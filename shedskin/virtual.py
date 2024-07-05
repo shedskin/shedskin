@@ -36,6 +36,7 @@ def virtuals(self, cl: python.Class, declare):
 
             if func.returnexpr:
                 retexpr = True
+                assert func.retnode
                 if func.retnode.thing in self.mergeinh:
                     sig_types.append(
                         self.mergeinh[func.retnode.thing]

@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
 import argparse
@@ -8,8 +8,9 @@ import os
 import sys
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any, Tuple, List
 if TYPE_CHECKING:
+    import ast
     from . import infer
     from . import python
     from .utils import ProgressBar
@@ -22,14 +23,15 @@ class GlobalInfo:  # XXX add comments, split up
         self.allvars: set['python.Variable'] = set()
         self.allfuncs: set['python.Function'] = set()
         self.allclasses: set['python.Class'] = set()
-        self.cnode: dict[str, 'infer.CNode'] = {}
-        self.types = {}
+        self.cnode: dict[Tuple[Any, int, int], 'infer.CNode']  = {}
+        self.types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
+        self.orig_types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
-        self.inheritance_relations = {}
-        self.inheritance_temp_vars = {}
-        self.parent_nodes = {}
-        self.inherited = set()
+        self.inheritance_relations: dict['python.Function', List['python.Function']] = {}
+        self.inheritance_temp_vars: dict['python.Variable', List['python.Variable']] = {}
+        self.parent_nodes: dict[ast.AST, ast.AST] = {}
+        self.inherited: set[ast.AST] = set()
         self.main_module: Optional['python.Module'] = None
         self.module: Optional['python.Module'] = None
         self.module_path: Optional[Path] = None
@@ -50,21 +52,22 @@ class GlobalInfo:  # XXX add comments, split up
             "bool_",
         ]
         # instance node for instance Variable assignment
-        self.assign_target = {}
+        self.assign_target: dict[ast.AST, ast.AST] = {}
         # allocation site type information across iterations
-        self.alloc_info = {}
+        self.alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
+        self.new_alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
         self.iterations: int = 0
         self.total_iterations: int = 0
-        self.lambdawrapper = {}
+        self.lambdawrapper: dict[Any, str] = {}
         self.init_directories()
         illegal_file = open(self.shedskin_illegal /  "illegal.txt")
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix: str = "__ss_"
-        self.list_types = {}
-        self.loopstack = []  # track nested loops
-        self.comments = {}
+        self.list_types: dict[Tuple[int, ast.AST], int] = {}
+        self.loopstack: List[ast.AST] = []  # track nested loops
+#        self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
-        self.from_module = {}
+        self.from_module: dict[ast.AST, 'python.Module'] = {}
         self.class_def_order: int = 0
         # command-line options
         self.wrap_around_check: bool = True
@@ -87,27 +90,25 @@ class GlobalInfo:  # XXX add comments, split up
         self.nomakefile: bool = False
 
         # Others
-        self.item_rvalue = {}
-        self.genexp_to_lc = {}
-        self.bool_test_only = set()
-        self.tempcount = {}
-        self.struct_unpack = {}
+        self.item_rvalue: dict[ast.AST, ast.AST] = {}
+        self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
+        self.bool_test_only: set[ast.AST] = set()
+        self.tempcount: dict[ast.AST, str] = {}
+        self.struct_unpack: dict[ast.Assign, Tuple[List, str, str]] = {}
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
         self.progressbar:  Optional['ProgressBar'] = None
         self.generate_cmakefile: bool = False
 
         # from infer.py
-        self.new_alloc_info = {}
         self.added_allocs: int = 0
-        self.added_allocs_set = set()
+        self.added_allocs_set: set[Any] = set()
         self.added_funcs: int = 0
-        self.added_funcs_set = set()
+        self.added_funcs_set: set['python.Function'] = set()
         self.cpa_clean: bool = False
         self.cpa_limit: int = 0
         self.cpa_limited: bool = False
-        self.orig_types = {}
-        self.merged_inh = {}
+        self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
     def init_directories(self):
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)

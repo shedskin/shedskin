@@ -30,7 +30,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -107,7 +107,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.name = module.ident
         self.filling_consts = False
         self.with_count = 0
-        self.bool_wrapper = {}
+        self.bool_wrapper: dict['ast.AST', bool] = {}
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
 
@@ -282,42 +282,42 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 result.append(type + (", ".join(names)) + ";\n")
         return result
 
-    def header_file(self):
+    def header_file(self) -> None:
         self.out = self.get_output_file(ext=".hpp")
         self.visit(self.module.ast, True)
         self.out.close()
 
-    def print(self, text=None):
+    def print(self, text: Optional[str]=None) -> None:
         if text is not None:
             print(text, file=self.out)
         else:
             print(file=self.out)
 
-    def output(self, text):
+    def output(self, text: str) -> None:
         if text:
             self.print(self.indentation + text)
 
-    def start(self, text=None):
+    def start(self, text: str=None) -> None:
         self.line = self.indentation
         if text:
             self.line += text
 
-    def append(self, text):
+    def append(self, text: str) -> None:
         self.line += text
 
-    def eol(self, text=None):
+    def eol(self, text: str=None) -> None:
         if text:
             self.append(text)
         if self.line.strip():
             self.print(self.line + ";")
 
-    def indent(self):
+    def indent(self) -> None:
         self.indentation += 4 * " "
 
-    def deindent(self):
+    def deindent(self) -> None:
         self.indentation = self.indentation[:-4]
 
-    def visitm(self, *args):
+    def visitm(self, *args) -> None:
         func = None
         if args and isinstance(args[-1], (python.Function, python.Class)):
             func = args[-1]
@@ -703,9 +703,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("*/")
 
     def do_comments(self, child):
-        if child in self.gx.comments:
-            for n in self.gx.comments[child]:
-                self.do_comment(n)
+        pass
+#        if child in self.gx.comments:
+#            for n in self.gx.comments[child]:
+#                self.do_comment(n)
 
     def visit_Continue(self, node, func=None):
         self.output("continue;")
@@ -893,10 +894,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def class_cpp(self, node):
         cl = self.mv.classes[node.name]
-        if node in self.gx.comments:
-            self.do_comments(node)
-        else:
-            self.output("/**\nclass %s\n*/\n" % cl.ident)
+#        if node in self.gx.comments:
+#            self.do_comments(node)
+#        else:
+        self.output("/**\nclass %s\n*/\n" % cl.ident)
         self.output("class_ *cl_" + cl.ident + ";\n")
 
         # --- methods
@@ -1133,7 +1134,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- raise class [, constructor args]
         if isinstance(exc, ast.Name) and not python.lookup_var(
-            exc.id, func, mv=self.mv
+            exc.id, func, self.mv
         ):  # XXX python.lookup_class
             self.append("new %s(" % exc.id)
             if (
@@ -1492,6 +1493,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif func.ident in ["__hash__"]:
             header += "long "  # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
+            assert func.retnode
             header += typestr.nodetypestr(
                 self.gx, func.retnode.thing, func, mv=self.mv
             )  # XXX mult
@@ -2575,7 +2577,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.bool_wrapper[node] = True
             self.visit(node, func)
 
-    def visit_callfunc_args(self, funcs, node, func):
+    def visit_callfunc_args(
+        self,
+        funcs: List['python.Function'],
+        node: ast.Call,
+        func: Optional['python.Function']
+    ) -> None:
         (
             objexpr,
             ident,
@@ -2982,7 +2989,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             func,
                         )
                     elif lcp and isinstance(lcp[0], python.Class):
-                        var = python.lookup_var(lvalue.attr, lcp[0], mv=self.mv)
+                        var = python.lookup_var(lvalue.attr, lcp[0], self.mv)
                         vartypes = set()
                         if var:
                             vartypes = self.mergeinh[var]
@@ -2996,7 +3003,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 # name = expr
                 elif isinstance(lvalue, ast.Name):
                     vartypes = self.mergeinh[
-                        python.lookup_var(lvalue.id, func, mv=self.mv)
+                        python.lookup_var(lvalue.id, func, self.mv)
                     ]
                     self.visit(lvalue, func)
                     self.append(" = ")
@@ -3142,7 +3149,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def lc_args(self, lcfunc, func):
         args = []
         for name in lcfunc.misses:
-            if python.lookup_var(name, func, mv=self.mv).parent:
+            if python.lookup_var(name, func, self.mv).parent:
                 arg = self.cpp_name(name)
                 if name in lcfunc.misses_by_ref:
                     arg = '&' + arg
@@ -3150,7 +3157,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     (
                         typestr.nodetypestr(
                             self.gx,
-                            python.lookup_var(name, lcfunc, mv=self.mv),
+                            python.lookup_var(name, lcfunc, self.mv),
                             lcfunc,
                             mv=self.mv,
                         ),
@@ -3261,9 +3268,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # iter var
         if isinstance(qual.target, ast.Name):
-            var = python.lookup_var(qual.target.id, lcfunc, mv=self.mv)
+            var = python.lookup_var(qual.target.id, lcfunc, self.mv)
         else:
-            var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, mv=self.mv)
+            var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, self.mv)
         iter = self.cpp_name(var)
 
         if ast_utils.is_fastfor(qual):
@@ -3334,7 +3341,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         temp = self.line
 
         for name in lcfunc.misses:
-            var = python.lookup_var(name, func, mv=self.mv)
+            var = python.lookup_var(name, func, self.mv)
             if var.parent:
                 if name == "self" and not func.listcomp:  # XXX parent?
                     args.append("this")
@@ -3516,7 +3523,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if not isinstance(node.value, ast.Name):
                     self.append("(")
                 if isinstance(node.value, ast.Name) and not python.lookup_var(
-                    node.value.id, func, mv=self.mv
+                    node.value.id, func, self.mv
                 ):  # XXX XXX
                     self.append(node.value.id)
                 else:
@@ -3579,7 +3586,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # obj.attr
             else:
                 if isinstance(node.value, ast.Name) and not python.lookup_var(
-                    node.value.id, func, mv=self.mv
+                    node.value.id, func, self.mv
                 ):  # XXX
                     self.append(node.value.id)
                 else:
@@ -3676,7 +3683,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             and node.id in func.parent.vars
                         ):  # XXX
                             self.append(func.ident + "::")
-                        var = python.smart_lookup_var(node.id, func, mv=self.mv)
+                        var = python.smart_lookup_var(node.id, func, self.mv)
                         if var:
                             if var.is_global:
                                 self.append(self.module.full_path() + "::")
@@ -3709,7 +3716,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         return "".join(value)
 
-    def visit_const(self, node, value):
+    def visit_Constant(self, node, func=None):
+        value = node.value
+
         if isinstance(value, bool):
             self.append(str(value))
 
@@ -3753,9 +3762,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         else:
             assert False
-
-    def visit_Constant(self, node, func=None):
-        self.visit_const(node, node.value)
 
 
 def generate_code(gx):

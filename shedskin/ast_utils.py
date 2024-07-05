@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
 import ast
@@ -103,7 +103,7 @@ class BaseNodeVisitor:
     (return value `None`) the `generic_visit` visitor is used instead.
     """
 
-    def visit(self, node, *args):
+    def visit(self, node: ast.AST, *args) -> None:
         """Visit a node."""
         assert isinstance(
             node, ast.AST
@@ -115,7 +115,7 @@ class BaseNodeVisitor:
         else:
             self.generic_visit(node, *args)
 
-    def generic_visit(self, node, *args):
+    def generic_visit(self, node: ast.AST, *args) -> None:
         """Called if no explicit visitor function exists for a node."""
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):

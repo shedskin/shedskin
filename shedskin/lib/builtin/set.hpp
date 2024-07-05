@@ -1,5 +1,138 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifndef SS_SET_HPP
+#define SS_SET_HPP
+
+template<class T> struct set_looper {
+    typename __GC_SET<T>::iterator it;
+};
+
+template <class T> class __setiter : public __iter<T> {
+public:
+    set<T> *p;
+    typename __GC_SET<T>::iterator it;
+
+    __setiter<T>(set<T> *p);
+    T __next__();
+};
+
+template<class T> class set : public pyiter<T> {
+public:
+    int frozen;
+    long hash;
+
+    __GC_SET<T> gcs;
+
+    template<class U> set(U *other, int frozen);
+    template<class U> set(U *other);
+    set(int frozen=0);
+    template<class ... Args> set(int count, Args ... args);
+
+    void *add(T key);
+    void *discard(T key);
+    void *remove(T key);
+    T pop();
+
+    str* __repr__();
+
+    __ss_bool __contains__(T key);
+    __ss_int __len__();
+
+    void *clear();
+    set<T> *copy();
+
+    void *update(int, set<T> *s);
+    template <class U> void *update(int, U *other);
+    template <class U, class V> void *update(int, U *other, V *other2);
+    template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
+
+    set<T> *intersection(int, set<T> *s);
+    template <class U> set<T> *intersection(int, U *other);
+    template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
+    template <class U, class V, class W> set<T> *intersection(int, U *iter, V *iter2, W *iter3);
+
+    void *intersection_update(int, set<T> *s);
+    template <class U> void *intersection_update(int, U *other);
+    template <class U, class V> void *intersection_update(int, U *other, V *other2);
+    template <class U, class V, class W> void *intersection_update(int, U *other, V *other2, W *other3);
+
+    set<T> *difference(int, set<T> *s);
+    template <class U> set<T> *difference(int, U *other);
+    template <class U, class V> set<T> *difference(int, U *other, V *other2);
+    template <class U, class V, class W> set<T> *difference(int, U *other, V *other2, W *other3);
+
+    void *difference_update(int, set<T> *s);
+    template <class U> void *difference_update(int, U *other);
+    template <class U, class V> void *difference_update(int, U *other, V *other2);
+    template <class U, class V, class W> void *difference_update(int, U *other, V *other2, W *other3);
+
+    set<T> *__ss_union(int, set<T> *s);
+    template <class U> set<T> *__ss_union(int, U *other);
+    template <class U, class V> set<T> *__ss_union(int, U *other, V *other2);
+    template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
+
+    set<T> *symmetric_difference(set<T> *s);
+    void *symmetric_difference_update(set<T> *s); // TODO why no iter versions?
+
+    set<T> *__and__(set<T> *s);
+    set<T> *__or__(set<T> *s);
+    set<T> *__xor__(set<T> *s);
+    set<T> *__sub__(set<T> *s);
+
+    set<T> *__iand__(set<T> *s);
+    set<T> *__ior__(set<T> *s);
+    set<T> *__ixor__(set<T> *s);
+    set<T> *__isub__(set<T> *s);
+
+    __ss_bool issubset(pyiter<T> *s);
+    __ss_bool issubset(set<T> *s);
+    __ss_bool issuperset(set<T> *s);
+    __ss_bool issuperset(pyiter<T> *s);
+
+    __ss_bool isdisjoint(set<T> *s);
+    __ss_bool isdisjoint(pyiter<T> *s);
+
+    __ss_bool __gt__(set<T> *s);
+    __ss_bool __lt__(set<T> *s);
+    __ss_bool __ge__(set<T> *s);
+    __ss_bool __le__(set<T> *s);
+    __ss_bool __eq__(pyobj *p);
+
+    __setiter<T> *__iter__() {
+        return new __setiter<T>(this);
+    }
+
+    set<T> *__copy__();
+    set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+    /* iteration */
+
+    typedef T for_in_unit;
+    typedef set_looper<T> for_in_loop;
+
+    inline set_looper<T> for_in_init() {
+        set_looper<T> l;
+        l.it = gcs.begin();
+        return l;
+    }
+
+    inline bool for_in_has_next(set_looper<T> &l) {
+        return l.it != gcs.end();
+    }
+
+    inline T for_in_next(set_looper<T> &l) {
+        return *(l.it++);
+    }
+
+#ifdef __SS_BIND
+    set(PyObject *);
+    PyObject *__to_py__();
+#endif
+
+    long __hash__();
+};
+
+
 template <class T> set<T>::set(int frozen_) : frozen(frozen_) {
     this->__class__ = cl_set;
     this->hash = -1;
@@ -502,3 +635,5 @@ template<class T> T __setiter<T>::__next__() {
         __throw_stop_iteration();
     return *it++;
 }
+
+#endif

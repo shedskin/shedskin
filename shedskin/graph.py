@@ -31,6 +31,7 @@ language.
 
 import ast
 import copy
+import pathlib
 import string
 import os
 import re
@@ -41,7 +42,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List, Tuple
 if TYPE_CHECKING:
     from . import config
 
@@ -62,21 +63,19 @@ def getmv() ->  Optional['ModuleVisitor']:
 
 def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False):  # XXX to modvisitor, rewrite
     mv = getmv()
-    if mv:
-        if mv.module:
-            if not mv.module.builtin:
-                existing = [mv.ext_classes, mv.ext_funcs]
-                if not onlybuiltins:
-                    existing += [mv.classes, mv.funcs]
-                for whatsit in existing:
-                    if s is not None:
-                        name = s
-                    else:
-                        name = node.name
-                    if name in whatsit:
-                        error.error(
-                            "function/class redefinition is not supported", gx, node, mv=mv
-                        )
+    if mv and mv.module and not mv.module.builtin:
+        existing_names =  list(mv.ext_classes) + list(mv.ext_funcs)
+        if not onlybuiltins:
+            existing_names.extend(mv.classes)
+            existing_names.extend(mv.funcs)
+        if s is not None:
+            name = s
+        else:
+            name = node.name
+        if name in existing_names:
+            error.error(
+                "function/class redefinition is not supported", gx, node, mv=mv
+            )
 
 
 # --- maintain inheritance relations between copied AST nodes
@@ -174,23 +173,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ast_utils.BaseNodeVisitor.__init__(self)
         self.module = module
         self.gx = gx
-        self.classes = {}
-        self.funcs = {}
-        self.globals = {}
-        self.exc_names = {}
-        self.current_with_vars = []
+        self.classes: dict[str, 'python.Class'] = {}
+        self.funcs: dict[str, 'python.Function'] = {}
+        self.globals: dict[str, 'python.Variable'] = {}
+        self.exc_names: dict[str, 'python.Variable'] = {}
+        self.current_with_vars: List[List[str]] = []
 
-        self.lambdas = {}
-        self.imports = {}
-        self.fake_imports = {}
-        self.ext_classes = {}
-        self.ext_funcs = {}
-        self.lambdaname = {}
-        self.lwrapper = {}
+        self.lambdas: dict[str, 'python.Function'] = {}
+        self.imports: dict[str, 'python.Module'] = {}
+        self.fake_imports: dict[str, 'python.Module'] = {}
+        self.ext_classes: dict[str, 'python.Class'] = {}
+        self.ext_funcs: dict[str, 'python.Function'] = {}
+        self.lambdaname: dict[ast.AST, str] = {}
+        self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
-        self.listcomps = []
-        self.defaults = {}
-        self.importnodes = []
+        self.listcomps: List[Tuple[ast.AST, 'python.Function', 'python.Function']] = []
+        self.defaults: dict[ast.AST, int] = {}
+        self.importnodes: List[ast.AST] = []
 
     def visit(self, node: Optional[ast.AST], *args):
         if (node, 0, 0) not in self.gx.cnode:
@@ -399,20 +398,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and isinstance(rvalue.func.value, ast.Name)
                 and rvalue.func.value.id == "struct"
                 and rvalue.func.attr in ("unpack", "unpack_from")
-                and python.lookup_var("struct", func, mv=self).imported
+                and python.lookup_var("struct", func, self).imported
             ):  # XXX imported from where?
                 return True
             elif (
                 isinstance(rvalue.func, ast.Name)
                 and rvalue.func.id in ("unpack", "unpack_from")
                 and rvalue.func.id in self.ext_funcs
-                and not python.lookup_var(rvalue.func.id, func, mv=self)
+                and not python.lookup_var(rvalue.func.id, func, self)
             ):  # XXX imported from where?
                 return True
 
     def struct_info(self, node, func):
         if isinstance(node, ast.Name):
-            var = python.lookup_var(node.id, func, mv=self)  # XXX fwd ref?
+            var = python.lookup_var(node.id, func, self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
                 error.error("non-constant format string", self.gx, node, mv=self)
             error.error(
@@ -634,11 +633,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.ClassDef):
             check_redef(self.gx, n)
             getmv().classnodes.append(n)
-            newclass = python.Class(self.gx, n, getmv())
+            newclass = python.Class(self.gx, n, getmv(), self.module)
             self.classes[n.name] = newclass
             getmv().classes[n.name] = newclass
-            newclass.module = self.module
-            newclass.parent = python.StaticClass(newclass, getmv())
 
             # methods
             for m in self.stmt_nodes(n, ast.FunctionDef):
@@ -655,7 +652,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         m,
                         mv=getmv(),
                     )
-                func = python.Function(self.gx, m, newclass, mv=getmv())
+                func = python.Function(self.gx, getmv(), m, newclass)
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
 
@@ -664,7 +661,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.FunctionDef):
             check_redef(self.gx, n)
             getmv().funcnodes.append(n)
-            func = getmv().funcs[n.name] = python.Function(self.gx, n, mv=getmv())
+            func = getmv().funcs[n.name] = python.Function(self.gx, getmv(), n)
             self.set_default_vars(n, func)
 
         # global variables XXX visit_Global
@@ -878,7 +875,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ):
             func = parent.funcs[node.name]
         else:
-            func = python.Function(self.gx, node, parent, inherited_from, mv=getmv())
+            func = python.Function(self.gx, getmv(), node, parent, inherited_from)
             if inherited_from:
                 self.set_default_vars(node, func)
 
@@ -1583,7 +1580,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
-        lcfunc = python.Function(self.gx, mv=getmv())
+        lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
         lcfunc.parent = func
@@ -1651,8 +1648,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.value is not None:  # Not naked return
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
-            if isinstance(node.value, ast.Name):
-                func.retvars.append(node.value.id)
         if func.retnode:
             self.add_constraint((infer.inode(self.gx, node.value), func.retnode), func)
 
@@ -1952,7 +1947,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     warning=True,
                 )
 
-            if python.lookup_var(ident, func, mv=getmv()):
+            if python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
@@ -1977,7 +1972,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         constructor = python.lookup_class(node.func, getmv())
         if constructor and (
             not isinstance(node.func, ast.Name)
-            or not python.lookup_var(node.func.id, func, mv=getmv())
+            or not python.lookup_var(node.func.id, func, getmv())
         ):
             self.instance(node, constructor, func)
             infer.inode(self.gx, node).callfuncs.append(
@@ -2028,17 +2023,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ]  # set in visit_Module, for forward references
         else:
             check_redef(self.gx, node)  # XXX merge with visit_Module
-            newclass = python.Class(self.gx, node, getmv())
+            newclass = python.Class(self.gx, node, getmv(), self.module)
             self.classes[node.name] = newclass
             getmv().classes[node.name] = newclass
-            newclass.module = self.module
-            newclass.parent = python.StaticClass(newclass, getmv())
             return
 
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
             for ident in ["__setattr__", "__getattr__"]:
-                func = python.Function(self.gx, mv=getmv())
+                func = python.Function(self.gx, getmv())
                 func.ident = ident
                 func.parent = cl
 
@@ -2266,7 +2259,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(func, python.Function) and node.id in func.globals:
                 var = infer.default_var(self.gx, node.id, None, mv=getmv())
             else:
-                var = python.lookup_var(node.id, func, mv=getmv())
+                var = python.lookup_var(node.id, func, getmv())
                 if not var:
                     if self.fncl_passing(node, newnode, func):
                         pass
@@ -2326,20 +2319,23 @@ def parse_module(name, gx: 'config.GlobalInfo', parent=None, node=None):
         absolute_name, filename, relative_filename, builtin = python.find_module(
             gx, name, module_paths
         )
-        module = python.Module(
-            absolute_name, filename, relative_filename, builtin, node
-        )
     except ImportError:
         error.error("cannot locate module: " + name, gx, node, mv=getmv())
 
     # --- check cache
-    if module.name in gx.modules:  # cached?
-        return gx.modules[module.name]
-    gx.modules[module.name] = module
+    if absolute_name in gx.modules:
+        return gx.modules[absolute_name]
 
     # --- not cached, so parse
-    module.ast = python.parse_file(module.filename)
+    ast = python.parse_file(pathlib.Path(filename))
 
+    module = python.Module(
+        absolute_name, filename, relative_filename, builtin, node, ast
+    )
+
+    gx.modules[absolute_name] = module
+
+    # --- visit ast
     old_mv = getmv()
     module.mv = mv = ModuleVisitor(module, gx)
     setmv(mv)

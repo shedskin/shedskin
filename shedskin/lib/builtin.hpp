@@ -1,7 +1,7 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#ifndef BUILTIN_HPP
-#define BUILTIN_HPP
+#ifndef SS_BUILTIN_HPP
+#define SS_BUILTIN_HPP
 
 #ifdef __SS_BIND
 #include <Python.h>
@@ -128,6 +128,16 @@ using tuple = tuple2<T, T>;
 
 extern __ss_bool True;
 extern __ss_bool False;
+/* externs */
+
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
+
+extern __GC_VECTOR(str *) __char_cache;
+
+extern list<str *> *__join_cache;
+extern list<bytes *> *__join_cache_bin;
+
+extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 /* class declarations */
 
@@ -367,256 +377,7 @@ public:
 #endif
 };
 
-class bytes : public pyseq<__ss_int> {
-protected:
-public:
-    __GC_STRING unit;
-    long hash;
-    int frozen;
 
-    bytes(int frozen=1);
-    bytes(const char *s);
-    bytes(bytes *b, int frozen=1);
-    bytes(__GC_STRING s, int frozen=1);
-    bytes(const char *s, int size, int frozen=1); /* '\0' delimiter in C */
-
-    inline __ss_int __getitem__(__ss_int i);
-    inline __ss_int __getfast__(__ss_int i);
-
-    template<class U> bytes *join(U *);
-
-    inline __ss_int __len__();
-    bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    bytes *rstrip(bytes *chars=0);
-    bytes *strip(bytes *chars=0);
-    bytes *lstrip(bytes *chars=0);
-
-    list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
-    list<bytes *> *rsplit(bytes *sep=0, __ss_int maxsplit=-1);
-    tuple2<bytes *, bytes *> *rpartition(bytes *sep);
-    tuple2<bytes *, bytes *> *partition(bytes *sep);
-    list<bytes *> *splitlines(__ss_int keepends = 0);
-
-    /* functions pointing to the underlying C++ implementation */
-    char *c_str() const;
-
-    __ss_int __fixstart(size_t a, __ss_int b);
-    __ss_int __checkneg(__ss_int i);
-
-    __ss_int find(bytes *s, __ss_int a=0);
-    __ss_int find(bytes *s, __ss_int a, __ss_int b);
-    __ss_int rfind(bytes *s, __ss_int a=0);
-    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
-
-    bytes *upper();
-    bytes *lower();
-    bytes *title();
-    bytes *capitalize();
-
-    __ss_bool istitle();
-    __ss_bool isspace();
-    __ss_bool isalpha();
-    __ss_bool isdigit();
-    __ss_bool islower();
-    __ss_bool isupper();
-    __ss_bool isalnum();
-    __ss_bool __ss_isascii();
-
-    __ss_bool startswith(bytes *s, __ss_int start=0);
-    __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
-    __ss_bool endswith(bytes *s, __ss_int start=0);
-    __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
-
-    __ss_int count(bytes *b, __ss_int start=0);
-    __ss_int count(__ss_int b, __ss_int start=0);
-    __ss_int count(bytes *b, __ss_int start, __ss_int end);
-    __ss_int count(__ss_int b, __ss_int start, __ss_int end);
-
-    __ss_int index(bytes *s, __ss_int a=0);
-    __ss_int index(bytes *s, __ss_int a, __ss_int b);
-    __ss_int rindex(bytes *s, __ss_int a=0);
-    __ss_int rindex(bytes *s, __ss_int a, __ss_int b);
-
-    bytes *expandtabs(__ss_int tabsize=8);
-
-    bytes *swapcase();
-
-    bytes *replace(bytes *a, bytes *b, __ss_int c=-1);
-
-    bytes *center(__ss_int width, bytes *fillchar=0);
-
-    bytes *zfill(__ss_int width);
-    bytes *ljust(__ss_int width, bytes *fillchar=0);
-    bytes *rjust(__ss_int width, bytes *fillchar=0);
-
-    str *hex(str *sep=0);
-
-    str *__str__();
-    str *__repr__();
-
-    __ss_bool __contains__(__ss_int);
-    __ss_bool __contains__(bytes *);
-
-    __ss_bool __eq__(pyobj *s);
-    long __hash__();
-
-    __ss_bool __ctype_function(int (*cfunc)(int));
-
-    bytes *__add__(bytes *b);
-    bytes *__mul__(__ss_int n);
-
-    /* iteration */
-
-    inline bool for_in_has_next(size_t i);
-    inline __ss_int for_in_next(size_t &i);
-
-    /* bytearray */
-
-    void *clear();
-    void *append(__ss_int i);
-    __ss_int pop(__ss_int i=-1);
-    bytes *copy();
-    void *extend(pyiter<__ss_int> *p);
-    void *reverse();
-    void *insert(__ss_int index, __ss_int item);
-
-    void *__setitem__(__ss_int i, __ss_int e);
-    void *__delitem__(__ss_int i);
-
-    void *remove(__ss_int i);
-
-    bytes *__iadd__(bytes *b);
-    bytes *__imul__(__ss_int n);
-
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b);
-    void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-#ifdef __SS_BIND
-    bytes(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
-
-class str : public pyseq<str *> {
-protected:
-public:
-    __GC_STRING unit;
-    long hash;
-    bool charcache;
-
-    str();
-    str(const char *s);
-    str(__GC_STRING s);
-    str(const char *s, size_t size); /* '\0' delimiter in C */
-
-    __ss_bool __contains__(str *s);
-    str *strip(str *chars=0);
-    str *lstrip(str *chars=0);
-    str *rstrip(str *chars=0);
-    __ss_bool __eq__(pyobj *s);
-    str *__add__(str *b);
-
-    template<class U> str *join(U *);
-
-    /* operators */
-    //inline void operator+= (const char *c);
-    str *operator+ (const char *c);
-    str *operator+ (const char &c);
-    void operator+= (const char *c);
-    void operator+= (const char &c);
-    //str *operator+ (const char c);
-    //str *operator+ (str *c);
-    //str *operator+ (basic_string c);
-
-    /* functions pointing to the underlying C++ implementation */
-    char *c_str() const;
-
-    str *__str__();
-    str *__repr__();
-    str *__mul__(__ss_int n);
-    inline str *__getitem__(__ss_int n);
-    inline str *__getfast__(__ss_int i);
-    inline __ss_int __len__();
-    str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
-    list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
-    tuple2<str *, str *> *rpartition(str *sep);
-    tuple2<str *, str *> *partition(str *sep);
-    list<str *> *splitlines(__ss_int keepends = 0);
-
-    __ss_int __fixstart(size_t a, __ss_int b);
-    __ss_int __checkneg(__ss_int i);
-
-    __ss_int find(str *s, __ss_int a=0);
-    __ss_int find(str *s, __ss_int a, __ss_int b);
-    __ss_int rfind(str *s, __ss_int a=0);
-    __ss_int rfind(str *s, __ss_int a, __ss_int b);
-
-    __ss_int index(str *s, __ss_int a=0);
-    __ss_int index(str *s, __ss_int a, __ss_int b);
-    __ss_int rindex(str *s, __ss_int a=0);
-    __ss_int rindex(str *s, __ss_int a, __ss_int b);
-
-    __ss_int count(str *s, __ss_int start=0);
-    __ss_int count(str *s, __ss_int start, __ss_int end);
-
-    str *upper();
-    str *lower();
-    str *title();
-    str *capitalize();
-    str *casefold();
-
-    str *replace(str *a, str *b, __ss_int c=-1);
-    str *translate(str *table, str *delchars=0);
-    str *swapcase();
-    str *center(__ss_int width, str *fillchar=0);
-
-    __ss_bool __ctype_function(int (*cfunc)(int));
-
-    __ss_bool istitle();
-    __ss_bool isspace();
-    __ss_bool isalpha();
-    __ss_bool isdigit();
-    __ss_bool islower();
-    __ss_bool isupper();
-    __ss_bool isalnum();
-    __ss_bool isprintable();
-    __ss_bool isnumeric();
-    __ss_bool __ss_isascii();
-    __ss_bool isdecimal();
-    __ss_bool isidentifier();
-
-    __ss_bool startswith(str *s, __ss_int start=0);
-    __ss_bool startswith(str *s, __ss_int start, __ss_int end);
-    __ss_bool endswith(str *s, __ss_int start=0);
-    __ss_bool endswith(str *s, __ss_int start, __ss_int end);
-
-    str *zfill(__ss_int width);
-    str *expandtabs(__ss_int tabsize=8);
-
-    str *ljust(__ss_int width, str *fillchar=0);
-    str *rjust(__ss_int width, str *fillchar=0);
-
-    __ss_int __cmp__(pyobj *p);
-    long __hash__();
-
-    __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
-
-    str *__iadd__(str *b);
-    str *__imul__(__ss_int n);
-
-    /* iteration */
-
-    inline bool for_in_has_next(size_t i);
-    inline str *for_in_next(size_t &i);
-
-#ifdef __SS_BIND
-    str(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
 
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
@@ -625,11 +386,29 @@ void __throw_dict_changed();
 void __throw_slice_step_zero();
 void __throw_stop_iteration();
 
-template<class K, class V> struct dictentry;
+#ifdef __GNUC__
+#define unlikely(x)       __builtin_expect((x), 0)
+#else
+#define unlikely(x)    (x)
+#endif
 
-const int MINSIZE = 8;
+template<class T> static inline int __wrap(T a, __ss_int i) {
+    __ss_int l = len(a);
+#ifndef __SS_NOWRAP
+    if(unlikely(i<0)) i += l;
+#endif
+#ifndef __SS_NOBOUNDS
+        if(unlikely(i<0 || i>= l))
+            __throw_index_out_of_range();
+#endif
+    return i;
+}
 
+#undef unlikely
+
+#include "builtin/iter.hpp"
 #include "builtin/hash.hpp"
+#include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
 template <class K, class V>
@@ -645,12 +424,6 @@ using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
-    __ss_int fill;
-    __ss_int used;
-    __ss_int mask;
-    dictentry<K,V> *table;
-    dictentry<K,V> smalltable[MINSIZE];
-
     __GC_DICT<K,V> gcd;
 
     dict();
@@ -665,7 +438,6 @@ public:
     str *__repr__();
     __ss_bool has_key(K k);
     __ss_bool __contains__(K key);
-    __ss_bool __contains__(dictentry<K,V>* entry);
     void *clear();
     dict<K,V> *copy();
     V get(K k);
@@ -725,172 +497,6 @@ public:
 #endif
 };
 
-template<class T> struct setentry;
-
-template<class T> struct set_looper {
-    typename __GC_SET<T>::iterator it;
-};
-
-template<class T> class set : public pyiter<T> {
-public:
-    int frozen;
-    long hash;
-
-    __GC_SET<T> gcs;
-
-    template<class U> set(U *other, int frozen);
-    template<class U> set(U *other);
-    set(int frozen=0);
-    template<class ... Args> set(int count, Args ... args);
-
-    void *add(T key);
-    void *add(setentry<T>* entry);
-    void *discard(T key);
-    void *remove(T key);
-    T pop();
-
-    str* __repr__();
-
-    __ss_bool __contains__(T key);
-    __ss_bool __contains__(setentry<T>* entry);
-    __ss_int __len__();
-
-    void *clear();
-    set<T> *copy();
-
-    void *update(int, set<T> *s);
-    template <class U> void *update(int, U *other);
-    template <class U, class V> void *update(int, U *other, V *other2);
-    template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
-
-    set<T> *intersection(int, set<T> *s);
-    template <class U> set<T> *intersection(int, U *other);
-    template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
-    template <class U, class V, class W> set<T> *intersection(int, U *iter, V *iter2, W *iter3);
-
-    void *intersection_update(int, set<T> *s);
-    template <class U> void *intersection_update(int, U *other);
-    template <class U, class V> void *intersection_update(int, U *other, V *other2);
-    template <class U, class V, class W> void *intersection_update(int, U *other, V *other2, W *other3);
-
-    set<T> *difference(int, set<T> *s);
-    template <class U> set<T> *difference(int, U *other);
-    template <class U, class V> set<T> *difference(int, U *other, V *other2);
-    template <class U, class V, class W> set<T> *difference(int, U *other, V *other2, W *other3);
-
-    void *difference_update(int, set<T> *s);
-    template <class U> void *difference_update(int, U *other);
-    template <class U, class V> void *difference_update(int, U *other, V *other2);
-    template <class U, class V, class W> void *difference_update(int, U *other, V *other2, W *other3);
-
-    set<T> *__ss_union(int, set<T> *s);
-    template <class U> set<T> *__ss_union(int, U *other);
-    template <class U, class V> set<T> *__ss_union(int, U *other, V *other2);
-    template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
-
-    set<T> *symmetric_difference(set<T> *s);
-    void *symmetric_difference_update(set<T> *s); // TODO why no iter versions?
-
-    set<T> *__and__(set<T> *s);
-    set<T> *__or__(set<T> *s);
-    set<T> *__xor__(set<T> *s);
-    set<T> *__sub__(set<T> *s);
-
-    set<T> *__iand__(set<T> *s);
-    set<T> *__ior__(set<T> *s);
-    set<T> *__ixor__(set<T> *s);
-    set<T> *__isub__(set<T> *s);
-
-    __ss_bool issubset(pyiter<T> *s);
-    __ss_bool issubset(set<T> *s);
-    __ss_bool issuperset(set<T> *s);
-    __ss_bool issuperset(pyiter<T> *s);
-
-    __ss_bool isdisjoint(set<T> *s);
-    __ss_bool isdisjoint(pyiter<T> *s);
-
-    __ss_bool __gt__(set<T> *s);
-    __ss_bool __lt__(set<T> *s);
-    __ss_bool __ge__(set<T> *s);
-    __ss_bool __le__(set<T> *s);
-    __ss_bool __eq__(pyobj *p);
-
-    __setiter<T> *__iter__() {
-        return new __setiter<T>(this);
-    }
-
-    set<T> *__copy__();
-    set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-    /* iteration */
-
-    typedef T for_in_unit;
-    typedef set_looper<T> for_in_loop;
-
-    inline set_looper<T> for_in_init() {
-        set_looper<T> l;
-        l.it = gcs.begin();
-        return l;
-    }
-
-    inline bool for_in_has_next(set_looper<T> &l) {
-        return l.it != gcs.end();
-    }
-
-    inline T for_in_next(set_looper<T> &l) {
-        return *(l.it++);
-    }
-
-#ifdef __SS_BIND
-    set(PyObject *);
-    PyObject *__to_py__();
-#endif
-
-    long __hash__();
-};
-
-class complex {
-public:
-    __ss_float real, imag;
-
-    inline complex operator+(complex b);
-    inline complex operator+(__ss_float b);
-    inline complex operator-(complex b);
-    inline complex operator-(__ss_float b);
-    inline complex operator*(complex b);
-    inline complex operator*(__ss_float b);
-    inline complex operator/(complex b);
-    inline complex operator/(__ss_float b);
-    inline complex operator%(complex b);
-    inline complex operator%(__ss_float b);
-    inline complex operator+();
-    inline complex operator-();
-    inline __ss_bool operator==(complex b);
-    inline __ss_bool operator==(__ss_float b);
-    inline __ss_bool operator!=(complex b);
-    inline __ss_bool operator!=(__ss_float b);
-    inline complex& operator=(__ss_float a);
-
-    inline complex conjugate();
-    complex parsevalue(str *s);
-
-    inline long __hash__();
-    str *__repr__();
-};
-
-complex mcomplex(__ss_float real=0.0, __ss_float imag=0.0);
-template<class T> complex mcomplex(T t);
-complex mcomplex(str *s);
-
-inline complex operator+(__ss_float a, complex b) { return mcomplex(a)+b; }
-inline complex operator-(__ss_float a, complex b) { return mcomplex(a)-b; }
-inline complex operator*(__ss_float a, complex b) { return mcomplex(a)*b; }
-inline complex operator/(__ss_float a, complex b) { return mcomplex(a)/b; }
-inline complex operator%(__ss_float a, complex b) { return mcomplex(a)%b; }
-
-inline __ss_bool operator==(__ss_float a, complex b) { return mcomplex(a)==b; }
-inline __ss_bool operator!=(__ss_float a, complex b) { return mcomplex(a)!=b; }
-
 class class_: public pyobj {
 public:
     str *__name__;
@@ -917,15 +523,6 @@ public:
     virtual T __get_next();
 
     str *__repr__();
-};
-
-template <class T> class __setiter : public __iter<T> {
-public:
-    set<T> *p;
-    typename __GC_SET<T>::iterator it;
-
-    __setiter<T>(set<T> *p);
-    T __next__();
 };
 
 class __xrange : public pyseq<__ss_int> {
@@ -1039,45 +636,11 @@ void __ss_exit(int code=0);
 
 /* slicing */
 
-static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
+void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
-/* externs */
-
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
-
-extern __GC_VECTOR(str *) __char_cache;
-
-extern list<str *> *__join_cache;
-extern list<bytes *> *__join_cache_bin;
-
-extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
-
-/* set */
-
-const int PERTURB_SHIFT = 5;
-
-const int DISCARD_NOTFOUND = 0;
-const int DISCARD_FOUND = 1;
-
-const int unused = 0;
-const int dummy = 1;
-const int active = 2;
-
-template<class T> struct setentry {
-    __ss_int hash; // avoid rehashings...
-    T key;
-    int use;
-};
-
-template<class K, class V> struct dictentry {
-    __ss_int hash;
-    K key;
-    V value;
-    int use;
-};
 
 /* int */
 
@@ -1125,56 +688,7 @@ str *__str();
 
 template<class ... Args> str *__add_strs(int n, Args ... args);
 
-#include "builtin/iter.hpp"
 
-/* bytes */
-
-template<class T> bytes *__bytes(T *t) {
-    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
-        bytes *b = new bytes();
-        __ss_int e;
-        typename T::for_in_loop __3;
-        __ss_int __2;
-        T *__1;
-        FOR_IN(e,t,1,2,3)
-            b->unit += (char)e;
-        END_FOR
-        return b;
-    } else {
-        if (!t)
-            return new bytes("None");
-        else
-            return t->__bytes__();
-    }
-}
-
-bytes *__bytes(bytes *b);
- bytes *__bytes(__ss_int t);
-bytes *__bytes();
-
-template<class T> bytes *__bytearray(T *t) {
-    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
-        bytes *b = new bytes();
-        b->frozen = 0;
-        __ss_int e;
-        typename pyiter<__ss_int>::for_in_loop __3;
-        int __2;
-        pyiter<__ss_int> *__1;
-        FOR_IN(e,t,1,2,3)
-            b->unit += (char)e;
-        END_FOR
-        return b;
-    } else {
-        if (!t)
-            return new bytes("None");
-        else
-            return t->__bytes__();
-    }
-}
-
-bytes *__bytearray(bytes *b);
-bytes *__bytearray(__ss_int t);
-bytes *__bytearray();
 
 /* repr */
 
@@ -1197,7 +711,6 @@ template<> str *repr(size_t t);
 #define ASSERT(x, y)
 #endif
 
-
 /* len */
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
@@ -1206,106 +719,7 @@ template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.si
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
 #include "builtin/extmod.hpp"
-
-
-/* file objects */
-
-struct __file_options {
-    char lastchar;
-    int space;
-    bool universal_mode;
-    bool cr;
-    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false) {}
-};
-
-class file : public __iter<str *> {
-public:
-    str *name;
-    str *mode;
-
-    FILE *f;
-    file_binary *buffer;
-
-    __ss_int closed;
-    __file_options options;
-    __GC_VECTOR(char) __read_cache;
-
-    file(FILE *g=0) : f(g) {}
-    file(str *name, str *mode=0);
-
-    virtual void * close();
-    virtual void * flush();
-    virtual int  __ss_fileno();
-    virtual __ss_bool isatty();
-    virtual str *  read(int n=-1);
-    virtual str *  readline(int n=-1);
-    list<str *> *  readlines(__ss_int size_hint=-1);
-    virtual void * seek(__ss_int i, __ss_int w=0);
-    virtual __ss_int tell();
-    virtual void * truncate(int size);
-    virtual void * write(str *s);
-    virtual void * writelines(pyiter<str *> *iter);
-    __iter<str *> *xreadlines();
-    virtual void __enter__();
-    virtual void __exit__();
-
-    virtual __iter<str *> *__iter__();
-    virtual str *  __next__();
-
-    virtual str *__repr__();
-
-    virtual bool __eof();
-    virtual bool __error();
-
-    inline void __check_closed() {
-        if(closed)
-            throw new ValueError(new str("I/O operation on closed file"));
-    }
-};
-
-/* TODO file<bytes *> template? */
-
-class file_binary : public __iter<bytes *> {
-public:
-    str *name;
-    str *mode;
-
-    FILE *f;
-    __ss_int closed;
-    __file_options options;
-    __GC_VECTOR(char) __read_cache;
-
-    file_binary(FILE *g=0) : f(g) {}
-    file_binary(str *name, str *mode=0);
-
-    virtual void * close();
-    virtual void * flush();
-    virtual int  __ss_fileno();
-    virtual __ss_bool isatty();
-    virtual bytes *  read(int n=-1);
-    virtual bytes *  readline(int n=-1);
-    list<bytes *> *  readlines(__ss_int size_hint=-1);
-    virtual void * seek(__ss_int i, __ss_int w=0);
-    virtual __ss_int tell();
-    virtual void * truncate(int size);
-    virtual void * write(bytes *b);
-    virtual void *writelines(pyiter<bytes *> *iter);
-    __iter<bytes *> *xreadlines();
-    virtual void __enter__();
-    virtual void __exit__();
-    virtual str *__repr__();
-
-    virtual __iter<bytes *> *__iter__();
-    virtual bytes *  __next__();
-
-    virtual bool __eof();
-    virtual bool __error();
-
-    inline void __check_closed() {
-        if(closed)
-            throw new ValueError(new str("I/O operation on closed file"));
-    }
-};
+#include "builtin/copy.hpp"
 
 /* with statement */
 
@@ -1333,64 +747,6 @@ private:
 
 #define END_WITH }
 
-#ifdef __GNUC__
-#define unlikely(x)       __builtin_expect((x), 0)
-#else
-#define unlikely(x)    (x)
-#endif
-
-template<class T> static inline int __wrap(T a, __ss_int i) {
-    __ss_int l = len(a);
-#ifndef __SS_NOWRAP
-    if(unlikely(i<0)) i += l;
-#endif
-#ifndef __SS_NOBOUNDS
-        if(unlikely(i<0 || i>= l))
-            __throw_index_out_of_range();
-#endif
-    return i;
-}
-
-#undef unlikely
-
-
-/* copy */
-
-template<class T> T __copy(T t) {
-    if(!t)
-        return (T)NULL;
-    return (T)(t->__copy__());
-}
-
-#ifdef __SS_LONG
-template<> inline __ss_int __copy(__ss_int i) { return i; }
-#endif
-template<> inline int __copy(int i) { return i; }
-template<> inline __ss_bool __copy(__ss_bool b) { return b; }
-template<> inline __ss_float __copy(__ss_float d) { return d; }
-template<> inline void *__copy(void *p) { return p; }
-
-template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
-    if(!t)
-        return (T)NULL;
-
-    if(!memo)
-        memo = new dict<void *, pyobj *>();
-    T u = (T)(memo->get(t, 0));
-    if(u)
-       return u;
-
-    return (T)(t->__deepcopy__(memo));
-}
-
-#ifdef __SS_LONG
-template<> inline __ss_int __deepcopy(__ss_int i, dict<void *, pyobj *> *) { return i; }
-#endif
-template<> inline int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
-template<> inline __ss_bool __deepcopy(__ss_bool b, dict<void *, pyobj *> *) { return b; }
-template<> inline __ss_float __deepcopy(__ss_float d, dict<void *, pyobj *> *) { return d; }
-template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p; }
-
 /* and, or, not */
 
 #define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))
@@ -1401,11 +757,9 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 
 template<class T> T __zero() { return 0; }
 template<> inline __ss_bool __zero<__ss_bool>() { return False; }
-template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 #include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
-#include "builtin/str.hpp"
 #include "builtin/bytes.hpp"
 #include "builtin/math.hpp"
 #include "builtin/dict.hpp"
@@ -1414,6 +768,8 @@ template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 #include "builtin/format.hpp"
 #include "builtin/function.hpp"
 #include "builtin/complex.hpp"
+
+template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 /* pyiter methods */
 
@@ -1517,43 +873,6 @@ template<class T> T __seqiter<T>::__next__() {
 }
 
 
-/* slicing */
-
-static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
-    if(x&4) {
-        if (s == 0)
-            __throw_slice_step_zero();
-    } else
-        s = 1;
-
-    if (l>=len)
-        l = len;
-    else if (l<0) {
-        l = len+l;
-        if(l<0)
-            l = 0;
-    }
-    if (u>=len)
-        u = len;
-    else if (u<0) {
-        u = len+u;
-        if(u<0)
-            u = 0;
-    }
-
-    if(s<0) {
-        if (!(x&1))
-            l = len-1;
-        if (!(x&2))
-            u = -1;
-    }
-    else {
-        if (!(x&1))
-            l = 0;
-        if (!(x&2))
-            u = len;
-    }
-}
 
 template<class T> void __unpack_check(T t, int expected) {
     if(len(t) > (__ss_int)expected)
