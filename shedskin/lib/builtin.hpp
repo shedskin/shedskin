@@ -742,15 +742,6 @@ public:
     str *__repr__();
 };
 
-template <class T> class __setiter : public __iter<T> {
-public:
-    set<T> *p;
-    typename __GC_SET<T>::iterator it;
-
-    __setiter<T>(set<T> *p);
-    T __next__();
-};
-
 class __xrange : public pyseq<__ss_int> {
 public:
     __ss_int a, b, s; // TODO remove
@@ -996,7 +987,6 @@ template<> str *repr(size_t t);
 #define ASSERT(x, y)
 #endif
 
-
 /* len */
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
@@ -1005,8 +995,6 @@ template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.si
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
 #include "builtin/extmod.hpp"
-
-
 
 /* with statement */
 

@@ -7,6 +7,15 @@ template<class T> struct set_looper {
     typename __GC_SET<T>::iterator it;
 };
 
+template <class T> class __setiter : public __iter<T> {
+public:
+    set<T> *p;
+    typename __GC_SET<T>::iterator it;
+
+    __setiter<T>(set<T> *p);
+    T __next__();
+};
+
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
