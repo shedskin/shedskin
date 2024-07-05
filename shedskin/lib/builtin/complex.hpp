@@ -1,6 +1,51 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+
+#ifndef SS_COMPLEX_HPP
+#define SS_COMPLEX_HPP
 
 /* complex */
+
+class complex {
+public:
+    __ss_float real, imag;
+
+    inline complex operator+(complex b);
+    inline complex operator+(__ss_float b);
+    inline complex operator-(complex b);
+    inline complex operator-(__ss_float b);
+    inline complex operator*(complex b);
+    inline complex operator*(__ss_float b);
+    inline complex operator/(complex b);
+    inline complex operator/(__ss_float b);
+    inline complex operator%(complex b);
+    inline complex operator%(__ss_float b);
+    inline complex operator+();
+    inline complex operator-();
+    inline __ss_bool operator==(complex b);
+    inline __ss_bool operator==(__ss_float b);
+    inline __ss_bool operator!=(complex b);
+    inline __ss_bool operator!=(__ss_float b);
+    inline complex& operator=(__ss_float a);
+
+    inline complex conjugate();
+    complex parsevalue(str *s);
+
+    inline long __hash__();
+    str *__repr__();
+};
+
+complex mcomplex(__ss_float real=0.0, __ss_float imag=0.0);
+template<class T> complex mcomplex(T t);
+complex mcomplex(str *s);
+
+inline complex operator+(__ss_float a, complex b) { return mcomplex(a)+b; }
+inline complex operator-(__ss_float a, complex b) { return mcomplex(a)-b; }
+inline complex operator*(__ss_float a, complex b) { return mcomplex(a)*b; }
+inline complex operator/(__ss_float a, complex b) { return mcomplex(a)/b; }
+inline complex operator%(__ss_float a, complex b) { return mcomplex(a)%b; }
+
+inline __ss_bool operator==(__ss_float a, complex b) { return mcomplex(a)==b; }
+inline __ss_bool operator!=(__ss_float a, complex b) { return mcomplex(a)!=b; }
 
 /* constructors */
 
@@ -152,3 +197,4 @@ template<> PyObject *__to_py(complex c);
 template<> complex __to_ss(PyObject *p);
 #endif
 
+#endif

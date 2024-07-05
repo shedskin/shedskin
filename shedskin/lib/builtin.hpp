@@ -725,48 +725,6 @@ public:
 #endif
 };
 
-class complex {
-public:
-    __ss_float real, imag;
-
-    inline complex operator+(complex b);
-    inline complex operator+(__ss_float b);
-    inline complex operator-(complex b);
-    inline complex operator-(__ss_float b);
-    inline complex operator*(complex b);
-    inline complex operator*(__ss_float b);
-    inline complex operator/(complex b);
-    inline complex operator/(__ss_float b);
-    inline complex operator%(complex b);
-    inline complex operator%(__ss_float b);
-    inline complex operator+();
-    inline complex operator-();
-    inline __ss_bool operator==(complex b);
-    inline __ss_bool operator==(__ss_float b);
-    inline __ss_bool operator!=(complex b);
-    inline __ss_bool operator!=(__ss_float b);
-    inline complex& operator=(__ss_float a);
-
-    inline complex conjugate();
-    complex parsevalue(str *s);
-
-    inline long __hash__();
-    str *__repr__();
-};
-
-complex mcomplex(__ss_float real=0.0, __ss_float imag=0.0);
-template<class T> complex mcomplex(T t);
-complex mcomplex(str *s);
-
-inline complex operator+(__ss_float a, complex b) { return mcomplex(a)+b; }
-inline complex operator-(__ss_float a, complex b) { return mcomplex(a)-b; }
-inline complex operator*(__ss_float a, complex b) { return mcomplex(a)*b; }
-inline complex operator/(__ss_float a, complex b) { return mcomplex(a)/b; }
-inline complex operator%(__ss_float a, complex b) { return mcomplex(a)%b; }
-
-inline __ss_bool operator==(__ss_float a, complex b) { return mcomplex(a)==b; }
-inline __ss_bool operator!=(__ss_float a, complex b) { return mcomplex(a)!=b; }
-
 class class_: public pyobj {
 public:
     str *__name__;
@@ -1262,7 +1220,6 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 
 template<class T> T __zero() { return 0; }
 template<> inline __ss_bool __zero<__ss_bool>() { return False; }
-template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 #include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
@@ -1275,6 +1232,8 @@ template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 #include "builtin/format.hpp"
 #include "builtin/function.hpp"
 #include "builtin/complex.hpp"
+
+template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 /* pyiter methods */
 
