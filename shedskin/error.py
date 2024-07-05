@@ -1,10 +1,13 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
+import ast
 import logging
 import sys
+
+from typing import Optional
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)
@@ -16,7 +19,13 @@ logger.addHandler(ch)
 ERRORS = set()
 
 
-def error(msg, gx, node=None, warning=False, mv=None):
+def error(
+    msg: str,
+    gx: 'config.GlobalInfo',
+    node: ast.AST=None,
+    warning: bool=False,
+    mv: Optional['graph.ModuleVisitor']=None,
+):
     from . import infer
 
     if warning:
@@ -38,7 +47,7 @@ def error(msg, gx, node=None, warning=False, mv=None):
         sys.exit(1)
 
 
-def print_error(error):
+def print_error(error) -> None:
     (kind, filename, lineno, msg) = error
     result = ""
     if filename:
@@ -49,7 +58,7 @@ def print_error(error):
     logger.log(kind, result + msg)
 
 
-def print_errors():
+def print_errors() -> None:
     for error in sorted(
         ERRORS, key=lambda x: (x[1] or "", x[2] if x[2] is not None else -1)
     ):

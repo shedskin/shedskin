@@ -78,7 +78,7 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any
 
 if TYPE_CHECKING:
     from . import config
@@ -152,16 +152,16 @@ class CNode:
 
         # --- in, outgoing constraints
 
-        self.in_ = set()  # incoming nodes
-        self.out = set()  # outgoing nodes
-        self.fout = set()  # unreal outgoing edges, used in ifa
+        self.in_: set[CNode] = set()  # incoming nodes
+        self.out: set[CNode] = set()  # outgoing nodes
+        self.fout: set[CNode] = set()  # unreal outgoing edges, used in ifa
 
         # --- iterative dataflow analysis
 
         self.in_list = 0  # node in work-list
-        self.callfuncs = []  # callfuncs to which node is object/argument
+        self.callfuncs: List[Any] = []  # callfuncs to which node is object/argument
 
-        self.nodecp = set()  # already analyzed cp's # XXX kill!?
+        self.nodecp: set[Tuple] = set()  # already analyzed cp's # XXX kill!?
 
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
@@ -507,7 +507,7 @@ def analyze_callfunc(
     # direct [constructor] call
     if isinstance(node.func, ast.Name) or namespace != mv.module:
         if isinstance(node.func, ast.Name):
-            if python.lookup_var(ident, cnode.parent, mv=mv):
+            if python.lookup_var(ident, cnode.parent, mv):
                 return (
                     objexpr,
                     ident,
@@ -543,7 +543,8 @@ def analyze_callfunc(
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
 def merged(gx: "config.GlobalInfo", nodes, inheritance=False):
-    merge = {}
+    merge: dict[Any, set[Tuple[Any, int]]] = {}
+
     if inheritance:  # XXX do we really need this crap
         mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
         mergenoinh = merged(gx, [n for n in nodes if n.thing not in gx.inherited])
@@ -668,7 +669,7 @@ def propagate(gx: "config.GlobalInfo"):
     logger.debug("propagate")
 
     # --- initialize working sets
-    worklist = []
+    worklist: list[CNode] = []
     changed = set()
     for node in gx.types:
         if gx.types[node]:
@@ -766,7 +767,8 @@ def possible_functions(gx: "config.GlobalInfo", node, analysis):
         parent_constr,
         anon_func,
     ) = analysis
-    funcs = []
+
+    funcs: List[Tuple['python.Function', int, Optional[Tuple['python.Class', int]]]] = []
 
     if anon_func:
         # anonymous call
@@ -793,7 +795,7 @@ def possible_functions(gx: "config.GlobalInfo", node, analysis):
 
     elif parent_constr:
         objtypes = gx.cnode[
-            python.lookup_var("self", node.parent, mv=node.mv), node.dcpa, node.cpa
+            python.lookup_var("self", node.parent, node.mv), node.dcpa, node.cpa
         ].types()
         funcs = [
             (t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs
@@ -1190,9 +1192,9 @@ def actuals_formals(
 
 def ifa(gx: "config.GlobalInfo"):
     logger.debug("ifa")
-    split = []  # [(set of creation nodes, new type number), ..]
+    split: List[Tuple] = []  # [(set of creation nodes, new type number), ..]
 
-    allcsites = {}
+    allcsites: dict[Tuple['python.Class', int], set[CNode]] = {}
     for n, types in gx.types.items():
         if not n.in_:
             for cl, dcpa in types:
@@ -1272,15 +1274,15 @@ def ifa_split_vars(
             return split
 
         # --- try to partition csites across paths
-        prt = {}
+        prt: dict[frozenset[Any], List[Tuple[Any, int, int]]] = {}
         for c in csites:
-            ts = set()
+            tspaths = set()
             for p in c.paths:
-                ts.update(p)
-            fs = frozenset(ts)
-            if fs not in prt:
-                prt[fs] = []
-            prt[fs].append(c)
+                tspaths.update(p)
+            ts = frozenset(tspaths)
+            if ts not in prt:
+                prt[ts] = []
+            prt[ts].append(c)
         if len(prt) > 1:
             ifa_logger.debug("IFA partition csites: %s", list(prt.values())[0])
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)
@@ -1309,7 +1311,7 @@ def ifa_split_no_confusion(
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
     others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites = {}
+    subtype_csites: dict[Tuple, List[CNode]] = {}
     for node in noconf:
         if node.paths:
             assign_set = node.paths[0]
@@ -1318,9 +1320,9 @@ def ifa_split_no_confusion(
         if attr_types[varnum] == assign_set:
             others += 1
         else:
-            subtype = attr_types[:]
-            subtype[varnum] = assign_set
-            subtype = tuple(subtype)
+            subtype_list = attr_types[:]
+            subtype_list[varnum] = assign_set
+            subtype = tuple(subtype_list)
             try:
                 subtype_csites[subtype].append(node)
             except KeyError:
@@ -1341,15 +1343,15 @@ def ifa_class_types(gx: "config.GlobalInfo", cl, vars):
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
-        attr_types = []  # XXX merge with ifa_merge_contours.. sep func?
+        attr_types_list = []  # XXX merge with ifa_merge_contours.. sep func?
         for var in vars:
             if (var, dcpa, 0) in gx.cnode:
-                attr_types.append(
+                attr_types_list.append(
                     merge_simple_types(gx, gx.cnode[var, dcpa, 0].types())
                 )
             else:
-                attr_types.append(frozenset())
-        attr_types = tuple(attr_types)
+                attr_types_list.append(frozenset())
+        attr_types = tuple(attr_types_list)
         if all(attr_types):
             ifa_logger.debug(
                 "IFA %s: %s",
@@ -1871,8 +1873,8 @@ def analyze(gx: "config.GlobalInfo", module_name):
     for func in gx.allfuncs:
         if func in gx.inheritance_relations:
             for inhfunc in gx.inheritance_relations[func]:
-                for a, b in zip(func.registered, inhfunc.registered):
-                    graph.inherit_rec(gx, a, b, func.mv)
+                for c, d in zip(func.registered, inhfunc.registered):
+                    graph.inherit_rec(gx, c, d, func.mv)
 
                 for a, b in zip(
                     func.registered_temp_vars, inhfunc.registered_temp_vars
@@ -1903,7 +1905,7 @@ def default_var(
 ):
     if parent:
         mv = parent.mv
-    var = python.lookup_var(name, parent, local=True, mv=mv)
+    var = python.lookup_var(name, parent, mv, local=True)
     if not var:
         var = python.Variable(name, parent)
         if parent:  # XXX move to python.Variable?
