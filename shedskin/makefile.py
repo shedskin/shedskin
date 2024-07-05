@@ -55,7 +55,7 @@ def generate_makefile(gx):
 
     makefile = open(makefile_path, "w")
 
-    def write(line=""):
+    def write(line: str="") -> None:
         print(line, file=makefile)
 
     esc_space = "\ "
