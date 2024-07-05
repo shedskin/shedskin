@@ -1277,10 +1277,10 @@ def ifa_split_vars(
             ts = set()
             for p in c.paths:
                 ts.update(p)
-            ts = frozenset(ts)
-            if ts not in prt:
-                prt[ts] = []
-            prt[ts].append(c)
+            fs = frozenset(ts)
+            if fs not in prt:
+                prt[fs] = []
+            prt[fs].append(c)
         if len(prt) > 1:
             ifa_logger.debug("IFA partition csites: %s", list(prt.values())[0])
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)

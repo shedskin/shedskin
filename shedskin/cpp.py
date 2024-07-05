@@ -100,7 +100,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
-        self.consts = {}
+        self.consts: dict[ast.Constant, str] = {}
         self.mergeinh = self.gx.merged_inh
         self.module = module
         self.mv = module.mv
@@ -125,7 +125,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return open(output_file, mode)
 
     # XXX this is too magical
-    def insert_consts(self, declare):  # XXX ugly
+    def insert_consts(self, declare: bool):  # XXX ugly
         if not self.consts:
             return
         self.filling_consts = True
@@ -199,7 +199,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             f.writelines(newlines2)
         self.filling_consts = False
 
-    def insert_extras(self, suffix):
+    def insert_extras(self, suffix: str):
         with self.get_output_file(ext=suffix, mode="r") as f:
             lines = f.readlines()
         # lines = open(self.output_base + suffix, 'r').readlines()
@@ -213,7 +213,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         with self.get_output_file(ext=suffix, mode="w") as f:
             f.writelines(newlines)
 
-    def fwd_class_refs(self):
+    def fwd_class_refs(self) -> list[str]:
         lines = []
         for _module in self.module.prop_includes:
             if _module.builtin:
@@ -228,7 +228,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             lines.insert(0, "\n")
         return lines
 
-    def include_files(self):
+    def include_files(self) -> list[str]:
         # find all (indirect) dependencies
         includes = set()
         includes.add(self.module)
