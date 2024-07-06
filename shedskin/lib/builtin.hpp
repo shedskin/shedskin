@@ -139,6 +139,9 @@ extern list<bytes *> *__join_cache_bin;
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
+extern str *nl;
+extern str *sp;
+
 /* class declarations */
 
 class pyobj : public gc {
@@ -609,14 +612,6 @@ inline __ss_float ___round(__ss_float a) {
 inline __ss_float ___round(__ss_float a, int n) {
     return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
 }
-
-template<class T> inline T __abs(T t) { return t->__abs__(); }
-#ifdef __SS_LONG
-template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
-#endif
-template<> inline int __abs(int a) { return a<0?-a:a; }
-template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
-inline int __abs(__ss_bool b) { return b.value; }
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
