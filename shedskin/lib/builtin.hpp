@@ -380,8 +380,6 @@ public:
 #endif
 };
 
-
-
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
 void __throw_set_changed();
@@ -528,23 +526,6 @@ public:
     str *__repr__();
 };
 
-class __xrange : public pyseq<__ss_int> {
-public:
-    __ss_int a, b, s; // TODO remove
-    __ss_int start, stop, step;
-
-    __xrange(__ss_int a, __ss_int b, __ss_int s);
-
-    __ss_int count(__ss_int value);
-    __ss_int index(__ss_int value);
-
-    __iter<__ss_int> *__iter__();
-    __ss_int __len__();
-    __ss_int __getitem__(__ss_int i);
-    __ss_bool __contains__(__ss_int i);
-    str *__repr__();
-};
-
 template <class T> class __seqiter : public __iter<T> {
 public:
     __ss_int counter, size;
@@ -684,21 +665,6 @@ str *__str();
 template<class ... Args> str *__add_strs(int n, Args ... args);
 
 
-
-/* repr */
-
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-template<> str *repr(__ss_float t);
-#ifdef __SS_LONG
-template<> str *repr(__ss_int t);
-#endif
-template<> str *repr(int t);
-template<> str *repr(__ss_bool b);
-template<> str *repr(void *t);
-template<> str *repr(long unsigned int t);
-#ifdef WIN32
-template<> str *repr(size_t t);
-#endif
 
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
