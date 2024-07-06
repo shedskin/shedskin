@@ -227,81 +227,10 @@ public:
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
-template <class T> class list : public pyseq<T> {
-public:
-    __GC_VECTOR(T) units;
-
-    list();
-    template <class ... Args> list(int count, Args ... args);
-    template <class U> list(U *iter);
-    list(list<T> *p);
-    list(tuple2<T, T> *p);
-    list(str *s);
-
-    void clear();
-    void *__setitem__(__ss_int i, T e);
-    void *__delitem__(__ss_int i);
-    int empty();
-    list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
-    void *__delete__(__ss_int i);
-    void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    void *__delslice__(__ss_int a, __ss_int b);
-    __ss_bool __contains__(T a);
-
-    list<T> *__add__(list<T> *b);
-    list<T> *__mul__(__ss_int b);
-
-    template <class U> void *extend(U *iter);
-    void *extend(list<T> *p);
-    void *extend(tuple2<T,T> *p);
-    void *extend(str *s);
-
-    template <class U> list<T> *__iadd__(U *iter);
-    list<T> *__imul__(__ss_int n);
-
-    __ss_int index(T a);
-    __ss_int index(T a, __ss_int s);
-    __ss_int index(T a, __ss_int s, __ss_int e);
-
-    __ss_int count(T a);
-    str *__repr__();
-    __ss_bool __eq__(pyobj *l);
-
-    void resize(__ss_int i); /* XXX remove */
-
-    inline T __getfast__(__ss_int i);
-    inline T __getitem__(__ss_int i);
-    inline __ss_int __len__();
-
-    T pop();
-    T pop(__ss_int m);
-    void *remove(T e);
-    template <class U> void *remove(U e);
-    void *insert(__ss_int m, T e);
-
-    void *append(T a);
-
-    void *reverse();
-    template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
-    template<class U> void *sort(__ss_int cmp, U (*key)(T), __ss_int reverse);
-    void *sort(__ss_int (*cmp)(T, T), __ss_int key, __ss_int reverse);
-    void *sort(__ss_int cmp, __ss_int key, __ss_int reverse);
-
-    list<T> *__copy__();
-    list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-    /* iteration */
-
-    inline bool for_in_has_next(size_t i);
-    inline T for_in_next(size_t &i);
-#ifdef __SS_BIND
-    list(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
-
+// TODO better approach to split declarations/definitions?
+#define SS_DECL
+#include "builtin/list.hpp"
+#undef SS_DECL
 
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
