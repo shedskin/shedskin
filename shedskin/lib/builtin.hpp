@@ -473,6 +473,16 @@ str *__str();
 
 template<class ... Args> str *__add_strs(int n, Args ... args);
 
+/* abs */
+
+template<class T> inline T __abs(T t) { return t->__abs__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
+#endif
+template<> inline int __abs(int a) { return a<0?-a:a; }
+template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
+inline int __abs(__ss_bool b) { return b.value; }
+
 /* repr */
 
 template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }

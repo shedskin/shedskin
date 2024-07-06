@@ -727,16 +727,6 @@ template <class ... Args> void print(Args ... args) {
     print_(0, False, NULL, NULL, NULL, args...);
 }
 
-/* abs */
-
-template<class T> inline T __abs(T t) { return t->__abs__(); }
-#ifdef __SS_LONG
-template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
-#endif
-template<> inline int __abs(int a) { return a<0?-a:a; }
-template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
-inline int __abs(__ss_bool b) { return b.value; }
-
 /* range */
 
 class __xrange : public pyseq<__ss_int> {
