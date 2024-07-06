@@ -283,21 +283,6 @@ template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     return c;
 }
 
-template<class T> list<T> *list<T>::__copy__() {
-    list<T> *c = new list<T>();
-    c->units = this->units;
-    return c;
-}
-
-template<class T> list<T> *list<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    list<T> *c = new list<T>();
-    memo->__setitem__(this, c);
-    c->units.resize(this->units.size());
-    for(size_t i=0; i<this->units.size(); i++)
-        c->units[i] = __deepcopy(this->units[i], memo);
-    return c;
-}
-
 template<class T> template<class U> list<T> *list<T>::__iadd__(U *iter) {
     extend(iter);
     return this;

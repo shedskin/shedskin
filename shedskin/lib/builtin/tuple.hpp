@@ -153,21 +153,6 @@ template<class T> long tuple2<T, T>::__hash__() {
     return seed;
 }
 
-template<class T> tuple2<T,T> *tuple2<T,T>::__copy__() {
-    tuple2<T,T> *c = new tuple2<T,T>();
-    c->units = this->units;
-    return c;
-}
-
-template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    tuple2<T,T> *c = new tuple2<T,T>();
-    memo->__setitem__(this, c);
-    c->units.resize(this->units.size());
-    for(size_t i=0; i<this->units.size(); i++)
-        c->units[i] = __deepcopy(this->units[i], memo);
-    return c;
-}
-
 template<class T> inline bool tuple2<T,T>::for_in_has_next(size_t i) {
     return i < units.size(); /* XXX opt end cond */
 }
@@ -253,16 +238,6 @@ template<class A, class B> str *tuple2<A, B>::__repr__() {
     return new str(s);
 }
 
-template<class A, class B> tuple2<A,B> *tuple2<A,B>::__copy__() {
-    return new tuple2<A,B>(2, first, second);
-}
-template<class A, class B> tuple2<A,B> *tuple2<A,B>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    tuple2<A,B> *n = new tuple2<A,B>();
-    memo->__setitem__(this, n);
-    n->first = __deepcopy(first, memo);
-    n->second = __deepcopy(second, memo);
-    return n;
-}
 
 #ifdef __SS_BIND
 template<class A, class B> tuple2<A, B>::tuple2(PyObject *p) {

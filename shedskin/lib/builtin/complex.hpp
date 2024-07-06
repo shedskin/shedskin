@@ -156,10 +156,6 @@ template<> inline __ss_bool __ge(complex, complex) { return __mbool(true); }
 template<> inline __ss_bool __lt(complex, complex) { return __mbool(true); }
 template<> inline __ss_bool __le(complex, complex) { return __mbool(true); }
 
-/* copy, deepcopy */
-
-template<> inline complex __copy(complex a) { return a; }
-template<> inline complex __deepcopy(complex a, dict<void *, pyobj *> *) { return a; }
 
 /* add */
 
