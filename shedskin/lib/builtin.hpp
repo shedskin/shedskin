@@ -415,88 +415,11 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 template <class K, class V>
 using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
 
-template<class K, class V> struct dict_looper {
-    typename __GC_DICT<K, V>::iterator it;
-};
 
 template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
 
 
-template <class K, class V> class dict : public pyiter<K> {
-public:
-    __GC_DICT<K,V> gcd;
-
-    dict();
-    template<class ... Args> dict(int count, Args ... args);
-    template<class U> dict(U *other);
-    dict(dict<K, V> *p);
-
-    void *__setitem__(K k, V v);
-    V __getitem__(K k);
-    void *__delitem__(K k);
-    __ss_int __len__();
-    str *__repr__();
-    __ss_bool has_key(K k);
-    __ss_bool __contains__(K key);
-    void *clear();
-    dict<K,V> *copy();
-    V get(K k);
-    V get(K k, V v);
-    V pop(K k);
-    V pop(K k, V v);
-    tuple2<K, V> *popitem();
-    template <class U> void *update(U *other);
-    void *update(dict<K, V> *e);
-
-    __ss_bool __gt__(pyobj *p);
-    __ss_bool __lt__(pyobj *p);
-    __ss_bool __ge__(pyobj *p);
-    __ss_bool __le__(pyobj *p);
-
-    __ss_bool __eq__(pyobj *p);
-
-    __ss_bool __gt__(dict<K,V> *s);
-    __ss_bool __lt__(dict<K,V> *s);
-    __ss_bool __ge__(dict<K,V> *s);
-    __ss_bool __le__(dict<K,V> *s);
-
-    V setdefault(K k, V v=0);
-
-    __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
-    __dictiterkeys<K, V> *keys() { return new __dictiterkeys<K,V>(this);}
-    __dictitervalues<K, V> *values() { return new __dictitervalues<K,V>(this);}
-    __dictiteritems<K, V> *items() { return new __dictiteritems<K,V>(this);}
-
-    dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
-    dict<K, V> *__copy__();
-
-    void *__addtoitem__(K k, V v);
-
-    /* iteration */
-
-    typedef K for_in_unit;
-    typedef dict_looper<K,V> for_in_loop;
-
-    inline dict_looper<K,V> for_in_init() {
-        dict_looper<K,V> l;
-        l.it = gcd.begin();
-        return l;
-    }
-
-    inline bool for_in_has_next(dict_looper<K,V> &l) {
-        return l.it != gcd.end();
-    }
-
-    inline K for_in_next(dict_looper<K,V> &l) {
-        return (*(l.it++)).first;
-    }
-
-#ifdef __SS_BIND
-    dict(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
 
 class class_: public pyobj {
 public:
@@ -533,39 +456,6 @@ public:
     __seqiter<T>();
     __seqiter<T>(pyseq<T> *p);
     T __next__();
-};
-
-template <class K, class V> class __dictiterkeys : public __iter<K> {
-public:
-    dict<K,V> *p;
-    typename __GC_DICT<K, V>::iterator it;
-
-    __dictiterkeys<K, V>(dict<K, V> *p);
-    K __next__();
-
-    inline str *__str__() { return new str("dict_keys"); }
-};
-
-template <class K, class V> class __dictitervalues : public __iter<V> {
-public:
-    dict<K,V> *p;
-    typename __GC_DICT<K, V>::iterator it;
-
-    __dictitervalues<K, V>(dict<K, V> *p);
-    V __next__();
-
-    inline str *__str__() { return new str("dict_values"); }
-};
-
-template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
-public:
-    dict<K,V> *p;
-    typename __GC_DICT<K, V>::iterator it;
-
-    __dictiteritems<K, V>(dict<K, V> *p);
-    tuple2<K, V> *__next__();
-
-    inline str *__str__() { return new str("dict_items"); }
 };
 
 /* builtin function declarations */
@@ -680,7 +570,6 @@ template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.si
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
 #include "builtin/extmod.hpp"
-#include "builtin/copy.hpp"
 
 /* with statement */
 
@@ -729,6 +618,7 @@ template<> inline __ss_bool __zero<__ss_bool>() { return False; }
 #include "builtin/format.hpp"
 #include "builtin/function.hpp"
 #include "builtin/complex.hpp"
+#include "builtin/copy.hpp"
 
 template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 

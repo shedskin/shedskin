@@ -1,5 +1,119 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifndef SS_DICT_HPP
+#define SS_DICT_HPP
+
+template<class K, class V> struct dict_looper {
+    typename __GC_DICT<K, V>::iterator it;
+};
+
+template <class K, class V> class __dictiterkeys : public __iter<K> {
+public:
+    dict<K,V> *p;
+    typename __GC_DICT<K, V>::iterator it;
+
+    __dictiterkeys<K, V>(dict<K, V> *p);
+    K __next__();
+
+    inline str *__str__() { return new str("dict_keys"); }
+};
+
+template <class K, class V> class __dictitervalues : public __iter<V> {
+public:
+    dict<K,V> *p;
+    typename __GC_DICT<K, V>::iterator it;
+
+    __dictitervalues<K, V>(dict<K, V> *p);
+    V __next__();
+
+    inline str *__str__() { return new str("dict_values"); }
+};
+
+template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
+public:
+    dict<K,V> *p;
+    typename __GC_DICT<K, V>::iterator it;
+
+    __dictiteritems<K, V>(dict<K, V> *p);
+    tuple2<K, V> *__next__();
+
+    inline str *__str__() { return new str("dict_items"); }
+};
+
+template <class K, class V> class dict : public pyiter<K> {
+public:
+    __GC_DICT<K,V> gcd;
+
+    dict();
+    template<class ... Args> dict(int count, Args ... args);
+    template<class U> dict(U *other);
+    dict(dict<K, V> *p);
+
+    void *__setitem__(K k, V v);
+    V __getitem__(K k);
+    void *__delitem__(K k);
+    __ss_int __len__();
+    str *__repr__();
+    __ss_bool has_key(K k);
+    __ss_bool __contains__(K key);
+    void *clear();
+    dict<K,V> *copy();
+    V get(K k);
+    V get(K k, V v);
+    V pop(K k);
+    V pop(K k, V v);
+    tuple2<K, V> *popitem();
+    template <class U> void *update(U *other);
+    void *update(dict<K, V> *e);
+
+    __ss_bool __gt__(pyobj *p);
+    __ss_bool __lt__(pyobj *p);
+    __ss_bool __ge__(pyobj *p);
+    __ss_bool __le__(pyobj *p);
+
+    __ss_bool __eq__(pyobj *p);
+
+    __ss_bool __gt__(dict<K,V> *s);
+    __ss_bool __lt__(dict<K,V> *s);
+    __ss_bool __ge__(dict<K,V> *s);
+    __ss_bool __le__(dict<K,V> *s);
+
+    V setdefault(K k, V v=0);
+
+    __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
+    __dictiterkeys<K, V> *keys() { return new __dictiterkeys<K,V>(this);}
+    __dictitervalues<K, V> *values() { return new __dictitervalues<K,V>(this);}
+    __dictiteritems<K, V> *items() { return new __dictiteritems<K,V>(this);}
+
+    dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
+    dict<K, V> *__copy__();
+
+    void *__addtoitem__(K k, V v);
+
+    /* iteration */
+
+    typedef K for_in_unit;
+    typedef dict_looper<K,V> for_in_loop;
+
+    inline dict_looper<K,V> for_in_init() {
+        dict_looper<K,V> l;
+        l.it = gcd.begin();
+        return l;
+    }
+
+    inline bool for_in_has_next(dict_looper<K,V> &l) {
+        return l.it != gcd.end();
+    }
+
+    inline K for_in_next(dict_looper<K,V> &l) {
+        return (*(l.it++)).first;
+    }
+
+#ifdef __SS_BIND
+    dict(PyObject *);
+    PyObject *__to_py__();
+#endif
+};
 
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
     __iter<typename U::for_in_unit> *it = ___iter(iter);
@@ -273,24 +387,6 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
     return c;
 }
 
-template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
-    dict<K,V> *c = new dict<K,V>;
-    c->gcd = gcd;
-    return c;
-}
-
-template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    dict<K,V> *c = new dict<K,V>();
-    memo->__setitem__(this, c);
-    K e;
-    typename dict<K,V>::for_in_loop __3;
-    int __2;
-    dict<K,V> *__1;
-    FOR_IN(e,this,1,2,3)
-        c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
-    END_FOR
-    return c;
-}
 
 /* dictiterkeys/values/items */
 
@@ -352,3 +448,5 @@ namespace __dict__ {
     }
 
 }
+
+#endif
