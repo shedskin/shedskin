@@ -1,6 +1,7 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#include "function.hpp"
+#ifndef SS_LIST_HPP
+#define SS_LIST_HPP
 
 /* list methods */
 
@@ -427,3 +428,5 @@ template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
     c->units[ll] = (T)u;
     return c;
 }
+
+#endif
