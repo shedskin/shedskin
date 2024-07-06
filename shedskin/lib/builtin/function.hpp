@@ -737,21 +737,6 @@ template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return b.value; }
 
-/* repr */
-
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-template<> str *repr(__ss_float t);
-#ifdef __SS_LONG
-template<> str *repr(__ss_int t);
-#endif
-template<> str *repr(int t);
-template<> str *repr(__ss_bool b);
-template<> str *repr(void *t);
-template<> str *repr(long unsigned int t);
-#ifdef WIN32
-template<> str *repr(size_t t);
-#endif
-
 /* range */
 
 class __xrange : public pyseq<__ss_int> {

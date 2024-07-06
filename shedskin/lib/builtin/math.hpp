@@ -3,6 +3,8 @@
 #ifndef SS_MATH_HPP
 #define SS_MATH_HPP
 
+#include "function.hpp"
+
 /* pow */
 
 inline __ss_float __power(__ss_int a, __ss_float b) { return pow(a,b); }
