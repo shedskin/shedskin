@@ -415,11 +415,8 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 template <class K, class V>
 using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
 
-
 template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
-
-
 
 class class_: public pyobj {
 public:
@@ -507,7 +504,6 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
-
 /* int */
 
 inline __ss_int __int() { return 0; }
@@ -553,8 +549,6 @@ str *__str(void *);
 str *__str();
 
 template<class ... Args> str *__add_strs(int n, Args ... args);
-
-
 
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
@@ -722,8 +716,6 @@ template<class T> T __seqiter<T>::__next__() {
         __throw_stop_iteration();
     return p->__getitem__(counter++);
 }
-
-
 
 template<class T> void __unpack_check(T t, int expected) {
     if(len(t) > (__ss_int)expected)
