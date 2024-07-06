@@ -6,7 +6,6 @@
 #include "str.hpp"
 #include "bytes.hpp"
 #include "file.hpp"
-#include "format.hpp"
 #include "math.hpp"
 
 /* sum */
@@ -582,7 +581,7 @@ template<class A> __ss_bool all(A *iter) {
 /* ord */
 
 static void __throw_ord_exc(size_t s) { /* improve inlining */
-    throw new TypeError(__mod6(new str("ord() expected a character, but string of length %d found"), 1, s));
+    throw new TypeError(__add_strs(3, new str("ord() expected a character, but string of length "), __str(s), new str(" found")));
 }
 
 inline __ss_int ord(str *s) {
