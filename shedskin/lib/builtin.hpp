@@ -302,83 +302,6 @@ public:
 #endif
 };
 
-template<class A, class B> class tuple2 : public pyobj {
-public:
-    A first;
-    B second;
-
-    tuple2();
-    tuple2(int n, A a, B b);
-    void __init2__(A a, B b);
-
-    A __getfirst__();
-    B __getsecond__();
-
-    str *__repr__();
-    __ss_int __len__();
-
-    __ss_bool __eq__(pyobj *p);
-    __ss_int __cmp__(pyobj *p);
-    long __hash__();
-
-    tuple2<A,B> *__copy__();
-    tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-#ifdef __SS_BIND
-    tuple2(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
-
-template<class T> class tuple2<T,T> : public pyseq<T> {
-public:
-    __GC_VECTOR(T) units;
-
-    tuple2();
-    template <class ... Args> tuple2(int count, Args ... args);
-    template <class U> tuple2(U *iter);
-    tuple2(list<T> *p);
-    tuple2(tuple2<T, T> *p);
-    tuple2(str *s);
-
-    void __init2__(T a, T b);
-
-    T __getfirst__();
-    T __getsecond__();
-
-    inline T __getfast__(__ss_int i);
-    inline T __getitem__(__ss_int i);
-
-    inline __ss_int __len__();
-
-    str *__repr__();
-
-    tuple2<T,T> *__add__(tuple2<T,T> *b);
-    tuple2<T,T> *__mul__(__ss_int b);
-
-    tuple2<T,T> *__iadd__(tuple2<T,T> *b);
-    tuple2<T,T> *__imul__(__ss_int n);
-
-    __ss_bool __contains__(T a);
-    __ss_bool __eq__(pyobj *p);
-
-    tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    long __hash__();
-
-    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
-    tuple2<T,T> *__copy__();
-
-    /* iteration */
-
-    inline bool for_in_has_next(size_t i);
-    inline T for_in_next(size_t &i);
-
-#ifdef __SS_BIND
-    tuple2(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
 
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
@@ -550,6 +473,21 @@ str *__str();
 
 template<class ... Args> str *__add_strs(int n, Args ... args);
 
+/* repr */
+
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
+template<> str *repr(__ss_float t);
+#ifdef __SS_LONG
+template<> str *repr(__ss_int t);
+#endif
+template<> str *repr(int t);
+template<> str *repr(__ss_bool b);
+template<> str *repr(void *t);
+template<> str *repr(long unsigned int t);
+#ifdef WIN32
+template<> str *repr(size_t t);
+#endif
+
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
 #else
@@ -602,15 +540,15 @@ private:
 template<class T> T __zero() { return 0; }
 template<> inline __ss_bool __zero<__ss_bool>() { return False; }
 
-#include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
+#include "builtin/function.hpp"
+#include "builtin/list.hpp"
 #include "builtin/bytes.hpp"
 #include "builtin/math.hpp"
 #include "builtin/dict.hpp"
 #include "builtin/set.hpp"
 #include "builtin/file.hpp"
 #include "builtin/format.hpp"
-#include "builtin/function.hpp"
 #include "builtin/complex.hpp"
 #include "builtin/copy.hpp"
 

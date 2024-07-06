@@ -1,7 +1,85 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* tuple2 methods */
+#ifndef SS_TUPLE_HPP
+#define SS_TUPLE_HPP
 
+template<class A, class B> class tuple2 : public pyobj {
+public:
+    A first;
+    B second;
+
+    tuple2();
+    tuple2(int n, A a, B b);
+    void __init2__(A a, B b);
+
+    A __getfirst__();
+    B __getsecond__();
+
+    str *__repr__();
+    __ss_int __len__();
+
+    __ss_bool __eq__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
+    long __hash__();
+
+    tuple2<A,B> *__copy__();
+    tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+#ifdef __SS_BIND
+    tuple2(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
+
+template<class T> class tuple2<T,T> : public pyseq<T> {
+public:
+    __GC_VECTOR(T) units;
+
+    tuple2();
+    template <class ... Args> tuple2(int count, Args ... args);
+    template <class U> tuple2(U *iter);
+    tuple2(list<T> *p);
+    tuple2(tuple2<T, T> *p);
+    tuple2(str *s);
+
+    void __init2__(T a, T b);
+
+    T __getfirst__();
+    T __getsecond__();
+
+    inline T __getfast__(__ss_int i);
+    inline T __getitem__(__ss_int i);
+
+    inline __ss_int __len__();
+
+    str *__repr__();
+
+    tuple2<T,T> *__add__(tuple2<T,T> *b);
+    tuple2<T,T> *__mul__(__ss_int b);
+
+    tuple2<T,T> *__iadd__(tuple2<T,T> *b);
+    tuple2<T,T> *__imul__(__ss_int n);
+
+    __ss_bool __contains__(T a);
+    __ss_bool __eq__(pyobj *p);
+
+    tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+
+    long __hash__();
+
+    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
+    tuple2<T,T> *__copy__();
+
+    /* iteration */
+
+    inline bool for_in_has_next(size_t i);
+    inline T for_in_next(size_t &i);
+
+#ifdef __SS_BIND
+    tuple2(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
 template<class T> void tuple2<T, T>::__init2__(T a, T b) {
     units.push_back(a);
     units.push_back(b);
@@ -255,4 +333,6 @@ template<class A, class B> PyObject *tuple2<A, B>::__to_py__() {
     PyTuple_SetItem(p, 1, __to_py(second));
     return p;
 }
+#endif
+
 #endif
