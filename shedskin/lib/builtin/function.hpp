@@ -1,5 +1,14 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifndef SS_FUNCTION_HPP
+#define SS_FUNCTION_HPP
+
+#include "str.hpp"
+#include "bytes.hpp"
+#include "file.hpp"
+#include "format.hpp"
+#include "math.hpp"
+
 /* sum */
 
 template<class A> struct __sumtype1 { typedef A type; };
@@ -718,3 +727,15 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
 template <class ... Args> void print(Args ... args) {
     print_(0, False, NULL, NULL, NULL, args...);
 }
+
+/* abs */
+
+template<class T> inline T __abs(T t) { return t->__abs__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
+#endif
+template<> inline int __abs(int a) { return a<0?-a:a; }
+template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
+inline int __abs(__ss_bool b) { return b.value; }
+
+#endif

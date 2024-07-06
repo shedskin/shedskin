@@ -2,15 +2,14 @@
 
 /* printf-style string formatting */
 
+#ifndef SS_FORMAT_HPP
+#define SS_FORMAT_HPP
+
 #if defined(_WIN32) || defined(WIN32) || defined(__sun)
 int asprintf(char **ret, const char *format, ...);
 #endif
 
 str *__escape_bytes(bytes *t);
-
-extern str *nl;
-extern str *sp;
-extern str *sep;
 
 template <class T> void *__mod_dict_arg(T, str *) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
@@ -296,3 +295,5 @@ template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
 template<class A, class B> bytes *__modtuple(bytes *fmt, tuple2<A,B> *t) {
     return __mod6(fmt, 2, t->__getfirst__(), t->__getsecond__());
 }
+
+#endif

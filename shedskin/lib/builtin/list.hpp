@@ -1,4 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+
+#include "function.hpp"
 
 /* list methods */
 

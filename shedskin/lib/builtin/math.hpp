@@ -1,4 +1,7 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+
+#ifndef SS_MATH_HPP
+#define SS_MATH_HPP
 
 /* pow */
 
@@ -183,3 +186,5 @@ namespace __int___ {
 #endif
     }
 }
+
+#endif
