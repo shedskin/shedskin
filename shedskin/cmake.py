@@ -25,12 +25,10 @@ import subprocess
 import sys
 import textwrap
 import time
+from typing import Optional, Union
 
 from . import config
-
 from .utils import CYAN, GREEN, RED, RESET, WHITE
-
-from typing import Optional, Union
 
 # type alias
 Pathlike = Union[pathlib.Path, str]
@@ -804,7 +802,7 @@ class CMakeBuilder:
 
             if self.options.pytest:
                 try:
-                    import pytest # noqa: F401
+                    import pytest  # noqa: F401
 
                     os.system("pytest")
                 except ImportError:
