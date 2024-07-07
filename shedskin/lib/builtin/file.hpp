@@ -100,4 +100,9 @@ public:
     }
 };
 
+file *open(str *name, str *flags = 0);
+file *open(bytes *name, str *flags = 0);
+file_binary *open_binary(str *name, str *flags = 0);
+file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
+
 #endif

@@ -7,6 +7,14 @@
 #include "bytes.hpp"
 #include "file.hpp"
 #include "math.hpp"
+#include "bool.hpp"
+#include "complex.hpp"
+
+/* 'zero' value for type */
+
+template<class T> T __zero() { return 0; }
+template<> inline __ss_bool __zero<__ss_bool>() { return False; }
+template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 /* sum */
 

@@ -313,10 +313,6 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
-file *open(str *name, str *flags = 0);
-file *open(bytes *name, str *flags = 0);
-file_binary *open_binary(str *name, str *flags = 0);
-file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
 str *input(str *msg = 0);
 
 __xrange *range(__ss_int b);
@@ -427,20 +423,18 @@ template<> str *repr(long unsigned int t);
 template<> str *repr(size_t t);
 #endif
 
-#ifndef __SS_NOASSERT
-#define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
-#else
-#define ASSERT(x, y)
-#endif
-
 /* len */
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
 template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.size(); } /* XXX more general solution? */
 
-#include "builtin/bool.hpp"
-#include "builtin/exception.hpp"
-#include "builtin/extmod.hpp"
+/* assert */
+
+#ifndef __SS_NOASSERT
+#define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
+#else
+#define ASSERT(x, y)
+#endif
 
 /* with statement */
 
@@ -474,11 +468,9 @@ private:
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
 #define __NOT(x) (__mbool(!(x)))
 
-/* 'zero' value for type */
-
-template<class T> T __zero() { return 0; }
-template<> inline __ss_bool __zero<__ss_bool>() { return False; }
-
+#include "builtin/bool.hpp"
+#include "builtin/exception.hpp"
+#include "builtin/extmod.hpp"
 #include "builtin/tuple.hpp"
 #include "builtin/function.hpp"
 #include "builtin/list.hpp"
@@ -490,8 +482,6 @@ template<> inline __ss_bool __zero<__ss_bool>() { return False; }
 #include "builtin/format.hpp"
 #include "builtin/complex.hpp"
 #include "builtin/copy.hpp"
-
-template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 /* pyiter methods */
 
