@@ -341,12 +341,6 @@ PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
 }
 #endif
 
-/* isinstance */
-
-__ss_bool isinstance(pyobj *p, class_ *cl) {
-    return __mbool(p->__class__ == cl);
-}
-
 /* slicing helper */
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {

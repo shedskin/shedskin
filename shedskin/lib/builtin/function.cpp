@@ -205,7 +205,15 @@ template<> str *repr(long unsigned int) { return new str("?"); } /* ? */
 template<> str *repr(size_t i) { return repr((__ss_int)i); }
 #endif
 
+/* str */
+
 str *__str(void *) { return new str("None"); }
+
+/* isinstance */
+
+__ss_bool isinstance(pyobj *p, class_ *cl) {
+    return __mbool(p->__class__ == cl);
+}
 
 /* get class pointer */
 
