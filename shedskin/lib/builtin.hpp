@@ -79,8 +79,6 @@ class pyobj;
 class class_;
 class str;
 class bytes;
-class file;
-class file_binary;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -104,6 +102,7 @@ using tuple = tuple2<T, T>;
 
 extern __ss_bool True;
 extern __ss_bool False;
+
 /* externs */
 
 extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
@@ -112,8 +111,6 @@ extern __GC_VECTOR(str *) __char_cache;
 
 extern list<str *> *__join_cache;
 extern list<bytes *> *__join_cache_bin;
-
-extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 extern str *nl;
 extern str *sp;
@@ -198,10 +195,6 @@ public:
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 void __throw_index_out_of_range();
-void __throw_range_step_zero();
-void __throw_set_changed();
-void __throw_dict_changed();
-void __throw_slice_step_zero();
 void __throw_stop_iteration();
 
 #ifdef __GNUC__
@@ -272,8 +265,6 @@ public:
     T __next__();
 };
 
-/* builtin function declarations */
-
 template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
@@ -296,82 +287,9 @@ void __ss_exit(int code=0);
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
-template<class T> inline int __is_none(T *t) { return !t; }
-template<class T> inline int __is_none(T) { return 0; }
-
-/* int */
-
-inline __ss_int __int() { return 0; }
-__ss_int __int(str *s, __ss_int base=10);
-__ss_int __int(bytes *s, __ss_int base=10);
-
-template<class T> inline __ss_int __int(T t) { return t->__int__(); }
-#ifdef __SS_LONG
-template<> inline __ss_int __int(__ss_int i) { return i; }
-#endif
-template<> inline __ss_int __int(int i) { return i; }
-template<> inline __ss_int __int(str *s) { return __int(s, 10); }
-template<> inline __ss_int __int(__ss_bool b) { return b.value; }
-template<> inline __ss_int __int(__ss_float d) { return (__ss_int)d; }
-
-/* float */
-
-inline __ss_float __float() { return 0; }
-template<class T> inline __ss_float __float(T t) { return t->__float__(); }
-#ifdef __SS_LONG
-template<> inline __ss_float __float(__ss_int p) { return p; }
-#endif
-template<> inline __ss_float __float(int p) { return p; }
-template<> inline __ss_float __float(__ss_bool b) { return b.value; }
-template<> inline __ss_float __float(__ss_float d) { return d; }
-template<> __ss_float __float(str *s);
-
-/* str */
-
-template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
-template<> str *__str(__ss_float t);
-template<> str *__str(long unsigned int t); /* ? */
-#ifdef WIN32
-template<> str *__str(size_t t); /* ? */
-#endif
-template<> str *__str(long int t); /* pure None type */
-#ifdef __SS_LONG
-str *__str(__ss_int t, __ss_int base=10);
-#endif
-str *__str(int t, int base=10);
-str *__str(__ss_bool b);
-str *__str(void *);
-str *__str();
-
-/* abs */
-
-template<class T> inline T __abs(T t) { return t->__abs__(); }
-#ifdef __SS_LONG
-template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
-#endif
-template<> inline int __abs(int a) { return a<0?-a:a; }
-template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
-inline int __abs(__ss_bool b) { return b.value; }
-
-/* repr */
-
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-template<> str *repr(__ss_float t);
-#ifdef __SS_LONG
-template<> str *repr(__ss_int t);
-#endif
-template<> str *repr(int t);
-template<> str *repr(__ss_bool b);
-template<> str *repr(void *t);
-template<> str *repr(long unsigned int t);
-#ifdef WIN32
-template<> str *repr(size_t t);
-#endif
-
-/* len */
-
-template<class T> inline __ss_int len(T x) { return x->__len__(); }
-template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.size(); } /* XXX more general solution? */
+#define SS_DECL
+#include "builtin/function.hpp"
+#undef SS_DECL
 
 /* assert */
 

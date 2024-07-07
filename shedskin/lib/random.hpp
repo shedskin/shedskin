@@ -252,6 +252,9 @@ template <class A> A Random::choice(pyseq<A> *seq) {
     return seq->__getitem__(__int((this->random()*len(seq))));
 }
 
+template<class T> inline int __is_none(T *t) { return !t; }
+template<class T> inline int __is_none(T) { return 0; }
+
 template <class A> void *Random::seed(A a) {
     /**
     Initialize the random number generator with a single seed number.
