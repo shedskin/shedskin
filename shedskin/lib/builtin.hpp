@@ -91,30 +91,6 @@ template <class T> class set;
 template <class K, class V> class dict;
 
 template <class T> class __iter;
-template <class T> class __seqiter;
-template <class T> class __setiter;
-template <class T, class U> class __dictiterkeys;
-template <class T, class U> class __dictitervalues;
-template <class T, class U> class __dictiteritems;
-class __fileiter;
-class __filebiniter;
-class __xrange;
-class __rangeiter;
-
-class BaseException;
-class Exception;
-class AssertionError;
-class KeyError;
-class ValueError;
-class IndexError;
-class NotImplementedError;
-class FileNotFoundError;
-class OSError;
-class SyntaxError;
-class StopIteration;
-class TypeError;
-class RuntimeError;
-class OverflowError;
 
 template<class T>
 using tuple = tuple2<T, T>;
@@ -302,9 +278,6 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
-str *input(str *msg = 0);
-
-
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 
@@ -369,8 +342,6 @@ str *__str(int t, int base=10);
 str *__str(__ss_bool b);
 str *__str(void *);
 str *__str();
-
-template<class ... Args> str *__add_strs(int n, Args ... args);
 
 /* abs */
 

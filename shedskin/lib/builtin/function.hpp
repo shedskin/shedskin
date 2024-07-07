@@ -231,6 +231,28 @@ template <class V, class W> list<str *> *sorted(str *x, V cmp, W key, __ss_int r
     return l;
 }
 
+/* range */
+
+class __xrange : public pyseq<__ss_int> {
+public:
+    __ss_int a, b, s; // TODO remove
+    __ss_int start, stop, step;
+
+    __xrange(__ss_int a, __ss_int b, __ss_int s);
+
+    __ss_int count(__ss_int value);
+    __ss_int index(__ss_int value);
+
+    __iter<__ss_int> *__iter__();
+    __ss_int __len__();
+    __ss_int __getitem__(__ss_int i);
+    __ss_bool __contains__(__ss_int i);
+    str *__repr__();
+};
+
+__xrange *range(__ss_int b);
+__xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
+
 /* reversed */
 
 template<class A> class __ss_reverse : public __iter<A> {
@@ -734,28 +756,6 @@ template <class ... Args> void print(Args ... args) {
     print_(0, False, NULL, NULL, NULL, args...);
 }
 
-/* range */
-
-class __xrange : public pyseq<__ss_int> {
-public:
-    __ss_int a, b, s; // TODO remove
-    __ss_int start, stop, step;
-
-    __xrange(__ss_int a, __ss_int b, __ss_int s);
-
-    __ss_int count(__ss_int value);
-    __ss_int index(__ss_int value);
-
-    __iter<__ss_int> *__iter__();
-    __ss_int __len__();
-    __ss_int __getitem__(__ss_int i);
-    __ss_bool __contains__(__ss_int i);
-    str *__repr__();
-};
-
-__xrange *range(__ss_int b);
-__xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
-
 /* isinstance */
 
 __ss_bool isinstance(pyobj *p, class_ *cl);
@@ -772,5 +772,9 @@ inline __ss_float ___round(__ss_float a) {
 inline __ss_float ___round(__ss_float a, int n) {
     return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
 }
+
+/* input */
+
+str *input(str *msg = 0);
 
 #endif
