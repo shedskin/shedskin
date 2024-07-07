@@ -26,7 +26,7 @@ class Shedskin:
         if 'name' in options:
             self.module_name = self.get_name(options.name)
 
-    def configure_log(self):
+    def configure_log(self) -> None:
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
         console.setFormatter(log.ShedskinFormatter())
@@ -38,7 +38,7 @@ class Shedskin:
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
 
-    def get_name(self, module_path: str):
+    def get_name(self, module_path: str) -> str:
         """Returns name of module to be translated.
 
         Also sets current working dir for nested targets
@@ -68,7 +68,7 @@ class Shedskin:
         self.gx.module_path = path.absolute()
         return path.stem
 
-    def configure(self, args: argparse.Namespace):
+    def configure(self, args: argparse.Namespace) -> 'config.GlobalInfo':
         # print(args)
         gx = config.GlobalInfo(args)
 
@@ -159,10 +159,10 @@ class Shedskin:
 
         return gx
 
-    def analyze(self):
+    def analyze(self) -> None:
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
-    def translate(self):
+    def translate(self) -> None:
 #        self.log.warning('translate option (using make) is deprecated. please use build option.')
 
         t0 = time.time()
@@ -171,12 +171,12 @@ class Shedskin:
         error.print_errors()
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
-    def build(self):
+    def build(self) -> None:
         cmake.generate_cmakefile(self.gx)
         builder = cmake.CMakeBuilder(self.gx.options)
         builder.build()
 
-    def test(self):
+    def test(self) -> None:
         if self.gx.options.run_errs:
             testrunner = cmake.TestRunner(self.gx.options)
             testrunner.run_error_tests()
@@ -184,7 +184,7 @@ class Shedskin:
             testrunner = cmake.TestRunner(self.gx.options)
             testrunner.run_tests()
 
-    def run(self):
+    def run(self) -> None:
         cwd = pathlib.Path.cwd()
         p = pathlib.Path(self.gx.options.name)
         if len(p.parts) == 1:
@@ -401,7 +401,7 @@ class Shedskin:
             ss.run()
 
 
-def pkg_path():
+def pkg_path() -> None:
     """used by cmake to get package path automatically"""
     cmake.pkg_path()
 

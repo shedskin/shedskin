@@ -42,7 +42,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional, List, Tuple
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any
 if TYPE_CHECKING:
     from . import config
 
@@ -1331,7 +1331,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.register_temp_var(var, func)
         return var
 
-    def temp_var2(self, node, source, func):
+    def temp_var2(self, node: Any, source: Any, func: 'python.Function'):
         tvar = self.temp_var(node, func)
         self.add_constraint((source, infer.inode(self.gx, tvar)), func)
         return tvar
@@ -1531,7 +1531,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     (node, 7), infer.inode(self.gx, node.iter.func.value), func
                 )
 
-    def bool_test_add(self, node):
+    def bool_test_add(self, node: ast.AST) -> None:
         if (
             isinstance(node, ast.BoolOp)
             or isinstance(node, ast.UnaryOp)

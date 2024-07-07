@@ -24,7 +24,7 @@ OVERLOAD = [
 ] + OVERLOAD_SINGLE
 
 
-def clname(cl):
+def clname(cl: 'python.Class') -> str:
     """class name normalizer
 
     :param      cl:   class object
@@ -41,7 +41,7 @@ class ExtensionModule:
     This class describes an extension module generator
     """
 
-    def __init__(self, gx, gv):
+    def __init__(self, gx: 'config.GlobalInfo', gv: 'cpp.GenerateVisitor'):
         self.gx = gx
         self.gv = gv
 
@@ -179,7 +179,7 @@ class ExtensionModule:
                     )
         return supported
 
-    def has_method(self, cl, name):  # XXX shared.py
+    def has_method(self, cl: 'python.Class', name: str) -> bool:  # XXX shared.py
         """
         Determines if method.
 
@@ -198,7 +198,7 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])
         )
 
-    def do_add_globals(self, classes, ssmod):
+    def do_add_globals(self, classes, ssmod) -> None:
 
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
