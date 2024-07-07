@@ -1910,6 +1910,7 @@ def default_var(
 ) -> 'python.Variable':
     if parent:
         mv = parent.mv
+    assert mv
     var = python.lookup_var(name, parent, mv, local=True)
     if not var:
         var = python.Variable(name, parent)
