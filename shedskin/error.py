@@ -7,7 +7,7 @@ import ast
 import logging
 import sys
 
-from typing import Optional
+from typing import Optional, Union
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)
