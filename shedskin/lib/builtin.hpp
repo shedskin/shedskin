@@ -195,6 +195,7 @@ public:
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 void __throw_index_out_of_range();
+void __throw_range_step_zero();
 void __throw_stop_iteration();
 
 #ifdef __GNUC__
