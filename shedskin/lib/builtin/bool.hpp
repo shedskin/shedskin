@@ -1,5 +1,21 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifdef SS_DECL
+
+class __ss_bool {
+public:
+    uint8_t value;
+    inline __ss_int operator+(__ss_bool b);
+    inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator&(__ss_bool b);
+    inline __ss_bool operator|(__ss_bool b);
+    inline __ss_bool operator^(__ss_bool b);
+    inline bool operator!();
+    inline operator bool();
+};
+
+#else
+
 #ifndef SS_BOOL_HPP
 #define SS_BOOL_HPP
 
@@ -30,4 +46,5 @@ template<> inline __ss_bool ___bool(void *) { return False; }
 
 template<class T> inline __ss_bool ___bool(list<T> *x) { return __mbool(x && (x->units.size() != 0)); } /* XXX more general solution */
 
+#endif
 #endif

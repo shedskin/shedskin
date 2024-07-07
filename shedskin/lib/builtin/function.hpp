@@ -7,7 +7,6 @@
 #include "bytes.hpp"
 #include "file.hpp"
 #include "math.hpp"
-#include "bool.hpp"
 #include "complex.hpp"
 
 /* 'zero' value for type */
