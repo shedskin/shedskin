@@ -315,24 +315,9 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 
 str *input(str *msg = 0);
 
-__xrange *range(__ss_int b);
-__xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
-
-static inline __ss_float __portableround(__ss_float x) {
-    if(x<0) return ceil(x-0.5);
-    return floor(x+0.5);
-}
-inline __ss_float ___round(__ss_float a) {
-    return __portableround(a);
-}
-inline __ss_float ___round(__ss_float a, int n) {
-    return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
-}
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
-
-__ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* internal use */
 
@@ -565,6 +550,7 @@ template<class T> T __iter<T>::__get_next() {
     }
     return __result;
 }
+
 /* iterators */
 
 template<class T> str *__iter<T>::__repr__() {

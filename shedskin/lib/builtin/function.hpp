@@ -754,4 +754,24 @@ public:
     str *__repr__();
 };
 
+__xrange *range(__ss_int b);
+__xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
+
+/* isinstance */
+
+__ss_bool isinstance(pyobj *p, class_ *cl);
+
+/* round */
+
+static inline __ss_float __portableround(__ss_float x) {
+    if(x<0) return ceil(x-0.5);
+    return floor(x+0.5);
+}
+inline __ss_float ___round(__ss_float a) {
+    return __portableround(a);
+}
+inline __ss_float ___round(__ss_float a, int n) {
+    return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
+}
+
 #endif
