@@ -7,7 +7,11 @@ import ast
 import logging
 import sys
 
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
+if TYPE_CHECKING:
+    from . import config
+    from . import graph
+    from . import python
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)

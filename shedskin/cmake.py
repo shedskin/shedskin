@@ -802,7 +802,7 @@ class CMakeBuilder:
 
             if self.options.pytest:
                 try:
-                    import pytest  # noqa: F401
+                    import pytest  # type: ignore
 
                     os.system("pytest")
                 except ImportError:
