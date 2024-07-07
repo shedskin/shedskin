@@ -11,6 +11,8 @@ struct __file_options {
     __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false) {}
 };
 
+class file_binary;
+
 class file : public __iter<str *> {
 public:
     str *name;
@@ -104,5 +106,7 @@ file *open(str *name, str *flags = 0);
 file *open(bytes *name, str *flags = 0);
 file_binary *open_binary(str *name, str *flags = 0);
 file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
+
+extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 #endif

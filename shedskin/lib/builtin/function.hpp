@@ -1,5 +1,83 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifdef SS_DECL
+
+/* int */
+
+inline __ss_int __int() { return 0; }
+__ss_int __int(str *s, __ss_int base=10);
+__ss_int __int(bytes *s, __ss_int base=10);
+
+template<class T> inline __ss_int __int(T t) { return t->__int__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __int(__ss_int i) { return i; }
+#endif
+template<> inline __ss_int __int(int i) { return i; }
+template<> inline __ss_int __int(str *s) { return __int(s, 10); }
+template<> inline __ss_int __int(__ss_bool b) { return b.value; }
+template<> inline __ss_int __int(__ss_float d) { return (__ss_int)d; }
+
+/* float */
+
+inline __ss_float __float() { return 0; }
+template<class T> inline __ss_float __float(T t) { return t->__float__(); }
+#ifdef __SS_LONG
+template<> inline __ss_float __float(__ss_int p) { return p; }
+#endif
+template<> inline __ss_float __float(int p) { return p; }
+template<> inline __ss_float __float(__ss_bool b) { return b.value; }
+template<> inline __ss_float __float(__ss_float d) { return d; }
+template<> __ss_float __float(str *s);
+
+/* str */
+
+template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
+template<> str *__str(__ss_float t);
+template<> str *__str(long unsigned int t); /* ? */
+#ifdef WIN32
+template<> str *__str(size_t t); /* ? */
+#endif
+template<> str *__str(long int t); /* pure None type */
+#ifdef __SS_LONG
+str *__str(__ss_int t, __ss_int base=10);
+#endif
+str *__str(int t, int base=10);
+str *__str(__ss_bool b);
+str *__str(void *);
+str *__str();
+
+/* abs */
+
+template<class T> inline T __abs(T t) { return t->__abs__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
+#endif
+template<> inline int __abs(int a) { return a<0?-a:a; }
+template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
+inline int __abs(__ss_bool b) { return b.value; }
+
+/* repr */
+
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
+template<> str *repr(__ss_float t);
+#ifdef __SS_LONG
+template<> str *repr(__ss_int t);
+#endif
+template<> str *repr(int t);
+template<> str *repr(__ss_bool b);
+template<> str *repr(void *t);
+template<> str *repr(long unsigned int t);
+#ifdef WIN32
+template<> str *repr(size_t t);
+#endif
+
+/* len */
+
+template<class T> inline __ss_int len(T x) { return x->__len__(); }
+template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.size(); } /* XXX more general solution? */
+
+#else
+
 #ifndef SS_FUNCTION_HPP
 #define SS_FUNCTION_HPP
 
@@ -777,4 +855,5 @@ inline __ss_float ___round(__ss_float a, int n) {
 
 str *input(str *msg = 0);
 
+#endif
 #endif
