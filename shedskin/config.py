@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Optional, Any, Tuple, List
+from typing import TYPE_CHECKING, Optional, Any, Tuple, List, Union
 if TYPE_CHECKING:
     import ast
     from . import infer
@@ -64,7 +64,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix: str = "__ss_"
         self.list_types: dict[Tuple[int, ast.AST], int] = {}
-        self.loopstack: List[ast.AST] = []  # track nested loops
+        self.loopstack: List[Union[ast.While, ast.For]] = []  # track nested loops
 #        self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
         self.from_module: dict[ast.AST, 'python.Module'] = {}
@@ -110,7 +110,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_limited: bool = False
         self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
-    def init_directories(self):
+    def init_directories(self) -> None:
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)
         shedskin_directory = os.sep.join(abspath.split(os.sep)[:-1])
         for dirname in sys.path:

@@ -740,7 +740,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("END_WITH")
 
-    def visit_While(self, node, func=None):
+    def visit_While(self, node: ast.While, func: Optional['python.Function']=None) -> None:
         self.print()
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node.orelse[0]])
@@ -2247,7 +2247,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def library_func(self, funcs, modname, clname, funcname):
+    def library_func(
+        self,
+        funcs: List['python.Function'],
+        modname: str,
+        clname: Optional[str],
+        funcname: str,
+    ) -> bool:
         for func in funcs:
             if not func.mv.module.builtin or func.mv.module.ident != modname:
                 continue
@@ -2255,6 +2261,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if not func.parent or func.parent.ident != clname:
                     continue
             return func.ident == funcname
+        return False
 
     def add_args_arg(self, node, funcs):
         """append argument that describes which formals are actually filled in"""

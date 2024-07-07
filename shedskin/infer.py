@@ -594,7 +594,7 @@ def in_out(a, b):
     b.in_.add(a)
 
 
-def add_to_worklist(worklist, node):  # XXX to infer.py
+def add_to_worklist(worklist: Optional[List[CNode]], node: CNode) -> None:  # XXX to infer.py
     if worklist is not None and not node.in_list:
         worklist.append(node)
         node.in_list = 1
@@ -1901,8 +1901,13 @@ def register_temp_var(var, parent):
 
 
 def default_var(
-    gx: "config.GlobalInfo", name, parent, worklist=None, mv=None, exc_name=False
-):
+    gx: "config.GlobalInfo",
+    name: str,
+    parent,
+    worklist: Optional[List[CNode]]=None,
+    mv: Optional['graph.ModuleVisitor']=None,
+    exc_name: bool=False
+) -> 'python.Variable':
     if parent:
         mv = parent.mv
     var = python.lookup_var(name, parent, mv, local=True)
