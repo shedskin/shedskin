@@ -213,24 +213,13 @@ public:
     virtual R __call__(A a, B b) = 0;
 };
 
-class __ss_bool {
-public:
-    uint8_t value;
-    inline __ss_int operator+(__ss_bool b);
-    inline __ss_bool operator==(__ss_bool b);
-    inline __ss_bool operator&(__ss_bool b);
-    inline __ss_bool operator|(__ss_bool b);
-    inline __ss_bool operator^(__ss_bool b);
-    inline bool operator!();
-    inline operator bool();
-};
-
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
-
-// TODO better approach to split declarations/definitions?
+// TODO better approach to split declarations/template definitions?
 #define SS_DECL
+#include "builtin/bool.hpp"
 #include "builtin/list.hpp"
 #undef SS_DECL
+
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
