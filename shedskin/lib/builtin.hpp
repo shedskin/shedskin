@@ -20,10 +20,8 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <iostream>
-#include <functional>
 #include <fstream>
 #include <sstream>
-#include <cstdarg>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
