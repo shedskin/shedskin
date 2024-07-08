@@ -68,12 +68,12 @@ class CPPNamer:
 
         return self.nokeywords(name)
 
-    def name_variable(self, var: python.Variable):
+    def name_variable(self, var: python.Variable) -> str:
         if var.masks_global():
             return "_" + var.name
         return self.name_str(var.name)
 
-    def name_function(self, func: python.Function):
+    def name_function(self, func: python.Function) -> str:
         return self.name_str(func.ident)
 
     def name_class(self, obj: python.Class) -> str:
@@ -2298,7 +2298,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Pass(self, node, func=None):
         pass
 
-    def visit_Call(self, node, func=None, argtypes=None):
+    def visit_Call(self, node:ast.Call, func:Optional['python.Function']=None, argtypes=None) -> None:
         (
             objexpr,
             ident,

@@ -269,7 +269,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # nrint 'listtype', node, self.gx.list_types[count, child]
         return self.gx.list_types[count, child]
 
-    def instance(self, node, cl, func=None):
+    def instance(self, node:ast.AST, cl:'python.Class', func:Optional['python.Function']=None) -> None:
         if (node, 0, 0) in self.gx.cnode:  # XXX to create_node() func
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -383,7 +383,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         fakechildnode.callfuncs.append(fakefunc)
 
     # --- add regular constraint to function
-    def add_constraint(self, constraint, func):
+    def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: 'python.Function'):
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
         while isinstance(func, python.Function) and func.listcomp:
