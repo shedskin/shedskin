@@ -583,7 +583,7 @@ def inode(gx: "config.GlobalInfo", node):
     return gx.cnode[node, 0, 0]
 
 
-def add_constraint(gx: "config.GlobalInfo", a, b, worklist=None):
+def add_constraint(gx: "config.GlobalInfo", a: CNode, b: CNode, worklist:Optional[List[CNode]]=None) -> None:
     gx.constraints.add((a, b))
     in_out(a, b)
     add_to_worklist(worklist, a)
