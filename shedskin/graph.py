@@ -2340,7 +2340,6 @@ def parse_module(name, gx: 'config.GlobalInfo', parent=None, node=None):
     module.mv = mv = ModuleVisitor(module, gx)
     setmv(mv)
 
-    mv.visitor = mv
     mv.visit(module.ast)
     module.import_order = gx.import_order
     gx.import_order += 1

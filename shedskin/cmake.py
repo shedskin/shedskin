@@ -39,7 +39,7 @@ def get_pkg_path() -> pathlib.Path:
     assert _pkg_path.name == "shedskin"
     return _pkg_path
 
-def pkg_path():
+def pkg_path() -> None:
     """used by cmake to get package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
 
@@ -59,7 +59,7 @@ def get_user_cache_dir():
     else:
         raise SystemExit(f"{system} os not supported")
 
-def user_cache_dir():
+def user_cache_dir() -> None:
     """used by CMakeLists.txt execute process"""
     sys.stdout.write(str(get_user_cache_dir()))
 
@@ -122,7 +122,7 @@ class ConanDependencyManager:
         self.bdwgc = ConanBDWGC()
         self.pcre = ConanPCRE()
 
-    def generate_conanfile(self):
+    def generate_conanfile(self) -> None:
         """generate conanfile file"""
         bdwgc = self.bdwgc
         pcre = self.pcre
@@ -153,7 +153,7 @@ class ConanDependencyManager:
         if not conanfile.exists():
             conanfile.write_text(content)
 
-    def install(self):
+    def install(self) -> None:
         """install conan dependencies"""
         os.system(f"cd {self.build_dir} && conan install .. --build=missing")
 
@@ -230,7 +230,7 @@ class ShedskinDependencyManager:
         targets = [libgc, libgccpp, libpcre, gc_h, pcre_h]
         return all(t.exists() for t in targets)
 
-    def install_all(self):
+    def install_all(self) -> None:
         """install all dependencies"""
         if not self.targets_exist():
             self.install_bdwgc()
@@ -256,7 +256,7 @@ class ShedskinDependencyManager:
     #     self.cmake_build(libatomic_build)
     #     self.cmake_install(libatomic_build)
 
-    def install_bdwgc(self):
+    def install_bdwgc(self) -> None:
         """download / build / install bdwgc"""
         # if platform.system() == "Windows":
         #     self.install_libatomics_ops()
@@ -317,7 +317,7 @@ class ShedskinDependencyManager:
     #         self.cmake_build(pcre_build)
     #         self.cmake_install(pcre_build)
 
-    def install_pcre(self):
+    def install_pcre(self) -> None:
         """download / build / install pcre"""
         pcre_repo = "https://github.com/luvit/pcre.git"
         pcre_src = self.src_dir / 'pcre'
@@ -487,7 +487,7 @@ def get_cmakefile_template(**kwds):
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
-def check_cmake_availability():
+def check_cmake_availability() -> None:
     """check if cmake executable is available in path"""
     if not bool(shutil.which('cmake')):
         raise Exception("cmake not available in path")
@@ -657,11 +657,11 @@ class CMakeBuilder:
         os.chdir("..")
         return failures
 
-    def rm_build(self):
+    def rm_build(self) -> None:
         """remove build directory"""
         shutil.rmtree(self.build_dir)
 
-    def mkdir_build(self):
+    def mkdir_build(self) -> None:
         """create build directory"""
         os.makedirs(self.build_dir, exist_ok=True)
 
@@ -694,11 +694,11 @@ class CMakeBuilder:
         self.log.info(tst_cmd)
         assert os.system(tst_cmd) == 0
 
-    def run_tests(self):
+    def run_tests(self) -> None:
         """run tests as a test runner"""
         self.process(run_tests=True)
 
-    def build(self):
+    def build(self) -> None:
         """build as a builder"""
         self.process(run_tests=False)
 
@@ -834,7 +834,7 @@ class CMakeBuilder:
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
         print(f"Total time: {elapsed_time}\n")
 
-    def run_error_tests(self):
+    def run_error_tests(self) -> None:
         """run error tests"""
         start_time = time.time()
 

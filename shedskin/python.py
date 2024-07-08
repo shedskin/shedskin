@@ -312,7 +312,7 @@ class Variable:
 def clear_block(m):
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
-def parse_file(name: str):
+def parse_file(name: pathlib.Path):
     data = importlib.util.decode_source(open(name, 'rb').read())
 
     # Convert block comments into strings which will be duely ignored.
