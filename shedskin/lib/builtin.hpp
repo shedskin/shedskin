@@ -114,7 +114,7 @@ extern list<bytes *> *__join_cache_bin;
 extern str *nl;
 extern str *sp;
 
-/* class declarations */
+/* root object class */
 
 class pyobj : public gc {
 public:
@@ -145,6 +145,8 @@ public:
     static const bool is_pyseq = false;
 };
 
+/* abstract iterable class */
+
 template <class T> class pyiter : public pyobj {
 public:
     virtual __iter<T> *__iter__() = 0;
@@ -157,6 +159,8 @@ public:
     inline bool for_in_has_next(__iter<T> *iter);
     inline T for_in_next(__iter<T> *iter);
 };
+
+/* abstract sequence class */
 
 template <class T> class pyseq : public pyiter<T> {
 public:
@@ -444,6 +448,8 @@ template<class T> T __seqiter<T>::__next__() {
         __throw_stop_iteration();
     return p->__getitem__(counter++);
 }
+
+/* tuple unpacking */
 
 template<class T> void __unpack_check(T t, int expected) {
     if(len(t) > (__ss_int)expected)
