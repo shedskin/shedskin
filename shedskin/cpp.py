@@ -63,8 +63,16 @@ class CPPNamer:
             return add_cl + self.name(cl)
 
     def name(self, obj: Any) -> str:
-        get_name = self.name_by_type[type(obj)]
-        name = get_name(obj)
+        if isinstance(obj, str):
+            name = self.name_str(obj)
+        elif isinstance(obj, python.Class):
+            name = self.name_class(obj)
+        elif isinstance(obj, python.Function):
+            name = self.name_function(obj)
+        elif isinstance(obj, python.Variable):
+            name = self.name_variable(obj)
+        else:
+            assert False
 
         return self.nokeywords(name)
 
