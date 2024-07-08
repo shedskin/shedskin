@@ -1,5 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /* iteration macros */
 
