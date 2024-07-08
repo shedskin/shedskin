@@ -270,9 +270,6 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
-template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
-template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
-
 /* internal use */
 
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
