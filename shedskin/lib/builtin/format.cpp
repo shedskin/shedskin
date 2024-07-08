@@ -1,6 +1,5 @@
 /* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-
 #if defined(WIN32)
 #include <BaseTsd.h>
 #include <stdlib.h>
