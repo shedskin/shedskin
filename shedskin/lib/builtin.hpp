@@ -41,6 +41,10 @@
 #endif
 #endif
 
+#if defined(_MSC_VER)
+#include "builtin/msvc.hpp"
+#endif
+
 namespace __shedskin__ {
 
 /* integer type */
