@@ -7,7 +7,7 @@ import ast
 import logging
 import sys
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -20,7 +20,7 @@ formatter = logging.Formatter("*%(levelname)s* %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-ERRORS = set()
+ERRORS: set[Tuple[int, str, int, str]] = set()
 
 
 def error(

@@ -7,7 +7,7 @@ Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See
 from . import Shedskin
 
 
-def run():
+def run() -> None:
     Shedskin.commandline()
 
 
