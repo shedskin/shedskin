@@ -237,7 +237,7 @@ class Function:
         self.inherited_from = inherited_from
         if node:
             ident = node.name
-            if inherited_from and ident in parent.funcs:
+            if inherited_from and parent and ident in parent.funcs:
                 ident += inherited_from.ident + "__"  # XXX ugly
             self.ident = ident
             self.formals = extract_argnames(node.args)
@@ -415,8 +415,9 @@ def lookup_class(node, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
             return module.mv.classes[node.attr]
 
 
-def lookup_module(node, mv: 'graph.ModuleVisitor'):
+def lookup_module(node, mv: 'graph.ModuleVisitor') -> Optional[Module]:
     path: List[str] = []
+    module: Optional[Module] = None
 
     imports = mv.imports
 
@@ -435,7 +436,7 @@ def lookup_module(node, mv: 'graph.ModuleVisitor'):
             else:
                 return None
 
-        return module
+    return module
 
 
 def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None):

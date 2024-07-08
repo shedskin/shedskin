@@ -26,7 +26,7 @@ ERRORS = set()
 def error(
     msg: str,
     gx: 'config.GlobalInfo',
-    node: Union[ast.AST, 'python.Variable']=None,
+    node: Optional[Union[ast.AST, 'python.Variable']] = None,
     warning: bool=False,
     mv: Optional['graph.ModuleVisitor']=None,
 ):
