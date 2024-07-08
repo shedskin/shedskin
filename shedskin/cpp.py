@@ -30,7 +30,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Any
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -62,7 +62,7 @@ class CPPNamer:
         else:
             return add_cl + self.name(cl)
 
-    def name(self, obj):
+    def name(self, obj: Any) -> str:
         get_name = self.name_by_type[type(obj)]
         name = get_name(obj)
 
@@ -96,7 +96,6 @@ class CPPNamer:
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, gx: 'config.GlobalInfo', module):
         self.gx = gx
-        #        self.output_base = module.filename[:-3]
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
@@ -111,7 +110,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
 
-    def cpp_name(self, obj):
+    def cpp_name(self, obj: Any) -> str:
         return self.namer.name(obj)
 
     def get_output_file(self, ext=".cpp", mode="w"):
@@ -458,7 +457,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         self.impl_visit_conv(default, self.mergeinh[var], None)
                         self.eol()
 
-    def rich_comparison(self):
+    def rich_comparison(self) -> None:
         cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
         for cl in self.mv.classes.values():
             if "__cmp__" not in cl.funcs and [
@@ -661,7 +660,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.module_cpp(node)
 
-    def do_main(self):
+    def do_main(self) -> None:
         modules = self.gx.modules.values()
         if any(module.builtin and module.ident == "sys" for module in modules):
             self.print("int main(int __ss_argc, char **__ss_argv) {")
@@ -1451,7 +1450,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}")
 
-    def func_pointers(self):
+    def func_pointers(self) -> None:
         for func in self.mv.lambdas.values():
             argtypes = [
                 typestr.nodetypestr(

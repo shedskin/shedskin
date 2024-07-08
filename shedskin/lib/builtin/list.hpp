@@ -275,7 +275,7 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
         }
 
         if(slicesize != len(la))
-            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<__ss_int,__ss_int>(2, len(la), (__ss_int)slicesize)));
+            throw new ValueError(__add_strs(0, new str("attempt to assign sequence of size "), __str(len(la)), new str(" to extended slice of size "), __str((__ss_int)slicesize)));
     }
 
     if(s == 1) {
