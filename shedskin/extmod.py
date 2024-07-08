@@ -11,6 +11,12 @@ from . import infer
 from . import python
 from . import typestr
 
+
+from typing import TYPE_CHECKING, Optional, Union
+if TYPE_CHECKING:
+    from . import config
+    from . import cpp
+
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]
 OVERLOAD = [
