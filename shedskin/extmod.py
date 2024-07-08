@@ -51,7 +51,7 @@ class ExtensionModule:
         self.gx = gx
         self.gv = gv
 
-    def write(self, entry):
+    def write(self, entry: str) -> None:
         """
         { function_description }
 
@@ -513,7 +513,7 @@ class ExtensionModule:
         write("    }")
         write("}\n")
 
-    def do_extmod(self):
+    def do_extmod(self) -> None:
         """Generate an python c-api extension module"""
         write = self.write
         write("/* extension module glue */\n")
@@ -807,7 +807,7 @@ class ExtensionModule:
             write("} // namespace __%s__" % n)
         write("")
 
-    def pyinit_func(self):
+    def pyinit_func(self) -> None:
         """
         { function_description }
         """
