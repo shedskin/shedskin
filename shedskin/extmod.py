@@ -12,7 +12,7 @@ from . import python
 from . import typestr
 
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, List
 if TYPE_CHECKING:
     from . import config
     from . import cpp
@@ -60,7 +60,7 @@ class ExtensionModule:
         """
         print(entry, file=self.gv.out)
 
-    def do_init_mods(self, what):
+    def do_init_mods(self, what: str) -> None:
         """
         Does initialize mods.
 
@@ -77,7 +77,7 @@ class ExtensionModule:
                     % (module.full_path(), what, "_".join(module.name_list))
                 )
 
-    def supported_vars(self, variables):  # XXX virtuals?
+    def supported_vars(self, variables: List['python.Variable']) -> List['python.Variable']: # XXX virtuals?
         """XXX currently only classs / instance variables"""
         supported = []
         for var in variables:
@@ -108,7 +108,7 @@ class ExtensionModule:
             supported.append(var)
         return supported
 
-    def supported_funcs(self, funcs):
+    def supported_funcs(self, funcs: List['python.Function']) -> List['python.Function']:
         """
         { function_description }
 
