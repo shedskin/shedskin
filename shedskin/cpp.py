@@ -709,7 +709,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output(line)
         self.output("*/")
 
-    def do_comments(self, child: ast.AST) -> Node:
+    def do_comments(self, child: ast.AST) -> None:
         pass
 #        if child in self.gx.comments:
 #            for n in self.gx.comments[child]:
