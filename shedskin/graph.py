@@ -188,7 +188,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
         self.listcomps: List[Tuple[ast.AST, 'python.Function', 'python.Function']] = []
-        self.defaults: dict[ast.AST, int] = {}
+        self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
         self.importnodes: List[ast.AST] = []
 
     def visit(self, node: Optional[ast.AST], *args):
@@ -381,7 +381,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         fakechildnode.callfuncs.append(fakefunc)
 
     # --- add regular constraint to function
-    def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: 'python.Function'):
+    def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: Optional['python.Function']):
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
         while isinstance(func, python.Function) and func.listcomp:
