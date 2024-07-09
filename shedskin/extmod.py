@@ -841,7 +841,7 @@ class ExtensionModule:
         """
         { function_description }
         """
-        def write(s):
+        def write(s: str) -> None:
             return print(s, file=self.gv.out)
 
         for cl in self.exported_classes():

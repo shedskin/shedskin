@@ -678,7 +678,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print("    __shedskin__::__start(__%s__::__init);" % self.module.ident)
         self.print("}")
 
-    def do_init_modules(self, extmod=False):
+    def do_init_modules(self, extmod:bool=False) -> None:
         self.print("    __shedskin__::__init();")
         for module in sorted(self.gx.modules.values(), key=lambda x: x.import_order):
             if module != self.gx.main_module and module.ident != "builtin":
@@ -696,7 +696,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                     self.print("    " + module.full_path() + "::__init();")
 
-    def do_comment(self, s):
+    def do_comment(self, s:str) -> None:
         if not s:
             return
         s = s.encode('ascii', 'ignore').decode('ascii') # TODO
@@ -709,16 +709,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output(line)
         self.output("*/")
 
-    def do_comments(self, child):
+    def do_comments(self, child: ast.AST) -> Node:
         pass
 #        if child in self.gx.comments:
 #            for n in self.gx.comments[child]:
 #                self.do_comment(n)
 
-    def visit_Continue(self, node, func=None):
+    def visit_Continue(self, node: ast.Continue, func:Optional['python.Function']=None) -> None:
         self.output("continue;")
 
-    def visit_With(self, node, func=None):
+    def visit_With(self, node: ast.With, func:Optional['python.Function']=None):
         def handle_with_vars(var):
             if isinstance(var, ast.Name):
                 return [var.id]
@@ -899,7 +899,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("};\n")
 
-    def class_cpp(self, node):
+    def class_cpp(self, node: ast.ClassDef) -> None:
         cl = self.mv.classes[node.name]
 #        if node in self.gx.comments:
 #            self.do_comments(node)
@@ -3116,7 +3116,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif ast_utils.is_assign_attribute(lvalue):
             self.visit_Attribute(lvalue, func)
 
-    def do_lambdas(self, declare):
+    def do_lambdas(self, declare: bool) -> None:
         for lam in self.mv.lambdas.values():
             if lam.ident not in self.mv.funcs:
                 self.visit_FunctionDef(lam.node, declare=declare)

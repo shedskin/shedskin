@@ -361,7 +361,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             return (list(infer.inode(self.gx, node).types())[0][0],)
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
-    def add_dynamic_constraint(self, parent, child, varname, func):
+    def add_dynamic_constraint(self, parent: ast.AST, child: ast.AST, varname: str, func: 'python.Function') -> None:
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
@@ -381,7 +381,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         fakechildnode.callfuncs.append(fakefunc)
 
     # --- add regular constraint to function
-    def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: Optional['python.Function']):
+    def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: Optional['python.Function']) -> None:
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
         while isinstance(func, python.Function) and func.listcomp:

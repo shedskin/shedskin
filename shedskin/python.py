@@ -326,7 +326,7 @@ def parse_file(name: pathlib.Path):
         sys.exit(1)
 
 
-def find_module(gx: 'config.GlobalInfo', name: str, paths):
+def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[str, str, str, bool]:
     if "." in name:
         name, module_name = name.rsplit(".", 1)
         name_as_path = name.replace(".", os.path.sep)
@@ -484,7 +484,7 @@ def smart_lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = Fals
             return VarLookup(mv.globals[name], True)
 
 
-def subclass(a, b):
+def subclass(a: Class, b: Class) -> bool:
     if b in a.bases:
         return True
     else:
