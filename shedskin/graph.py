@@ -283,7 +283,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.gx.types[newnode] = set([(cl, cl.dcpa)])
 
-    def constructor(self, node, classname, func):
+    def constructor(self, node: ast.AST, classname: str, func: 'python.Function') -> None:
         cl = python.def_class(self.gx, classname)
         assert cl
 
@@ -326,7 +326,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.add_dynamic_constraint(node, child, "unit", func)
 
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
-    def filter_redundant_children(self, node):
+    def filter_redundant_children(self, node: ast.AST) -> List[ast.AST]:
         done = set()
         nonred = []
         for child in node.elts:
@@ -542,7 +542,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lvar = self.default_var(node.target.id, func)
         self.add_constraint((newnode, infer.inode(self.gx, lvar)), func)
 
-    def visit_Module(self, node):
+    def visit_Module(self, node: ast.Module) -> None:
         # --- bootstrap built-in classes
         if self.module.ident == "builtin":
             for dummy in self.gx.builtins:
