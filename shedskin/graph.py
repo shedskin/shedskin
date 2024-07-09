@@ -195,9 +195,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
-    def fake_func(self, node, objexpr: Optional[ast.expr], attrname, args, func: Optional[python.Function] = None):
-        # if objexpr:
-        #     assert isinstance(objexpr, ast.expr), f"type: {type(objexpr)}"
+    def fake_func(self, node, objexpr: ast.expr, attrname, args, func: Optional[python.Function] = None):
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:

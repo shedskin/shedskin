@@ -21,14 +21,13 @@ def is_assign_attribute(node) -> bool:
 def is_constant(node) -> bool:  # TODO simplify?
     return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == "Constant"
 
-
 def is_none(node) -> bool:
-    return (
-        isinstance(node, ast.Name)
-        and node.id == "None"
-        or node.__class__.__name__ == "Constant"
-        and node.value is None
-    )
+    if (isinstance(node, ast.Name) and node.id == "None"):
+        return True
+    else:
+        if isinstance(node, ast.Constant) and node.value is None:
+            return True
+    return False
 
 
 def is_literal(node) -> bool:
