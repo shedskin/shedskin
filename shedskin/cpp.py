@@ -304,7 +304,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if text:
             self.print(self.indentation + text)
 
-    def start(self, text: str=None) -> None:
+    def start(self, text: Optional[str] = None):
         self.line = self.indentation
         if text:
             self.line += text
@@ -312,7 +312,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def append(self, text: str) -> None:
         self.line += text
 
-    def eol(self, text: str=None) -> None:
+    def eol(self, text: Optional[str] = None):
         if text:
             self.append(text)
         if self.line.strip():
