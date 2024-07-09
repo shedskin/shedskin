@@ -2524,6 +2524,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if (
                 ident == "__getitem__"
                 and isinstance(node.args[0], ast.Num)
+                and isinstance(node.args[0].n, int)
                 and node.args[0].n in (0, 1)
                 and self.only_classes(objexpr, ("tuple2",))
             ):

@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 _mv: Optional['ModuleVisitor'] = None
 
 
-def setmv(mv: 'ModuleVisitor'):
+def setmv(mv: 'ModuleVisitor') -> 'ModuleVisitor':
     global _mv
     _mv = mv
     return _mv
@@ -61,7 +61,7 @@ def getmv() ->  Optional['ModuleVisitor']:
     return _mv
 
 
-def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False):  # XXX to modvisitor, rewrite
+def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False) -> None:  # XXX to modvisitor, rewrite
     mv = getmv()
     if mv and mv.module and not mv.module.builtin:
         existing_names =  list(mv.ext_classes) + list(mv.ext_funcs)
@@ -79,7 +79,7 @@ def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = Fals
 
 
 # --- maintain inheritance relations between copied AST nodes
-def inherit_rec(gx: 'config.GlobalInfo', original, copy, mv: 'ModuleVisitor'):
+def inherit_rec(gx: 'config.GlobalInfo', original: ast.AST, copy: ast.AST, mv: 'ModuleVisitor') -> None:
     gx.inheritance_relations.setdefault(original, []).append(copy)
     gx.inherited.add(copy)
     gx.parent_nodes[copy] = original
@@ -88,7 +88,7 @@ def inherit_rec(gx: 'config.GlobalInfo', original, copy, mv: 'ModuleVisitor'):
         inherit_rec(gx, a, b, mv)
 
 
-def register_node(node, func):
+def register_node(node: ast.AST, func: Optional['python.Function']) -> None:
     if func:
         func.registered.append(node)
 
