@@ -12,15 +12,20 @@ import subprocess
 import sys
 import sysconfig
 
+# type-checking
+from typing import TYPE_CHECKING, Optional
+if TYPE_CHECKING:
+    from . import config
 
-def check_output(cmd: str):
+
+def check_output(cmd: str) -> Optional[str]:
     try:
         return subprocess.check_output(cmd.split(), encoding="utf8").strip()
     except FileNotFoundError:
         return None
 
 
-def generate_makefile(gx):
+def generate_makefile(gx: 'config.GlobalInfo') -> None:
     if gx.nomakefile:
         return
     if sys.platform == "win32":
