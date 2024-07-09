@@ -282,7 +282,7 @@ def typestrnew(
     else:
         sep, ptr, conv = "()", "", conv2
 
-    def map(ident):
+    def map(ident: str) -> str:
         if cplusplus:
             return ident + " *"
         return conv.get(ident, ident)
