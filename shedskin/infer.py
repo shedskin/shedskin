@@ -589,7 +589,7 @@ def add_constraint(gx: "config.GlobalInfo", a: CNode, b: CNode, worklist:Optiona
     add_to_worklist(worklist, a)
 
 
-def in_out(a, b):
+def in_out(a: CNode, b: CNode) -> None:
     a.out.add(b)
     b.in_.add(a)
 
