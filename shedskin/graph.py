@@ -191,7 +191,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
         self.importnodes: List[ast.AST] = []
 
-    def visit(self, node: Optional[ast.AST], *args):
+    def visit(self, node: ast.AST, *args):
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
