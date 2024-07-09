@@ -5,23 +5,25 @@ Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See
 """
 import ast
 
+from typing import List, Tuple
 
-def is_assign_list_or_tuple(node) -> bool:
+
+def is_assign_list_or_tuple(node: ast.AST) -> bool:
     return isinstance(node, (ast.Tuple, ast.List)) and isinstance(node.ctx, ast.Store)
 
 
-def is_assign_tuple(node) -> bool:
+def is_assign_tuple(node: ast.AST) -> bool:
     return isinstance(node, ast.Tuple) and isinstance(node.ctx, ast.Store)
 
 
-def is_assign_attribute(node) -> bool:
+def is_assign_attribute(node: ast.AST) -> bool:
     return isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store)
 
 
-def is_constant(node) -> bool:  # TODO simplify?
+def is_constant(node: ast.AST) -> bool:  # TODO simplify?
     return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == "Constant"
 
-def is_none(node) -> bool:
+def is_none(node: ast.AST) -> bool:
     if (isinstance(node, ast.Name) and node.id == "None"):
         return True
     else:
@@ -30,7 +32,7 @@ def is_none(node) -> bool:
     return False
 
 
-def is_literal(node) -> bool:
+def is_literal(node: ast.AST) -> bool:
     # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
         node = node.operand
@@ -38,7 +40,7 @@ def is_literal(node) -> bool:
     return isinstance(node, ast.Num) and isinstance(node.n, (int, float))
 
 
-def is_fastfor(node) -> bool:
+def is_fastfor(node: ast.For) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -46,7 +48,7 @@ def is_fastfor(node) -> bool:
     )
 
 
-def is_enumerate(node) -> bool:
+def is_enumerate(node: ast.For) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -56,7 +58,7 @@ def is_enumerate(node) -> bool:
     )
 
 
-def is_zip2(node) -> bool:
+def is_zip2(node: ast.For) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -66,7 +68,7 @@ def is_zip2(node) -> bool:
     )
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
-def assign_rec(left, right):
+def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
     if is_assign_list_or_tuple(left) and isinstance(
         right, (ast.Tuple, ast.List)
     ):
@@ -78,7 +80,7 @@ def assign_rec(left, right):
         return [(left, right)]
 
 
-def aug_msg(node, msg):
+def aug_msg(node: ast.BinOp, msg) -> str:
     if hasattr(node, "augment"):
         return "__i" + msg + "__"
     return "__" + msg + "__"
