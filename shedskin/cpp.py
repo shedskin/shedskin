@@ -30,7 +30,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias
+from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias, Union
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -2579,7 +2579,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if constructor:
             self.append(")")
 
-    def bool_test(self, node, func, always_wrap=False):
+    def bool_test(self, node: ast.AST, func: 'python.Function', always_wrap:bool=False) -> None:
         wrapper = always_wrap or not self.only_classes(node, ("int_", "bool_"))
         if node in self.gx.bool_test_only:
             self.visit(node, func)
@@ -2787,7 +2787,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if builtin_types:
                         return typestr.typestr(self.gx, builtin_types, mv=self.mv)
 
-    def visit_Return(self, node, func=None):
+    def visit_Return(self, node: ast.Return, func: Optional['python.Function']=None) -> None:
         if func and func.isGenerator:
             self.output("__stop_iteration = true;")
             func2 = typestr.nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[
@@ -2799,7 +2799,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
-    def tuple_assign(self, lvalue, rvalue, func):
+    def tuple_assign(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: 'python.Function') -> None:
         temp = self.mv.tempcount[lvalue]
         if isinstance(lvalue, tuple):
             nodes = lvalue
@@ -2860,7 +2860,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(item, " = ", self.get_selector(temp, item, i), func)
                 self.eol()
 
-    def one_class(self, node, names):
+    def one_class(self, node: ast.AST, names: Tuple[str]) -> bool:
         for clname in names:
             if self.only_classes(node, (clname,)):
                 return True
@@ -3349,10 +3349,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("END_FOR\n")
 
-    def visit_GeneratorExp(self, node, func=None):
+    def visit_GeneratorExp(self, node: ast.GeneratorExp, func:Optional['python.Function']=None) -> None:
         self.visit(self.gx.genexp_to_lc[node], func)
 
-    def visit_ListComp(self, node, func=None):
+    def visit_ListComp(self, node: ast.ListComp, func:Optional['python.Function']=None) -> None:
         lcfunc, _ = self.listcomps[node]
         args = []
         temp = self.line
@@ -3370,7 +3370,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append("new ")
         self.append(lcfunc.ident + "(" + ", ".join(args) + ")")
 
-    def visit_Subscript(self, node, func=None):
+    def visit_Subscript(self, node: ast.Subscript, func:Optional['python.Function']=None) -> None:
         if type(node.ctx) in (ast.Load, ast.Store):
             self.visit_Call(infer.inode(self.gx, node.value).fakefunc, func)
         elif type(node.ctx) == ast.Del:
@@ -3441,7 +3441,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return self.cpp_name(name)
 
-    def visit_Attribute(self, node, func=None):  # XXX merge with visitGetattr
+    def visit_Attribute(self, node: ast.Attribute, func:Optional['python.Function']=None) -> None:  # XXX merge with visitGetattr
         if type(node.ctx) == ast.Load:
             cl, module = python.lookup_class_module(
                 node.value, infer.inode(self.gx, node).mv, func
@@ -3619,7 +3619,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_Name(self, node, func=None, add_cl=True):
+    def visit_Name(self, node: ast.Name, func:Optional['python.Function']=None, add_cl:bool=True) -> None:
         if type(node.ctx) == ast.Del:
             error.error(
                 "'del' has no effect without refcounting",
