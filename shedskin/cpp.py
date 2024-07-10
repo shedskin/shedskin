@@ -30,10 +30,12 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List, Any
+from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias
 if TYPE_CHECKING:
     from . import config
     from . import graph
+
+Types: TypeAlias = set[Tuple['python.Class', int]]
 
 
 class CPPNamer:
@@ -50,12 +52,12 @@ class CPPNamer:
         }
         self.gv = gv
 
-    def nokeywords(self, name):
+    def nokeywords(self, name: str) -> str:
         if name in self.cpp_keywords:
             return self.ss_prefix + name
         return name
 
-    def namespace_class(self, cl, add_cl=""):
+    def namespace_class(self, cl: 'python.Class', add_cl:str="") -> str:
         module = cl.mv.module
         if module.ident != "builtin" and module != self.gv.module and module.name_list:
             return module.full_path() + "::" + add_cl + self.name(cl)
@@ -121,7 +123,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def cpp_name(self, obj: Any) -> str:
         return self.namer.name(obj)
 
-    def get_output_file(self, ext=".cpp", mode="w"):
+    def get_output_file(self, ext:str=".cpp", mode:str="w") -> TextIO:
         output_file = Path(self.output_base.with_suffix(ext))
         assert self.gx.module_path
         module_path = Path(self.gx.module_path)
@@ -1023,7 +1025,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             return True
         return False
 
-    def instance_new(self, node, argtypes):
+    def instance_new(self, node: ast.AST, argtypes: Optional[Types]) -> Types:
         if argtypes is None:
             argtypes = self.gx.merged_inh[node]
         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
