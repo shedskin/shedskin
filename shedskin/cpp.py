@@ -1257,7 +1257,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.fastfor(qual, iter, func)
         self.forbody(node, quals, iter, func, False, genexpr)
 
-    def impl_visit_temp(self, node, func):  # XXX generalize?
+    def impl_visit_temp(self, node: ast.AST, func: 'python.Function') -> None:  # XXX generalize?
         if node in self.mv.tempcount:
             self.append(self.mv.tempcount[node])
         else:
@@ -1788,7 +1788,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.impl_visit_conv(node.orelse, types, func)
         self.append("))")
 
-    def impl_visit_conv(self, node, argtypes, func, check_temp=True):
+    def impl_visit_conv(self, node: ast.AST, argtypes: Types, func: 'python.Function', check_temp: bool=True) -> None:
         # convert/cast node to type it is assigned to
         actualtypes = self.mergeinh[node]
         if check_temp and node in self.mv.tempcount:  # XXX
@@ -1848,7 +1848,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif type(node.op) == ast.And:
             self.impl_visit_and_or(node, node.values, "__AND", "and", func)
 
-    def impl_visit_and_or(self, node, nodes, op, mix, func=None):
+    def impl_visit_and_or(self, node: ast.AST, nodes: List[ast.AST], op: str, mix: str, func:Optional['python.Function']=None) -> None:
         if node in self.gx.bool_test_only:
             self.append("(")
             for n in nodes:
@@ -1967,7 +1967,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif type(node.op) == ast.Pow:
             self.power(node.left, node.right, None, func)
         elif type(node.op) == ast.Mod:
-            self.impl_visit_Mod(node, func)
+            self.impl_visit_mod(node, func)
         elif type(node.op) == ast.LShift:
             self.impl_visit_binary(
                 node.left, node.right, ast_utils.aug_msg(node, "lshift"), "<<", func
@@ -2001,7 +2001,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif self.mergeinh[node] == set([(python.def_class(self.gx, "str_"), 0)]):
             return [node]
 
-    def impl_visit_bitop(self, node, msg, inline, func=None):
+    def impl_visit_bitop(self, node: ast.AST, msg: str, inline: str, func: Optional['python.Function']=None) -> None:
         ltypes = self.mergeinh[node.left]
         ul = typestr.unboxable(self.gx, ltypes)
         self.append("(")
@@ -2034,7 +2034,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm("__power(", left, ", ", right, ")", func)
 
     def impl_visit_binary(
-        self, left, right, middle, inline, func=None
+        self, left: ast.AST, right: ast.AST, middle: str, inline: str, func: Optional['python.Function']=None
     ):  # XXX cleanup please
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
@@ -3388,7 +3388,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def impl_visit_Mod(self, node, func=None):
+    def impl_visit_mod(self, node: ast.BinOp, func: Optional['python.Function']=None) -> None:
         # --- non-str % ..
         if [
             t
