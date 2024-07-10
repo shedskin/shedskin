@@ -84,6 +84,8 @@ if TYPE_CHECKING:
     from . import config
     from . import graph
 
+Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules
+
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
 
@@ -197,7 +199,7 @@ class CNode:
             self.gx.types[newnode] = set()
         return newnode
 
-    def types(self):
+    def types(self) -> Types:
         if self in self.gx.types:
             return self.gx.types[self]
         else:
@@ -217,11 +219,11 @@ def nrargs(gx: "config.GlobalInfo", node):
     return len(node.args)
 
 
-def called(func):
+def called(func: 'python.Function') -> bool:
     return bool([cpas for cpas in func.cp.values() if cpas])
 
 
-def get_types(gx: "config.GlobalInfo", expr, node, merge):
+def get_types(gx: "config.GlobalInfo", expr, node, merge) -> Types:
     types = set()
     if merge:
         if expr.func in merge:
@@ -600,7 +602,7 @@ def add_to_worklist(worklist: Optional[List[CNode]], node: CNode) -> None:  # XX
         node.in_list = 1
 
 
-def class_copy(gx: "config.GlobalInfo", cl, dcpa):
+def class_copy(gx: "config.GlobalInfo", cl: 'python.Class', dcpa: int) -> None:
     for var in cl.vars.values():  # XXX
         if inode(gx, var) not in gx.types:
             continue  # XXX research later
@@ -632,7 +634,7 @@ def class_copy(gx: "config.GlobalInfo", cl, dcpa):
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
 
 
-def func_copy(gx: "config.GlobalInfo", func, dcpa, cpa, worklist=None, cart=None):
+def func_copy(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, cpa: int, worklist=None, cart=None) -> None:
     # print 'funccopy', func, cart, dcpa, cpa
 
     # --- copy local end points of each constraint
@@ -665,7 +667,7 @@ def func_copy(gx: "config.GlobalInfo", func, dcpa, cpa, worklist=None, cart=None
 
 
 # --- iterative dataflow analysis
-def propagate(gx: "config.GlobalInfo"):
+def propagate(gx: "config.GlobalInfo") -> None:
     logger.debug("propagate")
 
     # --- initialize working sets
@@ -1939,5 +1941,5 @@ def default_var(
     return var
 
 
-def var_types(gx: "config.GlobalInfo", var):
+def var_types(gx: "config.GlobalInfo", var: 'python.Variable') -> Types:
     return inode(gx, var).types()

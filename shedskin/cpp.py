@@ -986,7 +986,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and [1 for f in self.gx.inheritance_relations[func] if infer.called(f)]
         )
 
-    def visit_Slice(self, node, func=None):
+    def visit_Slice(self, node: ast.Slice, func: Optional['python.Function']=None) -> None:
         assert False, "visit_Slice should never be called"
         if type(node.ctx) == ast.Del:
             self.start()
@@ -998,7 +998,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Lambda(self, node, parent=None):
         self.append(self.mv.lambdaname[node])
 
-    def subtypes(self, types, varname):
+    def subtypes(self, types: Types, varname: str) -> Types:
         subtypes = set()
         for t in types:
             if isinstance(t[0], python.Class):
@@ -1007,7 +1007,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     subtypes.update(self.gx.cnode[var, t[1], 0].types())
         return subtypes
 
-    def bin_tuple(self, types):
+    def bin_tuple(self, types: Types) -> bool:
         for t in types:
             if isinstance(t[0], python.Class) and t[0].ident == "tuple2":
                 var1 = t[0].vars.get("first")
@@ -2579,7 +2579,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if constructor:
             self.append(")")
 
-    def bool_test(self, node: ast.AST, func: 'python.Function', always_wrap:bool=False) -> None:
+    def bool_test(self, node: ast.AST, func: Optional['python.Function'], always_wrap:bool=False) -> None:
         wrapper = always_wrap or not self.only_classes(node, ("int_", "bool_"))
         if node in self.gx.bool_test_only:
             self.visit(node, func)

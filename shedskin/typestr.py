@@ -27,7 +27,7 @@ class ExtmodError(Exception):
     pass
 
 
-def types_var_types(gx: 'config.GlobalInfo', types, varname):
+def types_var_types(gx: 'config.GlobalInfo', types: Types, varname: str) -> Types:
     subtypes = set()
     for t in types:
         if varname not in t[0].vars:
@@ -38,11 +38,11 @@ def types_var_types(gx: 'config.GlobalInfo', types, varname):
     return subtypes
 
 
-def types_classes(types):
+def types_classes(types: Types) -> set['python.Class']:
     return set(t[0] for t in types if isinstance(t[0], python.Class))
 
 
-def unboxable(gx: 'config.GlobalInfo', types):
+def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
     if not isinstance(types, set):
         types = infer.inode(gx, types).types()
     classes = set(t[0] for t in types)
