@@ -1005,7 +1005,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             return ast.Tuple([self.unpack_rec(elem) for elem in formal], ast.Store())
 
-    def visit_Lambda(self, node, func=None):
+    def visit_Lambda(self, node: ast.Lambda, func:Optional['python.Function']=None) -> None:
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
@@ -1017,7 +1017,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
 
-    def visit_BoolOp(self, node, func):
+    def visit_BoolOp(self, node: ast.BoolOp, func:Optional['python.Function']=None) -> None:
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         for child in node.values:
@@ -1060,10 +1060,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, node.body), newnode), func)
         self.add_constraint((infer.inode(self.gx, node.orelse), newnode), func)
 
-    def visit_Match(self, node, func=None):
+    def visit_Match(self, node: ast.Match, func:Optional['python.Function']=None) -> None:
         error.error("match case statement not supported", self.gx, node, mv=getmv())
 
-    def visit_Global(self, node, func=None):
+    def visit_Global(self, node: ast.Global, func:Optional['python.Function']=None) -> None:
         func.globals += node.names
 
     def visit_List(self, node: ast.List, func:Optional['python.Function']=None) -> None:
@@ -1075,7 +1075,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Set(self, node: ast.Set, func:Optional['python.Function']=None) -> None:
         self.constructor(node, "set", func)
 
-    def visit_Tuple(self, node: ast.Tuple, func=None):
+    def visit_Tuple(self, node: ast.Tuple, func: Optional['python.Function']=None) -> None:
         if isinstance(node.ctx, ast.Load):
             if len(node.elts) == 2:
                 self.constructor(node, "tuple2", func)

@@ -13,9 +13,11 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias
 if TYPE_CHECKING:
     from . import config
+
+Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with cpp.py version
 
 
 logger = logging.getLogger("typestr")
@@ -65,7 +67,7 @@ def singletype2(types, type):
         return ltypes[0][0]
 
 
-def polymorphic_t(gx: 'config.GlobalInfo', types):
+def polymorphic_t(gx: 'config.GlobalInfo', types: Types) -> set['python.Class']:
     return polymorphic_cl(gx, (t[0] for t in types))
 
 
@@ -87,7 +89,7 @@ def polymorphic_cl(gx: 'config.GlobalInfo', classes):
 
 
 # --- determine lowest common parent classes (inclusive)
-def lowest_common_parents(classes):
+def lowest_common_parents(classes: set['python.Class']) -> list['python.Class']:
     classes = [cl for cl in classes if isinstance(cl, python.Class)]
 
     # collect all possible parent classes
