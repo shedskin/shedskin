@@ -42,7 +42,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union
 if TYPE_CHECKING:
     from . import config
 
@@ -283,7 +283,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.gx.types[newnode] = set([(cl, cl.dcpa)])
 
-    def constructor(self, node: ast.AST, classname: str, func: 'python.Function') -> None:
+    def constructor(
+            self,
+            node: Union[ast.Tuple, ast.List, ast.Dict, ast.Set],
+            classname: str,
+            func: 'python.Function',
+    ) -> None:
         cl = python.def_class(self.gx, classname)
         assert cl
 
@@ -291,7 +296,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.default_var(self.gx, "unit", cl)
 
         # --- internally flow binary tuples
-        if cl.ident == "tuple2":
+        if isinstance(node, ast.Tuple) and cl.ident == "tuple2":
             infer.default_var(self.gx, "first", cl)
             infer.default_var(self.gx, "second", cl)
             elem0, elem1 = node.elts
@@ -308,7 +313,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             return
 
         # --- add dynamic children constraints for other types
-        if classname == "dict":  # XXX filter children
+        if isinstance(node, ast.Dict):  # XXX filter children
             infer.default_var(self.gx, "unit", cl)
             infer.default_var(self.gx, "value", cl)
 
@@ -1061,16 +1066,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Global(self, node, func=None):
         func.globals += node.names
 
-    def visit_List(self, node, func=None):
+    def visit_List(self, node: ast.List, func:Optional['python.Function']=None) -> None:
         self.constructor(node, "list", func)
 
-    def visit_Dict(self, node, func=None):
+    def visit_Dict(self, node: ast.Dict, func:Optional['python.Function']=None) -> None:
         self.constructor(node, "dict", func)
 
-    def visit_Set(self, node, func=None):
+    def visit_Set(self, node: ast.Set, func:Optional['python.Function']=None) -> None:
         self.constructor(node, "set", func)
 
-    def visit_Tuple(self, node, func=None):
+    def visit_Tuple(self, node: ast.Tuple, func=None):
         if isinstance(node.ctx, ast.Load):
             if len(node.elts) == 2:
                 self.constructor(node, "tuple2", func)
