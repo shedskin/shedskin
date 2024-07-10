@@ -287,7 +287,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self,
             node: Union[ast.Tuple, ast.List, ast.Dict, ast.Set],
             classname: str,
-            func: 'python.Function',
+            func: Optional['python.Function'],
     ) -> None:
         cl = python.def_class(self.gx, classname)
         assert cl
@@ -366,7 +366,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             return (list(infer.inode(self.gx, node).types())[0][0],)
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
-    def add_dynamic_constraint(self, parent: ast.AST, child: ast.AST, varname: str, func: 'python.Function') -> None:
+    def add_dynamic_constraint(self, parent: ast.AST, child: ast.AST, varname: str, func: Optional['python.Function']) -> None:
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
