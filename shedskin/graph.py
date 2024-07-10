@@ -1804,7 +1804,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
             self.visit(fakefunc, func)
 
-    def default_var(self, name, func, exc_name=False):
+    def default_var(self, name: str, func: 'python.Function', exc_name:bool=False) -> 'python.Variable':
         if isinstance(func, python.Function) and name in func.globals:
             return infer.default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
@@ -1862,7 +1862,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     return cl.node.bases[0]
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
 
-    def visit_Pass(self, node, func=None):
+    def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
         pass
 
     def visit_Call(self, node, func=None, fake_attr=False):  # XXX clean up!!
@@ -2205,7 +2205,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 mv=getmv(),
             )
 
-    def visit_Constant(self, node, func=None):
+    def visit_Constant(self, node:ast.Constant, func:Optional['python.Function']=None) -> None:
         if node.value.__class__.__name__ == "ellipsis":
             error.error("ellipsis is not supported", self.gx, node, mv=getmv())
         else:

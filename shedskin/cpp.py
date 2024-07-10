@@ -2860,7 +2860,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(item, " = ", self.get_selector(temp, item, i), func)
                 self.eol()
 
-    def one_class(self, node: ast.AST, names: Tuple[str]) -> bool:
+    def one_class(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         for clname in names:
             if self.only_classes(node, (clname,)):
                 return True
