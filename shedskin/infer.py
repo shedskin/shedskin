@@ -78,7 +78,7 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias
 
 if TYPE_CHECKING:
     from . import config
