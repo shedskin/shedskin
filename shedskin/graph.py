@@ -1313,7 +1313,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.inode(self.gx, node).assignhop = assign
         self.visit(assign, func)
 
-    def temp_var(self, node, func=None, looper=None, wopper=None, exc_name=False):
+    def temp_var(
+            self,
+            node: Any,
+            func: Optional['python.Function']=None,
+            looper: Optional[ast.AST]=None,
+            wopper: Optional[ast.AST]=None,
+            exc_name: bool=False,
+    ) -> 'python.Variable':
         if node in self.gx.parent_nodes:
             varname = self.tempcount[self.gx.parent_nodes[node]]
         elif node in self.tempcount:  # XXX investigate why this happens
@@ -1329,12 +1336,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.register_temp_var(var, func)
         return var
 
-    def temp_var2(self, node: Any, source: Any, func: 'python.Function'):
+    def temp_var2(self, node: Any, source: Any, func: 'python.Function') -> 'python.Variable':
         tvar = self.temp_var(node, func)
         self.add_constraint((source, infer.inode(self.gx, tvar)), func)
         return tvar
 
-    def temp_var_int(self, node, func):
+    def temp_var_int(self, node: Any, func: 'python.Function') -> 'python.Variable':
         var = self.temp_var(node, func)
         self.gx.types[infer.inode(self.gx, var)] = set(
             [(python.def_class(self.gx, "int_"), 0)]
@@ -1342,13 +1349,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.inode(self.gx, var).copymetoo = True
         return var
 
-    def visit_Raise(self, node, func=None):
-        if hasattr(node, "exc"):
-            if node.exc is None or node.cause is not None:
-                error.error("unsupported raise syntax", self.gx, node, mv=getmv())
-        else:  # py2
-            if node.type is None or node.inst is not None or node.tback is not None:
-                error.error("unsupported raise syntax", self.gx, node, mv=getmv())
+    def visit_Raise(self, node: ast.Raise, func:Optional['python.Function']=None) -> None:
+        if node.exc is None or node.cause is not None:
+            error.error("unsupported raise syntax", self.gx, node, mv=getmv())
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
