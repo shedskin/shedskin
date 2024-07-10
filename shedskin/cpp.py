@@ -379,7 +379,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.consts[node] = "const_" + str(len(self.consts))
         return self.consts[node]
 
-    def module_hpp(self, node):
+    def module_hpp(self, node: ast.Module) -> None:
         define = "_".join(self.module.name_list).upper() + "_HPP"
         self.print("#ifndef __" + define)
         self.print("#define __" + define + "\n")
@@ -503,7 +503,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.rich_compare(ge_cls, "ge", "le")
             self.print("}")
 
-    def rich_compare(self, cls, msg, fallback_msg):
+    def rich_compare(self, cls: List['python.Class'], msg: 'str', fallback_msg: 'str') -> None:
         for cl in cls:
             t = "__%s__::%s *" % (self.mv.module.ident, self.cpp_name(cl))
             self.print("template<> inline __ss_bool __%s(%sa, %sb) {" % (msg, t, t))
@@ -511,7 +511,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print("    return b->__%s__(a);" % fallback_msg)
             self.print("}")
 
-    def module_cpp(self, node):
+    def module_cpp(self, node: ast.Module) -> None:
         self.print('#include "builtin.hpp"\n')
 
         # --- comments
@@ -1307,7 +1307,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node.iter.func.attr == "items"
         )
 
-    def only_classes(self, node, names):
+    def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         if node not in self.mergeinh:
             return False
         classes = [python.def_class(self.gx, name, mv=self.mv) for name in names] + [
