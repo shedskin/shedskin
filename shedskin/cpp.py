@@ -1476,7 +1476,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
     # --- function/method header
-    def func_header(self, func: python.Function, declare, is_init: bool = False):
+    def func_header(self, func: 'python.Function', declare: bool, is_init: bool = False) -> None:
         method = isinstance(func.parent, python.Class)
         if method:
             formals = [f for f in func.formals if f != "self"]
@@ -1637,12 +1637,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def generator_ident(self, func):  # XXX merge?
+    def generator_ident(self, func: 'python.Function') -> str:  # XXX merge?
         if func.parent:
             return func.parent.ident + "_" + func.ident
         return func.ident
 
-    def generator_class(self, func):
+    def generator_class(self, func: 'python.Function') -> None:
         ident = self.generator_ident(func)
         self.output(
             "class __gen_%s : public %s {"

@@ -4,6 +4,7 @@
 """
 
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -30,7 +31,7 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
         prefix = sysconfig.get_config_var("prefix")
     else:
         pyver = sysconfig.get_config_var("VERSION") or sysconfig.get_python_version()
-        includes = "-I" + sysconfig.get_config_var("INCLUDEPY") + " "
+        includes = "-I" + (sysconfig.get_config_var("INCLUDEPY") or "") + " "
 
         includes += "-I" + os.path.dirname(sysconfig.get_config_h_filename())
 
@@ -41,7 +42,7 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
             ldflags += (sysconfig.get_config_var("SYSLIBS") or "") + " "
             ldflags += "-lpython" + pyver
             if not sysconfig.get_config_var("Py_ENABLE_SHARED"):
-                ldflags += " -L" + sysconfig.get_config_var("LIBPL")
+                ldflags += " -L" + (sysconfig.get_config_var("LIBPL") or "")
 
     ident = gx.main_module.ident
     if gx.pyextension_product:
@@ -62,7 +63,7 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
 
     esc_space = "\ "
 
-    def env_var(name):
+    def env_var(name: str) -> str:
         return "${%s}" % name
 
     libdirs = [d.replace(" ", esc_space) for d in gx.libdirs]
@@ -83,11 +84,11 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
     cppfiles = [fn + ".cpp" for fn in filenames]
     hppfiles = [fn + ".hpp" for fn in filenames]
     # used to be 're', but currently unused, but kept around just in case
-    for always in ():
-        repath = os.path.join(env_var("SHEDSKIN_LIBDIR"), always)
-        if repath not in filenames:
-            cppfiles.append(repath + ".cpp")
-            hppfiles.append(repath + ".hpp")
+#for always in ():
+#        repath = os.path.join(env_var("SHEDSKIN_LIBDIR"), always)
+#        if repath not in filenames:
+#            cppfiles.append(repath + ".cpp")
+#            hppfiles.append(repath + ".hpp")
 
     cppfiles.sort(reverse=True)
     hppfiles.sort(reverse=True)
@@ -98,9 +99,9 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
     if gx.flags:
         flags = gx.flags
     elif os.path.isfile("FLAGS"):
-        flags = "FLAGS"
+        flags = pathlib.Path("FLAGS")
     elif os.path.isfile("/etc/shedskin/FLAGS"):
-        flags = "/etc/shedskin/FLAGS"
+        flags = pathlib.Path("/etc/shedskin/FLAGS")
     elif sys.platform == "win32":
         flags = gx.shedskin_flags / "FLAGS.mingw"
     elif sys.platform == "darwin":
