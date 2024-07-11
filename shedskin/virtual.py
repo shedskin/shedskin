@@ -1,9 +1,6 @@
-"""
-*** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
-
-virtual.py: virtual methods and variables
-
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+"""shedskin.virtual: virtual methods and variables
 """
 
 import ast

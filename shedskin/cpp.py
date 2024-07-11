@@ -1,10 +1,9 @@
-"""
-*** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+"""shedskin.cpp: c++ code generator.
 
-cpp.py: output C++ code
-
-output equivalent C++ code, using templates and virtuals to support data and OO polymorphism.
+Outputs equivalent C++ code, using templates and virtuals to support data and
+OO polymorphism.
 
 class GenerateVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor,
 to recursively generate C++ code for each syntactical Python construct.

@@ -1,8 +1,6 @@
-"""
-*** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2013 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
-
-extmod.py: extension module support
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+"""shedskin.extmod: python extension module support
 
 """
 import logging
