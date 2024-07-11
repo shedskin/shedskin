@@ -15,18 +15,20 @@ import pathlib
 from . import ast_utils
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, List, Tuple
+from typing import Optional, TYPE_CHECKING, List, Tuple, TypeAlias, Union
 if TYPE_CHECKING:
     from . import config
     from . import graph
     from . import infer
+
+Parent: TypeAlias = Union['Class', 'Function']
 
 
 class PyObject:
     """Mixin for py objects"""
     ident: str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__} {self.ident}"
 
 
@@ -277,14 +279,14 @@ class Function:
         self.registered: List[ast.AST] = []
         self.registered_temp_vars: List[Variable] = []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.parent:
             return "Function " + repr((self.parent, self.ident))
         return "Function " + self.ident
 
 
 class Variable:
-    def __init__(self, name: str, parent):
+    def __init__(self, name: str, parent: Parent):
         self.name = name
         self.parent = parent
         self.invisible = False  # not in C++ output
@@ -302,7 +304,7 @@ class Variable:
                 return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.parent:
             return repr((self.parent, self.name))
         return self.name
@@ -366,7 +368,7 @@ def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[s
 
 
 # XXX ugly: find ancestor class that implements function 'ident'
-def lookup_implementor(cl: Class, ident: str):
+def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
     while cl:
         if ident in cl.funcs and not cl.funcs[ident].inherited:
             return cl.ident
@@ -377,7 +379,7 @@ def lookup_implementor(cl: Class, ident: str):
     return None
 
 
-def lookup_class_module(objexpr, mv: 'graph.ModuleVisitor', parent):
+def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Parent) -> Tuple[Optional['Class'], Optional['Module']]:
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?
@@ -385,7 +387,7 @@ def lookup_class_module(objexpr, mv: 'graph.ModuleVisitor', parent):
     return lookup_class(objexpr, mv), lookup_module(objexpr, mv)
 
 
-def lookup_func(node, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
+def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function']:  # XXX lookup_var first?
     if isinstance(node, ast.Name):
         if node.id in mv.funcs:
             return mv.funcs[node.id]
@@ -397,6 +399,7 @@ def lookup_func(node, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.funcs:
             return module.mv.funcs[node.attr]
+    return None
 
 
 def lookup_class(node, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
