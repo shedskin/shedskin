@@ -1545,7 +1545,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ):
             self.gx.bool_test_only.add(node)
 
-    def visit_While(self, node, func=None):
+    def visit_While(self, node:ast.While, func:Optional['python.Function']=None) -> None:
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
         for child in ast.iter_child_nodes(node):
@@ -1557,13 +1557,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for child in node.orelse:
                 self.visit(child, func)
 
-    def visit_Continue(self, node, func=None):
+    def visit_Continue(self, node:ast.Continue, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_Break(self, node, func=None):
+    def visit_Break(self, node:ast.Break, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_With(self, node, func=None):
+    def visit_With(self, node:ast.With, func:Optional['python.Function']=None) -> None:
         if len(node.items) > 1:
             error.error(
                 "with-construct with multiple 'as' terms", self.gx, node, mv=getmv()
@@ -1584,7 +1584,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for child in node.body:
             self.visit(child, func)
 
-    def visit_ListComp(self, node, func=None):
+    def visit_ListComp(self, node:ast.ListComp, func:Optional['python.Function']=None) -> None:
         # --- [expr for iter in list for .. if cond ..]
         lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
@@ -1640,13 +1640,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lcfunc.ident = "list_comp_" + str(len(self.listcomps))
         self.listcomps.append((node, lcfunc, func))
 
-    def visit_DictComp(self, node, func=None):
+    def visit_DictComp(self, node:ast.DictComp, func:Optional['python.Function']=None) -> None:
         error.error("dict comprehensions are not supported", self.gx, node, mv=getmv())
 
-    def visit_SetComp(self, node, func=None):
+    def visit_SetComp(self, node:ast.SetComp, func:Optional['python.Function']=None) -> None:
         error.error("set comprehensions are not supported", self.gx, node, mv=getmv())
 
-    def visit_Return(self, node, func):
+    def visit_Return(self, node:ast.Return, func:'python.Function') -> None:
         if node.value is None:
             node.value = ast.Name("None", ast.Load())
         self.visit(node.value, func)
