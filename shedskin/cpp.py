@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from . import graph
 
 Types: TypeAlias = set[Tuple['python.Class', int]]
+Parent: TypeAlias = Union['Class', 'Function']
 
 
 class CPPNamer:
@@ -1576,7 +1577,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.output(cast)
             self.deindent()
 
-    def visit_FunctionDef(self, node, parent=None, declare=False):
+    def visit_FunctionDef(self, node: ast.FunctionDef, parent:Optional[Parent]=None, declare:bool=False) -> None:
         # locate right func instance
         if parent and isinstance(parent, python.Class):
             func = parent.funcs[node.name]
@@ -2211,8 +2212,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")" + postfix)
 
     def visit2(
-        self, node, argtypes, middle, func
-    ):  # XXX use temp vars in comparisons, e.g. (t1=fun())
+        self,
+        node: ast.AST,
+        argtypes: Types,
+        middle: str,
+        func: Optional['python.Function'],
+    ) -> None:  # XXX use temp vars in comparisons, e.g. (t1=fun())
         if node in self.mv.tempcount:
             if node in self.done:
                 self.append(self.mv.tempcount[node])

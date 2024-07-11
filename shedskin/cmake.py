@@ -25,7 +25,7 @@ import subprocess
 import sys
 import textwrap
 import time
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from . import config
 from .utils import CYAN, GREEN, RED, RESET, WHITE
@@ -610,13 +610,13 @@ class CMakeBuilder:
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
         self.log = logging.getLogger(self.__class__.__name__)
 
-    def check(self, path: Pathlike):
+    def check(self, path: Pathlike) -> None:
         """check file for syntax errors"""
         with open(path, encoding="utf8") as fopen:
             src = fopen.read()
         compile(src, path, "exec")
 
-    def get_most_recent_test(self):
+    def get_most_recent_test(self) -> str:
         """returns name of recently modified test"""
         max_mtime = 0.0
         most_recent_test = None
@@ -627,7 +627,7 @@ class CMakeBuilder:
                 most_recent_test = test
         return most_recent_test
 
-    def error_tests(self):
+    def error_tests(self) -> List[str]:
         """test error messages from tests in errs directory"""
         failures = []
         os.chdir("errs")
@@ -665,7 +665,7 @@ class CMakeBuilder:
         """create build directory"""
         os.makedirs(self.build_dir, exist_ok=True)
 
-    def cmake_config(self, options: list[str], generator: Optional[str] = None):
+    def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """cmake configuration phase"""
         opts = " ".join(options)
         cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
@@ -674,7 +674,7 @@ class CMakeBuilder:
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
 
-    def cmake_build(self, options: list[str]):
+    def cmake_build(self, options: list[str]) -> None:
         """activate cmake build"""
         opts = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} {opts}"
@@ -682,7 +682,7 @@ class CMakeBuilder:
         print("bld_cmd:", bld_cmd)
         assert os.system(bld_cmd) == 0
 
-    def cmake_test(self, options: list[str]):
+    def cmake_test(self, options: list[str]) -> None:
         """activate ctest"""
         opts = " ".join(options)
         if platform.system() == 'Windows':
@@ -702,7 +702,7 @@ class CMakeBuilder:
         """build as a builder"""
         self.process(run_tests=False)
 
-    def process(self, run_tests: bool = False):
+    def process(self, run_tests: bool = False) -> None:
         """process shedskin program with cmake"""
         start_time = time.time()
 
