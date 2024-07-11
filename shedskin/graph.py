@@ -351,7 +351,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return nonred
 
     # --- determine single constructor child node type, used by the above
-    def child_type_rec(self, node):
+    def child_type_rec(self, node: ast.AST):
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
             node = node.operand
 
@@ -1659,7 +1659,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if func.retnode:
             self.add_constraint((infer.inode(self.gx, node.value), func.retnode), func)
 
-    def visit_Delete(self, node, func=None):
+    def visit_Delete(self, node:ast.Delete, func:Optional['python.Function']=None) -> None:
         for child in node.targets:
             assert type(child.ctx) == ast.Del
             self.visit(child, func)

@@ -75,7 +75,7 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias, Union
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias, Union, Dict
 
 if TYPE_CHECKING:
     from . import config
@@ -1381,7 +1381,7 @@ def ifa_determine_split(node, allnodes):
     return remaining
 
 
-def ifa_classes_to_split(gx: "config.GlobalInfo"):
+def ifa_classes_to_split(gx: "config.GlobalInfo") -> List['python.Class']:
     """setup classes to perform splitting on"""
     classes = []
     for ident in [
@@ -1405,7 +1405,7 @@ def ifa_classes_to_split(gx: "config.GlobalInfo"):
     return classes
 
 
-def ifa_confluence_point(node, creation_points):
+def ifa_confluence_point(node: CNode, creation_points: Dict) -> bool:
     """determine if node is confluence point"""
     if len(node.in_) > 1 and isinstance(node.thing, python.Variable):
         for csite in node.csites:
