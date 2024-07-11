@@ -28,7 +28,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.orig_types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
-        self.inheritance_relations: dict['python.Function', List['python.Function']] = {}
+        self.inheritance_relations: dict[Union['python.Function', 'ast.AST'], List[Union['python.Function', 'ast.AST']]] = {}
         self.inheritance_temp_vars: dict['python.Variable', List['python.Variable']] = {}
         self.parent_nodes: dict[ast.AST, ast.AST] = {}
         self.inherited: set[ast.AST] = set()

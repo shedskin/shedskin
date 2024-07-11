@@ -1466,13 +1466,18 @@ def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
     return creation_points, paths, assignsets, allnodes, csites, emptycsites
 
 
-def ifa_split_class(cl, dcpa, things, split):
+def ifa_split_class(
+    cl: 'python.Class',
+    dcpa: int,
+    things: List[Tuple[ast.AST, int, int]],
+    split: List[Tuple['python.Class', int, List[Tuple[ast.AST, int, int]], int]],
+) -> None:
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
 
 
-def update_progressbar(gx: "config.GlobalInfo", perc):
+def update_progressbar(gx: "config.GlobalInfo", perc: float) -> None:
     if not gx.silent:
         if gx.progressbar is None:
             gx.progressbar = utils.ProgressBar(total=1)

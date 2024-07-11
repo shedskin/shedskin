@@ -61,7 +61,12 @@ def getmv() ->  Optional['ModuleVisitor']:
     return _mv
 
 
-def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False) -> None:  # XXX to modvisitor, rewrite
+def check_redef(
+    gx: 'config.GlobalInfo',
+    node: Union[ast.ClassDef, ast.FunctionDef],
+    s: Optional[str]=None,
+    onlybuiltins: bool = False
+) -> None:  # XXX to modvisitor, rewrite
     mv = getmv()
     if mv and mv.module and not mv.module.builtin:
         existing_names =  list(mv.ext_classes) + list(mv.ext_funcs)
@@ -93,8 +98,8 @@ def register_node(node: ast.AST, func: Optional['python.Function']) -> None:
         func.registered.append(node)
 
 
-def slice_nums(nodes):
-    nodes2 = []
+def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
+    nodes2: List[ast.AST] = []
     x = 0
     for i, n in enumerate(nodes):
         if not n or ast_utils.is_none(n):
@@ -102,10 +107,11 @@ def slice_nums(nodes):
         else:
             nodes2.append(n)
             x |= 1 << i
-    return [ast.Num(x)] + nodes2
+    nodes2.insert(0, ast.Num(x))
+    return nodes2
 
 
-def get_arg_nodes(node):
+def get_arg_nodes(node: ast.Call) -> List[ast.arg]:  # TODO simplify for py3?
     args = []
 
     for arg in node.args:
@@ -126,7 +132,7 @@ def get_arg_nodes(node):
     return args
 
 
-def has_star_kwarg(node) -> bool:
+def has_star_kwarg(node: ast.Call) -> bool:  # TODO simplify for py3?
     if hasattr(node, "starargs"):
         return bool(node.starargs or node.kwargs)
 
@@ -142,8 +148,13 @@ def has_star_kwarg(node) -> bool:
 
 
 def make_arg_list(
-    argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]
-):
+    argnames: List[str],
+    vararg=None,
+    kwonlyargs=[],
+    kwarg=None,
+    defaults=[],
+    kw_defaults=[]
+) -> ast.arguments:
     try:
         ast.arg
 
@@ -159,7 +170,7 @@ def make_arg_list(
         return ast.arguments(args, vararg, kwarg, defaults)
 
 
-def is_property_setter(dec) -> bool:
+def is_property_setter(dec: ast.AST) -> bool:
     return (
         isinstance(dec, ast.Attribute)
         and isinstance(dec.value, ast.Name)
@@ -497,7 +508,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     result.append(ast.Name("True", ast.Load()))
         return ast.Tuple(result, ast.Load())
 
-    def visit_GeneratorExp(self, node, func=None):
+    def visit_GeneratorExp(self, node: ast.GeneratorExp, func:Optional['python.Function']=None) -> None:
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
