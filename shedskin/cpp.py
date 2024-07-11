@@ -650,22 +650,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.module == self.gx.main_module:
             self.do_main()
 
-    def visit_Expr(self, node, func=None):
+    def visit_Expr(self, node:ast.Expr, func:Optional['python.Function']=None) -> None:
         if not isinstance(node.value, ast.Str):
             self.start("")
             self.visit(node.value, func)
             self.eol()
 
-    def visit_NamedExpr(self, node, func=None):
+    def visit_NamedExpr(self, node:ast.NamedExpr, func:Optional['python.Function']=None) -> None:
         self.visitm("(", node.target.id, "=", node.value, ")", func)
 
-    def visit_Import(self, node, func=None):
+    def visit_Import(self, node:ast.Import, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_ImportFrom(self, node, func=None):
+    def visit_ImportFrom(self, node:ast.ImportFrom, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_Module(self, node, declare=False):
+    def visit_Module(self, node:ast.Module, declare:bool=False) -> None:
         if declare:
             self.module_hpp(node)
         else:
@@ -1708,7 +1708,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("};\n")
 
-    def generator_body(self, func):
+    def generator_body(self, func: 'python.Function') -> None:
         ident = self.generator_ident(func)
         if not (func.isGenerator and func.parent):
             formals = [self.cpp_name(func.vars[f]) for f in func.formals]
@@ -1720,7 +1720,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def visit_Yield(self, node, func):
+    def visit_Yield(self, node:ast.Yield, func: 'python.Function') -> None:
         self.output("__last_yield = %d;" % func.yieldNodes.index(node))
         self.start("__result = ")
         self.impl_visit_conv(node.value, self.mergeinh[func.yieldnode.thing], func)
@@ -1729,10 +1729,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("__after_yield_%d:;" % func.yieldNodes.index(node))
         self.start()
 
-    def visit_Global(self, node, func=None):
+    def visit_Global(self, node: ast.Global, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_If(self, node, func=None, else_if=0, root_if=None):
+    def visit_If(
+        self,
+        node: ast.If,
+        func:Optional['python.Function']=None,
+        else_if:int=0,
+        root_if: ast.If=None,
+    ) -> None:
         # break up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         root_if = root_if or node
         if else_if == 0:
@@ -1779,7 +1785,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif root_if in self.mv.tempcount:
             self.output("}")
 
-    def visit_IfExp(self, node, func=None):
+    def visit_IfExp(self, node:ast.IfExp, func:Optional['python.Function']=None) -> None:
         types = self.mergeinh[node]
         self.append("((")
         self.bool_test(node.test, func)
@@ -3188,7 +3194,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
         return args
 
-    def listcomp_func(self, node):
+    def listcomp_func(self, node: ast.AST) -> None:
         lcfunc, func = self.listcomps[node]
         self.listcomp_head(node, False, False)
         self.indent()
@@ -3204,7 +3210,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def genexpr_class(self, node, declare):
+    def genexpr_class(self, node: ast.AST, declare: bool) -> None:
         lcfunc, func = self.listcomps[node]
         args = self.lc_args(lcfunc, func)
         func1 = lcfunc.ident + "(" + ", ".join(a + b for a, b in args) + ")"
@@ -3240,7 +3246,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}\n")
 
-    def local_defs(self, func: python.Function):
+    def local_defs(self, func: python.Function) -> None:
         pairs = []
         for name, var in func.vars.items():
             if not var.invisible and (
@@ -3428,7 +3434,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(", ", n, func)
         self.append(")")
 
-    def attr_var_ref(self, node, ident, module=None):  # XXX blegh
+    def attr_var_ref(self, node: ast.Attribute, ident: str, module:Optional['python.Module']=None) -> str:  # XXX blegh
         lcp = typestr.lowest_common_parents(
             typestr.polymorphic_t(self.gx, self.mergeinh[node.value])
         )

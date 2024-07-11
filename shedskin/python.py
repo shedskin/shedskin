@@ -119,6 +119,7 @@ class Class(PyObject):
         self.bases: list['Class'] = []
         self.children: list['Class'] = []
         self.dcpa = 1
+        self.newdcpa: int
         self.vars: dict[str, 'Variable'] = {}
         self.funcs: dict[str, 'Function'] = {}
         self.virtuals: dict[str, set['Class']] = {}     # 'virtually' called methods
