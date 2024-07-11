@@ -698,7 +698,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                     self.print("    " + module.full_path() + "::__init();")
 
-    def do_comment(self, s:str) -> None:
+    def do_comment(self, s:Optional[str]) -> None:
         if not s:
             return
         s = s.encode('ascii', 'ignore').decode('ascii') # TODO
