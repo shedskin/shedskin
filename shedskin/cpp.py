@@ -1121,7 +1121,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_Assert(self, node, func=None):
+    def visit_Assert(self, node:ast.Assert, func:Optional['python.Function']=None) -> None:
         self.start("ASSERT(")
         self.visitm(node.test, ", ", func)
         if node.msg:
@@ -1170,10 +1170,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(exc, func)
         self.eol(")")
 
-    def visit_Try(self, node, func=None):  # py3
-        self.visit_TryExcept(node, func)
-
-    def visit_TryExcept(self, node, func=None):
+    def visit_Try(self, node:ast.Try, func:Optional['python.Function']=None) -> None:
         # try
         self.start("try {")
         self.print(self.line)
