@@ -78,13 +78,14 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias, Union
 
 if TYPE_CHECKING:
     from . import config
     from . import graph
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules
+Parent: TypeAlias = Union['python.Class', 'python.Function']
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -1804,7 +1805,7 @@ def deepcopy_classes(gx: "config.GlobalInfo", classes):
     return classes
 
 
-def determine_classes(gx: "config.GlobalInfo"):  # XXX modeling..?
+def determine_classes(gx: "config.GlobalInfo") -> None:  # XXX modeling..?
     if "copy" not in gx.modules:
         return
     func = gx.modules["copy"].mv.funcs["copy"]
@@ -1817,7 +1818,7 @@ def determine_classes(gx: "config.GlobalInfo"):  # XXX modeling..?
         cl.has_deepcopy = True
 
 
-def analyze(gx: "config.GlobalInfo", module_name):
+def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     from . import graph  # TODO improve separation to avoid circular imports..
     from .typestr import nodetypestr
     from .virtual import analyze_virtuals
@@ -1897,7 +1898,7 @@ def analyze(gx: "config.GlobalInfo", module_name):
     return gx
 
 
-def register_temp_var(var, parent):
+def register_temp_var(var: 'python.Variable', parent: Parent) -> None:
     if isinstance(parent, python.Function):
         parent.registered_temp_vars.append(var)
 
