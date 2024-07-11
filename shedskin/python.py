@@ -200,35 +200,12 @@ class StaticClass(PyObject):
         self.module = cl.module
 
 
-def get_arg_name(node: ast.AST, is_tuple_expansion: bool = False):
-    if hasattr(node, "arg"):
-        assert isinstance(node.arg, str), "non-arg string %s" % type(node.arg)
-        return node.arg
-
-    if isinstance(node, ast.Tuple):
-        return tuple(
-            get_arg_name(child, is_tuple_expansion=True) for child in node.elts
-        )
-    elif isinstance(node, ast.Name):
-        assert (
-            is_tuple_expansion
-            and type(node.ctx) == ast.Store
-            or type(node.ctx) == ast.Param
-        )
-        return node.id
-    elif isinstance(node, str):
-        return node
-    else:
-        assert False, "Unexpected argument type got %s" % type(node)
-
-
-def extract_argnames(arg_struct):
-    argnames = [get_arg_name(arg) for arg in arg_struct.args]
+def extract_argnames(arg_struct:ast.arguments) -> List[str]:
+    argnames = [arg.arg for arg in arg_struct.args]
     if arg_struct.vararg:
-        argnames.append(get_arg_name(arg_struct.vararg))
-    # PY3: kwonlyargs
+        argnames.append(arg_struct.vararg.arg)
     if arg_struct.kwarg:
-        argnames.append(arg_struct.kwarg)
+        argnames.append(arg_struct.kwarg.arg)
     return argnames
 
 
