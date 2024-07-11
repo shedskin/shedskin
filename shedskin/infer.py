@@ -1483,7 +1483,7 @@ def update_progressbar(gx: "config.GlobalInfo", perc):
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 
 
-def iterative_dataflow_analysis(gx: "config.GlobalInfo"):
+def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
     logger.info("[analyzing types..]")
     backup = backup_network(gx)
 
@@ -1614,7 +1614,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo"):
 # --- seed allocation sites in newly created templates (called by function.copy())
 
 
-def ifa_seed_template(gx: "config.GlobalInfo", func, cart, dcpa, cpa, worklist):
+def ifa_seed_template(gx: "config.GlobalInfo", func, cart, dcpa, cpa, worklist) -> None:
     if cart is not None:  # (None means we are not in the process of propagation)
         # print 'funccopy', func.ident #, func.nodes
         if isinstance(func.parent, python.Class):  # self
@@ -1740,7 +1740,7 @@ def backup_network(gx: "config.GlobalInfo"):
 
 
 # --- restore constraint network, introducing new types
-def restore_network(gx: "config.GlobalInfo", backup):
+def restore_network(gx: "config.GlobalInfo", backup) -> None:
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
 
     gx.types = {}
@@ -1782,7 +1782,7 @@ def merge_simple_types(gx: "config.GlobalInfo", types):
     return frozenset(merge)
 
 
-def get_classes(gx: "config.GlobalInfo", var):
+def get_classes(gx: "config.GlobalInfo", var) -> set['python.Class']:
     return set(
         t[0]
         for t in gx.merged_inh[var]
@@ -1790,7 +1790,7 @@ def get_classes(gx: "config.GlobalInfo", var):
     )
 
 
-def deepcopy_classes(gx: "config.GlobalInfo", classes):
+def deepcopy_classes(gx: "config.GlobalInfo", classes: set['python.Class']) -> set['python.Class']:
     changed = True
     while changed:
         changed = False

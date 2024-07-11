@@ -2871,7 +2871,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 return True
         return False
 
-    def get_selector(self, temp, item, i):
+    def get_selector(self, temp: str, item: ast.AST, i: int) -> str:
         rvalue_node = self.gx.item_rvalue[item]
         sel = "__getitem__(%d)" % i
         if i < 2 and self.only_classes(rvalue_node, ("tuple2",)):
@@ -2880,7 +2880,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             sel = "__getfast__(%d)" % i
         return "%s->%s" % (temp, sel)
 
-    def subs_assign(self, lvalue, func):
+    def subs_assign(self, lvalue: ast.Subscript, func:'python.Function') -> None:
         if isinstance(lvalue.slice, ast.Index):
             subs = lvalue.slice.value
         else:
@@ -2894,7 +2894,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             func,
         )
 
-    def struct_unpack_cpp(self, node, func):
+    def struct_unpack_cpp(self, node:ast.Assign, func:'python.Function') -> bool:
         struct_unpack = self.gx.struct_unpack.get(node)
         if struct_unpack:
             sinfo, tvar, tvar_pos = struct_unpack

@@ -25,7 +25,7 @@ import subprocess
 import sys
 import textwrap
 import time
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Callable
 
 from . import config
 from .utils import CYAN, GREEN, RED, RESET, WHITE
@@ -43,7 +43,7 @@ def pkg_path() -> None:
     """used by cmake to get package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
 
-def get_user_cache_dir():
+def get_user_cache_dir() -> pathlib.Path:
     """get user cache directory dependending on platform"""
     system = platform.system()
     if system == "Darwin":
@@ -179,27 +179,27 @@ class ShedskinDependencyManager:
         if self.reset_on_run:
             shutil.rmtree(self.deps_dir)
 
-    def shellcmd(self, cmd: str, *args, **kwds):
+    def shellcmd(self, cmd: str, *args, **kwds) -> None:
         """run shellcmd"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
         os.system(cmd.format(*args, **kwds))
 
-    def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None):
+    def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None) -> None:
         """retrieve git clone of repo"""
         if branch:
           self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
         else:
            self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
 
-    def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options):
+    def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options) -> None:
         """activate cmake configuration / generation stage"""
         opts = " ".join(f"-D{k}={v}" for k, v in options.items())
         self.shellcmd(
             f"cmake -S {src_dir} -B {build_dir} --install-prefix {prefix} {opts}"
         )
 
-    def cmake_build(self, build_dir: Pathlike, release: bool = True):
+    def cmake_build(self, build_dir: Pathlike, release: bool = True) -> None:
         """activate cmake build stage"""
         if release:
             build_type = "Release"
@@ -207,15 +207,15 @@ class ShedskinDependencyManager:
             build_type = "Debug"
         self.shellcmd(f"cmake --build {build_dir} --config {build_type}")
 
-    def cmake_install(self, build_dir: Pathlike):
+    def cmake_install(self, build_dir: Pathlike) -> None:
         """activate cmake install stage"""
         self.shellcmd(f"cmake --install {build_dir}")
 
-    def wget(self, url: str, output_dir: Pathlike):
+    def wget(self, url: str, output_dir: Pathlike) -> None:
         """download url resource using wget"""
         self.shellcmd(f"wget -P {output_dir} {url}")
 
-    def tar(self, archive: Pathlike, output_dir: Pathlike):
+    def tar(self, archive: Pathlike, output_dir: Pathlike) -> None:
         """uncompress tar archive"""
         self.shellcmd(f"tar -xvf {archive} -C {output_dir}")
 
@@ -366,7 +366,7 @@ def add_shedskin_product(
     debug: bool = False,
     name: Optional[str] = None,
     extra_lib_dir: Optional[str] = None,
-):
+) -> str:
     """populates a cmake function with the same name
 
     boolean options:
@@ -394,7 +394,7 @@ def add_shedskin_product(
         cmdline_options = '-X' + extra_lib_dir
         include_dirs = [extra_lib_dir]
 
-    def mk_add(lines: list[str], spaces: int = 4):
+    def mk_add(lines: list[str], spaces: int = 4) -> Callable:
         def _append(level, txt):
             indentation = " " * spaces * level
             lines.append(f"{indentation}{txt}")
@@ -480,7 +480,7 @@ def add_shedskin_product(
     return "\n".join(flist)
 
 
-def get_cmakefile_template(**kwds):
+def get_cmakefile_template(**kwds) -> str:
     """returns a cmake template"""
     _pkg_path = get_pkg_path()
     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"
@@ -492,7 +492,7 @@ def check_cmake_availability() -> None:
     if not bool(shutil.which('cmake')):
         raise Exception("cmake not available in path")
 
-def generate_cmakefile(gx: config.GlobalInfo):
+def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """improved generator using built-in machinery"""
     assert gx.main_module, "gx.main_module not provided"
     path = gx.main_module.filename
