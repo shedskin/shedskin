@@ -199,11 +199,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
         self.importnodes: List[ast.AST] = []
 
-    def visit(self, node: ast.AST, *args):
+    def visit(self, node: ast.AST, *args) -> None:
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
-    def fake_func(self, node, objexpr: ast.expr, attrname, args, func: Optional[python.Function] = None):
+    def fake_func(self, node, objexpr: ast.expr, attrname, args, func: Optional[python.Function] = None) -> ast.Call:
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -521,7 +521,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.visit(lc, func)
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
-    def visit_JoinedStr(self, node, func=None):
+    def visit_JoinedStr(self, node:ast.JoinedStr, func:Optional['python.Function']=None) -> None:
         for value in node.values:
             if isinstance(value, ast.FormattedValue):
                 if value.format_spec:
@@ -537,11 +537,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.fake_func(infer.inode(self.gx, value), value, "__str__", [], func)
         self.instance(node, python.def_class(self.gx, "str_"), func)
 
-    def visit_Expr(self, node, func=None):
+    def visit_Expr(self, node:ast.Expr, func:Optional['python.Function']=None) -> None:
         self.bool_test_add(node.value)
         self.visit(node.value, func)
 
-    def visit_NamedExpr(self, node, func=None):
+    def visit_NamedExpr(self, node:ast.NamedExpr, func:Optional['python.Function']=None) -> None:
         self.visit(node.value, func)
 
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
@@ -720,7 +720,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.extend(self.local_assignments(child, global_))
         return result
 
-    def visit_Import(self, node, func=None):
+    def visit_Import(self, node:ast.Import, func:Optional['python.Function']=None) -> None:
         if node not in getmv().importnodes:
             error.error(
                 "please place all imports (no 'try:' etc) at the top of the file",
@@ -1373,13 +1373,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.msg:
             self.visit(node.msg, func)
 
-    def visit_Try(self, node, func=None):
-        self.visit_TryExcept(node, func)
-
-    def visit_TryStar(self, node, func=None):
-        error.error("unsupported try/except syntax", self.gx, node, mv=getmv())
-
-    def visit_TryExcept(self, node, func=None):
+    def visit_Try(self, node:ast.Try, func:Optional['python.Function']=None) -> None:
         for child in node.body:
             self.visit(child, func)
 
@@ -1873,7 +1867,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_Call(self, node, func=None, fake_attr=False):  # XXX clean up!!
+    def visit_Call(self, node: ast.Call, func:Optional['python.Function']=None, fake_attr:bool=False) -> None:  # XXX clean up!!
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
