@@ -1774,7 +1774,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):
                 self.temp_var2(node.value, infer.inode(self.gx, node.value), func)
 
-    def assign_pair(self, lvalue, rvalue, func):
+    def assign_pair(self, lvalue: ast.AST, rvalue: ast.AST, func: 'python.Function') -> None:
         # expr[expr] = expr
         if isinstance(lvalue, ast.Subscript) and not isinstance(
             lvalue.slice, (ast.Slice, ast.Del)
@@ -1812,7 +1812,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             return infer.default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
 
-    def tuple_flow(self, lvalue, rvalue, func=None):
+    def tuple_flow(self, lvalue: ast.AST, rvalue: ast.AST, func:Optional['python.Function']=None) -> None:
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
         if ast_utils.is_assign_list_or_tuple(lvalue):
