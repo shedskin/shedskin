@@ -1,9 +1,6 @@
-"""
-*** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
-
-infer.py: perform iterative type analysis
------------------------------------------
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+"""shedskin.infer: perform iterative type analysis
 
 We combine two techniques from the literature, to analyze both parametric
 polymorphism and data polymorphism adaptively.
