@@ -337,7 +337,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.visit(arg, func)
 
-    def connector(self, node, func):
+    def connector(self, node: ast.AST, func: 'python.Function') -> str:
         if typestr.singletype(self.gx, node, python.Module):
             return "::"
         elif typestr.unboxable(self.gx, self.mergeinh[node]):
@@ -973,7 +973,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if [v for v in cl.vars if not v.startswith("__")]:
             self.print()
 
-    def nothing(self, types):
+    def nothing(self, types: Types) -> str:
         if python.def_class(self.gx, "complex") in (t[0] for t in types):
             return "mcomplex(0.0, 0.0)"
         elif python.def_class(self.gx, "bool_") in (t[0] for t in types):
@@ -981,7 +981,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return "0"
 
-    def inhcpa(self, func):
+    def inhcpa(self, func: 'python.Function') -> bool:
         return infer.called(func) or (
             func in self.gx.inheritance_relations
             and [1 for f in self.gx.inheritance_relations[func] if infer.called(f)]
@@ -996,7 +996,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.visit(infer.inode(self.gx, node.expr).fakefunc, func)
 
-    def visit_Lambda(self, node, parent=None):
+    def visit_Lambda(self, node: ast.Lambda, parent:Optional[Parent]=None) -> None:
         self.append(self.mv.lambdaname[node])
 
     def subtypes(self, types: Types, varname: str) -> Types:
@@ -3720,7 +3720,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def expand_special_chars(self, value):
+    def expand_special_chars(self, value) -> str:
         if isinstance(value, str):
             value = value.encode("utf-8")  # restriction
 
@@ -3738,7 +3738,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         return "".join(value)
 
-    def visit_Constant(self, node, func=None):
+    def visit_Constant(self, node: ast.Constant, func:Optional['python.Function']=None) -> None:
         value = node.value
 
         if isinstance(value, bool):
@@ -3786,7 +3786,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert False
 
 
-def generate_code(gx):
+def generate_code(gx: 'config.GlobalInfo') -> None:
     for module in gx.modules.values():
         if not module.builtin:
             gv = GenerateVisitor(gx, module)
