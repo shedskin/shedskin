@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from . import graph
 
 Types: TypeAlias = set[Tuple['python.Class', int]]
-Parent: TypeAlias = Union['Class', 'Function']
+Parent: TypeAlias = Union['python.Class', 'python.Function']
 
 
 class CPPNamer:
@@ -135,7 +135,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return open(output_file, mode)
 
     # XXX this is too magical
-    def insert_consts(self, declare: bool):  # XXX ugly
+    def insert_consts(self, declare: bool) -> None:  # XXX ugly
         if not self.consts:
             return
         self.filling_consts = True
@@ -337,7 +337,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.visit(arg, func)
 
-    def connector(self, node: ast.AST, func: 'python.Function') -> str:
+    def connector(self, node: ast.AST, func: Optional['python.Function']) -> str:  # TODO func unused
         if typestr.singletype(self.gx, node, python.Module):
             return "::"
         elif typestr.unboxable(self.gx, self.mergeinh[node]):
@@ -1792,7 +1792,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.impl_visit_conv(node.orelse, types, func)
         self.append("))")
 
-    def impl_visit_conv(self, node: ast.AST, argtypes: Types, func: 'python.Function', check_temp: bool=True) -> None:
+    def impl_visit_conv(
+        self,
+        node: ast.AST,
+        argtypes: Types,
+        func: Optional['python.Function'],
+        check_temp: bool=True,
+    ) -> None:
         # convert/cast node to type it is assigned to
         actualtypes = self.mergeinh[node]
         if check_temp and node in self.mv.tempcount:  # XXX
@@ -2232,7 +2238,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.impl_visit_conv(node, argtypes, func)
 
-    def visit_UnaryOp(self, node, func=None):
+    def visit_UnaryOp(self, node: ast.UnaryOp, func:Optional['python.Function']=None) -> None:
         if type(node.op) == ast.USub:
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
@@ -2303,7 +2309,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.append("0, ")
 
-    def visit_JoinedStr(self, node, func=None):
+    def visit_JoinedStr(self, node: ast.JoinedStr, func:Optional['python.Function']=None) -> None:
         self.append("__add_strs(%d, " % len(node.values))
         for i, value in enumerate(node.values):
             if isinstance(value, ast.FormattedValue):
@@ -2313,7 +2319,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(", ")
         self.append(")")
 
-    def visit_Pass(self, node, func=None):
+    def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
         pass
 
     def visit_Call(self, node:ast.Call, func:Optional['python.Function']=None, argtypes=None) -> None:

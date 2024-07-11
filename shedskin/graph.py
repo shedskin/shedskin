@@ -743,7 +743,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.import_modules(name, node, False)
 
-    def import_modules(self, name, node, fake):
+    def import_modules(self, name: str, node:ast.AST, fake:bool) -> 'python.Module':
         # in case of relative import, make name absolute
         level = getattr(node, "level", None) or 0
         if level > 0:
@@ -766,7 +766,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     parent.mv.imports[module.ident] = module
         return module
 
-    def import_module(self, name, pseudonym, node, fake):
+    def import_module(self, name: str, pseudonym: str, node: ast.AST, fake:bool) -> 'python.Module':
         module = self.analyze_module(name, pseudonym, node, fake)
         if not fake:
             var = infer.default_var(self.gx, pseudonym or name, None, mv=getmv())
@@ -864,7 +864,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=getmv(),
                 )
 
-    def analyze_module(self, name, pseud, node, fake):
+    def analyze_module(self, name: str, pseud: str, node, fake):
         module = parse_module(name, self.gx, getmv().module, node)
         if not fake:
             self.imports[pseud] = module
@@ -1061,7 +1061,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for child in node.orelse:
                 self.visit(child, func)
 
-    def visit_IfExp(self, node, func=None):
+    def visit_IfExp(self, node:ast.IfExp, func:Optional['python.Function']=None) -> None:
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
@@ -1123,7 +1123,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ident = "__getitem__"
                 self.fake_func(node, node.value, ident, [subscript], func)
 
-    def visit_Slice(self, node, func=None):
+    def visit_Slice(self, node:ast.Slice, func:Optional['python.Function']=None) -> None:
         self.slice(node, node.expr, [node.lower, node.upper, None], func)
 
     def slice(self, node, expr, nodes, func, replace=None):
@@ -1252,7 +1252,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 mv=getmv(),
             )
 
-    def visit_impl_bitpair(self, node, msg, func=None):
+    def visit_impl_bitpair(self, node: ast.BinOp, msg: str, func:Optional['python.Function']=None) -> None:
         infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[infer.inode(self.gx, node)] = set()
         faker = self.fake_func((node.left, 0), node.left, msg, [node.right], func)
@@ -1261,8 +1261,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
 
     def visit_AugAssign(
-        self, node, func=None
-    ):  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
+        self, node: ast.AugAssign, func:Optional['python.Function']=None
+    ) -> None:  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
