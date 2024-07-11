@@ -136,7 +136,7 @@ def nodetypestr(
     check_ret: bool = False,
     var=None,
     mv=None,
-):  # XXX minimize
+) -> str:  # XXX minimize
     if (
         cplusplus and isinstance(node, python.Variable) and node.looper
     ):  # XXX to declaredefs?
@@ -167,7 +167,7 @@ def typestr(
     var=None,
     tuple_check: bool = False,
     mv=None,
-):
+) -> str:
     try:
         ts = typestrnew(
             gx,
@@ -253,7 +253,7 @@ def typestrnew(
     var=None,
     tuple_check: bool = False,
     mv=None,
-):
+) -> str:
     if depth == 10:
         raise RuntimeError()
 
@@ -466,7 +466,7 @@ def typestrnew(
     return namespace + ident + sep[0] + ", ".join(subtypes) + sep[1] + ptr
 
 
-def incompatible_assignment_rec(gx: 'config.GlobalInfo', argtypes, formaltypes, depth=0) -> bool:
+def incompatible_assignment_rec(gx: 'config.GlobalInfo', argtypes: Types, formaltypes: Types, depth:int=0) -> bool:
     if depth == 10:
         return False
     argclasses = types_classes(argtypes)

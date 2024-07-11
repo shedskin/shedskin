@@ -1282,12 +1282,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(",%s,%s)" % (ivar[2:], evar[2:]))
         self.print(self.line)
 
-    def fastenumerate(self, node):
+    def fastenumerate(self, node: ast.For) -> bool:
         return ast_utils.is_enumerate(node) and self.only_classes(
             node.iter.args[0], ("tuple", "list", "str_")
         )
 
-    def fastzip2(self, node):
+    def fastzip2(self, node: ast.For) -> bool:
         names = ("tuple", "list")
         return (
             ast_utils.is_zip2(node)
@@ -1295,7 +1295,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and self.only_classes(node.iter.args[1], names)
         )
 
-    def fastdictiter(self, node):
+    def fastdictiter(self, node: ast.For) -> bool:
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_assign_list_or_tuple(node.target)
@@ -1312,7 +1312,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
-    def visit_For(self, node, func=None):
+    def visit_For(self, node: ast.For, func:Optional['python.Function']=None) -> None:
         if isinstance(node.target, ast.Name):
             assname = node.target.id
         elif ast_utils.is_assign_attribute(node.target):

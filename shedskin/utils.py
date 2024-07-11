@@ -16,7 +16,7 @@ RED_BOLD = "\x1b[31;1m"
 RESET = "\x1b[0m"
 
 
-def bold(txt):
+def bold(txt: str) -> str:
     return f"{BOLD}{txt}{RESET}"
 
 
@@ -46,7 +46,7 @@ class ProgressBar:
         self.progress = 0.0
         self.done: bool = False
 
-    def update(self, n: int):
+    def update(self, n: int) -> None:
         if self.done:
             return
 
