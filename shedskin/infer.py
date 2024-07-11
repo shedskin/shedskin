@@ -128,7 +128,7 @@ class CNode:
     def __init__(
         self,
         gx: "config.GlobalInfo",
-        thing,
+        thing: Any,
         dcpa: int = 0,
         cpa: int = 0,
         parent = None,
@@ -174,7 +174,7 @@ class CNode:
                     parent.nodes.add(self)
                     parent.nodes_ordered.append(self)
 
-    def copy(self, dcpa, cpa, worklist=None):  # XXX to infer.py
+    def copy(self, dcpa: int, cpa: int, worklist:Optional[List['CNode']]=None) -> 'CNode':  # XXX to infer.py
         # if not self.mv.module.builtin: print 'copy', self
 
         if (self.thing, dcpa, cpa) in self.gx.cnode:
@@ -209,7 +209,7 @@ class CNode:
         return repr((self.thing, self.dcpa, self.cpa))
 
 
-def DEBUG(gx: "config.GlobalInfo", level):
+def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
     return gx.debug_level >= level
 
 

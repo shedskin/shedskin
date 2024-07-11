@@ -131,7 +131,7 @@ class Class(PyObject):
 
         self.parent: StaticClass = StaticClass(self, mv)
 
-    def ancestors(self, inclusive: bool = False):  # XXX attribute (faster)
+    def ancestors(self, inclusive:bool=False) -> set['Class']:  # XXX attribute (faster)
         a = set(self.bases)
         changed = 1
         while changed:
@@ -144,7 +144,7 @@ class Class(PyObject):
             a.add(self)
         return a
 
-    def ancestors_upto(self, other: Optional['Class']):
+    def ancestors_upto(self, other: Optional['Class']) -> List['Class']:
         a = self
         result = []
         while a != other:
@@ -156,7 +156,7 @@ class Class(PyObject):
             a = a.bases[0]
         return result
 
-    def descendants(self, inclusive: bool = False):  # XXX attribute (faster)
+    def descendants(self, inclusive:bool=False) -> set['Class']:  # XXX attribute (faster)
         a = set()
         if inclusive:
             a.add(self)
@@ -165,7 +165,7 @@ class Class(PyObject):
             a.update(cl.descendants())
         return a
 
-    def tvar_names(self):
+    def tvar_names(self) -> List[str]:
         if self.mv.module.builtin:
             if self.ident in [
                 "list",
@@ -198,7 +198,7 @@ class StaticClass(PyObject):
         self.module = cl.module
 
 
-def get_arg_name(node, is_tuple_expansion: bool = False):
+def get_arg_name(node: ast.AST, is_tuple_expansion: bool = False):
     if hasattr(node, "arg"):
         assert isinstance(node.arg, str), "non-arg string %s" % type(node.arg)
         return node.arg
@@ -295,7 +295,7 @@ class Variable:
         self.wopper = None
         self.const_assign: List[ast.Constant] = []
 
-    def masks_global(self):
+    def masks_global(self) -> bool:
         if isinstance(self.parent, Class):
             mv = self.parent.mv
             if not mv.module.builtin and mv.module.in_globals(self.name):
@@ -309,7 +309,7 @@ class Variable:
         #     return f"<Variable '{self.parent.name}.{self.name}'>"
         # return f"<Variable '{self.name}'>"
 
-def clear_block(m):
+def clear_block(m) -> None:
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
 def parse_file(name: pathlib.Path):

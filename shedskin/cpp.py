@@ -3163,7 +3163,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 + [" {", ";"][declare]
             )
 
-    def lc_args(self, lcfunc, func):
+    def lc_args(self, lcfunc: 'python.Function', func: 'python.Function') -> List[Tuple[str, str]]:
         args = []
         for name in lcfunc.misses:
             if python.lookup_var(name, func, self.mv).parent:

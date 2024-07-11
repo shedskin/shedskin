@@ -2292,7 +2292,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 mv=getmv(),
             )
 
-    def builtin_wrapper(self, node, func):
+    def builtin_wrapper(self, node: ast.AST, func: 'python.Function') -> 'python.Function':
         node2 = ast.Call(
             copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in "abcde"], []
         )
