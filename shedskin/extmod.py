@@ -355,7 +355,7 @@ class ExtensionModule:
             )
             write("}\n}")
 
-    def do_extmod_methoddef(self, ident, funcs, cl):
+    def do_extmod_methoddef(self, ident: str, funcs: List['python.Function'], cl: 'python.Class') -> None:
         """
         Does an extmod methoddef.
 
@@ -426,7 +426,7 @@ class ExtensionModule:
         # write("    {NULL}\n};\n")
         write("    {NULL, NULL, 0, NULL}\n};\n")
 
-    def do_extmod_method(self, func):
+    def do_extmod_method(self, func: 'python.Function') -> None:
         """
         Does an extmod method.
 
@@ -630,7 +630,7 @@ class ExtensionModule:
         for cl in classes:
             self.convert_methods(cl, False)
 
-    def do_extmod_class(self, cl):
+    def do_extmod_class(self, cl: 'python.Class') -> None:
         """Generates a python c-api extension type.
 
         :param      cl:   class object
@@ -819,7 +819,7 @@ class ExtensionModule:
         #         "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))
         #     )
 
-    def exported_classes(self, warns=False):
+    def exported_classes(self, warns:bool=False) -> List['python.Class']:
         """
         { function_description }
 
@@ -837,7 +837,7 @@ class ExtensionModule:
                 classes.append(cl)
         return sorted(classes, key=lambda x: x.def_order)
 
-    def convert_methods2(self):
+    def convert_methods2(self) -> None:
         """
         { function_description }
         """

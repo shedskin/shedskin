@@ -80,7 +80,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.int128: bool = False
         self.float32: bool = False
         self.float64: bool = False
-        self.flags = None
+        self.flags: Optional[str] = None
         self.silent: bool = False
         self.nogc: bool = False
         self.backtrace: bool = False
