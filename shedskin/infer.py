@@ -1897,8 +1897,6 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
         ):
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
-    return gx
-
 
 def register_temp_var(var: 'python.Variable', parent: Parent) -> None:
     if isinstance(parent, python.Function):
