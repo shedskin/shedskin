@@ -1,7 +1,8 @@
-"""
-*** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+"""shedskin.config: contains the main shedskin global configuration class
 
+`GlobalInfo` which is referred to in shedskin as `gx`.
 """
 import argparse
 import os
