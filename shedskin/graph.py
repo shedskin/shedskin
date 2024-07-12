@@ -402,7 +402,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(func, python.Function):
             func.constraints.add(constraint)
 
-    def struct_unpack(self, rvalue, func):
+    def struct_unpack(self, rvalue: ast.AST, func: 'python.Function') -> bool:
         if isinstance(rvalue, ast.Call):
             if (
                 isinstance(rvalue.func, ast.Attribute)
@@ -420,7 +420,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX imported from where?
                 return True
 
-    def struct_info(self, node, func):
+    def struct_info(self, node: ast.AST, func: 'python.Function') -> List[Tuple[str, str, str, int]]:
         if isinstance(node, ast.Name):
             var = python.lookup_var(node.id, func, self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
@@ -489,6 +489,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=self,
                 )
                 digits = ""
+        print('INFO', result)
         return result
 
     def struct_faketuple(self, info):
@@ -679,13 +680,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for assname in self.local_assignments(node, global_=True):
             infer.default_var(self.gx, assname.id, None, mv=getmv())
 
-    def set_default_vars(self, node, func):
+    def set_default_vars(self, node: ast.AST, func: 'python.Function') -> None:
         globals = set(self.get_globals(node))
         for assname in self.local_assignments(node):
             if assname.id not in globals:
                 infer.default_var(self.gx, assname.id, func)
 
-    def get_globals(self, node):
+    def get_globals(self, node: ast.AST) -> List[str]:
         if isinstance(node, ast.Global):
             result = node.names
         else:
@@ -694,7 +695,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.extend(self.get_globals(child))
         return result
 
-    def local_assignments(self, node, global_=False):
+    def local_assignments(self, node: ast.AST, global_:bool=False):
         if global_ and isinstance(node, (ast.ClassDef, ast.FunctionDef)):
             return []
         elif isinstance(node, ast.ListComp):
