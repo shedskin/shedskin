@@ -5,12 +5,16 @@
 
 import ast
 
+from . import config
 from . import infer
 from . import python
 from . import typestr
+from . import cpp
+
+from typing import List, Any
 
 
-def virtuals(self, cl: python.Class, declare):
+def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> None:
     if not cl.virtuals:
         return
     for ident, subclasses in cl.virtuals.items():
@@ -100,7 +104,7 @@ def virtuals(self, cl: python.Class, declare):
 
 
 # --- determine virtual methods and variables
-def analyze_virtuals(gx):
+def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
     for node in gx.merged_inh:
         # --- for every message
         if (
@@ -137,7 +141,13 @@ def analyze_virtuals(gx):
                 upgrade_cl(gx, lcp[0], node, ident, classes)
 
 
-def upgrade_cl(gx, abstract_cl, node, ident, classes):
+def upgrade_cl(
+    gx: 'config.GlobalInfo',
+    abstract_cl: 'python.Class',
+    node: Any,
+    ident: str,
+    classes: List['python.Class'],
+) -> None:
     if not abstract_cl or not isinstance(abstract_cl, python.Class):
         return
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
