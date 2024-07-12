@@ -11,7 +11,7 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias
+from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict
 if TYPE_CHECKING:
     from . import config
 
@@ -203,7 +203,7 @@ def typestr(
     return "[" + ts + "]"
 
 
-def dynamic_variable_error(gx: 'config.GlobalInfo', node, types, conv2):
+def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', types: Types, conv2: Dict[str, str]) -> None:
     if not node.name.startswith("__"):  # XXX startswith
         classes = polymorphic_cl(gx, types_classes(types))
         if (

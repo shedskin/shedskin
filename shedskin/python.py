@@ -242,6 +242,7 @@ class Function:
         self.listcomp = False
         self.isGenerator = False
         self.yieldNodes: List[ast.Yield] = []
+        self.yieldnode: 'infer.CNode'
         # function is called via a virtual call: arguments may have to be cast
         self.ftypes: List[str] = []
         self.inherited = None
@@ -438,7 +439,7 @@ def lookup_var(name, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local:
 VarLookup = collections.namedtuple("VarLookup", ["var", "is_global"])
 
 
-def smart_lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = False):
+def smart_lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return VarLookup(parent.parent.vars[name], False)
     elif parent and name in parent.vars:

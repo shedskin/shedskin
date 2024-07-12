@@ -1431,7 +1431,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child, func)
             self.temp_var_int(node.orelse[0], func)
 
-    def visit_Yield(self, node, func):
+    def visit_Yield(self, node: ast.Yield, func:'python.Function') -> None:
         func.isGenerator = True
         func.yieldNodes.append(node)
         if not node.value:
@@ -1987,7 +1987,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node
             )  # XXX see above, investigate
 
-    def visit_ClassDef(self, node, parent=None):
+    def visit_ClassDef(self, node: ast.ClassDef, parent=None) -> None:
         if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
         if len(node.bases) > 1:
@@ -2169,7 +2169,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
             newclass.funcs["__hash__"].invisible = True
 
-    def visit_Attribute(self, node, func=None, callfunc=False):
+    def visit_Attribute(self, node:ast.Attribute, func:Optional['python.Function']=None, callfunc:bool=False) -> None:
         if type(node.ctx) == ast.Load:
             if node.attr in ["__doc__"]:
                 error.error(
