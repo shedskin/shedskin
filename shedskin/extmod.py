@@ -235,7 +235,7 @@ class ExtensionModule:
                     }
                 )
 
-    def do_reduce_setstate(self, cl, vars):
+    def do_reduce_setstate(self, cl: 'python.Class', vars: List['python.Variable']) -> None:
         """
         Does a reduce setstate.
 
@@ -289,7 +289,7 @@ class ExtensionModule:
         write("    return Py_None;")
         write("}\n")
 
-    def convert_methods(self, cl, declare):
+    def convert_methods(self, cl: 'python.Class', declare: bool) -> None:
         """
         { function_description }
 

@@ -278,7 +278,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return result
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
-    def group_declarations(self, pairs):
+    def group_declarations(self, pairs: List[Tuple[str, str]]) -> List[str]:
         group = {}
         for type, name in pairs:
             group.setdefault(type, []).append(name)
@@ -721,7 +721,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Continue(self, node: ast.Continue, func:Optional['python.Function']=None) -> None:
         self.output("continue;")
 
-    def visit_With(self, node: ast.With, func:Optional['python.Function']=None):
+    def visit_With(self, node: ast.With, func:Optional['python.Function']=None) -> None:
         def handle_with_vars(var):
             if isinstance(var, ast.Name):
                 return [var.id]
@@ -777,7 +777,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}")
 
-    def copy_method(self, cl, name, declare):
+    def copy_method(self, cl: 'python.Class', name: 'str', declare: bool) -> None:
         class_name = self.cpp_name(cl)
         header = class_name + " *"
         if not declare:
@@ -810,13 +810,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.eol()
 
-    def copy_methods(self, cl, declare):
+    def copy_methods(self, cl: 'python.Class', declare: bool) -> None:
         if cl.has_copy:
             self.copy_method(cl, "__copy__", declare)
         if cl.has_deepcopy:
             self.copy_method(cl, "__deepcopy__", declare)
 
-    def class_hpp(self, node):
+    def class_hpp(self, node: ast.ClassDef) -> None:
         cl = self.mv.classes[node.name]
         self.output("extern class_ *cl_" + cl.ident + ";")
 
@@ -1732,9 +1732,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_If(
         self,
         node: ast.If,
-        func:Optional['python.Function']=None,
-        else_if:int=0,
-        root_if: ast.If=None,
+        func: Optional['python.Function']=None,
+        else_if: int=0,
+        root_if: Optional[ast.If]=None,
     ) -> None:
         # break up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         root_if = root_if or node
@@ -2027,7 +2027,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")")
         self.append(")")
 
-    def power(self, left, right, mod, func=None):
+    def power(self, left: ast.AST, right: ast.AST, mod: ast.AST, func:Optional['python.Function']=None) -> None:
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, ast.Num) or right.n < 0:
@@ -2045,7 +2045,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def impl_visit_binary(
         self, left: ast.AST, right: ast.AST, middle: str, inline: str, func: Optional['python.Function']=None
-    ):  # XXX cleanup please
+    ) -> None:  # XXX cleanup please
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
@@ -2962,12 +2962,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return True
         return False
 
-    def visit_Delete(self, node, func=None):
+    def visit_Delete(self, node: ast.Delete, func:Optional['python.Function']=None) -> None:
         for child in node.targets:
             assert type(child.ctx) == ast.Del
             self.visit(child, func)
 
-    def visit_AnnAssign(self, node, func=None):
+    def visit_AnnAssign(self, node: ast.AnnAssign, func:Optional['python.Function']=None) -> None:
         self.visit(ast.Assign([node.target], node.value), func)
 
     def visit_Assign(self, node, func=None):

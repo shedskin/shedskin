@@ -75,7 +75,7 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias, Union, Dict
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, TypeAlias, Union, Dict, Iterable
 
 if TYPE_CHECKING:
     from . import config
@@ -129,7 +129,7 @@ class CNode:
         thing: Any,
         dcpa: int = 0,
         cpa: int = 0,
-        parent = None,
+        parent: Optional[Parent] = None,
         mv: Optional["graph.ModuleVisitor"] = None,
     ):
         self.gx = gx
@@ -213,7 +213,7 @@ def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
     return gx.debug_level >= level
 
 
-def nrargs(gx: "config.GlobalInfo", node):
+def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> int:
     if inode(gx, node).lambdawrapper:
         return inode(gx, node).lambdawrapper.largs
     return len(node.args)
@@ -257,13 +257,14 @@ def is_anon_callable(gx: "config.GlobalInfo", expr, node, merge=None):
     return anon, call
 
 
-def parent_func(gx: "config.GlobalInfo", thing):
+def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Function']:
     parent = inode(gx, thing).parent
     while parent:
         if not isinstance(parent, python.Function) or not parent.listcomp:
             if not isinstance(parent, python.StaticClass):
                 return parent
         parent = parent.parent
+    return None
 
 
 def analyze_args(
@@ -544,7 +545,7 @@ def analyze_callfunc(
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(gx: "config.GlobalInfo", nodes, inheritance=False):
+def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=False):
     merge: dict[Any, set[Tuple[Any, int]]] = {}
 
     if inheritance:  # XXX do we really need this crap
@@ -1018,8 +1019,7 @@ def redirect(
 
 # --- cartesian product algorithm; adds interprocedural constraints
 
-
-def cpa(gx: "config.GlobalInfo", callnode, worklist):
+def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None:
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
     cp = cartesian_product(gx, callnode, analysis, worklist)
     if not cp:
