@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 # --- global variable mv
-_mv: Optional['ModuleVisitor'] = None
+_mv: 'ModuleVisitor'
 
 
 def setmv(mv: 'ModuleVisitor') -> 'ModuleVisitor':
@@ -54,7 +54,7 @@ def setmv(mv: 'ModuleVisitor') -> 'ModuleVisitor':
     return _mv
 
 
-def getmv() ->  Optional['ModuleVisitor']:
+def getmv() -> 'ModuleVisitor':
     return _mv
 
 
@@ -2344,7 +2344,10 @@ def parse_module(name, gx: 'config.GlobalInfo', parent=None, node=None):
     gx.modules[absolute_name] = module
 
     # --- visit ast
-    old_mv = getmv()
+    try:
+        old_mv = getmv()
+    except NameError:
+        pass
     module.mv = mv = ModuleVisitor(module, gx)
     setmv(mv)
 
@@ -2352,7 +2355,10 @@ def parse_module(name, gx: 'config.GlobalInfo', parent=None, node=None):
     module.import_order = gx.import_order
     gx.import_order += 1
 
-    mv = old_mv
-    setmv(mv)
+    try:
+        mv = old_mv
+        setmv(mv)
+    except NameError:
+        pass
 
     return module
