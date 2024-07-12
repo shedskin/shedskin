@@ -202,7 +202,7 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])
         )
 
-    def do_add_globals(self, classes, ssmod) -> None:
+    def do_add_globals(self, classes: List['python.Class'], ssmod: str) -> None:
 
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):

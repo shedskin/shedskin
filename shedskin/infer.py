@@ -1094,8 +1094,13 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
 
 
 def connect_getsetattr(
-    gx: "config.GlobalInfo", func, callnode, callfunc, dcpa, worklist
-):
+    gx: "config.GlobalInfo",
+    func: 'python.Function',
+    callnode: CNode,
+    callfunc: ast.Call,
+    dcpa: int,
+    worklist: List[CNode],
+) -> bool:
     if (
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ["__setattr__", "__getattr__"]
