@@ -3154,7 +3154,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if lam.ident not in self.mv.funcs:
                 self.visit_FunctionDef(lam.node, declare=declare)
 
-    def do_listcomps(self, declare):
+    def do_listcomps(self, declare: bool) -> None:
         for listcomp, lcfunc, func in self.mv.listcomps:  # XXX cleanup
             if lcfunc.mv.module.builtin:
                 continue
@@ -3175,7 +3175,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.listcomp_func(listcomp)
 
-    def listcomp_head(self, node, declare, genexpr):
+    def listcomp_head(self, node: ast.ListComp, declare: bool, genexpr: bool) -> None:
         lcfunc, func = self.listcomps[node]
         args = [a + b for a, b in self.lc_args(lcfunc, func)]
         ts = typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
@@ -3214,7 +3214,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
         return args
 
-    def listcomp_func(self, node: ast.AST) -> None:
+    def listcomp_func(self, node: ast.ListComp) -> None:
         lcfunc, func = self.listcomps[node]
         self.listcomp_head(node, False, False)
         self.indent()
