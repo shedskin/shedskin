@@ -79,7 +79,7 @@ def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
         return [(left, right)]
 
 
-def aug_msg(node: ast.BinOp, msg) -> str:
+def aug_msg(node: ast.BinOp, msg: str) -> str:
     if hasattr(node, "augment"):
         return "__i" + msg + "__"
     return "__" + msg + "__"

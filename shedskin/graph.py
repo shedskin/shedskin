@@ -1132,7 +1132,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.fake_func(node, expr, "__slice__", nodes2, func)
 
-    def visit_UnaryOp(self, node, func=None):
+    def visit_UnaryOp(self, node: ast.UnaryOp, func: Optional['python.Function']=None) -> None:
         op_type = type(node.op)
         if op_type == ast.Not:
             self.bool_test_add(node.operand)
@@ -1150,7 +1150,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             }
             self.fake_func(node, node.operand, op_map[op_type], [], func)
 
-    def visit_Compare(self, node, func=None):
+    def visit_Compare(self, node: ast.Compare, func: Optional['python.Function']=None) -> None:
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
         self.gx.types[newnode] = set(
@@ -1193,7 +1193,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if not (isinstance(term, ast.Name) or ast_utils.is_constant(term)):
                 self.temp_var2(term, infer.inode(self.gx, term), func)
 
-    def visit_BinOp(self, node, func=None):
+    def visit_BinOp(self, node: ast.BinOp, func: Optional['python.Function']=None) -> None:
         if type(node.op) == ast.Add:
             self.fake_func(
                 node, node.left, ast_utils.aug_msg(node, "add"), [node.right], func

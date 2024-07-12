@@ -3121,7 +3121,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         self.append(")")
                     self.eol()
 
-    def assign_pair(self, lvalue, rvalue, func):
+    def assign_pair(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: 'python.Function') -> None:
         self.start("")
 
         # expr[expr] = expr
@@ -3230,7 +3230,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def genexpr_class(self, node: ast.AST, declare: bool) -> None:
+    def genexpr_class(self, node: ast.ListComp, declare: bool) -> None:
         lcfunc, func = self.listcomps[node]
         args = self.lc_args(lcfunc, func)
         func1 = lcfunc.ident + "(" + ", ".join(a + b for a, b in args) + ")"
@@ -3281,7 +3281,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
-    def listcomp_rec(self, node, quals, lcfunc, genexpr):
+    def listcomp_rec(self, node: ast.ListComp, quals, lcfunc, genexpr) -> None:
+        print('AH', node, quals, lcfunc, genexpr)
+
         if not quals:
             if genexpr:
                 self.start("__result = ")
