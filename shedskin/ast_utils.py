@@ -4,7 +4,7 @@
 """
 import ast
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
@@ -39,7 +39,7 @@ def is_literal(node: ast.AST) -> bool:
     return isinstance(node, ast.Num) and isinstance(node.n, (int, float))
 
 
-def is_fastfor(node: ast.For) -> bool:
+def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)

@@ -33,7 +33,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.inheritance_temp_vars: dict['python.Variable', List['python.Variable']] = {}
         self.parent_nodes: dict[ast.AST, ast.AST] = {}
         self.inherited: set[ast.AST] = set()
-        self.main_module: Optional['python.Module'] = None
+        self.main_module: 'python.Module'
         self.module: Optional['python.Module'] = None
         self.module_path: Optional[Path] = None
         self.cwd: Path = Path.cwd()
