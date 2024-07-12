@@ -306,7 +306,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if text:
             self.print(self.indentation + text)
 
-    def start(self, text: Optional[str] = None):
+    def start(self, text: Optional[str] = None) -> None:
         self.line = self.indentation
         if text:
             self.line += text
@@ -441,7 +441,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         self.print("#endif")
 
-    def gen_defaults(self):
+    def gen_defaults(self) -> Iterator[Tuple[str, int]]:
         for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
             formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
             var = func.vars[formal]
@@ -449,7 +449,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.gx, self.mergeinh[var], func, mv=self.mv
             ), nr  #  + ' ' + ('default_%d;' % nr)
 
-    def init_defaults(self, func):
+    def init_defaults(self, func: 'python.Function') -> None:
         for default in func.args.defaults:
             if default in self.mv.defaults:
                 nr, func, func_def_nr = self.mv.defaults[default]

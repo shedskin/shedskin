@@ -11,7 +11,7 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict
+from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any
 if TYPE_CHECKING:
     from . import config
 
@@ -53,15 +53,15 @@ def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
         return None
 
 
-def singletype(gx: 'config.GlobalInfo', node, type):
+def singletype(gx: 'config.GlobalInfo', node: Any, t: Type) -> Any:
     types = [t[0] for t in infer.inode(gx, node).types()]
-    if len(types) == 1 and isinstance(types[0], type):
+    if len(types) == 1 and isinstance(types[0], t):
         return types[0]
 
 
-def singletype2(types, type):
+def singletype2(types: Types, t: Type) -> Any:
     ltypes = list(types)
-    if len(types) == 1 and isinstance(ltypes[0][0], type):
+    if len(types) == 1 and isinstance(ltypes[0][0], t):
         return ltypes[0][0]
 
 
