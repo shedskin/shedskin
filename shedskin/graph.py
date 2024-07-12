@@ -489,7 +489,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=self,
                 )
                 digits = ""
-        print('INFO', result)
         return result
 
     def struct_faketuple(self, info):
