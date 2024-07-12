@@ -3351,7 +3351,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print(self.line + ")")
             self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr)
 
-    def listcompfor_body(self, node, quals, iter, lcfunc, skip, genexpr):
+    def listcompfor_body(
+        self,
+        node: ast.ListComp,
+        quals: List[ast.comprehension],
+        iter: str,
+        lcfunc: 'python.Function',
+        skip: bool,
+        genexpr: bool
+    ) -> None:
         qual = quals[0]
 
         if not skip:
