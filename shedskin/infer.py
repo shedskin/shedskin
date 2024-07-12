@@ -163,6 +163,8 @@ class CNode:
 
         self.nodecp: set[Tuple] = set()  # already analyzed cp's # XXX kill!?
 
+        self.csites: List[CNode]
+
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
             while parent and isinstance(parent, python.Function) and parent.listcomp:
@@ -1417,7 +1419,13 @@ def ifa_confluence_point(node: CNode, creation_points: Dict) -> bool:
     return False
 
 
-def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
+def ifa_flow_graph(
+    gx: 'config.GlobalInfo',
+    cl: 'python.Class',
+    dcpa: int,
+    node: CNode,
+    allcsites: dict[Tuple['python.Class', int], set[CNode]],
+):
     creation_points, paths, assignsets = {}, {}, {}
     allnodes = set()
     csites = []
@@ -1711,7 +1719,7 @@ def backflow_path(gx: "config.GlobalInfo", worklist, t):
     return path
 
 
-def flow_creation_sites(worklist, allnodes):
+def flow_creation_sites(worklist: List[CNode], allnodes: set[CNode]) -> None:
     while worklist:
         new = set()
         for node in worklist:
@@ -1722,6 +1730,7 @@ def flow_creation_sites(worklist, allnodes):
                     if len(out.csites) > oldsize:
                         new.add(out)
         worklist = new
+    return None
 
 
 # --- backup constraint network

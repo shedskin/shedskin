@@ -429,7 +429,7 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
         return mv.ext_classes[name]
 
 
-def lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = False):
+def lookup_var(name, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False):
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var

@@ -638,7 +638,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.append(child)
         return result
 
-    def forward_references(self, node):
+    def forward_references(self, node: ast.Module) -> None:
         getmv().classnodes = []
 
         # classes
@@ -1093,7 +1093,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             error.error("unsupported tuple ctx", self.gx, node, mv=getmv())
 
-    def visit_Subscript(self, node, func=None):  # XXX merge __setitem__, __getitem__
+    def visit_Subscript(self, node:ast.Subscript, func:Optional['python.Function']=None) -> None:  # XXX merge __setitem__, __getitem__
         if isinstance(node.slice, ast.Slice):
             nslice = node.slice
             self.slice(

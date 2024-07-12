@@ -383,8 +383,8 @@ def add_shedskin_product(
         cmdline_options = '-X' + extra_lib_dir
         include_dirs = [extra_lib_dir]
 
-    def mk_add(lines: list[str], spaces: int = 4) -> Callable:
-        def _append(level, txt):
+    def mk_add(lines: list[str], spaces: int = 4) -> Callable[[int, str], None]:
+        def _append(level: int, txt: str) -> None:
             indentation = " " * spaces * level
             lines.append(f"{indentation}{txt}")
 
@@ -605,7 +605,7 @@ class CMakeBuilder:
             src = fopen.read()
         compile(src, path, "exec")
 
-    def get_most_recent_test(self) -> str:
+    def get_most_recent_test(self) -> Optional[str]:
         """returns name of recently modified test"""
         max_mtime = 0.0
         most_recent_test = None
@@ -791,7 +791,7 @@ class CMakeBuilder:
 
             if self.options.pytest:
                 try:
-                    import pytest  # type: ignore
+                    import pytest
 
                     os.system("pytest")
                 except ImportError:
