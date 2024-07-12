@@ -483,7 +483,6 @@ def check_cmake_availability() -> None:
 
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """improved generator using built-in machinery"""
-    assert gx.main_module, "gx.main_module not provided"
     path = gx.main_module.filename
 
     in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)

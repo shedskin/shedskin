@@ -90,7 +90,6 @@ class CPPNamer:
         return obj.ident
 
     def name_str(self, name: str) -> str:
-        assert self.gx.main_module, "gx.main_module is not set"
         if (
             [x for x in ("init", "add") if name == x + self.gx.main_module.ident]
             or name in self.class_names
@@ -3282,8 +3281,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node: ast.ListComp, quals, lcfunc, genexpr) -> None:
-        print('AH', node, quals, lcfunc, genexpr)
-
         if not quals:
             if genexpr:
                 self.start("__result = ")
