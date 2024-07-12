@@ -29,7 +29,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias, Union, Dict, Iterator
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -344,7 +344,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return "->"
 
-    def gen_declare_defs(self, vars):
+    def gen_declare_defs(self, vars: List[Tuple[str, 'python.Variable']]) -> Iterator[Tuple[str, str]]:
         for name, var in vars:
             if (
                 typestr.singletype(self.gx, var, python.Module)
@@ -355,7 +355,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ts = typestr.nodetypestr(self.gx, var, var.parent, mv=self.mv)
             yield ts, self.cpp_name(var)
 
-    def declare_defs(self, vars, declare):
+    # TODO just pass vars as dict?
+    def declare_defs(self, vars: List[Tuple[str, 'python.Variable']], declare: bool) -> str:
         pairs = []
         for ts, name in self.gen_declare_defs(vars):
             if declare:
@@ -2770,7 +2771,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.append("0")
 
-    def cast_to_builtin(self, arg, func, formal, target, method_call, objexpr):
+    def cast_to_builtin(
+        self,
+        arg: ast.AST,
+        func: Optional['python.Function'],
+        formal: 'python.Variable',
+        target: 'python.Function',
+        method_call: bool,
+        objexpr: ast.AST,
+    ) -> Optional[Types]:
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {"u": "unit", "v": "value", "o": None}
         if (
@@ -2784,8 +2793,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.gx, subtypes, mv=self.mv
             ):
                 return subtypes
+        return None
 
-    def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
+    def cast_to_builtin2(
+        self,
+        arg: ast.AST,
+        func: Optional['python.Function'],
+        objexpr: ast.AST,
+        msg: str,
+        formal_nr: int,
+    ) -> Optional[str]:
         # shortcut for outside of visit_Call XXX merge with visit_Call?
         cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], python.Class)]
         if cls:
@@ -2799,6 +2816,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                     if builtin_types:
                         return typestr.typestr(self.gx, builtin_types, mv=self.mv)
+        return None
 
     def visit_Return(self, node: ast.Return, func: Optional['python.Function']=None) -> None:
         if func and func.isGenerator:
