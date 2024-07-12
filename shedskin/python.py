@@ -380,7 +380,7 @@ def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function'
     return None
 
 
-def lookup_class(node: ast.AST, mv: Optional['graph.ModuleVisitor']):  # XXX lookup_var first?
+def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
     if isinstance(node, ast.Name):
         if node.id == 'int': # TODO generalize
             return mv.ext_classes['int_']
