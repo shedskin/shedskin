@@ -289,7 +289,7 @@ class Variable:
         #     return f"<Variable '{self.parent.name}.{self.name}'>"
         # return f"<Variable '{self.name}'>"
 
-def clear_block(m) -> None:
+def clear_block(m: re.Match) -> str:
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
 def parse_file(name: pathlib.Path):
