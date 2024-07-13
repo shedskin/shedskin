@@ -1800,7 +1800,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
             self.visit(fakefunc, func)
 
-    def default_var(self, name: str, func: 'python.Function', exc_name:bool=False) -> 'python.Variable':
+    def default_var(self, name: str, func: Optional['python.Function'], exc_name:bool=False) -> 'python.Variable':
         if isinstance(func, python.Function) and name in func.globals:
             return infer.default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:

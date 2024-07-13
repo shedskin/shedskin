@@ -29,7 +29,7 @@ def error(
     node: Optional[Union[ast.AST, 'python.Variable']] = None,
     warning: bool=False,
     mv: Optional['graph.ModuleVisitor']=None,
-):
+) -> None:
     from . import infer
 
     if warning:

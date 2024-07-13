@@ -199,7 +199,7 @@ class Shedskin:
         os.system(executable)
 
     @classmethod
-    def commandline(cls, bypassargs:Optional[List[str]]=None):
+    def commandline(cls, bypassargs:Optional[List[str]]=None) -> None:
         """command line api
         """
         sys.setrecursionlimit(100000)
