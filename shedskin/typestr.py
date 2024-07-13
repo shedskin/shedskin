@@ -11,7 +11,7 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any
+from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any, Iterable
 if TYPE_CHECKING:
     from . import config
 
@@ -69,7 +69,7 @@ def polymorphic_t(gx: 'config.GlobalInfo', types: Types) -> set['python.Class']:
     return polymorphic_cl(gx, (t[0] for t in types))
 
 
-def polymorphic_cl(gx: 'config.GlobalInfo', classes):
+def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -> set['python.Class']:
     cls = set(cl for cl in classes)
     if (
         len(cls) > 1
