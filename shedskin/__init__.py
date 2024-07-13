@@ -18,6 +18,8 @@ import time
 
 from . import cmake, config, cpp, error, graph, infer, log
 
+from typing import List, Optional
+
 
 class Shedskin:
     """Main shedskin frontend class
@@ -197,7 +199,7 @@ class Shedskin:
         os.system(executable)
 
     @classmethod
-    def commandline(cls, bypassargs=None):
+    def commandline(cls, bypassargs:Optional[List[str]]=None):
         """command line api
         """
         sys.setrecursionlimit(100000)
