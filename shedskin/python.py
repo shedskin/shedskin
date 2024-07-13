@@ -56,7 +56,7 @@ class Module(PyObject):
             filename: str,
             relative_filename: str,
             builtin: bool,
-            node: ast.AST,
+            node: Optional[ast.AST],
             ast: ast.Module):
         # set name and its dependent fields
         self.name = name
@@ -428,6 +428,7 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
         return mv.classes[name]
     elif name in mv.ext_classes:
         return mv.ext_classes[name]
+    assert False
 
 
 def lookup_var(name, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False):
@@ -460,7 +461,7 @@ def smart_lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisit
         if name in mv.exc_names:
             return VarLookup(mv.exc_names[name], False)
         if any(name in vars for vars in mv.current_with_vars if vars):
-            return
+            return None
         if name in mv.globals:
             return VarLookup(mv.globals[name], True)
 

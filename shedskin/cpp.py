@@ -448,8 +448,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.gx, self.mergeinh[var], func, mv=self.mv
             ), nr  #  + ' ' + ('default_%d;' % nr)
 
-    def init_defaults(self, func: 'python.Function') -> None:
-        for default in func.args.defaults:
+    def init_defaults(self, func2: ast.FunctionDef) -> None:
+        for default in func2.args.defaults:
             if default in self.mv.defaults:
                 nr, func, func_def_nr = self.mv.defaults[default]
                 formal = func.formals[
@@ -721,7 +721,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("continue;")
 
     def visit_With(self, node: ast.With, func:Optional['python.Function']=None) -> None:
-        def handle_with_vars(var):
+        def handle_with_vars(var: ast.AST) -> List[str]:
             if isinstance(var, ast.Name):
                 return [var.id]
             elif isinstance(var, (ast.List, ast.Tuple)):
@@ -729,21 +729,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 for elt in var.elts:
                     result.extend(handle_with_vars(elt))
 
-        orig = node
-        if hasattr(node, "items"):
-            node = node.items[0]
-
+        item = node.items[0]
         self.start()
-        if node.optional_vars:
-            self.visitm("WITH_VAR(", node.context_expr, ",", node.optional_vars, func)
+        if item.optional_vars:
+            self.visitm("WITH_VAR(", item.context_expr, ",", item.optional_vars, func)
         else:
-            self.visitm("WITH(", node.context_expr, func)
+            self.visitm("WITH(", item.context_expr, func)
         self.append(",%d)" % self.with_count)
         self.with_count += 1
         self.print(self.line)
         self.indent()
-        self.mv.current_with_vars.append(handle_with_vars(node.optional_vars))
-        for child in orig.body:
+        self.mv.current_with_vars.append(handle_with_vars(item.optional_vars))
+        for child in node.body:
             self.visit(child, func)
         self.mv.current_with_vars.pop()
         self.deindent()
@@ -1943,7 +1940,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.eol()
         self.visit(infer.inode(self.gx, node).assignhop, func)
 
-    def visit_BinOp(self, node, func=None):
+    def visit_BinOp(self, node: ast.BinOp, func:Optional['python.Function']=None) -> None:
         if type(node.op) == ast.Add:
             str_nodes = self.rec_string_addition(node)
             if str_nodes and len(str_nodes) > 2:
@@ -2000,7 +1997,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def rec_string_addition(self, node):
+    def rec_string_addition(self, node: ast.AST) -> List[ast.AST]:
         if isinstance(node, ast.BinOp) and type(node.op) == ast.Add:
             left, right = self.rec_string_addition(node.left), self.rec_string_addition(
                 node.right

@@ -83,6 +83,7 @@ if TYPE_CHECKING:
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules
 Parent: TypeAlias = Union['python.Class', 'python.Function']
+Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -268,7 +269,7 @@ def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Functio
 
 
 def analyze_args(
-    gx: "config.GlobalInfo", expr, func, node=None, skip_defaults=False, merge=None
+    gx: "config.GlobalInfo", expr: ast.Call, func: 'python.Function', node:Optional[CNode]=None, skip_defaults:bool=False, merge:Optional[Merged]=None
 ):
     (
         objexpr,
@@ -284,8 +285,8 @@ def analyze_args(
     kwdict = {}
     for a in expr.args:
         args.append(a)
-    for a in expr.keywords:
-        kwdict[a.arg] = a.value
+    for b in expr.keywords:
+        kwdict[b.arg] = b.value
     formal_args = func.formals[:]
     if func.node.args.vararg:
         formal_args = formal_args[:-1]
@@ -437,7 +438,7 @@ def callfunc_targets(gx: "config.GlobalInfo", node, merge):
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(
-    gx: "config.GlobalInfo", node, node2=None, merge=None
+    gx: "config.GlobalInfo", node: ast.Call, node2:Optional[CNode]=None, merge:Optional[Merged]=None
 ):  # XXX generate target list XXX uniform python.Variable system! XXX node2, merge?
     # print 'analyze callnode', ast.dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
@@ -1784,8 +1785,7 @@ def restore_network(gx: "config.GlobalInfo", backup) -> None:
     for func in gx.allfuncs:
         func.cp = {}
 
-
-def merge_simple_types(gx: "config.GlobalInfo", types):
+def merge_simple_types(gx: "config.GlobalInfo", types: Types) -> frozenset[Tuple['python.Class', int]]:
     merge = types.copy()
     if len(types) > 1 and (python.def_class(gx, "none"), 0) in types:
         if (
