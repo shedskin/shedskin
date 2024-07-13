@@ -391,7 +391,7 @@ def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
 
 
 # --- return list of potential call targets
-def callfunc_targets(gx: "config.GlobalInfo", node, merge):
+def callfunc_targets(gx: "config.GlobalInfo", node: ast.Call, merge: Merged) -> List['python.Function']:
     (
         objexpr,
         ident,

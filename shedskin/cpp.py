@@ -1850,20 +1850,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if cast:
                 self.append("))")
 
-    def visit_Break(self, node, func=None):
+    def visit_Break(self, node: ast.Break, func:Optional['python.Function']=None) -> None:
         if self.gx.loopstack[-1].orelse:
             orelse_tempcount_id = self.gx.loopstack[-1].orelse[0]
             if orelse_tempcount_id in self.mv.tempcount:
                 self.output("%s = 1;" % self.mv.tempcount[orelse_tempcount_id])
         self.output("break;")
 
-    def visit_BoolOp(self, node, func=None):
+    def visit_BoolOp(self, node: ast.BoolOp, func:Optional['python.Function']=None) -> None:
         if type(node.op) == ast.Or:
             self.impl_visit_and_or(node, node.values, "__OR", "or", func)
         elif type(node.op) == ast.And:
             self.impl_visit_and_or(node, node.values, "__AND", "and", func)
 
-    def impl_visit_and_or(self, node: ast.AST, nodes: List[ast.AST], op: str, mix: str, func:Optional['python.Function']=None) -> None:
+    def impl_visit_and_or(self, node: ast.BoolOp, nodes: List[ast.expr], op: str, mix: str, func:Optional['python.Function']=None) -> None:
         if node in self.gx.bool_test_only:
             self.append("(")
             for n in nodes:
