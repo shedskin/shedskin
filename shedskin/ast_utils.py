@@ -4,7 +4,7 @@
 """
 import ast
 
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Any
 
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
@@ -103,7 +103,7 @@ class BaseNodeVisitor:
     (return value `None`) the `generic_visit` visitor is used instead.
     """
 
-    def visit(self, node: ast.AST, *args) -> None:
+    def visit(self, node: ast.AST, *args: Any) -> None:
         """Visit a node."""
         assert isinstance(
             node, ast.AST
@@ -115,7 +115,7 @@ class BaseNodeVisitor:
         else:
             self.generic_visit(node, *args)
 
-    def generic_visit(self, node: ast.AST, *args) -> None:
+    def generic_visit(self, node: ast.AST, *args: Any) -> None:
         """Called if no explicit visitor function exists for a node."""
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):

@@ -3528,7 +3528,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             # obj.attr
             else:
-                checkcls = []  # XXX better to just inherit vars?
+                checkcls: List['python.Class'] = []  # XXX better to just inherit vars?
+
                 for t in self.mergeinh[node.value]:
                     if isinstance(t[0], python.Class):
                         checkcls.extend(t[0].ancestors(True))
