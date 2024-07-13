@@ -74,7 +74,7 @@ class ConanBDWGC:
         self.java_finalization = java_finalization
         self.shared = shared
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}/{self.version}"
 
 

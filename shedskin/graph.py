@@ -199,6 +199,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
         self.importnodes: List[ast.AST] = []
 
+        self.funcnodes: List[ast.FunctionDef]
+
     def visit(self, node: ast.AST, *args) -> None:
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
@@ -1981,7 +1983,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node
             )  # XXX see above, investigate
 
-    def visit_ClassDef(self, node: ast.ClassDef, parent=None) -> None:
+    def visit_ClassDef(self, node: ast.ClassDef, func:Optional['python.Function']=None) -> None:
         if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
         if len(node.bases) > 1:
