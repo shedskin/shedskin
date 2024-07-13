@@ -861,7 +861,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=getmv(),
                 )
 
-    def analyze_module(self, name: str, pseud: str, node, fake):
+    def analyze_module(self, name: str, pseud: str, node: ast.AST, fake: bool) -> 'python.Module':
         module = parse_module(name, self.gx, getmv().module, node)
         if not fake:
             self.imports[pseud] = module
@@ -1123,7 +1123,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Slice(self, node:ast.Slice, func:Optional['python.Function']=None) -> None:
         self.slice(node, node.expr, [node.lower, node.upper, None], func)
 
-    def slice(self, node, expr, nodes, func, replace=None):
+    def slice(self, node: Union[ast.Slice, ast.Subscript], expr: ast.AST, nodes: List[Optional[ast.AST]], func: Optional['python.Function'], replace:Optional[ast.AST]=None) -> None:
         nodes2 = slice_nums(nodes)
         if replace:
             self.fake_func(node, expr, "__setslice__", nodes2 + [replace], func)
@@ -2308,7 +2308,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return f
 
 
-def parse_module(name, gx: 'config.GlobalInfo', parent=None, node=None):
+def parse_module(name: str, gx: 'config.GlobalInfo', parent:Optional['python.Module']=None, node:Optional[ast.AST]=None) -> 'python.Module':
     # --- valid name?
     if not re.match("^[a-zA-Z0-9_.]+$", name):
         print(
