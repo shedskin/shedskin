@@ -293,7 +293,7 @@ class Variable:
 def clear_block(m: re.Match) -> str:
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
-def parse_file(name: pathlib.Path):
+def parse_file(name: pathlib.Path) -> ast.Module:
     data = importlib.util.decode_source(open(name, 'rb').read())
 
     # Convert block comments into strings which will be duely ignored.
