@@ -47,7 +47,7 @@ def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
     )
 
 
-def is_enumerate(node: ast.For) -> bool:
+def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -57,7 +57,7 @@ def is_enumerate(node: ast.For) -> bool:
     )
 
 
-def is_zip2(node: ast.For) -> bool:
+def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)

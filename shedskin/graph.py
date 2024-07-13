@@ -969,7 +969,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 tmp = self.temp_var((node, i), func)
                 func.formals[i] = tmp.name
                 fake_unpack = ast.Assign(
-                    [self.unpack_rec(formal)], ast.Name(tmp.name, ast.Load())
+                    [ast.Name(formal, ast.Store())], ast.Name(tmp.name, ast.Load())
                 )
                 func.expand_args[tmp.name] = fake_unpack
                 self.visit(fake_unpack, func)
@@ -1006,12 +1006,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
-
-    def unpack_rec(self, formal):
-        if isinstance(formal, str):
-            return ast.Name(formal, ast.Store())
-        else:
-            return ast.Tuple([self.unpack_rec(elem) for elem in formal], ast.Store())
 
     def visit_Lambda(self, node: ast.Lambda, func:Optional['python.Function']=None) -> None:
         lambdanr = len(self.lambdas)

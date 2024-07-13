@@ -263,7 +263,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         includes = includes1 + self.includes_rec(set(includes2))
         return ['#include "%s"\n' % module.include_path() for module in includes]
 
-    def includes_rec(self, includes):  # XXX should be recursive!? ugh
+    def includes_rec(self, includes: set['python.Module']) -> List['python.Module']:  # XXX should be recursive!? ugh
         todo = includes.copy()
         result = []
         while todo:
@@ -727,7 +727,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(var, (ast.List, ast.Tuple)):
                 result = []
                 for elt in var.elts:
-                    result.extend(handle_with_vars(elt))
+                    result.extend(handle_with_vars(elt))  # TODO return result??
+            return []
 
         item = node.items[0]
         self.start()
@@ -1241,7 +1242,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}")
 
-    def do_fastfor(self, node, qual, quals, iter, func, genexpr):
+    def do_fastfor(
+        self,
+        node: Union[ast.For, ast.ListComp],
+        qual: Union[ast.For, ast.comprehension],
+        quals: Optional[List[ast.comprehension]],
+        iter: str,
+        func: Optional['python.Function'],
+        genexpr:bool
+    ) -> None:
         if len(qual.iter.args) == 3 and not ast_utils.is_literal(qual.iter.args[2]):
             for arg in qual.iter.args:  # XXX simplify
                 if arg in self.mv.tempcount:
@@ -1279,12 +1288,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(",%s,%s)" % (ivar[2:], evar[2:]))
         self.print(self.line)
 
-    def fastenumerate(self, node: ast.For) -> bool:
+    def fastenumerate(self, node: Union[ast.For, ast.comprehension]) -> bool:
         return ast_utils.is_enumerate(node) and self.only_classes(
             node.iter.args[0], ("tuple", "list", "str_")
         )
 
-    def fastzip2(self, node: ast.For) -> bool:
+    def fastzip2(self, node: Union[ast.For, ast.comprehension]) -> bool:
         names = ("tuple", "list")
         return (
             ast_utils.is_zip2(node)
@@ -1341,7 +1350,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, False, False)
         self.print()
 
-    def do_fastzip2(self, node, func, genexpr):
+    def do_fastzip2(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr:bool) -> None:
         self.start("FOR_IN_ZIP(")
         left, right = node.target.elts
         self.do_fastzip2_one(left, func)
@@ -1363,14 +1372,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def do_fastzip2_one(self, node, func):
+    def do_fastzip2_one(self, node: ast.AST, func: Optional['python.Function']) -> None:
         if ast_utils.is_assign_list_or_tuple(node):
             self.append(self.mv.tempcount[node])
         else:
             self.visit(node, func)
         self.append(",")
 
-    def do_fastenumerate(self, node, func, genexpr):
+    def do_fastenumerate(self, node: Union[ast.For, ast.comprehension], func:Optional['python.Function'], genexpr:bool) -> None:
         if self.only_classes(node.iter.args[0], ("tuple", "list")):
             self.start("FOR_IN_ENUMERATE(")
         else:
@@ -1387,7 +1396,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def do_fastdictiter(self, node, func, genexpr):
+    def do_fastdictiter(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr: bool) -> None:
         self.start("FOR_IN_DICT(")
         left, right = node.target.elts
         tail = (
@@ -1943,7 +1952,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_BinOp(self, node: ast.BinOp, func:Optional['python.Function']=None) -> None:
         if type(node.op) == ast.Add:
             str_nodes = self.rec_string_addition(node)
-            if str_nodes and len(str_nodes) > 2:
+            if len(str_nodes) > 2:
                 self.append("__add_strs(%d, " % len(str_nodes))
                 for i, node in enumerate(str_nodes):
                     self.visit(node, func)
@@ -2006,6 +2015,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 return left + right
         elif self.mergeinh[node] == set([(python.def_class(self.gx, "str_"), 0)]):
             return [node]
+        return []
 
     def impl_visit_bitop(self, node: ast.AST, msg: str, inline: str, func: Optional['python.Function']=None) -> None:
         ltypes = self.mergeinh[node.left]

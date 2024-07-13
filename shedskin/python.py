@@ -69,6 +69,7 @@ class Module(PyObject):
         self.relative_path = self.relative_filename.parent
 
         self.mv: 'graph.ModuleVisitor'
+        self.deps: set['python.Module']
 
         # set the rest
         self.ast = ast
