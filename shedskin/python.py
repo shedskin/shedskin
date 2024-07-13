@@ -471,4 +471,4 @@ def subclass(a: Class, b: Class) -> bool:
     if b in a.bases:
         return True
     else:
-        return a.bases and subclass(a.bases[0], b)  # XXX mult inh
+        return bool(a.bases) and subclass(a.bases[0], b)  # XXX mult inh

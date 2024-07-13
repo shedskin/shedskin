@@ -2033,7 +2033,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")")
         self.append(")")
 
-    def power(self, left: ast.AST, right: ast.AST, mod: ast.AST, func:Optional['python.Function']=None) -> None:
+    def power(self, left: ast.AST, right: ast.AST, mod: Optional[ast.AST], func:Optional['python.Function']=None) -> None:
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, ast.Num) or right.n < 0:
@@ -3766,7 +3766,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             value = value.encode("utf-8")  # restriction
 
         value = [chr(c) for c in value]
-        replace = dict(["\\\\", "\nn", "\tt", "\rr", "\ff", "\bb", "\vv", '""'])
+        replace = {
+            "\\" : "\\",
+            "\n" : "n",
+            "\t" : "t",
+            "\r" : "r",
+            "\f" : "f",
+            "\b" : "b",
+            "\v" : "v",
+            '"'  : '"',
+        }
 
         for i in range(len(value)):
             if value[i] in replace:

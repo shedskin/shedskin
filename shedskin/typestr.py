@@ -87,7 +87,7 @@ def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -
 
 
 # --- determine lowest common parent classes (inclusive)
-def lowest_common_parents(classes: set['python.Class']) -> list['python.Class']:
+def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Class']:
     classes = [cl for cl in classes if isinstance(cl, python.Class)]
 
     # collect all possible parent classes

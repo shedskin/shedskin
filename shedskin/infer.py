@@ -546,8 +546,8 @@ def analyze_callfunc(
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=False):
-    merge: dict[Any, set[Tuple[Any, int]]] = {}
+def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=False) -> Merged:
+    merge: Merged = {}
 
     if inheritance:  # XXX do we really need this crap
         mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
