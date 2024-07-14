@@ -156,6 +156,7 @@ class ExtensionModule:
                     builtins = False
                     reason = "cannot convert argument '%s'" % formal
             try:
+                assert func.retnode
                 typestr.nodetypestr(
                     self.gx,
                     func.retnode.thing,
