@@ -99,7 +99,7 @@ class ConanPCRE:
         self.with_bzip2 = with_bzip2
         self.with_zlib = with_zlib
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}/{self.version}"
 
 class ConanDependencyManager:
@@ -181,7 +181,7 @@ class ShedskinDependencyManager:
         else:
            self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
 
-    def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options) -> None:
+    def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options: bool) -> None:
         """activate cmake configuration / generation stage"""
         opts = " ".join(f"-D{k}={v}" for k, v in options.items())
         self.shellcmd(

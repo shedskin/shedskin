@@ -1347,7 +1347,7 @@ def ifa_split_no_confusion(
         ifa_logger.debug("IFA found simple split: %s", subtype_csites.keys())
 
 
-def ifa_class_types(gx: "config.GlobalInfo", cl, vars):
+def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['python.Variable']):
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
