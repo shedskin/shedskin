@@ -46,7 +46,7 @@ class ProgressBar:
         self.progress = 0.0
         self.done: bool = False
 
-    def update(self, n: int) -> None:
+    def update(self, n: float) -> None:
         if self.done:
             return
 
