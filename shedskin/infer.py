@@ -485,10 +485,11 @@ def analyze_callfunc(
                 if isinstance(thiscl, python.Class) and cl.ident in (
                     x.ident for x in thiscl.ancestors_upto(None)
                 ):  # XXX
-                    if python.lookup_implementor(cl, ident):
+                    implementor = python.lookup_implementor(cl, ident)
+                    if implementor:
                         parent_constr = True
                         ident = (
-                            ident + python.lookup_implementor(cl, ident) + "__"
+                            ident + implementor + "__"
                         )  # XXX change data structure
                         return (
                             objexpr,
@@ -568,6 +569,7 @@ def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=Fal
             ):
                 var = node.thing
                 for inhfunc in gx.inheritance_relations.get(var.parent, []):
+                    assert isinstance(inhfunc, python.Function)
                     if var.name in inhfunc.vars:
                         if inhfunc.vars[var.name] in mergenoinh:
                             sortdefault.update(mergenoinh[inhfunc.vars[var.name]])
