@@ -358,7 +358,7 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
     return None
 
 
-def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Parent) -> Tuple[Optional['Class'], Optional['Module']]:
+def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Optional[Parent]) -> Tuple[Optional['Class'], Optional['Module']]:
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?

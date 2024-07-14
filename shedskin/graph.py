@@ -205,7 +205,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
-    def fake_func(self, node, objexpr: ast.expr, attrname, args, func: Optional[python.Function] = None) -> ast.Call:
+    def fake_func(self, node, objexpr: ast.AST, attrname: str, args, func: Optional[python.Function] = None) -> ast.Call:
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -422,6 +422,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and not python.lookup_var(rvalue.func.id, func, self)
             ):  # XXX imported from where?
                 return True
+        return False
 
     def struct_info(self, node: ast.AST, func: 'python.Function') -> List[Tuple[str, str, str, int]]:
         if isinstance(node, ast.Name):
@@ -1348,12 +1349,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.register_temp_var(var, func)
         return var
 
-    def temp_var2(self, node: Any, source: Any, func: 'python.Function') -> 'python.Variable':
+    def temp_var2(self, node: Any, source: Any, func: Optional['python.Function']) -> 'python.Variable':
         tvar = self.temp_var(node, func)
         self.add_constraint((source, infer.inode(self.gx, tvar)), func)
         return tvar
 
-    def temp_var_int(self, node: Any, func: 'python.Function') -> 'python.Variable':
+    def temp_var_int(self, node: Any, func: Optional['python.Function']) -> 'python.Variable':
         var = self.temp_var(node, func)
         self.gx.types[infer.inode(self.gx, var)] = set(
             [(python.def_class(self.gx, "int_"), 0)]

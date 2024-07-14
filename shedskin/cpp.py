@@ -278,7 +278,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
     def group_declarations(self, pairs: List[Tuple[str, str]]) -> List[str]:
-        group = {}
+        group: Dict[str, List[str]] = {}
         for type, name in pairs:
             group.setdefault(type, []).append(name)
         result = []
@@ -2823,7 +2823,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
-    def tuple_assign(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: 'python.Function') -> None:
+    def tuple_assign(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
         temp = self.mv.tempcount[lvalue]
         if isinstance(lvalue, tuple):
             nodes = lvalue
