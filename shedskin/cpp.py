@@ -1426,7 +1426,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         tail += "," + self.mv.tempcount[(node, 5)][2:]
         return "", tail
 
-    def forbody(self, node, quals, iter, func, skip, genexpr):
+    def forbody(self, node, quals, iter, func, skip, genexpr) -> None:
         if quals is not None:
             self.listcompfor_body(node, quals, iter, func, False, genexpr)
             return
