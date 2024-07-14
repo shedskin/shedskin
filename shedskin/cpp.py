@@ -365,14 +365,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             pairs.append((ts, name))
         return "".join(self.group_declarations(pairs))
 
-    def get_constant(self, node:ast.Constant) -> str:
+    def get_constant(self, node:ast.Constant) -> Optional[str]:
         parent = infer.inode(self.gx, node).parent
         while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
         if isinstance(parent, python.Function) and (
             parent.inherited or not self.inhcpa(parent)
         ):  # XXX
-            return
+            return None
         for other in self.consts:  # XXX use mapping
             if node.s == other.s:
                 return self.consts[other]

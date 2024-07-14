@@ -495,7 +495,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return result
 
     def struct_faketuple(self, info):
-        result = []
+        result: List[ast.AST] = []
         for o, c, t, d in info:
             if d != 0 or c == "s":
                 if t == "int":

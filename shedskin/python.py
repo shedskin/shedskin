@@ -290,7 +290,7 @@ class Variable:
         #     return f"<Variable '{self.parent.name}.{self.name}'>"
         # return f"<Variable '{self.name}'>"
 
-def clear_block(m: re.Match) -> str:
+def clear_block(m: re.Match[str]) -> str:
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
 def parse_file(name: pathlib.Path) -> ast.Module:
@@ -465,6 +465,7 @@ def smart_lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisit
             return None
         if name in mv.globals:
             return VarLookup(mv.globals[name], True)
+    return None
 
 
 def subclass(a: Class, b: Class) -> bool:
