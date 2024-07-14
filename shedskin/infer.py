@@ -224,15 +224,15 @@ def called(func: 'python.Function') -> bool:
     return bool([cpas for cpas in func.cp.values() if cpas])
 
 
-def get_types(gx: "config.GlobalInfo", expr, node, merge) -> Types:
+def get_types(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge: Optional[Merged]) -> Types:
     types = set()
     if merge:
         if expr.func in merge:
             types = merge[expr.func]
     elif node:
-        node = (expr.func, node.dcpa, node.cpa)
-        if node in gx.cnode:
-            types = gx.cnode[node].types()
+        node2 = (expr.func, node.dcpa, node.cpa)
+        if node2 in gx.cnode:
+            types = gx.cnode[node2].types()
     return types
 
 
@@ -245,7 +245,7 @@ def get_starargs(node):
             return arg.value
 
 
-def is_anon_callable(gx: "config.GlobalInfo", expr, node, merge=None):
+def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge:Optional[Merged]=None) -> Tuple[bool, bool]:
     types = get_types(gx, expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], python.Function)])
     call = bool(
