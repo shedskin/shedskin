@@ -1447,7 +1447,7 @@ def ifa_flow_graph(
 
     # --- determine backflow paths and creation points per assignment set
     for assign_set, targets in assignsets.items():
-        path = backflow_path(gx, targets, (cl, dcpa))
+        path = backflow_path(gx, set(targets), (cl, dcpa))
         paths[assign_set] = path
         allnodes.update(path)
         alloc = [n for n in path if not n.in_]
@@ -1710,7 +1710,7 @@ def ifa_seed_template(gx: "config.GlobalInfo", func, cart, dcpa, cpa, worklist) 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 
 
-def backflow_path(gx: "config.GlobalInfo", worklist, t):
+def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]):
     path = set(worklist)
     while worklist:
         new = set()
