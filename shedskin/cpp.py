@@ -313,7 +313,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def append(self, text: str) -> None:
         self.line += text
 
-    def eol(self, text: Optional[str] = None):
+    def eol(self, text: Optional[str] = None) -> None:
         if text:
             self.append(text)
         if self.line.strip():
@@ -365,7 +365,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             pairs.append((ts, name))
         return "".join(self.group_declarations(pairs))
 
-    def get_constant(self, node):
+    def get_constant(self, node:ast.Constant) -> str:
         parent = infer.inode(self.gx, node).parent
         while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
@@ -1033,7 +1033,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append("(new " + ts[:-2] + "(")
         return argtypes
 
-    def visit_Dict(self, node, func=None, argtypes=None):
+    def visit_Dict(self, node: ast.Dict, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         argtypes = self.instance_new(node, argtypes)
         if node.keys:
             self.append(str(len(node.keys)) + ", ")
@@ -1057,10 +1057,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(",")
         self.append("))")
 
-    def visit_Set(self, node, func=None, argtypes=None):
+    def visit_Set(self, node:ast.Set, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         self.visit_tuple_list(node, func, argtypes)
 
-    def visit_tuple_list(self, node, func=None, argtypes=None):
+    def visit_tuple_list(self, node: ast.AST, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         if isinstance(func, python.Class):  # XXX
             func = None
         argtypes = self.instance_new(node, argtypes)
@@ -1081,7 +1081,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append(",")
         self.append("))")
 
-    def visit_Tuple(self, node, func=None, argtypes=None):
+    def visit_Tuple(self, node:ast.Tuple, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         if type(node.ctx) == ast.Load:
             if len(node.elts) > 2:
                 types = set()
@@ -1103,7 +1103,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_List(self, node, func=None, argtypes=None):
+    def visit_List(self, node:ast.List, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         if type(node.ctx) == ast.Load:
             self.visit_tuple_list(node, func, argtypes)
         elif type(node.ctx) == ast.Store:
@@ -1127,11 +1127,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append("0")
         self.eol(")")
 
-    def visit_Raise(self, node, func=None):
-        if hasattr(node, "exc"):
-            exc = node.exc
-        else:  # py2
-            exc = node.type
+    def visit_Raise(self, node:ast.Raise, func:Optional['python.Function']=None) -> None:
+        exc = node.exc
 
         cl = None  # XXX sep func
         t = [t[0] for t in self.mergeinh[exc]]
@@ -1139,22 +1136,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             cl = t[0]
         self.start("throw (")
 
-        # --- raise class [, constructor args]
+        # --- raise class  # TODO lookup_class?
         if isinstance(exc, ast.Name) and not python.lookup_var(
             exc.id, func, self.mv
-        ):  # XXX python.lookup_class
-            self.append("new %s(" % exc.id)
-            if (
-                hasattr(node, "inst") and node.inst
-            ):  # XXX what was this for, seems untested also
-                if isinstance(node.inst, ast.Tuple) and node.inst.elts:
-                    for n in node.inst.elts:
-                        self.visit(n, func)
-                        if n != node.inst.elts[-1]:
-                            self.append(", ")  # XXX visitcomma(nodes)
-                else:
-                    self.visit(node.inst, func)
-            self.append(")")
+        ):
+            self.append("new %s()" % exc.id)
 
         # --- raise instance
         elif (
@@ -1322,6 +1308,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(node.target, ast.Name):
             assname = node.target.id
         elif ast_utils.is_assign_attribute(node.target):
+            assert isinstance(node.target, ast.Attribute)
             self.start("")
             self.visit_Attribute(node.target, func)
             assname = self.line.strip()  # XXX yuck
@@ -3153,6 +3140,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # expr.x = expr
         elif ast_utils.is_assign_attribute(lvalue):
+            assert isinstance(lvalue, ast.Attribute)
             self.visit_Attribute(lvalue, func)
 
     def do_lambdas(self, declare: bool) -> None:

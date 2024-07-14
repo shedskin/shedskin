@@ -1067,7 +1067,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Match(self, node: ast.Match, func:Optional['python.Function']=None) -> None:
         error.error("match case statement not supported", self.gx, node, mv=getmv())
 
-    def visit_Global(self, node: ast.Global, func:Optional['python.Function']=None) -> None:
+    def visit_Global(self, node: ast.Global, func:'python.Function') -> None:
         func.globals += node.names
 
     def visit_List(self, node: ast.List, func:Optional['python.Function']=None) -> None:
@@ -1660,7 +1660,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             assert type(child.ctx) == ast.Del
             self.visit(child, func)
 
-    def visit_AnnAssign(self, node, func=None):
+    def visit_AnnAssign(self, node:ast.AnnAssign, func:Optional['python.Function']=None) -> None:
         assign = ast.Assign([node.target], node.value)
         self.visit(assign, func)
 
@@ -2218,7 +2218,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             }
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
 
-    def fncl_passing(self, node, newnode, func):
+    def fncl_passing(self, node:ast.AST, newnode: infer.CNode, func:'python.Function') -> bool:
         lfunc, lclass = python.lookup_func(node, getmv()), python.lookup_class(
             node, getmv()
         )
@@ -2240,7 +2240,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         newnode.copymetoo = True  # XXX merge into some kind of 'seeding' function
         return True
 
-    def visit_Name(self, node, func=None):
+    def visit_Name(self, node:ast.Name, func:Optional['python.Function']=None) -> None:
         if type(node.ctx) == ast.Load:
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
