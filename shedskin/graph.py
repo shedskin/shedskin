@@ -245,15 +245,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
             map = {"int": int, "str": str, "float": float}
-            if child.func.id in ("range"):  # ,'xrange'):
+            func_id = child.func.id
+            if func_id in ("range"):  # ,'xrange'):
                 count, child = count + 1, int
-            elif child.func.id in map:
-                child = map[child.func.id]
+            elif func_id in map:
+                child = map[func_id]
             elif (
-                child.func.id in (cl.ident for cl in self.gx.allclasses)
-                or child.func.id in getmv().classes
+                func_id in (cl.ident for cl in self.gx.allclasses)
+                or func_id in getmv().classes
             ):  # XXX getmv().classes
-                child = child.func.id
+                child = func_id
             else:
                 if count == 1:
                     return None
@@ -549,6 +550,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         self.add_constraint((infer.inode(self.gx, node.value), newnode), func)
+
+        assert isinstance(node.target, ast.Name)
 
         while func and isinstance(func, python.Function) and func.listcomp:
             func.misses_by_ref.add(node.target.id)
