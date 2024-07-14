@@ -937,7 +937,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}")
             self.print()
 
-    def class_variables(self, cl):
+    def class_variables(self, cl: 'python.Class') -> None:
         # --- class variables
         if cl.parent.vars:
             for var in cl.parent.vars.values():
@@ -2004,7 +2004,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return [node]
         return []
 
-    def impl_visit_bitop(self, node: ast.AST, msg: str, inline: str, func: Optional['python.Function']=None) -> None:
+    def impl_visit_bitop(self, node: ast.BinOp, msg: str, inline: str, func: Optional['python.Function']=None) -> None:
         ltypes = self.mergeinh[node.left]
         ul = typestr.unboxable(self.gx, ltypes)
         self.append("(")
@@ -2899,7 +2899,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             sel = "__getfast__(%d)" % i
         return "%s->%s" % (temp, sel)
 
-    def subs_assign(self, lvalue: ast.Subscript, func:'python.Function') -> None:
+    def subs_assign(self, lvalue: ast.Subscript, func:Optional['python.Function']) -> None:
         if isinstance(lvalue.slice, ast.Index):
             subs = lvalue.slice.value
         else:
@@ -2913,7 +2913,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             func,
         )
 
-    def struct_unpack_cpp(self, node:ast.Assign, func:'python.Function') -> bool:
+    def struct_unpack_cpp(self, node:ast.Assign, func:Optional['python.Function']) -> bool:
         struct_unpack = self.gx.struct_unpack.get(node)
         if struct_unpack:
             sinfo, tvar, tvar_pos = struct_unpack
@@ -2963,7 +2963,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_AnnAssign(self, node: ast.AnnAssign, func:Optional['python.Function']=None) -> None:
         self.visit(ast.Assign([node.target], node.value), func)
 
-    def visit_Assign(self, node, func=None):
+    def visit_Assign(self, node: ast.Assign, func:Optional['python.Function']=None) -> None:
         if node.value is None: # skip type annotation
             return
 
@@ -3114,7 +3114,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         self.append(")")
                     self.eol()
 
-    def assign_pair(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: 'python.Function') -> None:
+    def assign_pair(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
         self.start("")
 
         # expr[expr] = expr

@@ -439,27 +439,25 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             fmt = node.s
         else:
             error.error("non-constant format string", self.gx, node, mv=self)
-        char_type = dict(
-            [
-                "xx",
-                "cs",
-                "bi",
-                "Bi",
-                "?b",
-                "hi",
-                "Hi",
-                "ii",
-                "Ii",
-                "li",
-                "Li",
-                "qi",
-                "Qi",
-                "ff",
-                "df",
-                "ss",
-                "ps",
-            ]
-        )
+        char_type = {
+            "x": "x",
+            "c": "s",
+            "b": "i",
+            "B": "i",
+            "?": "b",
+            "h": "i",
+            "H": "i",
+            "i": "i",
+            "I": "i",
+            "l": "i",
+            "L": "i",
+            "q": "i",
+            "Q": "i",
+            "f": "f",
+            "d": "f",
+            "s": "s",
+            "p": "s",
+        }
         ordering = "@"
         if fmt and fmt[0] in "@<>!=":
             ordering, fmt = fmt[0], fmt[1:]
@@ -700,7 +698,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.extend(self.get_globals(child))
         return result
 
-    def local_assignments(self, node: ast.AST, global_:bool=False):
+    def local_assignments(self, node: ast.AST, global_:bool=False) -> List[ast.Name]:
         if global_ and isinstance(node, (ast.ClassDef, ast.FunctionDef)):
             return []
         elif isinstance(node, ast.ListComp):
@@ -1035,7 +1033,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, child), newnode), func)
             self.temp_var2(child, newnode, func)
 
-    def visit_If(self, node, func=None, root_if=None):
+    def visit_If(self, node:ast.If, func=None, root_if=None):
         # add temp var for to split up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         if not root_if:
             root_if = node
@@ -1774,7 +1772,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):
                 self.temp_var2(node.value, infer.inode(self.gx, node.value), func)
 
-    def assign_pair(self, lvalue: ast.AST, rvalue: ast.AST, func: 'python.Function') -> None:
+    def assign_pair(self, lvalue: ast.AST, rvalue: ast.AST, func: Optional['python.Function']) -> None:
         # expr[expr] = expr
         if isinstance(lvalue, ast.Subscript) and not isinstance(
             lvalue.slice, (ast.Slice, ast.Del)
@@ -1797,6 +1795,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # expr.attr = expr
         elif ast_utils.is_assign_attribute(lvalue):
+            assert isinstance(lvalue, ast.Attribute)
             infer.CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.value
             fakefunc = ast.Call(
@@ -2222,7 +2221,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             }
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
 
-    def fncl_passing(self, node:ast.AST, newnode: infer.CNode, func:'python.Function') -> bool:
+    def fncl_passing(self, node:ast.AST, newnode: infer.CNode, func:Optional['python.Function']) -> bool:
         lfunc, lclass = python.lookup_func(node, getmv()), python.lookup_class(
             node, getmv()
         )

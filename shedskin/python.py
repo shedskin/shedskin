@@ -397,7 +397,7 @@ def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor'):  # XXX lookup_var fi
             return module.mv.classes[node.attr]
 
 
-def lookup_module(node, mv: 'graph.ModuleVisitor') -> Optional[Module]:
+def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
     path: List[str] = []
     module: Optional[Module] = None
 

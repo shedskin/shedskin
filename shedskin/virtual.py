@@ -146,7 +146,7 @@ def upgrade_cl(
     abstract_cl: 'python.Class',
     node: Any,
     ident: str,
-    classes: List['python.Class'],
+    classes: set['python.Class'],
 ) -> None:
     if not abstract_cl or not isinstance(abstract_cl, python.Class):
         return
