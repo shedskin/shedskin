@@ -39,7 +39,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union, Type
 if TYPE_CHECKING:
     from . import config
 
@@ -197,9 +197,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.tempcount = self.gx.tempcount
         self.listcomps: List[Tuple[ast.AST, 'python.Function', 'python.Function']] = []
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
-        self.importnodes: List[ast.AST] = []
 
+        self.importnodes: List[ast.AST] = []
         self.funcnodes: List[ast.FunctionDef]
+        self.classnodes: List[ast.ClassDef]
 
     def visit(self, node: ast.AST, *args) -> None:
         if (node, 0, 0) not in self.gx.cnode:
@@ -493,7 +494,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 digits = ""
         return result
 
-    def struct_faketuple(self, info):
+    def struct_faketuple(self, info: List[Tuple[str, str, str, int]]) -> ast.Tuple:
         result: List[ast.AST] = []
         for o, c, t, d in info:
             if d != 0 or c == "s":
@@ -634,7 +635,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     if ident == func.ident:
                         cl.funcs[ident + ancestor.ident + "__"] = cl.funcs[ident]
 
-    def stmt_nodes(self, node, cl):
+    def stmt_nodes(self, node, cl: Type) -> List:
         result = []
         for child in node.body:
             if isinstance(child, cl):
@@ -1033,7 +1034,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, child), newnode), func)
             self.temp_var2(child, newnode, func)
 
-    def visit_If(self, node:ast.If, func=None, root_if=None):
+    def visit_If(self, node:ast.If, func:Optional['python.Function']=None, root_if:Optional[ast.If]=None) -> None:
         # add temp var for to split up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         if not root_if:
             root_if = node
