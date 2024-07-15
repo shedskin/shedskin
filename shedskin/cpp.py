@@ -325,7 +325,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def deindent(self) -> None:
         self.indentation = self.indentation[:-4]
 
-    def visitm(self, *args) -> None:
+    def visitm(self, *args: Any) -> None:
         func = None
         if args and isinstance(args[-1], (python.Function, python.Class)):
             func = args[-1]
@@ -1897,7 +1897,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if node not in self.bool_wrapper:
             self.append(")")
 
-    def visit_AugAssign(self, node, func=None):
+    def visit_AugAssign(self, node: ast.AugAssign, func:Optional['python.Function']=None) -> None:
         if isinstance(node.target, ast.Subscript):
             self.start()
             if (
@@ -2137,7 +2137,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(right, func)
         self.append(")")
 
-    def do_compare(self, left, right, middle, inline, func=None, prefix=""):
+    def do_compare(self, left: ast.AST, right: ast.AST, middle, inline, func=None, prefix="") -> None:
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
         argtypes = ltypes | rtypes
@@ -2823,7 +2823,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
-    def tuple_assign(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
+    def tuple_assign(self, lvalue: Union[ast.List, ast.Tuple], rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
         temp = self.mv.tempcount[lvalue]
         if isinstance(lvalue, tuple):
             nodes = lvalue
@@ -3053,6 +3053,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
                 # (a,(b,c), ..) = expr
                 elif ast_utils.is_assign_list_or_tuple(lvalue):
+                    assert isinstance(lvalue, (ast.Tuple, ast.List))
                     self.tuple_assign(lvalue, rvalue, func)
 
                 elif isinstance(lvalue, ast.Slice):
@@ -3359,6 +3360,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if not skip:
             self.indent()
             if ast_utils.is_assign_list_or_tuple(qual.target):
+                assert isinstance(qual.target, (ast.Tuple, ast.List))
                 self.tuple_assign(qual.target, iter, lcfunc)
 
         # if statements
