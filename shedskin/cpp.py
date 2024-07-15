@@ -207,7 +207,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             f.writelines(newlines2)
         self.filling_consts = False
 
-    def insert_extras(self, suffix: str):
+    def insert_extras(self, suffix: str) -> None:
         with self.get_output_file(ext=suffix, mode="r") as f:
             lines = f.readlines()
         # lines = open(self.output_base + suffix, 'r').readlines()
@@ -1421,7 +1421,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def forin_preftail(self, node):
+    def forin_preftail(self, node: Union[ast.For, ast.comprehension]) -> Tuple[str, str]:
         tail = self.mv.tempcount[node][2:] + "," + self.mv.tempcount[node.iter][2:]
         tail += "," + self.mv.tempcount[(node, 5)][2:]
         return "", tail
@@ -3275,7 +3275,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
-    def listcomp_rec(self, node: ast.ListComp, quals, lcfunc, genexpr) -> None:
+    def listcomp_rec(self, node: ast.ListComp, quals: List[ast.comprehension], lcfunc: 'python.Function', genexpr: bool) -> None:
         if not quals:
             if genexpr:
                 self.start("__result = ")

@@ -270,7 +270,7 @@ def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Functio
 
 def analyze_args(
     gx: "config.GlobalInfo", expr: ast.Call, func: 'python.Function', node:Optional[CNode]=None, skip_defaults:bool=False, merge:Optional[Merged]=None
-):
+) -> Tuple[List[Optional[ast.AST]], List[str], List[ast.AST], List[ast.AST], bool]:
     (
         objexpr,
         ident,
@@ -326,7 +326,7 @@ def analyze_args(
             missing = True
     extra = args[argnr:]
 
-    _error = (
+    _error = bool(
         (missing or extra)
         and not func.node.args.vararg
         and not func.node.args.kwarg
@@ -343,7 +343,7 @@ def analyze_args(
     return actuals, formals, defaults, extra, _error
 
 
-def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
+def connect_actual_formal(gx: 'config.GlobalInfo', expr: ast.Call, func: 'python.Function', parent_constr:bool=False, merge:Optional[Merged]=None) -> Tuple[List[Tuple[ast.AST, 'python.Variable']], int, bool]:
     pairs = []
 
     actuals = [a for a in expr.args if not isinstance(a, ast.keyword)]
@@ -387,6 +387,7 @@ def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
     for actual, formal in zip(actuals, formals):
         if not (isinstance(func.parent, python.Class) and formal == "self"):
             pairs.append((actual, func.vars[formal]))
+
     return pairs, len(extra), _error
 
 
@@ -1029,7 +1030,7 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
         return
     if len(cp) > gx.cpa_limit and not gx.cpa_clean:
         gx.cpa_limited = True
-        return []
+        return
     (
         objexpr,
         ident,
@@ -1468,7 +1469,7 @@ def ifa_flow_graph(
         if not n.in_:
             n.csites.add(n)
             csites.append(n)
-    flow_creation_sites(csites, allnodes)
+    flow_creation_sites(set(csites), allnodes)
 
     # csites not flowing to any assignment
     allcsites2 = allcsites.get((cl, dcpa), set())
@@ -1727,7 +1728,7 @@ def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['pytho
     return path
 
 
-def flow_creation_sites(worklist: List[CNode], allnodes: set[CNode]) -> None:
+def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
     while worklist:
         new = set()
         for node in worklist:
