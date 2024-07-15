@@ -895,7 +895,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
     return argtypes
 
 
-def cartesian_product(gx: "config.GlobalInfo", node, analysis, worklist):
+def cartesian_product(gx: "config.GlobalInfo", node: CNode, analysis, worklist):
     funcs = possible_functions(gx, node, analysis)
     if not funcs:
         return []
@@ -1317,7 +1317,7 @@ def ifa_split_no_confusion(
     emptycsites,
     allnodes,
     split,
-):
+) -> None:
     """creation sites on single path: split them off, possibly reusing contour"""
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)

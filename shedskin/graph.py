@@ -776,7 +776,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[infer.inode(self.gx, var)] = set([(module, 0)])
         return module
 
-    def visit_ImportFrom(self, node, parent=None):
+    def visit_ImportFrom(self, node: ast.ImportFrom, parent:Optional['python.Function']=None) -> None:
         if node.module == 'typing':
             return
 
@@ -805,8 +805,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.module is None and hasattr(node, "level") and node.level == 1:
             for alias in node.names:
                 submod = self.import_module(alias.name, alias.asname, node, False)
-                parent = getmv().module
-                parent.mv.imports[submod.ident] = submod
+                parent2 = getmv().module
+                parent2.mv.imports[submod.ident] = submod
                 self.gx.from_module[node] = submod
                 return
 
@@ -2294,7 +2294,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 mv=getmv(),
             )
 
-    def builtin_wrapper(self, node: ast.AST, func: 'python.Function') -> 'python.Function':
+    def builtin_wrapper(self, node: ast.AST, func: Optional['python.Function']) -> 'python.Function':
         node2 = ast.Call(
             copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in "abcde"], []
         )

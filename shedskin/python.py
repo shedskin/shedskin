@@ -252,7 +252,7 @@ class Function:
             self.gx.allfuncs.add(self)
 
         self.invisible = False
-        self.fakeret = None
+        self.fakeret: Optional[ast.Return] = None
         self.declared = False
 
         self.registered: List[ast.AST] = []
