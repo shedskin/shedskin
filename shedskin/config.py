@@ -9,12 +9,14 @@ import os
 import sys
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Optional, Any, Tuple, List, Union
+from typing import TYPE_CHECKING, Optional, Any, Tuple, List, Union, TypeAlias
 if TYPE_CHECKING:
     import ast
     from . import infer
     from . import python
     from .utils import ProgressBar
+
+CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 
 
 class GlobalInfo:  # XXX add comments, split up
@@ -55,8 +57,8 @@ class GlobalInfo:  # XXX add comments, split up
         # instance node for instance Variable assignment
         self.assign_target: dict[ast.AST, ast.AST] = {}
         # allocation site type information across iterations
-        self.alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
-        self.new_alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
+        self.alloc_info: dict[Tuple[str, CartesianProduct, ast.AST], Tuple['python.Class', int]] = {}
+        self.new_alloc_info: dict[Tuple[str, CartesianProduct, ast.AST], Tuple['python.Class', int]] = {}
         self.iterations: int = 0
         self.total_iterations: int = 0
         self.lambdawrapper: dict[Any, str] = {}
@@ -95,7 +97,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
         self.bool_test_only: set[ast.AST] = set()
         self.tempcount: dict[ast.AST, str] = {}
-        self.struct_unpack: dict[ast.Assign, Tuple[List, str, str]] = {}
+        self.struct_unpack: dict[ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str]] = {}
+
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
         self.progressbar:  Optional['ProgressBar'] = None

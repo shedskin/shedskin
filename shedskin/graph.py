@@ -635,50 +635,46 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     if ident == func.ident:
                         cl.funcs[ident + ancestor.ident + "__"] = cl.funcs[ident]
 
-    def stmt_nodes(self, node, cl: Type) -> List:
-        result = []
-        for child in node.body:
-            if isinstance(child, cl):
-                result.append(child)
-        return result
-
     def forward_references(self, node: ast.Module) -> None:
         getmv().classnodes = []
 
         # classes
-        for n in self.stmt_nodes(node, ast.ClassDef):
-            check_redef(self.gx, n)
-            getmv().classnodes.append(n)
-            newclass = python.Class(self.gx, n, getmv(), self.module)
-            self.classes[n.name] = newclass
-            getmv().classes[n.name] = newclass
+        for n in node.body:
+            if isinstance(n, ast.ClassDef):
+                check_redef(self.gx, n)
+                getmv().classnodes.append(n)
+                newclass = python.Class(self.gx, n, getmv(), self.module)
+                self.classes[n.name] = newclass
+                getmv().classes[n.name] = newclass
 
-            # methods
-            for m in self.stmt_nodes(n, ast.FunctionDef):
-                if m.decorator_list and [
-                    dec for dec in m.decorator_list if is_property_setter(dec)
-                ]:
-                    m.name = m.name + "__setter__"
-                if (
-                    m.name in newclass.funcs
-                ):  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
-                    error.error(
-                        "function/class redefinition is not allowed",
-                        self.gx,
-                        m,
-                        mv=getmv(),
-                    )
-                func = python.Function(self.gx, getmv(), m, newclass)
-                newclass.funcs[func.ident] = func
-                self.set_default_vars(m, func)
+                # methods
+                for m in n.body:
+                    if isinstance(m, ast.FunctionDef):
+                        if m.decorator_list and [
+                            dec for dec in m.decorator_list if is_property_setter(dec)
+                        ]:
+                            m.name = m.name + "__setter__"
+                        if (
+                            m.name in newclass.funcs
+                        ):  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
+                            error.error(
+                                "function/class redefinition is not allowed",
+                                self.gx,
+                                m,
+                                mv=getmv(),
+                            )
+                        func = python.Function(self.gx, getmv(), m, newclass)
+                        newclass.funcs[func.ident] = func
+                        self.set_default_vars(m, func)
 
         # functions
         getmv().funcnodes = []
-        for n in self.stmt_nodes(node, ast.FunctionDef):
-            check_redef(self.gx, n)
-            getmv().funcnodes.append(n)
-            func = getmv().funcs[n.name] = python.Function(self.gx, getmv(), n)
-            self.set_default_vars(n, func)
+        for n in node.body:
+            if isinstance(n, ast.FunctionDef):
+                check_redef(self.gx, n)
+                getmv().funcnodes.append(n)
+                func = getmv().funcs[n.name] = python.Function(self.gx, getmv(), n)
+                self.set_default_vars(n, func)
 
         # global variables XXX visit_Global
         for assname in self.local_assignments(node, global_=True):
