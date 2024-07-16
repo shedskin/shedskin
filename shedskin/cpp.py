@@ -2319,7 +2319,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
         pass
 
-    def visit_Call(self, node:ast.Call, func:Optional['python.Function']=None, argtypes=None) -> None:
+    def visit_Call(self, node:ast.Call, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         (
             objexpr,
             ident,

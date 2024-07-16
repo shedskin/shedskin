@@ -108,33 +108,23 @@ def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
     return nodes2
 
 
-def get_arg_nodes(node: ast.Call) -> List[ast.arg]:  # TODO simplify for py3?
+def get_arg_nodes(node: ast.Call) -> List[ast.arg]:
     args = []
 
     for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
+        if isinstance(arg, ast.Starred):
             arg = arg.value
         args.append(arg)
 
     if node.keywords:
         args.extend([kw.value for kw in node.keywords])
 
-    if hasattr(node, "starargs") and node.starargs:
-        if node.starargs:
-            args.append(node.starargs)  # partially allowed in builtins
-
-    if hasattr(node, "kwargs") and node.kwargs:
-        args.append(node.kwargs)
-
     return args
 
 
-def has_star_kwarg(node: ast.Call) -> bool:  # TODO simplify for py3?
-    if hasattr(node, "starargs"):
-        return bool(node.starargs or node.kwargs)
-
+def has_star_kwarg(node: ast.Call) -> bool:
     for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
+        if isinstance(arg, ast.Starred):
             return True
 
     for kw in node.keywords:
