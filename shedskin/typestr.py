@@ -212,7 +212,7 @@ def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', typ
         ):
             lcp = classes
         else:
-            lcp = lowest_common_parents(classes)
+            lcp = set(lowest_common_parents(classes))
 
         if node.parent:
             varname = "%s" % node
@@ -315,7 +315,7 @@ def typestrnew(
     ):
         lcp = classes
     else:
-        lcp = lowest_common_parents(classes)
+        lcp = set(lowest_common_parents(classes))
 
     # --- multiple parent classes
     if len(lcp) > 1:
