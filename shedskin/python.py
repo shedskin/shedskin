@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from . import infer
 
 Parent: TypeAlias = Union['Class', 'Function']
+CartesianProduct: TypeAlias = Tuple[Tuple['Class', int] , ...]
 
 
 class PyObject:
@@ -237,7 +238,7 @@ class Function:
         self.defaults: List[ast.AST] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
-        self.cp: dict[int, dict[Tuple, int]] = {}
+        self.cp: dict[int, dict[CartesianProduct, int]] = {}
         self.xargs: dict[Tuple[int, int], int] = {}
         self.largs = None
         self.listcomp = False

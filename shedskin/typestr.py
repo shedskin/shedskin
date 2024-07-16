@@ -53,13 +53,13 @@ def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
         return None
 
 
-def singletype(gx: 'config.GlobalInfo', node: Any, t: Type) -> Any:
+def singletype(gx: 'config.GlobalInfo', node: Any, t: Type[Any]) -> Any:
     types = [t[0] for t in infer.inode(gx, node).types()]
     if len(types) == 1 and isinstance(types[0], t):
         return types[0]
 
 
-def singletype2(types: Types, t: Type) -> Any:
+def singletype2(types: Types, t: Type[Any]) -> Any:
     ltypes = list(types)
     if len(types) == 1 and isinstance(ltypes[0][0], t):
         return ltypes[0][0]
@@ -93,28 +93,28 @@ def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Cla
     # collect all possible parent classes
     parents = set()
     for parent in classes:
-        while parent:
+        while True:
             parent.lcpcount = 0
             parents.add(parent)
             if parent.bases:
                 parent = parent.bases[0]
             else:
-                parent = None
+                break
 
     # count how many descendants in 'classes' each has
     for parent in classes:
-        while parent:
+        while True:
             parent.lcpcount += 1
             if parent.bases:
                 parent = parent.bases[0]
             else:
-                parent = None
+                break
 
     # remove those that don't add anything
     useless = set()
     for parent in parents:
         orig = parent
-        while parent:
+        while True:
             if parent != orig:
                 if parent.lcpcount > orig.lcpcount:
                     useless.add(orig)
@@ -123,7 +123,8 @@ def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Cla
             if parent.bases:
                 parent = parent.bases[0]
             else:
-                parent = None
+                break
+
     return list(parents - useless)
 
 

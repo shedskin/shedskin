@@ -85,6 +85,7 @@ Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modu
 FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
+Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -1204,7 +1205,7 @@ def actuals_formals(
 
 def ifa(gx: "config.GlobalInfo"):
     logger.debug("ifa")
-    split: List[Tuple] = []  # [(set of creation nodes, new type number), ..]
+    split: Split = []  # [(set of creation nodes, new type number), ..]
 
     allcsites: dict[Tuple['python.Class', int], set[CNode]] = {}
     for n, types in gx.types.items():
