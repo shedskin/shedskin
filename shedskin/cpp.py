@@ -1129,6 +1129,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Raise(self, node:ast.Raise, func:Optional['python.Function']=None) -> None:
         exc = node.exc
+        assert exc
 
         cl = None  # XXX sep func
         t = [t[0] for t in self.mergeinh[exc]]

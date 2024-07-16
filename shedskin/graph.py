@@ -768,8 +768,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     parent.mv.imports[module.ident] = module
         return module
 
-    def import_module(self, name: str, pseudonym: str, node: ast.AST, fake:bool) -> 'python.Module':
-        module = self.analyze_module(name, pseudonym, node, fake)
+    def import_module(self, name: str, pseudonym: Optional[str], node: ast.AST, fake:bool) -> 'python.Module':
+        module = self.analyze_module(name, pseudonym or name, node, fake)
         if not fake:
             var = infer.default_var(self.gx, pseudonym or name, None, mv=getmv())
             var.imported = True
@@ -1318,7 +1318,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             error.error("unsupported type of assignment", self.gx, node, mv=getmv())
 
         blah2 = ast.BinOp(lnode, node.op, node.value)
-        blah2.augment = True
 
         assign = ast.Assign([blah], blah2)
         register_node(assign, func)

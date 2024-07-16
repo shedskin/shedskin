@@ -82,6 +82,7 @@ if TYPE_CHECKING:
     from . import graph
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules
+FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 
@@ -162,7 +163,7 @@ class CNode:
         self.in_list = 0  # node in work-list
         self.callfuncs: List[Any] = []  # callfuncs to which node is object/argument
 
-        self.nodecp: set[Tuple] = set()  # already analyzed cp's # XXX kill!?
+        self.nodecp: set[Tuple['python.Function', Types, Types]] = set()  # already analyzed cp's # XXX kill!?
 
         self.csites: List[CNode]
 
@@ -1072,9 +1073,9 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
         )
 
         # already connected to template
-        if (func,) + objtype + c in callnode.nodecp:
+        if (func, objtype, c) in callnode.nodecp:
             continue
-        callnode.nodecp.add((func,) + objtype + c)
+        callnode.nodecp.add((func, objtype, c))
 
         # create new template
         if dcpa not in func.cp or c not in func.cp[dcpa]:
@@ -1350,7 +1351,7 @@ def ifa_split_no_confusion(
         ifa_logger.debug("IFA found simple split: %s", subtype_csites.keys())
 
 
-def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['python.Variable']):
+def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['python.Variable']) -> Tuple[Dict[FTypes, int], Dict[int, Tuple[FTypes]]]:
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
@@ -1369,8 +1370,10 @@ def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['pyt
                 dcpa,
                 list(zip([var.name for var in vars], map(list, attr_types))),
             )
+
         nr_classes[dcpa] = attr_types
         classes_nr[attr_types] = dcpa
+
     return classes_nr, nr_classes
 
 
