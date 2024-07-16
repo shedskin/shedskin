@@ -1318,6 +1318,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             error.error("unsupported type of assignment", self.gx, node, mv=getmv())
 
         blah2 = ast.BinOp(lnode, node.op, node.value)
+        blah2.augment = True
 
         assign = ast.Assign([blah], blah2)
         register_node(assign, func)
