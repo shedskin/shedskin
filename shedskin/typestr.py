@@ -14,6 +14,7 @@ from . import infer
 from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any, Iterable
 if TYPE_CHECKING:
     from . import config
+    from . import graph
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with cpp.py version
 
@@ -130,13 +131,12 @@ def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Cla
 
 def nodetypestr(
     gx: 'config.GlobalInfo',
-    node,
-    parent=None,
+    node: Any,
+    parent: Optional[Any]=None,
     cplusplus: bool = True,
     check_extmod: bool = False,
     check_ret: bool = False,
-    var=None,
-    mv=None,
+    mv:Optional['graph.ModuleVisitor']=None,
 ) -> str:  # XXX minimize
     if (
         cplusplus and isinstance(node, python.Variable) and node.looper
@@ -152,7 +152,7 @@ def nodetypestr(
             return "__GC_DICT<" + ts[5:-3] + ">::iterator "
     types = gx.merged_inh[node]
     return typestr(
-        gx, types, None, cplusplus, node, check_extmod, 0, check_ret, var, mv=mv
+        gx, types, None, cplusplus, node, check_extmod, 0, check_ret, mv=mv
     )
 
 

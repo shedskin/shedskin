@@ -1247,16 +1247,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.fastfor(qual, iter, func)
         self.forbody(node, quals, iter, func, False, genexpr)
 
-    def impl_visit_temp(self, node: ast.AST, func: 'python.Function') -> None:  # XXX generalize?
+    def impl_visit_temp(self, node: ast.AST, func: Optional['python.Function']) -> None:  # XXX generalize?
         if node in self.mv.tempcount:
             self.append(self.mv.tempcount[node])
         else:
             self.visit(node, func)
 
-    def fastfor(self, node, assname, func=None):
+    def fastfor(self, node: Union[ast.For, ast.comprehension], assname: str, func: Optional['python.Function']=None) -> None:
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) ..
         ivar, evar = self.mv.tempcount[node.target], self.mv.tempcount[node.iter]
         self.start("FAST_FOR(%s," % assname)
+
+        assert isinstance(node.iter, ast.Call)
 
         if len(node.iter.args) == 1:
             self.append("0,")

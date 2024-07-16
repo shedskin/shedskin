@@ -86,6 +86,7 @@ FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
+CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -238,13 +239,11 @@ def get_types(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], me
     return types
 
 
-def get_starargs(node):
-    if hasattr(node, "starargs"):
-        return node.starargs
-
+def get_starargs(node: ast.Call) -> Optional[ast.AST]:
     for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
+        if isinstance(arg, ast.Starred):
             return arg.value
+    return None
 
 
 def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge:Optional[Merged]=None) -> Tuple[bool, bool]:
@@ -916,7 +915,7 @@ def redirect(
     callnode,
     direct_call,
     constructor,
-):
+) -> Tuple[CartesianProduct, int, 'python.Function']:
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
         if isinstance(func.parent, python.Class):
