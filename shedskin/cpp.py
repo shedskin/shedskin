@@ -1276,19 +1276,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print(self.line)
 
     def fastenumerate(self, node: Union[ast.For, ast.comprehension]) -> bool:
-        return ast_utils.is_enumerate(node) and self.only_classes(
-            node.iter.args[0], ("tuple", "list", "str_")
+        return (
+            isinstance(node.iter, ast.Call)
+            and ast_utils.is_enumerate(node)
+            and self.only_classes(node.iter.args[0], ("tuple", "list", "str_"))
         )
 
     def fastzip2(self, node: Union[ast.For, ast.comprehension]) -> bool:
         names = ("tuple", "list")
         return (
-            ast_utils.is_zip2(node)
+            isinstance(node.iter, ast.Call)
+            and ast_utils.is_zip2(node)
             and self.only_classes(node.iter.args[0], names)
             and self.only_classes(node.iter.args[1], names)
         )
 
-    def fastdictiter(self, node: ast.For) -> bool:
+    def fastdictiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_assign_list_or_tuple(node.target)
@@ -2919,6 +2922,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if struct_unpack:
             sinfo, tvar, tvar_pos = struct_unpack
             self.start()
+            assert isinstance(node.value, ast.Call)
             self.visitm(tvar, " = ", node.value.args[1], func)
             self.eol()
             if len(node.value.args) > 2: # TODO unpack_from: nicer check
@@ -3396,7 +3400,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for name in lcfunc.misses:
             var = python.lookup_var(name, func, self.mv)
             if var.parent:
-                if name == "self" and not func.listcomp:  # XXX parent?
+                if name == "self" and not (func and func.listcomp):
                     args.append("this")
                 else:
                     args.append(self.cpp_name(var))
@@ -3459,7 +3463,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(", ", n, func)
         self.append(")")
 
-    def attr_var_ref(self, node: ast.Attribute, ident: str, module:Optional['python.Module']=None) -> str:  # XXX blegh
+    def attr_var_ref(self, node: ast.Attribute, ident: str) -> str:  # TODO remove, by using convention for var names
         lcp = typestr.lowest_common_parents(
             typestr.polymorphic_t(self.gx, self.mergeinh[node.value])
         )
@@ -3469,13 +3473,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node.attr in lcp[0].vars
             and node.attr not in lcp[0].funcs
         ):
-            name = lcp[0].vars[node.attr]
+            return self.cpp_name(lcp[0].vars[node.attr])
         else:
-            name = ident
-        if module and module.builtin:
-            return self.namer.nokeywords(name)
-        else:
-            return self.cpp_name(name)
+            return self.cpp_name(ident)
 
     def visit_Attribute(self, node: ast.Attribute, func:Optional['python.Function']=None) -> None:  # XXX merge with visitGetattr
         if type(node.ctx) == ast.Load:
@@ -3607,7 +3607,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX merge into above
                 ident = "__getfast__"
 
-            self.append(self.attr_var_ref(node, ident, module))
+            if module:
+                if module.builtin:
+                    cppname = self.namer.nokeywords(ident)
+                else:
+                    cppname = self.cpp_name(ident)
+            else:
+                cppname = self.attr_var_ref(node, ident)
+            self.append(cppname)
 
         elif type(node.ctx) == ast.Del:
             error.error(
