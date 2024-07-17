@@ -216,6 +216,7 @@ class Function:
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
+        self.ident: str
         if node:
             ident = node.name
             if inherited_from and parent and ident in parent.funcs:
@@ -433,7 +434,7 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
     assert False
 
 
-def lookup_var(name, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False):
+def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False):
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var

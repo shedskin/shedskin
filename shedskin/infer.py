@@ -513,6 +513,8 @@ def analyze_callfunc(
 
     # direct [constructor] call
     if isinstance(node.func, ast.Name) or namespace != mv.module:
+        assert isinstance(ident, str)
+
         if isinstance(node.func, ast.Name):
             if python.lookup_var(ident, cnode.parent, mv):
                 return (

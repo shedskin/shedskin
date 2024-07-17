@@ -955,7 +955,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if var.invisible:
                 continue  # var.name in cl.virtualvars: continue
             # var is masked by ancestor var
-            vars = set()
+            vars : set[str] = set()
             for ancestor in cl.ancestors():
                 vars.update(ancestor.vars)
             if var.name in vars:
@@ -1345,6 +1345,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
     def do_fastzip2(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr:bool) -> None:
+        assert isinstance(node.iter, ast.Call)
+
         self.start("FOR_IN_ZIP(")
         left, right = node.target.elts
         self.do_fastzip2_one(left, func)
@@ -3019,6 +3021,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
                 # expr.attr = expr
                 elif ast_utils.is_assign_attribute(lvalue):
+                    assert isinstance(lvalue, ast.Attribute)
                     lcp = typestr.lowest_common_parents(
                         typestr.polymorphic_t(self.gx, self.mergeinh[lvalue.value])
                     )
