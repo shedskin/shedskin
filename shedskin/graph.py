@@ -954,18 +954,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if is_lambda:
             self.lambdas[node.name] = func
 
-        # --- add unpacking statement for tuple formals
-        func.expand_args = {}
-        for i, formal in enumerate(func.formals):
-            if isinstance(formal, tuple):
-                tmp = self.temp_var((node, i), func)
-                func.formals[i] = tmp.name
-                fake_unpack = ast.Assign(
-                    [ast.Name(formal, ast.Store())], ast.Name(tmp.name, ast.Load())
-                )
-                func.expand_args[tmp.name] = fake_unpack
-                self.visit(fake_unpack, func)
-
         func.defaults = node.args.defaults
 
         for formal in func.formals:
@@ -1250,12 +1238,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.types[newnode] = set()
 
         clone = copy.deepcopy(node)
-        lnode = node.target
+        assert isinstance(clone, ast.AugAssign)
+        lnode: ast.AST
 
-        if isinstance(node.target, ast.Name):
+        if isinstance(clone.target, ast.Name):
             blah = node.target
             lnode = ast.Name(clone.target.id, ast.Load(), lineno=node.target.lineno)
-        elif isinstance(node.target, ast.Attribute):
+        elif isinstance(clone.target, ast.Attribute):
             blah = node.target
             lnode = ast.Attribute(
                 clone.target.value,

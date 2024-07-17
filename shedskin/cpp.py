@@ -118,6 +118,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.bool_wrapper: dict['ast.AST', bool] = {}
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
+        self.done: set[ast.AST]
 
     def cpp_name(self, obj: Any) -> str:
         return self.namer.name(obj)
@@ -1617,8 +1618,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.local_defs(func)
 
         # --- function body
-        for fake_unpack in func.expand_args.values():
-            self.visit(fake_unpack, func)
         for child in node.body:
             self.visit(child, func)
         if func.fakeret:
@@ -1678,8 +1677,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 "this->%s = %s;"
                 % (self.cpp_name(func.vars[f]), self.cpp_name(func.vars[f]))
             )
-        for fake_unpack in func.expand_args.values():
-            self.visit(fake_unpack, func)
         self.output("__last_yield = -1;")
         self.deindent()
         self.output("}\n")
@@ -1877,7 +1874,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.impl_visit_and_or(node, nodes[1:], op, mix, func)
                 self.append(", " + self.mv.tempcount[child][2:] + ")")
 
-    def visit_Compare(self, node, func=None, wrapper=True):
+    def visit_Compare(self, node: ast.Compare, func:Optional['python.Function']=None, wrapper:bool=True) -> None:
         if node not in self.bool_wrapper:
             self.append("___bool(")
         self.done = set()
@@ -1950,8 +1947,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             str_nodes = self.rec_string_addition(node)
             if len(str_nodes) > 2:
                 self.append("__add_strs(%d, " % len(str_nodes))
-                for i, node in enumerate(str_nodes):
-                    self.visit(node, func)
+                for i, str_node in enumerate(str_nodes):
+                    self.visit(str_node, func)
                     if i < len(str_nodes) - 1:
                         self.append(", ")
                 self.append(")")
