@@ -323,6 +323,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child, func)
 
             for key, value in zip(node.keys, node.values):  # XXX filter
+                assert key  # TODO when None?
                 self.add_dynamic_constraint(node, key, "unit", func)
                 self.add_dynamic_constraint(node, value, "value", func)
         else:
@@ -1484,9 +1485,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(child, func)
         self.gx.loopstack.pop()
 
-    def do_for(self, node, assnode, get_iter, func):
+    def do_for(self, node: Union[ast.For, ast.comprehension], assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if ast_utils.is_fastfor(node):
+            assert isinstance(node.iter, ast.Call)
+
             self.temp_var2(node.target, assnode, func)
             self.temp_var2(node.iter, infer.inode(self.gx, node.iter.args[0]), func)
 
@@ -1508,6 +1511,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var_int(node.iter, func)
 
             if ast_utils.is_enumerate(node) or ast_utils.is_zip2(node):
+                assert isinstance(node.iter, ast.Call)
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
                 if ast_utils.is_zip2(node):
                     self.temp_var2(
