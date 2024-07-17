@@ -265,7 +265,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def includes_rec(self, includes: set['python.Module']) -> List['python.Module']:  # XXX should be recursive!? ugh
         todo = includes.copy()
-        result = []
+        result : List['python.Module'] = []
         while todo:
             for include in todo:
                 if not include.deps - set(result):
@@ -1238,6 +1238,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         func: Optional['python.Function'],
         genexpr:bool
     ) -> None:
+        assert isinstance(qual.iter, ast.Call)
         if len(qual.iter.args) == 3 and not ast_utils.is_literal(qual.iter.args[2]):
             for arg in qual.iter.args:  # XXX simplify
                 if arg in self.mv.tempcount:
@@ -3072,54 +3073,40 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 # expr[a:b:c] = expr
                 elif isinstance(lvalue, ast.Subscript) and isinstance(
                     lvalue.slice, ast.Slice
-                ):  # XXX see comment above
-                    if (
-                        isinstance(rvalue, ast.Slice)
-                        and lvalue.upper == rvalue.upper is None
-                        and lvalue.lower == rvalue.lower is None
-                    ):
-                        self.visitm(
-                            lvalue.expr,
-                            self.connector(lvalue.expr, func),
-                            "units = ",
-                            rvalue.expr,
-                            self.connector(rvalue.expr, func),
-                            "units",
-                            func,
+                ):
+                    # XXX let visit_Call(fakefunc) use cast_to_builtin?
+                    fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
+                    self.visitm(
+                        "(",
+                        fakefunc.func.value,
+                        ")->__setslice__(",
+                        fakefunc.args[0],
+                        ",",
+                        fakefunc.args[1],
+                        ",",
+                        fakefunc.args[2],
+                        ",",
+                        fakefunc.args[3],
+                        ",",
+                        func,
+                    )
+                    if [
+                        t
+                        for t in self.mergeinh[lvalue.value]
+                        if t[0].ident == "bytes_"
+                    ]:  # TODO more general fix
+                        self.visit(fakefunc.args[4], func)
+                    elif [
+                        t
+                        for t in self.mergeinh[fakefunc.args[4]]
+                        if t[0].ident == "__xrange"
+                    ]:
+                        self.visit(fakefunc.args[4], func)
+                    else:
+                        self.impl_visit_conv(
+                            fakefunc.args[4], self.mergeinh[lvalue.value], func
                         )
-                    else:  # XXX let visit_Call(fakefunc) use cast_to_builtin
-                        fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
-                        self.visitm(
-                            "(",
-                            fakefunc.func.value,
-                            ")->__setslice__(",
-                            fakefunc.args[0],
-                            ",",
-                            fakefunc.args[1],
-                            ",",
-                            fakefunc.args[2],
-                            ",",
-                            fakefunc.args[3],
-                            ",",
-                            func,
-                        )
-                        if [
-                            t
-                            for t in self.mergeinh[lvalue.value]
-                            if t[0].ident == "bytes_"
-                        ]:  # TODO more general fix
-                            self.visit(fakefunc.args[4], func)
-                        elif [
-                            t
-                            for t in self.mergeinh[fakefunc.args[4]]
-                            if t[0].ident == "__xrange"
-                        ]:
-                            self.visit(fakefunc.args[4], func)
-                        else:
-                            self.impl_visit_conv(
-                                fakefunc.args[4], self.mergeinh[lvalue.value], func
-                            )
-                        self.append(")")
+                    self.append(")")
                     self.eol()
 
     def assign_pair(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
@@ -3819,7 +3806,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         elif isinstance(value, str):
             if not self.filling_consts:
-                self.append(self.get_constant(node))
+                const = self.get_constant(node)
+                assert const
+                self.append(const)
             else:
                 self.append('new str("%s"' % self.expand_special_chars(value))
                 if "\0" in value:
