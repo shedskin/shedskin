@@ -1343,7 +1343,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
-    def visit_Assert(self, node, func=None):
+    def visit_Assert(self, node: ast.Assert, func:Optional['python.Function']=None):
         self.visit(node.test, func)
         if node.msg:
             self.visit(node.msg, func)
