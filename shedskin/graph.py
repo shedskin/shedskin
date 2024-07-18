@@ -358,6 +358,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 cl = python.def_class(self.gx, "tuple")
 
             merged = set()
+            assert isinstance(node, (ast.List, ast.Tuple)) # why needed after isinstance check above
             for child in node.elts:
                 merged.add(self.child_type_rec(child))
 

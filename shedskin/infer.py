@@ -91,6 +91,7 @@ ClassesNr: TypeAlias = Dict[FTypes, int]
 NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
 AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
 CreationPoints: TypeAlias = Dict[FTypes, List['CNode']]
+Analysis: TypeAlias = Tuple[Optional[ast.AST], Optional[str], Optional['python.Function'], bool, Optional['python.Class'], bool, bool]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -171,7 +172,8 @@ class CNode:
 
         self.nodecp: set[Tuple['python.Function', Types, Types]] = set()  # already analyzed cp's # XXX kill!?
 
-        self.csites: List[CNode]
+        self.csites: set[CNode]
+        self.paths: List[FTypes]
 
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
@@ -445,7 +447,8 @@ def callfunc_targets(gx: "config.GlobalInfo", node: ast.Call, merge: Merged) -> 
 # --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(
     gx: "config.GlobalInfo", node: ast.Call, node2:Optional[CNode]=None, merge:Optional[Merged]=None
-):  # XXX generate target list XXX uniform python.Variable system! XXX node2, merge?
+) -> Analysis:
+    # XXX generate target list XXX uniform python.Variable system! XXX node2, merge?
     # print 'analyze callnode', ast.dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
     mv = cnode.mv
@@ -593,7 +596,7 @@ def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=Fal
     return merge
 
 
-def inode(gx: "config.GlobalInfo", node):
+def inode(gx: "config.GlobalInfo", node: Any):
     return gx.cnode[node, 0, 0]
 
 
@@ -832,7 +835,7 @@ def possible_functions(gx: "config.GlobalInfo", node, analysis):
     return funcs
 
 
-def possible_argtypes(gx, node, funcs, analysis, worklist):
+def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: List, analysis: Analysis, worklist: List[CNode]) -> List[Types]:
     expr = node.thing
     (
         objexpr,
@@ -902,7 +905,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
     return argtypes
 
 
-def cartesian_product(gx: "config.GlobalInfo", node: CNode, analysis, worklist):
+def cartesian_product(gx: "config.GlobalInfo", node: CNode, analysis: Analysis, worklist: List[CNode]) -> List:
     funcs = possible_functions(gx, node, analysis)
     if not funcs:
         return []
@@ -1032,6 +1035,7 @@ def redirect(
 
 def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None:
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
+
     cp = cartesian_product(gx, callnode, analysis, worklist)
     if not cp:
         return
@@ -1392,7 +1396,7 @@ def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['pyt
     return classes_nr, nr_classes
 
 
-def ifa_determine_split(node, allnodes):
+def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> List[set[CNode]]:
     """determine split along incoming dataflow edges"""
     remaining = [
         incoming.csites.copy() for incoming in node.in_ if incoming in allnodes
@@ -1734,7 +1738,7 @@ def ifa_seed_template(gx: "config.GlobalInfo", func, cart, dcpa, cpa, worklist) 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 
 
-def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]):
+def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]) -> set[CNode]:
     path = set(worklist)
     while worklist:
         new = set()
