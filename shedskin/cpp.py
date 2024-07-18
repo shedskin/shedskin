@@ -2546,6 +2546,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and node.args[0].n in (0, 1)
                 and self.only_classes(objexpr, ("tuple2",))
             ):
+                assert isinstance(node.func, ast.Attribute)
                 self.visit(node.func.value, func)
                 self.append(
                     "->%s()" % ["__getfirst__", "__getsecond__"][node.args[0].n]
@@ -2556,9 +2557,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(node.func, "->__call__(", func)
             elif (
                 ident == "is_integer"
+                and isinstance(node.func, ast.Attribute)
                 and (python.def_class(self.gx, "float_"), 0)
                 in self.mergeinh[node.func.value]
             ):
+                assert isinstance(node.func, ast.Attribute)
                 self.visitm("__ss_is_integer(", node.func.value, ")", func)
                 return
             else:

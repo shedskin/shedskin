@@ -649,7 +649,7 @@ def class_copy(gx: "config.GlobalInfo", cl: 'python.Class', dcpa: int) -> None:
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
 
 
-def func_copy(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, cpa: int, worklist=None, cart=None) -> None:
+def func_copy(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, cpa: int, worklist:Optional[List[CNode]]=None, cart:Optional[CartesianProduct]=None) -> None:
     # print 'funccopy', func, cart, dcpa, cpa
 
     # --- copy local end points of each constraint
@@ -916,15 +916,16 @@ def cartesian_product(gx: "config.GlobalInfo", node: CNode, analysis: Analysis, 
 
 def redirect(
     gx: "config.GlobalInfo",
-    c,
-    dcpa,
-    func,
-    callfunc,
-    ident,
-    callnode,
-    direct_call,
-    constructor,
+    c: CartesianProduct,
+    dcpa: int,
+    func: 'python.Function',
+    callfunc: ast.Call,
+    ident: Optional[str],
+    callnode: CNode,
+    direct_call: Optional['python.Function'],
+    constructor: Optional['python.Class'],
 ) -> Tuple[CartesianProduct, int, 'python.Function']:
+
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
         if isinstance(func.parent, python.Class):
@@ -1151,7 +1152,7 @@ def connect_getsetattr(
     return False
 
 
-def create_template(gx: "config.GlobalInfo", func, dcpa, c, worklist):
+def create_template(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, c: CartesianProduct, worklist: List[CNode]) -> None:
     # --- unseen cartesian product: create new template
     if dcpa not in func.cp:
         func.cp[dcpa] = {}
@@ -1165,7 +1166,7 @@ def create_template(gx: "config.GlobalInfo", func, dcpa, c, worklist):
 
 
 def actuals_formals(
-    gx: "config.GlobalInfo", expr, func, node, dcpa, cpa, types, analysis, worklist
+    gx: "config.GlobalInfo", expr, func, node, dcpa: int, cpa, types, analysis: Analysis, worklist: List[CNode]
 ):
     (
         objexpr,

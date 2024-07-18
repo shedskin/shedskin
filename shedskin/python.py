@@ -192,7 +192,7 @@ class Class(PyObject):
 
 
 class StaticClass(PyObject):
-    def __init__(self, cl, mv: 'graph.ModuleVisitor'):
+    def __init__(self, cl: 'Class', mv: 'graph.ModuleVisitor'):
         self.vars: dict[str, Variable] = {}
         self.static_nodes: List[ast.AST] = []
         self.funcs: dict[str, Function] = {}
@@ -227,7 +227,7 @@ class Function:
             self.doc = ast.get_docstring(node)
         self.returnexpr: List[ast.AST] = []
         self.retnode: Optional['infer.CNode'] = None
-        self.lambdanr = None
+        self.lambdanr: Optional[int] = None
         self.lambdawrapper = False
         self.parent = parent
         self.constraints: set[Tuple['infer.CNode', 'infer.CNode']] = set()
