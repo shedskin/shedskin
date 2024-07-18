@@ -128,6 +128,7 @@ def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
             if not classes:
                 continue
 
+            assert ident
             if (
                 isinstance(objexpr, ast.Name)
                 and objexpr.id == "self"
