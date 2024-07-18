@@ -192,7 +192,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.funcnodes: List[ast.FunctionDef]
         self.classnodes: List[ast.ClassDef]
 
-    def visit(self, node: ast.AST, *args) -> None:
+    def visit(self, node: ast.AST, *args: Any) -> None:
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
@@ -1343,7 +1343,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
-    def visit_Assert(self, node: ast.Assert, func:Optional['python.Function']=None):
+    def visit_Assert(self, node: ast.Assert, func:Optional['python.Function']=None) -> None:
         self.visit(node.test, func)
         if node.msg:
             self.visit(node.msg, func)
@@ -1474,7 +1474,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(child, func)
         self.gx.loopstack.pop()
 
-    def do_for(self, node: Union[ast.For, ast.comprehension], assnode, get_iter, func):
+    def do_for(self, node: Union[ast.For, ast.comprehension], assnode: 'infer.CNode', get_iter: ast.Call, func: Optional['python.Function']) -> None:
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if ast_utils.is_fastfor(node):
             assert isinstance(node.iter, ast.Call)

@@ -1396,6 +1396,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def do_fastdictiter(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr: bool) -> None:
         self.start("FOR_IN_DICT(")
+        assert isinstance(node.target, (ast.Tuple, ast.List))
         left, right = node.target.elts
         tail = (
             self.mv.tempcount[node, 7][2:]
@@ -1404,6 +1405,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             + ","
             + self.mv.tempcount[node.iter][2:]
         )
+        assert isinstance(node.iter, ast.Call)
+        assert isinstance(node.iter.func, ast.Attribute)
         self.visit(node.iter.func.value, func)
         self.print(self.line + "," + tail + ")")
         self.indent()
@@ -3755,11 +3758,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def expand_special_chars(self, value) -> str:
-        if isinstance(value, str):
-            value = value.encode("utf-8")  # restriction
+    def expand_special_chars(self, val: Union[str, bytes]) -> str:
+        if isinstance(val, str):
+            val = val.encode("utf-8")  # restriction
 
-        value = [chr(c) for c in value]
+        value = [chr(c) for c in val]
         replace = {
             "\\" : "\\",
             "\n" : "n",

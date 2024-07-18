@@ -83,10 +83,10 @@ if TYPE_CHECKING:
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules, reuse common types
 FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
+CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
-CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 ClassesNr: TypeAlias = Dict[FTypes, int]
 NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
 AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
@@ -1172,8 +1172,16 @@ def create_template(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int,
 
 
 def actuals_formals(
-    gx: "config.GlobalInfo", expr, func, node, dcpa: int, cpa, types, analysis: Analysis, worklist: List[CNode]
-):
+    gx: "config.GlobalInfo",
+    expr: ast.Call,
+    func: 'python.Function',
+    node: CNode,
+    dcpa: int,
+    cpa: int,
+    types: CartesianProduct,
+    analysis: Analysis,
+    worklist: List[CNode],
+) -> None:
     (
         objexpr,
         ident,
@@ -1219,7 +1227,7 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
-def ifa(gx: "config.GlobalInfo"):
+def ifa(gx: "config.GlobalInfo") -> Split:
     logger.debug("ifa")
     split: Split = []  # [(set of creation nodes, new type number), ..]
 
@@ -1665,7 +1673,14 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
 # --- seed allocation sites in newly created templates (called by function.copy())
 
 
-def ifa_seed_template(gx: "config.GlobalInfo", func, cart, dcpa, cpa, worklist) -> None:
+def ifa_seed_template(
+    gx: "config.GlobalInfo",
+    func,
+    cart,
+    dcpa: int,
+    cpa: int,
+    worklist: Optional[List[CNode]]
+) -> None:
     if cart is not None:  # (None means we are not in the process of propagation)
         # print 'funccopy', func.ident #, func.nodes
         if isinstance(func.parent, python.Class):  # self
@@ -1955,7 +1970,7 @@ def register_temp_var(var: 'python.Variable', parent: Parent) -> None:
 def default_var(
     gx: "config.GlobalInfo",
     name: str,
-    parent,
+    parent: Optional[Union['python.Function', 'python.Class']],
     worklist: Optional[List[CNode]]=None,
     mv: Optional['graph.ModuleVisitor']=None,
     exc_name: bool=False
