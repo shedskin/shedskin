@@ -1878,6 +1878,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and node.func.value.id in getmv().imports
                 and node.func.attr == "__getattr__"
             ):  # XXX analyze_callfunc
+                assert isinstance(node.args[0], ast.Str)
                 if (
                     node.args[0].s in getmv().imports[node.func.value.id].mv.globals
                 ):  # XXX bleh
