@@ -986,13 +986,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         )
 
     def visit_Slice(self, node: ast.Slice, func: Optional['python.Function']=None) -> None:
-        assert False, "visit_Slice should never be called"
-        if type(node.ctx) == ast.Del:
-            self.start()
-            self.visit(infer.inode(self.gx, node.expr).fakefunc, func)
-            self.eol()
-        else:
-            self.visit(infer.inode(self.gx, node.expr).fakefunc, func)
+        assert False
 
     def visit_Lambda(self, node: ast.Lambda, parent:Optional[Parent]=None) -> None:
         self.append(self.mv.lambdaname[node])
@@ -1347,6 +1341,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def do_fastzip2(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr:bool) -> None:
         assert isinstance(node.iter, ast.Call)
+        assert isinstance(node.target, (ast.Tuple, ast.List))
 
         self.start("FOR_IN_ZIP(")
         left, right = node.target.elts
@@ -1365,8 +1360,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print(self.line + tail1 + tail2 + ")")
         self.indent()
         if ast_utils.is_assign_list_or_tuple(left):
+            assert isinstance(left, (ast.Tuple, ast.List))
             self.tuple_assign(left, self.mv.tempcount[left], func)
         if ast_utils.is_assign_list_or_tuple(right):
+            assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
     def do_fastzip2_one(self, node: ast.AST, func: Optional['python.Function']) -> None:
@@ -1377,6 +1374,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(",")
 
     def do_fastenumerate(self, node: Union[ast.For, ast.comprehension], func:Optional['python.Function'], genexpr:bool) -> None:
+        assert isinstance(node.iter, ast.Call)
+        assert isinstance(node.target, (ast.Tuple, ast.List))
         if self.only_classes(node.iter.args[0], ("tuple", "list")):
             self.start("FOR_IN_ENUMERATE(")
         else:
@@ -1391,6 +1390,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.visitm(left, " = " + self.mv.tempcount[node.iter], func)
         self.eol()
         if ast_utils.is_assign_list_or_tuple(right):
+            assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
     def do_fastdictiter(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr: bool) -> None:
@@ -2435,6 +2435,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("1")  # don't call default constructor
 
         elif parent_constr:
+            assert isinstance(node.func, ast.Attribute)
             cl = python.lookup_class(node.func.value, self.mv)
             self.append(self.namer.namespace_class(cl) + "::" + node.func.attr + "(")
 

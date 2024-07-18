@@ -334,15 +334,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.add_dynamic_constraint(node, child, "unit", func)
 
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
-    def filter_redundant_children(self, node: ast.AST) -> List[ast.AST]:
+    def filter_redundant_children(self, node: Union[ast.Tuple, ast.List, ast.Set]) -> List[ast.AST]:
         done = set()
-        nonred = []
+        nonred : List[ast.AST] = []
         for child in node.elts:
             type = self.child_type_rec(child)
             if not type or type not in done:
                 done.add(type)
                 nonred.append(child)
-
         return nonred
 
     # --- determine single constructor child node type, used by the above
@@ -1095,7 +1094,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.fake_func(node, node.value, ident, [subscript], func)
 
     def visit_Slice(self, node:ast.Slice, func:Optional['python.Function']=None) -> None:
-        self.slice(node, node.expr, [node.lower, node.upper, None], func)
+        assert False
 
     def slice(self, node: Union[ast.Slice, ast.Subscript], expr: ast.AST, nodes: List[Optional[ast.AST]], func: Optional['python.Function'], replace:Optional[ast.AST]=None) -> None:
         nodes2 = slice_nums(nodes)
