@@ -81,7 +81,7 @@ if TYPE_CHECKING:
     from . import config
     from . import graph
 
-Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules
+Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules, reuse common types
 FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
@@ -92,7 +92,12 @@ NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
 AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
 CreationPoints: TypeAlias = Dict[FTypes, List['CNode']]
 Analysis: TypeAlias = Tuple[Optional[ast.AST], Optional[str], Optional['python.Function'], bool, Optional['python.Class'], bool, bool]
-Backup: TypeAlias = Tuple
+Backup: TypeAlias = Tuple[
+                        dict['CNode', set[Tuple[Any, int]]], # gx.types
+                        set[tuple['CNode', 'CNode']], # gx.constraints
+                        Dict['CNode', Tuple[set['CNode'], set['CNode']]], # cnode -> (cnode.in_, cnode.out)
+                        dict[Tuple[Any, int, int], 'CNode'] # gx.cnode
+                    ]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -772,7 +777,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
 
 
 # --- determine cartesian product of possible function and argument types
-def possible_functions(gx: "config.GlobalInfo", node, analysis):
+def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis):
     expr = node.thing
 
     # --- determine possible target functions
@@ -1301,13 +1306,13 @@ def ifa_split_vars(
             # --- if it exists, perform actual splitting
             ifa_logger.debug("IFA normal split, remaining:", len(remaining))
             for splitsites in remaining[1:]:
-                ifa_split_class(cl, dcpa, splitsites, split)
+                ifa_split_class(cl, dcpa, list(splitsites), split)
             return split
 
         # --- try to partition csites across paths
         prt: CreationPoints = {}
         for c in csites:
-            tspaths = set()
+            tspaths: Types = set()
             for p in c.paths:
                 tspaths.update(p)
             ts = frozenset(tspaths)
@@ -1330,15 +1335,15 @@ def ifa_split_vars(
 
 def ifa_split_no_confusion(
     gx: "config.GlobalInfo",
-    cl,
-    dcpa,
-    varnum,
-    classes_nr,
-    nr_classes,
-    csites,
-    emptycsites,
-    allnodes,
-    split,
+    cl: 'python.Class',
+    dcpa: int,
+    varnum: int,
+    classes_nr: ClassesNr,
+    nr_classes: NrClasses,
+    csites: List[CNode],
+    emptycsites: List[CNode],
+    allnodes: set[CNode],
+    split: Split,
 ) -> None:
     """creation sites on single path: split them off, possibly reusing contour"""
     attr_types = list(nr_classes[dcpa])
