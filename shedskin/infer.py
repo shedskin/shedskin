@@ -1826,7 +1826,7 @@ def merge_simple_types(gx: "config.GlobalInfo", types: Types) -> frozenset[Tuple
     return frozenset(merge)
 
 
-def get_classes(gx: "config.GlobalInfo", var) -> set['python.Class']:
+def get_classes(gx: "config.GlobalInfo", var: 'python.Variable') -> set['python.Class']:
     return set(
         t[0]
         for t in gx.merged_inh[var]
