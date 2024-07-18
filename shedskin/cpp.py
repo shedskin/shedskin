@@ -1038,6 +1038,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         )
         items = list(zip(node.keys, node.values))
         for key, value in items:
+            assert key  # TODO when None?
             if ts_key == ts_value:
                 self.visitm("(new tuple<%s>(2," % ts_key, func)
             else:
@@ -1718,6 +1719,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Yield(self, node:ast.Yield, func: 'python.Function') -> None:
         self.output("__last_yield = %d;" % func.yieldNodes.index(node))
         self.start("__result = ")
+        assert node.value # added in graph.py
         self.impl_visit_conv(node.value, self.mergeinh[func.yieldnode.thing], func)
         self.eol()
         self.output("return __result;")
@@ -2827,6 +2829,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("return __zero<%s>();" % func2)
             return
         self.start("return ")
+        assert node.value # added in graph.py
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
