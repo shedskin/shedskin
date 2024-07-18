@@ -87,6 +87,10 @@ Parent: TypeAlias = Union['python.Class', 'python.Function']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
 CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
+ClassesNr: TypeAlias = Dict[FTypes, int]
+NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
+AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
+CreationPoints: TypeAlias = Dict[FTypes, List['CNode']]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -1208,7 +1212,7 @@ def ifa(gx: "config.GlobalInfo"):
     logger.debug("ifa")
     split: Split = []  # [(set of creation nodes, new type number), ..]
 
-    allcsites: dict[Tuple['python.Class', int], set[CNode]] = {}
+    allcsites: AllCSites = {}
     for n, types in gx.types.items():
         if not n.in_:
             for cl, dcpa in types:
@@ -1233,8 +1237,15 @@ def ifa(gx: "config.GlobalInfo"):
 
 
 def ifa_split_vars(
-    gx: "config.GlobalInfo", cl, dcpa, vars, nr_classes, classes_nr, split, allcsites
-):
+    gx: "config.GlobalInfo",
+    cl: 'python.Class',
+    dcpa: int,
+    vars: List['python.Variable'],
+    nr_classes: NrClasses,
+    classes_nr: ClassesNr,
+    split: Split,
+    allcsites: AllCSites,
+) -> Optional[Split]:
     for varnum, var in enumerate(vars):
         if (var, dcpa, 0) not in gx.cnode:
             continue
@@ -1288,7 +1299,7 @@ def ifa_split_vars(
             return split
 
         # --- try to partition csites across paths
-        prt: dict[frozenset[Any], List[Tuple[Any, int, int]]] = {}
+        prt: CreationPoints = {}
         for c in csites:
             tspaths = set()
             for p in c.paths:
@@ -1307,6 +1318,8 @@ def ifa_split_vars(
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
+
+    return None
 
 
 def ifa_split_no_confusion(
@@ -1353,7 +1366,7 @@ def ifa_split_no_confusion(
         ifa_logger.debug("IFA found simple split: %s", subtype_csites.keys())
 
 
-def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['python.Variable']) -> Tuple[Dict[FTypes, int], Dict[int, Tuple[FTypes]]]:
+def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['python.Variable']) -> Tuple[ClassesNr, NrClasses]:
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
@@ -1421,7 +1434,7 @@ def ifa_classes_to_split(gx: "config.GlobalInfo") -> List['python.Class']:
     return classes
 
 
-def ifa_confluence_point(node: CNode, creation_points: Dict) -> bool:
+def ifa_confluence_point(node: CNode, creation_points: CreationPoints) -> bool:
     """determine if node is confluence point"""
     if len(node.in_) > 1 and isinstance(node.thing, python.Variable):
         for csite in node.csites:
@@ -1438,9 +1451,12 @@ def ifa_flow_graph(
     cl: 'python.Class',
     dcpa: int,
     node: CNode,
-    allcsites: dict[Tuple['python.Class', int], set[CNode]],
-):
-    creation_points, paths, assignsets = {}, {}, {}
+    allcsites: AllCSites,
+) -> Tuple[CreationPoints, CreationPoints, CreationPoints, set[CNode], List[CNode], List[CNode]]:
+
+    creation_points = {}
+    paths = {}
+    assignsets: CreationPoints = {}
     allnodes = set()
     csites = []
 
@@ -1488,8 +1504,8 @@ def ifa_flow_graph(
 def ifa_split_class(
     cl: 'python.Class',
     dcpa: int,
-    things: List[Tuple[ast.AST, int, int]],
-    split: List[Tuple['python.Class', int, List[Tuple[ast.AST, int, int]], int]],
+    things: List[CNode],
+    split: Split,
 ) -> None:
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
