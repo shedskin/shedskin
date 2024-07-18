@@ -92,6 +92,7 @@ NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
 AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
 CreationPoints: TypeAlias = Dict[FTypes, List['CNode']]
 Analysis: TypeAlias = Tuple[Optional[ast.AST], Optional[str], Optional['python.Function'], bool, Optional['python.Class'], bool, bool]
+Backup: TypeAlias = Tuple
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -1769,7 +1770,7 @@ def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
 
 
 # --- backup constraint network
-def backup_network(gx: "config.GlobalInfo"):
+def backup_network(gx: "config.GlobalInfo") -> Backup:
     beforetypes = {}
     for node, typeset in gx.types.items():
         beforetypes[node] = typeset.copy()
@@ -1786,7 +1787,7 @@ def backup_network(gx: "config.GlobalInfo"):
 
 
 # --- restore constraint network, introducing new types
-def restore_network(gx: "config.GlobalInfo", backup) -> None:
+def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
 
     gx.types = {}
