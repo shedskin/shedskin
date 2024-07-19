@@ -851,7 +851,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return module
 
     def visit_FunctionDef(
-        self, node: ast.FunctionDef, parent:Optional['python.Function']=None, is_lambda:bool=False, inherited_from:Optional['python.Class']=None
+        self, node: ast.FunctionDef, parent:Optional['python.Class']=None, is_lambda:bool=False, inherited_from:Optional['python.Class']=None
     ) -> None:
         if not getmv().module.builtin and (node.args.vararg or node.args.kwarg):
             error.error(

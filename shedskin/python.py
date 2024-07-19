@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from . import infer
 
 Parent: TypeAlias = Union['Class', 'Function']
+AllParent: TypeAlias = Union['Class', 'Function', 'StaticClass']
 CartesianProduct: TypeAlias = Tuple[Tuple['Class', int] , ...]
 
 
@@ -442,7 +443,7 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
     assert False
 
 
-def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['Variable']:
+def lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['Variable']:
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var
@@ -454,7 +455,7 @@ class VarLookup(NamedTuple):
     is_global: bool
 
 
-def smart_lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
+def smart_lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return VarLookup(parent.parent.vars[name], False)
     elif parent and name in parent.vars:
