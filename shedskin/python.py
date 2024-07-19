@@ -212,7 +212,14 @@ def extract_argnames(arg_struct:ast.arguments) -> List[str]:
 
 
 class Function:
-    def __init__(self, gx: 'config.GlobalInfo', mv: 'graph.ModuleVisitor', node=None, parent=None, inherited_from=None):
+    def __init__(
+        self,
+        gx: 'config.GlobalInfo',
+        mv: 'graph.ModuleVisitor',
+        node:Optional[ast.FunctionDef]=None,
+        parent:Optional['Class']=None,
+        inherited_from:Optional['Class']=None,
+    ):
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
@@ -383,7 +390,7 @@ def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function'
     return None
 
 
-def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
+def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Class']:  # XXX lookup_var first?
     if isinstance(node, ast.Name):
         if node.id == 'int': # TODO generalize
             return mv.ext_classes['int_']
@@ -397,6 +404,8 @@ def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor'):  # XXX lookup_var fi
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.classes:
             return module.mv.classes[node.attr]
+
+    return None
 
 
 def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
@@ -431,13 +440,14 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
         return mv.classes[name]
     elif name in mv.ext_classes:
         return mv.ext_classes[name]
-    assert False
+    return None
 
 
-def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False):
+def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['python.Variable']:
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var
+    return None
 
 
 VarLookup = collections.namedtuple("VarLookup", ["var", "is_global"])

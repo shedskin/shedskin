@@ -7,11 +7,13 @@ import ast
 import logging
 import sys
 
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union, TypeAlias
 if TYPE_CHECKING:
     from . import config
     from . import graph
     from . import python
+
+Error: TypeAlias = Tuple[int, str, int, str]
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)
@@ -20,7 +22,8 @@ formatter = logging.Formatter("*%(levelname)s* %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-ERRORS: set[Tuple[int, str, int, str]] = set()
+
+ERRORS: set[Error] = set()
 
 
 def error(
@@ -51,7 +54,7 @@ def error(
         sys.exit(1)
 
 
-def print_error(error) -> None:
+def print_error(error: Error) -> None:
     (kind, filename, lineno, msg) = error
     result = ""
     if filename:
