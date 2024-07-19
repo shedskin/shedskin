@@ -4,6 +4,7 @@
 
 """
 
+import ast
 import logging
 
 from . import error
@@ -11,7 +12,7 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any, Iterable
+from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any, Iterable, Union
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -158,16 +159,16 @@ def nodetypestr(
 
 def typestr(
     gx: 'config.GlobalInfo',
-    types,
-    parent=None,
+    types: Types,
+    parent: Optional['python.Function']=None,
     cplusplus: bool = True,
-    node=None,
+    node: Optional[Union[ast.AST, 'python.Variable']]=None,
     check_extmod: bool = False,
-    depth=0,
+    depth: int = 0,
     check_ret: bool = False,
-    var=None,
+    var: Optional['python.Variable']=None,
     tuple_check: bool = False,
-    mv=None,
+    mv: Optional['graph.ModuleVisitor']=None,
 ) -> str:
     try:
         ts = typestrnew(
@@ -245,15 +246,15 @@ def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', typ
 
 def typestrnew(
     gx: 'config.GlobalInfo',
-    types,
+    types: Types,
     cplusplus: bool = True,
-    node=None,
+    node: Optional[Union[ast.AST, 'python.Variable']]=None,
     check_extmod: bool = False,
-    depth=0,
+    depth: int = 0,
     check_ret: bool = False,
-    var=None,
+    var: Optional['python.Variable']=None,
     tuple_check: bool = False,
-    mv=None,
+    mv: Optional['graph.ModuleVisitor']=None,
 ) -> str:
     if depth == 10:
         raise RuntimeError()

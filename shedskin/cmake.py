@@ -168,11 +168,11 @@ class ShedskinDependencyManager:
         if self.reset_on_run:
             shutil.rmtree(self.deps_dir)
 
-    def shellcmd(self, cmd: str, *args, **kwds) -> None:
+    def shellcmd(self, cmd: str) -> None:
         """run shellcmd"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
-        os.system(cmd.format(*args, **kwds))
+        os.system(cmd) #.format(*args, **kwds))
 
     def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None) -> None:
         """retrieve git clone of repo"""
@@ -469,7 +469,7 @@ def add_shedskin_product(
     return "\n".join(flist)
 
 
-def get_cmakefile_template(**kwds) -> str:
+def get_cmakefile_template(**kwds: str) -> str:
     """returns a cmake template"""
     _pkg_path = get_pkg_path()
     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"

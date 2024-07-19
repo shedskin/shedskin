@@ -332,7 +332,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return nonred
 
     # --- determine single constructor child node type, used by the above
-    def child_type_rec(self, node: ast.AST):
+    def child_type_rec(self, node: ast.AST) -> Optional[Tuple['python.Class', ...]]:
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
             node = node.operand
 
@@ -354,6 +354,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         elif isinstance(node, (ast.Num, ast.Str)):
             return (list(infer.inode(self.gx, node).types())[0][0],)
+
+        return None
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent: ast.AST, child: ast.AST, varname: str, func: Optional['python.Function']) -> None:
@@ -849,8 +851,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return module
 
     def visit_FunctionDef(
-        self, node, parent=None, is_lambda=False, inherited_from=None
-    ):
+        self, node: ast.FunctionDef, parent:Optional['python.Function']=None, is_lambda:bool=False, inherited_from:Optional['python.Class']=None
+    ) -> None:
         if not getmv().module.builtin and (node.args.vararg or node.args.kwarg):
             error.error(
                 "argument (un)packing is not supported", self.gx, node, mv=getmv()
@@ -1406,7 +1408,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
-    def visit_For(self, node, func=None):
+    def visit_For(self, node: ast.For, func:Optional['python.Function']=None) -> None:
         # --- iterable contents -> assign node
         assnode = infer.CNode(self.gx, node.target, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
@@ -1633,7 +1635,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         assign = ast.Assign([node.target], node.value)
         self.visit(assign, func)
 
-    def visit_Assign(self, node, func=None):
+    def visit_Assign(self, node: ast.Assign, func:Optional['python.Function']=None) -> None:
         # skip type annotations
         if node.value is None:
             return
@@ -1810,7 +1812,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig, parent):
+    def super_call(self, orig: ast.Call, parent: Optional['python.Function']) -> Optional['python.Class']:
         node = orig.func
         while isinstance(parent, python.Function):
             parent = parent.parent
@@ -1829,6 +1831,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 if cl.node.bases:
                     return cl.node.bases[0]
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
+
+        return None
 
     def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
         pass

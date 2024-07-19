@@ -603,7 +603,7 @@ def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=Fal
     return merge
 
 
-def inode(gx: "config.GlobalInfo", node: Any):
+def inode(gx: "config.GlobalInfo", node: Any) -> CNode:
     return gx.cnode[node, 0, 0]
 
 

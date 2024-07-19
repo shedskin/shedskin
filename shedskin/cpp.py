@@ -103,7 +103,7 @@ class CPPNamer:
 
 
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
-    def __init__(self, gx: 'config.GlobalInfo', module):
+    def __init__(self, gx: 'config.GlobalInfo', module: 'python.Module'):
         self.gx = gx
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
