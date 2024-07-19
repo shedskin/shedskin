@@ -405,7 +405,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 return True
         return False
 
-    def struct_info(self, node: ast.AST, func: 'python.Function') -> List[Tuple[str, str, str, int]]:
+    def struct_info(self, node: ast.AST, func: Optional['python.Function']) -> List[Tuple[str, str, str, int]]:
         if isinstance(node, ast.Name):
             var = python.lookup_var(node.id, func, self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
