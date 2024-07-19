@@ -1431,8 +1431,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.eol()
         self.output(self.mv.tempcount[node, 6] + "++;")
         if ast_utils.is_assign_list_or_tuple(left):
+            assert isinstance(left, (ast.Tuple, ast.List))
             self.tuple_assign(left, self.mv.tempcount[left], func)
         if ast_utils.is_assign_list_or_tuple(right):
+            assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
     def forin_preftail(self, node: Union[ast.For, ast.comprehension]) -> Tuple[str, str]:
@@ -1440,7 +1442,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         tail += "," + self.mv.tempcount[(node, 5)][2:]
         return "", tail
 
-    def forbody(self, node, quals, iter, func, skip, genexpr) -> None:
+    def forbody(
+        self,
+        node: ast.For,
+        quals: Optional[List[ast.comprehension]],
+        iter: str,
+        func: Optional['python.Function'],
+        skip: bool,
+        genexpr: bool,
+    ) -> None:
         if quals is not None:
             self.listcompfor_body(node, quals, iter, func, False, genexpr)
             return
@@ -2148,7 +2158,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(right, func)
         self.append(")")
 
-    def do_compare(self, left: ast.AST, right: ast.AST, middle, inline, func=None, prefix="") -> None:
+    def do_compare(
+        self,
+        left: ast.AST,
+        right: ast.AST,
+        middle: Optional[str],
+        inline: Optional[str],
+        func: Optional['python.Function']=None,
+        prefix: Optional[str]=None,
+    ) -> None:
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
         argtypes = ltypes | rtypes
@@ -2290,7 +2308,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return func.ident == funcname
         return False
 
-    def add_args_arg(self, node, funcs):
+    def add_args_arg(self, node: ast.Call, funcs: List['python.Function']) -> None:
         """append argument that describes which formals are actually filled in"""
         if self.library_func(funcs, "datetime", "time", "replace") or self.library_func(
             funcs, "datetime", "datetime", "replace"

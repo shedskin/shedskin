@@ -96,7 +96,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.item_rvalue: dict[ast.AST, ast.AST] = {}
         self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
         self.bool_test_only: set[ast.AST] = set()
-        self.tempcount: dict[ast.AST, str] = {}
+        self.tempcount: dict[Any, str] = {}
         self.struct_unpack: dict[ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str]] = {}
 
         self.maxhits = 0  # XXX amaze.py termination
