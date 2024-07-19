@@ -98,6 +98,7 @@ Backup: TypeAlias = Tuple[
                         Dict['CNode', Tuple[set['CNode'], set['CNode']]], # cnode -> (cnode.in_, cnode.out)
                         dict[Tuple[Any, int, int], 'CNode'] # gx.cnode
                     ]
+PossibleFuncs: TypeAlias = List[Tuple['python.Function', int, Optional[Tuple['python.Class', int]]]]
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
@@ -221,7 +222,7 @@ class CNode:
         else:
             return set()  # XXX
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr((self.thing, self.dcpa, self.cpa))
 
 
@@ -777,7 +778,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
 
 
 # --- determine cartesian product of possible function and argument types
-def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis):
+def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis) -> PossibleFuncs:
     expr = node.thing
 
     # --- determine possible target functions
@@ -791,7 +792,7 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
         anon_func,
     ) = analysis
 
-    funcs: List[Tuple['python.Function', int, Optional[Tuple['python.Class', int]]]] = []
+    funcs: PossibleFuncs = []
 
     if anon_func:
         # anonymous call
@@ -841,7 +842,7 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
     return funcs
 
 
-def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: List, analysis: Analysis, worklist: List[CNode]) -> List[Types]:
+def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs, analysis: Analysis, worklist: List[CNode]) -> List[Types]:
     expr = node.thing
     (
         objexpr,
@@ -909,15 +910,6 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: List, analysi
                 func.largs = len(argtypes)
 
     return argtypes
-
-
-def cartesian_product(gx: "config.GlobalInfo", node: CNode, analysis: Analysis, worklist: List[CNode]) -> List:
-    funcs = possible_functions(gx, node, analysis)
-    if not funcs:
-        return []
-    argtypes = possible_argtypes(gx, node, funcs, analysis, worklist)
-    alltypes = [funcs] + argtypes
-    return list(itertools.product(*alltypes))
 
 
 def redirect(
@@ -1043,12 +1035,20 @@ def redirect(
 def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None:
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
 
-    cp = cartesian_product(gx, callnode, analysis, worklist)
+    # loop over cartesian product of possible funcs, arg types
+    funcs = possible_functions(gx, callnode, analysis)
+    if not funcs:
+        return
+    argtypes = possible_argtypes(gx, callnode, funcs, analysis, worklist)
+    alltypes = [funcs] + argtypes
+    cp = list(itertools.product(*alltypes))
     if not cp:
         return
+
     if len(cp) > gx.cpa_limit and not gx.cpa_clean:
         gx.cpa_limited = True
         return
+
     (
         objexpr,
         ident,
@@ -1357,7 +1357,7 @@ def ifa_split_no_confusion(
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
     others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites: dict[Tuple, List[CNode]] = {}
+    subtype_csites: dict[FTypes, List[CNode]] = {}
     for node in noconf:
         if node.paths:
             assign_set = node.paths[0]
@@ -1675,8 +1675,8 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
 
 def ifa_seed_template(
     gx: "config.GlobalInfo",
-    func,
-    cart,
+    func: 'python.Function',
+    cart: Optional[CartesianProduct],
     dcpa: int,
     cpa: int,
     worklist: Optional[List[CNode]]

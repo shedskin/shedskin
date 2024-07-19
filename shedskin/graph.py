@@ -136,25 +136,12 @@ def has_star_kwarg(node: ast.Call) -> bool:
 
 def make_arg_list(
     argnames: List[str],
-    vararg=None,
-    kwonlyargs=[],
-    kwarg=None,
-    defaults=[],
-    kw_defaults=[]
 ) -> ast.arguments:
-    try:
-        ast.arg
 
-        args = [ast.arg(a) for a in argnames]
-        vararg = ast.arg(vararg) if vararg else None
-        kwarg = ast.arg(kwarg) if kwarg else None
+    args = [ast.arg(a) for a in argnames]
 
-        # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
-        return ast.arguments([], args, vararg, [], [], kwarg, defaults)
-
-    except AttributeError:
-        args = [ast.Name(argname, ast.Param()) for argname in argnames]
-        return ast.arguments(args, vararg, kwarg, defaults)
+    # what about kwonlyargs, kw_defaults, posonlyargs?
+    return ast.arguments([], args, None, [], [], None, [])
 
 
 def is_property_setter(dec: ast.AST) -> bool:
@@ -196,7 +183,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
-    def fake_func(self, node, objexpr: ast.AST, attrname: str, args, func: Optional[python.Function] = None) -> ast.Call:
+    def fake_func(self, node: ast.AST, objexpr: ast.AST, attrname: str, args: List[ast.AST], func: Optional[python.Function] = None) -> ast.Call:
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -214,7 +201,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return fakefunc
 
     # simple heuristic for initial list split: count nesting depth, first constant child type
-    def list_type(self, node):
+    def list_type(self, node: ast.List) -> Optional[int]:
         count = 0
         child = node
         while isinstance(child, (ast.List, ast.ListComp)):
