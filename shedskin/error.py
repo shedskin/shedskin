@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from . import graph
     from . import python
 
-Error: TypeAlias = Tuple[int, str, int, str]
+Error: TypeAlias = Tuple[int, str, Optional[int], str]
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)
@@ -44,7 +44,7 @@ def error(
     filename = lineno = None
     if mv:
         filename = mv.module.relative_filename
-        if node and hasattr(node, "lineno"):
+        if isinstance(node, ast.AST) and hasattr(node, 'lineno'):
             lineno = node.lineno
     result = (kind, str(filename or ''), lineno, msg)
     if result not in ERRORS:

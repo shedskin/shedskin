@@ -71,6 +71,7 @@ def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
     if is_assign_list_or_tuple(left) and isinstance(
         right, (ast.Tuple, ast.List)
     ):
+        assert isinstance(left, (ast.Tuple, ast.List))
         pairs = []
         for lvalue, rvalue in zip(left.elts, right.elts):
             pairs += assign_rec(lvalue, rvalue)

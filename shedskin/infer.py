@@ -295,13 +295,14 @@ def analyze_args(
         anon_func,
     ) = analyze_callfunc(gx, expr, node, merge)
 
-    args = []
+    args: List[Optional[ast.AST]] = []
     kwdict = {}
     for a in expr.args:
         args.append(a)
     for b in expr.keywords:
         kwdict[b.arg] = b.value
     formal_args = func.formals[:]
+    assert func.node
     if func.node.args.vararg:
         formal_args = formal_args[:-1]
     default_start = len(formal_args) - len(func.defaults)
@@ -310,7 +311,7 @@ def analyze_args(
         args = args[1:]
 
     if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
-        args = [None] + args
+        args.insert(0, None)
 
     argnr = 0
     actuals, formals, defaults = [], [], []

@@ -4,7 +4,6 @@
 """
 
 import ast
-import collections
 import importlib.util
 import os
 import re
@@ -14,7 +13,7 @@ import pathlib
 from . import ast_utils
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, List, Tuple, TypeAlias, Union
+from typing import Optional, TYPE_CHECKING, List, Tuple, TypeAlias, Union, NamedTuple
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -216,9 +215,9 @@ class Function:
         self,
         gx: 'config.GlobalInfo',
         mv: 'graph.ModuleVisitor',
-        node:Optional[ast.FunctionDef]=None,
-        parent:Optional['Class']=None,
-        inherited_from:Optional['Class']=None,
+        node: Optional[ast.FunctionDef]=None,
+        parent: Optional[Parent]=None,
+        inherited_from: Optional['Class']=None,
     ):
         self.gx = gx
         self.node = node
@@ -226,7 +225,7 @@ class Function:
         self.ident: str
         if node:
             ident = node.name
-            if inherited_from and parent and ident in parent.funcs:
+            if inherited_from and isinstance(parent, Class) and ident in parent.funcs:
                 ident += inherited_from.ident + "__"  # XXX ugly
             self.ident = ident
             self.formals = extract_argnames(node.args)
@@ -440,17 +439,19 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
         return mv.classes[name]
     elif name in mv.ext_classes:
         return mv.ext_classes[name]
-    return None
+    assert False
 
 
-def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['python.Variable']:
+def lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['Variable']:
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var
     return None
 
 
-VarLookup = collections.namedtuple("VarLookup", ["var", "is_global"])
+class VarLookup(NamedTuple):
+    var: 'Variable'
+    is_global: bool
 
 
 def smart_lookup_var(name: str, parent: Optional[Parent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
