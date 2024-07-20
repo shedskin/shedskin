@@ -1009,12 +1009,15 @@ def redirect(
         and callfunc.func.attr in ("__getitem__", "__getunit__")
         and isinstance(callfunc.args[0], ast.Num)
         and callfunc.args[0].n in (0, 1)
+        and func.parent
         and func.parent.mv.module.builtin
         and func.parent.ident == "tuple2"
     ):
         if callfunc.args[0].n == 0:
+            assert isinstance(func.parent, python.Class)
             func = func.parent.funcs["__getfirst__"]
         else:
+            assert isinstance(func.parent, python.Class)
             func = func.parent.funcs["__getsecond__"]
 
     # property
