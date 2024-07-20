@@ -901,6 +901,7 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs
             if parent_constr or not (
                 isinstance(func.parent, python.Class) and form == "self"
             ):  # XXX merge
+                assert act
                 args.append(act)
 
     argtypes = []
@@ -915,7 +916,7 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs
         while argtypes and not argtypes[-1]:
             argtypes = argtypes[:-1]
         if func.lambdawrapper:
-            if starargs and node.parent and node.parent.node.args.vararg:
+            if starargs and node.parent and node.parent.node and node.parent.node.args.vararg:
                 func.largs = (
                     node.parent.xargs[node.dcpa, node.cpa]
                     - len(node.parent.formals)
