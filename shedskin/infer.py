@@ -468,6 +468,7 @@ def analyze_callfunc(
     # print 'analyze callnode', ast.dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
     mv = cnode.mv
+    assert mv # TODO make cnode.mv non-optional instead?
     namespace, objexpr, method_call, parent_constr = mv.module, None, False, False
     constructor, direct_call, ident = None, None, None
 
