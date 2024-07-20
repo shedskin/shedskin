@@ -85,6 +85,7 @@ Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modu
 FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
 CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
+AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
 ClassesNr: TypeAlias = Dict[FTypes, int]
@@ -273,11 +274,10 @@ def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNo
 
 
 def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Function']:
-    parent = inode(gx, thing).parent
+    parent: Optional[AllParent] = inode(gx, thing).parent
     while parent:
-        if not isinstance(parent, python.Function) or not parent.listcomp:
-            if not isinstance(parent, python.StaticClass):
-                return parent
+        if isinstance(parent, python.Function) and not parent.listcomp:
+            return parent
         parent = parent.parent
     return None
 
