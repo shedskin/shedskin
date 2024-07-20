@@ -284,7 +284,7 @@ def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Functio
 
 def analyze_args(
     gx: "config.GlobalInfo", expr: ast.Call, func: 'python.Function', node:Optional[CNode]=None, skip_defaults:bool=False, merge:Optional[Merged]=None
-) -> Tuple[List[Optional[ast.AST]], List[str], List[ast.AST], List[ast.AST], bool]:
+) -> Tuple[List[Optional[ast.AST]], List[str], List[ast.AST], List[Optional[ast.AST]], bool]:
     (
         objexpr,
         ident,
@@ -314,7 +314,9 @@ def analyze_args(
         args.insert(0, None)
 
     argnr = 0
-    actuals, formals, defaults = [], [], []
+    actuals: List[Optional[ast.AST]] = []
+    formals = []
+    defaults = []
     missing = False
     for i, formal in enumerate(formal_args):
         if formal in kwdict:
@@ -339,6 +341,7 @@ def analyze_args(
                 defaults.append(default)
         else:
             missing = True
+
     extra = args[argnr:]
 
     _error = bool(
@@ -864,7 +867,7 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs
     elif funcs and not func.node:  # XXX getattr, setattr
         args = expr.args
     elif funcs:
-        actuals, formals, used_defaults, varargs, _ = analyze_args(gx, expr, func, node)
+        actuals, formals, used_defaults, _, _ = analyze_args(gx, expr, func, node)
 
         if not node.defnodes:
             for i, default in enumerate(used_defaults):
@@ -1199,7 +1202,7 @@ def actuals_formals(
         actuals = len(formals) * [starargs]
         types = len(formals) * types
     else:
-        actuals, formals, _, varargs, _error = analyze_args(gx, expr, func, node)
+        actuals, formals, _, _, _error = analyze_args(gx, expr, func, node)
         if _error:
             return
 
