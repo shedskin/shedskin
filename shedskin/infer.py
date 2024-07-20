@@ -8,7 +8,7 @@ polymorphism and data polymorphism adaptively.
 These techniques are Agesen's cartesian product algorithm and Plevyak's
 iterative flow analysis (the data polymorphic part).
 
-For details about these algorithms, see Ole  Agesen's excellent Phd thesis.
+For details about these algorithms, see Ole Agesen's excellent Phd thesis.
 For details about the Shed Skin implementation, see Mark Dufour's MsC thesis.
 
 The cartesian product algorithm duplicates functions (or their graph
@@ -364,7 +364,7 @@ def analyze_args(
 def connect_actual_formal(gx: 'config.GlobalInfo', expr: ast.Call, func: 'python.Function', parent_constr:bool=False, merge:Optional[Merged]=None) -> Tuple[List[Tuple[ast.AST, 'python.Variable']], int, bool]:
     pairs = []
 
-    actuals = [a for a in expr.args if not isinstance(a, ast.keyword)]
+    actuals: List[Optional[ast.AST]] = [a for a in expr.args if not isinstance(a, ast.keyword)]
     if isinstance(func.parent, python.Class):
         formals = [f for f in func.formals if f != "self"]
     else:
@@ -404,6 +404,7 @@ def connect_actual_formal(gx: 'config.GlobalInfo', expr: ast.Call, func: 'python
 
     for actual, formal in zip(actuals, formals):
         if not (isinstance(func.parent, python.Class) and formal == "self"):
+            assert actual
             pairs.append((actual, func.vars[formal]))
 
     return pairs, len(extra), _error
