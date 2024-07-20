@@ -443,7 +443,11 @@ def callfunc_targets(gx: "config.GlobalInfo", node: ast.Call, merge: Merged) -> 
 
     elif parent_constr:
         if ident != "__init__":
-            cl = inode(gx, node).parent.parent
+            func = inode(gx, node).parent
+            assert isinstance(func, python.Function)
+            cl = func.parent
+            assert isinstance(cl, python.Class)
+            assert isinstance(ident, str)
             funcs = [cl.funcs[ident]]
 
     elif direct_call:
@@ -631,8 +635,8 @@ def add_to_worklist(worklist: Optional[List[CNode]], node: CNode) -> None:  # XX
 
 def class_copy(gx: "config.GlobalInfo", cl: 'python.Class', dcpa: int) -> None:
     for var in cl.vars.values():  # XXX
-        if inode(gx, var) not in gx.types:
-            continue  # XXX research later
+        if (var, 0, 0) not in gx.cnode or inode(gx, var) not in gx.types:
+            continue  # XXX research later, triggered for doom example
 
         inode(gx, var).copy(dcpa, 0)
         gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
@@ -1829,13 +1833,13 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         node.in_, node.out = befinout[0].copy(), befinout[1].copy()
         node.fout = set()  # XXX ?
 
-    for (
-        var
-    ) in (
-        gx.allvars
-    ):  # XXX we have to restore some variable constraint nodes.. remove vars?
-        if (var, 0, 0) not in gx.cnode:
-            CNode(gx, var, parent=var.parent)
+#    for (
+#        var
+#    ) in (
+#        gx.allvars
+#    ):  # XXX we have to restore some variable constraint nodes.. remove vars?
+#        if (var, 0, 0) not in gx.cnode:
+#            CNode(gx, var, parent=var.parent)
 
     for func in gx.allfuncs:
         func.cp = {}
