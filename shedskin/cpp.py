@@ -3104,6 +3104,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     # XXX let visit_Call(fakefunc) use cast_to_builtin?
                     fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
+                    assert fakefunc
                     self.visitm(
                         "(",
                         fakefunc.func.value,
