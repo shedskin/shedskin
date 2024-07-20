@@ -183,6 +183,10 @@ class CNode:
         self.csites: set[CNode]
         self.paths: List[FTypes]
 
+        self.temp1: str
+        self.temp2: str
+        self.subs: ast.AST
+
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
             while parent and isinstance(parent, python.Function) and parent.listcomp:
@@ -1151,9 +1155,11 @@ def connect_getsetattr(
         and not (
             isinstance(func.parent, python.Class)
             and callfunc.args
+            and isinstance(callfunc.args[0], ast.Str)
             and callfunc.args[0].s in func.parent.properties
         )
     ):
+        assert isinstance(callfunc.args[0], ast.Str)
         varname = callfunc.args[0].s
         parent = func.parent
 
@@ -1724,6 +1730,7 @@ def ifa_seed_template(
                     added.add(node.thing)
 
                 # --- contour is specified in alloc_info
+                assert isinstance(node.parent, python.Function)
                 parent = node.parent
                 while isinstance(parent.parent, python.Function):
                     parent = parent.parent
