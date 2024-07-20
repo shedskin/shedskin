@@ -1162,6 +1162,7 @@ def connect_getsetattr(
         assert isinstance(callfunc.args[0], ast.Str)
         varname = callfunc.args[0].s
         parent = func.parent
+        assert isinstance(parent, (python.Class, python.StaticClass))
 
         var = default_var(
             gx, varname, parent, worklist, mv=parent.module.mv
@@ -1223,7 +1224,9 @@ def actuals_formals(
     starargs = get_starargs(expr)
     if starargs:  # XXX only in lib/
         formals = func.formals
-        actuals = len(formals) * [starargs]
+        actuals: List[Optional[ast.AST]] = []
+        for _ in range(len(formals)):
+            actuals.append(starargs)
         types = len(formals) * types
     else:
         actuals, formals, _, _, _error = analyze_args(gx, expr, func, node)
