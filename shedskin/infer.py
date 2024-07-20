@@ -1028,12 +1028,15 @@ def redirect(
         if (
             isinstance(func.parent, python.Class)
             and callfunc.args
+            and isinstance(callfunc.args[0], ast.Str)
             and callfunc.args[0].s in func.parent.properties
         ):
             arg = callfunc.args[0].s
             if callfunc.func.attr == "__setattr__":
+                assert isinstance(func.parent, python.Class)
                 func = func.parent.funcs[func.parent.properties[arg][1]]
             else:
+                assert isinstance(func.parent, python.Class)
                 func = func.parent.funcs[func.parent.properties[arg][0]]
             c = c[1:]
 
