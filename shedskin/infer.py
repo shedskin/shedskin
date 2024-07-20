@@ -153,8 +153,8 @@ class CNode:
         self.thing = thing
         self.dcpa = dcpa
         self.cpa = cpa
-        self.fakefunc = None
-        if isinstance(parent, python.Class):  # XXX
+        self.fakefunc: Optional[ast.Call] = None
+        if isinstance(parent, python.Class):  # TODO leave class in? add type, see 'parent' usage below
             parent = None
         self.parent = parent
         self.defnodes = (
