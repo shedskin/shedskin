@@ -248,7 +248,7 @@ class Function:
         self.misses_by_ref: set[str] = set()
         self.cp: dict[int, dict[CartesianProduct, int]] = {}
         self.xargs: dict[Tuple[int, int], int] = {}
-        self.largs = None
+        self.largs: Optional[int] = None
         self.listcomp = False
         self.isGenerator = False
         self.yieldNodes: List[ast.Yield] = []
