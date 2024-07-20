@@ -243,7 +243,7 @@ class Function:
         self.mv = mv
         self.nodes: set['infer.CNode'] = set()
         self.nodes_ordered: List['infer.CNode'] = []
-        self.defaults: List[ast.AST] = []
+        self.defaults: List[ast.expr] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
         self.cp: dict[int, dict[CartesianProduct, int]] = {}
