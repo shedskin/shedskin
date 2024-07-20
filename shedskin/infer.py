@@ -596,7 +596,7 @@ def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=Fal
                 node.thing.parent, python.Function
             ):
                 var = node.thing
-                for inhfunc in gx.inheritance_relations.get(var.parent, []):
+                for inhfunc in gx.inheritance_relations.get(node.thing.parent, []):
                     assert isinstance(inhfunc, python.Function)
                     if var.name in inhfunc.vars:
                         if inhfunc.vars[var.name] in mergenoinh:
@@ -806,15 +806,19 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
 
     if anon_func:
         # anonymous call
-        types = gx.cnode[expr.func, node.dcpa, node.cpa].types()
-        types = [
-            t for t in types if isinstance(t[0], python.Function)
-        ]  # XXX XXX analyse per t, sometimes class, sometimes function..
+        types2 = gx.cnode[expr.func, node.dcpa, node.cpa].types()
+        types: List[Tuple['python.Function', int]] = []
+        for t in types2:
+            if isinstance(t[0], python.Function):
+                types.append(t)
+
+        # XXX XXX analyse per t, sometimes class, sometimes function..
 
         if list(types)[0][0].parent:  # method reference XXX merge below?
-            funcs = [
-                (f[0], f[1], (f[0].parent, f[1])) for f in types
-            ]  # node.dcpa: connect to right dcpa duplicate version
+            for f in types:
+                cl = f[0].parent
+                assert isinstance(cl, python.Class)
+                funcs.append((f[0], f[1], (cl, f[1]))) # node.dcpa: connect to right dcpa duplicate version
         else:  # function reference
             funcs = [
                 (f[0], f[1], None) for f in types
@@ -828,6 +832,7 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
         ]
 
     elif parent_constr:
+        assert node.mv
         objtypes = gx.cnode[
             python.lookup_var("self", node.parent, node.mv), node.dcpa, node.cpa
         ].types()
@@ -840,7 +845,7 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
 
     elif method_call:
         objtypes = gx.cnode[objexpr, node.dcpa, node.cpa].types()
-        objtypes = [t for t in objtypes if not isinstance(t[0], python.Function)]  # XXX
+        objtypes = {t for t in objtypes if not isinstance(t[0], python.Function)}  # XXX
 
         funcs = [
             (t[0].funcs[ident], t[1], t)
