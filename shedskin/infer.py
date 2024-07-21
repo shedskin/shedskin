@@ -1062,16 +1062,15 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
 
     # loop over cartesian product of possible funcs, arg types
-    funcs = possible_functions(gx, callnode, analysis)
-    if not funcs:
+    functypes = possible_functions(gx, callnode, analysis)
+    if not functypes:
         return
-    argtypes = possible_argtypes(gx, callnode, funcs, analysis, worklist)
-    alltypes = [funcs] + argtypes
-    cp = list(itertools.product(*alltypes))
+    argtypes = possible_argtypes(gx, callnode, functypes, analysis, worklist)
+    cp = list(itertools.product(*argtypes))
     if not cp:
         return
 
-    if len(cp) > gx.cpa_limit and not gx.cpa_clean:
+    if (len(functypes) * len(cp)) > gx.cpa_limit and not gx.cpa_clean:
         gx.cpa_limited = True
         return
 
@@ -1085,60 +1084,61 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
         anon_func,
     ) = analysis
 
-    # --- iterate over argument type combinations
-    for c in cp:
-        (func, dcpa, objtype), c = c[0], c[1:]
+    # --- iterate over function/argument type combinations
+    for functype in functypes:
+        for c in cp:
+            (func, dcpa, objtype) = functype
 
-        if INCREMENTAL:
-            if (
-                not func.mv.module.builtin
-                and func not in gx.added_funcs_set
-                and func.ident not in ["__getattr__", "__setattr__"]
-            ):
-                if INCREMENTAL_DATA:
-                    if gx.added_allocs >= INCREMENTAL_ALLOCS:
+            if INCREMENTAL:
+                if (
+                    not func.mv.module.builtin
+                    and func not in gx.added_funcs_set
+                    and func.ident not in ["__getattr__", "__setattr__"]
+                ):
+                    if INCREMENTAL_DATA:
+                        if gx.added_allocs >= INCREMENTAL_ALLOCS:
+                            continue
+                    if gx.added_funcs >= INCREMENTAL_FUNCS:
                         continue
-                if gx.added_funcs >= INCREMENTAL_FUNCS:
-                    continue
-                gx.added_funcs += 1
-                gx.added_funcs_set.add(func)
-                logger.debug("adding %s", func)
+                    gx.added_funcs += 1
+                    gx.added_funcs_set.add(func)
+                    logger.debug("adding %s", func)
 
-        if objtype:
-            objtype = (objtype,)
-        else:
-            objtype = ()
+            if objtype:
+                objtype = (objtype,)
+            else:
+                objtype = ()
 
-        # redirect in special cases
-        callfunc = callnode.thing
-        c, dcpa, func = redirect(
-            gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor
-        )
+            # redirect in special cases
+            callfunc = callnode.thing
+            c, dcpa, func = redirect(
+                gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor
+            )
 
-        # already connected to template
-        if (func, objtype, c) in callnode.nodecp:
-            continue
-        callnode.nodecp.add((func, objtype, c))
+            # already connected to template
+            if (func, objtype, c) in callnode.nodecp:
+                continue
+            callnode.nodecp.add((func, objtype, c))
 
-        # create new template
-        if dcpa not in func.cp or c not in func.cp[dcpa]:
-            create_template(gx, func, dcpa, c, worklist)
-        cpa = func.cp[dcpa][c]
-        func.xargs[dcpa, cpa] = len(c)
+            # create new template
+            if dcpa not in func.cp or c not in func.cp[dcpa]:
+                create_template(gx, func, dcpa, c, worklist)
+            cpa = func.cp[dcpa][c]
+            func.xargs[dcpa, cpa] = len(c)
 
-        # __getattr__, __setattr__
-        if connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
-            continue
+            # __getattr__, __setattr__
+            if connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
+                continue
 
-        # connect actuals and formals
-        actuals_formals(
-            gx, callfunc, func, callnode, dcpa, cpa, objtype + c, analysis, worklist
-        )
+            # connect actuals and formals
+            actuals_formals(
+                gx, callfunc, func, callnode, dcpa, cpa, objtype + c, analysis, worklist
+            )
 
-        # connect call and return expressions
-        if func.retnode and not constructor:
-            retnode = gx.cnode[func.retnode.thing, dcpa, cpa]
-            add_constraint(gx, retnode, callnode, worklist)
+            # connect call and return expressions
+            if func.retnode and not constructor:
+                retnode = gx.cnode[func.retnode.thing, dcpa, cpa]
+                add_constraint(gx, retnode, callnode, worklist)
 
 
 def connect_getsetattr(
