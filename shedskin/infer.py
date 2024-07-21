@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 
 Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with other modules, reuse common types
 FTypes: TypeAlias = frozenset[Tuple['python.Class', int]]
-CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
+CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]  # TODO wrong name!!
 Parent: TypeAlias = Union['python.Class', 'python.Function']
 AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
@@ -178,7 +178,7 @@ class CNode:
         self.in_list = 0  # node in work-list
         self.callfuncs: List[Any] = []  # callfuncs to which node is object/argument
 
-        self.nodecp: set[Tuple['python.Function', Types, Types]] = set()  # already analyzed cp's # XXX kill!?
+        self.nodecp: set[Tuple['python.Function', CartesianProduct, CartesianProduct]] = set()  # already analyzed cp's # XXX kill!?
 
         self.csites: set[CNode]
         self.paths: List[FTypes]
@@ -320,7 +320,7 @@ def analyze_args(
     argnr = 0
     actuals: List[Optional[ast.AST]] = []
     formals = []
-    defaults = []
+    defaults: List[ast.AST] = []
     missing = False
     for i, formal in enumerate(formal_args):
         if formal in kwdict:
@@ -1104,10 +1104,11 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
                     gx.added_funcs_set.add(func)
                     logger.debug("adding %s", func)
 
+            objtype2: CartesianProduct  # TODO wrong name for type!
             if objtype:
-                objtype = (objtype,)
+                objtype2 = (objtype,)
             else:
-                objtype = ()
+                objtype2 = ()
 
             # redirect in special cases
             callfunc = callnode.thing
@@ -1116,9 +1117,9 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
             )
 
             # already connected to template
-            if (func, objtype, c) in callnode.nodecp:
+            if (func, objtype2, c) in callnode.nodecp:
                 continue
-            callnode.nodecp.add((func, objtype, c))
+            callnode.nodecp.add((func, objtype2, c))
 
             # create new template
             if dcpa not in func.cp or c not in func.cp[dcpa]:
@@ -1132,7 +1133,7 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None
 
             # connect actuals and formals
             actuals_formals(
-                gx, callfunc, func, callnode, dcpa, cpa, objtype + c, analysis, worklist
+                gx, callfunc, func, callnode, dcpa, cpa, objtype2 + c, analysis, worklist
             )
 
             # connect call and return expressions
