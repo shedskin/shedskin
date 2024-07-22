@@ -143,11 +143,11 @@ class CNode:
     def __init__(
         self,
         gx: "config.GlobalInfo",
+        mv: "graph.ModuleVisitor",
         thing: Any,
         dcpa: int = 0,
         cpa: int = 0,
         parent: Optional[Parent] = None,
-        mv: Optional["graph.ModuleVisitor"] = None,
     ):
         self.gx = gx
         self.thing = thing
@@ -202,7 +202,7 @@ class CNode:
         if (self.thing, dcpa, cpa) in self.gx.cnode:
             return self.gx.cnode[self.thing, dcpa, cpa]
 
-        newnode = CNode(self.gx, self.thing, dcpa, cpa, mv=self.mv)
+        newnode = CNode(self.gx, self.mv, self.thing, dcpa, cpa)
 
         newnode.callfuncs = self.callfuncs[:]  # XXX no copy?
         newnode.constructor = self.constructor
@@ -888,11 +888,11 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs
             for i, default in enumerate(used_defaults):
                 defnode = CNode(
                     gx,
+                    node.mv,
                     (inode(gx, node.thing), i),
                     node.dcpa,
                     node.cpa,
                     parent=func,
-                    mv=node.mv,
                 )
                 gx.types[defnode] = set()
                 defnode.callfuncs.append(node.thing)
@@ -1739,7 +1739,7 @@ def ifa_seed_template(
                 while isinstance(parent.parent, python.Function):
                     parent = parent.parent
 
-                alloc_id = (parent.ident, cart, node.thing)  # XXX ident?
+                alloc_id: Tuple[str, CartesianProduct, ast.AST] = (parent.ident, cart, node.thing)  # XXX ident?
                 alloc_node = gx.cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in gx.alloc_info:
@@ -1857,14 +1857,6 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         node.in_, node.out = befinout[0].copy(), befinout[1].copy()
         node.fout = set()  # XXX ?
 
-#    for (
-#        var
-#    ) in (
-#        gx.allvars
-#    ):  # XXX we have to restore some variable constraint nodes.. remove vars?
-#        if (var, 0, 0) not in gx.cnode:
-#            CNode(gx, var, parent=var.parent)
-
     for func in gx.allfuncs:
         func.cp = {}
 
@@ -1975,6 +1967,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     for func in gx.allfuncs:
         if func in gx.inheritance_relations:
             for inhfunc in gx.inheritance_relations[func]:
+                assert isinstance(inhfunc, python.Function)
                 for c, d in zip(func.registered, inhfunc.registered):
                     graph.inherit_rec(gx, c, d, func.mv)
 
@@ -1995,7 +1988,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
 
-def register_temp_var(var: 'python.Variable', parent: Parent) -> None:
+def register_temp_var(var: 'python.Variable', parent: Optional[Parent]) -> None:
     if isinstance(parent, python.Function):
         parent.registered_temp_vars.append(var)
 
@@ -2023,7 +2016,7 @@ def default_var(
         gx.allvars.add(var)
 
     if (var, 0, 0) not in gx.cnode:
-        newnode = CNode(gx, var, parent=parent, mv=mv)
+        newnode = CNode(gx, mv, var, parent=parent)
         if parent:
             newnode.mv = parent.mv
         else:
