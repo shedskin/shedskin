@@ -274,7 +274,7 @@ class Function:
 
 
 class Variable:
-    def __init__(self, name: str, parent: Parent):
+    def __init__(self, name: str, parent: Optional[Parent]):
         self.name = name
         self.parent = parent
         self.invisible = False  # not in C++ output
