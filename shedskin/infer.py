@@ -88,8 +88,8 @@ Parent: TypeAlias = Union['python.Class', 'python.Function']
 AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
 Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
 Split: TypeAlias = List[Tuple['python.Class', int, List['CNode'], int]]
-ClassesNr: TypeAlias = Dict[FTypes, int]
-NrClasses: TypeAlias = Dict[int, Tuple[FTypes]]
+ClassesNr: TypeAlias = Dict[Tuple[FTypes, ...], int]
+NrClasses: TypeAlias = Dict[int, Tuple[FTypes, ...]]
 AllCSites: TypeAlias = dict[Tuple['python.Class', int], set['CNode']]
 CreationPoints: TypeAlias = Dict[FTypes, List['CNode']]
 Analysis: TypeAlias = Tuple[Optional[ast.AST], Optional[str], Optional['python.Function'], bool, Optional['python.Class'], bool, bool]
@@ -1389,7 +1389,7 @@ def ifa_split_no_confusion(
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
     others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites: dict[FTypes, List[CNode]] = {}
+    subtype_csites: dict[Tuple[FTypes, ...], List[CNode]] = {}
     for node in noconf:
         if node.paths:
             assign_set = node.paths[0]
@@ -1434,7 +1434,7 @@ def ifa_class_types(gx: "config.GlobalInfo", cl: 'python.Class', vars: List['pyt
             ifa_logger.debug(
                 "IFA %s: %s",
                 dcpa,
-                list(zip([var.name for var in vars], map(list, attr_types))),
+                list(zip([var.name for var in vars], [list(a) for a in attr_types])),
             )
 
         nr_classes[dcpa] = attr_types
@@ -1793,7 +1793,7 @@ def ifa_seed_template(
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 
 
-def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]) -> set[CNode]:
+def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]) -> list[CNode]:
     path = set(worklist)
     while worklist:
         new = set()
@@ -1805,7 +1805,7 @@ def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['pytho
                         path.add(incoming)
                         new.add(incoming)
         worklist = new
-    return path
+    return list(path)
 
 
 def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
