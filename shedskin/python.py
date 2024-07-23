@@ -223,6 +223,7 @@ class Function:
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
+        self.inherited: Optional[ast.FunctionDef] = None
         self.ident: str
         if node:
             ident = node.name
@@ -255,7 +256,6 @@ class Function:
         self.yieldnode: 'infer.CNode'
         # function is called via a virtual call: arguments may have to be cast
         self.ftypes: List[str] = []
-        self.inherited = None
 
         if node:
             self.gx.allfuncs.add(self)
