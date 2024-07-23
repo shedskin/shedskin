@@ -108,7 +108,7 @@ def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
     return nodes2
 
 
-def get_arg_nodes(node: ast.Call) -> List[ast.arg]:
+def get_arg_nodes(node: ast.Call) -> List[ast.expr]:
     args = []
 
     for arg in node.args:
@@ -203,7 +203,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     # simple heuristic for initial list split: count nesting depth, first constant child type
     def list_type(self, node: ast.List) -> Optional[int]:
         count = 0
-        child = node
+        child : Any = node
         while isinstance(child, (ast.List, ast.ListComp)):
             if isinstance(child, ast.List):
                 if not child.elts:
@@ -253,7 +253,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             child = None
 
         self.gx.list_types.setdefault((count, child), len(self.gx.list_types) + 2)
-        # nrint 'listtype', node, self.gx.list_types[count, child]
         return self.gx.list_types[count, child]
 
     def instance(self, node:ast.AST, cl:'python.Class', func:Optional['python.Function']=None) -> None:
@@ -386,7 +385,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(func, python.Function):
             func.constraints.add(constraint)
 
-    def struct_unpack(self, rvalue: ast.AST, func: 'python.Function') -> bool:
+    def struct_unpack(self, rvalue: ast.AST, func: Optional['python.Function']) -> bool:
         if isinstance(rvalue, ast.Call):
             if (
                 isinstance(rvalue.func, ast.Attribute)
@@ -1646,6 +1645,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if (
                 self.struct_unpack(rvalue, func)
                 and ast_utils.is_assign_list_or_tuple(lvalue)
+                and isinstance(lvalue, (ast.List, ast.Tuple))  # TODO avoid double isinstance (mypy)
                 and not [n for n in lvalue.elts if ast_utils.is_assign_list_or_tuple(n)]
             ):
                 self.visit(node.value, func)
