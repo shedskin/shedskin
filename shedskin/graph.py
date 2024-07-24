@@ -538,12 +538,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         assert isinstance(node.target, ast.Name)
 
-        while func and isinstance(func, python.Function) and func.listcomp:
-            func.misses_by_ref.add(node.target.id)
-            func = func.parent
+        parent : Optional[Parent] = func
+        while parent and isinstance(parent, python.Function) and parent.listcomp:
+            parent.misses_by_ref.add(node.target.id)
+            parent = parent.parent
 
-        lvar = self.default_var(node.target.id, func)
-        self.add_constraint((newnode, infer.inode(self.gx, lvar)), func)
+        assert isinstance(parent, (python.Function, type(None)))
+
+        lvar = self.default_var(node.target.id, parent)  # TODO shouldn't this be in orig func
+        self.add_constraint((newnode, infer.inode(self.gx, lvar)), parent)
 
     def visit_Module(self, node: ast.Module) -> None:
         # --- bootstrap built-in classes
@@ -1841,6 +1844,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and node.value.args[1].id == "self"
             ):
                 cl = python.lookup_class(node.value.args[0], getmv())
+                assert cl
                 if cl.node.bases:
                     return cl.node.bases[0]
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
