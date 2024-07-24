@@ -39,10 +39,11 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union, Type
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union, Type, TypeAlias
 if TYPE_CHECKING:
     from . import config
 
+Parent: TypeAlias = Union['python.Class', 'python.Function']
 
 # --- global variable mv
 _mv: 'ModuleVisitor'
@@ -201,7 +202,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return fakefunc
 
     # simple heuristic for initial list split: count nesting depth, first constant child type
-    def list_type(self, node: ast.List) -> Optional[int]:
+    def list_type(self, node: ast.AST) -> Optional[int]:
+        assert isinstance(node, (ast.List, ast.ListComp, ast.Call))
         count = 0
         child : Any = node
         while isinstance(child, (ast.List, ast.ListComp)):
@@ -266,8 +268,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if cl.ident in ["int_", "float_", "str_", "bytes_", "none", "class_", "bool_"]:
             self.gx.types[newnode] = set([(cl, cl.dcpa - 1)])
         else:
-            if cl.ident == "list" and self.list_type(node):
-                self.gx.types[newnode] = set([(cl, self.list_type(node))])
+            if cl.ident == "list" and (dcpa := self.list_type(node)):
+                self.gx.types[newnode] = set([(cl, dcpa)])
             else:
                 self.gx.types[newnode] = set([(cl, cl.dcpa)])
 
@@ -331,7 +333,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return nonred
 
     # --- determine single constructor child node type, used by the above
-    def child_type_rec(self, node: ast.AST) -> Optional[Tuple['python.Class', ...]]:
+    def child_type_rec(self, node: ast.AST) -> Tuple['python.Class', ...]:
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
             node = node.operand
 
@@ -349,12 +351,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 merged.add(self.child_type_rec(child))
 
             if len(merged) == 1:
-                return (cl, merged.pop())
+                return (cl,) + merged.pop()
 
         elif isinstance(node, (ast.Num, ast.Str)):
             return (list(infer.inode(self.gx, node).types())[0][0],)
 
-        return None
+        return ()
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent: ast.AST, child: ast.AST, varname: str, func: Optional['python.Function']) -> None:
@@ -380,19 +382,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: Optional['python.Function']) -> None:
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
-        while isinstance(func, python.Function) and func.listcomp:
-            func = func.parent  # XXX
-        if isinstance(func, python.Function):
-            func.constraints.add(constraint)
+        parent: Optional[Parent] = func
+        while isinstance(parent, python.Function) and parent.listcomp:  # TODO occurs frequently, ugly typing.. add Function method(s)
+            parent = parent.parent
+        if isinstance(parent, python.Function):
+            parent.constraints.add(constraint)
 
     def struct_unpack(self, rvalue: ast.AST, func: Optional['python.Function']) -> bool:
         if isinstance(rvalue, ast.Call):
+            struct_var = python.lookup_var("struct", func, self)
             if (
                 isinstance(rvalue.func, ast.Attribute)
                 and isinstance(rvalue.func.value, ast.Name)
                 and rvalue.func.value.id == "struct"
                 and rvalue.func.attr in ("unpack", "unpack_from")
-                and python.lookup_var("struct", func, self).imported
+                and struct_var
+                and struct_var.imported
             ):  # XXX imported from where?
                 return True
             elif (
@@ -412,6 +417,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             error.error(
                 "assuming constant format string", self.gx, node, mv=self, warning=True
             )
+            assert var
             fmt = var.const_assign[0].s
         elif isinstance(node, ast.Num):
             fmt = node.n
@@ -1429,6 +1435,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((assnode, infer.inode(self.gx, lvar)), func)
 
         elif ast_utils.is_assign_attribute(node.target):  # XXX experimental :)
+            assert isinstance(node.target, ast.Attribute)
+
             # for expr.x in..
             infer.CNode(self.gx, getmv(), node.target, parent=func)
 
@@ -1814,6 +1822,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def super_call(self, orig: ast.Call, parent: Optional['python.Function']) -> Optional['python.Class']:
         node = orig.func
+        assert isinstance(node, ast.Attribute)
         while isinstance(parent, python.Function):
             parent = parent.parent
         if (
