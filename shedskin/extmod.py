@@ -354,7 +354,7 @@ class ExtensionModule:
             )
             write("}\n}")
 
-    def do_extmod_methoddef(self, ident: str, funcs: List['python.Function'], cl: 'python.Class') -> None:
+    def do_extmod_methoddef(self, ident: str, funcs: List['python.Function'], cl: Optional['python.Class']) -> None:
         """
         Does an extmod methoddef.
 

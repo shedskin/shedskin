@@ -3167,6 +3167,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def do_lambdas(self, declare: bool) -> None:
         for lam in self.mv.lambdas.values():
             if lam.ident not in self.mv.funcs:
+                assert lam.node
                 self.visit_FunctionDef(lam.node, declare=declare)
 
     def do_listcomps(self, declare: bool) -> None:
