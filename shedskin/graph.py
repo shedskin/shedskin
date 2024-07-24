@@ -184,7 +184,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if (node, 0, 0) not in self.gx.cnode:
             ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
-    def fake_func(self, node: ast.AST, objexpr: ast.AST, attrname: str, args: List[ast.AST], func: Optional[python.Function] = None) -> ast.Call:
+    def fake_func(self, node: Any, objexpr: ast.AST, attrname: str, args: List[ast.AST], func: Optional[python.Function] = None) -> ast.Call:
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -888,11 +888,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         if node.decorator_list:
             for dec in node.decorator_list:
-                if isinstance(dec, ast.Name) and dec.id == "staticmethod":
+                if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif isinstance(dec, ast.Name) and dec.id == "property":
+                elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, None]
-                elif is_property_setter(dec):
+                elif parent and is_property_setter(dec):
                     parent.properties[dec.value.id][1] = node.name
                 else:
                     error.error(
