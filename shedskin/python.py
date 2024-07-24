@@ -281,8 +281,8 @@ class Variable:
         self.formal_arg = False
         self.imported = False
         self.registered = False
-        self.looper = None
-        self.wopper = None
+        self.looper: Optional[ast.AST] = None
+        self.wopper: Optional[ast.AST] = None
         self.const_assign: List[ast.Constant] = []
 
     def masks_global(self) -> bool:

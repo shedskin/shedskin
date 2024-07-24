@@ -2243,7 +2243,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self,
         node: ast.AST,
         argtypes: Types,
-        middle: str,
+        middle: Optional[str],
         func: Optional['python.Function'],
     ) -> None:  # XXX use temp vars in comparisons, e.g. (t1=fun())
         if node in self.mv.tempcount:
