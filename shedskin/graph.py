@@ -1863,7 +1863,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.func = ast.Attribute(
                     copy.deepcopy(base), node.func.attr, ast.Load()
                 )
-                node.args = [ast.Name("self", ast.Load())] + node.args
+                node.args.insert(0, ast.Name("self", ast.Load()))
 
             # method call
             if not fake_attr:
