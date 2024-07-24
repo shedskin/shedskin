@@ -376,7 +376,8 @@ class ExtensionModule:
             fs = [f for f in funcs if f.ident == overload]
             if fs:
                 f = fs[0]
-                if overload == "__abs__":  # XXX
+                assert isinstance(f.parent, python.Class)
+                if overload == "__abs__":
                     write(
                         "    (int (*)(PyObject *))%s_%s," % (clname(f.parent), overload)
                     )

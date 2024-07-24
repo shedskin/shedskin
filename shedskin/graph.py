@@ -173,7 +173,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lambdaname: dict[ast.AST, str] = {}
         self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
-        self.listcomps: List[Tuple[ast.AST, 'python.Function', 'python.Function']] = []
+        self.listcomps: List[Tuple[ast.ListComp, 'python.Function', 'python.Function']] = []
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
 
         self.importnodes: List[ast.AST] = []
@@ -583,6 +583,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for base in cl.node.bases:
                 if not (isinstance(base, ast.Name) and base.id == "object"):
                     ancestor = python.lookup_class(base, getmv())
+                    assert ancestor
                     cl.bases.append(ancestor)
                     ancestor.children.append(cl)
 
@@ -893,6 +894,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, None]
                 elif parent and is_property_setter(dec):
+                    assert isinstance(dec, ast.Attribute)
+                    assert isinstance(dec.value, ast.Name)
                     parent.properties[dec.value.id][1] = node.name
                 else:
                     error.error(
@@ -1652,8 +1655,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             lvalue, rvalue = node.targets[0], node.value
             if (
                 self.struct_unpack(rvalue, func)
+                and isinstance(rvalue, ast.Call)  # TODO double check
                 and ast_utils.is_assign_list_or_tuple(lvalue)
-                and isinstance(lvalue, (ast.List, ast.Tuple))  # TODO avoid double isinstance (mypy)
+                and isinstance(lvalue, (ast.List, ast.Tuple))  # TODO double check
                 and not [n for n in lvalue.elts if ast_utils.is_assign_list_or_tuple(n)]
             ):
                 self.visit(node.value, func)
