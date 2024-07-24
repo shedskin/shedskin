@@ -124,7 +124,7 @@ def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
 
             # --- determine abstract receiver class
             classes = typestr.polymorphic_t(gx, gx.merged_inh[objexpr])
-            classes = [cl for cl in classes if isinstance(cl, python.Class)]
+            classes = {cl for cl in classes if isinstance(cl, python.Class)}
             if not classes:
                 continue
 
