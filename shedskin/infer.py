@@ -186,6 +186,7 @@ class CNode:
         self.temp1: str
         self.temp2: str
         self.subs: ast.AST
+        self.assignhop: ast.Assign
 
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)

@@ -3427,13 +3427,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Subscript(self, node: ast.Subscript, func:Optional['python.Function']=None) -> None:
         if type(node.ctx) in (ast.Load, ast.Store):
-            self.visit_Call(infer.inode(self.gx, node.value).fakefunc, func)
+            fakefunc = infer.inode(self.gx, node.value).fakefunc
+            assert fakefunc
+            self.visit_Call(fakefunc, func)
         elif type(node.ctx) == ast.Del:
+            fakefunc = infer.inode(self.gx, node.value).fakefunc
+            assert fakefunc
             self.start()
             if isinstance(node.slice, ast.Slice):
-                self.visit_Call(infer.inode(self.gx, node.value).fakefunc, func)
+                self.visit_Call(fakefunc, func)
             else:
-                self.visit_Call(infer.inode(self.gx, node.value).fakefunc, func)
+                self.visit_Call(fakefunc, func)
             self.eol()
         else:
             error.error(
