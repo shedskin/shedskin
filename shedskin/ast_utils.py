@@ -21,8 +21,8 @@ def is_assign_attribute(node: ast.AST) -> bool:
     return isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store)
 
 
-def is_constant(node: ast.AST) -> bool:  # TODO simplify?
-    return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == "Constant"
+def is_constant(node: ast.AST) -> bool:
+    return isinstance(node, ast.Constant)
 
 def is_none(node: ast.AST) -> bool:
     if (isinstance(node, ast.Name) and node.id == "None"):

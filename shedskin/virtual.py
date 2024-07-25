@@ -134,8 +134,11 @@ def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
                 and objexpr.id == "self"
                 and infer.inode(gx, objexpr).parent
             ):
-                abstract_cl = infer.inode(gx, objexpr).parent.parent
-                upgrade_cl(gx, abstract_cl, node, ident, classes)
+                parent = infer.inode(gx, objexpr).parent
+                assert parent
+                abstract_cl = parent.parent
+                if isinstance(abstract_cl, python.Class):
+                    upgrade_cl(gx, abstract_cl, node, ident, classes)
 
             lcp = typestr.lowest_common_parents(classes)
             if lcp:
@@ -149,8 +152,6 @@ def upgrade_cl(
     ident: str,
     classes: set['python.Class'],
 ) -> None:
-    if not abstract_cl or not isinstance(abstract_cl, python.Class):
-        return
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
 
     # --- register virtual method

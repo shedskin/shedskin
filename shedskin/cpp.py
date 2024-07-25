@@ -29,7 +29,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List, Any, TextIO, Tuple, TypeAlias, Union, Dict, Iterator
+from typing import TYPE_CHECKING, Optional, List, Any, IO, Tuple, TypeAlias, Union, Dict, Iterator
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -123,7 +123,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def cpp_name(self, obj: Any) -> str:
         return self.namer.name(obj)
 
-    def get_output_file(self, ext:str=".cpp", mode:str="w") -> TextIO:
+    def get_output_file(self, ext:str=".cpp", mode:str="w") -> IO[Any]:
         output_file = Path(self.output_base.with_suffix(ext))
         assert self.gx.module_path
         module_path = Path(self.gx.module_path)
@@ -657,6 +657,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.eol()
 
     def visit_NamedExpr(self, node:ast.NamedExpr, func:Optional['python.Function']=None) -> None:
+        assert isinstance(node.target, ast.Name)
         self.visitm("(", node.target.id, "=", node.value, ")", func)
 
     def visit_Import(self, node:ast.Import, func:Optional['python.Function']=None) -> None:
@@ -722,7 +723,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("continue;")
 
     def visit_With(self, node: ast.With, func:Optional['python.Function']=None) -> None:
-        def handle_with_vars(var: ast.AST) -> List[str]:
+        def handle_with_vars(var: Optional[ast.AST]) -> List[str]:
             if isinstance(var, ast.Name):
                 return [var.id]
             elif isinstance(var, (ast.List, ast.Tuple)):
@@ -823,16 +824,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if not clnames:
             clnames = ["pyobj"]
             if "__iter__" in cl.funcs:  # XXX get return type of 'next'
-                ts = typestr.nodetypestr(
-                    self.gx, cl.funcs["__iter__"].retnode.thing, mv=self.mv
-                )
+                retnode = cl.funcs["__iter__"].retnode
+                assert retnode
+                ts = typestr.nodetypestr(self.gx, retnode.thing, mv=self.mv)
                 if ts.startswith("__iter<"):
                     ts = ts[ts.find("<") + 1 : ts.find(">")]
                     clnames = ["pyiter<%s>" % ts]  # XXX use iterable interface
             if "__call__" in cl.funcs:
                 callfunc = cl.funcs["__call__"]
+                retnode = callfunc.retnode
+                assert retnode
                 r_typestr = typestr.nodetypestr(
-                    self.gx, callfunc.retnode.thing, mv=self.mv
+                    self.gx, retnode.thing, mv=self.mv
                 ).strip()
                 nargs = len(callfunc.formals) - 1
                 argtypes = [
@@ -1488,6 +1491,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ]
             if func.largs is not None:
                 argtypes = argtypes[: func.largs]
+            assert func.retnode
             rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
             self.print(
                 "typedef %s(*lambda%d)(" % (rettype, func.lambdanr)
@@ -1649,6 +1653,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and not func.fakeret
                 and not isinstance(lastnode, ast.Return)
             ):
+                assert func.retnode
                 self.output(
                     "return %s;" % self.nothing(self.mergeinh[func.retnode.thing])
                 )
@@ -1663,6 +1668,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def generator_class(self, func: 'python.Function') -> None:
         ident = self.generator_ident(func)
+        assert func.retnode
         self.output(
             "class __gen_%s : public %s {"
             % (
@@ -2330,7 +2336,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             for i, arg in enumerate(node.args):
                 if isinstance(arg, ast.keyword):
-                    positions.append(formal_pos[arg.name])
+                    assert False
+#                    positions.append(formal_pos[arg.name])
                 else:
                     positions.append(i)
 
@@ -2859,6 +2866,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Return(self, node: ast.Return, func: Optional['python.Function']=None) -> None:
         if func and func.isGenerator:
             self.output("__stop_iteration = true;")
+            assert func.retnode
             func2 = typestr.nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[
                 7:-3
             ]  # XXX meugh
@@ -2866,6 +2874,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return
         self.start("return ")
         assert node.value # added in graph.py
+        assert func
+        assert func.retnode
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
