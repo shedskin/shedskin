@@ -173,7 +173,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lambdaname: dict[ast.AST, str] = {}
         self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
-        self.listcomps: List[Tuple[ast.ListComp, 'python.Function', 'python.Function']] = []
+        self.listcomps: List[Tuple[ast.ListComp, 'python.Function', Optional['python.Function']]] = []
         self.defaults: dict[ast.AST, Tuple[int, 'python.Function', int]] = {}
 
         self.importnodes: List[ast.AST] = []
@@ -1175,23 +1175,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_BinOp(self, node: ast.BinOp, func: Optional['python.Function']=None) -> None:
         if type(node.op) == ast.Add:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "add"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "add"), [node.right], func
             )
         elif type(node.op) == ast.Sub:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "sub"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "sub"), [node.right], func
             )
         elif type(node.op) == ast.Mult:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "mul"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "mul"), [node.right], func
             )
         elif type(node.op) == ast.Div:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "truediv"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "truediv"), [node.right], func
             )
         elif type(node.op) == ast.FloorDiv:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "floordiv"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "floordiv"), [node.right], func
             )
         elif type(node.op) == ast.Pow:
             self.fake_func(node, node.left, "__pow__", [node.right], func)
@@ -1207,18 +1207,18 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.fake_func(node, node.left, "__mod__", [node.right], func)
         elif type(node.op) == ast.LShift:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "lshift"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "lshift"), [node.right], func
             )
         elif type(node.op) == ast.RShift:
             self.fake_func(
-                node, node.left, ast_utils.aug_msg(node, "rshift"), [node.right], func
+                node, node.left, ast_utils.aug_msg(self.gx, node, "rshift"), [node.right], func
             )
         elif type(node.op) == ast.BitOr:
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "or"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "or"), func)
         elif type(node.op) == ast.BitXor:
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "xor"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "xor"), func)
         elif type(node.op) == ast.BitAnd:
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "and"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "and"), func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error.error(
@@ -1300,7 +1300,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             error.error("unsupported type of assignment", self.gx, node, mv=getmv())
 
         blah2 = ast.BinOp(lnode, node.op, node.value)
-        blah2.augment = True
+        self.gx.augment.add(blah2)
 
         assign = ast.Assign([blah], blah2)
         register_node(assign, func)
@@ -1529,7 +1529,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if (
             isinstance(node, ast.BoolOp)
             or isinstance(node, ast.UnaryOp)
-            and type(node.op) == ast.FloorDiv
+            and isinstance(node.op, ast.FloorDiv)
         ):
             self.gx.bool_test_only.add(node)
 
@@ -1561,13 +1561,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.visit(item.context_expr, func)
 
         if item.optional_vars:
-            varnode = infer.CNode(self.gx, getmv(), item.optional_vars, parent=func)
-            self.gx.types[varnode] = set()
-            self.add_constraint(
-                (infer.inode(self.gx, item.context_expr), varnode), func
-            )
-            lvar = self.default_var(item.optional_vars.id, func)
-            self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
+            if isinstance(item.optional_vars, ast.Name):
+                varnode = infer.CNode(self.gx, getmv(), item.optional_vars, parent=func)
+                self.gx.types[varnode] = set()
+                self.add_constraint(
+                    (infer.inode(self.gx, item.context_expr), varnode), func
+                )
+                lvar = self.default_var(item.optional_vars.id, func)
+                self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
+            else:
+                error.error("unsupported with syntax", self.gx, item, mv=getmv())
 
         for child in node.body:
             self.visit(child, func)
@@ -1647,7 +1650,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Delete(self, node:ast.Delete, func:Optional['python.Function']=None) -> None:
         for child in node.targets:
-            assert type(child.ctx) == ast.Del
+#            assert isinstance(child.ctx, ast.Del)
             self.visit(child, func)
 
     def visit_AnnAssign(self, node:ast.AnnAssign, func:Optional['python.Function']=None) -> None:
@@ -2221,9 +2224,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
 
     def fncl_passing(self, node:ast.AST, newnode: infer.CNode, func:Optional['python.Function']) -> bool:
-        lfunc, lclass = python.lookup_func(node, getmv()), python.lookup_class(
-            node, getmv()
-        )
+        lfunc = python.lookup_func(node, getmv())
+        lclass = python.lookup_class(node, getmv())
         if lfunc:
             if lfunc.mv.module.builtin:
                 lfunc = self.builtin_wrapper(node, func)

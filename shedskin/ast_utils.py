@@ -6,6 +6,8 @@ import ast
 
 from typing import List, Tuple, Union, Any
 
+from . import config
+
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
     return isinstance(node, (ast.Tuple, ast.List)) and isinstance(node.ctx, ast.Store)
@@ -80,8 +82,8 @@ def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
         return [(left, right)]
 
 
-def aug_msg(node: ast.BinOp, msg: str) -> str:
-    if hasattr(node, "augment"):
+def aug_msg(gx: 'config.GlobalInfo', node: ast.BinOp, msg: str) -> str:
+    if node in gx.augment:
         return "__i" + msg + "__"
     return "__" + msg + "__"
 
