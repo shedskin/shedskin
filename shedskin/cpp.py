@@ -261,8 +261,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         include.deps.add(module)
         includes1 = [i for i in includes if i.builtin]
         includes2 = [i for i in includes if not i.builtin]
-        includes = includes1 + self.includes_rec(set(includes2))
-        return ['#include "%s"\n' % module.include_path() for module in includes]
+        includes3 = includes1 + self.includes_rec(set(includes2))
+        return ['#include "%s"\n' % module.include_path() for module in includes3]
 
     def includes_rec(self, includes: set['python.Module']) -> List['python.Module']:  # XXX should be recursive!? ugh
         todo = includes.copy()
@@ -980,9 +980,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return "0"
 
     def inhcpa(self, func: 'python.Function') -> bool:
-        return infer.called(func) or (
-            func in self.gx.inheritance_relations
-            and [1 for f in self.gx.inheritance_relations[func] if infer.called(f)]
+        return bool(
+            infer.called(func)
+            or (
+                func in self.gx.inheritance_relations
+                and [1 for f in self.gx.inheritance_relations[func] if infer.called(f)]
+            )
         )
 
     def visit_Slice(self, node: ast.Slice, func: Optional['python.Function']=None) -> None:
@@ -1056,7 +1059,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Set(self, node:ast.Set, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         self.visit_tuple_list(node, func, argtypes)
 
-    def visit_tuple_list(self, node: ast.AST, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_tuple_list(self, node: Union[ast.Tuple, ast.List, ast.Set], func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
         if isinstance(func, python.Class):  # XXX
             func = None
         argtypes = self.instance_new(node, argtypes)
@@ -2235,6 +2238,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if middle == "==":
             self.append("==(")
         else:
+            assert middle
             self.append(self.connector(left, func) + middle + "(")
         self.visit2(right, argtypes, middle, func)
         self.append(")" + postfix)
@@ -2463,6 +2467,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif parent_constr:
             assert isinstance(node.func, ast.Attribute)
             cl = python.lookup_class(node.func.value, self.mv)
+            assert cl
             self.append(self.namer.namespace_class(cl) + "::" + node.func.attr + "(")
 
         elif direct_call:  # XXX no namespace (e.g., math.pow), check nr of args
