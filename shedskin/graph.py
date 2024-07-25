@@ -694,6 +694,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
+            children: List[ast.AST]
+
             if isinstance(node, ast.Try):
                 children = list(node.body)
                 for handler in node.handlers:
@@ -703,7 +705,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(node, ast.With):
                 children = list(node.body)
             else:
-                children = ast.iter_child_nodes(node)
+                children = list(ast.iter_child_nodes(node))
 
             result = []
             for child in children:
@@ -730,7 +732,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.import_modules(name, node, False)
 
-    def import_modules(self, name: str, node:ast.AST, fake:bool) -> 'python.Module':
+    def import_modules(self, name: Optional[str], node:ast.AST, fake:bool) -> 'python.Module':
         # in case of relative import, make name absolute
         level = getattr(node, "level", None) or 0
         if level > 0:
@@ -742,6 +744,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 name = newname
 
         # --- import a.b.c: import a, then a.b, then a.b.c
+        assert name
         split = name.split(".")
         module = getmv().module
         for i in range(len(split)):
@@ -895,7 +898,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
-                    parent.properties[node.name] = [node.name, None]
+                    parent.properties[node.name] = [node.name, '']
                 elif parent and is_property_setter(dec):
                     assert isinstance(dec, ast.Attribute)
                     assert isinstance(dec.value, ast.Name)
@@ -1074,15 +1077,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
         elif isinstance(node.slice, ast.Del):
-            if any(
-                isinstance(dim, ast.Ellipsis) for dim in node.slice.dims
-            ):  # XXX also check at setitem
-                error.error("ellipsis is not supported", self.gx, node, mv=getmv())
-            error.error("unsupported subscript method", self.gx, node, mv=getmv())
+            assert False
+#            if any(
+#                isinstance(dim, ast.Ellipsis) for dim in node.slice.dims
+#            ):  # XXX also check at setitem
+#                error.error("ellipsis is not supported", self.gx, node, mv=getmv())
+#            error.error("unsupported subscript method", self.gx, node, mv=getmv())
 
         else:
             if isinstance(node.slice, ast.Index):
-                subscript = node.slice.value
+                assert False
+#                subscript = node.slice.value
             else:
                 subscript = node.slice
 
@@ -1799,8 +1804,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
         if ast_utils.is_assign_list_or_tuple(lvalue):
-            lvalue = lvalue.elts
-        for i, item in enumerate(lvalue):
+            assert isinstance(lvalue, (ast.Tuple, ast.List))
+            lvalues = lvalue.elts
+        else:
+            lvalues = lvalue  # TODO tuple?
+
+        for i, item in enumerate(lvalues):
             fakenode = infer.CNode(
                 self.gx, getmv(), (item,), parent=func
             )  # fake node per item, for multiple callfunc triggers

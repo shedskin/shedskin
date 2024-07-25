@@ -25,7 +25,7 @@ def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> 
             subclasses.add(cl)
 
         # --- merge arg/return types
-        formals = []
+        formal_types = []
         retexpr = False
 
         for subcl in subclasses:
@@ -48,10 +48,10 @@ def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> 
             for name in func.formals[1:]:
                 var = func.vars[name]
                 sig_types.append(self.mergeinh[var])
-            formals.append(sig_types)
+            formal_types.append(sig_types)
 
         merged = []
-        for z in zip(*formals):
+        for z in zip(*formal_types):
             merge = set()
             for _types in z:
                 merge.update(_types)
