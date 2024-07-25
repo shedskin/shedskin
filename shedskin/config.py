@@ -98,6 +98,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.bool_test_only: set[ast.AST] = set()
         self.tempcount: dict[Any, str] = {}
         self.struct_unpack: dict[ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str]] = {}
+        self.augment: set[ast.AST] = set()
 
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None

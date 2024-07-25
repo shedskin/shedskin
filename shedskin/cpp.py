@@ -1444,7 +1444,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def forbody(
         self,
-        node: ast.For,
+        node: Union[ast.For, ast.ListComp],
         quals: Optional[List[ast.comprehension]],
         iter: str,
         func: Optional['python.Function'],
@@ -1452,11 +1452,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         genexpr: bool,
     ) -> None:
         if quals is not None:
+            assert isinstance(node, ast.ListComp)
+            assert func
             self.listcompfor_body(node, quals, iter, func, False, genexpr)
             return
+        assert isinstance(node, ast.For)
         if not skip:
             self.indent()
             if ast_utils.is_assign_list_or_tuple(node.target):
+                assert isinstance(node.target, (ast.List, ast.Tuple))
                 self.tuple_assign(node.target, self.mv.tempcount[node.target], func)
         self.gx.loopstack.append(node)
         for child in node.body:
@@ -1969,23 +1973,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             else:
                 self.impl_visit_binary(
-                    node.left, node.right, ast_utils.aug_msg(node, "add"), "+", func
+                    node.left, node.right, ast_utils.aug_msg(self.gx, node, "add"), "+", func
                 )
         elif type(node.op) == ast.Sub:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "sub"), "-", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "sub"), "-", func
             )
         elif type(node.op) == ast.Mult:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "mul"), "*", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "mul"), "*", func
             )
         elif type(node.op) == ast.Div:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "truediv"), "/", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "truediv"), "/", func
             )
         elif type(node.op) == ast.FloorDiv:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "floordiv"), "//", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "floordiv"), "//", func
             )
         elif type(node.op) == ast.Pow:
             self.power(node.left, node.right, None, func)
@@ -1993,18 +1997,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.impl_visit_mod(node, func)
         elif type(node.op) == ast.LShift:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "lshift"), "<<", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "lshift"), "<<", func
             )
         elif type(node.op) == ast.RShift:
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(node, "rshift"), ">>", func
+                node.left, node.right, ast_utils.aug_msg(self.gx, node, "rshift"), ">>", func
             )
         elif type(node.op) == ast.BitOr:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "or"), "|", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "or"), "|", func)
         elif type(node.op) == ast.BitXor:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "xor"), "^", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "xor"), "^", func)
         elif type(node.op) == ast.BitAnd:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "and"), "&", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "and"), "&", func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error.error(
@@ -3003,7 +3007,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Delete(self, node: ast.Delete, func:Optional['python.Function']=None) -> None:
         for child in node.targets:
-            assert type(child.ctx) == ast.Del
             self.visit(child, func)
 
     def visit_AnnAssign(self, node: ast.AnnAssign, func:Optional['python.Function']=None) -> None:
