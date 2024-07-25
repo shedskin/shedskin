@@ -1106,7 +1106,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         nodes2 = slice_nums(nodes)
         if replace:
             self.fake_func(node, expr, "__setslice__", nodes2 + [replace], func)
-        elif isinstance(node.ctx, ast.Del):
+        elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Del):
             self.fake_func(node, expr, "__delete__", nodes2, func)
         else:
             self.fake_func(node, expr, "__slice__", nodes2, func)
@@ -1267,7 +1267,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
             if isinstance(node.target.slice, ast.Index):
-                subs = node.target.slice.value
+                assert False
+#                subs = node.target.slice.value
             else:
                 subs = node.target.slice
             t2 = self.temp_var(subs, func)
@@ -2078,16 +2079,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         if len(rvalue.args) == 1 and isinstance(
                             rvalue.args[0], ast.Name
                         ):
-                            newclass.properties[lvalue.id] = rvalue.args[0].id, None
+                            newclass.properties[lvalue.id] = [rvalue.args[0].id, '']
                         elif (
                             len(rvalue.args) == 2
                             and isinstance(rvalue.args[0], ast.Name)
                             and isinstance(rvalue.args[1], ast.Name)
                         ):
-                            newclass.properties[lvalue.id] = (
+                            newclass.properties[lvalue.id] = [
                                 rvalue.args[0].id,
                                 rvalue.args[1].id,
-                            )
+                            ]
                         else:
                             error.error(
                                 "complex properties are not supported",
@@ -2316,11 +2317,12 @@ def parse_module(name: str, gx: 'config.GlobalInfo', parent:Optional['python.Mod
 
     # --- create module
     try:
-        if parent and parent.path != os.getcwd():
-            basepaths = [parent.path, os.getcwd()]
+        cwd = pathlib.Path(os.getcwd())
+        if parent and parent.path != cwd:
+            basepaths = [parent.path, cwd]
         else:
-            basepaths = [os.getcwd()]
-        module_paths = basepaths + gx.libdirs
+            basepaths = [cwd]
+        module_paths = [str(p) for p in basepaths] + gx.libdirs
         absolute_name, filename, relative_filename, builtin = python.find_module(
             gx, name, module_paths
         )
