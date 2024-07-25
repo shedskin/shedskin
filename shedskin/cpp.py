@@ -2263,20 +2263,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("-", node.operand, func)
             else:
-                self.visit_Call(infer.inode(self.gx, node.operand).fakefunc, func)
+                fakefunc = infer.inode(self.gx, node.operand).fakefunc
+                assert fakefunc
+                self.visit_Call(fakefunc, func)
             self.visitm(")", func)
         elif type(node.op) == ast.UAdd:
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("+", node.operand, func)
             else:
-                self.visit_Call(infer.inode(self.gx, node.operand).fakefunc, func)
+                fakefunc = infer.inode(self.gx, node.operand).fakefunc
+                assert fakefunc
+                self.visit_Call(fakefunc, func)
             self.visitm(")", func)
         elif type(node.op) == ast.Invert:
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("~", node.operand, func)
             else:
-                self.visit_Call(infer.inode(self.gx, node.operand).fakefunc, func)
+                fakefunc = infer.inode(self.gx, node.operand).fakefunc
+                assert fakefunc
+                self.visit_Call(fakefunc, func)
         elif type(node.op) == ast.Not:
             self.append("__NOT(")
             self.bool_test(node.operand, func)
@@ -2856,8 +2862,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def tuple_assign(self, lvalue: Union[ast.List, ast.Tuple], rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
         temp = self.mv.tempcount[lvalue]
+
+        nodes: List[ast.expr]
         if isinstance(lvalue, tuple):
-            nodes = lvalue
+            nodes = list(lvalue)
         else:
             nodes = lvalue.elts
 
@@ -2875,6 +2883,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if isinstance(item, ast.Name):
                     self.output("%s = %s;" % (item.id, selector))
                 elif ast_utils.is_assign_list_or_tuple(item):  # recursion
+                    assert isinstance(item, (ast.List, ast.Tuple))
                     self.tuple_assign(item, selector, func)
                 elif isinstance(item, ast.Subscript):
                     self.assign_pair(item, selector, func)
@@ -3213,7 +3222,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def lc_args(self, lcfunc: 'python.Function', func: 'python.Function') -> List[Tuple[str, str]]:
         args = []
         for name in lcfunc.misses:
-            if python.lookup_var(name, func, self.mv).parent:
+            var = python.lookup_var(name, func, self.mv)
+            assert var
+            if var.parent:
                 arg = self.cpp_name(name)
                 if name in lcfunc.misses_by_ref:
                     arg = '&' + arg

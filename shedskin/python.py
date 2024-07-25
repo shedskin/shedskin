@@ -125,7 +125,7 @@ class Class(PyObject):
         self.funcs: dict[str, 'Function'] = {}
         self.virtuals: dict[str, set['Class']] = {}     # 'virtually' called methods
         self.virtualvars: dict[str, set['Class']] = {}  # 'virtual' variables
-        self.properties: dict[str, Tuple[str, str]] = {}
+        self.properties: dict[str, List[str]] = {}
         self.staticmethods: List[str] = []
         self.splits: dict[int, int] = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
@@ -218,7 +218,7 @@ class Function:
         mv: 'graph.ModuleVisitor',
         node: Optional[ast.FunctionDef]=None,
         parent: Optional[Parent]=None,
-        inherited_from: Optional['Class']=None,
+        inherited_from: Optional[Union['Class', 'Function']]=None,  # TODO should be one
     ):
         self.gx = gx
         self.node = node

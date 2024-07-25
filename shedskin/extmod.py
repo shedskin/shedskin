@@ -492,6 +492,7 @@ class ExtensionModule:
 
         # call
         if is_method:
+            assert isinstance(func.parent, python.Class)
             where = "((%sObject *)self)->__ss_object->" % clname(func.parent)
         else:
             where = "__" + self.gv.module.ident + "__::"
