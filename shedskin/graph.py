@@ -1664,22 +1664,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:
-            lvalue, rvalue = node.targets[0], node.value
+            lvalue2, rvalue2 = node.targets[0], node.value
             if (
-                self.struct_unpack(rvalue, func)
-                and isinstance(rvalue, ast.Call)  # TODO double check
-                and ast_utils.is_assign_list_or_tuple(lvalue)
-                and isinstance(lvalue, (ast.List, ast.Tuple))  # TODO double check
-                and not [n for n in lvalue.elts if ast_utils.is_assign_list_or_tuple(n)]
+                self.struct_unpack(rvalue2, func)
+                and isinstance(rvalue2, ast.Call)  # TODO double check
+                and ast_utils.is_assign_list_or_tuple(lvalue2)
+                and isinstance(lvalue2, (ast.List, ast.Tuple))  # TODO double check
+                and not [n for n in lvalue2.elts if ast_utils.is_assign_list_or_tuple(n)]
             ):
                 self.visit(node.value, func)
-                sinfo = self.struct_info(rvalue.args[0], func)
+                sinfo = self.struct_info(rvalue2.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
                 self.visit(ast.Assign(node.targets, faketuple), func)
                 tvar = self.temp_var2(
-                    rvalue.args[1], infer.inode(self.gx, rvalue.args[1]), func
+                    rvalue2.args[1], infer.inode(self.gx, rvalue2.args[1]), func
                 )
-                tvar_pos = self.temp_var_int(rvalue.args[0], func)
+                tvar_pos = self.temp_var_int(rvalue2.args[0], func)
                 self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
@@ -1709,6 +1709,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.visit(lvalue, func)
                     lvar = self.default_var(lvalue.id, func)
                     if ast_utils.is_constant(rvalue):
+                        assert isinstance(rvalue, ast.Constant)
                         lvar.const_assign.append(rvalue)
                     self.add_constraint(
                         (infer.inode(self.gx, rvalue), infer.inode(self.gx, lvar)), func
@@ -1771,7 +1772,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             lvalue.slice, (ast.Slice, ast.Del)
         ):
             if isinstance(lvalue.slice, ast.Index):
-                subscript = lvalue.slice.value
+                assert False
+#                subscript = lvalue.slice.value
             else:
                 subscript = lvalue.slice
 
@@ -1840,7 +1842,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig: ast.Call, parent: Optional['python.Function']) -> Optional['python.Class']:
+    def super_call(self, orig: ast.Call, parent: Optional['python.Function']) -> Optional[ast.AST]:
         node = orig.func
         assert isinstance(node, ast.Attribute)
         while isinstance(parent, python.Function):
@@ -1923,15 +1925,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ident = node.func.id = "__print"  # XXX
 
             if ident == "open" and len(node.args) > 1:
-                if not ast_utils.is_constant(node.args[1]):
+                if isinstance(node.args[1], ast.Str):
+                    if "b" in node.args[1].s:
+                        ident = node.func.id = "open_binary"
+
+                else:
                     error.error(
                         "non-constant mode passed to 'open'",
                         self.gx,
                         node.func,
                         mv=getmv()
                     )
-                elif "b" in node.args[1].s:
-                    ident = node.func.id = "open_binary"
 
             if ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]:
                 error.error(
