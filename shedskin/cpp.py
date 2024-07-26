@@ -559,8 +559,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- declarations
         self.listcomps = {}
-        for listcomp, lcfunc, func in self.mv.listcomps:
-            self.listcomps[listcomp] = (lcfunc, func)
+        for listcomp, lcfunc, func2 in self.mv.listcomps:
+            self.listcomps[listcomp] = (lcfunc, func2)
         self.do_listcomps(True)
         self.do_lambdas(True)
         self.print()
@@ -3239,7 +3239,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 + [" {", ";"][declare]
             )
 
-    def lc_args(self, lcfunc: 'python.Function', func: 'python.Function') -> List[Tuple[str, str]]:
+    def lc_args(self, lcfunc: 'python.Function', func: Optional['python.Function']) -> List[Tuple[str, str]]:
         args = []
         for name in lcfunc.misses:
             var = python.lookup_var(name, func, self.mv)
