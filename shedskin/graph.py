@@ -2267,6 +2267,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.instance(node, python.def_class(self.gx, "bool_"), func)
                 return
 
+            var: Optional['python.Variable']
+
             if isinstance(func, python.Function) and node.id in func.globals:
                 var = infer.default_var(self.gx, node.id, None, mv=getmv())
             else:

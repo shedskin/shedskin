@@ -367,7 +367,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return "".join(self.group_declarations(pairs))
 
     def get_constant(self, node:ast.Constant) -> Optional[str]:
-        parent = infer.inode(self.gx, node).parent
+        parent: Union['python.Function', 'python.Class', None] = infer.inode(self.gx, node).parent
         while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
         if isinstance(parent, python.Function) and (
@@ -423,6 +423,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(child, ast.FunctionDef):
                 func = self.mv.funcs[child.name]
                 if self.inhcpa(func):
+                    assert func.node
                     self.visit_FunctionDef(func.node, declare=True)
         self.print()
 
