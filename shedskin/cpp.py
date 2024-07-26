@@ -935,8 +935,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if cl.parent.static_nodes:
             self.output("void %s::__static__() {" % self.cpp_name(cl))
             self.indent()
-            for node in cl.parent.static_nodes:
-                self.visit(node, cl.parent)
+            for node2 in cl.parent.static_nodes:
+                self.visit(node2, cl.parent)
             self.deindent()
             self.output("}")
             self.print()
