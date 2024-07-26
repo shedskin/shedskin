@@ -1809,11 +1809,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def tuple_flow(self, lvalue: ast.AST, rvalue: ast.AST, func:Optional['python.Function']=None) -> None:
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
-        if ast_utils.is_assign_list_or_tuple(lvalue):
+        lvalues: List[ast.expr]
+        if isinstance(lvalue, tuple):
+            assert False
+        elif ast_utils.is_assign_list_or_tuple(lvalue):
             assert isinstance(lvalue, (ast.Tuple, ast.List))
             lvalues = lvalue.elts
-        else:
-            lvalues = lvalue  # TODO tuple?
 
         for i, item in enumerate(lvalues):
             fakenode = infer.CNode(
@@ -2002,15 +2003,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         if not getmv().module.builtin:
             for base in node.bases:
-                if not isinstance(base, (ast.Name, ast.Attribute)):
+                if isinstance(base, ast.Name):
+                    name = base.id
+                elif isinstance(base, ast.Attribute):
+                    name = base.attr
+                else:
                     error.error(
                         "invalid expression for base class", self.gx, node, mv=getmv()
                     )
-
-                if isinstance(base, ast.Name):
-                    name = base.id
-                else:
-                    name = base.attr
 
                 cl = python.lookup_class(base, getmv())
                 if not cl:
@@ -2055,6 +2055,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 elif ident == "__getattr__":
                     func.formals = ["name"]
 
+                assert cl
                 cl.funcs[ident] = func
 
         # --- built-in attributes
