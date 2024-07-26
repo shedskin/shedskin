@@ -1843,11 +1843,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig: ast.Call, parent: Optional['python.Function']) -> Optional[ast.AST]:
+    def super_call(self, orig: ast.Call) -> Optional[ast.AST]:
         node = orig.func
         assert isinstance(node, ast.Attribute)
-        while isinstance(parent, python.Function):
-            parent = parent.parent
         if (
             isinstance(node.value, ast.Call)
             and node.attr not in ("__getattr__", "__setattr__")
@@ -1878,7 +1876,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             isinstance(node.func, ast.Attribute) and type(node.func.ctx) == ast.Load
         ):  # XXX import math; math.e
             # rewrite super(..) call
-            base = self.super_call(node, func)
+            base = self.super_call(node)
             if base:
                 node.func = ast.Attribute(
                     copy.deepcopy(base), node.func.attr, ast.Load()
