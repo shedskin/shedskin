@@ -987,7 +987,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             infer.called(func)
             or (
                 func in self.gx.inheritance_relations
-                and [1 for f in self.gx.inheritance_relations[func] if infer.called(f)]
+                and [1 for f in self.gx.inheritance_relations[func] if isinstance(f, python.Function) and infer.called(f)]
             )
         )
 
@@ -1169,6 +1169,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # except
         for handler in node.handlers:
+            pairs: List[Tuple[Optional[ast.expr], Optional[str], List[ast.stmt]]]
             if isinstance(handler.type, ast.Tuple):
                 pairs = [(n, handler.name, handler.body) for n in handler.type.elts]
             else:
@@ -1621,7 +1622,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 error.error(
                     repr(func) + " not called!", self.gx, node, warning=True, mv=self.mv
                 )
-            if not (declare and func.parent and func.ident in func.parent.virtuals):
+            if not (declare and isinstance(func.parent, python.Class) and func.ident in func.parent.virtuals):
                 return
 
         if func.isGenerator and not declare:
@@ -2464,7 +2465,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             )
             if ts == "complex ":
                 self.append("mcomplex(")
-                constructor = False  # XXX
+                constructor = None  # XXX
             else:
                 if argtypes is not None:  # XXX merge instance_new
                     ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
@@ -2547,6 +2548,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("(")
 
         elif method_call:
+            assert objexpr
             for cl, _ in self.mergeinh[objexpr]:
                 if (
                     isinstance(cl, python.Class)
@@ -3444,7 +3446,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         for name in lcfunc.misses:
             var = python.lookup_var(name, func, self.mv)
-            if var.parent:
+            if var and var.parent:
                 if name == "self" and not (func and func.listcomp):
                     args.append("this")
                 else:
