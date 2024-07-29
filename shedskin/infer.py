@@ -366,7 +366,13 @@ def analyze_args(
     return actuals, formals, defaults, extra, _error
 
 
-def connect_actual_formal(gx: 'config.GlobalInfo', expr: ast.Call, func: 'python.Function', parent_constr:bool=False, merge:Optional[Merged]=None) -> Tuple[List[Tuple[ast.AST, 'python.Variable']], int, bool]:
+def connect_actual_formal(
+    gx: 'config.GlobalInfo',
+    expr: ast.Call,
+    func: 'python.Function',
+    parent_constr:bool=False,
+    merge:Optional[Merged]=None
+) -> Tuple[List[Tuple[ast.AST, 'python.Variable']], int, bool]:
     pairs = []
 
     actuals: List[Optional[ast.AST]] = [a for a in expr.args if not isinstance(a, ast.keyword)]
