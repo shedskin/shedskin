@@ -2238,10 +2238,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[newnode] = set([(lfunc, 0)])
         elif lclass:
             if lclass.mv.module.builtin:
-                lclass = self.builtin_wrapper(node, func)
+                lclass2 = self.builtin_wrapper(node, func)
             else:
-                lclass = lclass.parent
-            self.gx.types[newnode] = set([(lclass, 0)])
+                lclass2 = lclass.parent
+            self.gx.types[newnode] = set([(lclass2, 0)])
         else:
             return False
         newnode.copymetoo = True  # XXX merge into some kind of 'seeding' function
