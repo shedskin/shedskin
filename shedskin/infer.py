@@ -147,7 +147,7 @@ class CNode:
         thing: Any,
         dcpa: int = 0,
         cpa: int = 0,
-        parent: Optional[Parent] = None,
+        parent: Optional[AllParent] = None,
     ):
         self.gx = gx
         self.thing = thing
@@ -928,6 +928,7 @@ def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs
         while argtypes and not argtypes[-1]:
             argtypes = argtypes[:-1]
         if func.lambdawrapper:
+            assert isinstance(node.parent, python.Function)
             if starargs and node.parent and node.parent.node and node.parent.node.args.vararg:
                 func.largs = (
                     node.parent.xargs[node.dcpa, node.cpa]
@@ -1996,7 +1997,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
 
-def register_temp_var(var: 'python.Variable', parent: Optional[Parent]) -> None:
+def register_temp_var(var: 'python.Variable', parent: Optional[AllParent]) -> None:
     if isinstance(parent, python.Function):
         parent.registered_temp_vars.append(var)
 
@@ -2004,7 +2005,7 @@ def register_temp_var(var: 'python.Variable', parent: Optional[Parent]) -> None:
 def default_var(
     gx: "config.GlobalInfo",
     name: str,
-    parent: Optional[Union['python.Function', 'python.Class']],
+    parent: Optional[AllParent],
     worklist: Optional[List[CNode]]=None,
     mv: Optional['graph.ModuleVisitor']=None,
     exc_name: bool=False

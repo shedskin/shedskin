@@ -217,7 +217,7 @@ class Function:
         gx: 'config.GlobalInfo',
         mv: 'graph.ModuleVisitor',
         node: Optional[ast.FunctionDef]=None,
-        parent: Optional[Parent]=None,
+        parent: Optional[AllParent]=None,
         inherited_from: Optional[Union['Class', 'Function']]=None,  # TODO should be one
     ):
         self.gx = gx
@@ -274,7 +274,7 @@ class Function:
 
 
 class Variable:
-    def __init__(self, name: str, parent: Optional[Parent]):
+    def __init__(self, name: str, parent: Optional[AllParent]):
         self.name = name
         self.parent = parent
         self.invisible = False  # not in C++ output
@@ -367,7 +367,7 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
     return None
 
 
-def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Optional[Parent]) -> Tuple[Optional['Class'], Optional['Module']]:
+def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Optional[AllParent]) -> Tuple[Optional['Class'], Optional['Module']]:
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?

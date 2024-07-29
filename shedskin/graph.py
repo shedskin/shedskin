@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from . import config
 
 Parent: TypeAlias = Union['python.Class', 'python.Function']
+AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
 
 # --- global variable mv
 _mv: 'ModuleVisitor'
@@ -382,7 +383,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def add_constraint(self, constraint: Tuple[infer.CNode, infer.CNode], func: Optional['python.Function']) -> None:
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
-        parent: Optional[Parent] = func
+        parent: Optional[AllParent] = func
         while isinstance(parent, python.Function) and parent.listcomp:  # TODO occurs frequently, ugly typing.. add Function method(s)
             parent = parent.parent
         if isinstance(parent, python.Function):
@@ -538,7 +539,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         assert isinstance(node.target, ast.Name)
 
-        parent : Optional[Parent] = func
+        parent : Optional[AllParent] = func
         while parent and isinstance(parent, python.Function) and parent.listcomp:
             parent.misses_by_ref.add(node.target.id)
             parent = parent.parent
@@ -2040,21 +2041,36 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             return
 
         # --- built-in functions
-        for cl in [newclass, newclass.parent]:
-            for ident in ["__setattr__", "__getattr__"]:
-                func = python.Function(self.gx, getmv())
-                func.ident = ident
-                func.parent = cl
+        for ident in ["__setattr__", "__getattr__"]:
+            func = python.Function(self.gx, getmv())
+            func.ident = ident
+            func.parent = newclass
 
-                if ident == "__setattr__":
-                    func.formals = ["name", "whatsit"]
-                    retexpr = ast.Return(value=None)
-                    self.visit(retexpr, func)
-                elif ident == "__getattr__":
-                    func.formals = ["name"]
+            if ident == "__setattr__":
+                func.formals = ["name", "whatsit"]
+                retexpr = ast.Return(value=None)
+                self.visit(retexpr, func)
+            elif ident == "__getattr__":
+                func.formals = ["name"]
 
-                assert cl
-                cl.funcs[ident] = func
+            assert newclass
+            newclass.funcs[ident] = func
+
+        newstaticclass = newclass.parent  # TODO copy-paste of above for mypy --strict
+        for ident in ["__setattr__", "__getattr__"]:
+            func = python.Function(self.gx, getmv())
+            func.ident = ident
+            func.parent = newstaticclass
+
+            if ident == "__setattr__":
+                func.formals = ["name", "whatsit"]
+                retexpr = ast.Return(value=None)
+                self.visit(retexpr, func)
+            elif ident == "__getattr__":
+                func.formals = ["name"]
+
+            assert newstaticclass
+            newstaticclass.funcs[ident] = func
 
         # --- built-in attributes
         if "class_" in getmv().classes or "class_" in getmv().ext_classes:
