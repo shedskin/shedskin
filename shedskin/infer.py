@@ -236,10 +236,9 @@ def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
     return gx.debug_level >= level
 
 
-def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> int:
+def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
     cnode = inode(gx, node)
     if cnode.lambdawrapper:
-        assert isinstance(cnode.lambdawrapper.largs, int)
         return cnode.lambdawrapper.largs
     return len(node.args)
 
