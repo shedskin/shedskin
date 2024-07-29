@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
 Types: TypeAlias = set[Tuple['python.Class', int]]
 Parent: TypeAlias = Union['python.Class', 'python.Function']
+AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
 
 
 class CPPNamer:
@@ -367,7 +368,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return "".join(self.group_declarations(pairs))
 
     def get_constant(self, node:ast.Constant) -> Optional[str]:
-        parent: Union['python.Function', 'python.Class', None] = infer.inode(self.gx, node).parent
+        parent: Optional[AllParent] = infer.inode(self.gx, node).parent
         while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
         if isinstance(parent, python.Function) and (
@@ -3222,7 +3223,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if lcfunc.mv.module.builtin:
                 continue
 
-            parent: Union['python.Function', 'python.Class', None] = func
+            parent: Optional[AllParent] = func
             while isinstance(parent, python.Function) and parent.listcomp:
                 parent = parent.parent
 
