@@ -998,13 +998,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Lambda(self, node: ast.Lambda, parent:Optional[Parent]=None) -> None:
         self.append(self.mv.lambdaname[node])
 
-    def subtypes(self, types: Types, varname: str) -> Types:
+    def subtypes(self, types: Types, varname: Optional[str]) -> Types:
         subtypes = set()
-        for t in types:
-            if isinstance(t[0], python.Class):
-                var = t[0].vars.get(varname)
-                if var and (var, t[1], 0) in self.gx.cnode:  # XXX yeah?
-                    subtypes.update(self.gx.cnode[var, t[1], 0].types())
+        if varname:
+            for t in types:
+                if isinstance(t[0], python.Class):
+                    var = t[0].vars.get(varname)
+                    if var and (var, t[1], 0) in self.gx.cnode:  # XXX yeah?
+                        subtypes.update(self.gx.cnode[var, t[1], 0].types())
         return subtypes
 
     def bin_tuple(self, types: Types) -> bool:
@@ -1495,6 +1496,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 argtypes = argtypes[: func.largs]
             assert func.retnode
             rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
+            assert isinstance(func.lambdanr, int)
             self.print(
                 "typedef %s(*lambda%d)(" % (rettype, func.lambdanr)
                 + ", ".join(argtypes)
@@ -2056,7 +2058,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def power(self, left: ast.AST, right: ast.AST, mod: Optional[ast.AST], func:Optional['python.Function']=None) -> None:
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
-            if not isinstance(right, ast.Num) or right.n < 0:
+            if not isinstance(right, ast.Num) or (isinstance(right.n, (int, float)) and right.n < 0):
                 error.error(
                     "pow(int, int) returns int after compilation",
                     self.gx,
@@ -2711,6 +2713,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if target.inherited_from:
             target = target.inherited_from
 
+        rest: Union[int, None]
+
         pairs, rest, err = infer.connect_actual_formal(
             self.gx, node, target, parent_constr, merge=self.mergeinh
         )
@@ -2732,6 +2736,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             rest = func.largs
 
         if target.node.args.vararg:
+            assert isinstance(rest, int)
             self.append("%d" % rest)
             if rest or pairs:
                 self.append(", ")
@@ -2785,7 +2790,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         % (target.mv.module.full_path(), target.mv.defaults[arg][0])
                     )
 
-            elif arg in self.consts:
+            elif isinstance(arg, ast.Constant) and arg in self.consts:
                 self.append(self.consts[arg])
             else:
                 if (
@@ -2826,7 +2831,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         formal: 'python.Variable',
         target: 'python.Function',
         method_call: bool,
-        objexpr: ast.AST,
+        objexpr: Optional[ast.AST],
     ) -> Optional[Types]:
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {"u": "unit", "v": "value", "o": None}
@@ -2834,8 +2839,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             target.mv.module.builtin
             and method_call
             and formal.name in vars
+            and isinstance(target.parent, python.Class)
             and target.parent.ident in ("list", "dict", "set")
         ):
+            assert objexpr
             subtypes = self.subtypes(self.mergeinh[objexpr], vars[formal.name])
             if typestr.nodetypestr(self.gx, arg, func, mv=self.mv) != typestr.typestr(
                 self.gx, subtypes, mv=self.mv
@@ -2963,7 +2970,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def subs_assign(self, lvalue: ast.Subscript, func:Optional['python.Function']) -> None:
         if isinstance(lvalue.slice, ast.Index):
-            subs = lvalue.slice.value
+            assert False
+#            subs = lvalue.slice.value
         else:
             subs = lvalue.slice
         self.visitm(
@@ -3132,6 +3140,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     # XXX let visit_Call(fakefunc) use cast_to_builtin?
                     fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
                     assert fakefunc
+                    assert isinstance(fakefunc.func, ast.Attribute)
                     self.visitm(
                         "(",
                         fakefunc.func.value,
@@ -3205,7 +3214,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if lcfunc.mv.module.builtin:
                 continue
 
-            parent = func
+            parent: Union['python.Function', 'python.Class', None] = func
             while isinstance(parent, python.Function) and parent.listcomp:
                 parent = parent.parent
 
