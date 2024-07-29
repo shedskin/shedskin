@@ -163,7 +163,7 @@ class CNode:
         self.mv = mv
         self.constructor = False  # allocation site
         self.copymetoo = False
-        self.lambdawrapper = None
+        self.lambdawrapper: Optional['python.Function'] = None
 
         self.gx.cnode[self.thing, self.dcpa, self.cpa] = self
 
@@ -237,8 +237,10 @@ def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
 
 
 def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> int:
-    if inode(gx, node).lambdawrapper:
-        return inode(gx, node).lambdawrapper.largs
+    cnode = inode(gx, node)
+    if cnode.lambdawrapper:
+        assert isinstance(cnode.lambdawrapper.largs, int)
+        return cnode.lambdawrapper.largs
     return len(node.args)
 
 

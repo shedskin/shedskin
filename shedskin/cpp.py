@@ -1720,6 +1720,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}")
 
+        assert func.node
         for child in func.node.body:
             self.visit(child, func)
 
@@ -2455,7 +2456,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- target expression
         if isinstance(node.func, ast.Attribute):
-            node.func.called = True
+            self.gx.called.add(node.func)
 
         if node.func in self.mergeinh and [
             t for t in self.mergeinh[node.func] if isinstance(t[0], python.Function)
@@ -2673,6 +2674,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             parent_constr,
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
+        target: Union['python.Function', 'python.Class']  # TODO should be one of the two
         target = funcs[0]  # XXX
 
         swap_env = False
@@ -2710,8 +2712,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
                 return
 
+        assert isinstance(target, python.Function)
         if target.inherited_from:
             target = target.inherited_from
+        assert isinstance(target, python.Function)
 
         rest: Union[int, None]
 
@@ -2735,6 +2739,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(func, python.Function) and func.lambdawrapper:
             rest = func.largs
 
+        assert target.node
         if target.node.args.vararg:
             assert isinstance(rest, int)
             self.append("%d" % rest)
@@ -2743,10 +2748,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         double = False
         if ident in ["min", "max"]:
-            for arg in node.args:
+            for arg2 in node.args:
                 if (
-                    arg in self.mergeinh
-                    and (python.def_class(self.gx, "float_"), 0) in self.mergeinh[arg]
+                    arg2 in self.mergeinh
+                    and (python.def_class(self.gx, "float_"), 0) in self.mergeinh[arg2]
                 ):
                     double = True
 
@@ -2779,6 +2784,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
+                    assert isinstance(arg, ast.Constant)  # TODO see 0.9.10 issue!
                     self.append(str(arg.value))
                 elif self.mergeinh[arg] == set([(python.def_class(self.gx, "none"), 0)]):
                     self.append("NULL")
@@ -3012,6 +3018,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if c == "x" or (d == 0 and c != "s"):
                     self.visitm(expr, func)
                 else:
+                    assert isinstance(node.targets[0], (ast.List, ast.Tuple))
                     n = list(node.targets[0].elts)[hop]
                     hop += 1
                     if isinstance(n, ast.Subscript):  # XXX merge
@@ -3020,6 +3027,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     elif isinstance(n, ast.Name):
                         self.visitm(n, " = ", expr, func)
                     elif ast_utils.is_assign_attribute(n):
+                        assert isinstance(n, ast.Attribute)
                         self.visit_Attribute(n, func)
                         self.visitm(" = ", expr, func)
                 self.eol()
@@ -3600,7 +3608,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                         break
 
-                    if not hasattr(node, "called") and [
+                    if not node in self.gx.called and [
                         cl for cl in checkcls if node.attr in cl.funcs
                     ]:
                         error.error(
