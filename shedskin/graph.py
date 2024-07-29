@@ -2237,6 +2237,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 lfunc.mv.lambdas[lfunc.ident] = lfunc
             self.gx.types[newnode] = set([(lfunc, 0)])
         elif lclass:
+            lclass2: Union['python.Function', 'python.StaticClass']
             if lclass.mv.module.builtin:
                 lclass2 = self.builtin_wrapper(node, func)
             else:
