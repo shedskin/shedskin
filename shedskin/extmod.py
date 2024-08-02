@@ -2,6 +2,21 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.extmod: python extension module support
 
+Generates extension module glue for the transpiled program.
+
+Builtin type instances (such as list, set..) are always completely converted
+(on method call, return, attribute/variable access..). This can be very slow
+of course.
+
+Custom class instancess are wrapped, meaning their state exists only on the
+C++ side, and access is much faster (unless again builtin type instances are
+involved).
+
+Since we are dealing with both the Boehm GC and CPython reference counting,
+a special '__ss_proxy' dictionary is used to make sure C++ objects can only be
+garbage collected after the (wrapper) reference count drops to 0 on the
+CPython side.
+
 """
 import logging
 
