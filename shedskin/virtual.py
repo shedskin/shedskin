@@ -1,6 +1,29 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.virtual: virtual methods and variables
+
+Adds 'virtual' keyword to methods and variables where needed, based on
+observed usage (so not just based on inheritance hierarchy).
+
+For example, in the following we call a 'sound' method on an abstract 'Animal'
+type, so the 'virtual' keyword is needed to make sure the overloaded method is
+called.
+
+class Animal:
+    def sound(self):
+        raise NotImplemented
+
+class Cow(Animal):
+    def sound(self):
+        print('moo')
+
+animal = Animal()
+animal = Cow()
+animal.sound()
+
+With 'observed usage' we mean that this is concluded based just on the call to
+'animal.sound'.
+
 """
 
 import ast
