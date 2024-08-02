@@ -13,6 +13,7 @@ dimensions (gx.merged_inh).
 
 """
 import ast
+import io
 import os
 import string
 import struct
@@ -104,14 +105,15 @@ class CPPNamer:
 
 
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
-    def __init__(self, gx: 'config.GlobalInfo', module: 'python.Module'):
+    def __init__(self, gx: 'config.GlobalInfo', module: 'python.Module', analyze: bool=False):
         self.gx = gx
+        self.module = module
+        self.analyze = analyze
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
         self.consts: dict[ast.Constant, str] = {}
         self.mergeinh = self.gx.merged_inh
-        self.module = module
         self.mv = module.mv
         self.name = module.ident
         self.filling_consts = False
@@ -125,6 +127,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return self.namer.name(obj)
 
     def get_output_file(self, ext:str=".cpp", mode:str="w") -> IO[Any]:
+        if self.analyze:
+            return io.StringIO()
         output_file = Path(self.output_base.with_suffix(ext))
         assert self.gx.module_path
         module_path = Path(self.gx.module_path)
@@ -3906,10 +3910,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert False
 
 
-def generate_code(gx: 'config.GlobalInfo') -> None:
+def generate_code(gx: 'config.GlobalInfo', analyze:bool=False) -> None:
     for module in gx.modules.values():
         if not module.builtin:
-            gv = GenerateVisitor(gx, module)
+            gv = GenerateVisitor(gx, module, analyze)
             gv.visit(module.ast)
             gv.out.close()
             gv.header_file()
@@ -3918,4 +3922,5 @@ def generate_code(gx: 'config.GlobalInfo') -> None:
             gv.insert_consts(declare=True)
             gv.insert_extras(".hpp")
             gv.insert_extras(".cpp")
-    makefile.generate_makefile(gx)
+    if not analyze:
+        makefile.generate_makefile(gx)
