@@ -171,6 +171,7 @@ class Shedskin:
         self.pre_analyze()
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
+        cpp.generate_code(self.gx, analyze=True)
         error.print_errors()
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
