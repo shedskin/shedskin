@@ -164,13 +164,18 @@ class Shedskin:
 
         return gx
 
+    def pre_analyze(self) -> None:
+        self.gx.main_module = graph.parse_module(self.module_name, self.gx)
+
     def analyze(self) -> None:
+        self.pre_analyze()
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         error.print_errors()
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
     def translate(self) -> None:
+        self.pre_analyze()
 #        self.log.warning('translate option (using make) is deprecated. please use build option.')
 
         t0 = time.time()
@@ -180,6 +185,7 @@ class Shedskin:
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
     def build(self) -> None:
+        self.pre_analyze()
         cmake.generate_cmakefile(self.gx)
         builder = cmake.CMakeBuilder(self.gx.options)
         builder.build()
@@ -393,18 +399,15 @@ class Shedskin:
             ss.analyze()
 
         if args.subcmd == 'translate':
-            ss.analyze()
             ss.translate()
 
         if args.subcmd == 'build':
-            ss.analyze()
             ss.build()
 
         if args.subcmd == 'test':
             ss.test()
 
         if args.subcmd == 'run':
-            ss.analyze()
             ss.build()
             ss.run()
 
