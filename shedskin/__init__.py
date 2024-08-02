@@ -222,7 +222,7 @@ class Shedskin:
 
         arg("name", help="Python file or module to analyze")
 
-        parser_translate = subparsers.add_parser('translate', help="translate python module to cpp")
+        parser_translate = subparsers.add_parser('translate', help="translate python module to cpp (Makefile)")
         arg = opt = parser_translate.add_argument
 
         arg("name", help="Python file or module to compile")
@@ -253,7 +253,7 @@ class Shedskin:
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("-w", "--nowrap",             help="Disable wrap-around checking", action="store_true")
 
-        parser_build = subparsers.add_parser('build', help="build translated module")
+        parser_build = subparsers.add_parser('build', help="translate and build python module (CMake)")
         arg = opt = parser_build.add_argument
 
         arg("name", help="Python file or module to compile")
@@ -294,7 +294,7 @@ class Shedskin:
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
-        parser_run = subparsers.add_parser('run', help="run built and translated module")
+        parser_run = subparsers.add_parser('run', help="run built and translated module (CMake)")
         arg = opt = parser_run.add_argument
 
         arg("name", help="Python file or module to run")
