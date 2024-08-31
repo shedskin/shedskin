@@ -1,41 +1,29 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.infer: perform iterative type analysis
+"""shedskin.infer: infer types
 
+Types are inferred by flowing them along the constraint graph produced
+in shedskin.graph. The flow starts from known 'seeds' such as a literal integer.
 
-We combine two techniques from the literature, to analyze both parametric
-polymorphism and data polymorphism adaptively.
+For example, if a variable 'x' gets assigned the literal value '0', an 'integer
+type' propagates everywhere that 'x' is passed.
 
-These techniques are Agesen's cartesian product algorithm and Plevyak's
-iterative flow analysis (the data polymorphic part).
+The catch is that types may flow together, for example for an identity function
+that is called with different types of arguments, which causes imprecisions in
+the return type. Another example is two lists that contain different types of
+elements.
 
-For details about these algorithms, see Ole Agesen's excellent Phd thesis.
-For details about the Shed Skin implementation, see Mark Dufour's MsC thesis.
+To deal with these imprecisions, we duplicate parts of the constraint graph
+during the analysis, so that separate uses of functions (parametric
+polymorphism) and containers (data polymorphism) do not affect each other.
 
-The cartesian product algorithm duplicates functions (or their graph
-counterpart), based on the cartesian product of possible argument
-types, whereas iterative flow analysis duplicates classes based on
-observed imprecisions at assignment points.
+More specifically, we combine Agesen's cartesian product algorithm (CPA) with
+Plevyak's iterative flow analysis (the data polymorphic part). For details about
+these algorithms, see Ole Agesen's excellent Phd thesis. For details about the
+Shed Skin implementation, see Mark Dufour's MsC thesis.
 
 The two integers mentioned in the graph.py description are used to keep track
-of duplicates along these dimensions (first class duplicate nr, then function
-duplicate nr).
-
-The combined technique scales reasonably well, but can explode
-in many cases. there are many ways to improve this. some ideas:
-
-- An iterative deepening approach, merging redundant duplicates after each
-deepening
-
-- Add and propagate filters across variables. e.g. `a+1;
-a=b` implies that `a` and `b` must be of a type that implements
-`__add__`.
-
-A complementary but very practical approach to (greatly)
-improve scalability would be to profile programs before compiling
-them, resulting in quite precise (lower bound) type information. type
-inference can then be used to 'fill in the gaps'.
-
+of duplicates along both dimensions (class duplicate, function duplicate).
 
 iterative_dataflow_analysis():
 
@@ -58,9 +46,9 @@ iterative_dataflow_analysis():
         - otherwise, restore the constraint graph to its original state and restart
         - all the while maintaining types for each allocation point in gx.alloc_info
 
-Update: we now analyze programs incrementally, adding several functions and redoing
-the full analysis each time. This seems to greatly help the CPA from exploding
-early on.
+Update: we now analyze programs incrementally, by adding a limited number of
+functions and allocation sites and redoing the full analysis each time.
+This seems to greatly help the CPA from exploding early on.
 
 
 """
