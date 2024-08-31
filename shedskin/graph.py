@@ -13,7 +13,7 @@ constraint graph nodes are stored in `gx.cnode`, the set of types for each
 node in `gx.types`.
 
 Nodes are identified by an AST Node, and two integers. The integers are
-used in py to duplicate parts of the constraint graph along two dimensions.
+used in infer.py to duplicate parts of the constraint graph along two dimensions.
 In the initial constraint graph, these integers are always 0.
 
 `class ModuleVisitor`: inherits visitor pattern from `ast_utils.BaseNodeVisitor`,
