@@ -149,99 +149,81 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             output_file.parent.mkdir(exist_ok=True)
         return open(output_file, mode)
 
-    def insert_consts(self, declare: bool) -> None:
+        # XXX this is too magical
+    def insert_consts(self, declare: bool) -> None:  # XXX ugly
         """Insert constant declarations into the output file"""
         if not self.consts:
             return
         self.filling_consts = True
 
-        suffix = ".hpp" if declare else ".cpp"
-        
-        lines = self.read_output_file(suffix)
-        newlines = self.process_lines(lines, declare)
-        self.write_output_file(suffix, newlines)
-        
-        self.filling_consts = False
+        if declare:
+            suffix = ".hpp"
+        else:
+            suffix = ".cpp"
 
-    def read_output_file(self, suffix: str) -> List[str]:
-        """Read the contents of the output file"""
         with self.get_output_file(ext=suffix, mode="r") as f:
-            return f.readlines()
-
-    def write_output_file(self, suffix: str, lines: List[str]) -> None:
-        """Write the contents of the output file"""
-        with self.get_output_file(ext=suffix, mode="w") as f:
-            f.writelines(lines)
-
-    def process_lines(self, lines: List[str], declare: bool) -> List[str]:
-        """Process the lines of the output file"""
+            lines = f.readlines()
         newlines = []
-        namespace_index = self.find_namespace_index(lines)
-        
+        j = -1
         for i, line in enumerate(lines):
+            if line.startswith("namespace ") and "XXX" not in line:  # XXX
+                j = i + 1
             newlines.append(line)
-            if i == namespace_index:
-                newlines.extend(self.generate_const_declarations(declare))
+
+            if i == j:
+                pairs = []
+                done = set()
+                for node, name in self.consts.items():
+                    if (
+                        name not in done
+                        and node in self.mergeinh
+                        and self.mergeinh[node]
+                    ):  # XXX
+                        ts = typestr.nodetypestr(
+                            self.gx, node, infer.inode(self.gx, node).parent, mv=self.mv
+                        )
+                        if declare:
+                            ts = "extern " + ts
+                        pairs.append((ts, name))
+                        done.add(name)
+
+                newlines.extend(self.group_declarations(pairs))
                 newlines.append("\n")
 
-        if not declare:
-            init_index = self.find_init_function_index(newlines)
-            if init_index != -1:
-                newlines = self.insert_const_initializations(newlines, init_index)
-
-        return newlines
-
-    def find_namespace_index(self, lines: List[str]) -> int:
-        """Find the index of the namespace declaration in the output file"""
-        for i, line in enumerate(lines):
-            if line.startswith("namespace ") and "XXX" not in line:
-                return i + 1
-        return -1
-
-    def generate_const_declarations(self, declare: bool) -> List[str]:
-        """Generate constant declarations"""
-        pairs = []
-        done = set()
-        for node, name in self.consts.items():
-            if name not in done and node in self.mergeinh and self.mergeinh[node]:
-                ts = typestr.nodetypestr(self.gx, node, infer.inode(self.gx, node).parent, mv=self.mv)
-                if declare:
-                    ts = "extern " + ts
-                pairs.append((ts, name))
-                done.add(name)
-        return self.group_declarations(pairs)
-
-    def find_init_function_index(self, lines: List[str]) -> int:
-        """Find the index of the __init function in the output file"""
-        for i, line in enumerate(lines):
+        newlines2 = []
+        j = -1
+        for i, line in enumerate(newlines):
             if line.startswith("void __init() {"):
-                return i
-        return -1
+                j = i
+            newlines2.append(line)
 
-    def insert_const_initializations(self, lines: List[str], init_index: int) -> List[str]:
-        """Insert constant initializations"""
-        todo = {int(name[6:]): node for node, name in self.consts.items()}
-        todolist = sorted(todo.keys())
-        
-        for number in todolist:
-            node = todo[number]
-            if self.mergeinh[node]:
-                name = f"const_{number}"
-                initialization = self.generate_const_initialization(node, name)
-                lines.insert(init_index + 1, initialization)
-                init_index += 1
-        
-        lines.insert(init_index + 1, "\n")
-        return lines
+            if i == j:
+                todo = {}
+                for node, name in self.consts.items():
+                    if name not in todo:
+                        todo[int(name[6:])] = node
+                todolist = list(todo)
+                todolist.sort()
+                for number in todolist:
+                    if self.mergeinh[todo[number]]:  # XXX
+                        name = "const_" + str(number)
+                        self.start("    " + name + " = ")
+                        if (
+                            isinstance(todo[number], ast.Str)
+                            and len(todo[number].s.encode("utf-8")) == 1
+                        ):
+                            self.append("__char_cache[%d]" % ord(todo[number].s))
+                        else:
+                            self.visit(
+                                todo[number], infer.inode(self.gx, todo[number]).parent
+                            )
+                        newlines2.append(self.line + ";\n")
 
-    def generate_const_initialization(self, node: ast.AST, name: str) -> str:
-        """Generate a constant initialization"""
-        self.start(f"    {name} = ")
-        if isinstance(node, ast.Str) and len(node.s.encode("utf-8")) == 1:
-            self.append(f"__char_cache[{ord(node.s)}]")
-        else:
-            self.visit(node, infer.inode(self.gx, node).parent)
-        return self.line + ";\n"
+                newlines2.append("\n")
+
+        with self.get_output_file(ext=suffix, mode="w") as f:
+            f.writelines(newlines2)
+        self.filling_consts = False
 
     def insert_extras(self, suffix: str) -> None:
         """Insert extra lines into the output file"""
