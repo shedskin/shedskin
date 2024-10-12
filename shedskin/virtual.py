@@ -38,6 +38,7 @@ from typing import List, Any
 
 
 def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> None:
+    """Generate virtual methods for a class"""
     if not cl.virtuals:
         return
     for ident, subclasses in cl.virtuals.items():
@@ -128,6 +129,7 @@ def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> 
 
 # --- determine virtual methods and variables
 def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
+    """Analyze virtual methods and variables"""
     for node in gx.merged_inh:
         # --- for every message
         if (
@@ -175,6 +177,7 @@ def upgrade_cl(
     ident: str,
     classes: set['python.Class'],
 ) -> None:
+    """Upgrade a class"""
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
 
     # --- register virtual method

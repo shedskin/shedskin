@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 def check_output(cmd: str) -> Optional[str]:
+    """Run a command and return the output"""
     try:
         return subprocess.check_output(cmd.split(), encoding="utf8").strip()
     except FileNotFoundError:
@@ -24,6 +25,7 @@ def check_output(cmd: str) -> Optional[str]:
 
 
 def generate_makefile(gx: 'config.GlobalInfo') -> None:
+    """Generate a makefile"""
     if gx.nomakefile:
         return
     if sys.platform == "win32":

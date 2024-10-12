@@ -33,7 +33,7 @@ class PyObject:
 
 
 class Module(PyObject):
-    """python module class
+    """Python module class
 
     name: str               module name
     name_list: [str]        list of names
@@ -80,9 +80,11 @@ class Module(PyObject):
         self.import_order = 0
 
     def full_path(self) -> str:
+        """Get the full path of a module"""
         return "__" + "__::__".join(self.name_list) + "__"
 
     def include_path(self) -> str:
+        """Get the include path of a module"""
         if self.relative_filename.name.endswith("__init__.py"):
             return os.path.join(self.relative_path, "__init__.hpp")
         else:
@@ -90,6 +92,7 @@ class Module(PyObject):
             return filename_without_ext + ".hpp"
 
     def in_globals(self, ident: str) -> bool:
+        """Check if a variable is global"""
         assert self.mv, "must have graph.ModuleVisitor instance"
         return (
                ident in self.mv.globals
@@ -101,11 +104,13 @@ class Module(PyObject):
 
     @property
     def doc(self) -> Optional[str]:
-        """returns module docstring."""
+        """Get the docstring of a module"""
         return ast.get_docstring(self.ast)
 
 
 class Class(PyObject):
+    """Python class class
+    """
     def __init__(
             self,
             gx: 'config.GlobalInfo',
@@ -135,7 +140,9 @@ class Class(PyObject):
 
         self.parent: StaticClass = StaticClass(self, mv)
 
-    def ancestors(self, inclusive:bool=False) -> set['Class']:  # XXX attribute (faster)
+    def ancestors(self, inclusive:bool=False) -> set['Class']:
+        """Get the ancestors of a class"""
+        # XXX attribute (faster)
         a = set(self.bases)
         changed = 1
         while changed:
@@ -149,6 +156,7 @@ class Class(PyObject):
         return a
 
     def ancestors_upto(self, other: Optional['Class']) -> List['Class']:
+        """Get the ancestors of a class up to a given class"""
         a = self
         result = []
         while a != other:
@@ -160,7 +168,9 @@ class Class(PyObject):
             a = a.bases[0]
         return result
 
-    def descendants(self, inclusive:bool=False) -> set['Class']:  # XXX attribute (faster)
+    def descendants(self, inclusive:bool=False) -> set['Class']:
+        """Get the descendants of a class"""
+        # XXX attribute (faster)
         a = set()
         if inclusive:
             a.add(self)
@@ -170,6 +180,7 @@ class Class(PyObject):
         return a
 
     def tvar_names(self) -> List[str]:
+        """Get the names of the types of variables in a class"""
         if self.mv.module.builtin:
             if self.ident in [
                 "list",
@@ -192,6 +203,8 @@ class Class(PyObject):
 
 
 class StaticClass(PyObject):
+    """Static class class
+    """
     def __init__(self, cl: 'Class', mv: 'graph.ModuleVisitor'):
         self.vars: dict[str, Variable] = {}
         self.static_nodes: List[ast.AST] = []
@@ -203,6 +216,7 @@ class StaticClass(PyObject):
 
 
 def extract_argnames(arg_struct:ast.arguments) -> List[str]:
+    """Get the names of the arguments of a function"""
     argnames = [arg.arg for arg in arg_struct.args]
     if arg_struct.vararg:
         argnames.append(arg_struct.vararg.arg)
@@ -212,6 +226,8 @@ def extract_argnames(arg_struct:ast.arguments) -> List[str]:
 
 
 class Function:
+    """Python function class
+    """
     def __init__(
         self,
         gx: 'config.GlobalInfo',
@@ -274,6 +290,8 @@ class Function:
 
 
 class Variable:
+    """Python variable class"""
+
     def __init__(self, name: str, parent: Optional[AllParent]):
         self.name = name
         self.parent = parent
@@ -286,6 +304,7 @@ class Variable:
         self.const_assign: List[ast.Constant] = []
 
     def masks_global(self) -> bool:
+        """Check if a variable masks a global variable"""
         if isinstance(self.parent, Class):
             mv = self.parent.mv
             if not mv.module.builtin and mv.module.in_globals(self.name):
@@ -300,9 +319,11 @@ class Variable:
         # return f"<Variable '{self.name}'>"
 
 def clear_block(m: re.Match[str]) -> str:
+    """Clear a block comment"""
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
 def parse_file(name: pathlib.Path) -> ast.Module:
+    """Parse a Python file"""
     data = importlib.util.decode_source(open(name, 'rb').read())
 
     # Convert block comments into strings which will be duely ignored.
@@ -317,6 +338,7 @@ def parse_file(name: pathlib.Path) -> ast.Module:
 
 
 def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[str, str, str, bool]:
+    """Find a module by name"""
     if "." in name:
         name, module_name = name.rsplit(".", 1)
         name_as_path = name.replace(".", os.path.sep)
@@ -357,6 +379,7 @@ def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[s
 
 # XXX ugly: find ancestor class that implements function 'ident'
 def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
+    """Find the class that implements a given function"""
     while cl:
         if ident in cl.funcs and not cl.funcs[ident].inherited:
             return cl.ident
@@ -368,6 +391,7 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
 
 
 def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Optional[AllParent]) -> Tuple[Optional['Class'], Optional['Module']]:
+    """Find the class and module of an expression"""
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?
@@ -376,6 +400,7 @@ def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Opt
 
 
 def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function']:  # XXX lookup_var first?
+    """Find a function by name"""
     if isinstance(node, ast.Name):
         if node.id in mv.funcs:
             return mv.funcs[node.id]
@@ -391,6 +416,7 @@ def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function'
 
 
 def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Class']:  # XXX lookup_var first?
+    """Find a class by name"""
     if isinstance(node, ast.Name):
         if node.id == 'int': # TODO generalize
             return mv.ext_classes['int_']
@@ -409,6 +435,7 @@ def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Class']:
 
 
 def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
+    """Find a module by name"""
     path: List[str] = []
     module: Optional[Module] = None
 
@@ -431,8 +458,9 @@ def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
 
     return module
 
-
+# XXX: this is weird class or bool?
 def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None) -> Class:
+    """Define a class"""
     if not mv:
         mv = gx.modules["builtin"].mv
     assert mv
@@ -444,6 +472,7 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
 
 
 def lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['Variable']:
+    """Find a variable by name"""
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var
@@ -451,11 +480,13 @@ def lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor'
 
 
 class VarLookup(NamedTuple):
+    """Variable lookup result"""
     var: 'Variable'
     is_global: bool
 
 
 def smart_lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
+    """Smart lookup of a variable"""
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return VarLookup(parent.parent.vars[name], False)
     elif parent and name in parent.vars:
@@ -483,6 +514,7 @@ def smart_lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVi
 
 
 def subclass(a: Class, b: Class) -> bool:
+    """Check if a class is a subclass of another class"""
     if b in a.bases:
         return True
     else:

@@ -44,45 +44,23 @@ OVERLOAD = [
 
 
 def clname(cl: 'python.Class') -> str:
-    """class name normalizer
-
-    :param      cl:   class object
-    :type       cl:   python.Class
-
-    :returns:   class name with shedksin prefix and module qualifier
-    :rtype:     str
-    """
+    """Class name normalizer"""
     return "__ss_%s_%s" % ("_".join(cl.mv.module.name_list), cl.ident)
 
 
 class ExtensionModule:
-    """
-    This class describes an extension module generator
-    """
+    """Extension module generator"""
 
     def __init__(self, gx: 'config.GlobalInfo', gv: 'cpp.GenerateVisitor'):
         self.gx = gx
         self.gv = gv
 
     def write(self, entry: str) -> None:
-        """
-        { function_description }
-
-        :param      entry:    { parameter_description }
-        :type       entry:    str
-        """
+        """Write an entry to the output file"""
         print(entry, file=self.gv.out)
 
     def do_init_mods(self, what: str) -> None:
-        """
-        Does initialize mods.
-
-        :param      what:  The what
-        :type       what:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Initialize modules"""
         for module in self.gx.modules.values():
             if not module.builtin and module is not self.gv.module:
                 self.write(
@@ -91,7 +69,8 @@ class ExtensionModule:
                 )
 
     def supported_vars(self, variables: Iterable['python.Variable']) -> List['python.Variable']: # XXX virtuals?
-        """XXX currently only classs / instance variables"""
+        """Supported variables
+        XXX currently only classs / instance variables"""
         supported = []
         for var in variables:
             if var not in self.gx.merged_inh or not self.gx.merged_inh[var]:
@@ -122,15 +101,7 @@ class ExtensionModule:
         return supported
 
     def supported_funcs(self, funcs: Iterable['python.Function']) -> List['python.Function']:
-        """
-        { function_description }
-
-        :param      funcs:  The funcs
-        :type       funcs:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Supported functions"""
         supported = []
         for func in funcs:
             if func.isGenerator or not infer.called(func):
@@ -200,17 +171,7 @@ class ExtensionModule:
         return supported
 
     def has_method(self, cl: 'python.Class', name: str) -> bool:  # XXX shared.py
-        """
-        Determines if method.
-
-        :param      cl:    { parameter_description }
-        :type       cl:    { type_description }
-        :param      name:  The name
-        :type       name:  { type_description }
-
-        :returns:   True if method, False otherwise.
-        :rtype:     bool
-        """
+        """Check if a class has a method"""
         return (
             name in cl.funcs
             and not cl.funcs[name].invisible
@@ -219,7 +180,7 @@ class ExtensionModule:
         )
 
     def do_add_globals(self, classes: List['python.Class'], ssmod: str) -> None:
-
+        """Add global variables to the module"""
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
             if [
@@ -252,17 +213,7 @@ class ExtensionModule:
                 )
 
     def do_reduce_setstate(self, cl: 'python.Class', vars: List['python.Variable']) -> None:
-        """
-        Does a reduce setstate.
-
-        :param      cl:    { parameter_description }
-        :type       cl:    { type_description }
-        :param      vars:  The variables
-        :type       vars:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Generate a reduce and setstate method"""
         write = self.write
         if python.def_class(self.gx, "Exception") in cl.ancestors():  # XXX
             return
@@ -306,17 +257,7 @@ class ExtensionModule:
         write("}\n")
 
     def convert_methods(self, cl: 'python.Class', declare: bool) -> None:
-        """
-        { function_description }
-
-        :param      cl:       { parameter_description }
-        :type       cl:       { type_description }
-        :param      declare:  The declare
-        :type       declare:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Generate converted methods"""
         write = self.write
         if python.def_class(self.gx, "Exception") in cl.ancestors():
             return
@@ -370,19 +311,7 @@ class ExtensionModule:
             write("}\n}")
 
     def do_extmod_methoddef(self, ident: str, funcs: List['python.Function'], cl: Optional['python.Class']) -> None:
-        """
-        Does an extmod methoddef.
-
-        :param      ident:  The identifier
-        :type       ident:  { type_description }
-        :param      funcs:  The funcs
-        :type       funcs:  { type_description }
-        :param      cl:     { parameter_description }
-        :type       cl:     { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Generate an extension method definition"""
         write = self.write
         if cl:
             ident = clname(cl)
@@ -442,15 +371,7 @@ class ExtensionModule:
         write("    {NULL, NULL, 0, NULL}\n};\n")
 
     def do_extmod_method(self, func: 'python.Function') -> None:
-        """
-        Does an extmod method.
-
-        :param      func:  The function
-        :type       func:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+        """Generate an extension method"""
         write = self.write
         is_method = isinstance(func.parent, python.Class)
         if is_method:
@@ -647,11 +568,7 @@ class ExtensionModule:
             self.convert_methods(cl, False)
 
     def do_extmod_class(self, cl: 'python.Class') -> None:
-        """Generates a python c-api extension type.
-
-        :param      cl:   class object
-        :type       cl:   python.Class
-        """
+        """Generates a python c-api extension type."""
         write = self.write
         for n in cl.module.name_list:
             write("namespace __%s__ { /* XXX */" % n)
@@ -824,9 +741,7 @@ class ExtensionModule:
         write("")
 
     def pyinit_func(self) -> None:
-        """
-        { function_description }
-        """
+        """Generate a module initialization function."""
         self.write(
             "PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list)
         )
@@ -835,13 +750,8 @@ class ExtensionModule:
         #         "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))
         #     )
 
-    def exported_classes(self, warns:bool=False) -> List['python.Class']:
-        """
-        { function_description }
-
-        :param      warns:  The warns
-        :type       warns:  bool
-        """
+    def exported_classes(self, warns: bool = False) -> List["python.Class"]:
+        """Get exported classes"""
         classes = []
         for cl in self.gv.module.mv.classes.values():
             if python.def_class(self.gx, "Exception") in cl.ancestors():
@@ -854,9 +764,7 @@ class ExtensionModule:
         return sorted(classes, key=lambda x: x.def_order)
 
     def convert_methods2(self) -> None:
-        """
-        { function_description }
-        """
+        """Generate converted methods"""
         def write(s: str) -> None:
             return print(s, file=self.gv.out)
 

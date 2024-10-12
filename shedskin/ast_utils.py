@@ -1,6 +1,9 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskub.ast_utils: functions and classes which operate on ast nodes.
+"""shedskin.ast_utils: Functions and classes which operate on ast nodes.
+
+This module provides utility functions and classes for working with abstract syntax
+trees (ASTs) in Python.
 """
 import ast
 
@@ -10,21 +13,26 @@ from . import config
 
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
+    """Check if a node is an assignment to a list or tuple"""
     return isinstance(node, (ast.Tuple, ast.List)) and isinstance(node.ctx, ast.Store)
 
 
 def is_assign_tuple(node: ast.AST) -> bool:
+    """Check if a node is an assignment to a tuple"""
     return isinstance(node, ast.Tuple) and isinstance(node.ctx, ast.Store)
 
 
 def is_assign_attribute(node: ast.AST) -> bool:
+    """Check if a node is an assignment to an attribute"""
     return isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store)
 
 
 def is_constant(node: ast.AST) -> bool:
+    """Check if a node is a constant"""
     return isinstance(node, ast.Constant)
 
 def is_none(node: ast.AST) -> bool:
+    """Check if a node is the None constant"""
     if (isinstance(node, ast.Name) and node.id == "None"):
         return True
     else:
@@ -34,6 +42,7 @@ def is_none(node: ast.AST) -> bool:
 
 
 def is_literal(node: ast.AST) -> bool:
+    """Check if a node is a literal"""
     # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
         node = node.operand
@@ -42,6 +51,7 @@ def is_literal(node: ast.AST) -> bool:
 
 
 def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
+    """Check if a node is a fast for loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -50,6 +60,7 @@ def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
 
 
 def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
+    """Check if a node is an enumerate loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -60,6 +71,7 @@ def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
 
 
 def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
+    """Check if a node is a zip loop with two arguments"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
@@ -70,6 +82,7 @@ def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
+    """Recursively determine (lvalue, rvalue) pairs in assignment expressions"""
     if is_assign_list_or_tuple(left) and isinstance(
         right, (ast.Tuple, ast.List)
     ):
@@ -83,6 +96,7 @@ def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
 
 
 def aug_msg(gx: 'config.GlobalInfo', node: ast.BinOp, msg: str) -> str:
+    """Generate an augmented assignment message"""
     if node in gx.augment:
         return "__i" + msg + "__"
     return "__" + msg + "__"

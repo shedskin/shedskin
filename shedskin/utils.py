@@ -17,6 +17,7 @@ RESET = "\x1b[0m"
 
 
 def bold(txt: str) -> str:
+    """Make text bold"""
     return f"{BOLD}{txt}{RESET}"
 
 
@@ -47,6 +48,7 @@ class ProgressBar:
         self.done: bool = False
 
     def update(self, n: float) -> None:
+        """Update the progress bar"""
         if self.done:
             return
 
