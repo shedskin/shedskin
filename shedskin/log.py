@@ -11,6 +11,7 @@ from typing import Optional
 
 
 class ShedskinFormatter(logging.Formatter):
+    """Formatter for Shedskin logs"""
     def __init__(self, datefmt: Optional[str]=None):
         self._info_formatter = logging.Formatter(
             utils.MOVE + "%(message)s", datefmt=datefmt
@@ -21,6 +22,7 @@ class ShedskinFormatter(logging.Formatter):
         )
 
     def format(self, record: logging.LogRecord) -> str:
+        """Format a log record"""
         if record.levelname == "INFO":
             return self._info_formatter.format(record)
         return self._other_formatter.format(record)
@@ -28,7 +30,7 @@ class ShedskinFormatter(logging.Formatter):
 
 
 class CustomFormatter(logging.Formatter):
-    """custom formatter class to add colors to logging"""
+    """Custom formatter class to add colors to logging"""
 
     white = "\x1b[97;20m"
     GREY = "\x1b[38;20m"
@@ -52,12 +54,14 @@ class CustomFormatter(logging.Formatter):
     }
 
     def format(self, record: logging.LogRecord) -> str:
+        """Format a log record"""
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt, datefmt="%H:%M:%S")
         return formatter.format(record)
 
 
 def config_log(debug: bool=True) -> None:
+    """Configure the logging system"""
     __handler = logging.StreamHandler()
     __handler.setFormatter(CustomFormatter())
     logging.basicConfig(
