@@ -1,8 +1,28 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.cmake: cmake generator and builder
+"""shedskin.cmake: CMake generator and builder for Shedskin
 
+This module provides functionality for generating CMake build files and managing
+the build process for Shedskin-compiled projects. Key components include:
+
+- CMake file generation
+- Dependency management (Conan, SPM, ExternalProject)
+- Build configuration and execution
+- Test running utilities
+
+Main classes:
+- ConanDependencyManager: Manages Conan dependencies
+- ShedskinDependencyManager: Local dependency manager (SPM)
+- CMakeBuilder: Handles CMake configuration, building, and testing
+- TestRunner: Specialized CMakeBuilder for running tests
+
+Key functions:
+- generate_cmakefile: Creates CMakeLists.txt for Shedskin projects
+- add_shedskin_product: Generates CMake function call for Shedskin targets
+
+The module also includes utilities for path handling, caching, and system-specific operations.
 """
+
 import argparse
 import glob
 import logging
@@ -23,17 +43,17 @@ from .utils import CYAN, GREEN, RED, RESET, WHITE
 Pathlike = Union[pathlib.Path, str]
 
 def get_pkg_path() -> pathlib.Path:
-    """return shedskin package path"""
+    """Return the path to the shedskin package"""
     _pkg_path = pathlib.Path(__file__).parent
     assert _pkg_path.name == "shedskin"
     return _pkg_path
 
 def pkg_path() -> None:
-    """used by cmake to get package path automatically"""
+    """Used by cmake to get the shedskin package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
 
 def get_user_cache_dir() -> pathlib.Path:
-    """get user cache directory dependending on platform"""
+    """Get user cache directory depending on platform"""
     system = platform.system()
     if system == "Darwin":
         return pathlib.Path("~/Library/Caches/shedskin").expanduser()
@@ -49,12 +69,12 @@ def get_user_cache_dir() -> pathlib.Path:
         raise SystemExit(f"{system} os not supported")
 
 def user_cache_dir() -> None:
-    """used by CMakeLists.txt execute process"""
+    """Used by CMakeLists.txt execute process"""
     sys.stdout.write(str(get_user_cache_dir()))
 
 
 class ConanBDWGC:
-    """conan gc dependency"""
+    """Conan bdwgc garbage collection dependency"""
 
     def __init__(
         self,
@@ -79,7 +99,7 @@ class ConanBDWGC:
 
 
 class ConanPCRE:
-    """conan pcre dependency"""
+    """Conan pcre dependency"""
 
     def __init__(
         self,
@@ -103,7 +123,7 @@ class ConanPCRE:
         return f"{self.name}/{self.version}"
 
 class ConanDependencyManager:
-    """dep manager which manages and install all conan dependencies"""
+    """Dependency manager which manages and installs all conan dependencies"""
 
     def __init__(self, source_dir: Pathlike):
         self.source_dir = pathlib.Path(source_dir)
@@ -112,7 +132,7 @@ class ConanDependencyManager:
         self.pcre = ConanPCRE()
 
     def generate_conanfile(self) -> None:
-        """generate conanfile file"""
+        """Generate conanfile.txt"""
         bdwgc = self.bdwgc
         pcre = self.pcre
         content = textwrap.dedent(
@@ -143,12 +163,12 @@ class ConanDependencyManager:
             conanfile.write_text(content)
 
     def install(self) -> None:
-        """install conan dependencies"""
+        """Install conan dependencies"""
         os.system(f"cd {self.build_dir} && conan install .. --build=missing")
 
 
 class ShedskinDependencyManager:
-    """shedskin local dependency manager (SPM) class"""
+    """Shedskin local dependency manager (SPM) class"""
 
     def __init__(self, source_dir: Pathlike, reset_on_run: bool = False):
         self.reset_on_run = reset_on_run
@@ -169,27 +189,27 @@ class ShedskinDependencyManager:
             shutil.rmtree(self.deps_dir)
 
     def shellcmd(self, cmd: str) -> None:
-        """run shellcmd"""
+        """Run a shell command"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
         os.system(cmd) #.format(*args, **kwds))
 
     def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None) -> None:
-        """retrieve git clone of repo"""
+        """Retrieve a git clone of a repository"""
         if branch:
           self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
         else:
            self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
 
     def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options: bool) -> None:
-        """activate cmake configuration / generation stage"""
+        """Activate cmake configuration / generation stage"""
         opts = " ".join(f"-D{k}={v}" for k, v in options.items())
         self.shellcmd(
             f"cmake -S {src_dir} -B {build_dir} --install-prefix {prefix} {opts}"
         )
 
     def cmake_build(self, build_dir: Pathlike, release: bool = True) -> None:
-        """activate cmake build stage"""
+        """Activate cmake build stage"""
         if release:
             build_type = "Release"
         else:
@@ -197,19 +217,19 @@ class ShedskinDependencyManager:
         self.shellcmd(f"cmake --build {build_dir} --config {build_type}")
 
     def cmake_install(self, build_dir: Pathlike) -> None:
-        """activate cmake install stage"""
+        """Activate cmake install stage"""
         self.shellcmd(f"cmake --install {build_dir}")
 
     def wget(self, url: str, output_dir: Pathlike) -> None:
-        """download url resource using wget"""
+        """Download url resource using wget"""
         self.shellcmd(f"wget -P {output_dir} {url}")
 
     def tar(self, archive: Pathlike, output_dir: Pathlike) -> None:
-        """uncompress tar archive"""
+        """Uncompress tar archive"""
         self.shellcmd(f"tar -xvf {archive} -C {output_dir}")
 
     def targets_exist(self) -> bool:
-        """check if required targets exist"""
+        """Check if required targets exist"""
         libgc = self.lib_dir / f"libgc{self.lib_suffix}"
         libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
         libpcre = self.lib_dir / f"libgccpp{self.lib_suffix}"
@@ -220,7 +240,7 @@ class ShedskinDependencyManager:
         return all(t.exists() for t in targets)
 
     def install_all(self) -> None:
-        """install all dependencies"""
+        """Install all dependencies"""
         if not self.targets_exist():
             self.install_bdwgc()
             self.install_pcre()
@@ -246,7 +266,7 @@ class ShedskinDependencyManager:
     #     self.cmake_install(libatomic_build)
 
     def install_bdwgc(self) -> None:
-        """download / build / install bdwgc"""
+        """Download / build / install bdwgc"""
         # if platform.system() == "Windows":
         #     self.install_libatomics_ops()
         bdwgc_repo = "https://github.com/ivmai/bdwgc"
@@ -307,7 +327,7 @@ class ShedskinDependencyManager:
     #         self.cmake_install(pcre_build)
 
     def install_pcre(self) -> None:
-        """download / build / install pcre"""
+        """Download / build / install pcre"""
         pcre_repo = "https://github.com/luvit/pcre.git"
         pcre_src = self.src_dir / 'pcre'
         pcre_build =  pcre_src / "build"
@@ -470,19 +490,19 @@ def add_shedskin_product(
 
 
 def get_cmakefile_template(**kwds: str) -> str:
-    """returns a cmake template"""
+    """Return a cmake template"""
     _pkg_path = get_pkg_path()
     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
 def check_cmake_availability() -> None:
-    """check if cmake executable is available in path"""
+    """Check if cmake executable is available in path"""
     if not bool(shutil.which('cmake')):
         raise Exception("cmake not available in path")
 
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
-    """improved generator using built-in machinery"""
+    """Improved generator using built-in machinery"""
     path = gx.main_module.filename
 
     in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)
@@ -585,7 +605,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
 
 
 class CMakeBuilder:
-    """shedskin cmake builder"""
+    """Shedskin cmake builder"""
 
     def __init__(self, options: argparse.Namespace):
         self.options = options
@@ -599,13 +619,13 @@ class CMakeBuilder:
         self.log = logging.getLogger(self.__class__.__name__)
 
     def check(self, path: Pathlike) -> None:
-        """check file for syntax errors"""
+        """Check file for syntax errors"""
         with open(path, encoding="utf8") as fopen:
             src = fopen.read()
         compile(src, path, "exec")
 
     def get_most_recent_test(self) -> Optional[str]:
-        """returns name of recently modified test"""
+        """Return the name of the recently modified test"""
         max_mtime = 0.0
         most_recent_test = None
         for test in self.tests:
@@ -616,7 +636,7 @@ class CMakeBuilder:
         return most_recent_test
 
     def error_tests(self) -> List[str]:
-        """test error messages from tests in errs directory"""
+        """Test error messages from tests in the errs directory"""
         failures = []
         os.chdir("errs")
         tests = sorted(os.path.basename(t) for t in glob.glob("[0-9][0-9].py"))
@@ -646,15 +666,15 @@ class CMakeBuilder:
         return failures
 
     def rm_build(self) -> None:
-        """remove build directory"""
+        """Remove the build directory"""
         shutil.rmtree(self.build_dir)
 
     def mkdir_build(self) -> None:
-        """create build directory"""
+        """Create the build directory"""
         os.makedirs(self.build_dir, exist_ok=True)
 
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
-        """cmake configuration phase"""
+        """CMake configuration phase"""
         opts = " ".join(options)
         cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
         if generator:
@@ -663,7 +683,7 @@ class CMakeBuilder:
         assert os.system(cfg_cmd) == 0
 
     def cmake_build(self, options: list[str]) -> None:
-        """activate cmake build"""
+        """Activate cmake build"""
         opts = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} {opts}"
         self.log.info(bld_cmd)
@@ -671,7 +691,7 @@ class CMakeBuilder:
         assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options: list[str]) -> None:
-        """activate ctest"""
+        """Activate ctest"""
         opts = " ".join(options)
         if platform.system() == 'Windows':
             cfg = f"-C {self.options.build_type}"
@@ -683,15 +703,15 @@ class CMakeBuilder:
         assert os.system(tst_cmd) == 0
 
     def run_tests(self) -> None:
-        """run tests as a test runner"""
+        """Run tests as a test runner"""
         self.process(run_tests=True)
 
     def build(self) -> None:
-        """build as a builder"""
+        """Build as a builder"""
         self.process(run_tests=False)
 
     def process(self, run_tests: bool = False) -> None:
-        """process shedskin program with cmake"""
+        """Process a shedskin program with cmake"""
         start_time = time.time()
 
         cfg_options = [] if not getattr(self.options, 'cfg', None) else [f'-D{opt}' for opt in self.options.cfg]
@@ -823,7 +843,7 @@ class CMakeBuilder:
         print(f"Total time: {elapsed_time}\n")
 
     def run_error_tests(self) -> None:
-        """run error tests"""
+        """Run error tests"""
         start_time = time.time()
 
         if self.options.run_errs:
@@ -843,7 +863,7 @@ class CMakeBuilder:
 
 
 class TestRunner(CMakeBuilder):
-    """basic test runner"""
+    """Basic test runner"""
 
     def __init__(self, options: argparse.Namespace):
         self.options = options

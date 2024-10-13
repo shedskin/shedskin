@@ -1,8 +1,8 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.error: error handling
+"""shedskin.error: error handling"""
 
-"""
+
 import ast
 import logging
 import sys
@@ -33,6 +33,7 @@ def error(
     warning: bool=False,
     mv: Optional['graph.ModuleVisitor']=None,
 ) -> None:
+    """Report an error"""
     from . import infer
 
     if warning:
@@ -55,6 +56,7 @@ def error(
 
 
 def print_error(error: Error) -> None:
+    """Print an error"""
     (kind, filename, lineno, msg) = error
     result = ""
     if filename:
@@ -66,6 +68,7 @@ def print_error(error: Error) -> None:
 
 
 def print_errors() -> None:
+    """Print all errors"""
     for error in sorted(
         ERRORS, key=lambda x: (x[1] or "", x[2] if x[2] is not None else -1)
     ):
