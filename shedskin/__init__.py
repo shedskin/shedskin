@@ -2,9 +2,9 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.__init__: main entrypoint
 
-Contains the `Shedskin` class, the main entrypoint to shedskin, providing
-both a programmatic class-based interface and command-line interface to the
-shedskin compiler.
+Contains the `Shedskin` class, the main entrypoint to shedskin, a Restricted-Python-to-C++
+Compiler, providing both a programmatic class-based interface and command-line interface
+to the compiler.
 """
 
 import argparse
@@ -32,6 +32,7 @@ class Shedskin:
             self.module_name = self.get_name(options.name)
 
     def configure_log(self) -> None:
+        """Configure logging for shedskin"""
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
         console.setFormatter(log.ShedskinFormatter())
@@ -74,6 +75,7 @@ class Shedskin:
         return path.stem
 
     def configure(self, args: argparse.Namespace) -> 'config.GlobalInfo':
+        """Configure global information for shedskin"""
         # print(args)
         gx = config.GlobalInfo(args)
 
@@ -158,16 +160,18 @@ class Shedskin:
 
         # --- some checks
         major, minor = sys.version_info[:2]
-        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12)]:
+        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13)]:
             self.log.error('Shed Skin is not compatible with this version of Python')
             sys.exit(1)
 
         return gx
 
     def pre_analyze(self) -> None:
+        """Parse the main module"""
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
     def analyze(self) -> None:
+        """Analyze the main module"""
         self.pre_analyze()
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
@@ -176,6 +180,7 @@ class Shedskin:
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
     def translate(self) -> None:
+        """Translate the main module"""
         self.pre_analyze()
 #        self.log.warning('translate option (using make) is deprecated. please use build option.')
 
@@ -186,12 +191,14 @@ class Shedskin:
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
     def build(self) -> None:
+        """Build the main module"""
         self.pre_analyze()
         cmake.generate_cmakefile(self.gx)
         builder = cmake.CMakeBuilder(self.gx.options)
         builder.build()
 
     def test(self) -> None:
+        """Run tests"""
         if self.gx.options.run_errs:
             testrunner = cmake.TestRunner(self.gx.options)
             testrunner.run_error_tests()
@@ -200,6 +207,7 @@ class Shedskin:
             testrunner.run_tests()
 
     def run(self) -> None:
+        """Run the main module"""
         cwd = pathlib.Path.cwd()
         p = pathlib.Path(self.gx.options.name)
         if len(p.parts) == 1:
@@ -210,8 +218,7 @@ class Shedskin:
 
     @classmethod
     def commandline(cls, bypassargs:Optional[List[str]]=None) -> None:
-        """command line api
-        """
+        """command line api"""
         sys.setrecursionlimit(100000)
 
         # --- command-line options

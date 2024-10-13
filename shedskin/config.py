@@ -20,6 +20,7 @@ CartesianProduct: TypeAlias = Tuple[Tuple['python.Class', int] , ...]
 
 
 class GlobalInfo:  # XXX add comments, split up
+    """Global configuration and state for the shedskin compiler"""
     def __init__(self, options: argparse.Namespace):
         self.options = options
         self.constraints: set[tuple['infer.CNode', 'infer.CNode']] = set()
@@ -117,6 +118,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
     def init_directories(self) -> None:
+        """Initialize directory paths"""
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)
         shedskin_directory = os.sep.join(abspath.split(os.sep)[:-1])
         for dirname in sys.path:

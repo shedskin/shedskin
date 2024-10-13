@@ -103,6 +103,7 @@ CPA_LIMIT = 10
 
 
 class CNode:
+    """A node in the constraint graph"""
     __slots__ = [
         "gx",
         "thing",
@@ -186,7 +187,8 @@ class CNode:
                     parent.nodes.add(self)
                     parent.nodes_ordered.append(self)
 
-    def copy(self, dcpa: int, cpa: int, worklist:Optional[List['CNode']]=None) -> 'CNode':  # XXX to infer.py
+    def copy(self, dcpa: int, cpa: int, worklist: Optional[List["CNode"]] = None) -> "CNode":  # XXX to infer.py
+        """Copy a node"""
         # if not self.mv.module.builtin: print 'copy', self
 
         if (self.thing, dcpa, cpa) in self.gx.cnode:
@@ -212,6 +214,7 @@ class CNode:
         return newnode
 
     def types(self) -> Types:
+        """Get the types of a node"""
         if self in self.gx.types:
             return self.gx.types[self]
         else:
@@ -222,10 +225,12 @@ class CNode:
 
 
 def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
+    """Check if debug level is enabled"""
     return gx.debug_level >= level
 
 
 def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
+    """Get the number of arguments of a call node"""
     cnode = inode(gx, node)
     if cnode.lambdawrapper:
         return cnode.lambdawrapper.largs
@@ -233,10 +238,12 @@ def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
 
 
 def called(func: 'python.Function') -> bool:
+    """Check if a function has been called"""
     return bool([cpas for cpas in func.cp.values() if cpas])
 
 
 def get_types(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge: Optional[Merged]) -> Types:
+    """Get the types of a call node"""
     types = set()
     if merge:
         if expr.func in merge:
@@ -249,13 +256,15 @@ def get_types(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], me
 
 
 def get_starargs(node: ast.Call) -> Optional[ast.AST]:
+    """Get the starred argument of a call node"""
     for arg in node.args:
         if isinstance(arg, ast.Starred):
             return arg.value
     return None
 
 
-def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge:Optional[Merged]=None) -> Tuple[bool, bool]:
+def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNode], merge: Optional[Merged] = None) -> Tuple[bool, bool]:
+    """Check if an anonymous function is callable"""
     types = get_types(gx, expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], python.Function)])
     call = bool(
@@ -269,6 +278,7 @@ def is_anon_callable(gx: "config.GlobalInfo", expr: ast.Call, node: Optional[CNo
 
 
 def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Function']:
+    """Get the parent function of a node"""
     parent: Optional[AllParent] = inode(gx, thing).parent
     while parent:
         if isinstance(parent, python.Function) and not parent.listcomp:
@@ -280,6 +290,7 @@ def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional['python.Functio
 def analyze_args(
     gx: "config.GlobalInfo", expr: ast.Call, func: 'python.Function', node:Optional[CNode]=None, skip_defaults:bool=False, merge:Optional[Merged]=None
 ) -> Tuple[List[Optional[ast.AST]], List[str], List[ast.AST], List[Optional[ast.AST]], bool]:
+    """Analyze the arguments of a call node"""
     (
         objexpr,
         ident,
@@ -363,6 +374,8 @@ def connect_actual_formal(
     parent_constr:bool=False,
     merge:Optional[Merged]=None
 ) -> Tuple[List[Tuple[ast.AST, 'python.Variable']], int, bool]:
+    """Connect actual and formal arguments"""
+
     pairs = []
 
     actuals: List[Optional[ast.AST]] = [a for a in expr.args if not isinstance(a, ast.keyword)]
@@ -413,6 +426,8 @@ def connect_actual_formal(
 
 # --- return list of potential call targets
 def callfunc_targets(gx: "config.GlobalInfo", node: ast.Call, merge: Merged) -> List['python.Function']:
+    """Get the potential call targets of a call node"""
+
     (
         objexpr,
         ident,
@@ -465,6 +480,8 @@ def callfunc_targets(gx: "config.GlobalInfo", node: ast.Call, merge: Merged) -> 
 def analyze_callfunc(
     gx: "config.GlobalInfo", node: ast.Call, node2:Optional[CNode]=None, merge:Optional[Merged]=None
 ) -> Analysis:
+    """Analyze a call expression"""
+
     # XXX generate target list XXX uniform python.Variable system! XXX node2, merge?
     # print 'analyze callnode', ast.dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
@@ -576,7 +593,9 @@ def analyze_callfunc(
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=False) -> Merged:
+def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance: bool = False) -> Merged:
+    """Merge constraint networks along given dimensions"""
+
     merge: Merged = {}
 
     if inheritance:  # XXX do we really need this crap
@@ -615,27 +634,32 @@ def merged(gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance:bool=Fal
 
 
 def inode(gx: "config.GlobalInfo", node: Any) -> CNode:
+    """Get the constraint node for a given object"""
     return gx.cnode[node, 0, 0]
 
 
-def add_constraint(gx: "config.GlobalInfo", a: CNode, b: CNode, worklist:Optional[List[CNode]]=None) -> None:
+def add_constraint(gx: "config.GlobalInfo", a: CNode, b: CNode, worklist: Optional[List[CNode]] = None) -> None:
+    """Add a constraint to the graph"""
     gx.constraints.add((a, b))
     in_out(a, b)
     add_to_worklist(worklist, a)
 
 
 def in_out(a: CNode, b: CNode) -> None:
+    """Add an outgoing edge to a node"""
     a.out.add(b)
     b.in_.add(a)
 
 
 def add_to_worklist(worklist: Optional[List[CNode]], node: CNode) -> None:  # XXX to infer.py
+    """Add a node to the worklist"""
     if worklist is not None and not node.in_list:
         worklist.append(node)
         node.in_list = 1
 
 
 def class_copy(gx: "config.GlobalInfo", cl: 'python.Class', dcpa: int) -> None:
+    """Copy a class"""
     for var in cl.vars.values():  # XXX
         if (var, 0, 0) not in gx.cnode or inode(gx, var) not in gx.types:
             continue  # XXX research later, triggered for doom example
@@ -668,6 +692,7 @@ def class_copy(gx: "config.GlobalInfo", cl: 'python.Class', dcpa: int) -> None:
 
 
 def func_copy(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, cpa: int, worklist:Optional[List[CNode]]=None, cart:Optional[CartesianProduct]=None) -> None:
+    """Copy a function"""
     # print 'funccopy', func, cart, dcpa, cpa
 
     # --- copy local end points of each constraint
@@ -701,6 +726,7 @@ def func_copy(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, cpa: 
 
 # --- iterative dataflow analysis
 def propagate(gx: "config.GlobalInfo") -> None:
+    """Propagate constraints through the graph"""
     logger.debug("propagate")
 
     # --- initialize working sets
@@ -790,6 +816,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
 
 # --- determine cartesian product of possible function and argument types
 def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis) -> PossibleFuncs:
+    """Determine the cartesian product of possible function and argument types"""
     expr = node.thing
 
     # --- determine possible target functions
@@ -859,6 +886,7 @@ def possible_functions(gx: "config.GlobalInfo", node: CNode, analysis: Analysis)
 
 
 def possible_argtypes(gx: 'config.GlobalInfo', node: CNode, funcs: PossibleFuncs, analysis: Analysis, worklist: List[CNode]) -> List[Types]:
+    """Determine the possible argument types for a call node"""
     expr = node.thing
     (
         objexpr,
@@ -941,6 +969,7 @@ def redirect(
     direct_call: Optional['python.Function'],
     constructor: Optional['python.Class'],
 ) -> Tuple[CartesianProduct, int, 'python.Function']:
+    """Redirect a call node"""
 
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
@@ -1057,6 +1086,8 @@ def redirect(
 # --- cartesian product algorithm; adds interprocedural constraints
 
 def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None:
+    """Perform the cartesian product algorithm"""
+
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
 
     # loop over cartesian product of possible funcs, arg types
@@ -1148,6 +1179,8 @@ def connect_getsetattr(
     dcpa: int,
     worklist: List[CNode],
 ) -> bool:
+    """Connect a get/setattr call to the target attribute"""
+
     if (
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ["__setattr__", "__getattr__"]
@@ -1187,6 +1220,7 @@ def connect_getsetattr(
 
 
 def create_template(gx: "config.GlobalInfo", func: 'python.Function', dcpa: int, c: CartesianProduct, worklist: List[CNode]) -> None:
+    """Create a new template for a function"""
     # --- unseen cartesian product: create new template
     if dcpa not in func.cp:
         func.cp[dcpa] = {}
@@ -1210,6 +1244,7 @@ def actuals_formals(
     analysis: Analysis,
     worklist: List[CNode],
 ) -> None:
+    """Connect actual and formal arguments"""
     (
         objexpr,
         ident,
@@ -1258,6 +1293,7 @@ def actuals_formals(
 
 
 def ifa(gx: "config.GlobalInfo") -> Split:
+    """Perform iterative flow analysis"""
     logger.debug("ifa")
     split: Split = []  # [(set of creation nodes, new type number), ..]
 
@@ -1295,6 +1331,8 @@ def ifa_split_vars(
     split: Split,
     allcsites: AllCSites,
 ) -> Optional[Split]:
+    """Split variables in a class"""
+
     for varnum, var in enumerate(vars):
         if (var, dcpa, 0) not in gx.cnode:
             continue
@@ -1502,7 +1540,7 @@ def ifa_flow_graph(
     node: CNode,
     allcsites: AllCSites,
 ) -> Tuple[CreationPoints, CreationPoints, CreationPoints, set[CNode], List[CNode], List[CNode]]:
-
+    """Create a flow graph for a given node"""
     creation_points = {}
     paths = {}
     assignsets: CreationPoints = {}
@@ -1556,12 +1594,14 @@ def ifa_split_class(
     things: List[CNode],
     split: Split,
 ) -> None:
+    """Split a class"""
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
 
 
 def update_progressbar(gx: "config.GlobalInfo", perc: float) -> None:
+    """Update the progress bar"""
     if not gx.silent:
         if gx.progressbar is None:
             gx.progressbar = utils.ProgressBar(total=1)
@@ -1573,6 +1613,7 @@ def update_progressbar(gx: "config.GlobalInfo", perc: float) -> None:
 
 
 def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
+    """Perform iterative dataflow analysis"""
     logger.info("[analyzing types..]")
     backup = backup_network(gx)
 
@@ -1711,6 +1752,7 @@ def ifa_seed_template(
     cpa: int,
     worklist: Optional[List[CNode]]
 ) -> None:
+    """Seed allocation sites in newly created templates"""
     if cart is not None:  # (None means we are not in the process of propagation)
         # print 'funccopy', func.ident #, func.nodes
         if isinstance(func.parent, python.Class):  # self
@@ -1792,6 +1834,7 @@ def ifa_seed_template(
 
 
 def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['python.Class', int]) -> list[CNode]:
+    """Find the path of creation points for a given target node"""
     path = set(worklist)
     while worklist:
         new = set()
@@ -1807,6 +1850,7 @@ def backflow_path(gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple['pytho
 
 
 def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
+    """Flow creation sites through the graph"""
     while worklist:
         new = set()
         for node in worklist:
@@ -1822,6 +1866,7 @@ def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
 
 # --- backup constraint network
 def backup_network(gx: "config.GlobalInfo") -> Backup:
+    """Backup the constraint network"""
     beforetypes = {}
     for node, typeset in gx.types.items():
         beforetypes[node] = typeset.copy()
@@ -1839,6 +1884,7 @@ def backup_network(gx: "config.GlobalInfo") -> Backup:
 
 # --- restore constraint network, introducing new types
 def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
+    """Restore the constraint network"""
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
 
     gx.types = {}
@@ -1859,6 +1905,7 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         func.cp = {}
 
 def merge_simple_types(gx: "config.GlobalInfo", types: Types) -> frozenset[Tuple['python.Class', int]]:
+    """Merge simple types"""
     merge = types.copy()
     if len(types) > 1 and (python.def_class(gx, "none"), 0) in types:
         if (
@@ -1872,6 +1919,7 @@ def merge_simple_types(gx: "config.GlobalInfo", types: Types) -> frozenset[Tuple
 
 
 def get_classes(gx: "config.GlobalInfo", var: 'python.Variable') -> set['python.Class']:
+    """Get the classes of a variable"""
     return set(
         t[0]
         for t in gx.merged_inh[var]
@@ -1880,6 +1928,7 @@ def get_classes(gx: "config.GlobalInfo", var: 'python.Variable') -> set['python.
 
 
 def deepcopy_classes(gx: "config.GlobalInfo", classes: set['python.Class']) -> set['python.Class']:
+    """Deepcopy classes"""
     changed = True
     while changed:
         changed = False
@@ -1895,6 +1944,7 @@ def deepcopy_classes(gx: "config.GlobalInfo", classes: set['python.Class']) -> s
 
 
 def determine_classes(gx: "config.GlobalInfo") -> None:  # XXX modeling..?
+    """Determine the classes of a module"""
     if "copy" not in gx.modules:
         return
     func = gx.modules["copy"].mv.funcs["copy"]
@@ -1908,6 +1958,7 @@ def determine_classes(gx: "config.GlobalInfo") -> None:  # XXX modeling..?
 
 
 def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
+    """Analyze a module"""
     from . import graph  # TODO improve separation to avoid circular imports..
     from .typestr import nodetypestr
     from .virtual import analyze_virtuals
@@ -1987,6 +2038,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
 
 
 def register_temp_var(var: 'python.Variable', parent: Optional[AllParent]) -> None:
+    """Register a temporary variable"""
     if isinstance(parent, python.Function):
         parent.registered_temp_vars.append(var)
 
@@ -1999,6 +2051,7 @@ def default_var(
     mv: Optional['graph.ModuleVisitor']=None,
     exc_name: bool=False
 ) -> 'python.Variable':
+    """Create a default variable"""
     if parent:
         mv = parent.mv
     assert mv
@@ -2031,4 +2084,5 @@ def default_var(
 
 
 def var_types(gx: "config.GlobalInfo", var: 'python.Variable') -> Types:
+    """Get the types of a variable"""
     return inode(gx, var).types()

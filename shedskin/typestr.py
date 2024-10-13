@@ -28,6 +28,7 @@ class ExtmodError(Exception):
 
 
 def types_var_types(gx: 'config.GlobalInfo', types: Types, varname: str) -> Types:
+    """Get the types of a variable"""
     subtypes = set()
     for t in types:
         if varname not in t[0].vars:
@@ -39,10 +40,12 @@ def types_var_types(gx: 'config.GlobalInfo', types: Types, varname: str) -> Type
 
 
 def types_classes(types: Types) -> set['python.Class']:
+    """Get the classes of a variable"""
     return set(t[0] for t in types if isinstance(t[0], python.Class))
 
 
 def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
+    """Check if a variable is unboxable"""
     if not isinstance(types, set):
         types = infer.inode(gx, types).types()
     classes = set(t[0] for t in types)
@@ -56,22 +59,26 @@ def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
 
 
 def singletype(gx: 'config.GlobalInfo', node: Any, t: Type[Any]) -> Any:
+    """Check if a variable has a single type"""
     types = [t[0] for t in infer.inode(gx, node).types()]
     if len(types) == 1 and isinstance(types[0], t):
         return types[0]
 
 
 def singletype2(types: Types, t: Type[Any]) -> Any:
+    """Check if a variable has a single type"""
     ltypes = list(types)
     if len(types) == 1 and isinstance(ltypes[0][0], t):
         return ltypes[0][0]
 
 
 def polymorphic_t(gx: 'config.GlobalInfo', types: Types) -> set['python.Class']:
+    """Get the polymorphic classes of a variable"""
     return polymorphic_cl(gx, (t[0] for t in types))
 
 
 def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -> set['python.Class']:
+    """Get the polymorphic classes of a variable"""
     cls = set(cl for cl in classes)
     if (
         len(cls) > 1
@@ -90,6 +97,7 @@ def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -
 
 # --- determine lowest common parent classes (inclusive)
 def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Class']:
+    """Get the lowest common parent classes of a variable"""
     classes = [cl for cl in classes if isinstance(cl, python.Class)]
 
     # collect all possible parent classes
@@ -138,7 +146,9 @@ def nodetypestr(
     check_extmod: bool = False,
     check_ret: bool = False,
     mv:Optional['graph.ModuleVisitor']=None,
-) -> str:  # XXX minimize
+) -> str:
+    """Get the type string of a node"""
+    # XXX minimize
     if (
         cplusplus and isinstance(node, python.Variable) and node.looper
     ):  # XXX to declaredefs?
@@ -168,6 +178,7 @@ def typestr(
     check_ret: bool = False,
     mv: Optional['graph.ModuleVisitor']=None,
 ) -> str:
+    """Get the type string of a node"""
     try:
         ts = typestrnew(
             gx,
@@ -202,6 +213,7 @@ def typestr(
 
 
 def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', types: Types, conv2: Dict[str, str]) -> None:
+    """Handle a dynamic variable error"""
     if not node.name.startswith("__"):  # XXX startswith
         classes = polymorphic_cl(gx, types_classes(types))
         if (
@@ -250,6 +262,7 @@ def typestrnew(
     check_ret: bool = False,
     mv: Optional['graph.ModuleVisitor']=None,
 ) -> str:
+    """Get the type string of a node"""
     if depth == 10:
         raise RuntimeError()
 
@@ -279,6 +292,7 @@ def typestrnew(
         sep, ptr, conv = "()", "", conv2
 
     def map(ident: str) -> str:
+        """Map a type identifier to a C++ type string"""
         if cplusplus:
             return ident + " *"
         return conv.get(ident, ident)
@@ -452,6 +466,7 @@ def typestrnew(
 
 
 def incompatible_assignment_rec(gx: 'config.GlobalInfo', argtypes: Types, formaltypes: Types, depth:int=0) -> bool:
+    """Check if an assignment is incompatible"""
     if depth == 10:
         return False
     argclasses = types_classes(argtypes)
