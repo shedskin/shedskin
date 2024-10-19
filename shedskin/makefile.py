@@ -1,7 +1,6 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.makefile: makefile generator
-"""
+"""shedskin.makefile: makefile generator"""
 
 import os
 import pathlib
@@ -12,6 +11,7 @@ import sysconfig
 
 # type-checking
 from typing import TYPE_CHECKING, Optional
+
 if TYPE_CHECKING:
     from . import config
 
@@ -24,7 +24,7 @@ def check_output(cmd: str) -> Optional[str]:
         return None
 
 
-def generate_makefile(gx: 'config.GlobalInfo') -> None:
+def generate_makefile(gx: "config.GlobalInfo") -> None:
     """Generate a makefile"""
     if gx.nomakefile:
         return
@@ -60,7 +60,7 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
 
     makefile = open(makefile_path, "w")
 
-    def write(line: str="") -> None:
+    def write(line: str = "") -> None:
         print(line, file=makefile)
 
     esc_space = "\ "
@@ -86,11 +86,11 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
     cppfiles = [fn + ".cpp" for fn in filenames]
     hppfiles = [fn + ".hpp" for fn in filenames]
     # used to be 're', but currently unused, but kept around just in case
-#for always in ():
-#        repath = os.path.join(env_var("SHEDSKIN_LIBDIR"), always)
-#        if repath not in filenames:
-#            cppfiles.append(repath + ".cpp")
-#            hppfiles.append(repath + ".hpp")
+    # for always in ():
+    #        repath = os.path.join(env_var("SHEDSKIN_LIBDIR"), always)
+    #        if repath not in filenames:
+    #            cppfiles.append(repath + ".cpp")
+    #            hppfiles.append(repath + ".hpp")
 
     cppfiles.sort(reverse=True)
     hppfiles.sort(reverse=True)
@@ -111,11 +111,11 @@ def generate_makefile(gx: 'config.GlobalInfo') -> None:
     else:
         flags = gx.shedskin_flags / "FLAGS"
 
-    line = ''
+    line = ""
     for line in open(flags):
         line = line[:-1]
 
-        variable = line[: line.find("=")].strip().rstrip('?')
+        variable = line[: line.find("=")].strip().rstrip("?")
 
         if variable == "CXXFLAGS":
             line += " -I. -I%s" % env_var("SHEDSKIN_LIBDIR")

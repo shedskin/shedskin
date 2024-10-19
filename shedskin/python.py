@@ -1,7 +1,6 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.python: models high-level python object types
-"""
+"""shedskin.python: models high-level python object types"""
 
 import ast
 import importlib.util
@@ -10,22 +9,23 @@ import re
 import sys
 import pathlib
 
-from . import ast_utils
 
 # type-checking
 from typing import Optional, TYPE_CHECKING, List, Tuple, TypeAlias, Union, NamedTuple
+
 if TYPE_CHECKING:
     from . import config
     from . import graph
     from . import infer
 
-Parent: TypeAlias = Union['Class', 'Function']
-AllParent: TypeAlias = Union['Class', 'Function', 'StaticClass']
-CartesianProduct: TypeAlias = Tuple[Tuple['Class', int] , ...]
+Parent: TypeAlias = Union["Class", "Function"]
+AllParent: TypeAlias = Union["Class", "Function", "StaticClass"]
+CartesianProduct: TypeAlias = Tuple[Tuple["Class", int], ...]
 
 
 class PyObject:
     """Mixin for py objects"""
+
     ident: str
 
     def __repr__(self) -> str:
@@ -52,13 +52,14 @@ class Module(PyObject):
     """
 
     def __init__(
-            self,
-            name: str,
-            filename: str,
-            relative_filename: str,
-            builtin: bool,
-            node: Optional[ast.AST],
-            ast: ast.Module):
+        self,
+        name: str,
+        filename: str,
+        relative_filename: str,
+        builtin: bool,
+        node: Optional[ast.AST],
+        ast: ast.Module,
+    ):
         # set name and its dependent fields
         self.name = name
         self.name_list = name.split(".")
@@ -69,14 +70,14 @@ class Module(PyObject):
         self.relative_filename = pathlib.Path(relative_filename)
         self.relative_path = self.relative_filename.parent
 
-        self.mv: 'graph.ModuleVisitor'
-        self.deps: set['Module']
+        self.mv: "graph.ModuleVisitor"
+        self.deps: set["Module"]
 
         # set the rest
         self.ast = ast
         self.builtin = builtin
         self.node = node
-        self.prop_includes: set['Module'] = set()
+        self.prop_includes: set["Module"] = set()
         self.import_order = 0
 
     def full_path(self) -> str:
@@ -95,7 +96,7 @@ class Module(PyObject):
         """Check if a variable is global"""
         assert self.mv, "must have graph.ModuleVisitor instance"
         return (
-               ident in self.mv.globals
+            ident in self.mv.globals
             or ident in self.mv.funcs
             or ident in self.mv.ext_funcs
             or ident in self.mv.classes
@@ -109,30 +110,33 @@ class Module(PyObject):
 
 
 class Class(PyObject):
-    """Python class class
-    """
+    """Python class class"""
+
     def __init__(
-            self,
-            gx: 'config.GlobalInfo',
-            node: ast.ClassDef,
-            mv: 'graph.ModuleVisitor',
-            module: Module):
+        self,
+        gx: "config.GlobalInfo",
+        node: ast.ClassDef,
+        mv: "graph.ModuleVisitor",
+        module: Module,
+    ):
         self.gx = gx
         self.node = node
         self.mv = mv
         self.module = module
         self.ident: str = node.name
-        self.bases: list['Class'] = []
-        self.children: list['Class'] = []
+        self.bases: list["Class"] = []
+        self.children: list["Class"] = []
         self.dcpa = 1
         self.newdcpa: int
-        self.vars: dict[str, 'Variable'] = {}
-        self.funcs: dict[str, 'Function'] = {}
-        self.virtuals: dict[str, set['Class']] = {}     # 'virtually' called methods
-        self.virtualvars: dict[str, set['Class']] = {}  # 'virtual' variables
+        self.vars: dict[str, "Variable"] = {}
+        self.funcs: dict[str, "Function"] = {}
+        self.virtuals: dict[str, set["Class"]] = {}  # 'virtually' called methods
+        self.virtualvars: dict[str, set["Class"]] = {}  # 'virtual' variables
         self.properties: dict[str, List[str]] = {}
         self.staticmethods: List[str] = []
-        self.splits: dict[int, int] = {}  # contour: old contour (used between iterations)
+        self.splits: dict[
+            int, int
+        ] = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
@@ -140,7 +144,7 @@ class Class(PyObject):
 
         self.parent: StaticClass = StaticClass(self, mv)
 
-    def ancestors(self, inclusive:bool=False) -> set['Class']:
+    def ancestors(self, inclusive: bool = False) -> set["Class"]:
         """Get the ancestors of a class"""
         # XXX attribute (faster)
         a = set(self.bases)
@@ -155,7 +159,7 @@ class Class(PyObject):
             a.add(self)
         return a
 
-    def ancestors_upto(self, other: Optional['Class']) -> List['Class']:
+    def ancestors_upto(self, other: Optional["Class"]) -> List["Class"]:
         """Get the ancestors of a class up to a given class"""
         a = self
         result = []
@@ -168,7 +172,7 @@ class Class(PyObject):
             a = a.bases[0]
         return result
 
-    def descendants(self, inclusive:bool=False) -> set['Class']:
+    def descendants(self, inclusive: bool = False) -> set["Class"]:
         """Get the descendants of a class"""
         # XXX attribute (faster)
         a = set()
@@ -203,9 +207,9 @@ class Class(PyObject):
 
 
 class StaticClass(PyObject):
-    """Static class class
-    """
-    def __init__(self, cl: 'Class', mv: 'graph.ModuleVisitor'):
+    """Static class class"""
+
+    def __init__(self, cl: "Class", mv: "graph.ModuleVisitor"):
         self.vars: dict[str, Variable] = {}
         self.static_nodes: List[ast.AST] = []
         self.funcs: dict[str, Function] = {}
@@ -215,7 +219,7 @@ class StaticClass(PyObject):
         self.module = cl.module
 
 
-def extract_argnames(arg_struct:ast.arguments) -> List[str]:
+def extract_argnames(arg_struct: ast.arguments) -> List[str]:
     """Get the names of the arguments of a function"""
     argnames = [arg.arg for arg in arg_struct.args]
     if arg_struct.vararg:
@@ -226,15 +230,17 @@ def extract_argnames(arg_struct:ast.arguments) -> List[str]:
 
 
 class Function:
-    """Python function class
-    """
+    """Python function class"""
+
     def __init__(
         self,
-        gx: 'config.GlobalInfo',
-        mv: 'graph.ModuleVisitor',
-        node: Optional[ast.FunctionDef]=None,
-        parent: Optional[AllParent]=None,
-        inherited_from: Optional[Union['Class', 'Function']]=None,  # TODO should be one
+        gx: "config.GlobalInfo",
+        mv: "graph.ModuleVisitor",
+        node: Optional[ast.FunctionDef] = None,
+        parent: Optional[AllParent] = None,
+        inherited_from: Optional[
+            Union["Class", "Function"]
+        ] = None,  # TODO should be one
     ):
         self.gx = gx
         self.node = node
@@ -250,16 +256,16 @@ class Function:
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr: List[ast.AST] = []
-        self.retnode: Optional['infer.CNode'] = None
+        self.retnode: Optional["infer.CNode"] = None
         self.lambdanr: Optional[int] = None
         self.lambdawrapper = False
         self.parent = parent
-        self.constraints: set[Tuple['infer.CNode', 'infer.CNode']] = set()
+        self.constraints: set[Tuple["infer.CNode", "infer.CNode"]] = set()
         self.vars: dict[str, Variable] = {}
         self.globals: List[str] = []
         self.mv = mv
-        self.nodes: set['infer.CNode'] = set()
-        self.nodes_ordered: List['infer.CNode'] = []
+        self.nodes: set["infer.CNode"] = set()
+        self.nodes_ordered: List["infer.CNode"] = []
         self.defaults: List[ast.expr] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
@@ -269,7 +275,7 @@ class Function:
         self.listcomp = False
         self.isGenerator = False
         self.yieldNodes: List[ast.Yield] = []
-        self.yieldnode: 'infer.CNode'
+        self.yieldnode: "infer.CNode"
         # function is called via a virtual call: arguments may have to be cast
         self.ftypes: List[str] = []
 
@@ -318,13 +324,15 @@ class Variable:
         #     return f"<Variable '{self.parent.name}.{self.name}'>"
         # return f"<Variable '{self.name}'>"
 
+
 def clear_block(m: re.Match[str]) -> str:
     """Clear a block comment"""
     return m.string.count("\n", m.start(), m.end()) * "\n"
 
+
 def parse_file(name: pathlib.Path) -> ast.Module:
     """Parse a Python file"""
-    data = importlib.util.decode_source(open(name, 'rb').read())
+    data = importlib.util.decode_source(open(name, "rb").read())
 
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
@@ -337,7 +345,9 @@ def parse_file(name: pathlib.Path) -> ast.Module:
         sys.exit(1)
 
 
-def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[str, str, str, bool]:
+def find_module(
+    gx: "config.GlobalInfo", name: str, paths: List[str]
+) -> Tuple[str, str, str, bool]:
     """Find a module by name"""
     if "." in name:
         name, module_name = name.rsplit(".", 1)
@@ -350,9 +360,9 @@ def find_module(gx: 'config.GlobalInfo', name: str, paths: List[str]) -> Tuple[s
     filename = None
     is_a_package = False
     for path in import_paths:
-        if os.path.isfile(os.path.join(path, module_name)+'.py'):
+        if os.path.isfile(os.path.join(path, module_name) + ".py"):
             filename = os.path.join(path, module_name)
-        elif os.path.isfile(os.path.join(path, module_name, '__init__.py')):
+        elif os.path.isfile(os.path.join(path, module_name, "__init__.py")):
             filename = os.path.join(path, module_name)
             is_a_package = True
 
@@ -390,7 +400,9 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
     return None
 
 
-def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Optional[AllParent]) -> Tuple[Optional['Class'], Optional['Module']]:
+def lookup_class_module(
+    objexpr: ast.AST, mv: "graph.ModuleVisitor", parent: Optional[AllParent]
+) -> Tuple[Optional["Class"], Optional["Module"]]:
     """Find the class and module of an expression"""
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
@@ -399,7 +411,9 @@ def lookup_class_module(objexpr: ast.AST, mv: 'graph.ModuleVisitor', parent: Opt
     return lookup_class(objexpr, mv), lookup_module(objexpr, mv)
 
 
-def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function']:  # XXX lookup_var first?
+def lookup_func(
+    node: ast.AST, mv: "graph.ModuleVisitor"
+) -> Optional["Function"]:  # XXX lookup_var first?
     """Find a function by name"""
     if isinstance(node, ast.Name):
         if node.id in mv.funcs:
@@ -415,11 +429,13 @@ def lookup_func(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Function'
     return None
 
 
-def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Class']:  # XXX lookup_var first?
+def lookup_class(
+    node: ast.AST, mv: "graph.ModuleVisitor"
+) -> Optional["Class"]:  # XXX lookup_var first?
     """Find a class by name"""
     if isinstance(node, ast.Name):
-        if node.id == 'int': # TODO generalize
-            return mv.ext_classes['int_']
+        if node.id == "int":  # TODO generalize
+            return mv.ext_classes["int_"]
         elif node.id in mv.classes:
             return mv.classes[node.id]
         elif node.id in mv.ext_classes:
@@ -434,14 +450,14 @@ def lookup_class(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional['Class']:
     return None
 
 
-def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
+def lookup_module(node: ast.AST, mv: "graph.ModuleVisitor") -> Optional[Module]:
     """Find a module by name"""
     path: List[str] = []
     module: Optional[Module] = None
 
     imports = mv.imports
 
-    while isinstance(node, ast.Attribute) and type(node.ctx) == ast.Load:
+    while isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
         path = [node.attr] + path
         node = node.value
 
@@ -458,8 +474,11 @@ def lookup_module(node: ast.AST, mv: 'graph.ModuleVisitor') -> Optional[Module]:
 
     return module
 
+
 # XXX: this is weird class or bool?
-def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None) -> Class:
+def def_class(
+    gx: "config.GlobalInfo", name: str, mv: Optional["graph.ModuleVisitor"] = None
+) -> Class:
     """Define a class"""
     if not mv:
         mv = gx.modules["builtin"].mv
@@ -471,7 +490,12 @@ def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisi
     assert False
 
 
-def lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool=False) -> Optional['Variable']:
+def lookup_var(
+    name: str,
+    parent: Optional[AllParent],
+    mv: "graph.ModuleVisitor",
+    local: bool = False,
+) -> Optional["Variable"]:
     """Find a variable by name"""
     var = smart_lookup_var(name, parent, mv, local=local)
     if var:
@@ -481,11 +505,17 @@ def lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor'
 
 class VarLookup(NamedTuple):
     """Variable lookup result"""
-    var: 'Variable'
+
+    var: "Variable"
     is_global: bool
 
 
-def smart_lookup_var(name: str, parent: Optional[AllParent], mv: 'graph.ModuleVisitor', local: bool = False) -> Optional[VarLookup]:
+def smart_lookup_var(
+    name: str,
+    parent: Optional[AllParent],
+    mv: "graph.ModuleVisitor",
+    local: bool = False,
+) -> Optional[VarLookup]:
     """Smart lookup of a variable"""
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return VarLookup(parent.parent.vars[name], False)

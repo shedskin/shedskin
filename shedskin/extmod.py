@@ -18,6 +18,7 @@ garbage collected after the (wrapper) reference count drops to 0 on the
 CPython side.
 
 """
+
 import logging
 
 from . import infer
@@ -25,7 +26,8 @@ from . import python
 from . import typestr
 
 
-from typing import TYPE_CHECKING, Optional, Union, List, Iterable
+from typing import TYPE_CHECKING, Optional, List, Iterable
+
 if TYPE_CHECKING:
     from . import config
     from . import cpp
@@ -43,7 +45,7 @@ OVERLOAD = [
 ] + OVERLOAD_SINGLE
 
 
-def clname(cl: 'python.Class') -> str:
+def clname(cl: "python.Class") -> str:
     """Class name normalizer"""
     return "__ss_%s_%s" % ("_".join(cl.mv.module.name_list), cl.ident)
 
@@ -51,7 +53,7 @@ def clname(cl: 'python.Class') -> str:
 class ExtensionModule:
     """Extension module generator"""
 
-    def __init__(self, gx: 'config.GlobalInfo', gv: 'cpp.GenerateVisitor'):
+    def __init__(self, gx: "config.GlobalInfo", gv: "cpp.GenerateVisitor"):
         self.gx = gx
         self.gv = gv
 
@@ -68,7 +70,9 @@ class ExtensionModule:
                     % (module.full_path(), what, "_".join(module.name_list))
                 )
 
-    def supported_vars(self, variables: Iterable['python.Variable']) -> List['python.Variable']: # XXX virtuals?
+    def supported_vars(
+        self, variables: Iterable["python.Variable"]
+    ) -> List["python.Variable"]:  # XXX virtuals?
         """Supported variables
         XXX currently only classs / instance variables"""
         supported = []
@@ -100,7 +104,9 @@ class ExtensionModule:
             supported.append(var)
         return supported
 
-    def supported_funcs(self, funcs: Iterable['python.Function']) -> List['python.Function']:
+    def supported_funcs(
+        self, funcs: Iterable["python.Function"]
+    ) -> List["python.Function"]:
         """Supported functions"""
         supported = []
         for func in funcs:
@@ -170,7 +176,7 @@ class ExtensionModule:
                     )
         return supported
 
-    def has_method(self, cl: 'python.Class', name: str) -> bool:  # XXX shared.py
+    def has_method(self, cl: "python.Class", name: str) -> bool:  # XXX shared.py
         """Check if a class has a method"""
         return (
             name in cl.funcs
@@ -179,7 +185,7 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])
         )
 
-    def do_add_globals(self, classes: List['python.Class'], ssmod: str) -> None:
+    def do_add_globals(self, classes: List["python.Class"], ssmod: str) -> None:
         """Add global variables to the module"""
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
@@ -212,7 +218,9 @@ class ExtensionModule:
                     }
                 )
 
-    def do_reduce_setstate(self, cl: 'python.Class', vars: List['python.Variable']) -> None:
+    def do_reduce_setstate(
+        self, cl: "python.Class", vars: List["python.Variable"]
+    ) -> None:
         """Generate a reduce and setstate method"""
         write = self.write
         if python.def_class(self.gx, "Exception") in cl.ancestors():  # XXX
@@ -256,7 +264,7 @@ class ExtensionModule:
         write("    return Py_None;")
         write("}\n")
 
-    def convert_methods(self, cl: 'python.Class', declare: bool) -> None:
+    def convert_methods(self, cl: "python.Class", declare: bool) -> None:
         """Generate converted methods"""
         write = self.write
         if python.def_class(self.gx, "Exception") in cl.ancestors():
@@ -310,7 +318,9 @@ class ExtensionModule:
             )
             write("}\n}")
 
-    def do_extmod_methoddef(self, ident: str, funcs: List['python.Function'], cl: Optional['python.Class']) -> None:
+    def do_extmod_methoddef(
+        self, ident: str, funcs: List["python.Function"], cl: Optional["python.Class"]
+    ) -> None:
         """Generate an extension method definition"""
         write = self.write
         if cl:
@@ -370,7 +380,7 @@ class ExtensionModule:
         # write("    {NULL}\n};\n")
         write("    {NULL, NULL, 0, NULL}\n};\n")
 
-    def do_extmod_method(self, func: 'python.Function') -> None:
+    def do_extmod_method(self, func: "python.Function") -> None:
         """Generate an extension method"""
         write = self.write
         is_method = isinstance(func.parent, python.Class)
@@ -492,11 +502,16 @@ class ExtensionModule:
         # write("        return;\n")
 
         # module init function
-        write("static struct PyModuleDef Module_%s = {" % "_".join(self.gv.module.name_list))
+        write(
+            "static struct PyModuleDef Module_%s = {"
+            % "_".join(self.gv.module.name_list)
+        )
         write("    PyModuleDef_HEAD_INIT,")
         write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
-        write("    NULL,   /* module documentation, may be NULL */") # FIXME
-        write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
+        write("    NULL,   /* module documentation, may be NULL */")  # FIXME
+        write(
+            "    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */"
+        )
         write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
         write("};")
 
@@ -567,7 +582,7 @@ class ExtensionModule:
         for cl in classes:
             self.convert_methods(cl, False)
 
-    def do_extmod_class(self, cl: 'python.Class') -> None:
+    def do_extmod_class(self, cl: "python.Class") -> None:
         """Generates a python c-api extension type."""
         write = self.write
         for n in cl.module.name_list:
@@ -614,9 +629,7 @@ class ExtensionModule:
             "PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {"
             % clname(cl)
         )
-        write(
-            "    (void)args; (void)kwargs;"
-        )
+        write("    (void)args; (void)kwargs;")
         write(
             "    %sObject *self = (%sObject *)type->tp_alloc(type, 0);"
             % (clname(cl), clname(cl))
@@ -645,7 +658,7 @@ class ExtensionModule:
                 "PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {"
                 % (clname(cl), var.name, clname(cl))
             )
-            write("    (void)closure;");
+            write("    (void)closure;")
             write("    return __to_py(self->__ss_object->%s);" % self.gv.cpp_name(var))
             write("}\n")
 
@@ -653,7 +666,7 @@ class ExtensionModule:
                 "int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {"
                 % (clname(cl), var.name, clname(cl))
             )
-            write("    (void)closure;");
+            write("    (void)closure;")
             write("    try {")
             typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             if typ == "void *":  # XXX investigate
@@ -765,6 +778,7 @@ class ExtensionModule:
 
     def convert_methods2(self) -> None:
         """Generate converted methods"""
+
         def write(s: str) -> None:
             return print(s, file=self.gv.out)
 

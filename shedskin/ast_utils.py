@@ -5,6 +5,7 @@
 This module provides utility functions and classes for working with abstract syntax
 trees (ASTs) in Python.
 """
+
 import ast
 
 from typing import List, Tuple, Union, Any
@@ -31,9 +32,10 @@ def is_constant(node: ast.AST) -> bool:
     """Check if a node is a constant"""
     return isinstance(node, ast.Constant)
 
+
 def is_none(node: ast.AST) -> bool:
     """Check if a node is the None constant"""
-    if (isinstance(node, ast.Name) and node.id == "None"):
+    if isinstance(node, ast.Name) and node.id == "None":
         return True
     else:
         if isinstance(node, ast.Constant) and node.value is None:
@@ -80,12 +82,11 @@ def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
         and is_assign_list_or_tuple(node.target)
     )
 
+
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
     """Recursively determine (lvalue, rvalue) pairs in assignment expressions"""
-    if is_assign_list_or_tuple(left) and isinstance(
-        right, (ast.Tuple, ast.List)
-    ):
+    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
         assert isinstance(left, (ast.Tuple, ast.List))
         pairs = []
         for lvalue, rvalue in zip(left.elts, right.elts):
@@ -95,7 +96,7 @@ def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
         return [(left, right)]
 
 
-def aug_msg(gx: 'config.GlobalInfo', node: ast.BinOp, msg: str) -> str:
+def aug_msg(gx: "config.GlobalInfo", node: ast.BinOp, msg: str) -> str:
     """Generate an augmented assignment message"""
     if node in gx.augment:
         return "__i" + msg + "__"
@@ -103,8 +104,7 @@ def aug_msg(gx: 'config.GlobalInfo', node: ast.BinOp, msg: str) -> str:
 
 
 class BaseNodeVisitor:
-    """
-    Copy of ast.NodeVisitor with added *args argument to visit functions
+    """Copy of ast.NodeVisitor with added *args argument to visit functions
 
     A node visitor base class that walks the abstract syntax tree and calls a
     visitor function for every node found.  This function may return a value
@@ -122,9 +122,9 @@ class BaseNodeVisitor:
 
     def visit(self, node: ast.AST, *args: Any) -> None:
         """Visit a node."""
-        assert isinstance(
-            node, ast.AST
-        ), "Expected node of type ast.AST, got node of type %s" % type(node)
+        assert isinstance(node, ast.AST), (
+            "Expected node of type ast.AST, got node of type %s" % type(node)
+        )
         method = "visit_" + node.__class__.__name__
         visitor = getattr(self, method, None)
         if visitor:
