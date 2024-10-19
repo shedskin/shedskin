@@ -12,9 +12,9 @@ The constraint graph, with inferred types, is first 'merged' back to program
 dimensions (gx.merged_inh).
 
 """
+
 import ast
 import io
-import os
 import string
 import struct
 import textwrap
@@ -30,19 +30,31 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional, List, Any, IO, Tuple, TypeAlias, Union, Dict, Iterator
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    List,
+    Any,
+    IO,
+    Tuple,
+    TypeAlias,
+    Union,
+    Dict,
+    Iterator,
+)
+
 if TYPE_CHECKING:
     from . import config
-    from . import graph
 
-Types: TypeAlias = set[Tuple['python.Class', int]]
-Parent: TypeAlias = Union['python.Class', 'python.Function']
-AllParent: TypeAlias = Union['python.Class', 'python.Function', 'python.StaticClass']
+Types: TypeAlias = set[Tuple["python.Class", int]]
+Parent: TypeAlias = Union["python.Class", "python.Function"]
+AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
 
 
 class CPPNamer:
     """Class for naming C++ entities"""
-    def __init__(self, gx: 'config.GlobalInfo', gv: 'GenerateVisitor'):
+
+    def __init__(self, gx: "config.GlobalInfo", gv: "GenerateVisitor"):
         self.gx = gx
         self.class_names = [cl.ident for cl in self.gx.allclasses]
         self.cpp_keywords = self.gx.cpp_keywords
@@ -61,7 +73,7 @@ class CPPNamer:
             return self.ss_prefix + name
         return name
 
-    def namespace_class(self, cl: 'python.Class', add_cl:str="") -> str:
+    def namespace_class(self, cl: "python.Class", add_cl: str = "") -> str:
         """Add a namespace to a class name"""
         module = cl.mv.module
         if module.ident != "builtin" and module != self.gv.module and module.name_list:
@@ -114,7 +126,10 @@ class CPPNamer:
 
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
     """Visitor for generating C++ code from Python ASTs"""
-    def __init__(self, gx: 'config.GlobalInfo', module: 'python.Module', analyze: bool=False):
+
+    def __init__(
+        self, gx: "config.GlobalInfo", module: "python.Module", analyze: bool = False
+    ):
         self.gx = gx
         self.module = module
         self.analyze = analyze
@@ -127,7 +142,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.name = module.ident
         self.filling_consts = False
         self.with_count = 0
-        self.bool_wrapper: dict['ast.AST', bool] = {}
+        self.bool_wrapper: dict["ast.AST", bool] = {}
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
@@ -136,7 +151,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a C++ name for an object"""
         return self.namer.name(obj)
 
-    def get_output_file(self, ext:str=".cpp", mode:str="w") -> IO[Any]:
+    def get_output_file(self, ext: str = ".cpp", mode: str = "w") -> IO[Any]:
         """Get an output file for writing C++ code"""
         if self.analyze:
             return io.StringIO()
@@ -149,7 +164,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             output_file.parent.mkdir(exist_ok=True)
         return open(output_file, mode)
 
-        # XXX this is too magical
     def insert_consts(self, declare: bool) -> None:  # XXX ugly
         """Insert constant declarations into the output file"""
         if not self.consts:
@@ -283,10 +297,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         includes3 = includes1 + self.includes_rec(set(includes2))
         return ['#include "%s"\n' % module.include_path() for module in includes3]
 
-    def includes_rec(self, includes: set['python.Module']) -> List['python.Module']:  # XXX should be recursive!? ugh
+    def includes_rec(
+        self, includes: set["python.Module"]
+    ) -> List["python.Module"]:  # XXX should be recursive!? ugh
         """Find all (indirect) dependencies recursively"""
         todo = includes.copy()
-        result : List['python.Module'] = []
+        result: List["python.Module"] = []
         while todo:
             for include in todo:
                 if not include.deps - set(result):
@@ -318,7 +334,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.visit(self.module.ast, True)
         self.out.close()
 
-    def print(self, text: Optional[str]=None) -> None:
+    def print(self, text: Optional[str] = None) -> None:
         """Print text to the output file"""
         if text is not None:
             print(text, file=self.out)
@@ -366,7 +382,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.visit(arg, func)
 
-    def connector(self, node: ast.AST, func: Optional['python.Function']) -> str:  # TODO func unused
+    # TODO func unused
+    def connector(self, node: ast.AST, func: Optional["python.Function"]) -> str:
         """Generate a connector for a node"""
         if typestr.singletype(self.gx, node, python.Module):
             return "::"
@@ -375,7 +392,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return "->"
 
-    def gen_declare_defs(self, vars: List[Tuple[str, 'python.Variable']]) -> Iterator[Tuple[str, str]]:
+    def gen_declare_defs(
+        self, vars: List[Tuple[str, "python.Variable"]]
+    ) -> Iterator[Tuple[str, str]]:
         """Generate declarations and definitions for variables"""
         for name, var in vars:
             if (
@@ -388,7 +407,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             yield ts, self.cpp_name(var)
 
     # TODO just pass vars as dict?
-    def declare_defs(self, vars: List[Tuple[str, 'python.Variable']], declare: bool) -> str:
+    def declare_defs(
+        self, vars: List[Tuple[str, "python.Variable"]], declare: bool
+    ) -> str:
         """Generate declarations and definitions for variables"""
         pairs = []
         for ts, name in self.gen_declare_defs(vars):
@@ -399,7 +420,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             pairs.append((ts, name))
         return "".join(self.group_declarations(pairs))
 
-    def get_constant(self, node:ast.Constant) -> Optional[str]:
+    def get_constant(self, node: ast.Constant) -> Optional[str]:
         """Get a constant name for a node"""
         parent: Optional[AllParent] = infer.inode(self.gx, node).parent
         while isinstance(parent, python.Function) and parent.listcomp:  # XXX
@@ -482,9 +503,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
             formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
             var = func.vars[formal]
-            yield typestr.typestr(
-                self.gx, self.mergeinh[var], func, mv=self.mv
-            ), nr  #  + ' ' + ('default_%d;' % nr)
+            yield (
+                typestr.typestr(self.gx, self.mergeinh[var], func, mv=self.mv),
+                nr,
+            )  #  + ' ' + ('default_%d;' % nr)
 
     def init_defaults(self, func2: ast.FunctionDef) -> None:
         """Initialize default values for function arguments"""
@@ -543,7 +565,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.rich_compare(ge_cls, "ge", "le")
             self.print("}")
 
-    def rich_compare(self, cls: List['python.Class'], msg: 'str', fallback_msg: 'str') -> None:
+    def rich_compare(
+        self, cls: List["python.Class"], msg: "str", fallback_msg: "str"
+    ) -> None:
         """Generate rich comparison functions for a list of classes"""
         for cl in cls:
             t = "__%s__::%s *" % (self.mv.module.ident, self.cpp_name(cl))
@@ -568,7 +592,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
         for child in node.body:
-            if isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
+            if isinstance(child, ast.ImportFrom) and child.module not in (
+                "__future__",
+                "typing",
+            ):
                 module = self.gx.from_module[child]
                 using = "using " + module.full_path() + "::"
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
@@ -637,7 +664,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
-            elif isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
+            elif isinstance(child, ast.ImportFrom) and child.module not in (
+                "__future__",
+                "typing",
+            ):
                 module = self.gx.from_module[child]
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
                     pseudonym = pseudonym or name
@@ -691,27 +721,35 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.module == self.gx.main_module:
             self.do_main()
 
-    def visit_Expr(self, node:ast.Expr, func:Optional['python.Function']=None) -> None:
-        """Visit an expression node"""  
+    def visit_Expr(
+        self, node: ast.Expr, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit an expression node"""
         if not isinstance(node.value, ast.Str):
             self.start("")
             self.visit(node.value, func)
             self.eol()
 
-    def visit_NamedExpr(self, node:ast.NamedExpr, func:Optional['python.Function']=None) -> None:
+    def visit_NamedExpr(
+        self, node: ast.NamedExpr, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a named expression node"""
         assert isinstance(node.target, ast.Name)
         self.visitm("(", node.target.id, "=", node.value, ")", func)
 
-    def visit_Import(self, node:ast.Import, func:Optional['python.Function']=None) -> None:
+    def visit_Import(
+        self, node: ast.Import, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an import node"""
         pass
 
-    def visit_ImportFrom(self, node:ast.ImportFrom, func:Optional['python.Function']=None) -> None:
+    def visit_ImportFrom(
+        self, node: ast.ImportFrom, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an import from node"""
         pass
 
-    def visit_Module(self, node:ast.Module, declare:bool=False) -> None:
+    def visit_Module(self, node: ast.Module, declare: bool = False) -> None:
         """Visit a module node"""
         if declare:
             self.module_hpp(node)
@@ -729,7 +767,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print("    __shedskin__::__start(__%s__::__init);" % self.module.ident)
         self.print("}")
 
-    def do_init_modules(self, extmod:bool=False) -> None:
+    def do_init_modules(self, extmod: bool = False) -> None:
         """Initialize modules"""
         self.print("    __shedskin__::__init();")
         for module in sorted(self.gx.modules.values(), key=lambda x: x.import_order):
@@ -748,11 +786,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                     self.print("    " + module.full_path() + "::__init();")
 
-    def do_comment(self, s:Optional[str]) -> None:
+    def do_comment(self, s: Optional[str]) -> None:
         """Generate a comment"""
         if not s:
             return
-        s = s.encode('ascii', 'ignore').decode('ascii') # TODO
+        s = s.encode("ascii", "ignore").decode("ascii")  # TODO
         doc = s.replace("/*", "//").replace("*/", "//").split("\n")
         self.output("/**")
         if doc[0].strip():
@@ -765,16 +803,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def do_comments(self, child: ast.AST) -> None:
         """Generate comments for a node"""
         pass
-#        if child in self.gx.comments:
-#            for n in self.gx.comments[child]:
-#                self.do_comment(n)
 
-    def visit_Continue(self, node: ast.Continue, func:Optional['python.Function']=None) -> None:
+    #        if child in self.gx.comments:
+    #            for n in self.gx.comments[child]:
+    #                self.do_comment(n)
+
+    def visit_Continue(
+        self, node: ast.Continue, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a continue node"""
         self.output("continue;")
 
-    def visit_With(self, node: ast.With, func:Optional['python.Function']=None) -> None:
+    def visit_With(
+        self, node: ast.With, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a with node"""
+
         def handle_with_vars(var: Optional[ast.AST]) -> List[str]:
             if isinstance(var, ast.Name):
                 return [var.id]
@@ -801,7 +845,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("END_WITH")
 
-    def visit_While(self, node: ast.While, func: Optional['python.Function']=None) -> None:
+    def visit_While(
+        self, node: ast.While, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a while node"""
         self.print()
         if node.orelse:
@@ -820,16 +866,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("}")
 
         if node.orelse:
-            self.output(
-                "if (!%s) {" % self.mv.tempcount[node.orelse[0]]
-            )
+            self.output("if (!%s) {" % self.mv.tempcount[node.orelse[0]])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
             self.deindent()
             self.output("}")
 
-    def copy_method(self, cl: 'python.Class', name: 'str', declare: bool) -> None:
+    def copy_method(self, cl: "python.Class", name: "str", declare: bool) -> None:
         """Generate a copy method for a class"""
         class_name = self.cpp_name(cl)
         header = class_name + " *"
@@ -863,7 +907,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.eol()
 
-    def copy_methods(self, cl: 'python.Class', declare: bool) -> None:
+    def copy_methods(self, cl: "python.Class", declare: bool) -> None:
         """Generate copy methods for a class"""
         if cl.has_copy:
             self.copy_method(cl, "__copy__", declare)
@@ -962,9 +1006,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def class_cpp(self, node: ast.ClassDef) -> None:
         """Generate a class definition for a source file"""
         cl = self.mv.classes[node.name]
-#        if node in self.gx.comments:
-#            self.do_comments(node)
-#        else:
+        #        if node in self.gx.comments:
+        #            self.do_comments(node)
+        #        else:
         self.output("/**\nclass %s\n*/\n" % cl.ident)
         self.output("class_ *cl_" + cl.ident + ";\n")
 
@@ -998,7 +1042,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}")
             self.print()
 
-    def class_variables(self, cl: 'python.Class') -> None:
+    def class_variables(self, cl: "python.Class") -> None:
         """Generate class variable declarations"""
         if cl.parent.vars:
             for var in cl.parent.vars.values():
@@ -1016,7 +1060,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if var.invisible:
                 continue  # var.name in cl.virtualvars: continue
             # var is masked by ancestor var
-            vars : set[str] = set()
+            vars: set[str] = set()
             for ancestor in cl.ancestors():
                 vars.update(ancestor.vars)
             if var.name in vars:
@@ -1040,21 +1084,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return "0"
 
-    def inhcpa(self, func: 'python.Function') -> bool:
+    def inhcpa(self, func: "python.Function") -> bool:
         """Check if a function is inherited"""
         return bool(
             infer.called(func)
             or (
                 func in self.gx.inheritance_relations
-                and [1 for f in self.gx.inheritance_relations[func] if isinstance(f, python.Function) and infer.called(f)]
+                and [
+                    1
+                    for f in self.gx.inheritance_relations[func]
+                    if isinstance(f, python.Function) and infer.called(f)
+                ]
             )
         )
 
-    def visit_Slice(self, node: ast.Slice, func: Optional['python.Function']=None) -> None:
+    def visit_Slice(
+        self, node: ast.Slice, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a slice node"""
         assert False
 
-    def visit_Lambda(self, node: ast.Lambda, parent:Optional[Parent]=None) -> None:
+    def visit_Lambda(self, node: ast.Lambda, parent: Optional[Parent] = None) -> None:
         """Visit a lambda node"""
         self.append(self.mv.lambdaname[node])
 
@@ -1099,7 +1149,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append("(new " + ts[:-2] + "(")
         return argtypes
 
-    def visit_Dict(self, node: ast.Dict, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_Dict(
+        self,
+        node: ast.Dict,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a dictionary node"""
         argtypes = self.instance_new(node, argtypes)
         if node.keys:
@@ -1125,11 +1180,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(",")
         self.append("))")
 
-    def visit_Set(self, node:ast.Set, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_Set(
+        self,
+        node: ast.Set,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a set node"""
         self.visit_tuple_list(node, func, argtypes)
 
-    def visit_tuple_list(self, node: Union[ast.Tuple, ast.List, ast.Set], func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_tuple_list(
+        self,
+        node: Union[ast.Tuple, ast.List, ast.Set],
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a tuple, list, or set node"""
         if isinstance(func, python.Class):  # XXX
             func = None
@@ -1151,17 +1216,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append(",")
         self.append("))")
 
-    def visit_Tuple(self, node:ast.Tuple, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_Tuple(
+        self,
+        node: ast.Tuple,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a tuple node"""
-        if type(node.ctx) == ast.Load:
+        if isinstance(node.ctx, ast.Load):
             if len(node.elts) > 2:
                 types = set()
                 for child in node.elts:
                     types.update(self.mergeinh[child])
             self.visit_tuple_list(node, func, argtypes)
-        elif type(node.ctx) == ast.Store:
+
+        elif isinstance(node.ctx, ast.Store):
             assert False
-        elif type(node.ctx) == ast.Del:
+        elif isinstance(node.ctx, ast.Del):
             assert False
         else:
             error.error(
@@ -1171,13 +1242,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_List(self, node:ast.List, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_List(
+        self,
+        node: ast.List,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a list node"""
-        if type(node.ctx) == ast.Load:
+
+        if isinstance(node.ctx, ast.Load):
             self.visit_tuple_list(node, func, argtypes)
-        elif type(node.ctx) == ast.Store:
+        elif isinstance(node.ctx, ast.Store):
             assert False
-        elif type(node.ctx) == ast.Del:
+        elif isinstance(node.ctx, ast.Del):
             assert False
         else:
             error.error(
@@ -1187,7 +1264,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_Assert(self, node:ast.Assert, func:Optional['python.Function']=None) -> None:
+    def visit_Assert(
+        self, node: ast.Assert, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an assert node"""
         self.start("ASSERT(")
         self.visitm(node.test, ", ", func)
@@ -1197,7 +1276,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append("0")
         self.eol(")")
 
-    def visit_Raise(self, node:ast.Raise, func:Optional['python.Function']=None) -> None:
+    def visit_Raise(
+        self, node: ast.Raise, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a raise node"""
         exc = node.exc
         assert exc
@@ -1209,9 +1290,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.start("throw (")
 
         # --- raise class  # TODO lookup_class?
-        if isinstance(exc, ast.Name) and not python.lookup_var(
-            exc.id, func, self.mv
-        ):
+        if isinstance(exc, ast.Name) and not python.lookup_var(exc.id, func, self.mv):
             self.append("new %s()" % exc.id)
 
         # --- raise instance
@@ -1225,7 +1304,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(exc, func)
         self.eol(")")
 
-    def visit_Try(self, node:ast.Try, func:Optional['python.Function']=None) -> None:
+    def visit_Try(
+        self, node: ast.Try, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a try node"""
         self.start("try {")
         self.print(self.line)
@@ -1292,9 +1373,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # else
         if node.orelse:
-            self.output(
-                "if(%s) { // else" % self.mv.tempcount[node.orelse[0]]
-            )
+            self.output("if(%s) { // else" % self.mv.tempcount[node.orelse[0]])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
@@ -1307,8 +1386,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         qual: Union[ast.For, ast.comprehension],
         quals: Optional[List[ast.comprehension]],
         iter: str,
-        func: Optional['python.Function'],
-        genexpr:bool
+        func: Optional["python.Function"],
+        genexpr: bool,
     ) -> None:
         """Generate a fast for loop"""
         assert isinstance(qual.iter, ast.Call)
@@ -1321,14 +1400,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.fastfor(qual, iter, func)
         self.forbody(node, quals, iter, func, False, genexpr)
 
-    def impl_visit_temp(self, node: ast.AST, func: Optional['python.Function']) -> None:  # XXX generalize?
+    # XXX generalize?
+    def impl_visit_temp(self, node: ast.AST, func: Optional["python.Function"]) -> None:
         """Visit a temporary variable"""
         if node in self.mv.tempcount:
             self.append(self.mv.tempcount[node])
         else:
             self.visit(node, func)
 
-    def fastfor(self, node: Union[ast.For, ast.comprehension], assname: str, func: Optional['python.Function']=None) -> None:
+    def fastfor(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        assname: str,
+        func: Optional["python.Function"] = None,
+    ) -> None:
         """Generate a fast for loop"""
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) ..
         ivar, evar = self.mv.tempcount[node.target], self.mv.tempcount[node.iter]
@@ -1390,7 +1475,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
-    def visit_For(self, node: ast.For, func:Optional['python.Function']=None) -> None:
+    def visit_For(
+        self, node: ast.For, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a for loop node"""
         if isinstance(node.target, ast.Name):
             assname = node.target.id
@@ -1424,7 +1511,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, False, False)
         self.print()
 
-    def do_fastzip2(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr:bool) -> None:
+    def do_fastzip2(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
         """Generate a fast zip2 loop"""
         assert isinstance(node.iter, ast.Call)
         assert isinstance(node.target, (ast.Tuple, ast.List))
@@ -1452,7 +1544,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def do_fastzip2_one(self, node: ast.AST, func: Optional['python.Function']) -> None:
+    def do_fastzip2_one(self, node: ast.AST, func: Optional["python.Function"]) -> None:
         """Generate a fast zip2 loop one"""
         if ast_utils.is_assign_list_or_tuple(node):
             self.append(self.mv.tempcount[node])
@@ -1460,7 +1552,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(node, func)
         self.append(",")
 
-    def do_fastenumerate(self, node: Union[ast.For, ast.comprehension], func:Optional['python.Function'], genexpr:bool) -> None:
+    def do_fastenumerate(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
         """Generate a fast enumerate loop"""
         assert isinstance(node.iter, ast.Call)
         assert isinstance(node.target, (ast.Tuple, ast.List))
@@ -1481,7 +1578,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def do_fastdictiter(self, node: Union[ast.For, ast.comprehension], func: Optional['python.Function'], genexpr: bool) -> None:
+    def do_fastdictiter(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
         """Generate a fast dict iterator loop"""
         self.start("FOR_IN_DICT(")
         assert isinstance(node.target, (ast.Tuple, ast.List))
@@ -1501,7 +1603,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.start()
         if left in self.mv.tempcount:  # XXX not for zip, enum..?
             self.visitm(
-                "%s = (*%s).first" % (self.mv.tempcount[left], self.mv.tempcount[node, 6]),
+                "%s = (*%s).first"
+                % (self.mv.tempcount[left], self.mv.tempcount[node, 6]),
                 func,
             )
         else:
@@ -1525,7 +1628,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
 
-    def forin_preftail(self, node: Union[ast.For, ast.comprehension]) -> Tuple[str, str]:
+    def forin_preftail(
+        self, node: Union[ast.For, ast.comprehension]
+    ) -> Tuple[str, str]:
         """Get the prefix and tail for a for in loop"""
         tail = self.mv.tempcount[node][2:] + "," + self.mv.tempcount[node.iter][2:]
         tail += "," + self.mv.tempcount[(node, 5)][2:]
@@ -1536,7 +1641,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         node: Union[ast.For, ast.ListComp],
         quals: Optional[List[ast.comprehension]],
         iter: str,
-        func: Optional['python.Function'],
+        func: Optional["python.Function"],
         skip: bool,
         genexpr: bool,
     ) -> None:
@@ -1559,9 +1664,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("END_FOR")
         if node.orelse:
-            self.output(
-                "if (!%s) {" % self.mv.tempcount[node.orelse[0]]
-            )
+            self.output("if (!%s) {" % self.mv.tempcount[node.orelse[0]])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
@@ -1588,8 +1691,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 + ");"
             )
         self.print()
-    
-    def func_header(self, func: 'python.Function', declare: bool, is_init: bool = False) -> None:
+
+    def func_header(
+        self, func: "python.Function", declare: bool, is_init: bool = False
+    ) -> None:
         """Generate the header for a function or method"""
         method = isinstance(func.parent, python.Class)
         if method:
@@ -1687,7 +1792,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.output(cast)
             self.deindent()
 
-    def visit_FunctionDef(self, node: ast.FunctionDef, parent:Optional[Parent]=None, declare:bool=False) -> None:
+    def visit_FunctionDef(
+        self,
+        node: ast.FunctionDef,
+        parent: Optional[Parent] = None,
+        declare: bool = False,
+    ) -> None:
         """Visit a function definition node"""
         # locate right func instance
         if parent and isinstance(parent, python.Class):
@@ -1711,7 +1821,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 error.error(
                     repr(func) + " not called!", self.gx, node, warning=True, mv=self.mv
                 )
-            if not (declare and isinstance(func.parent, python.Class) and func.ident in func.parent.virtuals):
+            if not (
+                declare
+                and isinstance(func.parent, python.Class)
+                and func.ident in func.parent.virtuals
+            ):
                 return
 
         if func.isGenerator and not declare:
@@ -1751,12 +1865,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def generator_ident(self, func: 'python.Function') -> str:  # XXX merge?
+    # XXX merge?
+    def generator_ident(self, func: "python.Function") -> str:
         if func.parent:
             return func.parent.ident + "_" + func.ident
         return func.ident
 
-    def generator_class(self, func: 'python.Function') -> None:
+    def generator_class(self, func: "python.Function") -> None:
         ident = self.generator_ident(func)
         assert func.retnode
         self.output(
@@ -1818,7 +1933,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("};\n")
 
-    def generator_body(self, func: 'python.Function') -> None:
+    def generator_body(self, func: "python.Function") -> None:
         """Generate the body of a generator function"""
         ident = self.generator_ident(func)
         if not (func.isGenerator and func.parent):
@@ -1831,44 +1946,46 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
-    def visit_Yield(self, node:ast.Yield, func: 'python.Function') -> None:
+    def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
         """Generate a yield statement"""
         self.output("__last_yield = %d;" % func.yieldNodes.index(node))
         self.start("__result = ")
-        assert node.value # added in graph.py
+        assert node.value  # added in graph.py
         self.impl_visit_conv(node.value, self.mergeinh[func.yieldnode.thing], func)
         self.eol()
         self.output("return __result;")
         self.output("__after_yield_%d:;" % func.yieldNodes.index(node))
         self.start()
 
-    def visit_Global(self, node: ast.Global, func:Optional['python.Function']=None) -> None:
+    def visit_Global(
+        self, node: ast.Global, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a global statement"""
         pass
 
     def visit_If(
         self,
         node: ast.If,
-        func: Optional['python.Function']=None,
-        else_if: int=0,
-        root_if: Optional[ast.If]=None,
+        func: Optional["python.Function"] = None,
+        else_if: int = 0,
+        root_if: Optional[ast.If] = None,
     ) -> None:
         """Visit an if statement"""
         # break up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         root_if = root_if or node
         if else_if == 0:
             if root_if in self.mv.tempcount:
-                self.output(self.mv.tempcount[root_if] + ' = (__ss_int)1;');
+                self.output(self.mv.tempcount[root_if] + " = (__ss_int)1;")
             self.start()
             self.append("if (")
         else:
             if root_if in self.mv.tempcount and else_if % 100 == 0:
-                self.output('else')
-                self.output('    ' + self.mv.tempcount[root_if] + ' = (__ss_int)0;');
+                self.output("else")
+                self.output("    " + self.mv.tempcount[root_if] + " = (__ss_int)0;")
                 if else_if > 100:
-                    self.output('}')
-                self.output('if(!' + self.mv.tempcount[root_if] + ') {')
-                self.output('    ' + self.mv.tempcount[root_if] + ' = (__ss_int)1;');
+                    self.output("}")
+                self.output("if(!" + self.mv.tempcount[root_if] + ") {")
+                self.output("    " + self.mv.tempcount[root_if] + " = (__ss_int)1;")
                 self.start()
                 self.append("if (")
             else:
@@ -1886,7 +2003,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if node.orelse:
             if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
-                self.visit_If(node.orelse[0], func, else_if+1, root_if)
+                self.visit_If(node.orelse[0], func, else_if + 1, root_if)
             else:
                 self.output("else {")
                 self.indent()
@@ -1900,7 +2017,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif root_if in self.mv.tempcount:
             self.output("}")
 
-    def visit_IfExp(self, node:ast.IfExp, func:Optional['python.Function']=None) -> None:
+    def visit_IfExp(
+        self, node: ast.IfExp, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an if expression"""
         types = self.mergeinh[node]
         self.append("((")
@@ -1915,8 +2034,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self,
         node: ast.AST,
         argtypes: Types,
-        func: Optional['python.Function'],
-        check_temp: bool=True,
+        func: Optional["python.Function"],
+        check_temp: bool = True,
     ) -> None:
         """Convert/cast a node to the type it is assigned to"""
         actualtypes = self.mergeinh[node]
@@ -1964,7 +2083,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if cast:
                 self.append("))")
 
-    def visit_Break(self, node: ast.Break, func:Optional['python.Function']=None) -> None:
+    def visit_Break(
+        self, node: ast.Break, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a break statement"""
         if self.gx.loopstack[-1].orelse:
             orelse_tempcount_id = self.gx.loopstack[-1].orelse[0]
@@ -1972,14 +2093,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.output("%s = 1;" % self.mv.tempcount[orelse_tempcount_id])
         self.output("break;")
 
-    def visit_BoolOp(self, node: ast.BoolOp, func:Optional['python.Function']=None) -> None:
+    def visit_BoolOp(
+        self, node: ast.BoolOp, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a boolean operation"""
-        if type(node.op) == ast.Or:
+        if isinstance(node.op, ast.Or):
             self.impl_visit_and_or(node, node.values, "__OR", "or", func)
-        elif type(node.op) == ast.And:
+        elif isinstance(node.op, ast.And):
             self.impl_visit_and_or(node, node.values, "__AND", "and", func)
 
-    def impl_visit_and_or(self, node: ast.BoolOp, nodes: List[ast.expr], op: str, mix: str, func:Optional['python.Function']=None) -> None:
+    def impl_visit_and_or(
+        self,
+        node: ast.BoolOp,
+        nodes: List[ast.expr],
+        op: str,
+        mix: str,
+        func: Optional["python.Function"] = None,
+    ) -> None:
         """Generate an and or operation"""
         if node in self.gx.bool_test_only:
             self.append("(")
@@ -1998,7 +2128,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.impl_visit_and_or(node, nodes[1:], op, mix, func)
                 self.append(", " + self.mv.tempcount[child][2:] + ")")
 
-    def visit_Compare(self, node: ast.Compare, func:Optional['python.Function']=None, wrapper:bool=True) -> None:
+    def visit_Compare(
+        self,
+        node: ast.Compare,
+        func: Optional["python.Function"] = None,
+        wrapper: bool = True,
+    ) -> None:
         """Visit a comparison operation"""
         if node not in self.bool_wrapper:
             self.append("___bool(")
@@ -2028,21 +2163,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if node not in self.bool_wrapper:
             self.append(")")
 
-    def visit_AugAssign(self, node: ast.AugAssign, func:Optional['python.Function']=None) -> None:
+    def visit_AugAssign(
+        self, node: ast.AugAssign, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an augmented assignment"""
         if isinstance(node.target, ast.Subscript):
             self.start()
-            if (
-                set(
-                    [
-                        t[0].ident
-                        for t in self.mergeinh[node.target.value]
-                        if isinstance(t[0], python.Class)
-                    ]
-                )
-                in [set(["dict"]), set(["defaultdict"])]
-                and type(node.op) == ast.Add
-            ):
+            if set(
+                [
+                    t[0].ident
+                    for t in self.mergeinh[node.target.value]
+                    if isinstance(t[0], python.Class)
+                ]
+            ) in [set(["dict"]), set(["defaultdict"])] and isinstance(node.op, ast.Add):
                 self.visitm(
                     node.target.value,
                     "->__addtoitem__(",
@@ -2068,9 +2201,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.eol()
         self.visit(infer.inode(self.gx, node).assignhop, func)
 
-    def visit_BinOp(self, node: ast.BinOp, func:Optional['python.Function']=None) -> None:
+    def visit_BinOp(
+        self, node: ast.BinOp, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a binary operation"""
-        if type(node.op) == ast.Add:
+        if isinstance(node.op, ast.Add):
             str_nodes = self.rec_string_addition(node)
             if len(str_nodes) > 2:
                 self.append("__add_strs(%d, " % len(str_nodes))
@@ -2081,42 +2216,76 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             else:
                 self.impl_visit_binary(
-                    node.left, node.right, ast_utils.aug_msg(self.gx, node, "add"), "+", func
+                    node.left,
+                    node.right,
+                    ast_utils.aug_msg(self.gx, node, "add"),
+                    "+",
+                    func,
                 )
-        elif type(node.op) == ast.Sub:
+        elif isinstance(node.op, ast.Sub):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "sub"), "-", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "sub"),
+                "-",
+                func,
             )
-        elif type(node.op) == ast.Mult:
+        elif isinstance(node.op, ast.Mult):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "mul"), "*", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "mul"),
+                "*",
+                func,
             )
-        elif type(node.op) == ast.Div:
+        elif isinstance(node.op, ast.Div):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "truediv"), "/", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "truediv"),
+                "/",
+                func,
             )
-        elif type(node.op) == ast.FloorDiv:
+        elif isinstance(node.op, ast.FloorDiv):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "floordiv"), "//", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "floordiv"),
+                "//",
+                func,
             )
-        elif type(node.op) == ast.Pow:
+        elif isinstance(node.op, ast.Pow):
             self.power(node.left, node.right, None, func)
-        elif type(node.op) == ast.Mod:
+        elif isinstance(node.op, ast.Mod):
             self.impl_visit_mod(node, func)
-        elif type(node.op) == ast.LShift:
+        elif isinstance(node.op, ast.LShift):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "lshift"), "<<", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "lshift"),
+                "<<",
+                func,
             )
-        elif type(node.op) == ast.RShift:
+        elif isinstance(node.op, ast.RShift):
             self.impl_visit_binary(
-                node.left, node.right, ast_utils.aug_msg(self.gx, node, "rshift"), ">>", func
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "rshift"),
+                ">>",
+                func,
             )
-        elif type(node.op) == ast.BitOr:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "or"), "|", func)
-        elif type(node.op) == ast.BitXor:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "xor"), "^", func)
-        elif type(node.op) == ast.BitAnd:
-            self.impl_visit_bitop(node, ast_utils.aug_msg(self.gx, node, "and"), "&", func)
+        elif isinstance(node.op, ast.BitOr):
+            self.impl_visit_bitop(
+                node, ast_utils.aug_msg(self.gx, node, "or"), "|", func
+            )
+        elif isinstance(node.op, ast.BitXor):
+            self.impl_visit_bitop(
+                node, ast_utils.aug_msg(self.gx, node, "xor"), "^", func
+            )
+        elif isinstance(node.op, ast.BitAnd):
+            self.impl_visit_bitop(
+                node, ast_utils.aug_msg(self.gx, node, "and"), "&", func
+            )
         # PY3: elif type(node.op) == MatMult:
         else:
             error.error(
@@ -2128,9 +2297,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def rec_string_addition(self, node: ast.AST) -> List[ast.AST]:
         """Recursively find string addition nodes"""
-        if isinstance(node, ast.BinOp) and type(node.op) == ast.Add:
-            left, right = self.rec_string_addition(node.left), self.rec_string_addition(
-                node.right
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left, right = (
+                self.rec_string_addition(node.left),
+                self.rec_string_addition(node.right),
             )
             if left and right:
                 return left + right
@@ -2138,7 +2308,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return [node]
         return []
 
-    def impl_visit_bitop(self, node: ast.BinOp, msg: str, inline: str, func: Optional['python.Function']=None) -> None:
+    def impl_visit_bitop(
+        self,
+        node: ast.BinOp,
+        msg: str,
+        inline: str,
+        func: Optional["python.Function"] = None,
+    ) -> None:
         """Generate a bitwise operation"""
         ltypes = self.mergeinh[node.left]
         ul = typestr.unboxable(self.gx, ltypes)
@@ -2155,11 +2331,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")")
         self.append(")")
 
-    def power(self, left: ast.AST, right: ast.AST, mod: Optional[ast.AST], func:Optional['python.Function']=None) -> None:
+    def power(
+        self,
+        left: ast.AST,
+        right: ast.AST,
+        mod: Optional[ast.AST],
+        func: Optional["python.Function"] = None,
+    ) -> None:
         """Generate a power operation"""
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
-            if not isinstance(right, ast.Num) or (isinstance(right.n, (int, float)) and right.n < 0):
+            if not isinstance(right, ast.Num) or (
+                isinstance(right.n, (int, float)) and right.n < 0
+            ):
                 error.error(
                     "pow(int, int) returns int after compilation",
                     self.gx,
@@ -2172,9 +2356,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.visitm("__power(", left, ", ", right, ")", func)
 
+    # XXX cleanup please
     def impl_visit_binary(
-        self, left: ast.AST, right: ast.AST, middle: str, inline: str, func: Optional['python.Function']=None
-        ) -> None:  # XXX cleanup please
+        self,
+        left: ast.AST,
+        right: ast.AST,
+        middle: str,
+        inline: str,
+        func: Optional["python.Function"] = None,
+    ) -> None:
         """Generate a binary operation"""
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
@@ -2251,7 +2441,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return
 
         # --- optimize: list + [element]
-        if middle == "__add__" and self.one_class(left, ('list',)) and isinstance(right, ast.List) and len(right.elts) == 1:
+        if (
+            middle == "__add__"
+            and self.one_class(left, ("list",))
+            and isinstance(right, ast.List)
+            and len(right.elts) == 1
+        ):
             self.append("__add_list_elt(")
             self.visit(left, func)
             self.append(", ")
@@ -2280,8 +2475,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         right: ast.AST,
         middle: Optional[str],
         inline: Optional[str],
-        func: Optional['python.Function']=None,
-        prefix: Optional[str]=None,
+        func: Optional["python.Function"] = None,
+        prefix: Optional[str] = None,
     ) -> None:
         """Generate a comparison operation"""
         ltypes = self.mergeinh[left]
@@ -2304,9 +2499,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append("__eq(")
 
                 if i == 0:
-                    self.visitm(self.mv.tempcount[(left, 'cmp')], '=', right, func)
+                    self.visitm(self.mv.tempcount[(left, "cmp")], "=", right, func)
                 else:
-                    self.visitm(self.mv.tempcount[(left, 'cmp')], func)
+                    self.visitm(self.mv.tempcount[(left, "cmp")], func)
 
                 self.append(",")
                 self.visit(elem, func)
@@ -2365,7 +2560,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         node: ast.AST,
         argtypes: Types,
         middle: Optional[str],
-        func: Optional['python.Function'],
+        func: Optional["python.Function"],
     ) -> None:  # XXX use temp vars in comparisons, e.g. (t1=fun())
         """Visit a node to get its temporary variable"""
         if node in self.mv.tempcount:
@@ -2379,9 +2574,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.impl_visit_conv(node, argtypes, func)
 
-    def visit_UnaryOp(self, node: ast.UnaryOp, func:Optional['python.Function']=None) -> None:
+    def visit_UnaryOp(
+        self, node: ast.UnaryOp, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a unary operation"""
-        if type(node.op) == ast.USub:
+        if isinstance(node.op, ast.USub):
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("-", node.operand, func)
@@ -2390,7 +2587,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 assert fakefunc
                 self.visit_Call(fakefunc, func)
             self.visitm(")", func)
-        elif type(node.op) == ast.UAdd:
+        elif isinstance(node.op, ast.UAdd):
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("+", node.operand, func)
@@ -2399,14 +2596,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 assert fakefunc
                 self.visit_Call(fakefunc, func)
             self.visitm(")", func)
-        elif type(node.op) == ast.Invert:
+        elif isinstance(node.op, ast.Invert):
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
                 self.visitm("~", node.operand, func)
             else:
                 fakefunc = infer.inode(self.gx, node.operand).fakefunc
                 assert fakefunc
                 self.visit_Call(fakefunc, func)
-        elif type(node.op) == ast.Not:
+        elif isinstance(node.op, ast.Not):
             self.append("__NOT(")
             self.bool_test(node.operand, func)
             self.append(")")
@@ -2420,7 +2617,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def library_func(
         self,
-        funcs: List['python.Function'],
+        funcs: List["python.Function"],
         modname: str,
         clname: Optional[str],
         funcname: str,
@@ -2435,31 +2632,37 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return func.ident == funcname
         return False
 
-    def add_args_arg(self, node: ast.Call, funcs: List['python.Function']) -> None:
+    def add_args_arg(self, node: ast.Call, funcs: List["python.Function"]) -> None:
         """append argument that describes which formals are actually filled in"""
         if self.library_func(funcs, "datetime", "time", "replace") or self.library_func(
             funcs, "datetime", "datetime", "replace"
         ):
-            formals = funcs[0].formals[1:]  # skip self
-            formal_pos = dict((v, k) for k, v in enumerate(formals))
+            # formals = funcs[0].formals[1:]  # skip self UNUSED
+            # formal_pos = dict((v, k) for k, v in enumerate(formals)) # UNUSED
             positions = []
 
             for i, arg in enumerate(node.args):
                 if isinstance(arg, ast.keyword):
                     assert False
-#                    positions.append(formal_pos[arg.name])
+                #                    positions.append(formal_pos[arg.name])
                 else:
                     positions.append(i)
 
             if positions:
                 self.append(
-                    str(functools.reduce(lambda a, b: a | b, ((1 << x) for x in positions)))
+                    str(
+                        functools.reduce(
+                            lambda a, b: a | b, ((1 << x) for x in positions)
+                        )
+                    )
                     + ", "
                 )
             else:
                 self.append("0, ")
 
-    def visit_JoinedStr(self, node: ast.JoinedStr, func:Optional['python.Function']=None) -> None:
+    def visit_JoinedStr(
+        self, node: ast.JoinedStr, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a joined string"""
         self.append("__add_strs(%d, " % len(node.values))
         for i, value in enumerate(node.values):
@@ -2470,11 +2673,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(", ")
         self.append(")")
 
-    def visit_Pass(self, node: ast.Pass, func:Optional['python.Function']=None) -> None:
+    def visit_Pass(
+        self, node: ast.Pass, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a pass statement"""
         pass
 
-    def visit_Call(self, node:ast.Call, func:Optional['python.Function']=None, argtypes:Optional[Types]=None) -> None:
+    def visit_Call(
+        self,
+        node: ast.Call,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
         """Visit a call node"""
         (
             objexpr,
@@ -2635,12 +2845,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("hasher(")  # XXX cleanup
             elif ident == "__print":  # XXX
                 if not node.keywords:
-                    self.append('print(')
+                    self.append("print(")
                     for i, arg in enumerate(node.args):
                         self.visit(arg, func)
-                        if i != len(node.args)-1:
-                            self.append(', ')
-                    self.append(')')
+                        if i != len(node.args) - 1:
+                            self.append(", ")
+                    self.append(")")
                     return
                 self.append("print_(")
             elif ident == "isinstance":
@@ -2752,7 +2962,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if constructor:
             self.append(")")
 
-    def bool_test(self, node: ast.AST, func: Optional['python.Function'], always_wrap:bool=False) -> None:
+    def bool_test(
+        self,
+        node: ast.AST,
+        func: Optional["python.Function"],
+        always_wrap: bool = False,
+    ) -> None:
         """Generate a boolean test"""
         wrapper = always_wrap or not self.only_classes(node, ("int_", "bool_"))
         if node in self.gx.bool_test_only:
@@ -2770,9 +2985,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_callfunc_args(
         self,
-        funcs: List['python.Function'],
+        funcs: List["python.Function"],
         node: ast.Call,
-        func: Optional['python.Function']
+        func: Optional["python.Function"],
     ) -> None:
         """Visit the arguments of a call node"""
         (
@@ -2784,7 +2999,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             parent_constr,
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
-        target: Union['python.Function', 'python.Class']  # TODO should be one of the two
+        target: Union[
+            "python.Function", "python.Class"
+        ]  # TODO should be one of the two
         target = funcs[0]  # XXX
 
         swap_env = False
@@ -2896,7 +3113,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
                     assert isinstance(arg, ast.Constant)  # TODO see 0.9.10 issue!
                     self.append(str(arg.value))
-                elif self.mergeinh[arg] == set([(python.def_class(self.gx, "none"), 0)]):
+                elif self.mergeinh[arg] == set(
+                    [(python.def_class(self.gx, "none"), 0)]
+                ):
                     self.append("NULL")
                 elif target.mv.module == self.mv.module:
                     self.append("default_%d" % (target.mv.defaults[arg][0]))
@@ -2943,9 +3162,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def cast_to_builtin(
         self,
         arg: ast.AST,
-        func: Optional['python.Function'],
-        formal: 'python.Variable',
-        target: 'python.Function',
+        func: Optional["python.Function"],
+        formal: "python.Variable",
+        target: "python.Function",
         method_call: bool,
         objexpr: Optional[ast.AST],
     ) -> Optional[Types]:
@@ -2970,7 +3189,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def cast_to_builtin2(
         self,
         arg: ast.AST,
-        func: Optional['python.Function'],
+        func: Optional["python.Function"],
         objexpr: ast.AST,
         msg: str,
         formal_nr: int,
@@ -2991,7 +3210,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         return typestr.typestr(self.gx, builtin_types, mv=self.mv)
         return None
 
-    def visit_Return(self, node: ast.Return, func: Optional['python.Function']=None) -> None:
+    def visit_Return(
+        self, node: ast.Return, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a return statement"""
         if func and func.isGenerator:
             self.output("__stop_iteration = true;")
@@ -3002,13 +3223,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("return __zero<%s>();" % func2)
             return
         self.start("return ")
-        assert node.value # added in graph.py
+        assert node.value  # added in graph.py
         assert func
         assert func.retnode
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
 
-    def tuple_assign(self, lvalue: Union[ast.List, ast.Tuple], rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
+    def tuple_assign(
+        self,
+        lvalue: Union[ast.List, ast.Tuple],
+        rvalue: Union[ast.AST, str],
+        func: Optional["python.Function"],
+    ) -> None:
         """Generate a tuple assignment"""
         temp = self.mv.tempcount[lvalue]
 
@@ -3090,11 +3316,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             sel = "__getfast__(%d)" % i
         return "%s->%s" % (temp, sel)
 
-    def subs_assign(self, lvalue: ast.Subscript, func:Optional['python.Function']) -> None:
+    def subs_assign(
+        self, lvalue: ast.Subscript, func: Optional["python.Function"]
+    ) -> None:
         """Generate a subscript assignment"""
         if isinstance(lvalue.slice, ast.Index):
             assert False
-#            subs = lvalue.slice.value
+        #            subs = lvalue.slice.value
         else:
             subs = lvalue.slice
         self.visitm(
@@ -3106,7 +3334,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             func,
         )
 
-    def struct_unpack_cpp(self, node:ast.Assign, func:Optional['python.Function']) -> bool:
+    def struct_unpack_cpp(
+        self, node: ast.Assign, func: Optional["python.Function"]
+    ) -> bool:
         """Generate a struct unpack operation"""
         struct_unpack = self.gx.struct_unpack.get(node)
         if struct_unpack:
@@ -3115,9 +3345,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(node.value, ast.Call)
             self.visitm(tvar, " = ", node.value.args[1], func)
             self.eol()
-            if len(node.value.args) > 2: # TODO unpack_from: nicer check
+            if len(node.value.args) > 2:  # TODO unpack_from: nicer check
                 self.start()
-                self.visitm(tvar_pos, " = __wrap(", tvar, ", ", node.value.args[2], ")", func)
+                self.visitm(
+                    tvar_pos, " = __wrap(", tvar, ", ", node.value.args[2], ")", func
+                )
                 self.eol()
             else:
                 self.output("%s = 0;" % tvar_pos)
@@ -3152,18 +3384,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return True
         return False
 
-    def visit_Delete(self, node: ast.Delete, func:Optional['python.Function']=None) -> None:
+    def visit_Delete(
+        self, node: ast.Delete, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit a delete statement"""
         for child in node.targets:
             self.visit(child, func)
 
-    def visit_AnnAssign(self, node: ast.AnnAssign, func:Optional['python.Function']=None) -> None:
+    def visit_AnnAssign(
+        self, node: ast.AnnAssign, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an annotated assignment"""
         self.visit(ast.Assign([node.target], node.value), func)
 
-    def visit_Assign(self, node: ast.Assign, func:Optional['python.Function']=None) -> None:
+    def visit_Assign(
+        self, node: ast.Assign, func: Optional["python.Function"] = None
+    ) -> None:
         """Visit an assignment"""
-        if node.value is None: # skip type annotation
+        if node.value is None:  # skip type annotation
             return
 
         if self.struct_unpack_cpp(node, func):
@@ -3285,9 +3523,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         func,
                     )
                     if [
-                        t
-                        for t in self.mergeinh[lvalue.value]
-                        if t[0].ident == "bytes_"
+                        t for t in self.mergeinh[lvalue.value] if t[0].ident == "bytes_"
                     ]:  # TODO more general fix
                         self.visit(fakefunc.args[4], func)
                     elif [
@@ -3303,7 +3539,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append(")")
                     self.eol()
 
-    def assign_pair(self, lvalue: ast.AST, rvalue: Union[ast.AST, str], func: Optional['python.Function']) -> None:
+    def assign_pair(
+        self,
+        lvalue: ast.AST,
+        rvalue: Union[ast.AST, str],
+        func: Optional["python.Function"],
+    ) -> None:
         """Generate an assignment pair"""
         self.start("")
 
@@ -3382,7 +3623,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 + [" {", ";"][declare]
             )
 
-    def lc_args(self, lcfunc: 'python.Function', func: Optional['python.Function']) -> List[Tuple[str, str]]:
+    def lc_args(
+        self, lcfunc: "python.Function", func: Optional["python.Function"]
+    ) -> List[Tuple[str, str]]:
         """Generate the arguments for a list comprehension"""
         args = []
         for name in lcfunc.misses:
@@ -3391,7 +3634,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if var.parent:
                 arg = self.cpp_name(name)
                 if name in lcfunc.misses_by_ref:
-                    arg = '&' + arg
+                    arg = "&" + arg
                 args.append(
                     (
                         typestr.nodetypestr(
@@ -3475,7 +3718,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
-    def listcomp_rec(self, node: ast.ListComp, quals: List[ast.comprehension], lcfunc: 'python.Function', genexpr: bool) -> None:
+    def listcomp_rec(
+        self,
+        node: ast.ListComp,
+        quals: List[ast.comprehension],
+        lcfunc: "python.Function",
+        genexpr: bool,
+    ) -> None:
         """Generate nested for loops"""
         if not quals:
             if genexpr:
@@ -3551,9 +3800,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         node: ast.ListComp,
         quals: List[ast.comprehension],
         iter: str,
-        lcfunc: 'python.Function',
+        lcfunc: "python.Function",
         skip: bool,
-        genexpr: bool
+        genexpr: bool,
     ) -> None:
         """Generate the body of a for loop"""
         qual = quals[0]
@@ -3584,12 +3833,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}")
         self.deindent()
         self.output("END_FOR\n")
-    
-    def visit_GeneratorExp(self, node: ast.GeneratorExp, func:Optional['python.Function']=None) -> None:
+
+    def visit_GeneratorExp(
+        self, node: ast.GeneratorExp, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a generator expression"""
         self.visit(self.gx.genexp_to_lc[node], func)
 
-    def visit_ListComp(self, node: ast.ListComp, func:Optional['python.Function']=None) -> None:
+    def visit_ListComp(
+        self, node: ast.ListComp, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a list comprehension"""
         lcfunc, _ = self.listcomps[node]
         args = []
@@ -3608,13 +3861,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append("new ")
         self.append(lcfunc.ident + "(" + ", ".join(args) + ")")
 
-    def visit_Subscript(self, node: ast.Subscript, func:Optional['python.Function']=None) -> None:
+    def visit_Subscript(
+        self, node: ast.Subscript, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a subscript operation"""
-        if type(node.ctx) in (ast.Load, ast.Store):
+        if isinstance(node.ctx, (ast.Load, ast.Store)):
             fakefunc = infer.inode(self.gx, node.value).fakefunc
             assert fakefunc
             self.visit_Call(fakefunc, func)
-        elif type(node.ctx) == ast.Del:
+        elif isinstance(node.ctx, ast.Del):
             fakefunc = infer.inode(self.gx, node.value).fakefunc
             assert fakefunc
             self.start()
@@ -3631,7 +3886,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def impl_visit_mod(self, node: ast.BinOp, func: Optional['python.Function']=None) -> None:
+    def impl_visit_mod(
+        self, node: ast.BinOp, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a modulo operation"""
         # --- non-str % ..
         if [
@@ -3647,10 +3904,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             not isinstance(node.right, ast.Tuple)
             and node.right in self.gx.merged_inh
             and [
-                 t
-                 for t in self.gx.merged_inh[node.right]
-                 if t[0].ident in ["tuple", "tuple2"]
-                ]
+                t
+                for t in self.gx.merged_inh[node.right]
+                if t[0].ident in ["tuple", "tuple2"]
+            ]
         ):
             self.visitm("__modtuple(", node.left, ", ", node.right, ")", func)
             return
@@ -3662,12 +3919,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             nodes = [node.right]
 
         # --- visit nodes, boxing scalars
-        self.visitm("__mod6(", node.left, ', ', str(len(nodes)), func)
+        self.visitm("__mod6(", node.left, ", ", str(len(nodes)), func)
         for n in nodes:
             self.visitm(", ", n, func)
         self.append(")")
 
-    def attr_var_ref(self, node: ast.Attribute, ident: str) -> str:  # TODO remove, by using convention for var names
+    def attr_var_ref(
+        self, node: ast.Attribute, ident: str
+    ) -> str:  # TODO remove, by using convention for var names
         """Generate a reference to an attribute variable"""
         lcp = typestr.lowest_common_parents(
             typestr.polymorphic_t(self.gx, self.mergeinh[node.value])
@@ -3682,9 +3941,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return self.cpp_name(ident)
 
-    def visit_Attribute(self, node: ast.Attribute, func:Optional['python.Function']=None) -> None:  # XXX merge with visitGetattr
+    def visit_Attribute(
+        self, node: ast.Attribute, func: Optional["python.Function"] = None
+    ) -> None:  # XXX merge with visitGetattr
         """Generate a reference to an attribute variable"""
-        if type(node.ctx) == ast.Load:
+        if isinstance(node.ctx, ast.Load):
             cl, module = python.lookup_class_module(
                 node.value, infer.inode(self.gx, node).mv, func
             )
@@ -3725,7 +3986,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             # obj.attr
             else:
-                checkcls: List['python.Class'] = []  # XXX better to just inherit vars?
+                checkcls: List["python.Class"] = []  # XXX better to just inherit vars?
 
                 for t in self.mergeinh[node.value]:
                     if isinstance(t[0], python.Class):
@@ -3745,7 +4006,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                         break
 
-                    if not node in self.gx.called and [
+                    if node not in self.gx.called and [
                         cl for cl in checkcls if node.attr in cl.funcs
                     ]:
                         error.error(
@@ -3822,7 +4083,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 cppname = self.attr_var_ref(node, ident)
             self.append(cppname)
 
-        elif type(node.ctx) == ast.Del:
+        elif isinstance(node.ctx, ast.Del):
             error.error(
                 "'del' has no effect without refcounting",
                 self.gx,
@@ -3830,7 +4091,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 warning=True,
                 mv=self.mv,
             )
-        elif type(node.ctx) == ast.Store:
+        elif isinstance(node.ctx, ast.Store):
             cl, module = python.lookup_class_module(
                 node.value, infer.inode(self.gx, node).mv, func
             )
@@ -3869,9 +4130,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 mv=self.mv,
             )
 
-    def visit_Name(self, node: ast.Name, func:Optional['python.Function']=None, add_cl:bool=True) -> None:
+    def visit_Name(
+        self,
+        node: ast.Name,
+        func: Optional["python.Function"] = None,
+        add_cl: bool = True,
+    ) -> None:
         """Generate a reference to a variable"""
-        if type(node.ctx) == ast.Del:
+        if isinstance(node.ctx, ast.Del):
             error.error(
                 "'del' has no effect without refcounting",
                 self.gx,
@@ -3973,14 +4239,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         value = [chr(c) for c in val]
         replace = {
-            "\\" : "\\",
-            "\n" : "n",
-            "\t" : "t",
-            "\r" : "r",
-            "\f" : "f",
-            "\b" : "b",
-            "\v" : "v",
-            '"'  : '"',
+            "\\": "\\",
+            "\n": "n",
+            "\t": "t",
+            "\r": "r",
+            "\f": "f",
+            "\b": "b",
+            "\v": "v",
+            '"': '"',
         }
 
         for i in range(len(value)):
@@ -3994,7 +4260,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         return "".join(value)
 
-    def visit_Constant(self, node: ast.Constant, func:Optional['python.Function']=None) -> None:
+    def visit_Constant(
+        self, node: ast.Constant, func: Optional["python.Function"] = None
+    ) -> None:
         """Generate a constant value"""
         value = node.value
 
@@ -4045,7 +4313,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert False
 
 
-def generate_code(gx: 'config.GlobalInfo', analyze:bool=False) -> None:
+def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
     """Generate code for a module"""
     for module in gx.modules.values():
         if not module.builtin:

@@ -34,10 +34,10 @@ from . import python
 from . import typestr
 from . import cpp
 
-from typing import List, Any
+from typing import Any
 
 
-def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> None:
+def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> None:
     """Generate virtual methods for a class"""
     if not cl.virtuals:
         return
@@ -128,7 +128,7 @@ def virtuals(self: 'cpp.GenerateVisitor', cl: 'python.Class', declare: bool) -> 
 
 
 # --- determine virtual methods and variables
-def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
+def analyze_virtuals(gx: "config.GlobalInfo") -> None:
     """Analyze virtual methods and variables"""
     for node in gx.merged_inh:
         # --- for every message
@@ -171,11 +171,11 @@ def analyze_virtuals(gx: 'config.GlobalInfo') -> None:
 
 
 def upgrade_cl(
-    gx: 'config.GlobalInfo',
-    abstract_cl: 'python.Class',
+    gx: "config.GlobalInfo",
+    abstract_cl: "python.Class",
     node: Any,
     ident: str,
-    classes: set['python.Class'],
+    classes: set["python.Class"],
 ) -> None:
     """Upgrade a class"""
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]

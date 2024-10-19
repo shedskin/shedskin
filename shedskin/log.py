@@ -1,7 +1,6 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.log: provides logging support
-"""
+"""shedskin.log: provides logging support"""
 
 import logging
 
@@ -12,7 +11,8 @@ from typing import Optional
 
 class ShedskinFormatter(logging.Formatter):
     """Formatter for Shedskin logs"""
-    def __init__(self, datefmt: Optional[str]=None):
+
+    def __init__(self, datefmt: Optional[str] = None):
         self._info_formatter = logging.Formatter(
             utils.MOVE + "%(message)s", datefmt=datefmt
         )
@@ -26,7 +26,6 @@ class ShedskinFormatter(logging.Formatter):
         if record.levelname == "INFO":
             return self._info_formatter.format(record)
         return self._other_formatter.format(record)
-
 
 
 class CustomFormatter(logging.Formatter):
@@ -60,7 +59,7 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def config_log(debug: bool=True) -> None:
+def config_log(debug: bool = True) -> None:
     """Configure the logging system"""
     __handler = logging.StreamHandler()
     __handler.setFormatter(CustomFormatter())
