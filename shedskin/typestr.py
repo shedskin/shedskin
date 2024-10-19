@@ -1,8 +1,6 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.typestr: generate type declarations
-
-"""
+"""shedskin.typestr: generate type declarations"""
 
 import ast
 import logging
@@ -12,12 +10,23 @@ from . import python
 from . import infer
 
 # type-checking
-from typing import Optional, TYPE_CHECKING, Tuple, TypeAlias, Dict, Type, Any, Iterable, Union
+from typing import (
+    Optional,
+    TYPE_CHECKING,
+    Tuple,
+    TypeAlias,
+    Dict,
+    Type,
+    Any,
+    Iterable,
+    Union,
+)
+
 if TYPE_CHECKING:
     from . import config
     from . import graph
 
-Types: TypeAlias = set[Tuple['python.Class', int]]  # TODO merge with cpp.py version
+Types: TypeAlias = set[Tuple["python.Class", int]]  # TODO merge with cpp.py version
 
 
 logger = logging.getLogger("typestr")
@@ -27,7 +36,7 @@ class ExtmodError(Exception):
     pass
 
 
-def types_var_types(gx: 'config.GlobalInfo', types: Types, varname: str) -> Types:
+def types_var_types(gx: "config.GlobalInfo", types: Types, varname: str) -> Types:
     """Get the types of a variable"""
     subtypes = set()
     for t in types:
@@ -39,12 +48,12 @@ def types_var_types(gx: 'config.GlobalInfo', types: Types, varname: str) -> Type
     return subtypes
 
 
-def types_classes(types: Types) -> set['python.Class']:
+def types_classes(types: Types) -> set["python.Class"]:
     """Get the classes of a variable"""
     return set(t[0] for t in types if isinstance(t[0], python.Class))
 
 
-def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
+def unboxable(gx: "config.GlobalInfo", types: Types) -> Optional[str]:
     """Check if a variable is unboxable"""
     if not isinstance(types, set):
         types = infer.inode(gx, types).types()
@@ -58,7 +67,7 @@ def unboxable(gx: 'config.GlobalInfo', types: Types) -> Optional[str]:
         return None
 
 
-def singletype(gx: 'config.GlobalInfo', node: Any, t: Type[Any]) -> Any:
+def singletype(gx: "config.GlobalInfo", node: Any, t: Type[Any]) -> Any:
     """Check if a variable has a single type"""
     types = [t[0] for t in infer.inode(gx, node).types()]
     if len(types) == 1 and isinstance(types[0], t):
@@ -72,12 +81,14 @@ def singletype2(types: Types, t: Type[Any]) -> Any:
         return ltypes[0][0]
 
 
-def polymorphic_t(gx: 'config.GlobalInfo', types: Types) -> set['python.Class']:
+def polymorphic_t(gx: "config.GlobalInfo", types: Types) -> set["python.Class"]:
     """Get the polymorphic classes of a variable"""
     return polymorphic_cl(gx, (t[0] for t in types))
 
 
-def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -> set['python.Class']:
+def polymorphic_cl(
+    gx: "config.GlobalInfo", classes: Iterable["python.Class"]
+) -> set["python.Class"]:
     """Get the polymorphic classes of a variable"""
     cls = set(cl for cl in classes)
     if (
@@ -96,7 +107,7 @@ def polymorphic_cl(gx: 'config.GlobalInfo', classes: Iterable['python.Class']) -
 
 
 # --- determine lowest common parent classes (inclusive)
-def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Class']:
+def lowest_common_parents(classes: Iterable["python.Class"]) -> list["python.Class"]:
     """Get the lowest common parent classes of a variable"""
     classes = [cl for cl in classes if isinstance(cl, python.Class)]
 
@@ -139,13 +150,13 @@ def lowest_common_parents(classes: Iterable['python.Class']) -> list['python.Cla
 
 
 def nodetypestr(
-    gx: 'config.GlobalInfo',
+    gx: "config.GlobalInfo",
     node: Any,
-    parent: Optional[Any]=None,
+    parent: Optional[Any] = None,
     cplusplus: bool = True,
     check_extmod: bool = False,
     check_ret: bool = False,
-    mv:Optional['graph.ModuleVisitor']=None,
+    mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
     # XXX minimize
@@ -162,21 +173,19 @@ def nodetypestr(
         if ts.startswith("dict<"):
             return "__GC_DICT<" + ts[5:-3] + ">::iterator "
     types = gx.merged_inh[node]
-    return typestr(
-        gx, types, None, cplusplus, node, check_extmod, 0, check_ret, mv=mv
-    )
+    return typestr(gx, types, None, cplusplus, node, check_extmod, 0, check_ret, mv=mv)
 
 
 def typestr(
-    gx: 'config.GlobalInfo',
+    gx: "config.GlobalInfo",
     types: Types,
-    parent: Optional['python.Function']=None,
+    parent: Optional["python.Function"] = None,
     cplusplus: bool = True,
-    node: Optional[Union[ast.AST, 'python.Variable']]=None,
+    node: Optional[Union[ast.AST, "python.Variable"]] = None,
     check_extmod: bool = False,
     depth: int = 0,
     check_ret: bool = False,
-    mv: Optional['graph.ModuleVisitor']=None,
+    mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
     try:
@@ -212,7 +221,12 @@ def typestr(
     return "[" + ts + "]"
 
 
-def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', types: Types, conv2: Dict[str, str]) -> None:
+def dynamic_variable_error(
+    gx: "config.GlobalInfo",
+    node: "python.Variable",
+    types: Types,
+    conv2: Dict[str, str],
+) -> None:
     """Handle a dynamic variable error"""
     if not node.name.startswith("__"):  # XXX startswith
         classes = polymorphic_cl(gx, types_classes(types))
@@ -253,14 +267,14 @@ def dynamic_variable_error(gx: 'config.GlobalInfo', node: 'python.Variable', typ
 
 
 def typestrnew(
-    gx: 'config.GlobalInfo',
+    gx: "config.GlobalInfo",
     types: Types,
     cplusplus: bool = True,
-    node: Optional[Union[ast.AST, 'python.Variable']]=None,
+    node: Optional[Union[ast.AST, "python.Variable"]] = None,
     check_extmod: bool = False,
     depth: int = 0,
     check_ret: bool = False,
-    mv: Optional['graph.ModuleVisitor']=None,
+    mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
     if depth == 10:
@@ -465,7 +479,9 @@ def typestrnew(
     return namespace + ident + sep[0] + ", ".join(subtypes) + sep[1] + ptr
 
 
-def incompatible_assignment_rec(gx: 'config.GlobalInfo', argtypes: Types, formaltypes: Types, depth:int=0) -> bool:
+def incompatible_assignment_rec(
+    gx: "config.GlobalInfo", argtypes: Types, formaltypes: Types, depth: int = 0
+) -> bool:
     """Check if an assignment is incompatible"""
     if depth == 10:
         return False

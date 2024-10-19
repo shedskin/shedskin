@@ -42,31 +42,34 @@ from .utils import CYAN, GREEN, RED, RESET, WHITE
 # type alias
 Pathlike = Union[pathlib.Path, str]
 
+
 def get_pkg_path() -> pathlib.Path:
     """Return the path to the shedskin package"""
     _pkg_path = pathlib.Path(__file__).parent
     assert _pkg_path.name == "shedskin"
     return _pkg_path
 
+
 def pkg_path() -> None:
     """Used by cmake to get the shedskin package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
+
 
 def get_user_cache_dir() -> pathlib.Path:
     """Get user cache directory depending on platform"""
     system = platform.system()
     if system == "Darwin":
         return pathlib.Path("~/Library/Caches/shedskin").expanduser()
-    elif system == "Linux":
+    if system == "Linux":
         return pathlib.Path("~/.cache/shedskin").expanduser()
-    elif system == "Windows":
+    if system == "Windows":
         profile = os.getenv("USERPROFILE")
         if not profile:
-            raise SystemExit(f"USERPROFILE environment variable not set on windows")
+            raise SystemExit("USERPROFILE environment variable not set on windows")
         user_dir = pathlib.Path(profile)
-        return user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache'
-    else:
-        raise SystemExit(f"{system} os not supported")
+        return user_dir / "AppData" / "Local" / "shedskin" / "Cache"
+    raise SystemExit(f"{system} os not supported")
+
 
 def user_cache_dir() -> None:
     """Used by CMakeLists.txt execute process"""
@@ -79,7 +82,7 @@ class ConanBDWGC:
     def __init__(
         self,
         name: str = "bdwgc",
-        version: str  = "8.2.2",
+        version: str = "8.2.2",
         cplusplus: bool = True,
         cord: bool = False,
         gcj_support: bool = False,
@@ -104,12 +107,12 @@ class ConanPCRE:
     def __init__(
         self,
         name: str = "pcre",
-        version: str ="8.45",
+        version: str = "8.45",
         build_pcrecpp: bool = True,
-        build_pcregrep: bool =False,
-        shared: bool =False,
-        with_bzip2: bool =False,
-        with_zlib: bool =False,
+        build_pcregrep: bool = False,
+        shared: bool = False,
+        with_bzip2: bool = False,
+        with_zlib: bool = False,
     ):
         self.name = name
         self.version = version
@@ -121,6 +124,7 @@ class ConanPCRE:
 
     def __str__(self) -> str:
         return f"{self.name}/{self.version}"
+
 
 class ConanDependencyManager:
     """Dependency manager which manages and installs all conan dependencies"""
@@ -192,16 +196,20 @@ class ShedskinDependencyManager:
         """Run a shell command"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
-        os.system(cmd) #.format(*args, **kwds))
+        os.system(cmd)  # .format(*args, **kwds))
 
-    def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None) -> None:
+    def git_clone(
+        self, repo: str, to_dir: Pathlike, branch: Optional[str] = None
+    ) -> None:
         """Retrieve a git clone of a repository"""
         if branch:
-          self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
+            self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
         else:
-           self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
+            self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
 
-    def cmake_generate(self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options: bool) -> None:
+    def cmake_generate(
+        self, src_dir: Pathlike, build_dir: Pathlike, prefix: Pathlike, **options: bool
+    ) -> None:
         """Activate cmake configuration / generation stage"""
         opts = " ".join(f"-D{k}={v}" for k, v in options.items())
         self.shellcmd(
@@ -329,8 +337,8 @@ class ShedskinDependencyManager:
     def install_pcre(self) -> None:
         """Download / build / install pcre"""
         pcre_repo = "https://github.com/luvit/pcre.git"
-        pcre_src = self.src_dir / 'pcre'
-        pcre_build =  pcre_src / "build"
+        pcre_src = self.src_dir / "pcre"
+        pcre_build = pcre_src / "build"
         print("download / build / install pcre")
         self.git_clone(pcre_repo, pcre_src)
         pcre_build.mkdir(parents=True, exist_ok=True)
@@ -350,6 +358,7 @@ class ShedskinDependencyManager:
         )
         self.cmake_build(pcre_build)
         self.cmake_install(pcre_build)
+
 
 def add_shedskin_product(
     main_module: Optional[str] = None,
@@ -400,7 +409,7 @@ def add_shedskin_product(
     """
 
     if extra_lib_dir:
-        cmdline_options = '-X' + extra_lib_dir
+        cmdline_options = "-X" + extra_lib_dir
         include_dirs = [extra_lib_dir]
 
     def mk_add(lines: list[str], spaces: int = 4) -> Callable[[int, str], None]:
@@ -496,10 +505,12 @@ def get_cmakefile_template(**kwds: str) -> str:
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
+
 def check_cmake_availability() -> None:
     """Check if cmake executable is available in path"""
-    if not bool(shutil.which('cmake')):
-        raise Exception("cmake not available in path")
+    if not bool(shutil.which("cmake")):
+        raise RuntimeError("cmake not available in path")
+
 
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """Improved generator using built-in machinery"""
@@ -536,7 +547,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
-    compile_opts = ' '.join(compile_options)
+    compile_opts = " ".join(compile_options)
 
     for module in modules:
         if module.builtin and module.filename.is_relative_to(gx.shedskin_lib):
@@ -644,7 +655,7 @@ class CMakeBuilder:
             print("*** test:", test)
             try:
                 checks = []
-                with open(test, encoding='utf8') as fopen:
+                with open(test, encoding="utf8") as fopen:
                     for line in fopen:
                         if line.startswith("#*"):
                             checks.append(line[1:].strip())
@@ -693,7 +704,7 @@ class CMakeBuilder:
     def cmake_test(self, options: list[str]) -> None:
         """Activate ctest"""
         opts = " ".join(options)
-        if platform.system() == 'Windows':
+        if platform.system() == "Windows":
             cfg = f"-C {self.options.build_type}"
         else:
             cfg = ""
@@ -714,7 +725,11 @@ class CMakeBuilder:
         """Process a shedskin program with cmake"""
         start_time = time.time()
 
-        cfg_options = [] if not getattr(self.options, 'cfg', None) else [f'-D{opt}' for opt in self.options.cfg]
+        cfg_options = (
+            []
+            if not getattr(self.options, "cfg", None)
+            else [f"-D{opt}" for opt in self.options.cfg]
+        )
         bld_options = []
         tst_options = []
 
@@ -725,11 +740,11 @@ class CMakeBuilder:
         if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
 
-        if hasattr(self.options, 'disable_exes'):
+        if hasattr(self.options, "disable_exes"):
             if self.options.disable_exes:
                 cfg_options.append("-DDISABLE_EXECUTABLES=ON")
 
-        if hasattr(self.options, 'disable_exts'):
+        if hasattr(self.options, "disable_exts"):
             if self.options.disable_exts:
                 cfg_options.append("-DDISABLE_EXTENSIONS=ON")
 
@@ -809,12 +824,7 @@ class CMakeBuilder:
             # nocleanup
 
             if self.options.pytest:
-                try:
-                    import pytest
-
-                    os.system("pytest")
-                except ImportError:
-                    self.log.exception("pytest not found")
+                os.system("pytest")
 
             if self.options.run:
                 target_suffix = "-exe"
@@ -855,7 +865,6 @@ class CMakeBuilder:
                 print(failures)
         else:
             raise ValueError("option.run_errs not set")
-            sys.exit()
 
         end_time = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))

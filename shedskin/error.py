@@ -2,12 +2,12 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.error: error handling"""
 
-
 import ast
 import logging
 import sys
 
 from typing import TYPE_CHECKING, Optional, Tuple, Union, TypeAlias
+
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -28,10 +28,10 @@ ERRORS: set[Error] = set()
 
 def error(
     msg: str,
-    gx: 'config.GlobalInfo',
-    node: Optional[Union[ast.AST, 'python.Variable']] = None,
-    warning: bool=False,
-    mv: Optional['graph.ModuleVisitor']=None,
+    gx: "config.GlobalInfo",
+    node: Optional[Union[ast.AST, "python.Variable"]] = None,
+    warning: bool = False,
+    mv: Optional["graph.ModuleVisitor"] = None,
 ) -> None:
     """Report an error"""
     from . import infer
@@ -45,9 +45,9 @@ def error(
     filename = lineno = None
     if mv:
         filename = mv.module.relative_filename
-        if isinstance(node, ast.AST) and hasattr(node, 'lineno'):
+        if isinstance(node, ast.AST) and hasattr(node, "lineno"):
             lineno = node.lineno
-    result = (kind, str(filename or ''), lineno, msg)
+    result = (kind, str(filename or ""), lineno, msg)
     if result not in ERRORS:
         ERRORS.add(result)
     if not warning:
