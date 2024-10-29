@@ -107,6 +107,7 @@ extern __ss_bool False;
 extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
 
 extern __GC_VECTOR(str *) __char_cache;
+extern __GC_VECTOR(bytes *) __byte_cache;
 
 extern list<str *> *__join_cache;
 extern list<bytes *> *__join_cache_bin;
