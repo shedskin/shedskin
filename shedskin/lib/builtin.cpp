@@ -22,6 +22,7 @@ bytes *bsp;
 
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
+__GC_VECTOR(bytes *) __byte_cache;
 
 __ss_bool True;
 __ss_bool False;
@@ -84,6 +85,13 @@ void __init() {
         str *charstr = new str(&c, 1);
         charstr->charcache = 1;
         __char_cache.push_back(charstr);
+    }
+
+    for(int i=0;i<256;i++) {
+        char c = (char)i;
+        bytes *charbytes = new bytes(&c, 1, 1);
+//        charbytes->charcache = 1; // TODO add and use in bytes.__contains__
+        __byte_cache.push_back(charbytes);
     }
 
     __join_cache = new list<str *>();

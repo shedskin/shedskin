@@ -227,6 +227,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             and len(todo[number].s.encode("utf-8")) == 1
                         ):
                             self.append("__char_cache[%d]" % ord(todo[number].s))
+                        elif (
+                            isinstance(todo[number], ast.Bytes)
+                            and len(todo[number].s) == 1
+                        ):
+                            self.append("__byte_cache[%d]" % ord(todo[number].s))
                         else:
                             self.visit(
                                 todo[number], infer.inode(self.gx, todo[number]).parent
@@ -4304,10 +4309,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
 
         elif isinstance(value, bytes):  # TODO merge with str above
-            self.append('new bytes("%s"' % self.expand_special_chars(value))
-            if b"\0" in value:
-                self.append(", %d" % len(value))
-            self.append(")")
+            if not self.filling_consts:
+                const = self.get_constant(node)
+                assert const
+                self.append(const)
+            else:
+                self.append('new bytes("%s"' % self.expand_special_chars(value))
+                if b"\0" in value:
+                    self.append(", %d" % len(value))
+                self.append(")")
 
         else:
             assert False
