@@ -60,11 +60,8 @@ for i, (start, end, dx, dy) in enumerate(lines):
         pos = (pos[0]+dx, pos[1]+dy)
         j += 1
 
-print(topology)
-
 def place(pos, turn):
     for line, pos in topology[pos]:
-        print('gots', line, pos)
         state[line][pos] = turn
 
 place((3,3), 'o')
@@ -72,5 +69,7 @@ place((3,4), 'x')
 place((4,4), 'o')
 place((4,3), 'x')
 
-for s in state:
+for s in state[:8]:
     print(s)
+
+# TODO check all lines consistent
