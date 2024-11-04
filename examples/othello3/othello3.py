@@ -1,6 +1,6 @@
 import collections
 
-# define all 38 lines
+# define all 46 lines
 lines = [ # (start, end, (len, dx, dy))
     ((0,0), (7,0), (8, 1, 0)), # horizontal
     ((0,1), (7,1), (8, 1, 0)),
@@ -20,7 +20,9 @@ lines = [ # (start, end, (len, dx, dy))
     ((6,0), (6,7), (8, 0, 1)),
     ((7,0), (7,7), (8, 0, 1)),
 
-    ((0,2), (2,0), (3, 1, -1)), # diagonal asc
+    ((0,0), (0,0), (1, 1, -1)), # diagonal asc
+    ((0,1), (1,0), (2, 1, -1)),
+    ((0,2), (2,0), (3, 1, -1)),
     ((0,3), (3,0), (4, 1, -1)),
     ((0,4), (4,0), (5, 1, -1)),
     ((0,5), (5,0), (6, 1, -1)),
@@ -31,8 +33,12 @@ lines = [ # (start, end, (len, dx, dy))
     ((3,7), (7,3), (5, 1, -1)),
     ((4,7), (7,4), (4, 1, -1)),
     ((5,7), (7,5), (3, 1, -1)),
+    ((6,7), (7,6), (2, 1, -1)),
+    ((7,7), (7,7), (1, 1, -1)),
 
-    ((0,5), (2,7), (3, 1, 1)), # diagonal desc
+    ((0,7), (0,7), (1, 1, 1)), # diagonal desc
+    ((0,6), (1,7), (2, 1, 1)),
+    ((0,5), (2,7), (3, 1, 1)),
     ((0,4), (3,7), (4, 1, 1)),
     ((0,3), (4,7), (5, 1, 1)),
     ((0,2), (5,7), (6, 1, 1)),
@@ -43,6 +49,8 @@ lines = [ # (start, end, (len, dx, dy))
     ((3,0), (7,4), (5, 1, 1)),
     ((4,0), (7,3), (4, 1, 1)),
     ((5,0), (7,2), (3, 1, 1)),
+    ((6,0), (7,1), (2, 1, 1)),
+    ((7,0), (7,0), (1, 1, 1)),
 ]
 
 # initial state
@@ -66,7 +74,21 @@ place((3,4), 'x')
 place((4,4), 'o')
 place((4,3), 'x')
 
-for s in state[:8]:
-    print(s)
+def get_board(line_from, line_to):
+    board = [['.' for i in range(8)] for j in range(8)]
+    for i in range(8):
+        for j in range(8):
+            for (l, idx) in topology[i, j]:
+                if line_from <= l < line_to:
+                    board[i][j] = state[l][idx]
+    return '\n'.join(''.join(row) for row in board)
 
-# TODO check all lines consistent
+def check_board():
+    a = get_board(0, 8)
+    b = get_board(8, 16)
+    c = get_board(16, 31)
+    d = get_board(35, 46)
+    assert a == b == c == d
+    return a
+
+print(check_board())
