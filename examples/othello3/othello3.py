@@ -80,15 +80,50 @@ def get_board(line_from, line_to):
         for j in range(8):
             for (l, idx) in topology[i, j]:
                 if line_from <= l < line_to:
-                    board[i][j] = state[l][idx]
-    return '\n'.join(''.join(row) for row in board)
+                    board[j][i] = state[l][idx]
+    return '\n'.join([''.join(row) for row in board])
 
 def check_board():
     a = get_board(0, 8)
+    print(a)
+    print()
     b = get_board(8, 16)
     c = get_board(16, 31)
     d = get_board(35, 46)
     assert a == b == c == d
     return a
 
-print(check_board())
+
+def calc_pos(l, j):
+    start, end, lendxdy = lines[l]
+    _, dx, dy = lendxdy
+    return (start[0]+j*dx, start[1]+j*dy)
+
+
+flippers_x = {
+    ('......',   3): [],
+    ('...x...',  4): [],
+    ('...x..',   3): [],
+    ('...xx..',  2): [],
+    ('...xx..',  4): [],
+    ('....x...', 4): [],
+    ('...xo...', 5): [4, 5],
+    ('........', 4): [],
+}
+
+def move(pos, turn):
+    for l, idx in topology[pos]:
+        if turn == 'x':
+            for j in flippers_x[''.join(state[l]), idx]:
+                state[l][j] = 'x'
+
+                pos2 = calc_pos(l, j)
+                for l2, idx2 in topology[pos2]:
+                    state[l2][idx2] = 'x'
+
+        else:
+            assert False
+
+check_board()
+move((5, 4), 'x')
+check_board()
