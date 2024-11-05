@@ -129,6 +129,17 @@ for state_len in range(1,9):
             flippers_o[s2, idx] = state_flips(s2, idx, 'o')
 
 
+patterns = set([tuple(v) for v in flippers_x.values()])
+print(len(patterns))
+flipfuncs = set()
+for i, l in enumerate(lines):
+    for p in patterns:
+        if p and max(p) < l.length-1:
+            posn = sorted([calc_pos(i, j) for j in p])
+            flipfuncs.add(f'flip_{posn}')
+print(flipfuncs)
+print(len(flipfuncs))
+
 def move(pos, turn):
     legal = False
     for l, idx in topology[pos]:
