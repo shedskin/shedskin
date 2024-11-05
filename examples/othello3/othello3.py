@@ -1,5 +1,11 @@
 import collections
 
+def product(iterables): # shedskin: avoid itertools.product splat operator
+    result = [[]]
+    for pool in iterables:
+        result = [x+[y] for x in result for y in pool]
+    return result
+
 class Line:
     def __init__(self, start, end, length, dx, dy):
         self.start = start
@@ -107,19 +113,13 @@ def state_flips(s, idx, turn):
                     continue
                 elif s[j] == turn:
                     flips.extend(flips2)
+                    continue
                 else:
                     flips2.append(j)
 
     return flips
 
 # for each line state, idx and turn, determine flipped discs
-
-def product(iterables): # shedskin: avoid itertools.product splat operator
-    result = [[]]
-    for pool in iterables:
-        result = [x+[y] for x in result for y in pool]
-    return result
-
 flippers_x = {}
 flippers_o = {}
 for state_len in range(1,9):
@@ -166,4 +166,8 @@ check_board()
 move((5, 4), 'x')
 check_board()
 move((3, 5), 'o')
+check_board()
+move((2, 5), 'x')
+check_board()
+move((5, 3), 'o')
 check_board()
