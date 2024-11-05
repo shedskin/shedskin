@@ -1,4 +1,5 @@
 import collections
+import itertools
 
 class Line:
     def __init__(self, start, end, length, dx, dy):
@@ -64,7 +65,7 @@ lines = [
 # initial state
 state = [['.' for _ in range(line.length)] for line in lines]
 
-# topology
+# topology (for each position, which lines cross the position and at which line index)
 topology = collections.defaultdict(list)
 for l, line in enumerate(lines):
     pos = line.start
@@ -72,14 +73,6 @@ for l, line in enumerate(lines):
         topology[pos].append((l, idx))
         pos = (pos[0]+line.dx, pos[1]+line.dy)
 
-def place(pos, turn):
-    for line, idx in topology[pos]:
-        state[line][idx] = turn
-
-place((3,3), 'o')
-place((3,4), 'x')
-place((4,4), 'o')
-place((4,3), 'x')
 
 def get_board(line_from, line_to):
     board = [['.' for i in range(8)] for j in range(8)]
@@ -90,19 +83,48 @@ def get_board(line_from, line_to):
                     board[j][i] = state[l][idx]
     return '\n'.join([''.join(row) for row in board])
 
+
 def calc_pos(l, j):
     line = lines[l]
     return (line.start[0]+j*line.dx, line.start[1]+j*line.dy)
 
 
-flippers_x = {
-    ('...xo...', 5): [4, 5],
-}
+def place(pos, turn):
+    for line, idx in topology[pos]:
+        state[line][idx] = turn
 
-flippers_o = {
-    ('...ox...', 5): [4, 5],
 
-}
+def state_flips(s, pos, turn):
+    flips = []
+
+    if s[pos] == '.':
+        for r in (
+            range(pos-1, -1, -1), # flip left
+            range(pos+1, len(s)), # flip right
+        ):
+            flips2 = []
+            for j in r:
+                if s[j] == '.':
+                    continue
+                elif s[j] == turn:
+                    flips.extend(flips2)
+                else:
+                    flips2.append(j)
+
+    if flips:
+        flips.append(pos)
+    return flips
+
+# for each line state, idx and turn, determine flipped discs
+flippers_x = {}
+flippers_o = {}
+for state_len in range(1,9):
+    for s in itertools.product(*(state_len*['.ox'])):
+        s2 = ''.join(s)
+        for pos in range(state_len):
+            flippers_x[s2, pos] = state_flips(s2, pos, 'x')
+            flippers_o[s2, pos] = state_flips(s2, pos, 'o')
+
 
 def move(pos, turn):
     for l, idx in topology[pos]:
@@ -112,11 +134,8 @@ def move(pos, turn):
             flips = flippers_o.get((''.join(state[l]), idx), [])
 
         for j in flips:
-            state[l][j] = turn
+            place(calc_pos(l, j), turn)
 
-            pos2 = calc_pos(l, j)
-            for l2, idx2 in topology[pos2]:
-                state[l2][idx2] = turn
 
 def check_board():
     a = get_board(0, 8)
@@ -128,6 +147,11 @@ def check_board():
     assert a == b == c == d
     return a
 
+
+place((3,3), 'o')
+place((3,4), 'x')
+place((4,4), 'o')
+place((4,3), 'x')
 
 check_board()
 move((5, 4), 'x')
