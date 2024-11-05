@@ -110,13 +110,12 @@ def state_flips(s, idx, turn):
             flips2 = []
             for j in r:
                 if s[j] == '.':
-                    continue
+                    break
                 elif s[j] == turn:
                     flips.extend(flips2)
-                    continue
+                    break
                 else:
                     flips2.append(j)
-
     return flips
 
 # for each line state, idx and turn, determine flipped discs
@@ -164,7 +163,6 @@ def check_board():
     assert a == b == c == d
     return a
 
-
 place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
@@ -183,3 +181,7 @@ for i in range(60):
         turn = 'o'
     else:
         turn = 'x'
+
+nx = sum(state[l].count('x') for l in range(8))
+no = sum(state[l].count('o') for l in range(8))
+print(f'{nx}-{no}')
