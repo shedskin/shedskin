@@ -1,5 +1,4 @@
 import collections
-import itertools
 
 class Line:
     def __init__(self, start, end, length, dx, dy):
@@ -94,13 +93,13 @@ def place(pos, turn):
         state[line][idx] = turn
 
 
-def state_flips(s, pos, turn):
+def state_flips(s, idx, turn):
     flips = []
 
-    if s[pos] == '.':
+    if s[idx] == '.':
         for r in (
-            range(pos-1, -1, -1), # flip left
-            range(pos+1, len(s)), # flip right
+            range(idx-1, -1, -1), # flip left
+            range(idx+1, len(s)), # flip right
         ):
             flips2 = []
             for j in r:
@@ -111,30 +110,40 @@ def state_flips(s, pos, turn):
                 else:
                     flips2.append(j)
 
-    if flips:
-        flips.append(pos)
     return flips
 
 # for each line state, idx and turn, determine flipped discs
+
+def product(iterables): # shedskin: avoid itertools.product splat operator
+    result = [[]]
+    for pool in iterables:
+        result = [x+[y] for x in result for y in pool]
+    return result
+
 flippers_x = {}
 flippers_o = {}
 for state_len in range(1,9):
-    for s in itertools.product(*(state_len*['.ox'])):
+    for s in product(state_len*['.ox']):
         s2 = ''.join(s)
-        for pos in range(state_len):
-            flippers_x[s2, pos] = state_flips(s2, pos, 'x')
-            flippers_o[s2, pos] = state_flips(s2, pos, 'o')
+        for idx in range(state_len):
+            flippers_x[s2, idx] = state_flips(s2, idx, 'x')
+            flippers_o[s2, idx] = state_flips(s2, idx, 'o')
 
 
 def move(pos, turn):
+    legal = False
     for l, idx in topology[pos]:
         if turn == 'x':
             flips = flippers_x.get((''.join(state[l]), idx), [])
         else:
             flips = flippers_o.get((''.join(state[l]), idx), [])
 
-        for j in flips:
-            place(calc_pos(l, j), turn)
+        if flips:
+            legal = True
+            for j in flips:
+                place(calc_pos(l, j), turn)
+    if legal:
+        place(pos, turn)
 
 
 def check_board():
