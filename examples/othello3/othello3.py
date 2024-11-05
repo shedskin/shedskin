@@ -142,6 +142,8 @@ def move(pos, turn):
             legal = True
             for j in flips:
                 place(calc_pos(l, j), turn)
+
+    assert legal
     if legal:
         place(pos, turn)
 
@@ -151,8 +153,14 @@ def check_board():
     print(a)
     print()
     b = get_board(8, 16)
+#    print(b, b==a)
+#    print()
     c = get_board(16, 31)
-    d = get_board(35, 46)
+#    print(c, c==a)
+#    print()
+    d = get_board(31, 46)
+#    print(d, d==a)
+#    print()
     assert a == b == c == d
     return a
 
