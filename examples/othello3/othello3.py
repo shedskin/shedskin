@@ -14,7 +14,7 @@ def str_base(number, base):  # base-3 helper
     return ''.join(digits)
 
 def str_state(s):
-    return str_base(s, 3).ljust(8, '1')
+    return str_base(s, 3).ljust(8, '0')
 
 class Line:
     def __init__(self, start, end, length, dx, dy):
@@ -78,7 +78,7 @@ lines = [
 ]
 
 # initial state
-state = [3280 for line in lines]
+state = [0 for line in lines]
 
 # topology (for each position, which lines cross the position and at which line index)
 topology = collections.defaultdict(list)
@@ -95,7 +95,7 @@ def get_board(line_from, line_to):
         for j in range(8):
             for (l, idx) in topology[i, j]:
                 if line_from <= l < line_to:
-                    board[j][i] = {'0': 'o', '1': '.', '2': 'x'}[str_state(state[l])[idx]]
+                    board[j][i] = {'0': '.', '1': 'o', '2': 'x'}[str_state(state[l])[idx]]
     return '\n'.join([''.join(row) for row in board])
 
 
@@ -106,26 +106,26 @@ def calc_pos(l, j):
 
 def place(pos, turn):
     for l, idx in topology[pos]:
-        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
+        state[l] += {'x': 2, 'o': 1}[turn] * 3**idx
 
 
 def flip(pos, turn):
     for l, idx in topology[pos]:
-        state[l] += {'x': 1, 'o': -1}[turn]*2 * 3**idx
+        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
 
 
-def state_flips(s, idx, turn, state_len):
+def state_flips(s, idx, turn):
     flips = []
-    s2 = str_base(s, 3).ljust(8, '1')
+    s2 = str_state(s)
 
-    if s2[idx] == '1':
+    if s2[idx] == '0':
         for r in (
             range(idx-1, -1, -1), # flip left
-            range(idx+1, state_len), # flip right
+            range(idx+1, 8), # flip right
         ):
             flips2 = []
             for j in r:
-                if s2[j] == '1':
+                if s2[j] == '0':
                     break
                 elif s2[j] == turn:
                     flips.extend(flips2)
@@ -137,11 +137,10 @@ def state_flips(s, idx, turn, state_len):
 # for each line state, idx and turn, determine flipped discs
 flippers_x = {}
 flippers_o = {}
-for state_len in range(1,9):
-    for s in range(3**8):
-        for idx in range(state_len):
-            flippers_x[s, idx] = state_flips(s, idx, '2', state_len)
-            flippers_o[s, idx] = state_flips(s, idx, '0', state_len)
+for s in range(3**8):
+    for idx in range(8):
+        flippers_x[s, idx] = state_flips(s, idx, '2')
+        flippers_o[s, idx] = state_flips(s, idx, '1')
 
 #patterns = set([tuple(v) for v in flippers_x.values()])
 #print(len(patterns))
@@ -161,9 +160,7 @@ def move(pos, turn):
             flips = flippers_x.get((state[l], idx), [])
         else:
             flips = flippers_o.get((state[l], idx), [])
-
         if flips:
-            print('flips', flips)
             legal = True
             for j in flips:
                 flip(calc_pos(l, j), turn)
@@ -178,8 +175,14 @@ def check_board():
     print(a)
     print()
     b = get_board(8, 16)
+#    print(a==b, b)
+#    print()
     c = get_board(16, 31)
+#    print(a==c, c)
+#    print()
     d = get_board(31, 46)
+#    print(a==d, d)
+#    print()
     assert a == b == c == d
     return a
 
@@ -192,6 +195,7 @@ check_board()
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 turn = 'x'
 for i in range(60):
+    print(i)
     human_move = italian[i*2:(i+1)*2]
     print(turn, human_move)
     pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
@@ -203,5 +207,5 @@ for i in range(60):
         turn = 'x'
 
 nx = sum(str_base(state[l], 3).count('2') for l in range(8))
-no = sum(str_base(state[l], 3).count('0') for l in range(8))
+no = sum(str_base(state[l], 3).count('1') for l in range(8))
 print(f'{nx}-{no}')
