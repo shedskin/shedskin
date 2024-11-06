@@ -186,6 +186,41 @@ def check_board():
     assert a == b == c == d
     return a
 
+
+class Move:
+    pass
+
+class move_b5(Move):
+    def go(self):
+        return 1
+
+
+class Flip:
+    pass
+
+class flip_none(Flip):
+    def go(self):
+        return 1
+
+
+class flip_a3_a4(Flip):
+    def go(self):
+        return 1
+
+
+move_funcs = [
+    move_b5(),
+]
+
+flip_funcs = [
+    flip_none(),
+    flip_a3_a4(),
+]
+
+move_funcs[0].go()
+flip_funcs[0].go()
+
+
 place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
