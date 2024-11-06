@@ -190,21 +190,21 @@ place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
 place((4,3), 'x')
-check_board()
+#check_board()
 
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 turn = 'x'
 for i in range(60):
-    print(i)
     human_move = italian[i*2:(i+1)*2]
-    print(turn, human_move)
     pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
     move(pos, turn)
-    check_board()
+#    check_board()
     if turn == 'x':
         turn = 'o'
     else:
         turn = 'x'
+
+check_board()
 
 nx = sum(str_base(state[l], 3).count('2') for l in range(8))
 no = sum(str_base(state[l], 3).count('1') for l in range(8))
