@@ -85,7 +85,7 @@ topology = collections.defaultdict(list)
 for l, line in enumerate(lines):
     pos = line.start
     for idx in range(line.length):
-        topology[pos].append((l, line.length-1-idx))
+        topology[pos].append((l, idx))
         pos = (pos[0]+line.dx, pos[1]+line.dy)
 
 
@@ -101,7 +101,7 @@ def get_board(line_from, line_to):
 
 def calc_pos(l, j):
     line = lines[l]
-    return (line.end[0]-j*line.dx, line.end[1]-j*line.dy)
+    return (line.start[0]+j*line.dx, line.start[1]+j*line.dy)
 
 
 def place(pos, turn):
@@ -175,13 +175,13 @@ def check_board():
     print(a)
     print()
     b = get_board(8, 16)
-#    print(a==b, b)
+#    print(b)
 #    print()
     c = get_board(16, 31)
-#    print(a==c, c)
+#    print(c)
 #    print()
     d = get_board(31, 46)
-#    print(a==d, d)
+#    print(d)
 #    print()
     assert a == b == c == d
     return a
