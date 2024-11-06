@@ -142,17 +142,6 @@ for s in range(3**8):
         flippers_x[s, idx] = state_flips(s, idx, '2')
         flippers_o[s, idx] = state_flips(s, idx, '1')
 
-#patterns = set([tuple(v) for v in flippers_x.values()])
-#print(len(patterns))
-#flipfuncs = set()
-#for i, l in enumerate(lines):
-#    for p in patterns:
-#        if p and max(p) < l.length-1:
-#            posn = sorted([calc_pos(i, j) for j in p])
-#            flipfuncs.add(f'flip_{posn}')
-#print(flipfuncs)
-#print(len(flipfuncs))
-
 def move(pos, turn):
     legal = False
     for l, idx in topology[pos]:
@@ -225,10 +214,10 @@ place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
 place((4,3), 'x')
-#check_board()
+turn = 'x'
+check_board()
 
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-turn = 'x'
 for i in range(60):
     human_move = italian[i*2:(i+1)*2]
     pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
@@ -244,3 +233,23 @@ check_board()
 nx = sum(str_base(state[l], 3).count('2') for l in range(8))
 no = sum(str_base(state[l], 3).count('1') for l in range(8))
 print(f'{nx}-{no}')
+print()
+
+patterns = set([tuple(v) for v in flippers_x.values()])
+flipfuncs = set()
+for i, l in enumerate(lines):
+    for p in patterns:
+        if p and max(p) < l.length-1:
+            posn = sorted([calc_pos(i, j) for j in p])
+            flipfuncs.add(tuple(posn))
+print(len(flipfuncs))
+
+print('class Flip:')
+print('    pass')
+
+flipfunc = ((4, 4),)
+print('class flip_e4(Flip):')
+print('    def go():')
+for pos in flipfunc:
+    for (l, idx) in topology[pos]:
+        print(f'        state[{l}] += {3**idx} * turn')
