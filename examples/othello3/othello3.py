@@ -217,23 +217,23 @@ place((4,3), 'x')
 turn = 'x'
 check_board()
 
-italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-for i in range(60):
-    human_move = italian[i*2:(i+1)*2]
-    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
-    move(pos, turn)
-#    check_board()
-    if turn == 'x':
-        turn = 'o'
-    else:
-        turn = 'x'
-
-check_board()
-
-nx = sum(str_base(state[l], 3).count('2') for l in range(8))
-no = sum(str_base(state[l], 3).count('1') for l in range(8))
-print(f'{nx}-{no}')
-print()
+#italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+#for i in range(60):
+#    human_move = italian[i*2:(i+1)*2]
+#    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
+#    move(pos, turn)
+##    check_board()
+#    if turn == 'x':
+#        turn = 'o'
+#    else:
+#        turn = 'x'
+#
+#check_board()
+#
+#nx = sum(str_base(state[l], 3).count('2') for l in range(8))
+#no = sum(str_base(state[l], 3).count('1') for l in range(8))
+#print(f'{nx}-{no}')
+#print()
 
 patterns = set([tuple(v) for v in flippers_x.values()])
 flipfuncs = set()
@@ -244,12 +244,20 @@ for i, l in enumerate(lines):
             flipfuncs.add(tuple(posn))
 print(len(flipfuncs))
 
+print('class Put:')
+print('    pass')
+print('class put_f4(Put):')
+print('    def go(self):')
+for (l, idx) in topology[5, 4]:
+    print(f'        state[{l}] += 2 * {3**idx}')  # TODO turn
+print()
+
 print('class Flip:')
 print('    pass')
 
 flipfunc = ((4, 4),)
 print('class flip_e4(Flip):')
-print('    def go():')
+print('    def go(self):')
 for pos in flipfunc:
     for (l, idx) in topology[pos]:
         print(f'        state[{l}] += {3**idx} * turn')
