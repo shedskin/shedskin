@@ -186,17 +186,6 @@ for s in range(3**8):
 #print(flips_nr)
 #print(nr_flips)
 
-# lookup table: line, pattern nr -> flip func
-line_flip_func = {}
-for l in range(46):
-    for nr, flips in nr_flips.items():
-        posn = [calc_pos(l, idx) for idx in flips if idx < lines[l].length-1]
-        human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in posn])
-        line_flip_func[l << 6 | nr] = f'flip_{human_moves}'
-
-#print(line_flip_func)
-#print(line_flip_func[4 << 6 | 14])
-
 # check that all line states match
 def check_board():
     a = get_board(0, 8)
@@ -222,6 +211,9 @@ def gen_funcs():
             print('    def go(self):')
             for (l, idx) in topology[i, j]:
                 print(f"        global state_{l}")
+            for (l, idx) in topology[i, j]:
+                print(f'        flipnr = flippers_x[state_{l}, {idx}]')
+                print(f'        line_flip_func[{l} << 6 | flipnr].go()')
             for (l, idx) in topology[i, j]:
                 print(f"        state_{l} += turn * {3**idx}")
             print()
@@ -262,12 +254,24 @@ class Put:
 class Flip:
     pass
 
+class flip_(Flip):
+    def go(self):
+        pass
+
 class put_a1(Put):
     def go(self):
         global state_0
         global state_8
         global state_16
         global state_38
+        flipnr = flippers_x[state_0, 0]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 0]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_16, 0]
+        line_flip_func[16 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 0]
+        line_flip_func[38 << 6 | flipnr].go()
         state_0 += turn * 1
         state_8 += turn * 1
         state_16 += turn * 1
@@ -279,6 +283,14 @@ class put_b1(Put):
         global state_9
         global state_17
         global state_39
+        flipnr = flippers_x[state_0, 1]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 0]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_17, 1]
+        line_flip_func[17 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 0]
+        line_flip_func[39 << 6 | flipnr].go()
         state_0 += turn * 3
         state_9 += turn * 1
         state_17 += turn * 3
@@ -290,6 +302,14 @@ class put_c1(Put):
         global state_10
         global state_18
         global state_40
+        flipnr = flippers_x[state_0, 2]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 0]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_18, 2]
+        line_flip_func[18 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 0]
+        line_flip_func[40 << 6 | flipnr].go()
         state_0 += turn * 9
         state_10 += turn * 1
         state_18 += turn * 9
@@ -301,6 +321,14 @@ class put_d1(Put):
         global state_11
         global state_19
         global state_41
+        flipnr = flippers_x[state_0, 3]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 0]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_19, 3]
+        line_flip_func[19 << 6 | flipnr].go()
+        flipnr = flippers_x[state_41, 0]
+        line_flip_func[41 << 6 | flipnr].go()
         state_0 += turn * 27
         state_11 += turn * 1
         state_19 += turn * 27
@@ -312,6 +340,14 @@ class put_e1(Put):
         global state_12
         global state_20
         global state_42
+        flipnr = flippers_x[state_0, 4]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 0]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_20, 4]
+        line_flip_func[20 << 6 | flipnr].go()
+        flipnr = flippers_x[state_42, 0]
+        line_flip_func[42 << 6 | flipnr].go()
         state_0 += turn * 81
         state_12 += turn * 1
         state_20 += turn * 81
@@ -323,6 +359,14 @@ class put_f1(Put):
         global state_13
         global state_21
         global state_43
+        flipnr = flippers_x[state_0, 5]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 0]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 5]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_43, 0]
+        line_flip_func[43 << 6 | flipnr].go()
         state_0 += turn * 243
         state_13 += turn * 1
         state_21 += turn * 243
@@ -334,6 +378,14 @@ class put_g1(Put):
         global state_14
         global state_22
         global state_44
+        flipnr = flippers_x[state_0, 6]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 0]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 6]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_44, 0]
+        line_flip_func[44 << 6 | flipnr].go()
         state_0 += turn * 729
         state_14 += turn * 1
         state_22 += turn * 729
@@ -345,6 +397,14 @@ class put_h1(Put):
         global state_15
         global state_23
         global state_45
+        flipnr = flippers_x[state_0, 7]
+        line_flip_func[0 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 0]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 7]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_45, 0]
+        line_flip_func[45 << 6 | flipnr].go()
         state_0 += turn * 2187
         state_15 += turn * 1
         state_23 += turn * 2187
@@ -356,6 +416,14 @@ class put_a2(Put):
         global state_8
         global state_17
         global state_37
+        flipnr = flippers_x[state_1, 0]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 1]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_17, 0]
+        line_flip_func[17 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 0]
+        line_flip_func[37 << 6 | flipnr].go()
         state_1 += turn * 1
         state_8 += turn * 3
         state_17 += turn * 1
@@ -367,6 +435,14 @@ class put_b2(Put):
         global state_9
         global state_18
         global state_38
+        flipnr = flippers_x[state_1, 1]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 1]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_18, 1]
+        line_flip_func[18 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 1]
+        line_flip_func[38 << 6 | flipnr].go()
         state_1 += turn * 3
         state_9 += turn * 3
         state_18 += turn * 3
@@ -378,6 +454,14 @@ class put_c2(Put):
         global state_10
         global state_19
         global state_39
+        flipnr = flippers_x[state_1, 2]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 1]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_19, 2]
+        line_flip_func[19 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 1]
+        line_flip_func[39 << 6 | flipnr].go()
         state_1 += turn * 9
         state_10 += turn * 3
         state_19 += turn * 9
@@ -389,6 +473,14 @@ class put_d2(Put):
         global state_11
         global state_20
         global state_40
+        flipnr = flippers_x[state_1, 3]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 1]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_20, 3]
+        line_flip_func[20 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 1]
+        line_flip_func[40 << 6 | flipnr].go()
         state_1 += turn * 27
         state_11 += turn * 3
         state_20 += turn * 27
@@ -400,6 +492,14 @@ class put_e2(Put):
         global state_12
         global state_21
         global state_41
+        flipnr = flippers_x[state_1, 4]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 1]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 4]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_41, 1]
+        line_flip_func[41 << 6 | flipnr].go()
         state_1 += turn * 81
         state_12 += turn * 3
         state_21 += turn * 81
@@ -411,6 +511,14 @@ class put_f2(Put):
         global state_13
         global state_22
         global state_42
+        flipnr = flippers_x[state_1, 5]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 1]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 5]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_42, 1]
+        line_flip_func[42 << 6 | flipnr].go()
         state_1 += turn * 243
         state_13 += turn * 3
         state_22 += turn * 243
@@ -422,6 +530,14 @@ class put_g2(Put):
         global state_14
         global state_23
         global state_43
+        flipnr = flippers_x[state_1, 6]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 1]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 6]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_43, 1]
+        line_flip_func[43 << 6 | flipnr].go()
         state_1 += turn * 729
         state_14 += turn * 3
         state_23 += turn * 729
@@ -433,6 +549,14 @@ class put_h2(Put):
         global state_15
         global state_24
         global state_44
+        flipnr = flippers_x[state_1, 7]
+        line_flip_func[1 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 1]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 6]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_44, 1]
+        line_flip_func[44 << 6 | flipnr].go()
         state_1 += turn * 2187
         state_15 += turn * 3
         state_24 += turn * 729
@@ -444,6 +568,14 @@ class put_a3(Put):
         global state_8
         global state_18
         global state_36
+        flipnr = flippers_x[state_2, 0]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 2]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_18, 0]
+        line_flip_func[18 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 0]
+        line_flip_func[36 << 6 | flipnr].go()
         state_2 += turn * 1
         state_8 += turn * 9
         state_18 += turn * 1
@@ -455,6 +587,14 @@ class put_b3(Put):
         global state_9
         global state_19
         global state_37
+        flipnr = flippers_x[state_2, 1]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 2]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_19, 1]
+        line_flip_func[19 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 1]
+        line_flip_func[37 << 6 | flipnr].go()
         state_2 += turn * 3
         state_9 += turn * 9
         state_19 += turn * 3
@@ -466,6 +606,14 @@ class put_c3(Put):
         global state_10
         global state_20
         global state_38
+        flipnr = flippers_x[state_2, 2]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 2]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_20, 2]
+        line_flip_func[20 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 2]
+        line_flip_func[38 << 6 | flipnr].go()
         state_2 += turn * 9
         state_10 += turn * 9
         state_20 += turn * 9
@@ -477,6 +625,14 @@ class put_d3(Put):
         global state_11
         global state_21
         global state_39
+        flipnr = flippers_x[state_2, 3]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 2]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 3]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 2]
+        line_flip_func[39 << 6 | flipnr].go()
         state_2 += turn * 27
         state_11 += turn * 9
         state_21 += turn * 27
@@ -488,6 +644,14 @@ class put_e3(Put):
         global state_12
         global state_22
         global state_40
+        flipnr = flippers_x[state_2, 4]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 2]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 4]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 2]
+        line_flip_func[40 << 6 | flipnr].go()
         state_2 += turn * 81
         state_12 += turn * 9
         state_22 += turn * 81
@@ -499,6 +663,14 @@ class put_f3(Put):
         global state_13
         global state_23
         global state_41
+        flipnr = flippers_x[state_2, 5]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 2]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 5]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_41, 2]
+        line_flip_func[41 << 6 | flipnr].go()
         state_2 += turn * 243
         state_13 += turn * 9
         state_23 += turn * 243
@@ -510,6 +682,14 @@ class put_g3(Put):
         global state_14
         global state_24
         global state_42
+        flipnr = flippers_x[state_2, 6]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 2]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 5]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_42, 2]
+        line_flip_func[42 << 6 | flipnr].go()
         state_2 += turn * 729
         state_14 += turn * 9
         state_24 += turn * 243
@@ -521,6 +701,14 @@ class put_h3(Put):
         global state_15
         global state_25
         global state_43
+        flipnr = flippers_x[state_2, 7]
+        line_flip_func[2 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 2]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 5]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_43, 2]
+        line_flip_func[43 << 6 | flipnr].go()
         state_2 += turn * 2187
         state_15 += turn * 9
         state_25 += turn * 243
@@ -532,6 +720,14 @@ class put_a4(Put):
         global state_8
         global state_19
         global state_35
+        flipnr = flippers_x[state_3, 0]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 3]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_19, 0]
+        line_flip_func[19 << 6 | flipnr].go()
+        flipnr = flippers_x[state_35, 0]
+        line_flip_func[35 << 6 | flipnr].go()
         state_3 += turn * 1
         state_8 += turn * 27
         state_19 += turn * 1
@@ -543,6 +739,14 @@ class put_b4(Put):
         global state_9
         global state_20
         global state_36
+        flipnr = flippers_x[state_3, 1]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 3]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_20, 1]
+        line_flip_func[20 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 1]
+        line_flip_func[36 << 6 | flipnr].go()
         state_3 += turn * 3
         state_9 += turn * 27
         state_20 += turn * 3
@@ -554,6 +758,14 @@ class put_c4(Put):
         global state_10
         global state_21
         global state_37
+        flipnr = flippers_x[state_3, 2]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 3]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 2]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 2]
+        line_flip_func[37 << 6 | flipnr].go()
         state_3 += turn * 9
         state_10 += turn * 27
         state_21 += turn * 9
@@ -565,6 +777,14 @@ class put_d4(Put):
         global state_11
         global state_22
         global state_38
+        flipnr = flippers_x[state_3, 3]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 3]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 3]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 3]
+        line_flip_func[38 << 6 | flipnr].go()
         state_3 += turn * 27
         state_11 += turn * 27
         state_22 += turn * 27
@@ -576,6 +796,14 @@ class put_e4(Put):
         global state_12
         global state_23
         global state_39
+        flipnr = flippers_x[state_3, 4]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 3]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 4]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 3]
+        line_flip_func[39 << 6 | flipnr].go()
         state_3 += turn * 81
         state_12 += turn * 27
         state_23 += turn * 81
@@ -587,6 +815,14 @@ class put_f4(Put):
         global state_13
         global state_24
         global state_40
+        flipnr = flippers_x[state_3, 5]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 3]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 4]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 3]
+        line_flip_func[40 << 6 | flipnr].go()
         state_3 += turn * 243
         state_13 += turn * 27
         state_24 += turn * 81
@@ -598,6 +834,14 @@ class put_g4(Put):
         global state_14
         global state_25
         global state_41
+        flipnr = flippers_x[state_3, 6]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 3]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 4]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_41, 3]
+        line_flip_func[41 << 6 | flipnr].go()
         state_3 += turn * 729
         state_14 += turn * 27
         state_25 += turn * 81
@@ -609,6 +853,14 @@ class put_h4(Put):
         global state_15
         global state_26
         global state_42
+        flipnr = flippers_x[state_3, 7]
+        line_flip_func[3 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 3]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_26, 4]
+        line_flip_func[26 << 6 | flipnr].go()
+        flipnr = flippers_x[state_42, 3]
+        line_flip_func[42 << 6 | flipnr].go()
         state_3 += turn * 2187
         state_15 += turn * 27
         state_26 += turn * 81
@@ -620,6 +872,14 @@ class put_a5(Put):
         global state_8
         global state_20
         global state_34
+        flipnr = flippers_x[state_4, 0]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 4]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_20, 0]
+        line_flip_func[20 << 6 | flipnr].go()
+        flipnr = flippers_x[state_34, 0]
+        line_flip_func[34 << 6 | flipnr].go()
         state_4 += turn * 1
         state_8 += turn * 81
         state_20 += turn * 1
@@ -631,6 +891,14 @@ class put_b5(Put):
         global state_9
         global state_21
         global state_35
+        flipnr = flippers_x[state_4, 1]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 4]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 1]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_35, 1]
+        line_flip_func[35 << 6 | flipnr].go()
         state_4 += turn * 3
         state_9 += turn * 81
         state_21 += turn * 3
@@ -642,6 +910,14 @@ class put_c5(Put):
         global state_10
         global state_22
         global state_36
+        flipnr = flippers_x[state_4, 2]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 4]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 2]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 2]
+        line_flip_func[36 << 6 | flipnr].go()
         state_4 += turn * 9
         state_10 += turn * 81
         state_22 += turn * 9
@@ -653,6 +929,14 @@ class put_d5(Put):
         global state_11
         global state_23
         global state_37
+        flipnr = flippers_x[state_4, 3]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 4]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 3]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 3]
+        line_flip_func[37 << 6 | flipnr].go()
         state_4 += turn * 27
         state_11 += turn * 81
         state_23 += turn * 27
@@ -664,6 +948,14 @@ class put_e5(Put):
         global state_12
         global state_24
         global state_38
+        flipnr = flippers_x[state_4, 4]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 4]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 3]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 4]
+        line_flip_func[38 << 6 | flipnr].go()
         state_4 += turn * 81
         state_12 += turn * 81
         state_24 += turn * 27
@@ -675,6 +967,14 @@ class put_f5(Put):
         global state_13
         global state_25
         global state_39
+        flipnr = flippers_x[state_4, 5]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 4]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 3]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 4]
+        line_flip_func[39 << 6 | flipnr].go()
         state_4 += turn * 243
         state_13 += turn * 81
         state_25 += turn * 27
@@ -686,6 +986,14 @@ class put_g5(Put):
         global state_14
         global state_26
         global state_40
+        flipnr = flippers_x[state_4, 6]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 4]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_26, 3]
+        line_flip_func[26 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 4]
+        line_flip_func[40 << 6 | flipnr].go()
         state_4 += turn * 729
         state_14 += turn * 81
         state_26 += turn * 27
@@ -697,6 +1005,14 @@ class put_h5(Put):
         global state_15
         global state_27
         global state_41
+        flipnr = flippers_x[state_4, 7]
+        line_flip_func[4 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 4]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_27, 3]
+        line_flip_func[27 << 6 | flipnr].go()
+        flipnr = flippers_x[state_41, 4]
+        line_flip_func[41 << 6 | flipnr].go()
         state_4 += turn * 2187
         state_15 += turn * 81
         state_27 += turn * 27
@@ -708,6 +1024,14 @@ class put_a6(Put):
         global state_8
         global state_21
         global state_33
+        flipnr = flippers_x[state_5, 0]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 5]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_21, 0]
+        line_flip_func[21 << 6 | flipnr].go()
+        flipnr = flippers_x[state_33, 0]
+        line_flip_func[33 << 6 | flipnr].go()
         state_5 += turn * 1
         state_8 += turn * 243
         state_21 += turn * 1
@@ -719,6 +1043,14 @@ class put_b6(Put):
         global state_9
         global state_22
         global state_34
+        flipnr = flippers_x[state_5, 1]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 5]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 1]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_34, 1]
+        line_flip_func[34 << 6 | flipnr].go()
         state_5 += turn * 3
         state_9 += turn * 243
         state_22 += turn * 3
@@ -730,6 +1062,14 @@ class put_c6(Put):
         global state_10
         global state_23
         global state_35
+        flipnr = flippers_x[state_5, 2]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 5]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 2]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_35, 2]
+        line_flip_func[35 << 6 | flipnr].go()
         state_5 += turn * 9
         state_10 += turn * 243
         state_23 += turn * 9
@@ -741,6 +1081,14 @@ class put_d6(Put):
         global state_11
         global state_24
         global state_36
+        flipnr = flippers_x[state_5, 3]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 5]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 2]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 3]
+        line_flip_func[36 << 6 | flipnr].go()
         state_5 += turn * 27
         state_11 += turn * 243
         state_24 += turn * 9
@@ -752,6 +1100,14 @@ class put_e6(Put):
         global state_12
         global state_25
         global state_37
+        flipnr = flippers_x[state_5, 4]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 5]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 2]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 4]
+        line_flip_func[37 << 6 | flipnr].go()
         state_5 += turn * 81
         state_12 += turn * 243
         state_25 += turn * 9
@@ -763,6 +1119,14 @@ class put_f6(Put):
         global state_13
         global state_26
         global state_38
+        flipnr = flippers_x[state_5, 5]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 5]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_26, 2]
+        line_flip_func[26 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 5]
+        line_flip_func[38 << 6 | flipnr].go()
         state_5 += turn * 243
         state_13 += turn * 243
         state_26 += turn * 9
@@ -774,6 +1138,14 @@ class put_g6(Put):
         global state_14
         global state_27
         global state_39
+        flipnr = flippers_x[state_5, 6]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 5]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_27, 2]
+        line_flip_func[27 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 5]
+        line_flip_func[39 << 6 | flipnr].go()
         state_5 += turn * 729
         state_14 += turn * 243
         state_27 += turn * 9
@@ -785,6 +1157,14 @@ class put_h6(Put):
         global state_15
         global state_28
         global state_40
+        flipnr = flippers_x[state_5, 7]
+        line_flip_func[5 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 5]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_28, 2]
+        line_flip_func[28 << 6 | flipnr].go()
+        flipnr = flippers_x[state_40, 5]
+        line_flip_func[40 << 6 | flipnr].go()
         state_5 += turn * 2187
         state_15 += turn * 243
         state_28 += turn * 9
@@ -796,6 +1176,14 @@ class put_a7(Put):
         global state_8
         global state_22
         global state_32
+        flipnr = flippers_x[state_6, 0]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 6]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_22, 0]
+        line_flip_func[22 << 6 | flipnr].go()
+        flipnr = flippers_x[state_32, 0]
+        line_flip_func[32 << 6 | flipnr].go()
         state_6 += turn * 1
         state_8 += turn * 729
         state_22 += turn * 1
@@ -807,6 +1195,14 @@ class put_b7(Put):
         global state_9
         global state_23
         global state_33
+        flipnr = flippers_x[state_6, 1]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 6]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 1]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_33, 1]
+        line_flip_func[33 << 6 | flipnr].go()
         state_6 += turn * 3
         state_9 += turn * 729
         state_23 += turn * 3
@@ -818,6 +1214,14 @@ class put_c7(Put):
         global state_10
         global state_24
         global state_34
+        flipnr = flippers_x[state_6, 2]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 6]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 1]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_34, 2]
+        line_flip_func[34 << 6 | flipnr].go()
         state_6 += turn * 9
         state_10 += turn * 729
         state_24 += turn * 3
@@ -829,6 +1233,14 @@ class put_d7(Put):
         global state_11
         global state_25
         global state_35
+        flipnr = flippers_x[state_6, 3]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 6]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 1]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_35, 3]
+        line_flip_func[35 << 6 | flipnr].go()
         state_6 += turn * 27
         state_11 += turn * 729
         state_25 += turn * 3
@@ -840,6 +1252,14 @@ class put_e7(Put):
         global state_12
         global state_26
         global state_36
+        flipnr = flippers_x[state_6, 4]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 6]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_26, 1]
+        line_flip_func[26 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 4]
+        line_flip_func[36 << 6 | flipnr].go()
         state_6 += turn * 81
         state_12 += turn * 729
         state_26 += turn * 3
@@ -851,6 +1271,14 @@ class put_f7(Put):
         global state_13
         global state_27
         global state_37
+        flipnr = flippers_x[state_6, 5]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 6]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_27, 1]
+        line_flip_func[27 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 5]
+        line_flip_func[37 << 6 | flipnr].go()
         state_6 += turn * 243
         state_13 += turn * 729
         state_27 += turn * 3
@@ -862,6 +1290,14 @@ class put_g7(Put):
         global state_14
         global state_28
         global state_38
+        flipnr = flippers_x[state_6, 6]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 6]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_28, 1]
+        line_flip_func[28 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 6]
+        line_flip_func[38 << 6 | flipnr].go()
         state_6 += turn * 729
         state_14 += turn * 729
         state_28 += turn * 3
@@ -873,6 +1309,14 @@ class put_h7(Put):
         global state_15
         global state_29
         global state_39
+        flipnr = flippers_x[state_6, 7]
+        line_flip_func[6 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 6]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_29, 1]
+        line_flip_func[29 << 6 | flipnr].go()
+        flipnr = flippers_x[state_39, 6]
+        line_flip_func[39 << 6 | flipnr].go()
         state_6 += turn * 2187
         state_15 += turn * 729
         state_29 += turn * 3
@@ -884,6 +1328,14 @@ class put_a8(Put):
         global state_8
         global state_23
         global state_31
+        flipnr = flippers_x[state_7, 0]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_8, 7]
+        line_flip_func[8 << 6 | flipnr].go()
+        flipnr = flippers_x[state_23, 0]
+        line_flip_func[23 << 6 | flipnr].go()
+        flipnr = flippers_x[state_31, 0]
+        line_flip_func[31 << 6 | flipnr].go()
         state_7 += turn * 1
         state_8 += turn * 2187
         state_23 += turn * 1
@@ -895,6 +1347,14 @@ class put_b8(Put):
         global state_9
         global state_24
         global state_32
+        flipnr = flippers_x[state_7, 1]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_9, 7]
+        line_flip_func[9 << 6 | flipnr].go()
+        flipnr = flippers_x[state_24, 0]
+        line_flip_func[24 << 6 | flipnr].go()
+        flipnr = flippers_x[state_32, 1]
+        line_flip_func[32 << 6 | flipnr].go()
         state_7 += turn * 3
         state_9 += turn * 2187
         state_24 += turn * 1
@@ -906,6 +1366,14 @@ class put_c8(Put):
         global state_10
         global state_25
         global state_33
+        flipnr = flippers_x[state_7, 2]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_10, 7]
+        line_flip_func[10 << 6 | flipnr].go()
+        flipnr = flippers_x[state_25, 0]
+        line_flip_func[25 << 6 | flipnr].go()
+        flipnr = flippers_x[state_33, 2]
+        line_flip_func[33 << 6 | flipnr].go()
         state_7 += turn * 9
         state_10 += turn * 2187
         state_25 += turn * 1
@@ -917,6 +1385,14 @@ class put_d8(Put):
         global state_11
         global state_26
         global state_34
+        flipnr = flippers_x[state_7, 3]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_11, 7]
+        line_flip_func[11 << 6 | flipnr].go()
+        flipnr = flippers_x[state_26, 0]
+        line_flip_func[26 << 6 | flipnr].go()
+        flipnr = flippers_x[state_34, 3]
+        line_flip_func[34 << 6 | flipnr].go()
         state_7 += turn * 27
         state_11 += turn * 2187
         state_26 += turn * 1
@@ -928,6 +1404,14 @@ class put_e8(Put):
         global state_12
         global state_27
         global state_35
+        flipnr = flippers_x[state_7, 4]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_12, 7]
+        line_flip_func[12 << 6 | flipnr].go()
+        flipnr = flippers_x[state_27, 0]
+        line_flip_func[27 << 6 | flipnr].go()
+        flipnr = flippers_x[state_35, 4]
+        line_flip_func[35 << 6 | flipnr].go()
         state_7 += turn * 81
         state_12 += turn * 2187
         state_27 += turn * 1
@@ -939,6 +1423,14 @@ class put_f8(Put):
         global state_13
         global state_28
         global state_36
+        flipnr = flippers_x[state_7, 5]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_13, 7]
+        line_flip_func[13 << 6 | flipnr].go()
+        flipnr = flippers_x[state_28, 0]
+        line_flip_func[28 << 6 | flipnr].go()
+        flipnr = flippers_x[state_36, 5]
+        line_flip_func[36 << 6 | flipnr].go()
         state_7 += turn * 243
         state_13 += turn * 2187
         state_28 += turn * 1
@@ -950,6 +1442,14 @@ class put_g8(Put):
         global state_14
         global state_29
         global state_37
+        flipnr = flippers_x[state_7, 6]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_14, 7]
+        line_flip_func[14 << 6 | flipnr].go()
+        flipnr = flippers_x[state_29, 0]
+        line_flip_func[29 << 6 | flipnr].go()
+        flipnr = flippers_x[state_37, 6]
+        line_flip_func[37 << 6 | flipnr].go()
         state_7 += turn * 729
         state_14 += turn * 2187
         state_29 += turn * 1
@@ -961,6 +1461,14 @@ class put_h8(Put):
         global state_15
         global state_30
         global state_38
+        flipnr = flippers_x[state_7, 7]
+        line_flip_func[7 << 6 | flipnr].go()
+        flipnr = flippers_x[state_15, 7]
+        line_flip_func[15 << 6 | flipnr].go()
+        flipnr = flippers_x[state_30, 0]
+        line_flip_func[30 << 6 | flipnr].go()
+        flipnr = flippers_x[state_38, 7]
+        line_flip_func[38 << 6 | flipnr].go()
         state_7 += turn * 2187
         state_15 += turn * 2187
         state_30 += turn * 1
@@ -3208,6 +3716,23 @@ class flip_b7_c6_d5_e4_f3(Flip):
         state_13 += 2 * turn * 9
         state_41 += 2 * turn * 9
 
+class flip_c4_e6(Flip):
+    def go(self):
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_5
+        global state_12
+        global state_25
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 90
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+
 class flip_b3_c4_d5_e6_f7(Flip):
     def go(self):
         global state_2
@@ -3242,23 +3767,6 @@ class flip_b3_c4_d5_e6_f7(Flip):
         state_6 += 2 * turn * 243
         state_13 += 2 * turn * 729
         state_27 += 2 * turn * 3
-
-class flip_c4_e6(Flip):
-    def go(self):
-        global state_3
-        global state_10
-        global state_21
-        global state_37
-        global state_5
-        global state_12
-        global state_25
-        state_3 += 2 * turn * 9
-        state_10 += 2 * turn * 27
-        state_21 += 2 * turn * 9
-        state_37 += 2 * turn * 90
-        state_5 += 2 * turn * 81
-        state_12 += 2 * turn * 243
-        state_25 += 2 * turn * 9
 
 class flip_d8_e8_f8_g8(Flip):
     def go(self):
@@ -8082,6 +8590,17 @@ class flip_d5_e4_f3_g2(Flip):
         state_14 += 2 * turn * 3
         state_43 += 2 * turn * 3
 
+class flip_e5(Flip):
+    def go(self):
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+
 class flip_b5_c5_d5_f5_g5(Flip):
     def go(self):
         global state_4
@@ -8116,17 +8635,6 @@ class flip_b5_c5_d5_f5_g5(Flip):
         state_14 += 2 * turn * 81
         state_26 += 2 * turn * 27
         state_40 += 2 * turn * 81
-
-class flip_e5(Flip):
-    def go(self):
-        global state_4
-        global state_12
-        global state_24
-        global state_38
-        state_4 += 2 * turn * 81
-        state_12 += 2 * turn * 81
-        state_24 += 2 * turn * 27
-        state_38 += 2 * turn * 81
 
 class flip_b7_c6_d5_f3_g2(Flip):
     def go(self):
@@ -14147,6 +14655,41 @@ class flip_c5_d6_e7(Flip):
         state_12 += 2 * turn * 729
         state_26 += 2 * turn * 3
 
+class flip_c6_d6_e6_f6_g6(Flip):
+    def go(self):
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1089
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+
 class flip_b3_c3_d3_e3_f3_g3(Flip):
     def go(self):
         global state_2
@@ -14204,41 +14747,6 @@ class flip_e4_f4(Flip):
         state_13 += 2 * turn * 27
         state_24 += 2 * turn * 81
         state_40 += 2 * turn * 27
-
-class flip_c6_d6_e6_f6_g6(Flip):
-    def go(self):
-        global state_5
-        global state_10
-        global state_23
-        global state_35
-        global state_11
-        global state_24
-        global state_36
-        global state_12
-        global state_25
-        global state_37
-        global state_13
-        global state_26
-        global state_38
-        global state_14
-        global state_27
-        global state_39
-        state_5 += 2 * turn * 1089
-        state_10 += 2 * turn * 243
-        state_23 += 2 * turn * 9
-        state_35 += 2 * turn * 9
-        state_11 += 2 * turn * 243
-        state_24 += 2 * turn * 9
-        state_36 += 2 * turn * 27
-        state_12 += 2 * turn * 243
-        state_25 += 2 * turn * 9
-        state_37 += 2 * turn * 81
-        state_13 += 2 * turn * 243
-        state_26 += 2 * turn * 9
-        state_38 += 2 * turn * 243
-        state_14 += 2 * turn * 243
-        state_27 += 2 * turn * 9
-        state_39 += 2 * turn * 243
 
 class flip_c4_d4_e4_g4(Flip):
     def go(self):
@@ -16151,6 +16659,29 @@ class flip_g3_g4_g6(Flip):
         state_27 += 2 * turn * 9
         state_39 += 2 * turn * 243
 
+class flip_h3_h4_h6(Flip):
+    def go(self):
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 279
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+
 class flip_h3_h4_h5_h7(Flip):
     def go(self):
         global state_2
@@ -16179,29 +16710,6 @@ class flip_h3_h4_h5_h7(Flip):
         state_6 += 2 * turn * 2187
         state_29 += 2 * turn * 3
         state_39 += 2 * turn * 729
-
-class flip_h3_h4_h6(Flip):
-    def go(self):
-        global state_2
-        global state_15
-        global state_25
-        global state_43
-        global state_3
-        global state_26
-        global state_42
-        global state_5
-        global state_28
-        global state_40
-        state_2 += 2 * turn * 2187
-        state_15 += 2 * turn * 279
-        state_25 += 2 * turn * 243
-        state_43 += 2 * turn * 9
-        state_3 += 2 * turn * 2187
-        state_26 += 2 * turn * 81
-        state_42 += 2 * turn * 27
-        state_5 += 2 * turn * 2187
-        state_28 += 2 * turn * 9
-        state_40 += 2 * turn * 243
 
 class flip_c4_e4_f4(Flip):
     def go(self):
@@ -16318,29 +16826,6 @@ class flip_d6_e7(Flip):
         state_12 += 2 * turn * 729
         state_26 += 2 * turn * 3
 
-class flip_f5_f6_f7(Flip):
-    def go(self):
-        global state_4
-        global state_13
-        global state_25
-        global state_39
-        global state_5
-        global state_26
-        global state_38
-        global state_6
-        global state_27
-        global state_37
-        state_4 += 2 * turn * 243
-        state_13 += 2 * turn * 1053
-        state_25 += 2 * turn * 27
-        state_39 += 2 * turn * 81
-        state_5 += 2 * turn * 243
-        state_26 += 2 * turn * 9
-        state_38 += 2 * turn * 243
-        state_6 += 2 * turn * 243
-        state_27 += 2 * turn * 3
-        state_37 += 2 * turn * 243
-
 class flip_f3_f5_f6(Flip):
     def go(self):
         global state_2
@@ -16363,6 +16848,29 @@ class flip_f3_f5_f6(Flip):
         state_5 += 2 * turn * 243
         state_26 += 2 * turn * 9
         state_38 += 2 * turn * 243
+
+class flip_f5_f6_f7(Flip):
+    def go(self):
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 1053
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_d6_e6_f6(Flip):
     def go(self):
@@ -18595,29 +19103,6 @@ class flip_d6_e5_f4_g3(Flip):
         state_14 += 2 * turn * 9
         state_42 += 2 * turn * 9
 
-class flip_e6_f6_g6(Flip):
-    def go(self):
-        global state_5
-        global state_12
-        global state_25
-        global state_37
-        global state_13
-        global state_26
-        global state_38
-        global state_14
-        global state_27
-        global state_39
-        state_5 += 2 * turn * 1053
-        state_12 += 2 * turn * 243
-        state_25 += 2 * turn * 9
-        state_37 += 2 * turn * 81
-        state_13 += 2 * turn * 243
-        state_26 += 2 * turn * 9
-        state_38 += 2 * turn * 243
-        state_14 += 2 * turn * 243
-        state_27 += 2 * turn * 9
-        state_39 += 2 * turn * 243
-
 class flip_c6_d6_f6(Flip):
     def go(self):
         global state_5
@@ -18640,6 +19125,29 @@ class flip_c6_d6_f6(Flip):
         state_13 += 2 * turn * 243
         state_26 += 2 * turn * 9
         state_38 += 2 * turn * 243
+
+class flip_e6_f6_g6(Flip):
+    def go(self):
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1053
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_a6(Flip):
     def go(self):
@@ -20180,41 +20688,6 @@ class flip_b6_d6_e6(Flip):
         state_25 += 2 * turn * 9
         state_37 += 2 * turn * 81
 
-class flip_e2_e3_e5_e6_e7(Flip):
-    def go(self):
-        global state_1
-        global state_12
-        global state_21
-        global state_41
-        global state_2
-        global state_22
-        global state_40
-        global state_4
-        global state_24
-        global state_38
-        global state_5
-        global state_25
-        global state_37
-        global state_6
-        global state_26
-        global state_36
-        state_1 += 2 * turn * 81
-        state_12 += 2 * turn * 1065
-        state_21 += 2 * turn * 81
-        state_41 += 2 * turn * 3
-        state_2 += 2 * turn * 81
-        state_22 += 2 * turn * 81
-        state_40 += 2 * turn * 9
-        state_4 += 2 * turn * 81
-        state_24 += 2 * turn * 27
-        state_38 += 2 * turn * 81
-        state_5 += 2 * turn * 81
-        state_25 += 2 * turn * 9
-        state_37 += 2 * turn * 81
-        state_6 += 2 * turn * 81
-        state_26 += 2 * turn * 3
-        state_36 += 2 * turn * 81
-
 class flip_e2_e3_e4_e5_e6(Flip):
     def go(self):
         global state_1
@@ -20249,6 +20722,41 @@ class flip_e2_e3_e4_e5_e6(Flip):
         state_5 += 2 * turn * 81
         state_25 += 2 * turn * 9
         state_37 += 2 * turn * 81
+
+class flip_e2_e3_e5_e6_e7(Flip):
+    def go(self):
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 1065
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b6_d4_e3(Flip):
     def go(self):
@@ -20831,8 +21339,16 @@ class flip_b7_c6_e4(Flip):
         state_12 += 2 * turn * 27
         state_39 += 2 * turn * 27
 
+
 #gen_funcs()
 #stop
+
+line_flip_func = {}
+for l in range(46):
+    for nr, flips in nr_flips.items():
+        posn = sorted([calc_pos(l, idx) for idx in flips if idx < lines[l].length-1])
+        human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in posn])
+        line_flip_func[l << 6 | nr] = eval(f'flip_{human_moves}()')
 
 # setup initial board state
 turn = BLACK
@@ -20845,23 +21361,20 @@ check_board()
 turn = -turn
 
 
-#put_f5().go()
-#check_board()
-#for (l, idx) in topology[5, 4]:
-#    print(l, flippers_x[states()[l], idx])
-
+put_f5().go()
+check_board()
 
 # play full italian line
-italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
-moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
-
-for mv in moves:
-    move_table[mv].go()
-    check_board()
-    turn = -turn
-
-check_board()
+#italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+#human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
+#moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
+#
+#for mv in moves:
+#    move_table[mv].go()
+#    check_board()
+#    turn = -turn
+#
+#check_board()
 
 nx = sum(str_state(states()[l]).count('2') for l in range(8))
 no = sum(str_state(states()[l]).count('0') for l in range(8))
