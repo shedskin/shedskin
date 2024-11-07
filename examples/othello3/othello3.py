@@ -211,15 +211,23 @@ print()
 
 def gen_funcs():
     # 64 empty square moves (4 unused)
-    for i in range(8):
-        for j in range(8):
+    move_funcs = []
+    for j in range(8):
+        for i in range(8):
             human_move = 'abcdefgh'[i] + str(j+1)
-            print(f'class put_{human_move}(Put):')
+            func_name = f'put_{human_move}'
+            move_funcs.append(func_name)
+            print(f'class {func_name}(Put):')
             print('    def go(self):')
             for (l, idx) in topology[i, j]:
                 print(f"        state[{l}] += {{'x': 1, 'o': -1}}[turn] * {3**idx}")
             print()
-            print()
+
+    print('move_table = [')
+    for name in move_funcs:
+        print(f'   {name},')
+    print(']')
+    print()
 
     # 830 flip patterns (831 including noop)
     patterns = set([tuple(v) for v in flippers_x.values()])
@@ -241,7 +249,6 @@ def gen_funcs():
             for (l, idcs) in line_idcs.items():
                 value = sum(3**idx for idx in idcs)
                 print(f"        state[{l}] += 2 * {{'x': 1, 'o': -1}}[turn] * {value}")
-            print()
             print()
 
 
