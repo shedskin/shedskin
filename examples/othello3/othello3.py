@@ -168,15 +168,34 @@ def state_flips(s, idx, turn):
                     break
                 else:
                     flips2.append(j)
-    return flips
+    return tuple(flips)
 
+# lookup table: state, idx -> pattern nr
 flippers_x = {}
-flippers_o = {}
+flips_nr = {}
+nr_flips = {}
 for s in range(3**8):
     for idx in range(8):
-        flippers_x[s, idx] = state_flips(s, idx, '2')
-        flippers_o[s, idx] = state_flips(s, idx, '0')
+        flips = state_flips(s, idx, '2')
+        if flips not in flips_nr:
+            nr = len(flips_nr)
+            flips_nr[flips] = nr
+            nr_flips[nr] = flips
+        flippers_x[s, idx] = flips_nr[flips]
 
+#print(flips_nr)
+#print(nr_flips)
+
+# lookup table: line, pattern nr -> flip func
+line_flip_func = {}
+for l in range(46):
+    for nr, flips in nr_flips.items():
+        posn = [calc_pos(l, idx) for idx in flips if idx < lines[l].length-1]
+        human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in posn])
+        line_flip_func[l << 6 | nr] = f'flip_{human_moves}'
+
+#print(line_flip_func)
+#print(line_flip_func[4 << 6 | 14])
 
 # check that all line states match
 def check_board():
@@ -214,7 +233,7 @@ def gen_funcs():
     print()
 
     # 830 flip patterns (831 including noop)
-    patterns = set([tuple(v) for v in flippers_x.values()])
+    patterns = list(flips_nr)
     flipfuncs = set()
     for i, line in enumerate(lines):
         for p in patterns:
@@ -20824,6 +20843,13 @@ put_d4().go()
 put_e5().go()
 check_board()
 turn = -turn
+
+
+#put_f5().go()
+#check_board()
+#for (l, idx) in topology[5, 4]:
+#    print(l, flippers_x[states()[l], idx])
+
 
 # play full italian line
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
