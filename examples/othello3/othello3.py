@@ -80,8 +80,58 @@ lines = [
     Line((7,0), (7,0), 1, 1, 1),
 ]
 
-# initial state (base-3 number, 0..3**8-1. digit value 0, 1, 2 -> white, empty, black)
-state = [3280 for line in lines]
+# initial state (base-3 numbers, 0..3**8-1. digit is 0, 1, 2 -> white, empty, black)
+state_0 = 3280
+state_1 = 3280
+state_2 = 3280
+state_3 = 3280
+state_4 = 3280
+state_5 = 3280
+state_6 = 3280
+state_7 = 3280
+state_8 = 3280
+state_9 = 3280
+state_10 = 3280
+state_11 = 3280
+state_12 = 3280
+state_13 = 3280
+state_14 = 3280
+state_15 = 3280
+state_16 = 3280
+state_17 = 3280
+state_18 = 3280
+state_19 = 3280
+state_20 = 3280
+state_21 = 3280
+state_22 = 3280
+state_23 = 3280
+state_24 = 3280
+state_25 = 3280
+state_26 = 3280
+state_27 = 3280
+state_28 = 3280
+state_29 = 3280
+state_30 = 3280
+state_31 = 3280
+state_32 = 3280
+state_33 = 3280
+state_34 = 3280
+state_35 = 3280
+state_36 = 3280
+state_37 = 3280
+state_38 = 3280
+state_39 = 3280
+state_40 = 3280
+state_41 = 3280
+state_42 = 3280
+state_43 = 3280
+state_44 = 3280
+state_45 = 3280
+
+def states():
+    return [
+        state_0, state_1, state_2, state_3, state_4, state_5, state_6, state_7, state_8, state_9, state_10, state_11, state_12, state_13, state_14, state_15, state_16, state_17, state_18, state_19, state_20, state_21, state_22, state_23, state_24, state_25, state_26, state_27, state_28, state_29, state_30, state_31, state_32, state_33, state_34, state_35, state_36, state_37, state_38, state_39, state_40, state_41, state_42, state_43, state_44, state_45
+    ]
 
 # topology (for each position, which lines cross the position and at which line index)
 topology = collections.defaultdict(list)
@@ -98,7 +148,7 @@ def get_board(line_from, line_to):
         for j in range(8):
             for (l, idx) in topology[i, j]:
                 if line_from <= l < line_to:
-                    board[j][i] = {'1': '.', '0': 'o', '2': 'x'}[str_state(state[l])[idx]]
+                    board[j][i] = {'1': '.', '0': 'o', '2': 'x'}[str_state(states()[l])[idx]]
     return '\n'.join([''.join(row) for row in board])
 
 
@@ -160,7 +210,9 @@ def gen_funcs():
             print(f'class {func_name}(Put):')
             print('    def go(self):')
             for (l, idx) in topology[i, j]:
-                print(f"        state[{l}] += turn * {3**idx}")
+                print(f"        global state_{l}")
+            for (l, idx) in topology[i, j]:
+                print(f"        state_{l} += turn * {3**idx}")
             print()
 
     print('move_table = [')
@@ -182,17 +234,16 @@ def gen_funcs():
         human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in flipfunc])
         print(f'class flip_{human_moves}(Flip):')
         print('    def go(self):')
+        line_idcs = collections.defaultdict(list)
         for pos in flipfunc:
-            line_idcs = collections.defaultdict(list)
             for (l, idx) in topology[pos]:
                 line_idcs[l].append(idx)
-            for (l, idcs) in line_idcs.items():
-                value = sum(3**idx for idx in idcs)
-                print(f"        state[{l}] += 2 * turn * {value}")
-            print()
-
-#gen_funcs()
-#stop
+        for l in line_idcs:
+            print(f"        global state_{l}")
+        for (l, idcs) in line_idcs.items():
+            value = sum(3**idx for idx in idcs)
+            print(f"        state_{l} += 2 * turn * {value}")
+        print()
 
 class Put:
     pass
@@ -202,451 +253,707 @@ class Flip:
 
 class put_a1(Put):
     def go(self):
-        state[0] += turn * 1
-        state[8] += turn * 1
-        state[16] += turn * 1
-        state[38] += turn * 1
+        global state_0
+        global state_8
+        global state_16
+        global state_38
+        state_0 += turn * 1
+        state_8 += turn * 1
+        state_16 += turn * 1
+        state_38 += turn * 1
 
 class put_b1(Put):
     def go(self):
-        state[0] += turn * 3
-        state[9] += turn * 1
-        state[17] += turn * 3
-        state[39] += turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        state_0 += turn * 3
+        state_9 += turn * 1
+        state_17 += turn * 3
+        state_39 += turn * 1
 
 class put_c1(Put):
     def go(self):
-        state[0] += turn * 9
-        state[10] += turn * 1
-        state[18] += turn * 9
-        state[40] += turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        state_0 += turn * 9
+        state_10 += turn * 1
+        state_18 += turn * 9
+        state_40 += turn * 1
 
 class put_d1(Put):
     def go(self):
-        state[0] += turn * 27
-        state[11] += turn * 1
-        state[19] += turn * 27
-        state[41] += turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        state_0 += turn * 27
+        state_11 += turn * 1
+        state_19 += turn * 27
+        state_41 += turn * 1
 
 class put_e1(Put):
     def go(self):
-        state[0] += turn * 81
-        state[12] += turn * 1
-        state[20] += turn * 81
-        state[42] += turn * 1
+        global state_0
+        global state_12
+        global state_20
+        global state_42
+        state_0 += turn * 81
+        state_12 += turn * 1
+        state_20 += turn * 81
+        state_42 += turn * 1
 
 class put_f1(Put):
     def go(self):
-        state[0] += turn * 243
-        state[13] += turn * 1
-        state[21] += turn * 243
-        state[43] += turn * 1
+        global state_0
+        global state_13
+        global state_21
+        global state_43
+        state_0 += turn * 243
+        state_13 += turn * 1
+        state_21 += turn * 243
+        state_43 += turn * 1
 
 class put_g1(Put):
     def go(self):
-        state[0] += turn * 729
-        state[14] += turn * 1
-        state[22] += turn * 729
-        state[44] += turn * 1
+        global state_0
+        global state_14
+        global state_22
+        global state_44
+        state_0 += turn * 729
+        state_14 += turn * 1
+        state_22 += turn * 729
+        state_44 += turn * 1
 
 class put_h1(Put):
     def go(self):
-        state[0] += turn * 2187
-        state[15] += turn * 1
-        state[23] += turn * 2187
-        state[45] += turn * 1
+        global state_0
+        global state_15
+        global state_23
+        global state_45
+        state_0 += turn * 2187
+        state_15 += turn * 1
+        state_23 += turn * 2187
+        state_45 += turn * 1
 
 class put_a2(Put):
     def go(self):
-        state[1] += turn * 1
-        state[8] += turn * 3
-        state[17] += turn * 1
-        state[37] += turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        state_1 += turn * 1
+        state_8 += turn * 3
+        state_17 += turn * 1
+        state_37 += turn * 1
 
 class put_b2(Put):
     def go(self):
-        state[1] += turn * 3
-        state[9] += turn * 3
-        state[18] += turn * 3
-        state[38] += turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        state_1 += turn * 3
+        state_9 += turn * 3
+        state_18 += turn * 3
+        state_38 += turn * 3
 
 class put_c2(Put):
     def go(self):
-        state[1] += turn * 9
-        state[10] += turn * 3
-        state[19] += turn * 9
-        state[39] += turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        state_1 += turn * 9
+        state_10 += turn * 3
+        state_19 += turn * 9
+        state_39 += turn * 3
 
 class put_d2(Put):
     def go(self):
-        state[1] += turn * 27
-        state[11] += turn * 3
-        state[20] += turn * 27
-        state[40] += turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        state_1 += turn * 27
+        state_11 += turn * 3
+        state_20 += turn * 27
+        state_40 += turn * 3
 
 class put_e2(Put):
     def go(self):
-        state[1] += turn * 81
-        state[12] += turn * 3
-        state[21] += turn * 81
-        state[41] += turn * 3
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        state_1 += turn * 81
+        state_12 += turn * 3
+        state_21 += turn * 81
+        state_41 += turn * 3
 
 class put_f2(Put):
     def go(self):
-        state[1] += turn * 243
-        state[13] += turn * 3
-        state[22] += turn * 243
-        state[42] += turn * 3
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        state_1 += turn * 243
+        state_13 += turn * 3
+        state_22 += turn * 243
+        state_42 += turn * 3
 
 class put_g2(Put):
     def go(self):
-        state[1] += turn * 729
-        state[14] += turn * 3
-        state[23] += turn * 729
-        state[43] += turn * 3
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        state_1 += turn * 729
+        state_14 += turn * 3
+        state_23 += turn * 729
+        state_43 += turn * 3
 
 class put_h2(Put):
     def go(self):
-        state[1] += turn * 2187
-        state[15] += turn * 3
-        state[24] += turn * 729
-        state[44] += turn * 3
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        state_1 += turn * 2187
+        state_15 += turn * 3
+        state_24 += turn * 729
+        state_44 += turn * 3
 
 class put_a3(Put):
     def go(self):
-        state[2] += turn * 1
-        state[8] += turn * 9
-        state[18] += turn * 1
-        state[36] += turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        state_2 += turn * 1
+        state_8 += turn * 9
+        state_18 += turn * 1
+        state_36 += turn * 1
 
 class put_b3(Put):
     def go(self):
-        state[2] += turn * 3
-        state[9] += turn * 9
-        state[19] += turn * 3
-        state[37] += turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        state_2 += turn * 3
+        state_9 += turn * 9
+        state_19 += turn * 3
+        state_37 += turn * 3
 
 class put_c3(Put):
     def go(self):
-        state[2] += turn * 9
-        state[10] += turn * 9
-        state[20] += turn * 9
-        state[38] += turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        state_2 += turn * 9
+        state_10 += turn * 9
+        state_20 += turn * 9
+        state_38 += turn * 9
 
 class put_d3(Put):
     def go(self):
-        state[2] += turn * 27
-        state[11] += turn * 9
-        state[21] += turn * 27
-        state[39] += turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        state_2 += turn * 27
+        state_11 += turn * 9
+        state_21 += turn * 27
+        state_39 += turn * 9
 
 class put_e3(Put):
     def go(self):
-        state[2] += turn * 81
-        state[12] += turn * 9
-        state[22] += turn * 81
-        state[40] += turn * 9
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        state_2 += turn * 81
+        state_12 += turn * 9
+        state_22 += turn * 81
+        state_40 += turn * 9
 
 class put_f3(Put):
     def go(self):
-        state[2] += turn * 243
-        state[13] += turn * 9
-        state[23] += turn * 243
-        state[41] += turn * 9
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        state_2 += turn * 243
+        state_13 += turn * 9
+        state_23 += turn * 243
+        state_41 += turn * 9
 
 class put_g3(Put):
     def go(self):
-        state[2] += turn * 729
-        state[14] += turn * 9
-        state[24] += turn * 243
-        state[42] += turn * 9
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        state_2 += turn * 729
+        state_14 += turn * 9
+        state_24 += turn * 243
+        state_42 += turn * 9
 
 class put_h3(Put):
     def go(self):
-        state[2] += turn * 2187
-        state[15] += turn * 9
-        state[25] += turn * 243
-        state[43] += turn * 9
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        state_2 += turn * 2187
+        state_15 += turn * 9
+        state_25 += turn * 243
+        state_43 += turn * 9
 
 class put_a4(Put):
     def go(self):
-        state[3] += turn * 1
-        state[8] += turn * 27
-        state[19] += turn * 1
-        state[35] += turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        state_3 += turn * 1
+        state_8 += turn * 27
+        state_19 += turn * 1
+        state_35 += turn * 1
 
 class put_b4(Put):
     def go(self):
-        state[3] += turn * 3
-        state[9] += turn * 27
-        state[20] += turn * 3
-        state[36] += turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        state_3 += turn * 3
+        state_9 += turn * 27
+        state_20 += turn * 3
+        state_36 += turn * 3
 
 class put_c4(Put):
     def go(self):
-        state[3] += turn * 9
-        state[10] += turn * 27
-        state[21] += turn * 9
-        state[37] += turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        state_3 += turn * 9
+        state_10 += turn * 27
+        state_21 += turn * 9
+        state_37 += turn * 9
 
 class put_d4(Put):
     def go(self):
-        state[3] += turn * 27
-        state[11] += turn * 27
-        state[22] += turn * 27
-        state[38] += turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        state_3 += turn * 27
+        state_11 += turn * 27
+        state_22 += turn * 27
+        state_38 += turn * 27
 
 class put_e4(Put):
     def go(self):
-        state[3] += turn * 81
-        state[12] += turn * 27
-        state[23] += turn * 81
-        state[39] += turn * 27
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        state_3 += turn * 81
+        state_12 += turn * 27
+        state_23 += turn * 81
+        state_39 += turn * 27
 
 class put_f4(Put):
     def go(self):
-        state[3] += turn * 243
-        state[13] += turn * 27
-        state[24] += turn * 81
-        state[40] += turn * 27
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        state_3 += turn * 243
+        state_13 += turn * 27
+        state_24 += turn * 81
+        state_40 += turn * 27
 
 class put_g4(Put):
     def go(self):
-        state[3] += turn * 729
-        state[14] += turn * 27
-        state[25] += turn * 81
-        state[41] += turn * 27
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        state_3 += turn * 729
+        state_14 += turn * 27
+        state_25 += turn * 81
+        state_41 += turn * 27
 
 class put_h4(Put):
     def go(self):
-        state[3] += turn * 2187
-        state[15] += turn * 27
-        state[26] += turn * 81
-        state[42] += turn * 27
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        state_3 += turn * 2187
+        state_15 += turn * 27
+        state_26 += turn * 81
+        state_42 += turn * 27
 
 class put_a5(Put):
     def go(self):
-        state[4] += turn * 1
-        state[8] += turn * 81
-        state[20] += turn * 1
-        state[34] += turn * 1
+        global state_4
+        global state_8
+        global state_20
+        global state_34
+        state_4 += turn * 1
+        state_8 += turn * 81
+        state_20 += turn * 1
+        state_34 += turn * 1
 
 class put_b5(Put):
     def go(self):
-        state[4] += turn * 3
-        state[9] += turn * 81
-        state[21] += turn * 3
-        state[35] += turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        state_4 += turn * 3
+        state_9 += turn * 81
+        state_21 += turn * 3
+        state_35 += turn * 3
 
 class put_c5(Put):
     def go(self):
-        state[4] += turn * 9
-        state[10] += turn * 81
-        state[22] += turn * 9
-        state[36] += turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        state_4 += turn * 9
+        state_10 += turn * 81
+        state_22 += turn * 9
+        state_36 += turn * 9
 
 class put_d5(Put):
     def go(self):
-        state[4] += turn * 27
-        state[11] += turn * 81
-        state[23] += turn * 27
-        state[37] += turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        state_4 += turn * 27
+        state_11 += turn * 81
+        state_23 += turn * 27
+        state_37 += turn * 27
 
 class put_e5(Put):
     def go(self):
-        state[4] += turn * 81
-        state[12] += turn * 81
-        state[24] += turn * 27
-        state[38] += turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        state_4 += turn * 81
+        state_12 += turn * 81
+        state_24 += turn * 27
+        state_38 += turn * 81
 
 class put_f5(Put):
     def go(self):
-        state[4] += turn * 243
-        state[13] += turn * 81
-        state[25] += turn * 27
-        state[39] += turn * 81
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        state_4 += turn * 243
+        state_13 += turn * 81
+        state_25 += turn * 27
+        state_39 += turn * 81
 
 class put_g5(Put):
     def go(self):
-        state[4] += turn * 729
-        state[14] += turn * 81
-        state[26] += turn * 27
-        state[40] += turn * 81
+        global state_4
+        global state_14
+        global state_26
+        global state_40
+        state_4 += turn * 729
+        state_14 += turn * 81
+        state_26 += turn * 27
+        state_40 += turn * 81
 
 class put_h5(Put):
     def go(self):
-        state[4] += turn * 2187
-        state[15] += turn * 81
-        state[27] += turn * 27
-        state[41] += turn * 81
+        global state_4
+        global state_15
+        global state_27
+        global state_41
+        state_4 += turn * 2187
+        state_15 += turn * 81
+        state_27 += turn * 27
+        state_41 += turn * 81
 
 class put_a6(Put):
     def go(self):
-        state[5] += turn * 1
-        state[8] += turn * 243
-        state[21] += turn * 1
-        state[33] += turn * 1
+        global state_5
+        global state_8
+        global state_21
+        global state_33
+        state_5 += turn * 1
+        state_8 += turn * 243
+        state_21 += turn * 1
+        state_33 += turn * 1
 
 class put_b6(Put):
     def go(self):
-        state[5] += turn * 3
-        state[9] += turn * 243
-        state[22] += turn * 3
-        state[34] += turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        state_5 += turn * 3
+        state_9 += turn * 243
+        state_22 += turn * 3
+        state_34 += turn * 3
 
 class put_c6(Put):
     def go(self):
-        state[5] += turn * 9
-        state[10] += turn * 243
-        state[23] += turn * 9
-        state[35] += turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        state_5 += turn * 9
+        state_10 += turn * 243
+        state_23 += turn * 9
+        state_35 += turn * 9
 
 class put_d6(Put):
     def go(self):
-        state[5] += turn * 27
-        state[11] += turn * 243
-        state[24] += turn * 9
-        state[36] += turn * 27
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        state_5 += turn * 27
+        state_11 += turn * 243
+        state_24 += turn * 9
+        state_36 += turn * 27
 
 class put_e6(Put):
     def go(self):
-        state[5] += turn * 81
-        state[12] += turn * 243
-        state[25] += turn * 9
-        state[37] += turn * 81
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        state_5 += turn * 81
+        state_12 += turn * 243
+        state_25 += turn * 9
+        state_37 += turn * 81
 
 class put_f6(Put):
     def go(self):
-        state[5] += turn * 243
-        state[13] += turn * 243
-        state[26] += turn * 9
-        state[38] += turn * 243
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        state_5 += turn * 243
+        state_13 += turn * 243
+        state_26 += turn * 9
+        state_38 += turn * 243
 
 class put_g6(Put):
     def go(self):
-        state[5] += turn * 729
-        state[14] += turn * 243
-        state[27] += turn * 9
-        state[39] += turn * 243
+        global state_5
+        global state_14
+        global state_27
+        global state_39
+        state_5 += turn * 729
+        state_14 += turn * 243
+        state_27 += turn * 9
+        state_39 += turn * 243
 
 class put_h6(Put):
     def go(self):
-        state[5] += turn * 2187
-        state[15] += turn * 243
-        state[28] += turn * 9
-        state[40] += turn * 243
+        global state_5
+        global state_15
+        global state_28
+        global state_40
+        state_5 += turn * 2187
+        state_15 += turn * 243
+        state_28 += turn * 9
+        state_40 += turn * 243
 
 class put_a7(Put):
     def go(self):
-        state[6] += turn * 1
-        state[8] += turn * 729
-        state[22] += turn * 1
-        state[32] += turn * 1
+        global state_6
+        global state_8
+        global state_22
+        global state_32
+        state_6 += turn * 1
+        state_8 += turn * 729
+        state_22 += turn * 1
+        state_32 += turn * 1
 
 class put_b7(Put):
     def go(self):
-        state[6] += turn * 3
-        state[9] += turn * 729
-        state[23] += turn * 3
-        state[33] += turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        state_6 += turn * 3
+        state_9 += turn * 729
+        state_23 += turn * 3
+        state_33 += turn * 3
 
 class put_c7(Put):
     def go(self):
-        state[6] += turn * 9
-        state[10] += turn * 729
-        state[24] += turn * 3
-        state[34] += turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        state_6 += turn * 9
+        state_10 += turn * 729
+        state_24 += turn * 3
+        state_34 += turn * 9
 
 class put_d7(Put):
     def go(self):
-        state[6] += turn * 27
-        state[11] += turn * 729
-        state[25] += turn * 3
-        state[35] += turn * 27
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        state_6 += turn * 27
+        state_11 += turn * 729
+        state_25 += turn * 3
+        state_35 += turn * 27
 
 class put_e7(Put):
     def go(self):
-        state[6] += turn * 81
-        state[12] += turn * 729
-        state[26] += turn * 3
-        state[36] += turn * 81
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        state_6 += turn * 81
+        state_12 += turn * 729
+        state_26 += turn * 3
+        state_36 += turn * 81
 
 class put_f7(Put):
     def go(self):
-        state[6] += turn * 243
-        state[13] += turn * 729
-        state[27] += turn * 3
-        state[37] += turn * 243
+        global state_6
+        global state_13
+        global state_27
+        global state_37
+        state_6 += turn * 243
+        state_13 += turn * 729
+        state_27 += turn * 3
+        state_37 += turn * 243
 
 class put_g7(Put):
     def go(self):
-        state[6] += turn * 729
-        state[14] += turn * 729
-        state[28] += turn * 3
-        state[38] += turn * 729
+        global state_6
+        global state_14
+        global state_28
+        global state_38
+        state_6 += turn * 729
+        state_14 += turn * 729
+        state_28 += turn * 3
+        state_38 += turn * 729
 
 class put_h7(Put):
     def go(self):
-        state[6] += turn * 2187
-        state[15] += turn * 729
-        state[29] += turn * 3
-        state[39] += turn * 729
+        global state_6
+        global state_15
+        global state_29
+        global state_39
+        state_6 += turn * 2187
+        state_15 += turn * 729
+        state_29 += turn * 3
+        state_39 += turn * 729
 
 class put_a8(Put):
     def go(self):
-        state[7] += turn * 1
-        state[8] += turn * 2187
-        state[23] += turn * 1
-        state[31] += turn * 1
+        global state_7
+        global state_8
+        global state_23
+        global state_31
+        state_7 += turn * 1
+        state_8 += turn * 2187
+        state_23 += turn * 1
+        state_31 += turn * 1
 
 class put_b8(Put):
     def go(self):
-        state[7] += turn * 3
-        state[9] += turn * 2187
-        state[24] += turn * 1
-        state[32] += turn * 3
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        state_7 += turn * 3
+        state_9 += turn * 2187
+        state_24 += turn * 1
+        state_32 += turn * 3
 
 class put_c8(Put):
     def go(self):
-        state[7] += turn * 9
-        state[10] += turn * 2187
-        state[25] += turn * 1
-        state[33] += turn * 9
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        state_7 += turn * 9
+        state_10 += turn * 2187
+        state_25 += turn * 1
+        state_33 += turn * 9
 
 class put_d8(Put):
     def go(self):
-        state[7] += turn * 27
-        state[11] += turn * 2187
-        state[26] += turn * 1
-        state[34] += turn * 27
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        state_7 += turn * 27
+        state_11 += turn * 2187
+        state_26 += turn * 1
+        state_34 += turn * 27
 
 class put_e8(Put):
     def go(self):
-        state[7] += turn * 81
-        state[12] += turn * 2187
-        state[27] += turn * 1
-        state[35] += turn * 81
+        global state_7
+        global state_12
+        global state_27
+        global state_35
+        state_7 += turn * 81
+        state_12 += turn * 2187
+        state_27 += turn * 1
+        state_35 += turn * 81
 
 class put_f8(Put):
     def go(self):
-        state[7] += turn * 243
-        state[13] += turn * 2187
-        state[28] += turn * 1
-        state[36] += turn * 243
+        global state_7
+        global state_13
+        global state_28
+        global state_36
+        state_7 += turn * 243
+        state_13 += turn * 2187
+        state_28 += turn * 1
+        state_36 += turn * 243
 
 class put_g8(Put):
     def go(self):
-        state[7] += turn * 729
-        state[14] += turn * 2187
-        state[29] += turn * 1
-        state[37] += turn * 729
+        global state_7
+        global state_14
+        global state_29
+        global state_37
+        state_7 += turn * 729
+        state_14 += turn * 2187
+        state_29 += turn * 1
+        state_37 += turn * 729
 
 class put_h8(Put):
     def go(self):
-        state[7] += turn * 2187
-        state[15] += turn * 2187
-        state[30] += turn * 1
-        state[38] += turn * 2187
+        global state_7
+        global state_15
+        global state_30
+        global state_38
+        state_7 += turn * 2187
+        state_15 += turn * 2187
+        state_30 += turn * 1
+        state_38 += turn * 2187
 
 move_table = [
    put_a1(),
@@ -717,14708 +1024,19806 @@ move_table = [
 
 class flip_d8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 999
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_d2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 351
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c5_d5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1089
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_c2_d3_f5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 336
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_b1_c1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1065
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_a4_a5_a7(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_6
+        global state_22
+        global state_32
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 837
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_d3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 108
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_c2_c3_c5_c6_c7(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 1065
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c3_d3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 117
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 972
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b6_c6_d6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 120
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_d4_d5_d6_d7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 1080
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b3_c4_d5(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_4
+        global state_11
+        global state_23
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 39
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
 
 class flip_e2_e3_e4_e5_e6_e7(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 1092
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_g2_g3_g4(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 39
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_a2_a4_a5_a6_a7(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 1083
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_d7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 108
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_f7_g6(Flip):
     def go(self):
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_6
+        global state_13
+        global state_27
+        global state_37
+        global state_5
+        global state_14
+        global state_39
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 12
+        state_37 += 2 * turn * 243
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_39 += 2 * turn * 243
 
 class flip_a3_a4(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 36
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
 
 class flip_e3_e4_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 279
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_c2_c3_c4_c5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 120
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_c3_c4_c5_c6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 360
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_h6_h7(Flip):
     def go(self):
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_5
+        global state_15
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_5 += 2 * turn * 2187
+        state_15 += 2 * turn * 972
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_d4_d5(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 108
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_b7_d7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1083
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_h3_h4_h6_h7(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 1008
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b3_c4(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 12
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
 
 class flip_c3_d4_f6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 1008
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_e5_e7(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_6
+        global state_26
+        global state_36
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 810
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_f4_g5(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_4
+        global state_14
+        global state_26
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 108
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_d2_f4(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_13
+        global state_24
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 30
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
 
 class flip_c1_d1_e1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 846
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b8_c8_d8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1092
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_c8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1062
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_e4_e5_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_6
+        global state_26
+        global state_36
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 837
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_a4_a6_a7(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 999
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_c3_d3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1089
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_b2_c2_d2_e2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 849
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_e5_e6_e7(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 1053
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b2_d2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 111
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_d5_f7(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_6
+        global state_13
+        global state_27
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 270
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_a3_a5_a6_a7(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 1062
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b2_c3_e5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 336
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b8_c8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 336
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_g2_g4_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 111
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b8_d8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1083
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_h5_h6(Flip):
     def go(self):
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_4
+        global state_15
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_4 += 2 * turn * 2187
+        state_15 += 2 * turn * 324
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_c3_d3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1008
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_c4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1062
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_e3_e5_e6_e7(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 1062
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_d2_d3_d4_d6(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 282
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_b6_c6_d6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1011
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_e6_e7(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 972
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 972
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b4_c4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 93
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_d2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 999
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_e4_e6_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 999
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_f2_f3_f4_f5_f6_f7(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 1092
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_c4_d3(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_2
+        global state_11
+        global state_39
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 36
+        state_37 += 2 * turn * 9
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
 
 class flip_d5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_c3_d3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 360
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b5_b6(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 324
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_c3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
 
 class flip_b4_c4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 336
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_c2_c4_c5_c6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 354
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_b3_c2(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_1
+        global state_10
+        global state_39
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 12
+        state_37 += 2 * turn * 3
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_39 += 2 * turn * 3
 
 class flip_b7_c6_d5(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 39
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
 
 class flip_g4_g6_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 999
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b2_b3(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 12
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
 
 class flip_d3_d4_d5_d6_d7(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 1089
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_a2_a4(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_3
+        global state_19
+        global state_35
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 30
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
 
 class flip_g2_g3_g5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 336
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_e2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 810
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_b6_c5_d4_e3_f2(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 363
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_c4_c5_c6_c7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 1080
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_d2_d4_d5_d6(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 354
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_d4_e4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 837
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_a3_a5_a6(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 333
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 81
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_a2_a3_a5_a6_a7(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 1065
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_d2_d3_d5_d6(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 336
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_f2_f3_f4_f6_f7(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 1011
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f3_f4_f5(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 117
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_c4_d5_e6(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 117
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_b7_c6_d5_e4_f3(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 363
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_b3_c4_d5_e6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 363
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_c4_e6(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_5
+        global state_12
+        global state_25
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 90
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_d8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1080
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_f3_f4_f5_f6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 1089
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_c8_d8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1008
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_h4_h6(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 270
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_d3_f5_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 333
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_e2_e3_e5_e6(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 336
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_f3_f4_f6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 1008
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_b3_d3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1083
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_b5_c5_d5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 282
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_h3_h5(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 90
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_b2_c3_d4_e5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 363
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b1_c1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 336
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_c6_d5_f3_g2(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 1008
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_c4_d4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 117
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_c5_d5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 279
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_b4_b6(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 270
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_e5_f6(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_5
+        global state_13
+        global state_26
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 324
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_c8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 333
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_a4_a5_a6_a7(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 1080
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_f4_f5_f6_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 1080
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_b2_c2_d2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1011
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_c3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 90
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_b2_c2_d2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 363
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 333
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_e2_e3_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 93
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_b1_c1_d1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 282
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_d4_f2(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_1
+        global state_13
+        global state_42
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 270
+        state_38 += 2 * turn * 27
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_d3_e3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 837
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_d3_d4_d6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 279
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_d5_d7(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_6
+        global state_25
+        global state_35
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 810
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1053
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_c4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 90
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_g2_g3_g4_g5_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_6
+        global state_28
+        global state_38
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 849
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b7_c6_d5_e4_f3_g2(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 1092
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_a2_a3_a4_a5_a6(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 363
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_f4_f5_f6(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 351
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 324
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_g2_g3_g4_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 282
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b4_b6_b7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 999
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_d7_e6_f5(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_5
+        global state_12
+        global state_37
+        global state_4
+        global state_13
+        global state_39
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 39
+        state_35 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_37 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
 
 class flip_h4_h6_h7(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 999
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_c2_d2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        state_1 += 2 * turn * 36
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
 
 class flip_d7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b3_b4_b5_b6_b7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 1089
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_c6_d6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        state_5 += 2 * turn * 36
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_c6_d5_e4_f3(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 360
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_b4_c4_d4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 120
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_b1_c1_d1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1092
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 972
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_b2_c2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 93
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_a7(Flip):
     def go(self):
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_6
+        global state_8
+        global state_22
+        global state_32
+        state_6 += 2 * turn * 1
+        state_8 += 2 * turn * 729
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b2_c3_e5_f6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 1065
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b2_d4_e5_f6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 1083
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_e2_g4(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_3
+        global state_14
+        global state_25
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 30
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
 
 class flip_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 324
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_d2_e3_f4(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_12
+        global state_22
+        global state_3
+        global state_13
+        global state_24
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 39
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
 
 class flip_b3_b5_b6_b7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 1062
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_e5_f4_g3(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 351
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_g3_g4_g5_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_6
+        global state_28
+        global state_38
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 846
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_e3_f2(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 324
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_d6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 108
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_b2_b4_b5_b6_b7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 1083
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_c7_d7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1089
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c3_d2(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_1
+        global state_11
+        global state_40
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 36
+        state_38 += 2 * turn * 9
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_40 += 2 * turn * 3
 
 class flip_e7_f6_g5(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_5
+        global state_13
+        global state_38
+        global state_4
+        global state_14
+        global state_40
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 39
+        state_36 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_38 += 2 * turn * 243
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_40 += 2 * turn * 81
 
 class flip_c4_c5(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 108
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_h2_h4_h5_h6(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 354
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_f4_g3(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 324
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_c1_d1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1089
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b8_c8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1065
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_h4_h5_h6(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 351
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_b7_d5(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_4
+        global state_11
+        global state_37
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 30
+        state_33 += 2 * turn * 3
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
 
 class flip_h7(Flip):
     def go(self):
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_6
+        global state_15
+        global state_29
+        global state_39
+        state_6 += 2 * turn * 2187
+        state_15 += 2 * turn * 729
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b7_c6_e4_f3(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 336
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_c2_d3_e4_f5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 363
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_d2_d4(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_22
+        global state_38
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 30
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_f3_f5_f6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 1062
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_c6_e4_f3_g2(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 1062
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_a3_a4_a5(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 117
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_c7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 90
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_c3_e5(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 90
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_a2_a3_a5_a6(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 336
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_b4_c5(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_10
+        global state_22
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 12
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
 
 class flip_b4_d2(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_1
+        global state_11
+        global state_40
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 30
+        state_36 += 2 * turn * 3
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_40 += 2 * turn * 3
 
 class flip_c6_d6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 360
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b8_d8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 111
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_c5_d5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        state_4 += 2 * turn * 36
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_c6_d6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 117
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_b2_b4_b5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 111
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_a5_a6_a7(Flip):
     def go(self):
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_4
+        global state_8
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_4 += 2 * turn * 1
+        state_8 += 2 * turn * 1053
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b5_c5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 93
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_d7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 351
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f2_f3_f4_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 120
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_f3_g2(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 972
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_e4_f5(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_13
+        global state_25
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 108
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_g2_g3(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 12
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_a2_a3_a5(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 93
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_c7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 333
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_d3_d4(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 36
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_h2_h3(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 12
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
 
 class flip_b8_c8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        state_7 += 2 * turn * 12
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
 
 class flip_e4_f3_g2(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 1053
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_d4_e3(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 108
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_c4_d5_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        global state_6
+        global state_13
+        global state_27
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 279
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_c4_d5(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 36
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
 
 class flip_c1_d1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1008
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_a3(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 9
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
 
 class flip_d4_f6(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_5
+        global state_13
+        global state_26
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 270
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_c3_d4_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_5
+        global state_13
+        global state_26
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 279
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b3_c3_d3_e3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 849
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_b3_b4_b5(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 117
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_e4_e6(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 270
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_g4_g5_g6(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 351
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 324
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_b6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_f2_f3_f5_f6_f7(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 1065
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_c6_e4_f3(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 333
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_c6_d6_e6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 846
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_c8_d8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        state_7 += 2 * turn * 36
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
 
 class flip_h2_h3_h4_h6(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 282
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_b1_c1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        state_0 += 2 * turn * 12
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
 
 class flip_b1_c1_d1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        state_0 += 2 * turn * 39
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
 
 class flip_b8_c8_d8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        state_7 += 2 * turn * 39
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
 
 class flip_c7_d6_e5_f4(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 120
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_c6_d5_e4_f3_g2(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 1089
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_c2_c4(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_21
+        global state_37
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 30
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
 
 class flip_e3_e5_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 333
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_e2_e3(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 12
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_h3(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 9
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
 
 class flip_e4_f3(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 324
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_b7_d7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_11
+        global state_25
+        global state_35
+        state_6 += 2 * turn * 30
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 324
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_d3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 999
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_b8_d8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 354
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_d3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1080
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_b5_c4(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_3
+        global state_10
+        global state_37
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 12
+        state_35 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_37 += 2 * turn * 9
 
 class flip_b3_c3_d3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 282
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_c2_c3_c4_c6_c7(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 1011
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c7_d6_f4_g3(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 336
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_d6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1080
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b7_c7_d7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 282
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 972
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_d4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 270
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_g5_g6(Flip):
     def go(self):
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_4
+        global state_14
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 324
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_h2_h3_h5_h6(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 336
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_g2_g3_g4_g5_g6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 1092
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 999
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_d5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 999
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_d3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 351
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_c7_e5_f4(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 111
+        state_34 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_b4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
 
 class flip_c3_c4(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 36
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
 
 class flip_e2_e4_e5_e6_e7(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 1083
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_f4_f5(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 108
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_d7_f5_g4(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_4
+        global state_13
+        global state_39
+        global state_3
+        global state_14
+        global state_41
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 111
+        state_35 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_b2_c2_d2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 282
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_b4_d4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 354
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_c1_d1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 360
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_c3_d4_e5_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 360
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_d2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1080
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_b2_b3_b4_b5_b7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_6
+        global state_23
+        global state_33
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 849
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_e5_g3(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_2
+        global state_14
+        global state_42
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 270
+        state_38 += 2 * turn * 81
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_f3_g4(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_14
+        global state_25
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 36
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
 
 class flip_b1_d1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_11
+        global state_19
+        global state_41
+        state_0 += 2 * turn * 30
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
 
 class flip_f2_f3_f4_f5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 363
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b5_b6_b7(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 1053
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_f6_g5(Flip):
     def go(self):
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        global state_4
+        global state_14
+        global state_40
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 36
+        state_38 += 2 * turn * 243
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_40 += 2 * turn * 81
 
 class flip_d4_e5(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 108
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_c3_d4_e5(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 117
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_h5_h6_h7(Flip):
     def go(self):
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_4
+        global state_15
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_4 += 2 * turn * 2187
+        state_15 += 2 * turn * 1053
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b7_c7_d7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1011
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b6_c6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1065
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_c7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_b4_b5_b6(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 351
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_c6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 90
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_d2_d3_d5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 93
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_h2_h3_h5(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 93
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_a5(Flip):
     def go(self):
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_4
+        global state_8
+        global state_20
+        global state_34
+        state_4 += 2 * turn * 1
+        state_8 += 2 * turn * 81
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1053
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_b2_d2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 354
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c7_d7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1008
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_e1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_12
+        global state_20
+        global state_42
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 810
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
 
 class flip_b5_c4_e2(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_3
+        global state_10
+        global state_37
+        global state_1
+        global state_12
+        global state_41
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 93
+        state_35 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_37 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_d4_e5_f6_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 1080
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_c2_e4_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 111
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_c2_c3_c4_c5_c6_c7(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 1092
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_g2_g3_g4_g6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 1011
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_e3_f4(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_13
+        global state_24
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 36
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
 
 class flip_e2_f3_g4(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_13
+        global state_23
+        global state_3
+        global state_14
+        global state_25
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 39
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
 
 class flip_c1_d1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 279
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_d5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 108
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_d2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
 
 class flip_c3_d4(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 36
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
 
 class flip_c2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 333
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c5_d4_f2(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_1
+        global state_13
+        global state_42
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 279
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_g4_g6(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 270
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_c4_d5_e6_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 360
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_c3_c5_c6_c7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 1062
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_b2_b4(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_20
+        global state_36
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 30
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
 
 class flip_e3_e5(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 90
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_c7_e5(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_4
+        global state_12
+        global state_38
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 30
+        state_34 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
 
 class flip_d5_e4_f3_g2(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 1080
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_b5_c5_d5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1011
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_b7_c6_d5_f3_g2(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 1011
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1053
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_c6_e4(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 90
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 class flip_d3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 270
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b6_c5_e3_f2(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 336
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_c3_d3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 279
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b4_d4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_11
+        global state_22
+        global state_38
+        state_3 += 2 * turn * 30
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_b6_c6_d6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 282
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b6_c5_d4_e3(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 120
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_e7_f6(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_5
+        global state_13
+        global state_38
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 12
+        state_36 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_38 += 2 * turn * 243
 
 class flip_c2_c3_c4_c5_c6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 363
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_a2_a3_a4_a5(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 120
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_d3_e4_f5_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 360
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_d7_e7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 837
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b2_c2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1065
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_f3_f4_f5_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 360
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_c7_e5_f4_g3(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 354
+        state_34 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_c5_e3_f2(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 333
+        state_36 += 2 * turn * 9
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1053
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_g3_g4_g5(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 117
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b8_c8_d8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 120
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_h3_h4_h5(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 117
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_h3_h4_h5_h6(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 360
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_c3_c4_c5_c6_c7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 1089
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_b2_c3_d4_e5_f6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 1092
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_g2_g4_g5_g6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 1083
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c6_d6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1008
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_d3_e4(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 36
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
 
 class flip_d1_e1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 837
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b2_b3_b5_b6_b7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 1065
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b7_d5_e4_f3_g2(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 1083
+        state_33 += 2 * turn * 3
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_d2_d3_d5_d6_d7(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 1065
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_d6_d7(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 972
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 972
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_e8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_12
+        global state_27
+        global state_35
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 810
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_b2_b3_b4(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 39
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
 
 class flip_d7_f5(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_4
+        global state_13
+        global state_39
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 30
+        state_35 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
 
 class flip_b4_c5_d6_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_10
+        global state_22
+        global state_5
+        global state_11
+        global state_24
+        global state_6
+        global state_12
+        global state_26
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 120
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_d4_d6(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 270
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_c5_d5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1008
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b3_c3_d3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 363
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b6_c7(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_6
+        global state_10
+        global state_24
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 12
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
 
 class flip_e6_f5_g4(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_4
+        global state_13
+        global state_39
+        global state_3
+        global state_14
+        global state_41
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 117
+        state_37 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_b2_c3_d4_e5_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_6
+        global state_14
+        global state_28
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 849
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        state_7 += 2 * turn * 3
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
 
 class flip_c7_d7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 117
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_e4_g2(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_1
+        global state_14
+        global state_43
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 810
+        state_39 += 2 * turn * 27
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_a4_a5_a6(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 351
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_e5_g7(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_6
+        global state_14
+        global state_28
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 810
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 324
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_d7_e6_g4(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_5
+        global state_12
+        global state_37
+        global state_3
+        global state_14
+        global state_41
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 93
+        state_35 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_37 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_b8_c8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 93
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_b6_c5_d4(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 39
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_f6_f7(Flip):
     def go(self):
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 972
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_d7_e6(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_5
+        global state_12
+        global state_37
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 12
+        state_35 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_37 += 2 * turn * 81
 
 class flip_b3_d5_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 111
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_b4_c3_d2(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_2
+        global state_10
+        global state_38
+        global state_1
+        global state_11
+        global state_40
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 39
+        state_36 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_40 += 2 * turn * 3
 
 class flip_b3_b4_b5_b7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_6
+        global state_23
+        global state_33
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 846
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b6_c6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 93
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_h5(Flip):
     def go(self):
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_4
+        global state_15
+        global state_27
+        global state_41
+        state_4 += 2 * turn * 2187
+        state_15 += 2 * turn * 81
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_b6_c5(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 12
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
 
 class flip_d3_d4_d5(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 117
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_d5_d6(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 324
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_b3_b5(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 90
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_b7_c7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        state_6 += 2 * turn * 12
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 81
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_g6_g7(Flip):
     def go(self):
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_5
+        global state_14
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 972
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b2_c2_d2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1092
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_e5_e6(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 324
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_h5_h7(Flip):
     def go(self):
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_4
+        global state_15
+        global state_27
+        global state_41
+        global state_6
+        global state_29
+        global state_39
+        state_4 += 2 * turn * 2187
+        state_15 += 2 * turn * 810
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_a2_a3_a4_a5_a6_a7(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 1092
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b3_c3_d3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1011
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_e4_e5_e6(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 351
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_d5_e4_f3(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 351
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_c3_c4_c5(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 117
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_f2_f3_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 93
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_e3_e4_e5(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 117
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_c5_d4_e3(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 117
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 243
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_c7_d6(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 12
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
 
 class flip_c5_c7(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_6
+        global state_24
+        global state_34
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 810
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_b1_c1_d1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 120
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_e6_f5(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_4
+        global state_13
+        global state_39
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 36
+        state_37 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
 
 class flip_h2_h3_h5_h6_h7(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 1065
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b7_c7_d7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        state_6 += 2 * turn * 39
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b3_d5_e6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 354
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_d6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_c6_d5(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 36
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
 
 class flip_b8_c8_d8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 363
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1053
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c8_d8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 117
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_a5_a7(Flip):
     def go(self):
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_4
+        global state_8
+        global state_20
+        global state_34
+        global state_6
+        global state_22
+        global state_32
+        state_4 += 2 * turn * 1
+        state_8 += 2 * turn * 810
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_e5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 810
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_f3_f4(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 36
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_b2_b4_b5_b6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 354
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_c2_d3_e4_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 120
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_c4_d4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 279
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_d2_e3_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_12
+        global state_22
+        global state_4
+        global state_14
+        global state_26
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 93
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_d5_f3_g2(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 999
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_b5_c5_d5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 363
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_d6_e5_f4(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 117
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_g2_g3_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 93
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_d3_d5_d6_d7(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 1062
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_f3_f4_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 279
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_c3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1062
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_g5_g6_g7(Flip):
     def go(self):
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_4
+        global state_14
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 1053
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c7_d6_e5_f4_g3(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 363
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_c4_d4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1089
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_c7_d7_e7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 846
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d2_d3_d4_d5_d6_d7(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 1092
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b3_d3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_11
+        global state_21
+        global state_39
+        state_2 += 2 * turn * 30
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
 
 class flip_h2_h4_h5(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 111
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_c5_d5_e5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 846
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b2_c3_d4_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_5
+        global state_13
+        global state_26
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 282
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_f5_f7(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_6
+        global state_27
+        global state_37
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 810
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_e4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 810
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_a6_a7(Flip):
     def go(self):
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_5
+        global state_8
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_5 += 2 * turn * 1
+        state_8 += 2 * turn * 972
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1062
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b2_b3_b4_b5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 120
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_b2_b3_b4_b6_b7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 1011
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_d6_e6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 837
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_h3_h5_h6_h7(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 1062
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_d4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_b1_d1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 354
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_h2_h4(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_3
+        global state_26
+        global state_42
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 30
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
 
 class flip_c2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
 
 class flip_d3_e4_f5(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 117
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_b4_c4_d4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 363
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_d2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 108
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_b7_d5_e4_f3(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 354
+        state_33 += 2 * turn * 3
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_b2_c3_d4_f6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 1011
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b6_c5_e3(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_2
+        global state_12
+        global state_40
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 93
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_b5_c5_d5_e5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 849
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b3_d3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 111
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_e2_e3_e4_e6(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 282
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_d4_e5_f6(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 351
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b2_d2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1083
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_a3_a4_a5_a7(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_6
+        global state_22
+        global state_32
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 846
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_f2_f4_f5_f6_f7(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 1083
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f2_f4(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_3
+        global state_24
+        global state_40
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 30
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_b5_c5_d5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1092
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_g2_g4_g5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 354
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b3_c4_e6_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 336
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_h3_h4(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 36
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
 
 class flip_c6_d7(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_6
+        global state_11
+        global state_25
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 36
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
 
 class flip_d2_d4_d5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 111
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_d4_d5_d7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_6
+        global state_25
+        global state_35
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 837
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_c6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1062
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_d3_e2(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_1
+        global state_12
+        global state_41
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 108
+        state_39 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_c1_d1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        state_0 += 2 * turn * 36
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
 
 class flip_b7_d7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 354
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_e2_e3_e4_e5_e7(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 849
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_d1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 108
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_b7_c6_d5_e4_g2(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_1
+        global state_14
+        global state_43
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 849
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_b5_c6(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_5
+        global state_10
+        global state_23
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 12
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
 
 class flip_b4_c4_d4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1011
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_a4_a6(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 270
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_b3_c3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 336
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_c2_c4_c5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 111
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_b7_c7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 336
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_a3_a4_a6_a7(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 1008
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b5_c5_d5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 120
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_c4_c5_c7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_6
+        global state_24
+        global state_34
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 837
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c5_d5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 117
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_h2_h3_h4_h5(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 120
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_b2_c3_d4_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 120
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_d7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 270
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_e5_f6_g7(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 1053
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b4_c5_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_10
+        global state_22
+        global state_6
+        global state_12
+        global state_26
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 93
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 972
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_c2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1062
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_h4_h5_h7(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_6
+        global state_29
+        global state_39
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 837
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_g2_g3_g4_g5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 363
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1053
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_b1_d1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 111
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_f6_g7(Flip):
     def go(self):
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        global state_6
+        global state_14
+        global state_28
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 972
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_e2_e3_e4_e6_e7(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 1011
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b7_d5_e4(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 111
+        state_33 += 2 * turn * 3
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 class flip_b3_c3_d3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        state_2 += 2 * turn * 39
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
 
 class flip_b6_c5_d4_f2(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_4
+        global state_10
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_1
+        global state_13
+        global state_42
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 282
+        state_34 += 2 * turn * 3
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_d6_f4(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_3
+        global state_13
+        global state_40
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 90
+        state_36 += 2 * turn * 27
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 972
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_a2_a4_a5_a6(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 354
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_b3_b5_b6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 333
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_d5_e4_g2(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_1
+        global state_14
+        global state_43
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 837
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_d8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 108
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_b1_d1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1083
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b6_d4(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_3
+        global state_11
+        global state_38
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 30
+        state_34 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_b2_c2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 336
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_c2_e4_f5_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 354
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_f5_g4(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_3
+        global state_14
+        global state_41
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 108
+        state_39 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_a3_a4_a5_a6_a7(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 1089
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_g3_g4_g5_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 360
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 729
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_c3_e5_f6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 1062
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 972
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b3_c3_d3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 120
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_d2_d3(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 12
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
 
 class flip_g2_g4(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_3
+        global state_25
+        global state_41
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 30
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_d6_e5(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 36
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
 
 class flip_f4_f5_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_6
+        global state_27
+        global state_37
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 837
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_e6_f7(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_6
+        global state_13
+        global state_27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 324
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_d4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 108
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_b5_c5_d5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        state_4 += 2 * turn * 39
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_b8_c8_d8_e8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 849
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_c3_c4_c5_c7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_6
+        global state_24
+        global state_34
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 846
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c6_d5_e4_g2(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        global state_1
+        global state_14
+        global state_43
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 846
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_d8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        state_7 += 2 * turn * 27
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
 
 class flip_c2_d2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 117
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_a4(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 27
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
 
 class flip_d5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1080
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_d5_f3(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 270
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_c5_d4_e3_f2(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 360
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_d2_d3_d4_d5_d7(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_6
+        global state_25
+        global state_35
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 849
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_a2_a3_a4_a6(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 282
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_d5_d6_d7(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 1053
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_h2_h3_h4_h5_h7(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_6
+        global state_29
+        global state_39
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 849
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_c2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 90
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_e2_f3(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_13
+        global state_23
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 12
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
 
 class flip_d6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 999
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b7_c7_d7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 363
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_d3_f5(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_4
+        global state_13
+        global state_25
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 90
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_b7_d7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 111
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b4_d6(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_5
+        global state_11
+        global state_24
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 30
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
 
 class flip_e3_g5(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_4
+        global state_14
+        global state_26
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 90
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 324
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b4_c4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        state_3 += 2 * turn * 12
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
 
 class flip_e2_e4_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 111
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_c3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 333
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_c5_d4(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_3
+        global state_11
+        global state_38
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 36
+        state_36 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_c7_d7_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 360
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_a2_a3_a4_a6_a7(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        global state_6
+        global state_22
+        global state_32
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 1011
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b5_b7(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_6
+        global state_23
+        global state_33
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 810
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b3_d5(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_4
+        global state_11
+        global state_23
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 30
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
 
 class flip_h2_h3_h4_h5_h6_h7(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 1092
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b3_c3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        state_2 += 2 * turn * 12
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
 
 class flip_d5_e4(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 108
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 class flip_c8_d8_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1089
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_c2_c3_c4_c5_c7(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_6
+        global state_24
+        global state_34
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 849
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 333
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_b5_d5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1083
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_g3_g5(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 90
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_e2_e4(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_3
+        global state_23
+        global state_39
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 30
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_c4_d3_e2(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_2
+        global state_11
+        global state_39
+        global state_1
+        global state_12
+        global state_41
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 117
+        state_37 += 2 * turn * 9
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_e4_g6(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_5
+        global state_14
+        global state_27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 270
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_c5_d6_e7(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_5
+        global state_11
+        global state_24
+        global state_6
+        global state_12
+        global state_26
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 117
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_b3_c3_d3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1092
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 324
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_c6_d6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1089
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_c4_d4_e4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 846
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_d1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 351
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_e3_e4(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 36
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_c5_e7(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_6
+        global state_12
+        global state_26
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 90
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_c1_d1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 117
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_d3_d4_d5_d7(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_6
+        global state_25
+        global state_35
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 846
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_c4_d4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        state_3 += 2 * turn * 36
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_b6_c6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 336
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_c1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1062
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b4_c4_d4_e4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 849
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_f2_g3(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_14
+        global state_24
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 12
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
 
 class flip_e7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 810
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_e3_e4_e5_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 360
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_b1_c1_d1_e1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 849
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b4_b5_b6_b7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 1080
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_e4_e5(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 108
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_b4_d6_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_5
+        global state_11
+        global state_24
+        global state_6
+        global state_12
+        global state_26
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 111
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_d2_d3_d4_d5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 120
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_f4_f6(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 270
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b2_c2_d2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        state_1 += 2 * turn * 39
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
 
 class flip_b5_c5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 336
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_b8_c8_d8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1011
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_b6_d6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 354
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_c5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 333
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_c2_c3_c5_c6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 336
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_f2_f4_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 111
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_c6_c7(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 972
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_a2_a3(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 12
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
 
 class flip_h2(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 3
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
 
 class flip_b3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
 
 class flip_c1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 90
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_f2_f4_f5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 354
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_f5_f6(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 324
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b5_d5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 354
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_d7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1080
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_h4_h5(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 108
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
 
 class flip_a3_a5(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_4
+        global state_20
+        global state_34
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 90
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_c7_d6_e5_g3(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_2
+        global state_14
+        global state_42
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 282
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_d5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 351
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_c2_c3_c4_c6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 282
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_b2_d2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_11
+        global state_20
+        global state_40
+        state_1 += 2 * turn * 30
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
 
 class flip_f3_f5(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 90
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_g4_g5_g6_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 1080
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d7_e6_f5_g4(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_5
+        global state_12
+        global state_37
+        global state_4
+        global state_13
+        global state_39
+        global state_3
+        global state_14
+        global state_41
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 120
+        state_35 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_37 += 2 * turn * 81
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_39 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_c2_c3_c4(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 39
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
 
 class flip_h3_h5_h6(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 333
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_e6_g4(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_3
+        global state_14
+        global state_41
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 90
+        state_37 += 2 * turn * 81
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 27
+        state_41 += 2 * turn * 27
 
 class flip_e7_g5(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_4
+        global state_14
+        global state_40
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 30
+        state_36 += 2 * turn * 81
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_40 += 2 * turn * 81
 
 class flip_c2_d3(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 12
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
 
 class flip_c6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_h2_h4_h5_h6_h7(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 1083
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_g2_g3_g5_g6_g7(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 1065
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b4_b5(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 108
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_c8_e8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_12
+        global state_27
+        global state_35
+        state_7 += 2 * turn * 90
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
 
 class flip_d4_d6_d7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 999
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b1_c1_e1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_12
+        global state_20
+        global state_42
+        state_0 += 2 * turn * 93
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
 
 class flip_b2_b3_b4_b5_b6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 363
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_c5_e3(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_2
+        global state_12
+        global state_40
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 90
+        state_36 += 2 * turn * 9
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_a2_a3_a4_a5_a7(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[6] += 2 * turn * 1
-        state[8] += 2 * turn * 729
-        state[22] += 2 * turn * 1
-        state[32] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_6
+        global state_22
+        global state_32
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 849
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_6 += 2 * turn * 1
+        state_22 += 2 * turn * 1
+        state_32 += 2 * turn * 1
 
 class flip_b2_c3_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_4
+        global state_12
+        global state_24
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 93
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_h4_h5_h6_h7(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 1080
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b5_c4_d3(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_3
+        global state_10
+        global state_37
+        global state_2
+        global state_11
+        global state_39
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 39
+        state_35 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_37 += 2 * turn * 9
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
 
 class flip_b7_c7_d7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 120
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b5_d3(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_2
+        global state_11
+        global state_39
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 30
+        state_35 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
 
 class flip_b8_c8_d8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 282
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_c2_d3_f5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_4
+        global state_13
+        global state_25
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 93
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
 
 class flip_b5_d5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 111
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_d2_d3_d4(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 39
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_e2_e3_e4(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 39
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_h2_h3_h4(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 39
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
 
 class flip_b3_b4_b6_b7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 1008
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b6_d6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1083
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_g3_g5_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 333
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_g3_g4_g6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 1008
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c3_d3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        state_2 += 2 * turn * 36
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
 
 class flip_b1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        state_0 += 2 * turn * 3
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
 
 class flip_d4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1080
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_c5_d5_e5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 360
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_f5_g6(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_5
+        global state_14
+        global state_27
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 324
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_d8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 351
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_g3_g4_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_5
+        global state_27
+        global state_39
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 279
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_h3_h4_h5_h7(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_6
+        global state_29
+        global state_39
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 846
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_h3_h4_h6(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 279
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_c4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 333
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_d5_e5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_12
+        global state_24
+        global state_38
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 837
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_g2_g3_g4_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_14
+        global state_23
+        global state_43
+        global state_2
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 120
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
+        state_2 += 2 * turn * 729
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_e4_f5_g6(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_13
+        global state_25
+        global state_5
+        global state_14
+        global state_27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 351
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_d6_e7(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_6
+        global state_12
+        global state_26
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 108
+        state_6 += 2 * turn * 81
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
 
 class flip_f5_f6_f7(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 1053
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f3_f5_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 333
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_d6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 351
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_a3_a4_a6(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_5
+        global state_21
+        global state_33
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 279
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_c4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
 
 class flip_f2_f3_f4_f5_f7(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_6
+        global state_27
+        global state_37
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 849
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_d3_d5_d6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 333
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_a2(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 3
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
 
 class flip_c3_d4_e5_f6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 1089
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b7_c7_d7_e7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 849
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c2_e4(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 30
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
 
 class flip_c4_e6_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 333
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_c3_c5_c6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 333
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_e3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 810
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_b2_b3_b4_b5_b6_b7(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 1092
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_e4_e5_e6_e7(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 1080
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b7_c6_e4_f3_g2(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        global state_2
+        global state_13
+        global state_41
+        global state_1
+        global state_14
+        global state_43
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 1065
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
+        state_1 += 2 * turn * 729
+        state_14 += 2 * turn * 3
+        state_43 += 2 * turn * 3
 
 class flip_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 243
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_c8_d8_e8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 360
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_d3_d5(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_4
+        global state_23
+        global state_37
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 90
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_c3_e5_f6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 333
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b7_c7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1065
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_c4_d4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1008
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_b1_c1_d1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1011
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_a2_a4_a5(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 111
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_c3_c4_c6_c7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 1008
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_d6_f4_g3(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 333
+        state_36 += 2 * turn * 27
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_c2_d3_e4(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_3
+        global state_12
+        global state_23
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 39
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
 
 class flip_h6(Flip):
     def go(self):
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_5
+        global state_15
+        global state_28
+        global state_40
+        state_5 += 2 * turn * 2187
+        state_15 += 2 * turn * 243
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_b6_c6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        state_5 += 2 * turn * 12
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_c5_e5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        state_4 += 2 * turn * 90
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_g4_g5_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_6
+        global state_28
+        global state_38
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 837
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b4_c5_d6(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_10
+        global state_22
+        global state_5
+        global state_11
+        global state_24
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 39
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
 
 class flip_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_b4_d4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1083
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_d2_d3_d4_d6_d7(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 1011
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_c4_d4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 360
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_e2_e4_e5_e6(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 354
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_h3_h4_h5_h6_h7(Flip):
     def go(self):
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_2
+        global state_15
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_2 += 2 * turn * 2187
+        state_15 += 2 * turn * 1089
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_c8_d8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 279
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_b7_c7_e7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_12
+        global state_26
+        global state_36
+        state_6 += 2 * turn * 93
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_c2_d2_e2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 846
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_d4_e5_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_12
+        global state_24
+        global state_6
+        global state_14
+        global state_28
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 837
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_c3_c4_c6(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 279
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_f2_f3(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 12
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_c7_d7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        state_6 += 2 * turn * 36
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_e7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 324
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_b4_c4_d4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 282
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_b3_c4_d5_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_4
+        global state_11
+        global state_23
+        global state_5
+        global state_12
+        global state_25
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 120
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_b2_c3(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 12
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
 
 class flip_f3_f4_f5_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_4
+        global state_25
+        global state_39
+        global state_6
+        global state_27
+        global state_37
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 846
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_b7_c7_d7_e7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_12
+        global state_26
+        global state_36
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 1092
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_12 += 2 * turn * 729
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d5_e6_f7(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_5
+        global state_12
+        global state_25
+        global state_6
+        global state_13
+        global state_27
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 351
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_g3_g4_g5_g6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 1089
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d4_d5_d6(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 351
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_d2_e3_f4_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_12
+        global state_22
+        global state_3
+        global state_13
+        global state_24
+        global state_4
+        global state_14
+        global state_26
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 120
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_a2_a3_a4(Flip):
     def go(self):
-        state[1] += 2 * turn * 1
-        state[8] += 2 * turn * 3
-        state[17] += 2 * turn * 1
-        state[37] += 2 * turn * 1
-
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
+        global state_1
+        global state_8
+        global state_17
+        global state_37
+        global state_2
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        state_1 += 2 * turn * 1
+        state_8 += 2 * turn * 39
+        state_17 += 2 * turn * 1
+        state_37 += 2 * turn * 1
+        state_2 += 2 * turn * 1
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
 
 class flip_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 729
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b2_d4_e5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_5
+        global state_13
+        global state_26
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 354
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
 
 class flip_b7_c6(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 12
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
 
 class flip_b2_d4_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 111
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
 
 class flip_e5_f4(Flip):
     def go(self):
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_4
+        global state_12
+        global state_24
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 108
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_b5_c5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        state_4 += 2 * turn * 12
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_d6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 270
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_d1_e1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 1080
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_d1_f1_g1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
-
-        state[0] += 2 * turn * 729
-        state[14] += 2 * turn * 1
-        state[22] += 2 * turn * 729
-        state[44] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        global state_14
+        global state_22
+        global state_44
+        state_0 += 2 * turn * 999
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
+        state_14 += 2 * turn * 1
+        state_22 += 2 * turn * 729
+        state_44 += 2 * turn * 1
 
 class flip_b4_d4_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 111
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_b6_c6_d6_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1092
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_g5_g7(Flip):
     def go(self):
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_4
+        global state_14
+        global state_26
+        global state_40
+        global state_6
+        global state_28
+        global state_38
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 810
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_e3_f4_g5(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_13
+        global state_24
+        global state_4
+        global state_14
+        global state_26
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 117
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_b3_b4_b5_b6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 360
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_c5_c6(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 324
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_b6_d6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_11
+        global state_24
+        global state_36
+        state_5 += 2 * turn * 30
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_b3_c3_e3_f3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 1065
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_h4(Flip):
     def go(self):
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
+        global state_3
+        global state_15
+        global state_26
+        global state_42
+        state_3 += 2 * turn * 2187
+        state_15 += 2 * turn * 27
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
 
 class flip_d2_f4_g5(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_13
+        global state_24
+        global state_4
+        global state_14
+        global state_26
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 111
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
 
 class flip_b3_c4_e6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_5
+        global state_12
+        global state_25
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 93
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_b5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_b3_b4(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 36
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
 
 class flip_c3_c5(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 90
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_a5_a6(Flip):
     def go(self):
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_4
+        global state_8
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_4 += 2 * turn * 1
+        state_8 += 2 * turn * 324
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_g3_g4(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_3
+        global state_25
+        global state_41
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 36
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_3 += 2 * turn * 729
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_d2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 270
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_f4_f6_f7(Flip):
     def go(self):
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_3
+        global state_13
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        global state_6
+        global state_27
+        global state_37
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 999
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_6 += 2 * turn * 243
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_b2_b3_b4_b6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 282
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_e6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 810
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_f2_f3_f5_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_4
+        global state_25
+        global state_39
+        global state_5
+        global state_26
+        global state_38
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 336
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_4 += 2 * turn * 243
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_b2_c3_d4(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_10
+        global state_20
+        global state_3
+        global state_11
+        global state_22
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 39
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
 
 class flip_c4_c6_c7(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 999
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_f2_f3_f4(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 39
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_b2_d4(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 30
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
 
 class flip_b2_c2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        state_1 += 2 * turn * 12
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
 
 class flip_c4_c6(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_5
+        global state_23
+        global state_35
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 270
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_c8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        state_7 += 2 * turn * 9
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
 
 class flip_b4_b5_b7(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_4
+        global state_21
+        global state_35
+        global state_6
+        global state_23
+        global state_33
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 837
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_c2_c3(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 12
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
 
 class flip_d6_e5_f4_g3(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_3
+        global state_13
+        global state_40
+        global state_2
+        global state_14
+        global state_42
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 360
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_e6_f6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 1053
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_c6_d6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 279
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_a6(Flip):
     def go(self):
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_5
+        global state_8
+        global state_21
+        global state_33
+        state_5 += 2 * turn * 1
+        state_8 += 2 * turn * 243
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_d5_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 270
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_c2_d3_e4_g6(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_11
+        global state_21
+        global state_3
+        global state_12
+        global state_23
+        global state_5
+        global state_14
+        global state_27
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 282
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_d4_e3_f2(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 351
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_b5_d5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_11
+        global state_23
+        global state_37
+        state_4 += 2 * turn * 30
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
 
 class flip_b5_c5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1065
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_c2_d2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1008
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_c2_d2_e2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 360
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_b4_c4_d4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        state_3 += 2 * turn * 39
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
 
 class flip_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b6_b7(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_6
+        global state_23
+        global state_33
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 972
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_6 += 2 * turn * 3
+        state_23 += 2 * turn * 3
+        state_33 += 2 * turn * 3
 
 class flip_b2_b3_b5_b6(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        global state_5
+        global state_22
+        global state_34
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 336
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_b3_d3_e3_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 354
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_f5(Flip):
     def go(self):
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
+        global state_4
+        global state_13
+        global state_25
+        global state_39
+        state_4 += 2 * turn * 243
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
 
 class flip_d1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 270
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_c5_d6(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_5
+        global state_11
+        global state_24
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 36
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
 
 class flip_d5_e6(Flip):
     def go(self):
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_4
+        global state_11
+        global state_23
+        global state_37
+        global state_5
+        global state_12
+        global state_25
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 108
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
 
 class flip_c3_d3_e3_g3(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_11
+        global state_21
+        global state_39
+        global state_12
+        global state_22
+        global state_40
+        global state_14
+        global state_24
+        global state_42
+        state_2 += 2 * turn * 846
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_14 += 2 * turn * 9
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
 
 class flip_d3(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
 
 class flip_c1(Flip):
     def go(self):
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
+        global state_0
+        global state_10
+        global state_18
+        global state_40
+        state_0 += 2 * turn * 9
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
 
 class flip_d8_e8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 837
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_f2_f3_f4_f6(Flip):
     def go(self):
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_1
+        global state_13
+        global state_22
+        global state_42
+        global state_2
+        global state_23
+        global state_41
+        global state_3
+        global state_24
+        global state_40
+        global state_5
+        global state_26
+        global state_38
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 282
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_2 += 2 * turn * 243
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
+        state_3 += 2 * turn * 243
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_5 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_c6_d5_f3(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 279
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_d2_e2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 837
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_c5_c6_c7(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_4 += 2 * turn * 9
+        state_10 += 2 * turn * 1053
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_c3_d4_e5_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_10
+        global state_20
+        global state_38
+        global state_3
+        global state_11
+        global state_22
+        global state_4
+        global state_12
+        global state_24
+        global state_6
+        global state_14
+        global state_28
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 846
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_b5_c4_d3_e2(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_3
+        global state_10
+        global state_37
+        global state_2
+        global state_11
+        global state_39
+        global state_1
+        global state_12
+        global state_41
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 120
+        state_35 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_37 += 2 * turn * 9
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_d2_d3_d4_d5_d6(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 363
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_e8_f8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_12
+        global state_27
+        global state_35
+        global state_13
+        global state_28
+        global state_36
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 1053
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_c2_c4_c5_c6_c7(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_3
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        global state_6
+        global state_24
+        global state_34
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 1083
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_3 += 2 * turn * 9
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_6 += 2 * turn * 9
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
 
 class flip_d6_e5_g3(Flip):
     def go(self):
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
+        global state_5
+        global state_11
+        global state_24
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        global state_2
+        global state_14
+        global state_42
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 279
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 9
+        state_42 += 2 * turn * 9
 
 class flip_h2_h3_h4_h5_h6(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[4] += 2 * turn * 2187
-        state[15] += 2 * turn * 81
-        state[27] += 2 * turn * 27
-        state[41] += 2 * turn * 81
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_4
+        global state_27
+        global state_41
+        global state_5
+        global state_28
+        global state_40
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 363
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_4 += 2 * turn * 2187
+        state_27 += 2 * turn * 27
+        state_41 += 2 * turn * 81
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
 
 class flip_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 81
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_g3_g5_g6_g7(Flip):
     def go(self):
-        state[2] += 2 * turn * 729
-        state[14] += 2 * turn * 9
-        state[24] += 2 * turn * 243
-        state[42] += 2 * turn * 9
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_2
+        global state_14
+        global state_24
+        global state_42
+        global state_4
+        global state_26
+        global state_40
+        global state_5
+        global state_27
+        global state_39
+        global state_6
+        global state_28
+        global state_38
+        state_2 += 2 * turn * 729
+        state_14 += 2 * turn * 1062
+        state_24 += 2 * turn * 243
+        state_42 += 2 * turn * 9
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
+        state_6 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_b7_c6_d5_f3(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_2
+        global state_13
+        global state_41
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 282
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_41 += 2 * turn * 9
 
 class flip_d4_f6_g7(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_5
+        global state_13
+        global state_26
+        global state_6
+        global state_14
+        global state_28
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 999
+        state_5 += 2 * turn * 243
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_6 += 2 * turn * 729
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
 
 class flip_a3_a4_a5_a6(Flip):
     def go(self):
-        state[2] += 2 * turn * 1
-        state[8] += 2 * turn * 9
-        state[18] += 2 * turn * 1
-        state[36] += 2 * turn * 1
-
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
-
-        state[5] += 2 * turn * 1
-        state[8] += 2 * turn * 243
-        state[21] += 2 * turn * 1
-        state[33] += 2 * turn * 1
+        global state_2
+        global state_8
+        global state_18
+        global state_36
+        global state_3
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        global state_5
+        global state_21
+        global state_33
+        state_2 += 2 * turn * 1
+        state_8 += 2 * turn * 360
+        state_18 += 2 * turn * 1
+        state_36 += 2 * turn * 1
+        state_3 += 2 * turn * 1
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
+        state_5 += 2 * turn * 1
+        state_21 += 2 * turn * 1
+        state_33 += 2 * turn * 1
 
 class flip_d4_e4_f4(Flip):
     def go(self):
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_3
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        state_3 += 2 * turn * 351
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
 
 class flip_b6_c6_d6_e6_f6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 243
-        state[13] += 2 * turn * 243
-        state[26] += 2 * turn * 9
-        state[38] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_13
+        global state_26
+        global state_38
+        state_5 += 2 * turn * 363
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_13 += 2 * turn * 243
+        state_26 += 2 * turn * 9
+        state_38 += 2 * turn * 243
 
 class flip_d3_e4_g6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_12
+        global state_23
+        global state_5
+        global state_14
+        global state_27
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 279
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_5 += 2 * turn * 729
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
 
 class flip_b4_c4_d4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_11
+        global state_22
+        global state_38
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1092
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_11 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_b4_c3(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_2
+        global state_10
+        global state_38
+        state_3 += 2 * turn * 3
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 12
+        state_36 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_10 += 2 * turn * 9
+        state_38 += 2 * turn * 9
 
 class flip_c6_d5_e4(Flip):
     def go(self):
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_5
+        global state_10
+        global state_23
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 117
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 class flip_b5_c6_d7(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_5
+        global state_10
+        global state_23
+        global state_6
+        global state_11
+        global state_25
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 39
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
 
 class flip_b2_c2_d2_e2(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        state_1 += 2 * turn * 120
+        state_9 += 2 * turn * 3
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
 
 class flip_c5_e5_f5_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[4] += 2 * turn * 243
-        state[13] += 2 * turn * 81
-        state[25] += 2 * turn * 27
-        state[39] += 2 * turn * 81
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_10
+        global state_22
+        global state_36
+        global state_12
+        global state_24
+        global state_38
+        global state_13
+        global state_25
+        global state_39
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 1062
+        state_10 += 2 * turn * 81
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_12 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_13 += 2 * turn * 81
+        state_25 += 2 * turn * 27
+        state_39 += 2 * turn * 81
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b3_b4_b6(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_20
+        global state_36
+        global state_5
+        global state_22
+        global state_34
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 279
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_3 += 2 * turn * 3
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_5 += 2 * turn * 3
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
 
 class flip_b1_c1_d1_e1_f1(Flip):
     def go(self):
-        state[0] += 2 * turn * 3
-        state[9] += 2 * turn * 1
-        state[17] += 2 * turn * 3
-        state[39] += 2 * turn * 1
-
-        state[0] += 2 * turn * 9
-        state[10] += 2 * turn * 1
-        state[18] += 2 * turn * 9
-        state[40] += 2 * turn * 1
-
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
-
-        state[0] += 2 * turn * 81
-        state[12] += 2 * turn * 1
-        state[20] += 2 * turn * 81
-        state[42] += 2 * turn * 1
-
-        state[0] += 2 * turn * 243
-        state[13] += 2 * turn * 1
-        state[21] += 2 * turn * 243
-        state[43] += 2 * turn * 1
+        global state_0
+        global state_9
+        global state_17
+        global state_39
+        global state_10
+        global state_18
+        global state_40
+        global state_11
+        global state_19
+        global state_41
+        global state_12
+        global state_20
+        global state_42
+        global state_13
+        global state_21
+        global state_43
+        state_0 += 2 * turn * 363
+        state_9 += 2 * turn * 1
+        state_17 += 2 * turn * 3
+        state_39 += 2 * turn * 1
+        state_10 += 2 * turn * 1
+        state_18 += 2 * turn * 9
+        state_40 += 2 * turn * 1
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
+        state_12 += 2 * turn * 1
+        state_20 += 2 * turn * 81
+        state_42 += 2 * turn * 1
+        state_13 += 2 * turn * 1
+        state_21 += 2 * turn * 243
+        state_43 += 2 * turn * 1
 
 class flip_b5_d3_e2(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_2
+        global state_11
+        global state_39
+        global state_1
+        global state_12
+        global state_41
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 111
+        state_35 += 2 * turn * 3
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 9
+        state_39 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_h2_h3_h4_h6_h7(Flip):
     def go(self):
-        state[1] += 2 * turn * 2187
-        state[15] += 2 * turn * 3
-        state[24] += 2 * turn * 729
-        state[44] += 2 * turn * 3
-
-        state[2] += 2 * turn * 2187
-        state[15] += 2 * turn * 9
-        state[25] += 2 * turn * 243
-        state[43] += 2 * turn * 9
-
-        state[3] += 2 * turn * 2187
-        state[15] += 2 * turn * 27
-        state[26] += 2 * turn * 81
-        state[42] += 2 * turn * 27
-
-        state[5] += 2 * turn * 2187
-        state[15] += 2 * turn * 243
-        state[28] += 2 * turn * 9
-        state[40] += 2 * turn * 243
-
-        state[6] += 2 * turn * 2187
-        state[15] += 2 * turn * 729
-        state[29] += 2 * turn * 3
-        state[39] += 2 * turn * 729
+        global state_1
+        global state_15
+        global state_24
+        global state_44
+        global state_2
+        global state_25
+        global state_43
+        global state_3
+        global state_26
+        global state_42
+        global state_5
+        global state_28
+        global state_40
+        global state_6
+        global state_29
+        global state_39
+        state_1 += 2 * turn * 2187
+        state_15 += 2 * turn * 1011
+        state_24 += 2 * turn * 729
+        state_44 += 2 * turn * 3
+        state_2 += 2 * turn * 2187
+        state_25 += 2 * turn * 243
+        state_43 += 2 * turn * 9
+        state_3 += 2 * turn * 2187
+        state_26 += 2 * turn * 81
+        state_42 += 2 * turn * 27
+        state_5 += 2 * turn * 2187
+        state_28 += 2 * turn * 9
+        state_40 += 2 * turn * 243
+        state_6 += 2 * turn * 2187
+        state_29 += 2 * turn * 3
+        state_39 += 2 * turn * 729
 
 class flip_b4_c4_e4_f4_g4(Flip):
     def go(self):
-        state[3] += 2 * turn * 3
-        state[9] += 2 * turn * 27
-        state[20] += 2 * turn * 3
-        state[36] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
-
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
+        global state_3
+        global state_9
+        global state_20
+        global state_36
+        global state_10
+        global state_21
+        global state_37
+        global state_12
+        global state_23
+        global state_39
+        global state_13
+        global state_24
+        global state_40
+        global state_14
+        global state_25
+        global state_41
+        state_3 += 2 * turn * 1065
+        state_9 += 2 * turn * 27
+        state_20 += 2 * turn * 3
+        state_36 += 2 * turn * 3
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_13 += 2 * turn * 27
+        state_24 += 2 * turn * 81
+        state_40 += 2 * turn * 27
+        state_14 += 2 * turn * 27
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
 
 class flip_c8_d8_e8_g8(Flip):
     def go(self):
-        state[7] += 2 * turn * 9
-        state[10] += 2 * turn * 2187
-        state[25] += 2 * turn * 1
-        state[33] += 2 * turn * 9
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 81
-        state[12] += 2 * turn * 2187
-        state[27] += 2 * turn * 1
-        state[35] += 2 * turn * 81
-
-        state[7] += 2 * turn * 729
-        state[14] += 2 * turn * 2187
-        state[29] += 2 * turn * 1
-        state[37] += 2 * turn * 729
+        global state_7
+        global state_10
+        global state_25
+        global state_33
+        global state_11
+        global state_26
+        global state_34
+        global state_12
+        global state_27
+        global state_35
+        global state_14
+        global state_29
+        global state_37
+        state_7 += 2 * turn * 846
+        state_10 += 2 * turn * 2187
+        state_25 += 2 * turn * 1
+        state_33 += 2 * turn * 9
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_12 += 2 * turn * 2187
+        state_27 += 2 * turn * 1
+        state_35 += 2 * turn * 81
+        state_14 += 2 * turn * 2187
+        state_29 += 2 * turn * 1
+        state_37 += 2 * turn * 729
 
 class flip_b3_c3_e3(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_10
+        global state_20
+        global state_38
+        global state_12
+        global state_22
+        global state_40
+        state_2 += 2 * turn * 93
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_10 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
 
 class flip_d8_f8(Flip):
     def go(self):
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
-
-        state[7] += 2 * turn * 243
-        state[13] += 2 * turn * 2187
-        state[28] += 2 * turn * 1
-        state[36] += 2 * turn * 243
+        global state_7
+        global state_11
+        global state_26
+        global state_34
+        global state_13
+        global state_28
+        global state_36
+        state_7 += 2 * turn * 270
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
+        state_13 += 2 * turn * 2187
+        state_28 += 2 * turn * 1
+        state_36 += 2 * turn * 243
 
 class flip_e2_e3_e4_e5(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 120
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
 
 class flip_e3_e4_e5_e7(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_6
+        global state_26
+        global state_36
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 846
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_b7_c6_d5_e4(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_4
+        global state_11
+        global state_37
+        global state_3
+        global state_12
+        global state_39
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 120
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_37 += 2 * turn * 27
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 class flip_b6_c6_d6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        state_5 += 2 * turn * 39
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_c2_d2_e2_f2_g2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
-
-        state[1] += 2 * turn * 729
-        state[14] += 2 * turn * 3
-        state[23] += 2 * turn * 729
-        state[43] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_12
+        global state_21
+        global state_41
+        global state_13
+        global state_22
+        global state_42
+        global state_14
+        global state_23
+        global state_43
+        state_1 += 2 * turn * 1089
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_12 += 2 * turn * 3
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
+        state_14 += 2 * turn * 3
+        state_23 += 2 * turn * 729
+        state_43 += 2 * turn * 3
 
 class flip_g5(Flip):
     def go(self):
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_4
+        global state_14
+        global state_26
+        global state_40
+        state_4 += 2 * turn * 729
+        state_14 += 2 * turn * 81
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_c7_d7_f7(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        state_6 += 2 * turn * 279
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 3
+        state_34 += 2 * turn * 9
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
 
 class flip_f3(Flip):
     def go(self):
-        state[2] += 2 * turn * 243
-        state[13] += 2 * turn * 9
-        state[23] += 2 * turn * 243
-        state[41] += 2 * turn * 9
+        global state_2
+        global state_13
+        global state_23
+        global state_41
+        state_2 += 2 * turn * 243
+        state_13 += 2 * turn * 9
+        state_23 += 2 * turn * 243
+        state_41 += 2 * turn * 9
 
 class flip_b6_d6_e6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        state_5 += 2 * turn * 111
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_e2_e3_e5_e6_e7(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 1065
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_e2_e3_e4_e5_e6(Flip):
     def go(self):
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
+        global state_1
+        global state_12
+        global state_21
+        global state_41
+        global state_2
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 363
+        state_21 += 2 * turn * 81
+        state_41 += 2 * turn * 3
+        state_2 += 2 * turn * 81
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
 
 class flip_b6_d4_e3(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 111
+        state_34 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
 
 class flip_d1(Flip):
     def go(self):
-        state[0] += 2 * turn * 27
-        state[11] += 2 * turn * 1
-        state[19] += 2 * turn * 27
-        state[41] += 2 * turn * 1
+        global state_0
+        global state_11
+        global state_19
+        global state_41
+        state_0 += 2 * turn * 27
+        state_11 += 2 * turn * 1
+        state_19 += 2 * turn * 27
+        state_41 += 2 * turn * 1
 
 class flip_b8_d8(Flip):
     def go(self):
-        state[7] += 2 * turn * 3
-        state[9] += 2 * turn * 2187
-        state[24] += 2 * turn * 1
-        state[32] += 2 * turn * 3
-
-        state[7] += 2 * turn * 27
-        state[11] += 2 * turn * 2187
-        state[26] += 2 * turn * 1
-        state[34] += 2 * turn * 27
+        global state_7
+        global state_9
+        global state_24
+        global state_32
+        global state_11
+        global state_26
+        global state_34
+        state_7 += 2 * turn * 30
+        state_9 += 2 * turn * 2187
+        state_24 += 2 * turn * 1
+        state_32 += 2 * turn * 3
+        state_11 += 2 * turn * 2187
+        state_26 += 2 * turn * 1
+        state_34 += 2 * turn * 27
 
 class flip_c7_d6_f4(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[3] += 2 * turn * 243
-        state[13] += 2 * turn * 27
-        state[24] += 2 * turn * 81
-        state[40] += 2 * turn * 27
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_3
+        global state_13
+        global state_40
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 93
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_3 += 2 * turn * 243
+        state_13 += 2 * turn * 27
+        state_40 += 2 * turn * 27
 
 class flip_b6_d4_e3_f2(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_3
+        global state_11
+        global state_38
+        global state_2
+        global state_12
+        global state_40
+        global state_1
+        global state_13
+        global state_42
+        state_5 += 2 * turn * 3
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 354
+        state_34 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_11 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_40 += 2 * turn * 9
+        state_1 += 2 * turn * 243
+        state_13 += 2 * turn * 3
+        state_42 += 2 * turn * 3
 
 class flip_d3_d4_d5_d6(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 360
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
 
 class flip_c4_c5_c6(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_4
+        global state_22
+        global state_36
+        global state_5
+        global state_23
+        global state_35
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 351
+        state_21 += 2 * turn * 9
+        state_37 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
+        state_5 += 2 * turn * 9
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
 
 class flip_g4_g5(Flip):
     def go(self):
-        state[3] += 2 * turn * 729
-        state[14] += 2 * turn * 27
-        state[25] += 2 * turn * 81
-        state[41] += 2 * turn * 27
-
-        state[4] += 2 * turn * 729
-        state[14] += 2 * turn * 81
-        state[26] += 2 * turn * 27
-        state[40] += 2 * turn * 81
+        global state_3
+        global state_14
+        global state_25
+        global state_41
+        global state_4
+        global state_26
+        global state_40
+        state_3 += 2 * turn * 729
+        state_14 += 2 * turn * 108
+        state_25 += 2 * turn * 81
+        state_41 += 2 * turn * 27
+        state_4 += 2 * turn * 729
+        state_26 += 2 * turn * 27
+        state_40 += 2 * turn * 81
 
 class flip_b2_b3_b5(Flip):
     def go(self):
-        state[1] += 2 * turn * 3
-        state[9] += 2 * turn * 3
-        state[18] += 2 * turn * 3
-        state[38] += 2 * turn * 3
-
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
+        global state_1
+        global state_9
+        global state_18
+        global state_38
+        global state_2
+        global state_19
+        global state_37
+        global state_4
+        global state_21
+        global state_35
+        state_1 += 2 * turn * 3
+        state_9 += 2 * turn * 93
+        state_18 += 2 * turn * 3
+        state_38 += 2 * turn * 3
+        state_2 += 2 * turn * 3
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 3
+        state_4 += 2 * turn * 3
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 3
 
 class flip_d7_f7_g7(Flip):
     def go(self):
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
-
-        state[6] += 2 * turn * 729
-        state[14] += 2 * turn * 729
-        state[28] += 2 * turn * 3
-        state[38] += 2 * turn * 729
+        global state_6
+        global state_11
+        global state_25
+        global state_35
+        global state_13
+        global state_27
+        global state_37
+        global state_14
+        global state_28
+        global state_38
+        state_6 += 2 * turn * 999
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
+        state_37 += 2 * turn * 243
+        state_14 += 2 * turn * 729
+        state_28 += 2 * turn * 3
+        state_38 += 2 * turn * 729
 
 class flip_d2_d4_d5_d6_d7(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_3
+        global state_22
+        global state_38
+        global state_4
+        global state_23
+        global state_37
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 1083
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_4 += 2 * turn * 27
+        state_23 += 2 * turn * 27
+        state_37 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_b3_c4_d5_f7(Flip):
     def go(self):
-        state[2] += 2 * turn * 3
-        state[9] += 2 * turn * 9
-        state[19] += 2 * turn * 3
-        state[37] += 2 * turn * 3
-
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[4] += 2 * turn * 27
-        state[11] += 2 * turn * 81
-        state[23] += 2 * turn * 27
-        state[37] += 2 * turn * 27
-
-        state[6] += 2 * turn * 243
-        state[13] += 2 * turn * 729
-        state[27] += 2 * turn * 3
-        state[37] += 2 * turn * 243
+        global state_2
+        global state_9
+        global state_19
+        global state_37
+        global state_3
+        global state_10
+        global state_21
+        global state_4
+        global state_11
+        global state_23
+        global state_6
+        global state_13
+        global state_27
+        state_2 += 2 * turn * 3
+        state_9 += 2 * turn * 9
+        state_19 += 2 * turn * 3
+        state_37 += 2 * turn * 282
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 9
+        state_4 += 2 * turn * 27
+        state_11 += 2 * turn * 81
+        state_23 += 2 * turn * 27
+        state_6 += 2 * turn * 243
+        state_13 += 2 * turn * 729
+        state_27 += 2 * turn * 3
 
 class flip_c2_c3_c5(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[2] += 2 * turn * 9
-        state[10] += 2 * turn * 9
-        state[20] += 2 * turn * 9
-        state[38] += 2 * turn * 9
-
-        state[4] += 2 * turn * 9
-        state[10] += 2 * turn * 81
-        state[22] += 2 * turn * 9
-        state[36] += 2 * turn * 9
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_2
+        global state_20
+        global state_38
+        global state_4
+        global state_22
+        global state_36
+        state_1 += 2 * turn * 9
+        state_10 += 2 * turn * 93
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_2 += 2 * turn * 9
+        state_20 += 2 * turn * 9
+        state_38 += 2 * turn * 9
+        state_4 += 2 * turn * 9
+        state_22 += 2 * turn * 9
+        state_36 += 2 * turn * 9
 
 class flip_d2_e3(Flip):
     def go(self):
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
+        global state_1
+        global state_11
+        global state_20
+        global state_40
+        global state_2
+        global state_12
+        global state_22
+        state_1 += 2 * turn * 27
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 12
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 9
+        state_22 += 2 * turn * 81
 
 class flip_b5_d7(Flip):
     def go(self):
-        state[4] += 2 * turn * 3
-        state[9] += 2 * turn * 81
-        state[21] += 2 * turn * 3
-        state[35] += 2 * turn * 3
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_4
+        global state_9
+        global state_21
+        global state_35
+        global state_6
+        global state_11
+        global state_25
+        state_4 += 2 * turn * 3
+        state_9 += 2 * turn * 81
+        state_21 += 2 * turn * 3
+        state_35 += 2 * turn * 30
+        state_6 += 2 * turn * 27
+        state_11 += 2 * turn * 729
+        state_25 += 2 * turn * 3
 
 class flip_c4_e2(Flip):
     def go(self):
-        state[3] += 2 * turn * 9
-        state[10] += 2 * turn * 27
-        state[21] += 2 * turn * 9
-        state[37] += 2 * turn * 9
-
-        state[1] += 2 * turn * 81
-        state[12] += 2 * turn * 3
-        state[21] += 2 * turn * 81
-        state[41] += 2 * turn * 3
+        global state_3
+        global state_10
+        global state_21
+        global state_37
+        global state_1
+        global state_12
+        global state_41
+        state_3 += 2 * turn * 9
+        state_10 += 2 * turn * 27
+        state_21 += 2 * turn * 90
+        state_37 += 2 * turn * 9
+        state_1 += 2 * turn * 81
+        state_12 += 2 * turn * 3
+        state_41 += 2 * turn * 3
 
 class flip_e4(Flip):
     def go(self):
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_3
+        global state_12
+        global state_23
+        global state_39
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
 
 class flip_c2_d2_f2(Flip):
     def go(self):
-        state[1] += 2 * turn * 9
-        state[10] += 2 * turn * 3
-        state[19] += 2 * turn * 9
-        state[39] += 2 * turn * 3
-
-        state[1] += 2 * turn * 27
-        state[11] += 2 * turn * 3
-        state[20] += 2 * turn * 27
-        state[40] += 2 * turn * 3
-
-        state[1] += 2 * turn * 243
-        state[13] += 2 * turn * 3
-        state[22] += 2 * turn * 243
-        state[42] += 2 * turn * 3
+        global state_1
+        global state_10
+        global state_19
+        global state_39
+        global state_11
+        global state_20
+        global state_40
+        global state_13
+        global state_22
+        global state_42
+        state_1 += 2 * turn * 279
+        state_10 += 2 * turn * 3
+        state_19 += 2 * turn * 9
+        state_39 += 2 * turn * 3
+        state_11 += 2 * turn * 3
+        state_20 += 2 * turn * 27
+        state_40 += 2 * turn * 3
+        state_13 += 2 * turn * 3
+        state_22 += 2 * turn * 243
+        state_42 += 2 * turn * 3
 
 class flip_d3_d4_d6_d7(Flip):
     def go(self):
-        state[2] += 2 * turn * 27
-        state[11] += 2 * turn * 9
-        state[21] += 2 * turn * 27
-        state[39] += 2 * turn * 9
-
-        state[3] += 2 * turn * 27
-        state[11] += 2 * turn * 27
-        state[22] += 2 * turn * 27
-        state[38] += 2 * turn * 27
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[6] += 2 * turn * 27
-        state[11] += 2 * turn * 729
-        state[25] += 2 * turn * 3
-        state[35] += 2 * turn * 27
+        global state_2
+        global state_11
+        global state_21
+        global state_39
+        global state_3
+        global state_22
+        global state_38
+        global state_5
+        global state_24
+        global state_36
+        global state_6
+        global state_25
+        global state_35
+        state_2 += 2 * turn * 27
+        state_11 += 2 * turn * 1008
+        state_21 += 2 * turn * 27
+        state_39 += 2 * turn * 9
+        state_3 += 2 * turn * 27
+        state_22 += 2 * turn * 27
+        state_38 += 2 * turn * 27
+        state_5 += 2 * turn * 27
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_6 += 2 * turn * 27
+        state_25 += 2 * turn * 3
+        state_35 += 2 * turn * 27
 
 class flip_a4_a5(Flip):
     def go(self):
-        state[3] += 2 * turn * 1
-        state[8] += 2 * turn * 27
-        state[19] += 2 * turn * 1
-        state[35] += 2 * turn * 1
-
-        state[4] += 2 * turn * 1
-        state[8] += 2 * turn * 81
-        state[20] += 2 * turn * 1
-        state[34] += 2 * turn * 1
+        global state_3
+        global state_8
+        global state_19
+        global state_35
+        global state_4
+        global state_20
+        global state_34
+        state_3 += 2 * turn * 1
+        state_8 += 2 * turn * 108
+        state_19 += 2 * turn * 1
+        state_35 += 2 * turn * 1
+        state_4 += 2 * turn * 1
+        state_20 += 2 * turn * 1
+        state_34 += 2 * turn * 1
 
 class flip_e3_e4_e6_e7(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 1008
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_e3_e4_e5_e6_e7(Flip):
     def go(self):
-        state[2] += 2 * turn * 81
-        state[12] += 2 * turn * 9
-        state[22] += 2 * turn * 81
-        state[40] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[6] += 2 * turn * 81
-        state[12] += 2 * turn * 729
-        state[26] += 2 * turn * 3
-        state[36] += 2 * turn * 81
+        global state_2
+        global state_12
+        global state_22
+        global state_40
+        global state_3
+        global state_23
+        global state_39
+        global state_4
+        global state_24
+        global state_38
+        global state_5
+        global state_25
+        global state_37
+        global state_6
+        global state_26
+        global state_36
+        state_2 += 2 * turn * 81
+        state_12 += 2 * turn * 1089
+        state_22 += 2 * turn * 81
+        state_40 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_23 += 2 * turn * 81
+        state_39 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_24 += 2 * turn * 27
+        state_38 += 2 * turn * 81
+        state_5 += 2 * turn * 81
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_6 += 2 * turn * 81
+        state_26 += 2 * turn * 3
+        state_36 += 2 * turn * 81
 
 class flip_c7_d6_e5(Flip):
     def go(self):
-        state[6] += 2 * turn * 9
-        state[10] += 2 * turn * 729
-        state[24] += 2 * turn * 3
-        state[34] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[4] += 2 * turn * 81
-        state[12] += 2 * turn * 81
-        state[24] += 2 * turn * 27
-        state[38] += 2 * turn * 81
+        global state_6
+        global state_10
+        global state_24
+        global state_34
+        global state_5
+        global state_11
+        global state_36
+        global state_4
+        global state_12
+        global state_38
+        state_6 += 2 * turn * 9
+        state_10 += 2 * turn * 729
+        state_24 += 2 * turn * 39
+        state_34 += 2 * turn * 9
+        state_5 += 2 * turn * 27
+        state_11 += 2 * turn * 243
+        state_36 += 2 * turn * 27
+        state_4 += 2 * turn * 81
+        state_12 += 2 * turn * 81
+        state_38 += 2 * turn * 81
 
 class flip_b6_c6_d6_e6_g6(Flip):
     def go(self):
-        state[5] += 2 * turn * 3
-        state[9] += 2 * turn * 243
-        state[22] += 2 * turn * 3
-        state[34] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[5] += 2 * turn * 27
-        state[11] += 2 * turn * 243
-        state[24] += 2 * turn * 9
-        state[36] += 2 * turn * 27
-
-        state[5] += 2 * turn * 81
-        state[12] += 2 * turn * 243
-        state[25] += 2 * turn * 9
-        state[37] += 2 * turn * 81
-
-        state[5] += 2 * turn * 729
-        state[14] += 2 * turn * 243
-        state[27] += 2 * turn * 9
-        state[39] += 2 * turn * 243
+        global state_5
+        global state_9
+        global state_22
+        global state_34
+        global state_10
+        global state_23
+        global state_35
+        global state_11
+        global state_24
+        global state_36
+        global state_12
+        global state_25
+        global state_37
+        global state_14
+        global state_27
+        global state_39
+        state_5 += 2 * turn * 849
+        state_9 += 2 * turn * 243
+        state_22 += 2 * turn * 3
+        state_34 += 2 * turn * 3
+        state_10 += 2 * turn * 243
+        state_23 += 2 * turn * 9
+        state_35 += 2 * turn * 9
+        state_11 += 2 * turn * 243
+        state_24 += 2 * turn * 9
+        state_36 += 2 * turn * 27
+        state_12 += 2 * turn * 243
+        state_25 += 2 * turn * 9
+        state_37 += 2 * turn * 81
+        state_14 += 2 * turn * 243
+        state_27 += 2 * turn * 9
+        state_39 += 2 * turn * 243
 
 class flip_b7_c6_e4(Flip):
     def go(self):
-        state[6] += 2 * turn * 3
-        state[9] += 2 * turn * 729
-        state[23] += 2 * turn * 3
-        state[33] += 2 * turn * 3
-
-        state[5] += 2 * turn * 9
-        state[10] += 2 * turn * 243
-        state[23] += 2 * turn * 9
-        state[35] += 2 * turn * 9
-
-        state[3] += 2 * turn * 81
-        state[12] += 2 * turn * 27
-        state[23] += 2 * turn * 81
-        state[39] += 2 * turn * 27
+        global state_6
+        global state_9
+        global state_23
+        global state_33
+        global state_5
+        global state_10
+        global state_35
+        global state_3
+        global state_12
+        global state_39
+        state_6 += 2 * turn * 3
+        state_9 += 2 * turn * 729
+        state_23 += 2 * turn * 93
+        state_33 += 2 * turn * 3
+        state_5 += 2 * turn * 9
+        state_10 += 2 * turn * 243
+        state_35 += 2 * turn * 9
+        state_3 += 2 * turn * 81
+        state_12 += 2 * turn * 27
+        state_39 += 2 * turn * 27
 
 #gen_funcs()
 #stop
 
-# init board state
+# setup initial board state
 turn = BLACK
 put_d5().go()
 put_e4().go()
@@ -15426,21 +20831,21 @@ turn = -turn
 put_d4().go()
 put_e5().go()
 check_board()
-
 turn = -turn
 
+# play full italian line
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
 moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
 
 for mv in moves:
     move_table[mv].go()
-#    check_board()
+    check_board()
     turn = -turn
 
 check_board()
 
-nx = sum(str_state(state[l]).count('2') for l in range(8))
-no = sum(str_state(state[l]).count('0') for l in range(8))
+nx = sum(str_state(states()[l]).count('2') for l in range(8))
+no = sum(str_state(states()[l]).count('0') for l in range(8))
 print(f'{nx}-{no}')
 print()
