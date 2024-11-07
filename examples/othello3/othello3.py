@@ -23999,7 +23999,7 @@ for x in range(1000):
     turn = WHITE
     put_d4().go()
     put_e5().go()
-    check_board()
+#    check_board()
     turn = BLACK
 
     for mv in moves:
@@ -24007,9 +24007,14 @@ for x in range(1000):
 #        check_board()
         turn = -turn
 
-print('moves/sec: %d' % (60000 // (time.time()-t0)))
+t = 60000 // (time.time()-t0)
+
+check_board()
 
 nx = sum(str_state(states()[l]).count('2') for l in range(8))
 no = sum(str_state(states()[l]).count('0') for l in range(8))
+
 print(f'{nx}-{no}')
 print()
+
+print('moves/sec: %d' % t)
