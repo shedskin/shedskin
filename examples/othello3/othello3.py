@@ -137,19 +137,13 @@ for s in range(3**8):
         flippers_o[s, idx] = state_flips(s, idx, '0')
 
 
-def check_board():  # TODO remove
+def check_board():
     a = get_board(0, 8)
     print(a)
     print()
     b = get_board(8, 16)
-#    print(b)
-#    print()
     c = get_board(16, 31)
-#    print(c)
-#    print()
     d = get_board(31, 46)
-#    print(d)
-#    print()
     assert a == b == c == d
     return a
 
@@ -15436,7 +15430,7 @@ check_board()
 turn = -turn
 
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-human_moves = [italian[i*2:(i+1)*2] for i in range(60)]
+human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
 moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
 
 for mv in moves:
