@@ -112,15 +112,12 @@ state_43 = 3280
 state_44 = 3280
 state_45 = 3280
 
-def str_base(number, base):  # base-3 helper
+def str_state(number):
     digits = []
     while number > 0:
-        number, digit = divmod(number, base)
+        number, digit = divmod(number, 3)
         digits.append(str(digit))
-    return ''.join(digits)
-
-def str_state(s):
-    return str_base(s, 3).ljust(8, '0')
+    return ''.join(digits).ljust(8, '0')
 
 def states():
     return [
