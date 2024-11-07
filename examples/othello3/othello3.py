@@ -1,4 +1,5 @@
 import collections
+import time
 
 def product(iterables):  # shedskin: avoid itertools.product splat operator
     result = [[]]
@@ -78,7 +79,7 @@ lines = [
 ]
 
 # initial state
-state = [0 for line in lines]
+state = [3280 for line in lines]
 
 # topology (for each position, which lines cross the position and at which line index)
 topology = collections.defaultdict(list)
@@ -95,7 +96,7 @@ def get_board(line_from, line_to):
         for j in range(8):
             for (l, idx) in topology[i, j]:
                 if line_from <= l < line_to:
-                    board[j][i] = {'0': '.', '1': 'o', '2': 'x'}[str_state(state[l])[idx]]
+                    board[j][i] = {'1': '.', '0': 'o', '2': 'x'}[str_state(state[l])[idx]]
     return '\n'.join([''.join(row) for row in board])
 
 
@@ -106,26 +107,26 @@ def calc_pos(l, j):
 
 def place(pos, turn):
     for l, idx in topology[pos]:
-        state[l] += {'x': 2, 'o': 1}[turn] * 3**idx
+        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
 
 
 def flip(pos, turn):
     for l, idx in topology[pos]:
-        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
+        state[l] += 2 * {'x': 1, 'o': -1}[turn] * 3**idx
 
 
 def state_flips(s, idx, turn):
     flips = []
     s2 = str_state(s)
 
-    if s2[idx] == '0':
+    if s2[idx] == '1':
         for r in (
             range(idx-1, -1, -1), # flip left
             range(idx+1, 8), # flip right
         ):
             flips2 = []
             for j in r:
-                if s2[j] == '0':
+                if s2[j] == '1':
                     break
                 elif s2[j] == turn:
                     flips.extend(flips2)
@@ -140,7 +141,7 @@ flippers_o = {}
 for s in range(3**8):
     for idx in range(8):
         flippers_x[s, idx] = state_flips(s, idx, '2')
-        flippers_o[s, idx] = state_flips(s, idx, '1')
+        flippers_o[s, idx] = state_flips(s, idx, '0')
 
 def move(pos, turn):
     legal = False
@@ -175,41 +176,6 @@ def check_board():
     assert a == b == c == d
     return a
 
-
-class Move:
-    pass
-
-class move_b5(Move):
-    def go(self):
-        return 1
-
-
-class Flip:
-    pass
-
-class flip_none(Flip):
-    def go(self):
-        return 1
-
-
-class flip_a3_a4(Flip):
-    def go(self):
-        return 1
-
-
-move_funcs = [
-    move_b5(),
-]
-
-flip_funcs = [
-    flip_none(),
-    flip_a3_a4(),
-]
-
-move_funcs[0].go()
-flip_funcs[0].go()
-
-
 place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
@@ -217,33 +183,34 @@ place((4,3), 'x')
 turn = 'x'
 check_board()
 
-#italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-#for i in range(60):
-#    human_move = italian[i*2:(i+1)*2]
-#    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
-#    move(pos, turn)
-##    check_board()
-#    if turn == 'x':
-#        turn = 'o'
-#    else:
-#        turn = 'x'
-#
-#check_board()
-#
-#nx = sum(str_base(state[l], 3).count('2') for l in range(8))
-#no = sum(str_base(state[l], 3).count('1') for l in range(8))
-#print(f'{nx}-{no}')
-#print()
+italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+for i in range(60):
+    human_move = italian[i*2:(i+1)*2]
+    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
+    move(pos, turn)
+    check_board()
+    if turn == 'x':
+        turn = 'o'
+    else:
+        turn = 'x'
+
+check_board()
+
+nx = sum(str_state(state[l]).count('2') for l in range(8))
+no = sum(str_state(state[l]).count('0') for l in range(8))
+print(f'{nx}-{no}')
+print()
 
 patterns = set([tuple(v) for v in flippers_x.values()])
 flipfuncs = set()
-for i, l in enumerate(lines):
+for i, line in enumerate(lines):
     for p in patterns:
-        if p and max(p) < l.length-1:
+        if p and max(p) < line.length-1:
             posn = sorted([calc_pos(i, j) for j in p])
             flipfuncs.add(tuple(posn))
 print(len(flipfuncs))
 
+'''
 print('class Put:')
 print('    pass')
 print('class put_f4(Put):')
@@ -261,3 +228,4 @@ print('    def go(self):')
 for pos in flipfunc:
     for (l, idx) in topology[pos]:
         print(f'        state[{l}] += {3**idx} * turn')
+'''
