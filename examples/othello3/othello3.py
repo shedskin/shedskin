@@ -135,35 +135,6 @@ for s in range(3**8):
         flippers_o[s, idx] = state_flips(s, idx, '0')
 
 
-# non-optimized place/flip funcs  # TODO remove
-
-def place(pos, turn):
-    for l, idx in topology[pos]:
-        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
-
-
-def flip(pos, turn):
-    for l, idx in topology[pos]:
-        state[l] += 2 * {'x': 1, 'o': -1}[turn] * 3**idx
-
-
-def move(pos, turn):
-    legal = False
-    for l, idx in topology[pos]:
-        if turn == 'x':
-            flips = flippers_x.get((state[l], idx), [])
-        else:
-            flips = flippers_o.get((state[l], idx), [])
-        if flips:
-            legal = True
-            for j in flips:
-                flip(calc_pos(l, j), turn)
-
-    assert legal
-    if legal:
-        place(pos, turn)
-
-
 def check_board():  # TODO remove
     a = get_board(0, 8)
     print(a)
@@ -181,6 +152,7 @@ def check_board():  # TODO remove
     return a
 
 
+# generate function tables
 def gen_funcs():
     # 64 empty square moves (4 unused)
     move_funcs = []
@@ -197,7 +169,7 @@ def gen_funcs():
 
     print('move_table = [')
     for name in move_funcs:
-        print(f'   {name},')
+        print(f'   {name}(),')
     print(']')
     print()
 
@@ -679,70 +651,70 @@ class put_h8(Put):
         state[38] += {'x': 1, 'o': -1}[turn] * 2187
 
 move_table = [
-   put_a1,
-   put_b1,
-   put_c1,
-   put_d1,
-   put_e1,
-   put_f1,
-   put_g1,
-   put_h1,
-   put_a2,
-   put_b2,
-   put_c2,
-   put_d2,
-   put_e2,
-   put_f2,
-   put_g2,
-   put_h2,
-   put_a3,
-   put_b3,
-   put_c3,
-   put_d3,
-   put_e3,
-   put_f3,
-   put_g3,
-   put_h3,
-   put_a4,
-   put_b4,
-   put_c4,
-   put_d4,
-   put_e4,
-   put_f4,
-   put_g4,
-   put_h4,
-   put_a5,
-   put_b5,
-   put_c5,
-   put_d5,
-   put_e5,
-   put_f5,
-   put_g5,
-   put_h5,
-   put_a6,
-   put_b6,
-   put_c6,
-   put_d6,
-   put_e6,
-   put_f6,
-   put_g6,
-   put_h6,
-   put_a7,
-   put_b7,
-   put_c7,
-   put_d7,
-   put_e7,
-   put_f7,
-   put_g7,
-   put_h7,
-   put_a8,
-   put_b8,
-   put_c8,
-   put_d8,
-   put_e8,
-   put_f8,
-   put_g8,
-   put_h8,
+   put_a1(),
+   put_b1(),
+   put_c1(),
+   put_d1(),
+   put_e1(),
+   put_f1(),
+   put_g1(),
+   put_h1(),
+   put_a2(),
+   put_b2(),
+   put_c2(),
+   put_d2(),
+   put_e2(),
+   put_f2(),
+   put_g2(),
+   put_h2(),
+   put_a3(),
+   put_b3(),
+   put_c3(),
+   put_d3(),
+   put_e3(),
+   put_f3(),
+   put_g3(),
+   put_h3(),
+   put_a4(),
+   put_b4(),
+   put_c4(),
+   put_d4(),
+   put_e4(),
+   put_f4(),
+   put_g4(),
+   put_h4(),
+   put_a5(),
+   put_b5(),
+   put_c5(),
+   put_d5(),
+   put_e5(),
+   put_f5(),
+   put_g5(),
+   put_h5(),
+   put_a6(),
+   put_b6(),
+   put_c6(),
+   put_d6(),
+   put_e6(),
+   put_f6(),
+   put_g6(),
+   put_h6(),
+   put_a7(),
+   put_b7(),
+   put_c7(),
+   put_d7(),
+   put_e7(),
+   put_f7(),
+   put_g7(),
+   put_h7(),
+   put_a8(),
+   put_b8(),
+   put_c8(),
+   put_d8(),
+   put_e8(),
+   put_f8(),
+   put_g8(),
+   put_h8(),
 ]
 
 class flip_d8_f8_g8(Flip):
@@ -15445,20 +15417,26 @@ class flip_b7_c6_e4(Flip):
         state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
         state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
 
+#gen_funcs()
+#stop
 
-place((3,3), 'o')
-place((3,4), 'x')
-place((4,4), 'o')
-place((4,3), 'x')
+turn = 'x'
+put_d5().go()
+put_e4().go()
+turn = 'o'
+put_d4().go()
+put_e5().go()
 check_board()
 turn = 'x'
 
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-for i in range(60):
-    human_move = italian[i*2:(i+1)*2]
-    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
-    move(pos, turn)
-    check_board()
+human_moves = [italian[i*2:(i+1)*2] for i in range(60)]
+moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
+
+for mv in moves:
+    move_table[mv].go()
+#    check_board()
+
     if turn == 'x':
         turn = 'o'
     else:
@@ -15470,4 +15448,3 @@ nx = sum(str_state(state[l]).count('2') for l in range(8))
 no = sum(str_state(state[l]).count('0') for l in range(8))
 print(f'{nx}-{no}')
 print()
-
