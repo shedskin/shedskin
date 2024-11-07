@@ -180,8 +180,26 @@ place((3,3), 'o')
 place((3,4), 'x')
 place((4,4), 'o')
 place((4,3), 'x')
-turn = 'x'
 check_board()
+turn = 'x'
+
+class Put:
+    pass
+
+class Flip:
+    pass
+
+class put_f5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 81
+        state[25] += {'x': 1, 'o': -1}[turn] * 27
+        state[39] += {'x': 1, 'o': -1}[turn] * 81
+
+#put_f5().go()
+#check_board()
+
+#stop
 
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 for i in range(60):
@@ -201,31 +219,34 @@ no = sum(str_state(state[l]).count('0') for l in range(8))
 print(f'{nx}-{no}')
 print()
 
-patterns = set([tuple(v) for v in flippers_x.values()])
-flipfuncs = set()
-for i, line in enumerate(lines):
-    for p in patterns:
-        if p and max(p) < line.length-1:
-            posn = sorted([calc_pos(i, j) for j in p])
-            flipfuncs.add(tuple(posn))
-print(len(flipfuncs))
+def gen_funcs():
+    # 64 empty square moves (4 unused)
+    for i in range(8):
+        for j in range(8):
+            human_move = 'abcdefgh'[i] + str(j+1)
+            print(f'class put_{human_move}(Put):')
+            print('    def go(self):')
+            for (l, idx) in topology[i, j]:
+                print(f"        state[{l}] += {{'x': 1, 'o': -1}}[turn] * {3**idx}")
+            print()
 
-'''
-print('class Put:')
-print('    pass')
-print('class put_f4(Put):')
-print('    def go(self):')
-for (l, idx) in topology[5, 4]:
-    print(f'        state[{l}] += 2 * {3**idx}')  # TODO turn
-print()
+    # 830 flip patterns
+    patterns = set([tuple(v) for v in flippers_x.values()])
+    flipfuncs = set()
+    for i, line in enumerate(lines):
+        for p in patterns:
+            if p and max(p) < line.length-1:
+                posn = sorted([calc_pos(i, j) for j in p])
+                flipfuncs.add(tuple(posn))
+    print(len(flipfuncs))
 
-print('class Flip:')
-print('    pass')
+    '''
+    flipfunc = ((4, 4),)
+    print('class flip_e4(Flip):')
+    print('    def go(self):')
+    for pos in flipfunc:
+        for (l, idx) in topology[pos]:
+            print(f'        state[{l}] += {3**idx} * turn')
+    '''
 
-flipfunc = ((4, 4),)
-print('class flip_e4(Flip):')
-print('    def go(self):')
-for pos in flipfunc:
-    for (l, idx) in topology[pos]:
-        print(f'        state[{l}] += {3**idx} * turn')
-'''
+#gen_funcs()
