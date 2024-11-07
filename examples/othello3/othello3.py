@@ -135,6 +135,7 @@ def state_flips(s, idx, turn):
                     flips2.append(j)
     return flips
 
+
 # for each line state, idx and turn, determine flipped discs
 flippers_x = {}
 flippers_o = {}
@@ -142,6 +143,7 @@ for s in range(3**8):
     for idx in range(8):
         flippers_x[s, idx] = state_flips(s, idx, '2')
         flippers_o[s, idx] = state_flips(s, idx, '0')
+
 
 def move(pos, turn):
     legal = False
@@ -230,7 +232,7 @@ def gen_funcs():
                 print(f"        state[{l}] += {{'x': 1, 'o': -1}}[turn] * {3**idx}")
             print()
 
-    # 830 flip patterns
+    # 830 flip patterns (831 including noop)
     patterns = set([tuple(v) for v in flippers_x.values()])
     flipfuncs = set()
     for i, line in enumerate(lines):
@@ -240,13 +242,16 @@ def gen_funcs():
                 flipfuncs.add(tuple(posn))
     print(len(flipfuncs))
 
-    '''
-    flipfunc = ((4, 4),)
-    print('class flip_e4(Flip):')
-    print('    def go(self):')
-    for pos in flipfunc:
-        for (l, idx) in topology[pos]:
-            print(f'        state[{l}] += {3**idx} * turn')
-    '''
+    for flipfunc in flipfuncs:
+        human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in flipfunc])
+        print(f'class flip_{human_moves}(Flip):')
+        print('    def go(self):')
+        for pos in flipfunc:
+            line_idcs = collections.defaultdict(list)
+            for (l, idx) in topology[pos]:
+                line_idcs[l].append(idx)
+            for (l, idcs) in line_idcs.items():
+                value = sum(3**idx for idx in idcs)
+                print(f"        state[{l}] += 2 * {{'x': 1, 'o': -1}}[turn] * {value}")
 
 #gen_funcs()
