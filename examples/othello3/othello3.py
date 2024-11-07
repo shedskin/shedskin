@@ -21362,31 +21362,21 @@ for l in range(46):
 turn = BLACK
 put_d5().go()
 put_e4().go()
-turn = -turn
+turn = WHITE
 put_d4().go()
 put_e5().go()
 check_board()
-turn = -turn
-
-put_f5().go()
-check_board()
-turn = -turn
-
-put_d6().go()
-check_board()
-turn = -turn
+turn = BLACK
 
 # play full italian line
-#italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-#human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
-#moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
-#
-#for mv in moves:
-#    move_table[mv].go()
-#    check_board()
-#    turn = -turn
-#
-#check_board()
+italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
+moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
+
+for mv in moves:
+    move_table[mv].go()
+    check_board()
+    turn = -turn
 
 nx = sum(str_state(states()[l]).count('2') for l in range(8))
 no = sum(str_state(states()[l]).count('0') for l in range(8))
