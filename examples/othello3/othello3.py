@@ -105,16 +105,6 @@ def calc_pos(l, j):
     return (line.start[0]+j*line.dx, line.start[1]+j*line.dy)
 
 
-def place(pos, turn):
-    for l, idx in topology[pos]:
-        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
-
-
-def flip(pos, turn):
-    for l, idx in topology[pos]:
-        state[l] += 2 * {'x': 1, 'o': -1}[turn] * 3**idx
-
-
 def state_flips(s, idx, turn):
     flips = []
     s2 = str_state(s)
@@ -145,6 +135,18 @@ for s in range(3**8):
         flippers_o[s, idx] = state_flips(s, idx, '0')
 
 
+# non-optimized place/flip funcs
+
+def place(pos, turn):
+    for l, idx in topology[pos]:
+        state[l] += {'x': 1, 'o': -1}[turn] * 3**idx
+
+
+def flip(pos, turn):
+    for l, idx in topology[pos]:
+        state[l] += 2 * {'x': 1, 'o': -1}[turn] * 3**idx
+
+
 def move(pos, turn):
     legal = False
     for l, idx in topology[pos]:
@@ -162,7 +164,7 @@ def move(pos, turn):
         place(pos, turn)
 
 
-def check_board():
+def check_board():  # TODO remove
     a = get_board(0, 8)
     print(a)
     print()
@@ -178,36 +180,6 @@ def check_board():
     assert a == b == c == d
     return a
 
-place((3,3), 'o')
-place((3,4), 'x')
-place((4,4), 'o')
-place((4,3), 'x')
-check_board()
-turn = 'x'
-
-class Put:
-    pass
-
-class Flip:
-    pass
-
-italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-for i in range(60):
-    human_move = italian[i*2:(i+1)*2]
-    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
-    move(pos, turn)
-    check_board()
-    if turn == 'x':
-        turn = 'o'
-    else:
-        turn = 'x'
-
-check_board()
-
-nx = sum(str_state(state[l]).count('2') for l in range(8))
-no = sum(str_state(state[l]).count('0') for l in range(8))
-print(f'{nx}-{no}')
-print()
 
 def gen_funcs():
     # 64 empty square moves (4 unused)
@@ -252,4 +224,40 @@ def gen_funcs():
             print()
 
 
-gen_funcs()
+class Put:
+    pass
+
+class Flip:
+    pass
+
+
+#gen_funcs()
+#stop
+
+
+
+place((3,3), 'o')
+place((3,4), 'x')
+place((4,4), 'o')
+place((4,3), 'x')
+check_board()
+turn = 'x'
+
+italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+for i in range(60):
+    human_move = italian[i*2:(i+1)*2]
+    pos = ('ABCDEFGH'.index(human_move[0]), int(human_move[1])-1)
+    move(pos, turn)
+    check_board()
+    if turn == 'x':
+        turn = 'o'
+    else:
+        turn = 'x'
+
+check_board()
+
+nx = sum(str_state(state[l]).count('2') for l in range(8))
+no = sum(str_state(state[l]).count('0') for l in range(8))
+print(f'{nx}-{no}')
+print()
+
