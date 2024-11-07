@@ -191,18 +191,6 @@ class Put:
 class Flip:
     pass
 
-class put_f5(Put):
-    def go(self):
-        state[4] += {'x': 1, 'o': -1}[turn] * 243
-        state[13] += {'x': 1, 'o': -1}[turn] * 81
-        state[25] += {'x': 1, 'o': -1}[turn] * 27
-        state[39] += {'x': 1, 'o': -1}[turn] * 81
-
-#put_f5().go()
-#check_board()
-
-#stop
-
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 for i in range(60):
     human_move = italian[i*2:(i+1)*2]
@@ -231,6 +219,7 @@ def gen_funcs():
             for (l, idx) in topology[i, j]:
                 print(f"        state[{l}] += {{'x': 1, 'o': -1}}[turn] * {3**idx}")
             print()
+            print()
 
     # 830 flip patterns (831 including noop)
     patterns = set([tuple(v) for v in flippers_x.values()])
@@ -240,7 +229,6 @@ def gen_funcs():
             if p and max(p) < line.length-1:
                 posn = sorted([calc_pos(i, j) for j in p])
                 flipfuncs.add(tuple(posn))
-    print(len(flipfuncs))
 
     for flipfunc in flipfuncs:
         human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in flipfunc])
@@ -253,5 +241,8 @@ def gen_funcs():
             for (l, idcs) in line_idcs.items():
                 value = sum(3**idx for idx in idcs)
                 print(f"        state[{l}] += 2 * {{'x': 1, 'o': -1}}[turn] * {value}")
+            print()
+            print()
 
-#gen_funcs()
+
+gen_funcs()
