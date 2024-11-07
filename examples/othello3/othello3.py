@@ -65,52 +65,54 @@ lines = [
 ]
 
 # initial state (base-3 numbers, 0..3**8-1. digit is 0, 1, 2 -> white, empty, black)
-state_0 = 3280
-state_1 = 3280
-state_2 = 3280
-state_3 = 3280
-state_4 = 3280
-state_5 = 3280
-state_6 = 3280
-state_7 = 3280
-state_8 = 3280
-state_9 = 3280
-state_10 = 3280
-state_11 = 3280
-state_12 = 3280
-state_13 = 3280
-state_14 = 3280
-state_15 = 3280
-state_16 = 3280
-state_17 = 3280
-state_18 = 3280
-state_19 = 3280
-state_20 = 3280
-state_21 = 3280
-state_22 = 3280
-state_23 = 3280
-state_24 = 3280
-state_25 = 3280
-state_26 = 3280
-state_27 = 3280
-state_28 = 3280
-state_29 = 3280
-state_30 = 3280
-state_31 = 3280
-state_32 = 3280
-state_33 = 3280
-state_34 = 3280
-state_35 = 3280
-state_36 = 3280
-state_37 = 3280
-state_38 = 3280
-state_39 = 3280
-state_40 = 3280
-state_41 = 3280
-state_42 = 3280
-state_43 = 3280
-state_44 = 3280
-state_45 = 3280
+def init_state():
+    global state_0, state_1, state_2, state_3, state_4, state_5, state_6, state_7, state_8, state_9, state_10, state_11, state_12, state_13, state_14, state_15, state_16, state_17, state_18, state_19, state_20, state_21, state_22, state_23, state_24, state_25, state_26, state_27, state_28, state_29, state_30, state_31, state_32, state_33, state_34, state_35, state_36, state_37, state_38, state_39, state_40, state_41, state_42, state_43, state_44, state_45
+    state_0 = 3280
+    state_1 = 3280
+    state_2 = 3280
+    state_3 = 3280
+    state_4 = 3280
+    state_5 = 3280
+    state_6 = 3280
+    state_7 = 3280
+    state_8 = 3280
+    state_9 = 3280
+    state_10 = 3280
+    state_11 = 3280
+    state_12 = 3280
+    state_13 = 3280
+    state_14 = 3280
+    state_15 = 3280
+    state_16 = 3280
+    state_17 = 3280
+    state_18 = 3280
+    state_19 = 3280
+    state_20 = 3280
+    state_21 = 3280
+    state_22 = 3280
+    state_23 = 3280
+    state_24 = 3280
+    state_25 = 3280
+    state_26 = 3280
+    state_27 = 3280
+    state_28 = 3280
+    state_29 = 3280
+    state_30 = 3280
+    state_31 = 3280
+    state_32 = 3280
+    state_33 = 3280
+    state_34 = 3280
+    state_35 = 3280
+    state_36 = 3280
+    state_37 = 3280
+    state_38 = 3280
+    state_39 = 3280
+    state_40 = 3280
+    state_41 = 3280
+    state_42 = 3280
+    state_43 = 3280
+    state_44 = 3280
+    state_45 = 3280
 
 def str_state(number):
     digits = []
@@ -23980,25 +23982,32 @@ line_flip_func[2936] = flip_()
 #gen_funcs()
 #stop
 
-# setup initial board state
-turn = BLACK
-put_d5().go()
-put_e4().go()
-turn = WHITE
-put_d4().go()
-put_e5().go()
-check_board()
-turn = BLACK
-
-# play full italian line
+# italian line
 italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
 human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
 moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
 
-for mv in moves:
-    move_table[mv].go()
+# setup initial board state
+t0 = time.time()
+
+for x in range(1000):
+    init_state()
+
+    turn = BLACK
+    put_d5().go()
+    put_e4().go()
+    turn = WHITE
+    put_d4().go()
+    put_e5().go()
     check_board()
-    turn = -turn
+    turn = BLACK
+
+    for mv in moves:
+        move_table[mv].go()
+#        check_board()
+        turn = -turn
+
+print('moves/sec: %d' % (60000 // (time.time()-t0)))
 
 nx = sum(str_state(states()[l]).count('2') for l in range(8))
 no = sum(str_state(states()[l]).count('0') for l in range(8))
