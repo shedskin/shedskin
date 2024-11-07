@@ -135,7 +135,7 @@ for s in range(3**8):
         flippers_o[s, idx] = state_flips(s, idx, '0')
 
 
-# non-optimized place/flip funcs
+# non-optimized place/flip funcs  # TODO remove
 
 def place(pos, turn):
     for l, idx in topology[pos]:
@@ -230,10 +230,15220 @@ class Put:
 class Flip:
     pass
 
+class put_a1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 1
+        state[16] += {'x': 1, 'o': -1}[turn] * 1
+        state[38] += {'x': 1, 'o': -1}[turn] * 1
 
-#gen_funcs()
-#stop
+class put_b1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 1
+        state[17] += {'x': 1, 'o': -1}[turn] * 3
+        state[39] += {'x': 1, 'o': -1}[turn] * 1
 
+class put_c1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 1
+        state[18] += {'x': 1, 'o': -1}[turn] * 9
+        state[40] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_d1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 1
+        state[19] += {'x': 1, 'o': -1}[turn] * 27
+        state[41] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_e1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 1
+        state[20] += {'x': 1, 'o': -1}[turn] * 81
+        state[42] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_f1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 1
+        state[21] += {'x': 1, 'o': -1}[turn] * 243
+        state[43] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_g1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 1
+        state[22] += {'x': 1, 'o': -1}[turn] * 729
+        state[44] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_h1(Put):
+    def go(self):
+        state[0] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 1
+        state[23] += {'x': 1, 'o': -1}[turn] * 2187
+        state[45] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_a2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 3
+        state[17] += {'x': 1, 'o': -1}[turn] * 1
+        state[37] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 3
+        state[18] += {'x': 1, 'o': -1}[turn] * 3
+        state[38] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 3
+        state[19] += {'x': 1, 'o': -1}[turn] * 9
+        state[39] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_d2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 3
+        state[20] += {'x': 1, 'o': -1}[turn] * 27
+        state[40] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_e2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 3
+        state[21] += {'x': 1, 'o': -1}[turn] * 81
+        state[41] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_f2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 3
+        state[22] += {'x': 1, 'o': -1}[turn] * 243
+        state[42] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_g2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 3
+        state[23] += {'x': 1, 'o': -1}[turn] * 729
+        state[43] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_h2(Put):
+    def go(self):
+        state[1] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 3
+        state[24] += {'x': 1, 'o': -1}[turn] * 729
+        state[44] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_a3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 9
+        state[18] += {'x': 1, 'o': -1}[turn] * 1
+        state[36] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 9
+        state[19] += {'x': 1, 'o': -1}[turn] * 3
+        state[37] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 9
+        state[20] += {'x': 1, 'o': -1}[turn] * 9
+        state[38] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 9
+        state[21] += {'x': 1, 'o': -1}[turn] * 27
+        state[39] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_e3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 9
+        state[22] += {'x': 1, 'o': -1}[turn] * 81
+        state[40] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_f3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 9
+        state[23] += {'x': 1, 'o': -1}[turn] * 243
+        state[41] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_g3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 9
+        state[24] += {'x': 1, 'o': -1}[turn] * 243
+        state[42] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_h3(Put):
+    def go(self):
+        state[2] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 9
+        state[25] += {'x': 1, 'o': -1}[turn] * 243
+        state[43] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_a4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 27
+        state[19] += {'x': 1, 'o': -1}[turn] * 1
+        state[35] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 27
+        state[20] += {'x': 1, 'o': -1}[turn] * 3
+        state[36] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 27
+        state[21] += {'x': 1, 'o': -1}[turn] * 9
+        state[37] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 27
+        state[22] += {'x': 1, 'o': -1}[turn] * 27
+        state[38] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_e4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 27
+        state[23] += {'x': 1, 'o': -1}[turn] * 81
+        state[39] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_f4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 27
+        state[24] += {'x': 1, 'o': -1}[turn] * 81
+        state[40] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_g4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 27
+        state[25] += {'x': 1, 'o': -1}[turn] * 81
+        state[41] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_h4(Put):
+    def go(self):
+        state[3] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 27
+        state[26] += {'x': 1, 'o': -1}[turn] * 81
+        state[42] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_a5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 81
+        state[20] += {'x': 1, 'o': -1}[turn] * 1
+        state[34] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 81
+        state[21] += {'x': 1, 'o': -1}[turn] * 3
+        state[35] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 81
+        state[22] += {'x': 1, 'o': -1}[turn] * 9
+        state[36] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 81
+        state[23] += {'x': 1, 'o': -1}[turn] * 27
+        state[37] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_e5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 81
+        state[24] += {'x': 1, 'o': -1}[turn] * 27
+        state[38] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_f5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 81
+        state[25] += {'x': 1, 'o': -1}[turn] * 27
+        state[39] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_g5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 81
+        state[26] += {'x': 1, 'o': -1}[turn] * 27
+        state[40] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_h5(Put):
+    def go(self):
+        state[4] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 81
+        state[27] += {'x': 1, 'o': -1}[turn] * 27
+        state[41] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_a6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 243
+        state[21] += {'x': 1, 'o': -1}[turn] * 1
+        state[33] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 243
+        state[22] += {'x': 1, 'o': -1}[turn] * 3
+        state[34] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 243
+        state[23] += {'x': 1, 'o': -1}[turn] * 9
+        state[35] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 243
+        state[24] += {'x': 1, 'o': -1}[turn] * 9
+        state[36] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_e6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 243
+        state[25] += {'x': 1, 'o': -1}[turn] * 9
+        state[37] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_f6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 243
+        state[26] += {'x': 1, 'o': -1}[turn] * 9
+        state[38] += {'x': 1, 'o': -1}[turn] * 243
+
+class put_g6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 243
+        state[27] += {'x': 1, 'o': -1}[turn] * 9
+        state[39] += {'x': 1, 'o': -1}[turn] * 243
+
+class put_h6(Put):
+    def go(self):
+        state[5] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 243
+        state[28] += {'x': 1, 'o': -1}[turn] * 9
+        state[40] += {'x': 1, 'o': -1}[turn] * 243
+
+class put_a7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 729
+        state[22] += {'x': 1, 'o': -1}[turn] * 1
+        state[32] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 729
+        state[23] += {'x': 1, 'o': -1}[turn] * 3
+        state[33] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 729
+        state[24] += {'x': 1, 'o': -1}[turn] * 3
+        state[34] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 729
+        state[25] += {'x': 1, 'o': -1}[turn] * 3
+        state[35] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_e7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 729
+        state[26] += {'x': 1, 'o': -1}[turn] * 3
+        state[36] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_f7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 729
+        state[27] += {'x': 1, 'o': -1}[turn] * 3
+        state[37] += {'x': 1, 'o': -1}[turn] * 243
+
+class put_g7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 729
+        state[28] += {'x': 1, 'o': -1}[turn] * 3
+        state[38] += {'x': 1, 'o': -1}[turn] * 729
+
+class put_h7(Put):
+    def go(self):
+        state[6] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 729
+        state[29] += {'x': 1, 'o': -1}[turn] * 3
+        state[39] += {'x': 1, 'o': -1}[turn] * 729
+
+class put_a8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 1
+        state[8] += {'x': 1, 'o': -1}[turn] * 2187
+        state[23] += {'x': 1, 'o': -1}[turn] * 1
+        state[31] += {'x': 1, 'o': -1}[turn] * 1
+
+class put_b8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 3
+        state[9] += {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += {'x': 1, 'o': -1}[turn] * 1
+        state[32] += {'x': 1, 'o': -1}[turn] * 3
+
+class put_c8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 9
+        state[10] += {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += {'x': 1, 'o': -1}[turn] * 1
+        state[33] += {'x': 1, 'o': -1}[turn] * 9
+
+class put_d8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 27
+        state[11] += {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += {'x': 1, 'o': -1}[turn] * 1
+        state[34] += {'x': 1, 'o': -1}[turn] * 27
+
+class put_e8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 81
+        state[12] += {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += {'x': 1, 'o': -1}[turn] * 1
+        state[35] += {'x': 1, 'o': -1}[turn] * 81
+
+class put_f8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 243
+        state[13] += {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += {'x': 1, 'o': -1}[turn] * 1
+        state[36] += {'x': 1, 'o': -1}[turn] * 243
+
+class put_g8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 729
+        state[14] += {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += {'x': 1, 'o': -1}[turn] * 1
+        state[37] += {'x': 1, 'o': -1}[turn] * 729
+
+class put_h8(Put):
+    def go(self):
+        state[7] += {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += {'x': 1, 'o': -1}[turn] * 2187
+        state[30] += {'x': 1, 'o': -1}[turn] * 1
+        state[38] += {'x': 1, 'o': -1}[turn] * 2187
+
+move_table = [
+   put_a1,
+   put_b1,
+   put_c1,
+   put_d1,
+   put_e1,
+   put_f1,
+   put_g1,
+   put_h1,
+   put_a2,
+   put_b2,
+   put_c2,
+   put_d2,
+   put_e2,
+   put_f2,
+   put_g2,
+   put_h2,
+   put_a3,
+   put_b3,
+   put_c3,
+   put_d3,
+   put_e3,
+   put_f3,
+   put_g3,
+   put_h3,
+   put_a4,
+   put_b4,
+   put_c4,
+   put_d4,
+   put_e4,
+   put_f4,
+   put_g4,
+   put_h4,
+   put_a5,
+   put_b5,
+   put_c5,
+   put_d5,
+   put_e5,
+   put_f5,
+   put_g5,
+   put_h5,
+   put_a6,
+   put_b6,
+   put_c6,
+   put_d6,
+   put_e6,
+   put_f6,
+   put_g6,
+   put_h6,
+   put_a7,
+   put_b7,
+   put_c7,
+   put_d7,
+   put_e7,
+   put_f7,
+   put_g7,
+   put_h7,
+   put_a8,
+   put_b8,
+   put_c8,
+   put_d8,
+   put_e8,
+   put_f8,
+   put_g8,
+   put_h8,
+]
+
+class flip_d8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_d5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_d3_f5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b1_c1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_a4_a5_a7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c2_c3_c5_c6_c7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c3_d3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b6_c6_d6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d4_d5_d6_d7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_c4_d5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2_e3_e4_e5_e6_e7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g2_g3_g4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a2_a4_a5_a6_a7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f7_g6(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a3_a4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e3_e4_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_c3_c4_c5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c3_c4_c5_c6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h6_h7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d4_d5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b7_d7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h3_h4_h6_h7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b3_c4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c3_d4_f6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e5_e7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f4_g5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2_f4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c1_d1_e1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b8_c8_d8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e4_e5_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a4_a6_a7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c3_d3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_c2_d2_e2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_e6_e7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_d2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d5_f7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a3_a5_a6_a7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_c3_e5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b8_c8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g2_g4_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b8_d8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_h5_h6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_d3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e3_e5_e6_e7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2_d3_d4_d6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_d6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e6_e7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_c4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_e6_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f2_f3_f4_f5_f6_f7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_d3(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c3_d3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b5_b6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_c4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_c4_c5_c6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b3_c2(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b7_c6_d5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g4_g6_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_b3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d3_d4_d5_d6_d7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a2_a4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g2_g3_g5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b6_c5_d4_e3_f2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c4_c5_c6_c7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d2_d4_d5_d6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d4_e4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a3_a5_a6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a2_a3_a5_a6_a7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d2_d3_d5_d6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f2_f3_f4_f6_f7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f3_f4_f5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c4_d5_e6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_c6_d5_e4_f3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b3_c4_d5_e6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_e6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_f3_f4_f5_f6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c8_d8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_h4_h6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_f5_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e2_e3_e5_e6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f3_f4_f6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b3_d3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b5_c5_d5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h3_h5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_c3_d4_e5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b1_c1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c6_d5_f3_g2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c4_d4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c5_d5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_b6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_f6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a4_a5_a6_a7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f4_f5_f6_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b2_c2_d2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_c2_d2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e2_e3_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b1_c1_d1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d4_f2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d3_e3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d3_d4_d6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_d7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g2_g3_g4_g5_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c6_d5_e4_f3_g2(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a2_a3_a4_a5_a6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f4_f5_f6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g2_g3_g4_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b4_b6_b7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d7_e6_f5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h4_h6_h7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_d2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_b4_b5_b6_b7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c6_d6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d5_e4_f3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_c4_d4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_c1_d1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_c2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_c3_e5_f6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_d4_e5_f6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e2_g4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d2_e3_f4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_b5_b6_b7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_f4_g3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g3_g4_g5_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e3_f2(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_b4_b5_b6_b7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c7_d7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c3_d2(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e7_f6_g5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c4_c5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h2_h4_h5_h6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f4_g3(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c1_d1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b8_c8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_h4_h5_h6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_d5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c6_e4_f3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c2_d3_e4_f5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d2_d4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f3_f5_f6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c6_e4_f3_g2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a3_a4_a5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c3_e5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a2_a3_a5_a6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b4_c5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_d2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c6_d6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b8_d8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c5_d5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_b4_b5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a5_a6_a7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b5_c5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f2_f3_f4_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f3_g2(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_f5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g2_g3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_a2_a3_a5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_d4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b8_c8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e4_f3_g2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d4_e3(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c4_d5_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_d5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c1_d1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_a3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d4_f6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_d4_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b3_c3_d3_e3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b3_b4_b5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_e6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g4_g5_g6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_f2_f3_f5_f6_f7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c6_e4_f3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c6_d6_e6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c8_d8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3_h4_h6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b1_c1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b1_c1_d1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b8_c8_d8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c7_d6_e5_f4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d5_e4_f3_g2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c2_c4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e3_e5_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e2_e3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e4_f3(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b7_d7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b8_d8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b5_c4(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b3_c3_d3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c2_c3_c4_c6_c7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c7_d6_f4_g3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c7_d7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g5_g6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_h2_h3_h5_h6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g2_g3_g4_g5_g6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c7_e5_f4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3_c4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e2_e4_e5_e6_e7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f4_f5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d7_f5_g4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_c2_d2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b4_d4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c1_d1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c3_d4_e5_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b2_b3_b4_b5_b7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_g3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f3_g4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_d1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f2_f3_f4_f5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b5_b6_b7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_f6_g5(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d4_e5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c3_d4_e5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h5_h6_h7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c7_d7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b6_c6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_b5_b6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2_d3_d5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3_h5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b2_d2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c7_d7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_c4_e2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d4_e5_f6_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_e4_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_c3_c4_c5_c6_c7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g2_g3_g4_g6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e3_f4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2_f3_g4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c1_d1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3_d4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_d4_f2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_g4_g6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_d5_e6_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_c5_c6_c7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_b4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e3_e5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c7_e5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d5_e4_f3_g2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_c5_d5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_c6_d5_f3_g2(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c6_e4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b6_c5_e3_f2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3_d3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_d4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_d6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b6_c5_d4_e3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e7_f6(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c2_c3_c4_c5_c6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_a2_a3_a4_a5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d3_e4_f5_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d7_e7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_c2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_f3_f4_f5_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c7_e5_f4_g3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c5_e3_f2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g3_g4_g5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b8_c8_d8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h3_h4_h5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h3_h4_h5_h6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_c4_c5_c6_c7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_c3_d4_e5_f6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_g2_g4_g5_g6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c6_d6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_e4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d1_e1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_b3_b5_b6_b7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b7_d5_e4_f3_g2(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d2_d3_d5_d6_d7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d6_d7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_b3_b4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d7_f5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_c5_d6_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d4_d6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c5_d5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_c3_d3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b6_c7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e6_f5_g4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_c3_d4_e5_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c7_d7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e4_g2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a4_a5_a6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e5_g7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d7_e6_g4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b8_c8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b6_c5_d4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f6_f7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d7_e6(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_d5_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_c3_d2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b3_b4_b5_b7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b6_c6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b6_c5(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d3_d4_d5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_d6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_b5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b7_c7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g6_g7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_c2_d2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e5_e6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h5_h7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_a2_a3_a4_a5_a6_a7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b3_c3_d3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e4_e5_e6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d5_e4_f3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c3_c4_c5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f2_f3_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e3_e4_e5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c5_d4_e3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c7_d6(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c5_c7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b1_c1_d1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e6_f5(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h2_h3_h5_h6_h7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c7_d7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_d5_e6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d5(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b8_c8_d8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c8_d8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a5_a7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f3_f4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_b4_b5_b6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c2_d3_e4_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c4_d4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_e3_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d5_f3_g2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_c5_d5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d6_e5_f4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g2_g3_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d3_d5_d6_d7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f3_f4_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g5_g6_g7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c7_d6_e5_f4_g3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c4_d4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c7_d7_e7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d2_d3_d4_d5_d6_d7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_d3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h2_h4_h5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c5_d5_e5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_c3_d4_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f5_f7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a6_a7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b2_b3_b4_b5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b2_b3_b4_b6_b7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d6_e6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_h3_h5_h6_h7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_d1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_h2_h4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d3_e4_f5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_c4_d4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b7_d5_e4_f3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_c3_d4_f6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b6_c5_e3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b5_c5_d5_e5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_d3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e2_e3_e4_e6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d4_e5_f6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b2_d2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a3_a4_a5_a7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f2_f4_f5_f6_f7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f2_f4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b5_c5_d5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g2_g4_g5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b3_c4_e6_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_h3_h4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_d4_d5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d4_d5_d7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_e2(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c1_d1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b7_d7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e2_e3_e4_e5_e7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b7_c6_d5_e4_g2(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_c6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_c4_d4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a4_a6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b3_c3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c2_c4_c5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b7_c7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a3_a4_a6_a7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b5_c5_d5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c4_c5_c7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c5_d5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h2_h3_h4_h5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_c3_d4_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e5_f6_g7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b4_c5_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_h4_h5_h7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_g2_g3_g4_g5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_d1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f6_g7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e2_e3_e4_e6_e7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_d5_e4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_c3_d3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b6_c5_d4_f2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d6_f4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_a2_a4_a5_a6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b3_b5_b6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d5_e4_g2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b1_d1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b6_d4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_c2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c2_e4_f5_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f5_g4(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a3_a4_a5_a6_a7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g3_g4_g5_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c3_e5_f6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b3_c3_d3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d2_d3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g2_g4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d6_e5(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f4_f5_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e6_f7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b5_c5_d5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b8_c8_d8_e8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c3_c4_c5_c7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c6_d5_e4_g2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_d2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_a4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d5_f3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c5_d4_e3_f2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d2_d3_d4_d5_d7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a2_a3_a4_a6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d5_d6_d7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3_h4_h5_h7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e2_f3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c7_d7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_f5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_d7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_d6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e3_g5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_c4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e2_e4_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c5_d4(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c7_d7_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a2_a3_a4_a6_a7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b5_b7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b3_d5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3_h4_h5_h6_h7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b3_c3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d5_e4(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c8_d8_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_c3_c4_c5_c7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b5_d5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g3_g5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e2_e4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_d3_e2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_g6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c5_d6_e7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_c3_d3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c6_d6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_d4_e4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e3_e4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c5_e7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c1_d1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d3_d4_d5_d7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_d4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b4_c4_d4_e4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f2_g3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e3_e4_e5_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b1_c1_d1_e1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b4_b5_b6_b7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_e5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b4_d6_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2_d3_d4_d5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_f4_f6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b2_c2_d2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_c5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b8_c8_d8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b6_d6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_c3_c5_c6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f2_f4_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c6_c7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_a2_a3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_h2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_f2_f4_f5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f5_f6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b5_d5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_h4_h5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a3_a5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c7_d6_e5_g3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_c3_c4_c6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_d2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_f3_f5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g4_g5_g6_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d7_e6_f5_g4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_c3_c4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h3_h5_h6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e6_g4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e7_g5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_d3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h2_h4_h5_h6_h7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_g2_g3_g5_g6_g7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b4_b5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c8_e8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d4_d6_d7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_c1_e1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_b3_b4_b5_b6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_e3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_a2_a3_a4_a5_a7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_c3_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h4_h5_h6_h7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b5_c4_d3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b7_c7_d7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b5_d3(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b8_c8_d8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c2_d3_f5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b5_d5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d2_d3_d4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2_e3_e4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h2_h3_h4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_b4_b6_b7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b6_d6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g3_g5_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g3_g4_g6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c3_d3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c5_d5_e5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f5_g6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g3_g4_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_h3_h4_h5_h7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_h3_h4_h6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_e5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g2_g3_g4_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e4_f5_g6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d6_e7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_f5_f6_f7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f3_f5_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a3_a4_a6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f2_f3_f4_f5_f7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_d5_d6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c3_d4_e5_f6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c7_d7_e7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_e4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_e6_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c3_c5_c6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_b3_b4_b5_b6_b7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4_e5_e6_e7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_c6_e4_f3_g2(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c8_d8_e8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_d5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c3_e5_f6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c4_d4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b1_c1_d1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_a2_a4_a5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c3_c4_c6_c7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_f4_g3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c2_d3_e4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_h6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b6_c6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c5_e5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g4_g5_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b4_c5_d6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b4_d4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_d3_d4_d6_d7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_d4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e2_e4_e5_e6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_h3_h4_h5_h6_h7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c8_d8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c7_e7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_d2_e2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d4_e5_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c3_c4_c6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f2_f3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c7_d7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b4_c4_d4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_c4_d5_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_c3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f3_f4_f5_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c7_d7_e7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d5_e6_f7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g3_g4_g5_g6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d4_d5_d6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_e3_f4_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_a2_a3_a4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b2_d4_e5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c6(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b2_d4_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e5_f4(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b5_c5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d1_e1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d1_f1_g1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b4_d4_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_d6_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_g5_g7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_e3_f4_g5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_b4_b5_b6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_c6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b6_d6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_c3_e3_f3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_f4_g5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_c4_e6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b3_b4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c3_c5(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_a5_a6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_g3_g4(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_f4_f6_f7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b2_b3_b4_b6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f2_f3_f5_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b2_c3_d4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_c6_c7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f2_f3_f4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_d4(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_c2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c4_c6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b4_b5_b7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c2_c3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_e5_f4_g3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_e6_f6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c6_d6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_a6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d5_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_d3_e4_g6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d4_e3_f2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b5_d5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b5_c5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c2_d2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c2_d2_e2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b4_c4_d4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b6_b7(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b2_b3_b5_b6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b3_d3_e3_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_f5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_d1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_c5_d6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_d5_e6(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c3_d3_e3_g3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d8_e8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_f2_f3_f4_f6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c6_d5_f3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d2_e2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_c6_c7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c3_d4_e5_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b5_c4_d3_e2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d2_d3_d4_d5_d6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_e8_f8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_c2_c4_c5_c6_c7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d6_e5_g3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_h2_h3_h4_h5_h6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_g3_g5_g6_g7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b7_c6_d5_f3(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d4_f6_g7(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_a3_a4_a5_a6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_d4_e4_f4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_d6_e6_f6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_d3_e4_g6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b4_c4_d4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b4_c3(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_c6_d5_e4(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b5_c6_d7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b2_c2_d2_e2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_c5_e5_f5_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b3_b4_b6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_b1_c1_d1_e1_f1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[17] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b5_d3_e2(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_h2_h3_h4_h6_h7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[44] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[15] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b4_c4_e4_f4_g4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c8_d8_e8_g8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[29] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_b3_c3_e3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d8_f8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_e2_e3_e4_e5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e3_e4_e5_e7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b7_c6_d5_e4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_c6_d6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_d2_e2_f2_g2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[43] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_g5(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c7_d7_f7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_f3(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b6_d6_e6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e2_e3_e5_e6_e7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e2_e3_e4_e5_e6(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b6_d4_e3(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d1(Flip):
+    def go(self):
+        state[0] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_b8_d8(Flip):
+    def go(self):
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[32] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[7] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 2187
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c7_d6_f4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b6_d4_e3_f2(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d3_d4_d5_d6(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_c5_c6(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_g4_g5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b2_b3_b5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[18] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d7_f7_g7(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[28] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 729
+
+class flip_d2_d4_d5_d6_d7(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_b3_c4_d5_f7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_c2_c3_c5(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_d2_e3(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+class flip_b5_d7(Flip):
+    def go(self):
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c4_e2(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[41] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_e4(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_c2_d2_f2(Flip):
+    def go(self):
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[1] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[13] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[42] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+class flip_d3_d4_d6_d7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[21] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+class flip_a4_a5(Flip):
+    def go(self):
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[19] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[8] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[20] += 2 * {'x': 1, 'o': -1}[turn] * 1
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 1
+
+class flip_e3_e4_e6_e7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_e3_e4_e5_e6_e7(Flip):
+    def go(self):
+        state[2] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[40] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[26] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_c7_d6_e5(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[4] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[38] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+class flip_b6_c6_d6_e6_g6(Flip):
+    def go(self):
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[22] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[34] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[11] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[24] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[36] += 2 * {'x': 1, 'o': -1}[turn] * 27
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[25] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[37] += 2 * {'x': 1, 'o': -1}[turn] * 81
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[14] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[27] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 243
+
+class flip_b7_c6_e4(Flip):
+    def go(self):
+        state[6] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[9] += 2 * {'x': 1, 'o': -1}[turn] * 729
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 3
+        state[33] += 2 * {'x': 1, 'o': -1}[turn] * 3
+
+        state[5] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[10] += 2 * {'x': 1, 'o': -1}[turn] * 243
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 9
+        state[35] += 2 * {'x': 1, 'o': -1}[turn] * 9
+
+        state[3] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[12] += 2 * {'x': 1, 'o': -1}[turn] * 27
+        state[23] += 2 * {'x': 1, 'o': -1}[turn] * 81
+        state[39] += 2 * {'x': 1, 'o': -1}[turn] * 27
 
 
 place((3,3), 'o')
