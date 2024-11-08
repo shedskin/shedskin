@@ -14,8 +14,9 @@ def gen_funcs():
             for (l, idx) in topology[i, j]:
                 print(f"        global state_{l}")
             for (l, idx) in topology[i, j]:
-                print(f'        flipnr = flippers_x[state_{l} << 10 | {idx << 2} | turn+1]')
-                print(f'        line_flip_func[{l} << 6 | flipnr].go()')
+                print(f'        flipnr = flippers_x[state_{l} << 5 | {idx << 2} | turn+1]')
+                print(f'        if flipnr > 0:')
+                print(f'            flip_table[{l} << 6 | flipnr].go()')
             for (l, idx) in topology[i, j]:
                 print(f"        state_{l} += turn * {3**idx}")
             print()
@@ -50,12 +51,14 @@ def gen_funcs():
             print(f"        state_{l} += turn * {2 * value}")
         print()
 
-    print('line_flip_func = {}')
-    for l in range(46):
-        for nr, flips in nr_flips.items():
+    print(f'flip_table = [None for x in range({2**(6+6)})]')
+    for nr, flips in sorted(nr_flips.items()):
+        for l in range(len(lines)):
             posn = sorted([calc_pos(l, idx) for idx in flips if idx < lines[l].length-1])
             human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in posn])
-            print(f'line_flip_func[{l << 6 | nr}] = flip_{human_moves}()')
+            if human_moves:
+                print(f'flip_table[{l << 6 | nr}] = flip_{human_moves}()')
+    print()
 
 
 if __name__ == '__main__':
