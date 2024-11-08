@@ -207,63 +207,6 @@ def check_board():
     return a
 
 
-# generate function tables
-def gen_funcs():
-    # 64 empty square moves (4 unused)
-    move_funcs = []
-    for j in range(8):
-        for i in range(8):
-            human_move = 'abcdefgh'[i] + str(j+1)
-            func_name = f'put_{human_move}'
-            move_funcs.append(func_name)
-            print(f'class {func_name}(Put):')
-            print('    def go(self):')
-            for (l, idx) in topology[i, j]:
-                print(f"        global state_{l}")
-            for (l, idx) in topology[i, j]:
-                print(f'        flipnr = flippers_x[state_{l} << 10 | {idx << 2} | turn+1]')
-                print(f'        line_flip_func[{l} << 6 | flipnr].go()')
-            for (l, idx) in topology[i, j]:
-                print(f"        state_{l} += turn * {3**idx}")
-            print()
-
-    print('move_table = [')
-    for name in move_funcs:
-        print(f'   {name}(),')
-    print(']')
-    print()
-
-    # 830 flip patterns (831 including noop)
-    patterns = list(flips_nr)
-    flipfuncs = set()
-    for i, line in enumerate(lines):
-        for p in patterns:
-            if p and max(p) < line.length-1:
-                posn = sorted([calc_pos(i, j) for j in p])
-                flipfuncs.add(tuple(posn))
-
-    for flipfunc in flipfuncs:
-        human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in flipfunc])
-        print(f'class flip_{human_moves}(Flip):')
-        print('    def go(self):')
-        line_idcs = collections.defaultdict(list)
-        for pos in flipfunc:
-            for (l, idx) in topology[pos]:
-                line_idcs[l].append(idx)
-        for l in line_idcs:
-            print(f"        global state_{l}")
-        for (l, idcs) in line_idcs.items():
-            value = sum(3**idx for idx in idcs)
-            print(f"        state_{l} += turn * {2 * value}")
-        print()
-
-    print('line_flip_func = {}')
-    for l in range(46):
-        for nr, flips in nr_flips.items():
-            posn = sorted([calc_pos(l, idx) for idx in flips if idx < lines[l].length-1])
-            human_moves = '_'.join(['abcdefgh'[i] + str(j+1) for (i, j) in posn])
-            print(f'line_flip_func[{l << 6 | nr}] = flip_{human_moves}()')
-
 class Put:
     pass
 
@@ -273,6 +216,7 @@ class Flip:
 class flip_(Flip):
     def go(self):
         pass
+
 
 class put_a1(Put):
     def go(self):
@@ -23979,42 +23923,41 @@ line_flip_func[2934] = flip_()
 line_flip_func[2935] = flip_()
 line_flip_func[2936] = flip_()
 
-#gen_funcs()
-#stop
 
-# italian line
-italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
-human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
-moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
+if __name__ == '__main__':
+    # italian line
+    italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
+    human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
+    moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
 
-# setup initial board state
-t0 = time.time()
+    # setup initial board state
+    t0 = time.time()
 
-for x in range(1000):
-    init_state()
+    for x in range(1000):
+        init_state()
 
-    turn = BLACK
-    put_d5().go()
-    put_e4().go()
-    turn = WHITE
-    put_d4().go()
-    put_e5().go()
-#    check_board()
-    turn = BLACK
-
-    for mv in moves:
-        move_table[mv].go()
+        turn = BLACK
+        put_d5().go()
+        put_e4().go()
+        turn = WHITE
+        put_d4().go()
+        put_e5().go()
 #        check_board()
-        turn = -turn
+        turn = BLACK
 
-t = 60000 // (time.time()-t0)
+        for mv in moves:
+            move_table[mv].go()
+#        check_board()
+            turn = -turn
 
-check_board()
+    t = 60000 // (time.time()-t0)
 
-nx = sum(str_state(states()[l]).count('2') for l in range(8))
-no = sum(str_state(states()[l]).count('0') for l in range(8))
+    check_board()
 
-print(f'{nx}-{no}')
-print()
+    nx = sum(str_state(states()[l]).count('2') for l in range(8))
+    no = sum(str_state(states()[l]).count('0') for l in range(8))
 
-print('moves/sec: %d' % t)
+    print(f'{nx}-{no}')
+    print()
+
+    print('moves/sec: %d' % t)
