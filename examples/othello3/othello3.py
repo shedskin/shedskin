@@ -1,3 +1,26 @@
+'''
+advanced othello move generator
+
+based on a concept by jan de graaf (othello.nl).
+
+for each line on the board, a number describes the state of the line.
+
+using lookup tables and generated functions (gen.py), line states are
+updated efficiently for all possible flipping patterns.
+
+more specifically, a given line state and player move on that line
+determine the flipping pattern (lookup table 1, about 1MB).
+
+a specific line and flipping pattern determine which generated
+function to call to perform the correct flips (lookup table 2).
+
+so far, the speed is comparable to a bitboard implemention
+(see ref.py), at about 100M moves/sec.
+
+performance seems quite sensitive to caching, and subtle
+optimizations in the C++ compiler that may or may not be triggered.
+'''
+
 import collections
 import time
 
@@ -23423,12 +23446,10 @@ if __name__ == '__main__':
         turn = WHITE
         put_d4().go()
         put_e5().go()
-#        check_board()
         turn = BLACK
 
         for mv in moves:
             move_table[mv].go()
-#        check_board()
             turn = -turn
 
     t = 60 * 10**5 // (time.time()-t0)
