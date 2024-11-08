@@ -1,7 +1,7 @@
-import sys
 import time
 
 # determine bitboard reference speed
+# note this does not use SIMD, for a potential 8x speedup!
 
 BLACK, WHITE = 0, 1
 
@@ -111,14 +111,20 @@ def print_board(state):
 
 
 if __name__ == '__main__':
-    state = parse_state(empty_board())
-    print_board(state)
-
     italian = 'F5D6C4D3E6F4E3F3C6F6G5G6E7F7C3G4D2C5H3H4E2F2G3C1C2E1D1B3F1G1F8D7C7G7A3B4B6B1H8B5A6A5A4B7A8G8H7H6H5G2H1H2A1D8E8C8B2A2B8A7'
     human_moves = [italian[i*2:(i+1)*2] for i in range(len(italian)//2)]
     moves = ['ABCDEFGH'.index(h[0]) + 8 * (int(h[1])-1) for h in human_moves]
 
-    color = BLACK
-    do_move(state, color, 37)
+    s0, s1 = parse_state(empty_board())
 
+    t0 = time.time()
+    for x in range(1000):
+        state = [s0, s1]
+        color = BLACK
+        for move in moves:
+            do_move(state, color, move)
+            color = 1 - color
+
+    t = 60000 // (time.time()-t0)
     print_board(state)
+    print('moves/sec: %d' % t)
