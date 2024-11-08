@@ -118,13 +118,13 @@ if __name__ == '__main__':
     s0, s1 = parse_state(empty_board())
 
     t0 = time.time()
-    for x in range(1000):
+    for x in range(10**5):
         state = [s0, s1]
         color = BLACK
         for move in moves:
             do_move(state, color, move)
             color = 1 - color
 
-    t = 60000 // (time.time()-t0)
+    t = 60 * 10**5 // (time.time()-t0)
     print_board(state)
     print('moves/sec: %d' % t)
