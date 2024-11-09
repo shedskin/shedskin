@@ -15,7 +15,7 @@ a specific line and flipping pattern determine which generated
 function to call to perform the correct flips (lookup table 2).
 
 so far, the speed is comparable to a bitboard implemention
-(see ref.py), at about 100M moves/sec.
+(see ref.py), at about 130M moves/sec.
 
 performance seems quite sensitive to caching, and subtle
 optimizations in the C++ compiler that may or may not be triggered.
@@ -23437,15 +23437,20 @@ if __name__ == '__main__':
     # setup initial board state
     t0 = time.time()
 
+    p_d5 = put_d5()
+    p_e4 = put_e4()
+    p_d4 = put_d4()
+    p_e5 = put_e5()
+
     for x in range(10**5):
         init_state()
 
         turn = BLACK
-        put_d5().go()
-        put_e4().go()
+        p_d5.go()
+        p_e4.go()
         turn = WHITE
-        put_d4().go()
-        put_e5().go()
+        p_d4.go()
+        p_e5.go()
         turn = BLACK
 
         for mv in moves:
