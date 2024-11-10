@@ -108,6 +108,10 @@ def test_isupper():
 def test_join():
     assert '-'.join(['a', 'b', 'c']) == "a-b-c"
 
+    # nested join
+    board = [[chr(65+i+j) for i in range(2)] for j in range(2)]
+    assert '\n'.join(''.join(row) for row in board) == 'AB\nBC'
+
 def test_ljust():
     assert 'bla'.ljust(8) == 'bla     '
     assert 'bla'.ljust(6, '+') == 'bla+++'

@@ -109,9 +109,6 @@ extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *
 extern __GC_VECTOR(str *) __char_cache;
 extern __GC_VECTOR(bytes *) __byte_cache;
 
-extern list<str *> *__join_cache;
-extern list<bytes *> *__join_cache_bin;
-
 extern str *nl;
 extern str *sp;
 
