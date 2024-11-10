@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-79 programs that work with Shed Skin 0.9.9
+80 programs that work with Shed Skin 0.9.9
 
 ## Example Overview
 
