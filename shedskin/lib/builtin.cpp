@@ -146,7 +146,7 @@ class_::class_(const char *name) {
 }
 
 str *class_::__repr__() {
-    return (new str("class "))->__add__(__name__);
+    return __add_strs(3, new str("<class "), __name__, new str(">"));
 }
 
 __ss_bool class_::__eq__(pyobj *c) {
