@@ -76,6 +76,10 @@ def test_isupper():
 def test_join():
     assert b'-'.join([b'a', b'b', b'c']) == b"a-b-c"
 
+    # nested join
+    board = [[bytes([65+i+j]) for i in range(2)] for j in range(2)]
+    assert b'\n'.join(b''.join(row) for row in board) == b'AB\nBC'
+
 def test_ljust():
     assert b'bla'.ljust(8) == b'bla     '
     assert b'bla'.ljust(6, b'+') == b'bla+++'

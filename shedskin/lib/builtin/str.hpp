@@ -152,24 +152,25 @@ template <class U> str *str::join(U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;
-    __join_cache->units.resize(0);
+    list<str *> __join_cache;
+    __join_cache.units.resize(0);
     total = 0;
     FOR_IN(e,iter,1,2,3)
-        __join_cache->units.push_back(e);
+        __join_cache.units.push_back(e);
         sz = e->unit.size();
         if(sz != 1)
             only_ones = false;
         total += sz;
     END_FOR
     size_t unitsize = this->unit.size();
-    size_t elems = __join_cache->units.size();
+    size_t elems = __join_cache.units.size();
     if(elems==1)
-        return __join_cache->units[0];
+        return __join_cache.units[0];
     str *s = new str();
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
         for(size_t j=0; j<elems; j++)
-            s->unit[j] = __join_cache->units[j]->unit[0];
+            s->unit[j] = __join_cache.units[j]->unit[0];
     }
     else if(elems) {
         total += (elems-1)*unitsize;
@@ -177,7 +178,7 @@ template <class U> str *str::join(U *iter) {
         size_t tsz;
         size_t k = 0;
         for(size_t m = 0; m<elems; m++) {
-            str *t = __join_cache->units[m];
+            str *t = __join_cache.units[m];
             tsz = t->unit.size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
