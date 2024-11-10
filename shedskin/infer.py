@@ -54,6 +54,7 @@ This seems to greatly help the CPA from exploding early on.
 """
 
 import ast
+import collections
 import itertools
 import logging
 import random
@@ -143,7 +144,6 @@ class CNode:
         "lambdawrapper",
         "in_",
         "out",
-        "fout",
         "in_list",
         "callfuncs",
         "nodecp",
@@ -188,7 +188,6 @@ class CNode:
 
         self.in_: set[CNode] = set()  # incoming nodes
         self.out: set[CNode] = set()  # outgoing nodes
-        self.fout: set[CNode] = set()  # unreal outgoing edges, used in ifa
 
         # --- iterative dataflow analysis
 
@@ -1655,8 +1654,9 @@ def ifa_flow_graph(
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
+    fout_dict = collections.defaultdict(set) # unreal outgoing edges
     for assign_set, targets in assignsets.items():
-        path = backflow_path(gx, set(targets), (cl, dcpa))
+        path = backflow_path(gx, set(targets), (cl, dcpa), fout_dict)
         paths[assign_set] = path
         allnodes.update(path)
         alloc = [n for n in path if not n.in_]
@@ -1675,7 +1675,7 @@ def ifa_flow_graph(
         if not n.in_:
             n.csites.add(n)
             csites.append(n)
-    flow_creation_sites(set(csites), allnodes)
+    flow_creation_sites(set(csites), allnodes, fout_dict)
 
     # csites not flowing to any assignment
     allcsites2 = allcsites.get((cl, dcpa), set())
@@ -1936,7 +1936,10 @@ def ifa_seed_template(
 
 
 def backflow_path(
-    gx: "config.GlobalInfo", worklist: set[CNode], t: Tuple["python.Class", int]
+    gx: "config.GlobalInfo",
+    worklist: set[CNode],
+    t: Tuple["python.Class", int],
+    fout_dict: dict[CNode, set[CNode]],
 ) -> list[CNode]:
     """Find the path of creation points for a given target node"""
     path = set(worklist)
@@ -1945,7 +1948,7 @@ def backflow_path(
         for node in worklist:
             for incoming in node.in_:
                 if t in gx.types[incoming]:
-                    incoming.fout.add(node)
+                    fout_dict[incoming].add(node)
                     if incoming not in path:
                         path.add(incoming)
                         new.add(incoming)
@@ -1953,12 +1956,16 @@ def backflow_path(
     return list(path)
 
 
-def flow_creation_sites(worklist: set[CNode], allnodes: set[CNode]) -> None:
+def flow_creation_sites(
+    worklist: set[CNode],
+    allnodes: set[CNode],
+    fout_dict: dict[CNode, set[CNode]],
+) -> None:
     """Flow creation sites through the graph"""
     while worklist:
         new = set()
         for node in worklist:
-            for out in node.fout:
+            for out in fout_dict[node]:
                 if out in allnodes:
                     oldsize = len(out.csites)
                     out.csites.update(node.csites)
@@ -2003,7 +2010,6 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         node.defnodes = False
         befinout = beforeinout[node]
         node.in_, node.out = befinout[0].copy(), befinout[1].copy()
-        node.fout = set()  # XXX ?
 
     for func in gx.allfuncs:
         func.cp = {}
