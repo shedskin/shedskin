@@ -1,7 +1,12 @@
 '''
 advanced othello move generator
 
-based on a concept by jan de graaf (othello.nl).
+copyright mark dufour 2024, license GPLv3.
+
+based on a concept by jan de graaf (
+    jan.de.graaf@othello.nl,
+    https://www.linkedin.com/in/jan-c-de-graaf-blijleven-9076473/
+)
 
 for each line on the board, a number describes the state of the line.
 
@@ -19,6 +24,9 @@ so far, the speed is comparable to a bitboard implemention
 
 performance seems quite sensitive to caching, and subtle
 optimizations in the C++ compiler that may or may not be triggered.
+
+jan's C version still appears to be much faster, possibly because of
+using function pointers instead of virtual calls.
 '''
 
 import collections
