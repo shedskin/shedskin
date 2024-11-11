@@ -759,7 +759,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Get local assignments"""
         if global_ and isinstance(node, (ast.ClassDef, ast.FunctionDef)):
             return []
-        elif isinstance(node, ast.ListComp):
+        elif isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp)):
             return []
         elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
             result = [node]
