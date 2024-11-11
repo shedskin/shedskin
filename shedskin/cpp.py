@@ -3738,6 +3738,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.eol()
                 self.output("return __result;")
                 self.start("__after_yield_0:")
+            elif node in self.gx.setcomp_to_lc.values():
+                self.start("__ss_result->add(")
+                self.visit(node.elt, lcfunc)
+                self.append(")")
             elif (
                 len(node.generators) == 1
                 and not ast_utils.is_fastfor(node.generators[0])
@@ -3755,10 +3759,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
                 self.visit(node.elt, lcfunc)
             else:
-                if node in self.gx.setcomp_to_lc.values():
-                    self.start("__ss_result->add(")
-                else:
-                    self.start("__ss_result->append(")
+                self.start("__ss_result->append(")
                 self.visit(node.elt, lcfunc)
                 self.append(")")
             self.eol()
@@ -3795,7 +3796,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             pref, tail = self.forin_preftail(qual)
 
-            if len(node.generators) == 1 and not qual.ifs and not genexpr:
+            if len(node.generators) == 1 and not qual.ifs and not genexpr and not node in self.gx.setcomp_to_lc.values():
                 if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set")):
                     self.output("__ss_result->resize(len(" + itervar + "));")
 
