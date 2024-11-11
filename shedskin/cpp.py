@@ -3755,7 +3755,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
                 self.visit(node.elt, lcfunc)
             else:
-                self.start("__ss_result->append(")
+                if node in self.gx.setcomp_to_lc.values():
+                    self.start("__ss_result->add(")
+                else:
+                    self.start("__ss_result->append(")
                 self.visit(node.elt, lcfunc)
                 self.append(")")
             self.eol()
@@ -3844,6 +3847,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Generate a generator expression"""
         self.visit(self.gx.genexp_to_lc[node], func)
+
+    def visit_SetComp(
+        self, node: ast.SetComp, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a set comprehension"""
+        self.visit(self.gx.setcomp_to_lc[node], func)
 
     def visit_ListComp(
         self, node: ast.ListComp, func: Optional["python.Function"] = None

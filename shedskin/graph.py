@@ -1842,6 +1842,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # node type
         if node in self.gx.genexp_to_lc.values():  # converted generator expression
             self.instance(node, python.def_class(self.gx, "__iter"), func)
+        elif node in self.gx.setcomp_to_lc.values():
+            self.instance(node, python.def_class(self.gx, "set"), func)
         else:
             self.instance(node, python.def_class(self.gx, "list"), func)
 
@@ -1862,7 +1864,21 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.SetComp, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a set comprehension"""
-        error.error("set comprehensions are not supported", self.gx, node, mv=getmv())
+
+        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        self.gx.types[newnode] = set()
+        lc = ast.ListComp(
+            node.elt,
+            [
+                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                for qual in node.generators
+            ],
+            lineno=node.lineno,
+        )
+        register_node(lc, func)
+        self.gx.setcomp_to_lc[node] = lc
+        self.visit(lc, func)
+        self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_Return(self, node: ast.Return, func: "python.Function") -> None:
         """Visit a return statement"""
