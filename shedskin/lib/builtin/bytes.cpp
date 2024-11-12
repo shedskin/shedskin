@@ -42,10 +42,25 @@ __ss_int bytes::find(bytes *s, __ss_int a) {
     slicenr(3, a, b, step, this->__len__());
     return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).find(s->unit), a);
 }
+
 __ss_int bytes::find(bytes *s, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
     return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).find(s->unit), a);
+}
+
+__ss_int bytes::find(__ss_int i, __ss_int a) {
+    return find(i, a, this->__len__());
+}
+
+__ss_int bytes::find(__ss_int i, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    for(size_t j=a; j<b; j++) {
+        if(unit[j] == i)
+            return j;
+    }
+    return -1;
 }
 
 __ss_int bytes::rfind(bytes *s, __ss_int a) {
@@ -69,6 +84,7 @@ __ss_int bytes::__checkneg(__ss_int i) {
 
 __ss_int bytes::index(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
 __ss_int bytes::index(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
+
 __ss_int bytes::index(__ss_int i, __ss_int a) { // TODO case with b
     size_t len = unit.size();
     for(size_t j=a; j<len; j++) {
