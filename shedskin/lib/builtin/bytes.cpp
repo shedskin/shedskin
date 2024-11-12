@@ -78,21 +78,14 @@ __ss_int bytes::rfind(bytes *s, __ss_int a, __ss_int b) {
 
 __ss_int bytes::__checkneg(__ss_int i) {
     if(i == -1)
-        throw new ValueError(new str("substring not found"));
+        throw new ValueError(new str("subsection not found"));
     return i;
 }
 
 __ss_int bytes::index(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
 __ss_int bytes::index(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
-
-__ss_int bytes::index(__ss_int i, __ss_int a) { // TODO case with b
-    size_t len = unit.size();
-    for(size_t j=a; j<len; j++) {
-        if(unit[j] == i)
-            return j;
-    }
-    throw new ValueError(new str("subsection not found"));
-}
+__ss_int bytes::index(__ss_int i, __ss_int a) { return __checkneg(find(i, a)); }
+__ss_int bytes::index(__ss_int i, __ss_int a, __ss_int b) { return __checkneg(find(i, a, b)); }
 
 __ss_int bytes::rindex(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
 __ss_int bytes::rindex(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }

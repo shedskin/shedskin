@@ -51,10 +51,22 @@ def test_find():
     assert b'bla'.find(b'ba') == -1
 
 def test_index():
-    assert b'bla'.index(b'la') == 1
-    assert b'bla'.index(b'bl') == 0
+    assert b'bla'.index(b'a') == 2
+    assert b'bla'.index(b'a', 0, 3) == 2
+    assert b'bla'.index(b'a', -2, 33) == 2
 
     assert b'bla'.index(ord('a')) == 2
+    assert b'bla'.index(ord('a'), 0, 3) == 2
+    assert b'bla'.index(ord('a'), -2, 33) == 2
+
+    assert b'bla'.index(b'la') == 1
+
+    exc = False
+    try:
+        assert b'bla'.index(b'ba') == -1
+    except ValueError as e:
+        exc = True
+    assert exc
 
 def test_isalnum():
     assert b'bla'.isalnum()
