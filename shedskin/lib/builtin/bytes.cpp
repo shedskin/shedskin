@@ -102,8 +102,10 @@ __ss_int bytes::index(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find
 __ss_int bytes::index(__ss_int i, __ss_int a) { return __checkneg(find(i, a)); }
 __ss_int bytes::index(__ss_int i, __ss_int a, __ss_int b) { return __checkneg(find(i, a, b)); }
 
-__ss_int bytes::rindex(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
-__ss_int bytes::rindex(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
+__ss_int bytes::rindex(bytes *s, __ss_int a) { return __checkneg(rfind(s, a)); }
+__ss_int bytes::rindex(bytes *s, __ss_int a, __ss_int b) { return __checkneg(rfind(s, a, b)); }
+__ss_int bytes::rindex(__ss_int i, __ss_int a) { return __checkneg(rfind(i, a)); }
+__ss_int bytes::rindex(__ss_int i, __ss_int a, __ss_int b) { return __checkneg(rfind(i, a, b)); }
 
 str *bytes::__repr__() {
     std::stringstream ss;
