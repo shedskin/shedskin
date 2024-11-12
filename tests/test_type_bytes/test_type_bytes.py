@@ -37,6 +37,16 @@ def test_expandtabs():
     assert b'bla\tbla'.expandtabs() == b'bla     bla'
 
 def test_find():
+    assert b'bla'.find(b'a') == 2
+    assert b'bla'.find(b'a', 7) == -1
+    assert b'bla'.find(b'a', 0, 3) == 2
+    assert b'bla'.find(b'a', -2, 33) == 2
+
+    assert b'bla'.find(ord('a')) == 2
+    assert b'bla'.find(ord('a'), 7) == -1
+    assert b'bla'.find(ord('a'), 0, 3) == 2
+    assert b'bla'.find(ord('a'), -2, 33) == 2
+
     assert b'bla'.find(b'la') == 1
     assert b'bla'.find(b'ba') == -1
 
