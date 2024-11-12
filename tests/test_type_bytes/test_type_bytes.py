@@ -30,6 +30,8 @@ def test_index():
     assert b'bla'.index(b'la') == 1
     assert b'bla'.index(b'bl') == 0
 
+    assert b'bla'.index(ord('a')) == 2
+
 def test_isalnum():
     assert b'bla'.isalnum()
     assert b'123'.isalnum()
