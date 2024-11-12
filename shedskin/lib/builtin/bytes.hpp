@@ -71,6 +71,7 @@ public:
 
     __ss_int index(bytes *s, __ss_int a=0);
     __ss_int index(bytes *s, __ss_int a, __ss_int b);
+    __ss_int index(__ss_int i, __ss_int a=0); // TODO more, also rindex and other methods?
     __ss_int rindex(bytes *s, __ss_int a=0);
     __ss_int rindex(bytes *s, __ss_int a, __ss_int b);
 
