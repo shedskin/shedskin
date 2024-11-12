@@ -142,6 +142,16 @@ def test_replace():
     assert b'bla'.replace(b'la', b'bla') == b'bbla'
 
 def test_rfind():
+    assert b'bla'.rfind(b'a') == 2
+    assert b'bla'.rfind(b'a', 7) == -1
+    assert b'bla'.rfind(b'a', 0, 3) == 2
+    assert b'bla'.rfind(b'a', -2, 33) == 2
+
+    assert b'bla'.rfind(ord('a')) == 2
+    assert b'bla'.rfind(ord('a'), 7) == -1
+    assert b'bla'.rfind(ord('a'), 0, 3) == 2
+    assert b'bla'.rfind(ord('a'), -2, 33) == 2
+
     assert b'bla'.rfind(b'la') == 1
     assert b'bla'.rfind(b'ba') == -1
 
@@ -184,7 +194,6 @@ def test_strip():
     assert b'bla  '.strip() == b'bla'
     assert b'**bla**'.strip(b'*') == b'bla'
 
-
 def test_swapcase():
     assert b'bLa'.swapcase() == b'BlA'
 
@@ -200,7 +209,7 @@ def test_zfill():
     assert b'bla'.zfill(10) == b'0000000bla'
 
 def heuk(x):
-    return    
+    return
 
 def test_bytes_cmp():
     assert b"hoei\\n" != b"hoei\n"
