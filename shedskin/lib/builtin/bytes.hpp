@@ -40,11 +40,6 @@ public:
     __ss_int __fixstart(size_t a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
 
-    __ss_int find(bytes *s, __ss_int a=0);
-    __ss_int find(bytes *s, __ss_int a, __ss_int b);
-    __ss_int rfind(bytes *s, __ss_int a=0);
-    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
-
     bytes *upper();
     bytes *lower();
     bytes *title();
@@ -61,8 +56,19 @@ public:
 
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
+
     __ss_bool endswith(bytes *s, __ss_int start=0);
     __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
+
+    __ss_int find(bytes *s, __ss_int a=0);
+    __ss_int find(bytes *s, __ss_int a, __ss_int b);
+    __ss_int find(__ss_int i, __ss_int a=0);
+    __ss_int find(__ss_int i, __ss_int a, __ss_int b);
+
+    __ss_int rfind(bytes *s, __ss_int a=0);
+    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rfind(__ss_int i, __ss_int a=0);
+    __ss_int rfind(__ss_int i, __ss_int a, __ss_int b);
 
     __ss_int count(bytes *b, __ss_int start=0);
     __ss_int count(__ss_int b, __ss_int start=0);
@@ -71,9 +77,13 @@ public:
 
     __ss_int index(bytes *s, __ss_int a=0);
     __ss_int index(bytes *s, __ss_int a, __ss_int b);
-    __ss_int index(__ss_int i, __ss_int a=0); // TODO more, also rindex and other methods?
+    __ss_int index(__ss_int i, __ss_int a=0);
+    __ss_int index(__ss_int i, __ss_int a, __ss_int b);
+
     __ss_int rindex(bytes *s, __ss_int a=0);
     __ss_int rindex(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rindex(__ss_int i, __ss_int a=0);
+    __ss_int rindex(__ss_int i, __ss_int a, __ss_int b);
 
     bytes *expandtabs(__ss_int tabsize=8);
 
