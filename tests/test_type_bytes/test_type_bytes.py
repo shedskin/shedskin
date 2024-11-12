@@ -12,8 +12,18 @@ def test_center():
 def test_count():
     assert b'blaa'.count(b'a') == 2
     assert b'blaabla'.count(b'aa') == 1
+    assert b'blaa'.count(b'a', 3) == 1
+    assert b'blaa'.count(b'a', 0, 2) == 0
 
-def test_encode(): pass
+    assert b'blaa'.count(ord('a')) == 2
+    assert b'blaa'.count(ord('a'), 3) == 1
+    assert b'blaa'.count(ord('a'), 0, 3) == 1
+
+    assert b'blaa'.count(ord('a'), -1) == 1
+    assert b'blaa'.count(ord('a'), -4, -1) == 1
+
+def test_encode():
+    pass
 
 def test_endswith():
     assert b'bla'.endswith(b'la')
