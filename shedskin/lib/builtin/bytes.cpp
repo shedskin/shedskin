@@ -76,6 +76,21 @@ __ss_int bytes::rfind(bytes *s, __ss_int a, __ss_int b) {
     return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).rfind(s->unit), a);
 }
 
+__ss_int bytes::rfind(__ss_int i, __ss_int a) {
+    return rfind(i, a, this->__len__());
+
+}
+
+__ss_int bytes::rfind(__ss_int i, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    for(size_t j=b-1; j>=a; j--) {
+        if(unit[j] == i)
+            return j;
+    }
+    return -1;
+}
+
 __ss_int bytes::__checkneg(__ss_int i) {
     if(i == -1)
         throw new ValueError(new str("subsection not found"));
