@@ -156,8 +156,24 @@ def test_rfind():
     assert b'bla'.rfind(b'ba') == -1
 
 def test_rindex():
+    assert b'bla'.rindex(b'a') == 2
+#    assert b'bla'.rindex(b'a', 7) == -1
+    assert b'bla'.rindex(b'a', 0, 3) == 2
+    assert b'bla'.rindex(b'a', -2, 33) == 2
+
+    assert b'bla'.rindex(ord('a')) == 2
+#    assert b'bla'.rindex(ord('a'), 7) == -1
+    assert b'bla'.rindex(ord('a'), 0, 3) == 2
+    assert b'bla'.rindex(ord('a'), -2, 33) == 2
+
     assert b'bla'.rindex(b'la') == 1
-    assert b'bla'.rindex(b'bl') == 0
+
+    exc = False
+    try:
+        assert b'bla'.rindex(b'ba') == -1
+    except ValueError as e:
+        exc = True
+    assert exc
 
 def test_rjust():
     assert b'bla'.rjust(8) == b'     bla'
