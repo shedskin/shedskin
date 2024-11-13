@@ -1,30 +1,33 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.graph: build constraint graph used in dataflow analysis
+"""shedskin.graph: Builds and manages the constraint graph for type inference
 
-constraint graph: graph along which possible types 'flow' during an 'abstract
-execution' of a program (a dataflow analysis). Consider the assignment
-statement `a = b`. It follows that the set of possible types of `b` is smaller
-than or equal to that of `a` (a constraint). we can  determine possible types
-of `a`, by 'flowing' the types from `b` to `a`, in other words, along
-the constraint.
+This module implements a constraint-based type inference system using a graph structure
+where types "flow" during analysis. The constraint graph is used to determine possible
+types for variables and expressions through dataflow analysis.
 
-constraint graph nodes are stored in `gx.cnode`, the set of types for each
-node in `gx.types`.
+Key concepts:
+- Constraint Graph: A directed graph where nodes represent program elements and edges
+  represent type constraints between them. For example, in `a = b`, types flow from
+  `b` to `a` since `a` must be able to hold any type that `b` could be.
 
-Nodes are identified by an AST Node, and two integers. The integers are
-used in infer.py to duplicate parts of the constraint graph along two dimensions.
-In the initial constraint graph, these integers are always 0.
+- Constraint Graph Structure:
+  - Nodes are stored in `gx.cnode`
+  - Type sets for each node are stored in `gx.types` 
+  - Each node is identified by (AST Node, int, int), where the integers are used
+    by `infer.py` to duplicate graph sections (class duplicate, function duplicate).
+    Initially both are 0.
 
-`class ModuleVisitor`: inherits visitor pattern from `ast_utils.BaseNodeVisitor`,
-to recursively generate constraints for each syntactical Python construct. for
-example, the visitFor method is called in case of a for-loop. temporary
-variables are introduced in many places, to enable translation to a lower-level
-language.
+Key components:
+- `ModuleVisitor`: Inherits from `ast_utils.BaseNodeVisitor` and traverses Python AST
+  to recursively generate type constraints for each syntactical Python language
+  construct, calling specialized methods (such as `visitFor` for for-loops) as needed
+  and introducing temporary variables as needed for C++ translation.
 
-`parse_module()`: locate module by name (e.g. `os.path`), and use
-`ModuleVisitor` if not cached
+- `parse_module()`: Entry point that locates and processes Python modules, using
+  `ModuleVisitor` for uncached modules.
 """
+
 
 import ast
 import copy
