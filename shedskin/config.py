@@ -108,6 +108,8 @@ class GlobalInfo:  # XXX add comments, split up
         # Others
         self.item_rvalue: dict[ast.AST, ast.AST] = {}
         self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
+        self.setcomp_to_lc: dict[ast.SetComp, ast.ListComp] = {}
+        self.dictcomp_to_lc: dict[ast.DictComp, ast.ListComp] = {}
         self.bool_test_only: set[ast.AST] = set()
         self.called: set[ast.Attribute] = set()
         self.tempcount: dict[Any, str] = {}

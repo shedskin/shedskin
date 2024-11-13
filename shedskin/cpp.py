@@ -3761,6 +3761,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.eol()
                 self.output("return __result;")
                 self.start("__after_yield_0:")
+            elif node in self.gx.setcomp_to_lc.values():
+                self.start("__ss_result->add(")
+                self.visit(node.elt, lcfunc)
+                self.append(")")
+            elif node in self.gx.dictcomp_to_lc.values():
+                self.start("__ss_result->__setitem__(")
+                self.visit(node.elt[0], lcfunc)
+                self.append(",")
+                self.visit(node.elt[1], lcfunc)
+                self.append(")")
             elif (
                 len(node.generators) == 1
                 and not ast_utils.is_fastfor(node.generators[0])
@@ -3815,7 +3825,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             pref, tail = self.forin_preftail(qual)
 
-            if len(node.generators) == 1 and not qual.ifs and not genexpr:
+            if (len(node.generators) == 1 and
+                not qual.ifs and
+                not genexpr and
+                not node in self.gx.setcomp_to_lc.values() and
+                not node in self.gx.dictcomp_to_lc.values()):
                 if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set")):
                     self.output("__ss_result->resize(len(" + itervar + "));")
 
@@ -3888,6 +3902,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if node in self.gx.genexp_to_lc.values():
             self.append("new ")
         self.append(lcfunc.ident + "(" + ", ".join(args) + ")")
+
+    def visit_SetComp(
+        self, node: ast.SetComp, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a set comprehension"""
+        self.visit(self.gx.setcomp_to_lc[node], func)
+
+    def visit_DictComp(
+        self, node: ast.DictComp, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a dict comprehension"""
+        self.visit(self.gx.dictcomp_to_lc[node], func)
 
     def visit_Subscript(
         self, node: ast.Subscript, func: Optional["python.Function"] = None

@@ -1,7 +1,12 @@
 '''
 advanced othello move generator
 
-based on a concept by jan de graaf (othello.nl).
+copyright mark dufour 2024, license GPLv3.
+
+based on a concept by jan de graaf (
+    jan.de.graaf@othello.nl,
+    https://www.linkedin.com/in/jan-c-de-graaf-blijleven-9076473/
+)
 
 for each line on the board, a number describes the state of the line.
 
@@ -15,10 +20,13 @@ a specific line and flipping pattern determine which generated
 function to call to perform the correct flips (lookup table 2).
 
 so far, the speed is comparable to a bitboard implemention
-(see ref.py), at about 100M moves/sec.
+(see ref.py), at about 130M moves/sec.
 
 performance seems quite sensitive to caching, and subtle
 optimizations in the C++ compiler that may or may not be triggered.
+
+jan's C version still appears to be much faster, possibly because of
+using function pointers instead of virtual calls.
 '''
 
 import collections
@@ -23437,15 +23445,20 @@ if __name__ == '__main__':
     # setup initial board state
     t0 = time.time()
 
+    p_d5 = put_d5()
+    p_e4 = put_e4()
+    p_d4 = put_d4()
+    p_e5 = put_e5()
+
     for x in range(10**5):
         init_state()
 
         turn = BLACK
-        put_d5().go()
-        put_e4().go()
+        p_d5.go()
+        p_e4.go()
         turn = WHITE
-        put_d4().go()
-        put_e5().go()
+        p_d4.go()
+        p_e5.go()
         turn = BLACK
 
         for mv in moves:

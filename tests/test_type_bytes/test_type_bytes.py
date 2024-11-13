@@ -11,9 +11,23 @@ def test_center():
 
 def test_count():
     assert b'blaa'.count(b'a') == 2
-    assert b'blaabla'.count(b'aa') == 1
+    assert b'blaa'.count(b'a', 3) == 1
+    assert b'blaa'.count(b'a', 0, 3) == 1
+    assert b'blaa'.count(b'a', -1) == 1
+    assert b'blaa'.count(b'a', -4, -1) == 1
 
-def test_encode(): pass
+    assert b'blaa'.count(ord('a')) == 2
+    assert b'blaa'.count(ord('a'), 3) == 1
+    assert b'blaa'.count(ord('a'), 0, 3) == 1
+    assert b'blaa'.count(ord('a'), -1) == 1
+    assert b'blaa'.count(ord('a'), -4, -1) == 1
+
+    assert b'blaabla'.count(b'aa') == 1
+    assert b'blaabla'.count(b'aa', 1) == 1
+    assert b'blaabla'.count(b'aa', -7) == 1
+
+def test_encode():
+    pass
 
 def test_endswith():
     assert b'bla'.endswith(b'la')
@@ -23,12 +37,36 @@ def test_expandtabs():
     assert b'bla\tbla'.expandtabs() == b'bla     bla'
 
 def test_find():
+    assert b'bla'.find(b'a') == 2
+    assert b'bla'.find(b'a', 7) == -1
+    assert b'bla'.find(b'a', 0, 3) == 2
+    assert b'bla'.find(b'a', -2, 33) == 2
+
+    assert b'bla'.find(ord('a')) == 2
+    assert b'bla'.find(ord('a'), 7) == -1
+    assert b'bla'.find(ord('a'), 0, 3) == 2
+    assert b'bla'.find(ord('a'), -2, 33) == 2
+
     assert b'bla'.find(b'la') == 1
     assert b'bla'.find(b'ba') == -1
 
 def test_index():
+    assert b'bla'.index(b'a') == 2
+    assert b'bla'.index(b'a', 0, 3) == 2
+    assert b'bla'.index(b'a', -2, 33) == 2
+
+    assert b'bla'.index(ord('a')) == 2
+    assert b'bla'.index(ord('a'), 0, 3) == 2
+    assert b'bla'.index(ord('a'), -2, 33) == 2
+
     assert b'bla'.index(b'la') == 1
-    assert b'bla'.index(b'bl') == 0
+
+    exc = False
+    try:
+        assert b'bla'.index(b'ba') == -1
+    except ValueError as e:
+        exc = True
+    assert exc
 
 def test_isalnum():
     assert b'bla'.isalnum()
@@ -76,6 +114,10 @@ def test_isupper():
 def test_join():
     assert b'-'.join([b'a', b'b', b'c']) == b"a-b-c"
 
+    # nested join
+    board = [[bytes([65+i+j]) for i in range(2)] for j in range(2)]
+    assert b'\n'.join(b''.join(row) for row in board) == b'AB\nBC'
+
 def test_ljust():
     assert b'bla'.ljust(8) == b'bla     '
     assert b'bla'.ljust(6, b'+') == b'bla+++'
@@ -100,12 +142,38 @@ def test_replace():
     assert b'bla'.replace(b'la', b'bla') == b'bbla'
 
 def test_rfind():
+    assert b'bla'.rfind(b'a') == 2
+    assert b'bla'.rfind(b'a', 7) == -1
+    assert b'bla'.rfind(b'a', 0, 3) == 2
+    assert b'bla'.rfind(b'a', -2, 33) == 2
+
+    assert b'bla'.rfind(ord('a')) == 2
+    assert b'bla'.rfind(ord('a'), 7) == -1
+    assert b'bla'.rfind(ord('a'), 0, 3) == 2
+    assert b'bla'.rfind(ord('a'), -2, 33) == 2
+
     assert b'bla'.rfind(b'la') == 1
     assert b'bla'.rfind(b'ba') == -1
 
 def test_rindex():
+    assert b'bla'.rindex(b'a') == 2
+#    assert b'bla'.rindex(b'a', 7) == -1
+    assert b'bla'.rindex(b'a', 0, 3) == 2
+    assert b'bla'.rindex(b'a', -2, 33) == 2
+
+    assert b'bla'.rindex(ord('a')) == 2
+#    assert b'bla'.rindex(ord('a'), 7) == -1
+    assert b'bla'.rindex(ord('a'), 0, 3) == 2
+    assert b'bla'.rindex(ord('a'), -2, 33) == 2
+
     assert b'bla'.rindex(b'la') == 1
-    assert b'bla'.rindex(b'bl') == 0
+
+    exc = False
+    try:
+        assert b'bla'.rindex(b'ba') == -1
+    except ValueError as e:
+        exc = True
+    assert exc
 
 def test_rjust():
     assert b'bla'.rjust(8) == b'     bla'
@@ -142,7 +210,6 @@ def test_strip():
     assert b'bla  '.strip() == b'bla'
     assert b'**bla**'.strip(b'*') == b'bla'
 
-
 def test_swapcase():
     assert b'bLa'.swapcase() == b'BlA'
 
@@ -158,7 +225,7 @@ def test_zfill():
     assert b'bla'.zfill(10) == b'0000000bla'
 
 def heuk(x):
-    return    
+    return
 
 def test_bytes_cmp():
     assert b"hoei\\n" != b"hoei\n"
