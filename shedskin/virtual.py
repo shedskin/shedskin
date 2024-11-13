@@ -23,7 +23,6 @@ animal.sound()
 
 With 'observed usage' we mean that this is concluded based just on the call to
 'animal.sound'.
-
 """
 
 import ast
