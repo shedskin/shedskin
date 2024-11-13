@@ -2,55 +2,61 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.infer: infer types
 
-Types are inferred by flowing them along the constraint graph produced
-in shedskin.graph. The flow starts from known 'seeds' such as a literal integer.
+Type inference in Shed Skin works by propagating types along a constraint graph.
+The graph is built during the analysis phase in `shedskin.graph`.
 
-For example, if a variable 'x' gets assigned the literal value '0', an 'integer
-type' propagates everywhere that 'x' is passed.
+The inference starts from known type "seeds" - for example, when a variable 'x'
+is assigned a literal integer value like '0', that integer type propagates to
+everywhere 'x' is used.
 
-The catch is that types may flow together, for example for an identity function
-that is called with different types of arguments, which causes imprecisions in
-the return type. Another example is two lists that contain different types of
-elements.
+A key challenge is handling cases where types flow together and mix. This happens
+in scenarios like:
+- An identity function called with different argument types, leading to an
+  imprecise return type.
+- Lists containing elements of different types.
 
-To deal with these imprecisions, we duplicate parts of the constraint graph
-during the analysis, so that separate uses of functions (parametric
-polymorphism) and containers (data polymorphism) do not affect each other.
+To maintain precision, Shed Skin duplicates parts of the constraint graph during
+analysis. This allows different uses of functions (parametric polymorphism) and
+containers (data polymorphism) to be analyzed separately.
 
-More specifically, we combine Agesen's cartesian product algorithm (CPA) with
-Plevyak's iterative flow analysis (the data polymorphic part). For details about
-these algorithms, see Ole Agesen's excellent Phd thesis. For details about the
-Shed Skin implementation, see Mark Dufour's MsC thesis.
+The implementation combines two key algorithms:
 
-The two integers mentioned in the graph.py description are used to keep track
-of duplicates along both dimensions (class duplicate, function duplicate).
+1. Agesen's Cartesian Product Algorithm (CPA) for handling function polymorphism,
+   where the return type of a method may depend on the actual types of the method
+   arguments.
 
-iterative_dataflow_analysis():
+2. Plevyak's Iterative Flow Analysis (IFA) for handling data polymorphism, where
+   the type of a variable may depend on the control flow.
 
-    FORWARD PHASE
-        - propagate types along constraint graph (propagate())
-        - all the while creating function duplicates using the cartesian
-          product algorithm(cpa())
-        - when creating a function duplicate, fill in allocation points
-          with correct type (ifa_seed_template())
+The analysis, in `iterative_dataflow_analysis()`, proceeds in phases:
 
-    BACKWARD PHASE
-        - determine classes to be duplicated, according to found imprecision
-          points (ifa())
-        - from imprecision points, follow the constraint graph (backwards)
-          to find involved allocation points
-        - duplicate classes, and spread them over these allocation points
+FORWARD PHASE
+- Propagate types through the constraint graph via `propagate()`
+- Create function duplicates using CPA via `cpa()`
+- Seed allocation points with correct types via `ifa_seed_template()`
 
-    CLEANUP
-        - quit if no further imprecision points (ifa() did not find anything)
-        - otherwise, restore the constraint graph to its original state and restart
-        - all the while maintaining types for each allocation point in gx.alloc_info
+BACKWARD PHASE
+- Find imprecision points and determine classes to duplicate via `ifa()`
+- Trace backwards through graph to find related allocation points
+- Duplicate classes and distribute them across allocation points
 
-Update: we now analyze programs incrementally, by adding a limited number of
-functions and allocation sites and redoing the full analysis each time.
-This seems to greatly help the CPA from exploding early on.
+CLEANUP
+- Exit if no imprecision points found
+- Otherwise reset graph and restart analysis
+- Maintain allocation point types in `gx.alloc_info`
 
+The analysis runs incrementally, analyzing a limited set of functions and
+allocation sites before re-running. This helps prevent CPA explosion early
+in the process.
 
+In each node of `shedskin.graph`, two integers are used by `shedskin.infer` 
+to represent duplicate parts of the constraint graph along two dimensions 
+(class duplicate, function duplicate).
+
+For more details, see:
+- The docstring of `shedskin.graph`
+- Ole Agesen's PhD thesis on the CPA algorithm
+- Mark Dufour's MSc thesis on Shed Skin's implementation
 """
 
 import ast
