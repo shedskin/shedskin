@@ -1,16 +1,39 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.cpp: c++ code generator.
+"""shedskin.cpp: C++ Code Generator
 
-Outputs equivalent C++ code, using templates and virtuals to support data and
-OO polymorphism.
+This module is responsible for translating Python code into equivalent C++ code,
+handling all aspects of code generation including:
 
-class GenerateVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor,
-to recursively generate C++ code for each syntactical Python construct.
+Key Components:
+- `GenerateVisitor`: Main code generation class that traverses the Python AST
+  and outputs corresponding C++ code. Inherits visitor pattern from
+  `ast_utils.BaseNodeVisitor` to recursively generate C++ code for each
+  syntactical Python construct. 
+- `CPPNamer`: Handles C++ identifier naming and keyword conflicts.
+- `TypeExpr`: Manages C++ template type expressions.
+- `InstanceAllocator`: Handles object allocation and memory management.
 
-The constraint graph, with inferred types, is first 'merged' back to program
-dimensions (gx.merged_inh).
+Major Features:
+- Template-based polymorphism for Python's dynamic typing.
+- Virtual method tables for inheritance and method dispatch.
+- Reference counting and garbage collection integration.
+- Python builtin type implementations
+- Exception handling translation
+- Module system and import handling
+- Standard library implementations
 
+The code generation process:
+1. Constraint graph, with inferred types, is first 'merged' back to program
+   dimensions (`gx.merged_inh`).
+2. AST is traversed to generate C++ declarations and definitions.
+3. Template specializations are generated for polymorphic functions.
+4. Virtual method tables are created for class hierarchies.
+5. Boilerplate code is added for Python integration.
+
+Generated code aims to balance performance with Python semantics,
+using C++ features like templates and virtuals where appropriate
+while maintaining Python's dynamic behavior.
 """
 
 import ast
