@@ -3,7 +3,27 @@
 """shedskin.ast_utils: Functions and classes which operate on ast nodes.
 
 This module provides utility functions and classes for working with abstract syntax
-trees (ASTs) in Python.
+trees (ASTs) in Python. It includes functions to:
+
+- Check node types and contexts:
+  - `is_assign_list_or_tuple()`: Check if node is list/tuple assignment
+  - `is_assign_tuple()`: Check if node is tuple assignment 
+  - `is_assign_attribute()`: Check if node is attribute assignment
+  -` is_constant()`: Check if node is a constant value
+  - `is_none()`: Check if node represents None
+  - `is_literal()`: Check if node is a numeric literal
+
+The functions help analyze and validate Python AST nodes during the compilation
+process. They abstract away the details of AST node type checking to make the
+compiler code more readable and maintainable.
+
+Key use cases:
+- Validating assignment targets and contexts
+- Identifying constant values and literals
+- Supporting type inference and code generation
+
+The module is used by other parts of the compiler to analyze Python source code
+and generate equivalent C++ code.
 """
 
 import ast

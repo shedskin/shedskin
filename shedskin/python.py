@@ -1,6 +1,38 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.python: models high-level python object types"""
+"""shedskin.python: models high-level python object types
+
+This module models Python's high-level object types and program structure for
+the Shedskin compiler.
+
+Key Components:
+- `Module`: Represents Python modules, tracking names, paths, AST, and dependencies
+- `Class`: Models Python classes with inheritance, methods, and type information
+- `Function`: Represents functions and methods with arguments and return types
+- `Variable`: Tracks variables and their possible types
+- `StaticClass`: Special class for built-in types like list, dict etc.
+
+The type system uses these classes to:
+1. Build the program model during parsing
+2. Track type constraints during inference
+3. Generate appropriate C++ code
+
+Major Features:
+- Full class hierarchy modeling with multiple inheritance
+- Function overloading and polymorphism support
+- Module import system and dependency tracking
+- Static vs instance method handling
+- Built-in type implementations
+- Variable scope and lifetime management
+
+The module works closely with:
+- `graph.py`: Builds constraint graph using these types
+- `infer.py`: Type inference using class/function information
+- `cpp.py`: Code generation based on type model
+
+This type model forms the core of Shedskin's static analysis and code generation,
+bridging the gap between Python's dynamic types and C++'s static typing.
+"""
 
 import ast
 import importlib.util

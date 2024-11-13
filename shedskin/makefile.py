@@ -63,7 +63,7 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
     def write(line: str = "") -> None:
         print(line, file=makefile)
 
-    esc_space = "\ "
+    esc_space = r"\ "
 
     def env_var(name: str) -> str:
         return "${%s}" % name
