@@ -1,6 +1,24 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.typestr: generate type declarations"""
+"""shedskin.typestr: generate type declarations
+
+Contains functions and classes for generating C++ type declarations from Python types.
+
+The module provides functionality to:
+- Convert Python type annotations and inferred types to C++ type declarations
+- Handle template parameters and specialization
+- Generate type declarations for variables, functions, and classes
+- Resolve type dependencies and inheritance hierarchies
+- Format type strings according to C++ syntax rules
+
+Key components:
+- `types_var_types()`: Get types associated with a variable
+- `ExtmodError`: Exception raised for extension module type errors
+- `Types`: Type alias for sets of (Class, int) tuples representing Python types
+
+This module is used by the code generator to produce valid C++ type declarations
+from the Python type information gathered during type inference.
+"""
 
 import ast
 import logging

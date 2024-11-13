@@ -6,19 +6,19 @@ This module provides functionality for generating CMake build files and managing
 the build process for Shedskin-compiled projects. Key components include:
 
 - CMake file generation
-- Dependency management (Conan, SPM, ExternalProject)
+- Dependency management (`Conan`, `SPM`, `ExternalProject`)
 - Build configuration and execution
 - Test running utilities
 
 Main classes:
-- ConanDependencyManager: Manages Conan dependencies
-- ShedskinDependencyManager: Local dependency manager (SPM)
-- CMakeBuilder: Handles CMake configuration, building, and testing
-- TestRunner: Specialized CMakeBuilder for running tests
+- `ConanDependencyManager`: Manages Conan dependencies
+- `ShedskinDependencyManager`: Local dependency manager (SPM)
+- `CMakeBuilder`: Handles CMake configuration, building, and testing
+- `TestRunner`: Specialized CMakeBuilder for running tests
 
 Key functions:
-- generate_cmakefile: Creates CMakeLists.txt for Shedskin projects
-- add_shedskin_product: Generates CMake function call for Shedskin targets
+- `generate_cmakefile`: Creates CMakeLists.txt for Shedskin projects
+-` add_shedskin_product`: Generates CMake function call for Shedskin targets
 
 The module also includes utilities for path handling, caching, and system-specific operations.
 """
