@@ -762,7 +762,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Get local assignments"""
         if global_ and isinstance(node, (ast.ClassDef, ast.FunctionDef)):
             return []
-        elif isinstance(node, ast.ListComp):
+        elif isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp)):
             return []
         elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
             result = [node]
@@ -1801,8 +1801,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_ListComp(
         self, node: ast.ListComp, func: Optional["python.Function"] = None
     ) -> None:
-        """Visit a list comprehension"""
+        """Visit a list/set/dict/generator comprehension"""
         # --- [expr for iter in list for .. if cond ..]
+        # --- {..}
+        # --- {a: b for .. }
+        # --- (expr for .. }
         lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
@@ -1845,12 +1848,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # node type
         if node in self.gx.genexp_to_lc.values():  # converted generator expression
             self.instance(node, python.def_class(self.gx, "__iter"), func)
+        elif node in self.gx.setcomp_to_lc.values():
+            self.instance(node, python.def_class(self.gx, "set"), func)
+        elif node in self.gx.dictcomp_to_lc.values():
+            self.instance(node, python.def_class(self.gx, "dict"), func)
         else:
             self.instance(node, python.def_class(self.gx, "list"), func)
 
         # expr->instance.unit
-        self.visit(node.elt, lcfunc)
-        self.add_dynamic_constraint(node, node.elt, "unit", lcfunc)
+        if isinstance(node.elt, tuple):
+            self.visit(node.elt[0], lcfunc)
+            self.add_dynamic_constraint(node, node.elt[0], "unit", lcfunc)
+            self.visit(node.elt[1], lcfunc)
+            self.add_dynamic_constraint(node, node.elt[1], "value", lcfunc)
+        else:
+            self.visit(node.elt, lcfunc)
+            self.add_dynamic_constraint(node, node.elt, "unit", lcfunc)
 
         lcfunc.ident = "list_comp_" + str(len(self.listcomps))
         self.listcomps.append((node, lcfunc, func))
@@ -1859,13 +1872,39 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.DictComp, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a dictionary comprehension"""
-        error.error("dict comprehensions are not supported", self.gx, node, mv=getmv())
+        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        self.gx.types[newnode] = set()
+        lc = ast.ListComp(
+            (node.key, node.value),
+            [
+                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                for qual in node.generators
+            ],
+            lineno=node.lineno,
+        )
+        register_node(lc, func)
+        self.gx.dictcomp_to_lc[node] = lc
+        self.visit(lc, func)
+        self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_SetComp(
         self, node: ast.SetComp, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a set comprehension"""
-        error.error("set comprehensions are not supported", self.gx, node, mv=getmv())
+        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        self.gx.types[newnode] = set()
+        lc = ast.ListComp(
+            node.elt,
+            [
+                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                for qual in node.generators
+            ],
+            lineno=node.lineno,
+        )
+        register_node(lc, func)
+        self.gx.setcomp_to_lc[node] = lc
+        self.visit(lc, func)
+        self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_Return(self, node: ast.Return, func: "python.Function") -> None:
         """Visit a return statement"""

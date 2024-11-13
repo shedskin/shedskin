@@ -27,8 +27,6 @@ __GC_VECTOR(bytes *) __byte_cache;
 __ss_bool True;
 __ss_bool False;
 
-list<str *> *__join_cache;
-list<bytes *> *__join_cache_bin;
 str *__case_swap_cache;
 
 char __str_cache[4000];
@@ -94,9 +92,6 @@ void __init() {
         __byte_cache.push_back(charbytes);
     }
 
-    __join_cache = new list<str *>();
-    __join_cache_bin = new list<bytes *>();
-
     for(int i=0; i<1000; i++) {
         __str_cache[4*i] = '0' + (char)(i % 10);
         __str_cache[4*i+1] = '0' + (char)((i/10) % 10);
@@ -151,7 +146,7 @@ class_::class_(const char *name) {
 }
 
 str *class_::__repr__() {
-    return (new str("class "))->__add__(__name__);
+    return __add_strs(3, new str("<class "), __name__, new str(">"));
 }
 
 __ss_bool class_::__eq__(pyobj *c) {

@@ -40,11 +40,6 @@ public:
     __ss_int __fixstart(size_t a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
 
-    __ss_int find(bytes *s, __ss_int a=0);
-    __ss_int find(bytes *s, __ss_int a, __ss_int b);
-    __ss_int rfind(bytes *s, __ss_int a=0);
-    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
-
     bytes *upper();
     bytes *lower();
     bytes *title();
@@ -61,8 +56,19 @@ public:
 
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
+
     __ss_bool endswith(bytes *s, __ss_int start=0);
     __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
+
+    __ss_int find(bytes *s, __ss_int a=0);
+    __ss_int find(bytes *s, __ss_int a, __ss_int b);
+    __ss_int find(__ss_int i, __ss_int a=0);
+    __ss_int find(__ss_int i, __ss_int a, __ss_int b);
+
+    __ss_int rfind(bytes *s, __ss_int a=0);
+    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rfind(__ss_int i, __ss_int a=0);
+    __ss_int rfind(__ss_int i, __ss_int a, __ss_int b);
 
     __ss_int count(bytes *b, __ss_int start=0);
     __ss_int count(__ss_int b, __ss_int start=0);
@@ -71,8 +77,13 @@ public:
 
     __ss_int index(bytes *s, __ss_int a=0);
     __ss_int index(bytes *s, __ss_int a, __ss_int b);
+    __ss_int index(__ss_int i, __ss_int a=0);
+    __ss_int index(__ss_int i, __ss_int a, __ss_int b);
+
     __ss_int rindex(bytes *s, __ss_int a=0);
     __ss_int rindex(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rindex(__ss_int i, __ss_int a=0);
+    __ss_int rindex(__ss_int i, __ss_int a, __ss_int b);
 
     bytes *expandtabs(__ss_int tabsize=8);
 
@@ -171,24 +182,25 @@ template <class U> bytes *bytes::join(U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;
-    __join_cache_bin->units.resize(0);
+    list<bytes *> __join_cache;
+    __join_cache.units.resize(0);
     total = 0;
     FOR_IN(e,iter,1,2,3)
-        __join_cache_bin->units.push_back(e);
+        __join_cache.units.push_back(e);
         sz = e->unit.size();
         if(sz != 1)
             only_ones = false;
         total += sz;
     END_FOR
     size_t unitsize = this->unit.size();
-    size_t elems = __join_cache_bin->units.size();
+    size_t elems = __join_cache.units.size();
     if(elems==1)
-        return __join_cache_bin->units[0];
+        return __join_cache.units[0];
     bytes *s = new bytes(frozen);
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
         for(size_t j=0; j<elems; j++)
-            s->unit[j] = __join_cache_bin->units[j]->unit[0];
+            s->unit[j] = __join_cache.units[j]->unit[0];
     }
     else if(elems) {
         total += (elems-1)*unitsize;
@@ -196,7 +208,7 @@ template <class U> bytes *bytes::join(U *iter) {
         size_t tsz;
         size_t k = 0;
         for(size_t m = 0; m<elems; m++) {
-            bytes *t = __join_cache_bin->units[m];
+            bytes *t = __join_cache.units[m];
             tsz = t->unit.size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
