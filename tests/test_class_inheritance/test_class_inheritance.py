@@ -81,6 +81,26 @@ class B(C):
         return 'meow'
 
 
+def flop():
+    pass
+
+
+class Flip:
+    pass
+
+
+class flip_none(Flip):
+    def flop(self):
+        return 1
+
+
+class flip_a3_a4(Flip):
+    def flop(self):
+        return 2
+
+
+
+
 def test_inheritance1():
     w = World()
     w.objects.append(Plane(6, 7, 8))
@@ -88,6 +108,7 @@ def test_inheritance1():
     assert len(w.objects) == 2
     assert w.objects[0].shader == 8
     assert w.objects[1].shader == 9
+
 
 def test_inheritance2():
     father = Father(3)
@@ -99,6 +120,7 @@ def test_inheritance2():
     daughter = Daughter(4)
     assert daughter.g(5) == 1280
 
+
 def test_inheritance3():
     c3 = C3()
     c3.m1()
@@ -107,10 +129,24 @@ def test_inheritance3():
     assert c3.a2 == 4
 
 
+def test_inheritance4():
+    flip_funcs = [
+        flip_none(),
+        flip_a3_a4(),
+    ]
+
+    xx = flip_funcs[0]
+    assert xx.flop() == 1
+
+    xx = flip_funcs[1]
+    assert xx.flop() == 2
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
     test_inheritance3()
+    test_inheritance4()
 
 if __name__ == '__main__':
     test_all() 

@@ -3990,6 +3990,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and isinstance(lcp[0], python.Class)
             and node.attr in lcp[0].vars
             and node.attr not in lcp[0].funcs
+            and node.attr not in lcp[0].virtuals
         ):
             return self.cpp_name(lcp[0].vars[node.attr])
         else:
