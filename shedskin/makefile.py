@@ -26,6 +26,8 @@ def check_output(cmd: str) -> Optional[str]:
 
 def generate_makefile(gx: "config.GlobalInfo") -> None:
     """Generate a makefile"""
+    includes = ""
+    ldflags = ""
     if gx.nomakefile:
         return
     if sys.platform == "win32":
@@ -45,6 +47,12 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
             ldflags += "-lpython" + pyver
             if not sysconfig.get_config_var("Py_ENABLE_SHARED"):
                 ldflags += " -L" + (sysconfig.get_config_var("LIBPL") or "")
+    if gx.options.include_dirs:
+        for include_dir in gx.options.include_dirs:
+            includes += f" -I{include_dir}"
+    if gx.options.link_dirs:
+        for link_dir in gx.options.link_dirs:
+            ldflags += f" -L{link_dir}"
 
     ident = gx.main_module.ident
     if gx.pyextension_product:
@@ -107,6 +115,10 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
     elif sys.platform == "win32":
         flags = gx.shedskin_flags / "FLAGS.mingw"
     elif sys.platform == "darwin":
+        BREW_PREFIX = check_output("brew --prefix")
+        if BREW_PREFIX:
+            includes += f" -I{BREW_PREFIX}/include"
+            ldflags += f" -L{BREW_PREFIX}/lib"
         flags = gx.shedskin_flags / "FLAGS.osx"
     else:
         flags = gx.shedskin_flags / "FLAGS"
@@ -120,6 +132,7 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
         if variable == "CXXFLAGS":
             line += " -I. -I%s" % env_var("SHEDSKIN_LIBDIR")
             line += "".join(" -I" + libdir for libdir in libdirs[:-1])
+            line += " " + includes
             if sys.platform == "darwin" and os.path.isdir("/usr/local/include"):
                 line += " -I/usr/local/include"  # XXX
             if sys.platform == "darwin" and os.path.isdir("/opt/local/include"):
@@ -151,6 +164,7 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
                     line += " -g -fPIC -D__SS_BIND " + includes
 
         elif variable == "LFLAGS":
+            line += ldflags
             if sys.platform == "darwin" and os.path.isdir("/opt/local/lib"):  # XXX
                 line += " -L/opt/local/lib"
             if sys.platform == "darwin" and os.path.isdir("/usr/local/lib"):  # XXX
