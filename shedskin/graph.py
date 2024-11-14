@@ -150,10 +150,8 @@ def has_star_kwarg(node: ast.Call) -> bool:
 
 
 def make_arg_list(argnames: List[str]) -> ast.arguments:
-    """Make an argument list from a list of argument names"""
+    """Make a simple argument list from a list of argument names"""
     args = [ast.arg(a) for a in argnames]
-
-    # what about kwonlyargs, kw_defaults, posonlyargs?
     return ast.arguments([], args, None, [], [], None, [])
 
 
@@ -724,6 +722,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                                 m,
                                 mv=getmv(),
                             )
+                        self.remove_poskw_only_args(m)
                         func = python.Function(self.gx, getmv(), m, newclass)
                         newclass.funcs[func.ident] = func
                         self.set_default_vars(m, func)
@@ -734,6 +733,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(n, ast.FunctionDef):
                 check_redef(self.gx, n)
                 getmv().funcnodes.append(n)
+                self.remove_poskw_only_args(n)
                 func = getmv().funcs[n.name] = python.Function(self.gx, getmv(), n)
                 self.set_default_vars(n, func)
 
@@ -747,6 +747,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for assname in self.local_assignments(node):
             if assname.id not in globals:
                 infer.default_var(self.gx, assname.id, func)
+
+    def remove_poskw_only_args(self, node: ast.FunctionDef) -> None:
+        """Ignore /, * (pos-only, keyword-only) arguments"""
+        if node.args.posonlyargs or node.args.kwonlyargs:
+            node.args.args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            node.args.posonlyargs = []
+            node.args.kwonlyargs = []
 
     def get_globals(self, node: ast.AST) -> List[str]:
         """Get global variables"""
@@ -960,6 +967,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         inherited_from: Optional["python.Class"] = None,
     ) -> None:
         """Visit a function definition"""
+
         if not getmv().module.builtin and (node.args.vararg or node.args.kwarg):
             error.error(
                 "argument (un)packing is not supported", self.gx, node, mv=getmv()
