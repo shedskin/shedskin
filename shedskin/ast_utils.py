@@ -24,6 +24,8 @@ Key use cases:
 
 The module is used by other parts of the compiler to analyze Python source code
 and generate equivalent C++ code.
+
+Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
