@@ -823,6 +823,7 @@ class KeyError(LookupError): pass
 
 class RuntimeError(Exception): pass
 class NotImplementedError(RuntimeError): pass
+class PythonFinalizationError(RuntimeError): pass
 
 __exception = OSError('') # XXX remove
 __exception = FileNotFoundError('')
