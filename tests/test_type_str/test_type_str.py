@@ -142,6 +142,9 @@ def test_replace():
     assert "1, 3, 5".replace(",", "", 0) == '1, 3, 5'
     assert "1, 3, 5".replace(",", "", 1) == '1 3, 5'
 
+#   TODO as of 3.13, count can given as keyword
+#    assert "aaabapa".replace('a', '-', count=2) == "--abapa"
+
 def test_rfind():
     assert 'bla'.rfind('la') == 1
     assert 'bla'.rfind('ba') == -1
