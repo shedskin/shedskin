@@ -29,13 +29,13 @@ class match_object:
     def __group1(self, arg):
         return ''
 
-    def start(self, i = 0):
+    def start(self, i=0):
         return 1
 
-    def end(self, i = 0):
+    def end(self, i=0):
         return 1
 
-    def span(self):
+    def span(self, group=0):
         return (1,)
 
     def groups(self, defval=None):

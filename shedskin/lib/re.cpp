@@ -119,11 +119,11 @@ dict<str *, str *> *match_object::groupdict(str *defval)
 }
 
 str *match_object::__repr__() {
-    return new str("<match_object>");
+    return new str("<Match object>");
 }
 
 str *re_object::__repr__() {
-    return new str("<re_object>");
+    return new str("<Re object>");
 }
 
 //these are for internal use
