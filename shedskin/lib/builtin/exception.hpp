@@ -93,7 +93,7 @@ static void print_traceback(FILE *out)
 #endif
 #endif
 
-extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception;
+extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror;
 
 class BaseException : public pyobj {
 public:
@@ -235,6 +235,14 @@ public:
     NotImplementedError(str *msg=0) : RuntimeError(msg) { this->__class__ = cl_notimplementederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotImplementedError; }
+#endif
+};
+
+class PythonFinalizationError : public RuntimeError {
+public:
+    PythonFinalizationError(str *msg=0) : RuntimeError(msg) { this->__class__ = cl_pythonfinalizationerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_PythonFinalizationError; }
 #endif
 };
 
