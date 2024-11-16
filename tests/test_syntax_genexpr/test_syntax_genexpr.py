@@ -24,14 +24,10 @@ def test_set_comprehensions():  # TODO seperate 'syntax_comprehension' tests
     sp = {u+v for u,v in uh}
     assert sp == {0, 2, 6, 72, 42, 12, 20, 56, 90, 30}
 
+def test_set_comprehensions2():  # TODO causes max iterations whene merging with above func!?
     # primes to 100
     primes = [2] + sorted(set(range(3,100,2)) - {x for step in range(3, int(100**0.5) + 1, 2) if step %3 or step==3 for x in range(step * 3, 100, step * 2)})
     assert primes == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
-
-
-#def test_set_comprehensions2():  # TODO causes max iterations!?
-#    b = [sum(s) for s in {(1,2), (3,4), (4,5)}]
-#    assert b == [9, 3, 7]
 
 
 def test_dict_comprehensions():  # TODO to seperate 'syntax_comprehension' tests?
@@ -49,7 +45,7 @@ def test_all():
     test_sum()
     test_list()
     test_set_comprehensions()
-#    test_set_comprehensions2()
+    test_set_comprehensions2()
     test_dict_comprehensions()
 
 
