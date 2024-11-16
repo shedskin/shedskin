@@ -21,18 +21,27 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     return d->__getitem__(key);
 }
 
-template <class T> void __mod_int(str *, size_t &, const char *, T) {}
-template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_int arg) {
-    char *d;
-    int x;
-    x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
-    if(x == -1)
-        throw new ValueError(new str("error in string formatting"));
-    result->unit += d;
-    free(d);
+template <class T> void __mod_int(str *, size_t &, const char *, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    std::string sabs = std::to_string(__abs(arg));
+
+    if (arg < 0)
+        result->unit += "-";
+    else if (f_flag == '+')
+        result->unit += "+";
+    else if (f_flag == ' ')
+        result->unit += " ";
+
+    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
+        result->unit += std::string(f_precision-sabs.size(), '0');
+    } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
+        result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
+    }
+
+    result->unit += sabs;
 }
-template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_float arg) {
-    __mod_int(result, pos, fstr, (__ss_int)arg);
+template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
+    __mod_int(result, pos, fstr, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_oct(str *, size_t &, T) {}
@@ -154,6 +163,7 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
         char d;
         __ss_int f_width = -1;
         __ss_int f_precision = -1;
+        bool f_zero = false;
         bool dot = false;
 
         for(size_t k=1; k<fstr.size(); k++) {
@@ -186,9 +196,11 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
                         else
                             f_precision = 10*f_precision + (__ss_int)(d - '0');
                     } else {
-                        if (f_width == -1)
+                        if (f_width == -1) {
+                            if (d == '0')
+                                f_zero = true;
                             f_width = (__ss_int)(d - '0');
-                        else
+                        } else
                             f_width = 10*f_width + (__ss_int)(d - '0');
                     }
                     break;
@@ -208,10 +220,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 'i':
             case 'u':
                 if(name) {
-                    __mod_int(result, pos, fstr.c_str(), __mod_dict_arg(arg, name));
+                    __mod_int(result, pos, fstr.c_str(), __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_int(result, pos, fstr.c_str(), arg);
+                    __mod_int(result, pos, fstr.c_str(), arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
 

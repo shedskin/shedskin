@@ -242,7 +242,7 @@ class PythonFinalizationError : public RuntimeError {
 public:
     PythonFinalizationError(str *msg=0) : RuntimeError(msg) { this->__class__ = cl_pythonfinalizationerror; }
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_PythonFinalizationError; }
+    //PyObject *__to_py__() { return PyExc_PythonFinalizationError; } // TODO check python version macro?
 #endif
 };
 
