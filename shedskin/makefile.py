@@ -19,16 +19,19 @@ The generated Makefile handles:
 """
 
 import os
-import pathlib
 import re
 import subprocess
 import sys
 import sysconfig
-import platform 
-from typing import TYPE_CHECKING, Optional
+import platform
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional, TypeAlias
 
 if TYPE_CHECKING:
     from . import config
+    from . import python
+
+PathLike: TypeAlias = Path | str
 
 PLATFORM = platform.system()
 
@@ -46,9 +49,9 @@ def check_output(cmd: str) -> Optional[str]:
 
 class MakefileWriter:
     """Handles writing Makefile contents"""
-    def __init__(self, path: str):
+    def __init__(self, path: PathLike):
         self.makefile = open(path, "w")
-        
+
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
         print(line, file=self.makefile)
@@ -67,7 +70,7 @@ class PythonSystem:
         return self.version
 
     @property
-    def version(self):
+    def version(self) -> str:
         """semantic version of python: 3.11.10"""
         return f"{self.major}.{self.minor}.{self.patch}"
 
@@ -122,7 +125,7 @@ class PythonSystem:
     @property
     def linklib(self) -> str:
         """name of library for linking"""
-        return f"-l{self.ver_name}"
+        return f"-l{self.name_ver}"
 
     @property
     def staticlib_name(self) -> str:
@@ -135,19 +138,19 @@ class PythonSystem:
     @property
     def dylib_name(self) -> str:
         """dynamic link libname"""
-        if PLATFORM == "Darwin":
-            return f"{self.libname}.dylib"
-        if PLATFORM == "Linux":
-            return f"{self.libname}.so"
         if PLATFORM == "Windows":
             return f"{self.libname}.dll"
+        elif PLATFORM == "Darwin":
+            return f"{self.libname}.dylib"
+        else:
+            return f"{self.libname}.so"
 
     @property
     def dylib_linkname(self) -> str:
         """symlink to dylib"""
         if PLATFORM == "Darwin":
             return f"{self.libname}.dylib"
-        if PLATFORM == "Linux":
+        else:
             return f"{self.libname}.so"
 
     @property
@@ -199,31 +202,207 @@ class PythonSystem:
             return ".so"
 
 
-
 class MakefileGenerator:
+    """Generates Makefile for C/C++ code"""
+    
+    def __init__(self, path: PathLike):
+        # variables
+        self.vars: dict[str, PathLike] = {}
+        # include directories
+        self.includes: list[str] = []
+        # c compiler flags
+        self.cflags: list[str] = []
+        # c++ compiler flags
+        self.cxxflags: list[str] = []
+        # link directories
+        self.link_dirs: list[str] = []
+        # link libraries
+        self.link_libs: list[str] = []
+        # linker flags
+        self.ldflags: list[str] = []
+        # targets
+        self.targets: list[str] = []
+        # phony targets
+        self.phony: list[str] = []
+        # clean target
+        self.clean: list[str] = []
+        # writer
+        self.writer = MakefileWriter(path)
+
+    def write(self, text: Optional[str] = None) -> None:
+        """Write a line to the Makefile"""
+        if not text:
+            self.writer.write('')
+        else:
+            self.writer.write(text)
+
+    def close(self) -> None:
+        """Close the Makefile"""
+        self.writer.close()
+
+    def add_variable(self, key: str, value: str) -> None:
+        """Add a variable to the Makefile"""
+        self.vars[key] = value
+
+    def add_include_dirs(self, *entries, **kwargs):
+        """Add include directories to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.includes.append(f"-I{entry}")
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.includes.append(f"-I$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_cflags(self, *entries, **kwargs):
+        """Add compiler flags to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.cflags.append(entry)
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.cflags.append(f"$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_cxxflags(self, *entries, **kwargs):
+        """Add c++ compiler flags to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.cxxflags.append(entry)
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.cxxflags.append(f"$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_link_dirs(self, *entries, **kwargs):
+        """Add link directories to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.link_dirs.append(f"-L{entry}")
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.link_dirs.append(f"-L$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_link_libs(self, *entries, **kwargs):
+        """Add link libraries to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.link_libs.append(entry)
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.link_libs.append(f"$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_ldflags(self, *entries, **kwargs):
+        """Add linker flags to the Makefile"""
+        for entry in entries:
+            if entry:
+                self.ldflags.append(entry)
+        for key, value in kwargs.items():
+            if value:
+                self.vars[key] = value
+                self.ldflags.append(f"$({key})")
+            else:
+                raise ValueError(f"Invalid value for {key}: {value}")
+
+    def add_target(self, name: str, dependencies: list[str], body: str):
+        """Add targets to the Makefile"""
+        deps = " ".join(dependencies)
+        self.targets.append(f"{name}: {deps}\n\t{body}")
+
+    def add_phony(self, *entries):
+        """Add phony targets to the Makefile"""
+        for entry in entries:
+            self.phony.append(entry)
+
+    def add_clean(self, *entries):
+        """Add clean target to the Makefile"""
+        for entry in entries:
+            self.clean.append(entry)
+
+    def _write_variables(self) -> None:
+        """Write variables to the Makefile"""
+        for key, value in self.vars.items():
+            self.write(f"{key}={value}")
+        self.write()
+
+    def _write_phony(self) -> None:
+        """Write phony targets to the Makefile"""
+        phone_targets = " ".join(self.phony)
+        self.write(f".PHONY: {phone_targets}")
+        self.write()
+    def _write_targets(self) -> None:
+        """Write targets to the Makefile"""
+        for target in self.targets:
+            self.write(target)
+            self.write()
+
+    def _write_clean(self) -> None:
+        """Write clean target to the Makefile"""
+        clean_targets = " ".join(self.clean)
+        self.write(f"@clean:\n\trm -rf {clean_targets}")
+        self.write()
+
+    def generate(self) -> None:
+        """Generate the Makefile"""
+        self._write_variables()
+        self._write_phony()
+        self._write_targets()
+        self._write_clean()
+        self.close()
+
+def test_makefile_generator() -> None:
+    """Test MakefileGenerator"""
+    m = MakefileGenerator("Makefile")
+    m.add_variable("TEST", "test")
+    m.add_include_dirs("/usr/include")
+    m.add_cflags("-Wall", "-Wextra")
+    m.add_cxxflags("-Wall", "-Wextra")
+    m.add_link_dirs("/usr/lib")
+    m.add_link_libs("pthread")
+    m.add_ldflags("-pthread")
+    m.add_target("test", ["test.o"], "echo $(TEST)")
+    m.add_phony("test")
+    m.add_clean("test.o")
+    m.generate()
+
+
+class ShedskinMakefileGenerator:
     """Generates Makefile for Shedskin-compiled code"""
     
     def __init__(self, gx: "config.GlobalInfo"):
         self.gx = gx
-        self.includes = []
-        self.ldflags = []
-        self.writer = None
+        self.vars: dict[str, PathLike] = {}
+        self.includes: list[str] = []
+        self.ldflags: list[str] = []
+        self.writer = MakefileWriter(gx.makefile_name)
         self.esc_space = r"\ "
         self.is_static = False
         self.py = PythonSystem()
 
     @property
-    def shedskin_libdirs(self):
+    def shedskin_libdirs(self) -> list[str]:
         """List of shedskin libdirs"""
         return [d.replace(" ", self.esc_space) for d in self.gx.libdirs]
     
     @property
-    def modules(self):
+    def modules(self) -> list['python.Module']:
         """List of modules"""
-        return self.gx.modules.values()
+        return list(self.gx.modules.values())
     
     @property
-    def filenames(self):
+    def filenames(self) -> list[str]:
         """List of filenames"""
         _filenames = []
         for module in self.modules:
@@ -239,12 +418,12 @@ class MakefileGenerator:
         return _filenames
 
     @property
-    def cppfiles(self):
+    def cppfiles(self) -> list[str]:
         """Reverse sorted list of .cpp files"""
         return sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
 
     @property
-    def hppfiles(self):
+    def hppfiles(self) -> list[str]:
         """Reverse sorted list of .hpp files"""
         return sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
 
@@ -288,29 +467,45 @@ class MakefileGenerator:
             if entry:
                 self.ldflags.append(entry)
 
-    def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[str]:
+    def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
         if entry:
-            return check_output(f"brew --prefix {entry}")
+            res = check_output(f"brew --prefix {entry}")
+            if res:
+                return Path(res)
+            return None
         else:
-            return check_output("brew --prefix")
+            res = check_output("brew --prefix")
+            if res:
+                return Path(res)
+            return None
 
     def generate(self) -> None:
         """Generate the Makefile"""
         if self.gx.nomakefile:
             return
-            
+
+        self._setup_variables()
         self._setup_platform()
         self._add_user_dirs()
-        
-        self.writer = MakefileWriter(self.makefile_path)
         
         self._write_variables()
         self._write_targets()
         self._write_clean()
         self._write_phony()
-        
+
         self.writer.close()
+
+    def _setup_variables(self) -> None:
+        """Configure general variables"""
+        self.vars['SHEDSKIN_LIBDIR'] = self.shedskin_libdirs[-1]
+        self.vars['PY_INCLUDE'] = self.py.include_dir
+        if prefix := self.homebrew_prefix():
+            self.vars["HOMEBREW_PREFIX"] = prefix
+            self.vars["HOMEBREW_INCLUDE"] = prefix / 'include'
+            self.vars["HOMEBREW_LIB"] = prefix / 'lib'
+            self.add_include_dirs("$(HOMEBREW_INCLUDE)")
+            self.add_link_dirs("$(HOMEBREW_LIB)")
 
     def _setup_platform(self) -> None:
         """Configure platform-specific settings"""
@@ -321,6 +516,7 @@ class MakefileGenerator:
             
     def _setup_windows(self) -> None:
         """Configure Windows-specific settings"""
+        # placeholder
         
     def _setup_unix(self) -> None:
         """Configure Unix-like platform settings"""
@@ -357,9 +553,10 @@ class MakefileGenerator:
         self.write("PY_INCLUDE=%s" % self.py.include_dir)
         if PLATFORM == "Darwin":
             if self.homebrew_prefix():
-                self.write("HOMEBREW_PREFIX=%s" % self.homebrew_prefix())
-                self.write("HOMEBREW_INCLUDE=%s/include" % self.homebrew_prefix())
-                self.write("HOMEBREW_LIB=%s/lib" % self.homebrew_prefix())
+                prefix = self.homebrew_prefix()
+                self.write(f"HOMEBREW_PREFIX={prefix}")
+                self.write(f"HOMEBREW_INCLUDE={prefix}/include")
+                self.write(f"HOMEBREW_LIB={prefix}/lib")
         self._write_flags()
         self._write_cpp_files()
         
@@ -372,11 +569,11 @@ class MakefileGenerator:
         
     def _write_flags(self) -> None:
         """Write compiler and linker flags"""
-        flags = self._get_flags_file()
+        flags_file = self._get_flags_file()
         includes = " ".join(self.includes)
         ldflags = " ".join(self.ldflags)
         
-        for line in open(flags):
+        for line in open(flags_file):
             line = line[:-1]
             variable = line[: line.find("=")].strip().rstrip("?")
             
@@ -390,26 +587,19 @@ class MakefileGenerator:
             
             self._handle_static_flags(line)
             
-    def _get_flags_file(self) -> pathlib.Path:
+    def _get_flags_file(self) -> Path:
         """Get the appropriate flags file for the current platform"""
         if self.gx.flags:
             return self.gx.flags
         elif os.path.isfile("FLAGS"):
-            return pathlib.Path("FLAGS")
+            return Path("FLAGS")
         elif os.path.isfile("/etc/shedskin/FLAGS"):
-            return pathlib.Path("/etc/shedskin/FLAGS")
+            return Path("/etc/shedskin/FLAGS")
         elif PLATFORM == "Windows":
             return self.gx.shedskin_flags / "FLAGS.mingw"
         elif PLATFORM == "Darwin":
-            self._setup_homebrew()
             return self.gx.shedskin_flags / "FLAGS.osx"
         return self.gx.shedskin_flags / "FLAGS"
-        
-    def _setup_homebrew(self) -> None:
-        """Configure Homebrew paths if available"""
-        if self.homebrew_prefix():
-            self.add_include_dirs("$(HOMEBREW_INCLUDE)")
-            self.add_link_dirs("$(HOMEBREW_LIB)")
             
     def _update_cxx_flags(self, line: str, includes: str) -> str:
         """Update C++ compiler flags"""
@@ -588,5 +778,5 @@ class MakefileGenerator:
 
 def generate_makefile(gx: "config.GlobalInfo") -> None:
     """Generate a makefile for the Shedskin-compiled code"""
-    generator = MakefileGenerator(gx)
+    generator = ShedskinMakefileGenerator(gx)
     generator.generate()
