@@ -63,10 +63,14 @@ template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_fla
     result->unit += sabs;
 }
 
-// TODO same as mod_int different base?
+// TODO same as mod_int different base? almost, upper/lower x different
 template <class T> void __mod_hex(str *, size_t &, char, const char *, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_hex(str *result, size_t &, char, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __GC_STRING sabs = __str(__abs(arg), (__ss_int)16)->unit;
+template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __GC_STRING sabs;
+    if (c == 'x')
+       sabs = __str(__abs(arg), (__ss_int)16)->unit;
+    else
+       sabs = __str(__abs(arg), (__ss_int)16)->upper()->unit;
 
     if (arg < 0)
         result->unit += "-";
