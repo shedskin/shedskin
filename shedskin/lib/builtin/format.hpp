@@ -125,7 +125,7 @@ template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int
 template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
     std::string s;
     if(c=='s')
-        s = __str(arg)->unit;
+        s = arg->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
 
