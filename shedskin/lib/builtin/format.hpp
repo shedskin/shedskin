@@ -5,10 +5,6 @@
 #ifndef SS_FORMAT_HPP
 #define SS_FORMAT_HPP
 
-#if defined(_WIN32) || defined(WIN32) || defined(__sun)
-int asprintf(char **ret, const char *format, ...);
-#endif
-
 template <class T> void *__mod_dict_arg(T, str *) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
@@ -88,18 +84,32 @@ template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr
     result->unit += sabs;
 }
 
-template <class T> void __mod_float(str *, size_t &, const char *, T) {}
-template<> inline void __mod_float(str *result, size_t &, const char *fstr, __ss_float arg) {
-    char *d;
-    int x;
-    x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
-    if(x == -1)
-        throw new ValueError(new str("error in string formatting"));
-    result->unit += d;
-    free(d);
+template <class T> void __mod_float(str *, size_t &, char, const char *, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_float(str *result, size_t &, char c, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    std::stringstream t;
+    if(c == 'f') {
+        t.setf(std::ios::fixed);
+        if (f_precision != -1)
+            t.precision(f_precision);
+        else
+            t.precision(6);
+        t << arg;
+    } else if(c == 'g') {
+        t.setf(std::ios::fixed);
+        if (f_precision > 0)
+            t.precision(f_precision-1);
+        else
+            t.precision(5);
+        t << arg;
+    } else if(c == 'e') {
+        char num[64];
+        sprintf(num, "%.6e", arg); // TODO use f_precision without generating warnings..
+        t << num;
+    }
+    result->unit += t.str();
 }
-template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, __ss_int arg) {
-    __mod_float(result, pos, fstr, (__ss_float)arg);
+template<> inline void __mod_float(str *result, size_t &pos, char c, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_float(result, pos, c, fstr, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int f_precision) {
@@ -107,7 +117,7 @@ template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int
     if(c=='s')
         s = __str(arg)->unit;
     else
-        s = repr(arg)->unit;
+        s = repr(arg)->unit; // TODO escaping?
 
     if (f_precision == -1)
         result->unit += s;
@@ -119,7 +129,7 @@ template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss
     if(c=='s')
         s = __str(arg)->unit;
     else
-        s = repr(arg)->unit;
+        s = repr(arg)->unit; // TODO escaping?
 
     if (f_precision == -1)
         result->unit += s;
@@ -281,10 +291,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 'g':
             case 'G':
                 if(name) {
-                    __mod_float(result, pos, fstr.c_str(), __mod_dict_arg(arg, name));
+                    __mod_float(result, pos, c, fstr.c_str(), __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_float(result, pos, fstr.c_str(), arg);
+                    __mod_float(result, pos, c, fstr.c_str(), arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
                 break;
