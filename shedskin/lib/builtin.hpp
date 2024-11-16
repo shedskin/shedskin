@@ -42,7 +42,7 @@
 #endif
 
 #if defined(_MSC_VER)
-#include "builtin/msvc.hpp"
+#include <ciso646>
 #endif
 
 namespace __shedskin__ {

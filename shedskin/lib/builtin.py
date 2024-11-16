@@ -410,7 +410,7 @@ class str_(pyseq):
     def endswith(self, e, start=0, end=0):
         return True
 
-    def replace(self, a, b, c=0):
+    def replace(self, a, b, count=-1):
         return ''
 
     def translate(self, table, delchars=''):
@@ -823,6 +823,7 @@ class KeyError(LookupError): pass
 
 class RuntimeError(Exception): pass
 class NotImplementedError(RuntimeError): pass
+class PythonFinalizationError(RuntimeError): pass
 
 __exception = OSError('') # XXX remove
 __exception = FileNotFoundError('')
