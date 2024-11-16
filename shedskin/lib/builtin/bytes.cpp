@@ -56,7 +56,7 @@ __ss_int bytes::find(__ss_int i, __ss_int a) {
 __ss_int bytes::find(__ss_int i, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    for(size_t j=a; j<b; j++) {
+    for(__ss_int j=a; j<b; j++) {
         if(unit[j] == i)
             return j;
     }
@@ -84,7 +84,7 @@ __ss_int bytes::rfind(__ss_int i, __ss_int a) {
 __ss_int bytes::rfind(__ss_int i, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    for(size_t j=b-1; j>=a; j--) {
+    for(__ss_int j=b-1; j>=a; j--) {
         if(unit[j] == i)
             return j;
     }
