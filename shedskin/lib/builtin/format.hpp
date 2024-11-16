@@ -18,20 +18,17 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
 template <class T> void __mod_int(str *, size_t &, const char *, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::string sabs = std::to_string(__abs(arg));
-
     if (arg < 0)
         result->unit += "-";
     else if (f_flag == '+')
         result->unit += "+";
     else if (f_flag == ' ')
         result->unit += " ";
-
     if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
         result->unit += std::string(f_precision-sabs.size(), '0');
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
         result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
     }
-
     result->unit += sabs;
 }
 template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
@@ -42,20 +39,17 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
 template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __GC_STRING sabs = __str(__abs(arg), (__ss_int)8)->unit;
-
     if (arg < 0)
         result->unit += "-";
     else if (f_flag == '+')
         result->unit += "+";
     else if (f_flag == ' ')
         result->unit += " ";
-
     if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
         result->unit += std::string(f_precision-sabs.size(), '0');
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
         result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
     }
-
     result->unit += sabs;
 }
 
@@ -67,7 +61,6 @@ template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr
        sabs = __str(__abs(arg), (__ss_int)16)->unit;
     else
        sabs = __str(__abs(arg), (__ss_int)16)->upper()->unit;
-
     if (arg < 0)
         result->unit += "-";
     else if (f_flag == '+')
@@ -80,13 +73,18 @@ template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
         result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
     }
-
     result->unit += sabs;
 }
 
 template <class T> void __mod_float(str *, size_t &, char, const char *, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_float(str *result, size_t &, char c, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::stringstream t;
+    if (arg > 0) {
+        if (f_flag == '+')
+            result->unit += "+";
+        else if (f_flag == ' ')
+            result->unit += " ";
+    }
     if(c == 'f') {
         t.setf(std::ios::fixed);
         if (f_precision != -1)
