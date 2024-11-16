@@ -471,14 +471,15 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _setup_variables(self) -> None:
         """Configure general variables"""
-        self.vars['SHEDSKIN_LIBDIR'] = self.shedskin_libdirs[-1]
-        self.vars['PY_INCLUDE'] = self.py.include_dir
-        if prefix := self.homebrew_prefix():
-            self.vars["HOMEBREW_PREFIX"] = prefix
-            self.vars["HOMEBREW_INCLUDE"] = prefix / 'include'
-            self.vars["HOMEBREW_LIB"] = prefix / 'lib'
-            self.add_include_dirs("$(HOMEBREW_INCLUDE)")
-            self.add_link_dirs("$(HOMEBREW_LIB)")
+        self.add_variable('SHEDSKIN_LIBDIR', self.shedskin_libdirs[-1])
+        if self.gx.pyextension_product:
+            self.add_variable('PY_INCLUDE', self.py.include_dir)
+        if PLATFORM == "Darwin":
+            if bool(self.homebrew_prefix()):
+                self.add_variable("HOMEBREW_PREFIX", self.homebrew_prefix())
+                self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
+                self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
+    
 
     def _setup_platform(self) -> None:
         """Configure platform-specific settings"""
