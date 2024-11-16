@@ -378,37 +378,23 @@ class MakefileGenerator:
         self._write_clean()
         self.close()
 
-def test_makefile_generator() -> None:
-    """Test MakefileGenerator"""
-    m = MakefileGenerator("Makefile")
-    m.add_variable("TEST", "test")
-    m.add_include_dirs("/usr/include")
-    m.add_cflags("-Wall", "-Wextra")
-    m.add_cxxflags("-Wall", "-Wextra", "-std=c++11", "-O3")
-    m.add_ldflags("-shared", "-Wl,-rpath,/usr/local/lib", "-fPIC")
-    m.add_link_dirs("/usr/lib", "/usr/local/lib")
-    m.add_link_libs("-lpthread")
-    m.add_target("all", deps=["build", "test"])
-    m.add_target("build", deps=["tool.exe"])
-    m.add_target("tool.exe", "$(CXX) $(CPPFILES) $(CXXFLAGS) $(LDFLAGS) -o $@ $^", deps=["a.o", "b.o"])
-    m.add_target("test", "echo $(TEST)", deps=["test.o"])
-    m.add_phony("all", "build","test")
-    m.add_clean("test.o", "*.o")
-    m.generate()
 
-
-class ShedskinMakefileGenerator:
+class ShedskinMakefileGenerator(MakefileGenerator):
     """Generates Makefile for Shedskin-compiled code"""
     
     def __init__(self, gx: "config.GlobalInfo"):
         self.gx = gx
-        self.vars: dict[str, PathLike] = {}
-        self.includes: list[str] = []
-        self.ldflags: list[str] = []
-        self.writer = MakefileWriter(gx.makefile_name)
+        super().__init__(path=self.gx.makefile_name)
         self.esc_space = r"\ "
         self.is_static = False
         self.py = PythonSystem()
+
+    @property
+    def makefile_path(self) -> str:
+        """Get the Makefile output path"""
+        if self.gx.outputdir:
+            return os.path.join(self.gx.outputdir, self.gx.makefile_name)
+        return self.gx.makefile_name
 
     @property
     def shedskin_libdirs(self) -> list[str]:
@@ -453,38 +439,6 @@ class ShedskinMakefileGenerator:
             return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
         else:
             return self.gx.main_module.ident
-
-    @property
-    def makefile_path(self) -> str:
-        """Get the Makefile output path"""
-        if self.gx.outputdir:
-            return os.path.join(self.gx.outputdir, self.gx.makefile_name)
-        return self.gx.makefile_name
-
-    def write(self, text: Optional[str] = None) -> None:
-        """Write a line to the Makefile"""
-        if not text:
-            self.writer.write('')
-        else:
-            self.writer.write(text)
-
-    def add_include_dirs(self, *entries):
-        """Add include directories to the Makefile"""
-        for entry in entries:
-            if entry:
-                self.includes.append(f"-I{entry}")
-        
-    def add_link_dirs(self, *entries):
-        """Add link directories to the Makefile"""
-        for entry in entries:
-            if entry:
-                self.ldflags.append(f"-L{entry}")
-        
-    def add_ldflags(self, *entries):
-        """Add linker flags to the Makefile"""
-        for entry in entries:
-            if entry:
-                self.ldflags.append(entry)
 
     def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
@@ -794,7 +748,6 @@ class ShedskinMakefileGenerator:
         self.write(phony)
 
 
-
 def generate_makefile(gx: "config.GlobalInfo") -> None:
     """Generate a makefile for the Shedskin-compiled code"""
     generator = ShedskinMakefileGenerator(gx)
@@ -802,4 +755,22 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
 
 
 if __name__ == "__main__":
+    def test_makefile_generator() -> None:
+        """Test MakefileGenerator"""
+        m = MakefileGenerator("Makefile")
+        m.add_variable("TEST", "test")
+        m.add_include_dirs("/usr/include")
+        m.add_cflags("-Wall", "-Wextra")
+        m.add_cxxflags("-Wall", "-Wextra", "-std=c++11", "-O3")
+        m.add_ldflags("-shared", "-Wl,-rpath,/usr/local/lib", "-fPIC")
+        m.add_link_dirs("/usr/lib", "/usr/local/lib")
+        m.add_link_libs("-lpthread")
+        m.add_target("all", deps=["build", "test"])
+        m.add_target("build", deps=["tool.exe"])
+        m.add_target("tool.exe", "$(CXX) $(CPPFILES) $(CXXFLAGS) $(LDFLAGS) -o $@ $^", deps=["a.o", "b.o"])
+        m.add_target("test", "echo $(TEST)", deps=["test.o"])
+        m.add_phony("all", "build","test")
+        m.add_clean("test.o", "*.o")
+        m.generate()
+
     test_makefile_generator()
