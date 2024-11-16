@@ -65,17 +65,29 @@ template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, _
     __mod_float(result, pos, fstr, (__ss_float)arg);
 }
 
-template <class T> void __mod_str(str *result, size_t &, char c, T arg) {
+template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int f_precision) {
+    std::string s;
     if(c=='s')
-        result->unit += __str(arg)->unit;
+        s = __str(arg)->unit;
     else
-        result->unit += repr(arg)->unit;
+        s = repr(arg)->unit;
+
+    if (f_precision == -1)
+        result->unit += s;
+    else
+        result->unit += s.substr(0, f_precision);
 }
-template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg) {
+template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
+    std::string s;
     if(c=='s')
-        result->unit += arg->unit;
+        s = __str(arg)->unit;
     else
-        result->unit += repr(arg)->unit;
+        s = repr(arg)->unit;
+
+    if (f_precision == -1)
+        result->unit += s;
+    else
+        result->unit += s.substr(0, f_precision);
 }
 
 template <class T> void __mod_char(str *, size_t &, char, T) {}
@@ -137,6 +149,53 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
         if(fstr.find('*') != std::string::npos)
             throw new ValueError(new str("unsupported format character"));
 
+        /* extract flags, width, precision */
+        char f_flag = 'x';
+        char d;
+        __ss_int f_width = -1;
+        __ss_int f_precision = -1;
+        bool dot = false;
+
+        for(size_t k=1; k<fstr.size(); k++) {
+            d = fstr[k];
+
+            switch(d) {
+                case '-':
+                case '+':
+                case ' ':
+                    f_flag = d;
+                    break;
+
+                case '.':
+                    dot = true;
+                    break;
+
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    if (dot) {
+                        if (f_precision == -1)
+                            f_precision = (__ss_int)(d - '0');
+                        else
+                            f_precision = 10*f_precision + (__ss_int)(d - '0');
+                    } else {
+                        if (f_width == -1)
+                            f_width = (__ss_int)(d - '0');
+                        else
+                            f_width = 10*f_width + (__ss_int)(d - '0');
+                    }
+                    break;
+            }
+        }
+//        printf("result flag %c width %d prec %d\n", f_flag, (int)f_width, (int)f_precision);
+
 #ifdef __SS_LONG
         if(c == 'd' or c == 'i' or c == 'u' or c == 'x' or c == 'X')
             fstr += "l";
@@ -193,10 +252,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 's':
             case 'r':
                 if(name) {
-                    __mod_str(result, pos, c, __mod_dict_arg(arg, name));
+                    __mod_str(result, pos, c, __mod_dict_arg(arg, name), f_precision);
                     break;
                 } else {
-                    __mod_str(result, pos, c, arg);
+                    __mod_str(result, pos, c, arg, f_precision);
                     return;
                 }
 

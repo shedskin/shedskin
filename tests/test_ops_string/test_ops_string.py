@@ -57,10 +57,19 @@ def test_classic3():
 #    assert ("%(aap)s %(bert)d %% %(bert)c" % {"aap": "hallo", "bert": 72}) == 'hallo 72 % H'
 
 
+def test_str_precision():
+    assert ('%.8s' % 'abracadabra') == 'abracada'
+    assert ('%.8r' % 'abracadabra') == "'abracad"
+
+    assert ('%.8s' % b'abracadabra') == "b'abraca"
+    assert ('%.8r' % b'abracadabra') == "b'abraca"
+
 def test_all():
     test_classic1()
     test_classic2()
     test_classic3()
+
+    test_str_precision()
 
 
 if __name__ == "__main__":
