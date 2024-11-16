@@ -44,9 +44,25 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
     __mod_int(result, pos, fstr, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_oct(str *, size_t &, T) {}
-template<> inline void __mod_oct(str *result, size_t &, __ss_int arg) { // TODO asprintf for precision (has issues with 0-bytes?)
-    result->unit += __str(arg, (__ss_int)8)->unit;
+// TODO same as mod_int different base?
+template <class T> void __mod_oct(str *, size_t &, T, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {}
+template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __GC_STRING sabs = __str(__abs(arg), (__ss_int)8)->unit;
+
+    if (arg < 0)
+        result->unit += "-";
+    else if (f_flag == '+')
+        result->unit += "+";
+    else if (f_flag == ' ')
+        result->unit += " ";
+
+    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
+        result->unit += std::string(f_precision-sabs.size(), '0');
+    } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
+        result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
+    }
+
+    result->unit += sabs;
 }
 
 template <class T> void __mod_hex(str *, size_t &, char, const char *, T) {}
@@ -229,10 +245,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
 
             case 'o':
                 if(name) {
-                    __mod_oct(result, pos, __mod_dict_arg(arg, name));
+                    __mod_oct(result, pos, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_oct(result, pos, arg);
+                    __mod_oct(result, pos, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
 
