@@ -287,6 +287,9 @@ Under Windows (note that this will download dependencies), type:
 
   shedskin build --conan test
 
+If there is an error about ``nmake`` not being found, you may have to enter a
+"visual studio developer command prompt" first.
+
 Under Linux/macOS, the binary is named ``build/test``. Under Windows, it is named
 ``build/Debug/test.exe``.
 
