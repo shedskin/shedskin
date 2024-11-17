@@ -1080,7 +1080,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(body_node, func)
 
         for i, default in enumerate(func.defaults):
-            if not ast_utils.is_literal(default):
+            if (
+                not ast_utils.is_literal(default) and not
+                (isinstance(default, ast.Constant) and isinstance(default.value, bool))  # TODO fix is_literal
+            ):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
 

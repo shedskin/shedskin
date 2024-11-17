@@ -3138,10 +3138,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("((void *)(")
 
             if arg in target.mv.defaults:
-                if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
-                    assert isinstance(arg, ast.Constant)  # TODO see 0.9.10 issue!
-                    self.append(str(arg.value))
-                elif self.mergeinh[arg] == set(
+                if self.mergeinh[arg] == set(
                     [(python.def_class(self.gx, "none"), 0)]
                 ):
                     self.append("NULL")

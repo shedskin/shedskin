@@ -99,6 +99,14 @@ def test_poskw_only():
     assert bert.hap(5,4,c=4) == 13
 
 
+TRUE = True
+def test_default_args(arg=TRUE, arg2=[], arg3=''.join(3*['x']), arg4=17.7):
+    assert arg
+    assert arg2 == []
+    assert arg3 == 'xxx'
+    assert arg4 == 17.7
+
+
 def test_all():
     test_tuple_arg()
     test_baz()
@@ -109,6 +117,7 @@ def test_all():
     test_klass()
     test_msplit()
     test_poskw_only()
+    test_default_args()
 
 
 if __name__ == '__main__':
