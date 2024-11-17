@@ -47,6 +47,10 @@ def islice(iterable, start, stop = -1, step = -1):
     'Known limitations: cannot distinguish between 0 and None for the stop argument'
     yield iter(iterable).__next__()
 
+def batched(iterable, n, strict=False):
+    elem = iter(iterable).__next__()
+    yield elem,
+
 def tee(iterable, n = 2):
     return iter(iterable), iter(iterable)
 
