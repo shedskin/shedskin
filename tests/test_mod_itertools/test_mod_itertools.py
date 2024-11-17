@@ -223,6 +223,14 @@ def test_accumulate():
     assert list(itertools.accumulate([2,5,-1], func=lambda a,b: a-b, initial=-1)) == [-1, -3, -8, -7]
 
 
+def test_batched():
+    batches = list(itertools.batched(range(9), 3))
+    assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
+
+    batches = list(itertools.batched(range(10), 3))  #  TODO test strict kw arg
+    assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
+
+
 def test_all():
     test_count()
     test_cycle()
@@ -242,6 +250,7 @@ def test_all():
     test_zip_longest()
     test_pairwise()
     test_accumulate()
+    test_batched()
 
 
 if __name__ == '__main__':

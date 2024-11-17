@@ -199,6 +199,52 @@ template<class T> inline cycleiter<T> *cycle(pyiter<T> *iterable) {
     return new cycleiter<T>(iterable);
 }
 
+// batched
+
+template<class T> class batchediter : public __iter<tuple<T> *> {
+public:
+    int n;
+    int count;
+    bool exhausted;
+    __ss_bool strict;
+    __iter<T> *iter;
+
+    batchediter(pyiter<T> *iterable, __ss_int n, __ss_bool strict);
+
+    tuple<T> *__next__();
+};
+
+template<class T> inline batchediter<T>::batchediter(pyiter<T> *iterable, __ss_int n, __ss_bool strict) {
+    this->count = 0;
+    this->exhausted = false;
+    this->n = n;
+    this->iter = iterable->__iter__();
+    this->strict = strict;
+}
+
+template<class T> tuple<T> *batchediter<T>::__next__() {
+    if (this->exhausted)
+        throw new StopIteration();
+    tuple<T> *t = new tuple<T>();
+    for(count = 0; count < this->n; count++) {
+        try {
+            t->units.push_back(iter->__next__());
+        } catch (StopIteration *) {
+            exhausted = true;
+            if(count == 0)
+                throw new StopIteration();
+            if (this->strict)
+                throw new ValueError(new str("batched(): incomplete batch"));
+            return t;
+        }
+    }
+    return t;
+}
+
+template<class T> inline batchediter<T> *batched(pyiter<T> *iterable, __ss_int n, __ss_bool strict) {
+    return new batchediter<T>(iterable, n, strict);
+}
+
 // repeat
 
 template<class T> class repeatiter : public __iter<T> {
