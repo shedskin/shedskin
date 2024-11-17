@@ -8,7 +8,10 @@ S = DOTALL = 16
 U = UNICODE = 32
 X = VERBOSE = 64
 
-class error(Exception): pass
+class PatternError(Exception): pass
+
+class error(Exception): pass  # deprecated alias for PatternError
+
 
 class match_object:
     def __init__(self):

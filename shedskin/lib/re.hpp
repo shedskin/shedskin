@@ -28,16 +28,18 @@ typedef str *(*replfunc)(match_object *);
 extern class_ *cl_error;
 
 //re.error
-class error : public Exception
+class PatternError : public Exception
 {
 public:
 
-    error(str *m = 0) : Exception(m) {}
+    PatternError(str *m = 0) : Exception(m) {}
 
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_Exception; }
+    PyObject *__to_py__() { return PyExc_Exception; } // TODO re.PatternError?
 #endif
 };
+
+using error = PatternError;
 
 //we have a circular declaration, so we need to forward declare re_object
 class re_object;
