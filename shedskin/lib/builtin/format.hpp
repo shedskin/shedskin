@@ -15,8 +15,8 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     return d->__getitem__(key);
 }
 
-template <class T> void __mod_int(str *, size_t &, const char *, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+template <class T> void __mod_int(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_int(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::string sabs = std::to_string(__abs(arg));
     if (arg < 0)
         result->unit += "-";
@@ -25,14 +25,14 @@ template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_i
     else if (f_flag == ' ')
         result->unit += " ";
     if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_precision-sabs.size(), '0');
+        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
+        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
     }
     result->unit += sabs;
 }
-template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
-    __mod_int(result, pos, fstr, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
+    __mod_int(result, pos, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
 }
 
 // TODO same as mod_int different base?
@@ -46,16 +46,16 @@ template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_fla
     else if (f_flag == ' ')
         result->unit += " ";
     if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_precision-sabs.size(), '0');
+        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
+        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
     }
     result->unit += sabs;
 }
 
 // TODO same as mod_int different base? almost, upper/lower x different
-template <class T> void __mod_hex(str *, size_t &, char, const char *, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __GC_STRING sabs;
     if (c == 'x')
        sabs = __str(__abs(arg), (__ss_int)16)->unit;
@@ -69,15 +69,15 @@ template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr
         result->unit += " ";
 
     if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_precision-sabs.size(), '0');
+        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
     } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string(f_width-sabs.size(), f_zero? '0' : ' ');
+        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
     }
     result->unit += sabs;
 }
 
-template <class T> void __mod_float(str *, size_t &, char, const char *, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_float(str *result, size_t &, char c, const char *fstr, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int, __ss_int f_precision, bool) {
     std::stringstream t;
     if (arg > 0) {
         if (f_flag == '+')
@@ -106,8 +106,8 @@ template<> inline void __mod_float(str *result, size_t &, char c, const char *fs
     }
     result->unit += t.str();
 }
-template<> inline void __mod_float(str *result, size_t &pos, char c, const char *fstr, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __mod_float(result, pos, c, fstr, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_float(result, pos, c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int f_precision) {
@@ -120,7 +120,7 @@ template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int
     if (f_precision == -1)
         result->unit += s;
     else
-        result->unit += s.substr(0, f_precision);
+        result->unit += s.substr(0, (size_t)f_precision);
 }
 template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
     std::string s;
@@ -132,7 +132,7 @@ template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss
     if (f_precision == -1)
         result->unit += s;
     else
-        result->unit += s.substr(0, f_precision);
+        result->unit += s.substr(0, (size_t)f_precision);
 }
 
 template <class T> void __mod_char(str *, size_t &, char, T) {}
@@ -242,13 +242,6 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
                     break;
             }
         }
-//        printf("result flag %c width %d prec %d\n", f_flag, (int)f_width, (int)f_precision);
-
-#ifdef __SS_LONG
-        if(c == 'd' or c == 'i' or c == 'u' or c == 'x' or c == 'X')
-            fstr += "l";
-#endif
-        fstr += c;
 
         /* check format flag */
         switch(c) {
@@ -256,10 +249,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 'i':
             case 'u':
                 if(name) {
-                    __mod_int(result, pos, fstr.c_str(), __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_int(result, pos, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_int(result, pos, fstr.c_str(), arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_int(result, pos, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
 
@@ -275,10 +268,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 'x':
             case 'X':
                 if(name) {
-                    __mod_hex(result, pos, c, fstr.c_str(), __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_hex(result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_hex(result, pos, c, fstr.c_str(), arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_hex(result, pos, c, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
 
@@ -289,10 +282,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 'g':
             case 'G':
                 if(name) {
-                    __mod_float(result, pos, c, fstr.c_str(), __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_float(result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_float(result, pos, c, fstr.c_str(), arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_float(result, pos, c, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
                 break;
