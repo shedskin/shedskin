@@ -101,7 +101,7 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
         t << arg;
     } else if(c == 'e') {
         char num[64];
-        sprintf(num, "%.6e", arg); // TODO use f_precision without generating warnings..
+        snprintf(num, 64, "%.6e", arg); // TODO use f_precision without generating warnings..
         t << num;
     }
     result->unit += t.str();
