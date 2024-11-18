@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "array.hpp"
 
@@ -57,7 +57,7 @@ template<> __ss_int array<str *>::count(str *t) {
     return (__ss_int)std::count(this->units.begin(), this->units.end(), t->unit[0]);
 }
 
-template<> __ss_int array<str *>::index(str *t) {
+template<> __ss_int array<str *>::index(str *t, __ss_int start, __ss_int stop) { // TODO start, stop
     if(len(t) == 1) {
         size_t len = units.size() / itemsize;
         char c = t->unit[0];

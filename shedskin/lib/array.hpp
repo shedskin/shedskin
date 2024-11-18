@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __ARRAY_HPP
 #define __ARRAY_HPP
@@ -63,10 +63,12 @@ public:
     array<T> *__iadd__(array<T> *a);
 
     __ss_int count(T t);
-    __ss_int index(T t);
+    __ss_int index(T t, __ss_int start=0, __ss_int stop=1000000);  // TODO stop..
 
     void *remove(T t);
     T pop(__ss_int i=-1);
+
+    void *clear();
 
     __ss_int __len__();
     str *__repr__();
@@ -147,7 +149,7 @@ template<class T> void *array<T>::frombytes(bytes *s) {
     else {
         size_t s1 = this->units.size();
         this->units.resize(s1+len);
-        memcpy(&(this->units[0]), &(s->unit[0]), len);
+        memcpy(&(this->units[s1]), &(s->unit[0]), len);
     }
     return NULL;
 }
@@ -229,14 +231,15 @@ template<class T> __ss_int array<T>::count(T t) {
 }
 template<> __ss_int array<str *>::count(str *t);
 
-template<class T> __ss_int array<T>::index(T t) {
-    size_t len = this->__len__();
-    for(size_t i=0; i<len; i++)
+template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
+    __ss_int step = 1;
+    slicenr(3, start, stop, step, this->__len__());
+    for(__ss_int i=start; i<stop; i++)
         if(__eq(t, this->__getitem__(i)))
             return i;
     throw new ValueError(new str("array.index(x): x not in list"));
 }
-template<> __ss_int array<str *>::index(str *t);
+template<> __ss_int array<str *>::index(str *t, __ss_int start, __ss_int stop);
 
 template<class T> void *array<T>::remove(T t) {
     this->pop(this->index(t));
@@ -253,6 +256,11 @@ template<class T> T array<T>::pop(__ss_int i) {
     T t = this->__getitem__(i);
     this->units.erase(this->units.begin()+(i*itemsize), this->units.begin()+((i+1)*itemsize));
     return t;
+}
+
+template<class T> void *array<T>::clear() {
+    this->units.clear();
+    return NULL;
 }
 
 template<class T> void array<T>::fillbuf(T t) {
@@ -332,7 +340,10 @@ template<class T> void *array<T>::__delitem__(__ss_int i) {
 }
 
 template<class T> str *array<T>::__repr__() {
-    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
+    if (this->__len__())
+        return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
+    else
+        return __add_strs(5, new str("array('"), typecode, new str(")"));
 }
 template<> str *array<str *>::__repr__();
 
