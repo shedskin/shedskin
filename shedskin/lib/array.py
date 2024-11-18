@@ -56,9 +56,9 @@ class array:
     def fromfile(self, f, n):
         pass
 
-    def count(self, e):
+    def count(self, v):
         return 1
-    def index(self, e):
+    def index(self, v, start=0, stop=1000000): # TODO stop..
         return 1
     def __contains__(self, e):
         return True
@@ -66,6 +66,9 @@ class array:
     def byteswap(self):
         pass
     def reverse(self):
+        pass
+
+    def clear(self):
         pass
 
     def __add__(self, b):
