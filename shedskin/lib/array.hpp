@@ -118,7 +118,6 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
     return NULL;
 }
 template<> template<> void *array<int>::extend(list<__ss_int> *l);
-template<> template<> void *array<str *>::extend(bytes *s);
 
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     extend(iter);
@@ -229,7 +228,6 @@ template<class T> __ss_int array<T>::count(T t) {
             result += 1;
     return result;
 }
-template<> __ss_int array<str *>::count(str *t);
 
 template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
     __ss_int step = 1;
@@ -239,8 +237,6 @@ template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
             return i;
     throw new ValueError(new str("array.index(x): x not in list"));
 }
-template<> __ss_int array<str *>::index(str *t, __ss_int start, __ss_int stop);
-
 template<class T> void *array<T>::remove(T t) {
     this->pop(this->index(t));
     return NULL;
@@ -297,10 +293,6 @@ template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
     }
     return 0;
 }
-template<> inline str *array<str *>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
-    return __char_cache[(unsigned char)units[(size_t)i]];
-}
 template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     if(typechar == 'f')
@@ -315,7 +307,6 @@ template<class T> void *array<T>::append(T t) {
         units.push_back(((char *)buffy)[i]);
     return NULL;
 }
-template<> void *array<str *>::append(str *t);
 
 template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
     i = __wrap(this, i);
@@ -324,7 +315,6 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
         this->units[i*itemsize+j] = ((char *)buffy)[j];
     return NULL;
 }
-template<> void *array<str *>::__setitem__(__ss_int i, str *t);
 
 template<class T> void *array<T>::insert(__ss_int i, T t) {
     i = __wrap(this, i);
@@ -345,7 +335,6 @@ template<class T> str *array<T>::__repr__() {
     else
         return __add_strs(5, new str("array('"), typecode, new str(")"));
 }
-template<> str *array<str *>::__repr__();
 
 template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */
     size_t len = this->__len__();
