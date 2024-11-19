@@ -63,7 +63,8 @@ public:
     array<T> *__iadd__(array<T> *a);
 
     __ss_int count(T t);
-    __ss_int index(T t, __ss_int start=0, __ss_int stop=1000000);  // TODO stop..
+    __ss_int index(T t, __ss_int start=0);
+    __ss_int index(T t, __ss_int start, __ss_int stop);
 
     void *remove(T t);
     T pop(__ss_int i=-1);
@@ -227,6 +228,16 @@ template<class T> __ss_int array<T>::count(T t) {
         if(__eq(t, this->__getitem__(i)))
             result += 1;
     return result;
+}
+
+template<class T> __ss_int array<T>::index(T t, __ss_int start) {
+    __ss_int step = 1;
+    __ss_int stop = this->__len__();
+    slicenr(3, start, stop, step, this->__len__());
+    for(__ss_int i=start; i<stop; i++)
+        if(__eq(t, this->__getitem__(i)))
+            return i;
+    throw new ValueError(new str("array.index(x): x not in list"));
 }
 
 template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
