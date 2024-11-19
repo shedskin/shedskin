@@ -38,6 +38,9 @@ def test_bytes():
 
     assert arr == arr2
 
+    arr2.frombytes(bs)
+    assert arr2 == arr + arr
+
 
 def test_list():
     arr = array.array('i', [1, 2])
@@ -49,6 +52,8 @@ def test_sequence_immutable():
     arr = array.array('i', range(5, 15))
     assert arr[3] == 8
     assert arr.index(8) == 3
+    assert arr.index(8, 0) == 3
+    assert arr.index(8, 0, -1) == 3
     assert arr.count(6) == 1
     assert 14 in arr
     assert 15 not in arr
@@ -118,6 +123,8 @@ def test_all():
     test_file()
     test_sequence_immutable()
     test_sequence_mutable()
+
+    # TODO array.clear.. check sys.version?
 
 
 if __name__ == '__main__':
