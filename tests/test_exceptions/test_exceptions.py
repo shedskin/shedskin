@@ -6,7 +6,7 @@ class CustomError(Exception):
 
 class Error(Exception):
     def __init__(self, x):
-        print("error.__init__", x)
+        pass #print("error.__init__", x)
 
 
 class ParsingError(Error):
@@ -15,7 +15,7 @@ class ParsingError(Error):
 
 class MissingSectionHeaderError(ParsingError):
     def __init__(self):
-        print("missingsectionheadererror.__init__")
+        #print("missingsectionheadererror.__init__")
         Error.__init__(self, "4")
 
 class CustomExceptionA(Exception): pass
@@ -109,6 +109,13 @@ def test_system_exit_error():
     assert error
 
 
+def test_args():
+    e = Exception('bert')
+    assert e.args == ('bert',)
+    assert str(e) == 'bert'
+    assert repr(e) == "Exception('bert')"
+
+
 # def test_type_error():
 #     error = False
 #     try:
@@ -159,6 +166,7 @@ def test_all():
     test_custom_error3()
     test_system_exit_error()
     # test_custom_salary_error() # FIXME: super not supported
+    test_args()
 
 
 if __name__ == '__main__':

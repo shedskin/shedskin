@@ -789,9 +789,10 @@ complex(1.0, 1.0)
 class object: pass
 
 class BaseException:
-    def __init__(self, msg=None):
-        self.msg = msg # XXX needed?
-        self.message = msg
+    def __init__(self, arg=None):
+        self.args = ('',)
+        self.msg = arg  # TODO remove
+        self.message = arg  # TODO remove
 
 class GeneratorExit(BaseException): pass
 class KeyboardInterrupt(BaseException): pass

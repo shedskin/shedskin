@@ -53,4 +53,5 @@ BaseException::BaseException(str *msg) {
     __init__(msg);
 
     this->__class__ = cl_baseexception;
+    this->args = new tuple<str *>(1, msg);
 }
