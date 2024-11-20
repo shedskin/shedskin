@@ -48,3 +48,9 @@ void __throw_slice_step_zero() {
 void __throw_stop_iteration() {
     throw new StopIteration();
 }
+
+BaseException::BaseException(str *msg) {
+    __init__(msg);
+
+    this->__class__ = cl_baseexception;
+}

@@ -97,12 +97,11 @@ extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingp
 
 class BaseException : public pyobj {
 public:
-    str *message;
-    BaseException(str *msg=0) {
-        __init__(msg);
+    tuple<str *> *args;
+    str *message; // TODO remove
 
-        this->__class__ = cl_baseexception;
-    }
+    BaseException(str *msg=0);
+
     void __init__(str *msg) {
         if(msg)
             message = msg;
