@@ -55,3 +55,11 @@ BaseException::BaseException(str *msg) {
     this->__class__ = cl_baseexception;
     this->args = new tuple<str *>(1, msg);
 }
+
+str *BaseException::__str__() {
+    return args->__getitem__(0);
+}
+
+str *BaseException::__repr__() {
+    return __add_strs(4, this->__class__->__name__, new str("('"), args->__getitem__(0), new str("')"));
+}

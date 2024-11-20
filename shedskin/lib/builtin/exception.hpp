@@ -102,21 +102,10 @@ public:
 
     BaseException(str *msg=0);
 
-    void __init__(str *msg) {
-        if(msg)
-            message = msg;
-        else
-            message = new str("");
-    }
-    void __init__(void *) { /* XXX test 148 */
-        message = new str("");
-    }
-    str *__repr__() {
-        return __add_strs(4, this->__class__->__name__, new str("('"), message, new str("')"));
-    }
-    str *__str__() {
-        return message;
-    }
+    void __init__(str *msg) {}
+    void __init__(void *) {}
+    str *__repr__();
+    str *__str__();
 };
 
 class Exception: public BaseException {
@@ -309,6 +298,7 @@ class SystemExit : public BaseException {
 public:
     int code;
     int show_message;
+    str *message;
     SystemExit(__ss_int c) {
         this->__class__ = cl_systemexit;
         this->code = c;
