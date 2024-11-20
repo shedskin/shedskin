@@ -791,7 +791,6 @@ class object: pass
 class BaseException:
     def __init__(self, arg=None):
         self.args = ('',)
-        self.msg = arg  # TODO remove
         self.message = arg  # TODO remove
 
 class GeneratorExit(BaseException): pass
