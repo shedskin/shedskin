@@ -1299,6 +1299,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.start("ASSERT(")
         self.visitm(node.test, ", ", func)
         if node.msg:
+            if not self.only_classes(node.msg, ("str_",)):
+                error.error(
+                    "exception with non-str argument",
+                    self.gx,
+                    node.msg,
+                    warning=True,
+                    mv=self.mv,
+                )
             self.visit(node.msg, func)
         else:
             self.append("0")
