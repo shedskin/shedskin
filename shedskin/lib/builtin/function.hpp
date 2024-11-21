@@ -325,6 +325,9 @@ public:
     __ss_int __len__();
     __ss_int __getitem__(__ss_int i);
     __ss_bool __contains__(__ss_int i);
+
+    __xrange *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+
     str *__repr__();
 };
 
