@@ -245,7 +245,6 @@ class MakefileGenerator:
         self.clean: list[str] = []  # clean target
         # writer
         self.writer = MakefileWriter(path)
-        self.with_flags=True
 
 
     def write(self, text: Optional[str] = None) -> None:
@@ -443,6 +442,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
         self.gx = gx
+        self.no_flag_file = False
         super().__init__(path=self.gx.makefile_name, strict=strict)
         self.esc_space = r"\ "
         self.py = PythonSystem()
@@ -521,7 +521,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         self._setup_variables()
         self._setup_platform()
 
-        if self.with_flags:
+        if not self.no_flag_file:
             self._add_flag_file_options()
         self._add_feature_flags()
         self._add_user_options()
@@ -557,16 +557,17 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _setup_windows(self) -> None:
         """Configure Windows-specific settings"""
-        self.add_cxxflags(
-            "-O2",
-            "-DWIN32",
-            "-std=c++17",
-            "-march=native",
-            "-Wno-deprecated",
-            "-Wl,--enable-auto-import",
-            "$(CPPFLAGS)",
-        )
-        self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
+        if self.no_flag_file:
+            self.add_cxxflags(
+                "-O2",
+                "-DWIN32",
+                "-std=c++17",
+                "-march=native",
+                "-Wno-deprecated",
+                "-Wl,--enable-auto-import",
+                "$(CPPFLAGS)",
+            )
+            self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -594,8 +595,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE)"
                 )
-            self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
-            self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
+            if self.no_flag_file:
+                self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -610,8 +612,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 )
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
-            self.add_cxxflags("-O2", "-std=c++17", "-march=native", "$(CPPFLAGS)")
-            self.add_ldlibs("-lgc", "-lgctba", "-lutil")
+            if self.no_flag_file:
+                self.add_cxxflags("-O2", "-std=c++17", "-march=native", "$(CPPFLAGS)")
+                self.add_ldlibs("-lgc", "-lgctba", "-lutil")
 
     def _add_feature_flags(self) -> None:
         """Add feature-specific compiler flags"""
@@ -644,6 +647,12 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         if self.gx.options.link_dirs:
             for link_dir in self.gx.options.link_dirs:
                 self.add_link_dirs(link_dir)
+        if self.gx.options.link_libs:
+            for link_lib in self.gx.options.link_libs:
+                if PLATFORM == "Windows":
+                    link_lib = link_lib.replace(" ", self.esc_space)
+                else:
+                    self.add_ldlibs(f"-l{link_lib}")
 
     def _add_module_linker_flags(self) -> None:
         """Add module-specific linker flags"""
