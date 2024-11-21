@@ -185,15 +185,23 @@ str *__xrange::__repr__() {
 }
 
 __xrange *__xrange::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s_) {
-    if(x&1)
-        l = a+l*s;
-    else
+    if(x&1) {
+        if(l < 0)
+            l = b+l*s;
+        else
+            l = a+l*s;
+    } else {
         l = a;
+    }
 
-    if(x&2)
-        u = a+u*s;
-    else
+    if(x&2) {
+        if(u < 0)
+            u = b+u*s;
+        else
+            u = a+u*s;
+    } else {
         u = b;
+    }
 
     if(x&4)
         s_ = s*s_;
