@@ -1046,6 +1046,8 @@ class __xrange(pyseq):
         return True
     def __len__(self):
         return 1
+    def __slice__(self, x, l, u, s):
+        return self
 
 def range(a, b=1, s=1):  # TODO use class directly
     return __xrange()

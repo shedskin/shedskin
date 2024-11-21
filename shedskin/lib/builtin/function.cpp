@@ -184,6 +184,25 @@ str *__xrange::__repr__() {
     return __mod6(new str("range(%d, %d, %d)"), 3, a, b, s); /* XXX */
 }
 
+__xrange *__xrange::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s_) {
+    if(x&1)
+        l = a+l*s;
+    else
+        l = a;
+
+    if(x&2)
+        u = a+u*s;
+    else
+        u = b;
+
+    if(x&4)
+        s_ = s*s_;
+    else
+        s_ = s;
+
+    return new __xrange(l, u, s_);
+}
+
 __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
 __xrange *range(__ss_int n) { return new __xrange(0, n, 1); }
 
