@@ -247,7 +247,7 @@ def test_print():  # TODO print to StringIO and check?
     assert True
 
 
-def test_range():  # TODO __slice__
+def test_range():
     a = 1
 
     assert list(range(1, 10, 1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -293,6 +293,16 @@ def test_range():  # TODO __slice__
     assert r[7] == 8
     assert bool(r)
     assert not bool(range(0))
+
+
+def test_range_slicing():
+    r = range(2,20,2)
+    assert list(r[2:4:3]) == [6]
+    assert list(r[::2]) == [2, 6, 10, 14, 18]
+    assert list(r[1:5:]) == [4, 6, 8, 10]
+    assert list(r[-5:-2:]) == [10, 12, 14]
+    assert list(r[4:1:]) == []
+    assert list(r[4:1:-2]) == [10, 6]
 
 
 def test_repr():
@@ -374,6 +384,7 @@ def test_all():
     test_property()
     test_print()
     test_range()
+    test_range_slicing()
     test_repr()
     test_reversed()
     test_round()
@@ -387,8 +398,3 @@ def test_all():
 
 if __name__ == '__main__':
     test_all()
-
-
-
-
-
