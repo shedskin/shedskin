@@ -185,28 +185,11 @@ str *__xrange::__repr__() {
 }
 
 __xrange *__xrange::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s_) {
-    if(x&1) {
-        if(l < 0)
-            l = b+l*s;
-        else
-            l = a+l*s;
-    } else {
-        l = a;
-    }
+    slicenr(x, l, u, s_, this->__len__());
 
-    if(x&2) {
-        if(u < 0)
-            u = b+u*s;
-        else
-            u = a+u*s;
-    } else {
-        u = b;
-    }
-
-    if(x&4)
-        s_ = s*s_;
-    else
-        s_ = s;
+    l = a+l*s;
+    u = a+u*s;
+    s_ = s*s_;
 
     return new __xrange(l, u, s_);
 }
