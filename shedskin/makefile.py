@@ -25,7 +25,7 @@ import sys
 import sysconfig
 import platform
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, TypeAlias
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeAlias
 
 if TYPE_CHECKING:
     from . import config
@@ -55,6 +55,11 @@ CXX?=g++
 CXXFLAGS?=-O2 -std=c++17 -Wno-deprecated $(CPPFLAGS)
 LFLAGS=-lgc -lgctba -lpcre $(LDFLAGS)
 """
+
+
+def always_true(x: Any) -> bool:
+    """dummy test function always returns True"""
+    return True
 
 
 def env_var(name: str) -> str:
@@ -225,12 +230,384 @@ class PythonSystem:
             return ".so"
 
 
+class Builder:
+    """Configure and execute compiler instructions."""
+
+    def __init__(self, target: PathLike, strict: bool = False):
+        self.target = target
+        self.strict = strict  # raise error if entry already exists
+        self.cppfiles: list[str] = []
+        self.hppfiles: list[str] = []
+        self.cxx = "g++"
+        self.include_dirs: list[str] = []  # include directories
+        self.cflags: list[str] = []  # c compiler flags
+        self.cxxflags: list[str] = []  # c++ compiler flags
+        self.link_dirs: list[str] = []  # link directories
+        self.ldlibs: list[str] = []  # link libraries
+        self.ldflags: list[str] = []  # linker flags + link_dirs
+        self.clean: list[str] = []  # clean target
+
+    def _execute(self, cmd: str) -> None:
+        """Execute a command"""
+        os.system(cmd)
+
+    def configure(self) -> None:
+        """Configure the builder"""
+        self._setup_defaults()
+
+    def build(self, dry_run: bool = False) -> None:
+        """configure, then build executable or extension"""
+        self.configure()
+        if dry_run:
+            print(self.build_cmd)
+        else:
+            self._execute(self.build_cmd)
+
+    @property
+    def build_cmd(self) -> str:
+        """Get the executable or extension build command"""
+        return f"{self.CXX} {self.CXXFLAGS} {self.CPPFILES} {self.LDLIBS} {self.LDFLAGS} -o {self.TARGET}"
+
+    @property
+    def TARGET(self) -> str:
+        """compilation product"""
+        return self.target
+
+    @property
+    def CPPFILES(self) -> str:
+        """c++ files"""
+        return " ".join(self.cppfiles)
+
+    @property
+    def HPPFILES(self) -> str:
+        """hpp files"""
+        return " ".join(self.hppfiles)
+
+    @property
+    def CXX(self) -> str:
+        """c++ compiler"""
+        return self.cxx
+
+    @property
+    def CFLAGS(self) -> str:
+        """c compiler flags"""
+        return " ".join(self.cflags)
+
+    @property
+    def CXXFLAGS(self) -> str:
+        """c++ compiler flags"""
+        _flags = " ".join(self.cxxflags)
+        return f"{_flags} {self.INCLUDEDIRS}"
+
+    @property
+    def INCLUDEDIRS(self) -> str:
+        """include directories"""
+        return " ".join(self.include_dirs)
+
+    @property
+    def LINKDIRS(self) -> str:
+        """link directories"""
+        return " ".join(self.link_dirs)
+
+    @property
+    def LDFLAGS(self) -> str:
+        """linker flags"""
+        _flags = " ".join(self.ldflags)
+        return f"{_flags} {self.LINKDIRS}"
+
+    @property
+    def LDLIBS(self) -> str:
+        """link libraries"""
+        return " ".join(self.ldlibs)
+
+    def _add_config_entries(
+        self,
+        attr: str,
+        prefix: str = "",
+        test_func: Optional[TestFunc] = None,
+        *entries,
+    ) -> None:
+        """Add an entry to the configuration"""
+        assert hasattr(self, attr), f"Invalid attribute: {attr}"
+        _list = getattr(self, attr)
+        if not test_func:
+            test_func = always_true
+        for entry in entries:
+            assert test_func(entry), f"Invalid entry: {entry}"
+            if entry in _list:
+                if self.strict:
+                    raise ValueError(f"entry: {entry} already exists in {attr} list")
+                else:
+                    continue
+            _list.append(f"{prefix}{entry}")
+
+    def add_include_dirs(self, *entries):
+        """Add include directories to the configuration"""
+        self._add_config_entries("include_dirs", "-I", os.path.isdir, *entries)
+
+    def add_cflags(self, *entries):
+        """Add compiler flags to the configuration"""
+        self._add_config_entries("cflags", "", None, *entries)
+
+    def add_cxxflags(self, *entries):
+        """Add c++ compiler flags to the configuration"""
+        self._add_config_entries("cxxflags", "", None, *entries)
+
+    def add_link_dirs(self, *entries):
+        """Add link directories to the configuration"""
+        self._add_config_entries("link_dirs", "-L", os.path.isdir, *entries)
+
+    def add_ldlibs(self, *entries):
+        """Add link libraries to the configuration"""
+        self._add_config_entries("ldlibs", "", None, *entries)
+
+    def add_ldflags(self, *entries):
+        """Add linker flags to the configuration"""
+        self._add_config_entries("ldflags", "", None, *entries)
+
+    def _setup_defaults(self):
+        """Setup default model configuration"""
+        self.add_include_dirs(".")
+
+
+class ShedskinBuilder(Builder):
+    """Configure and execute compiler instructions for Shedskin-compiled code."""
+
+    def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
+        self.gx = gx
+        self.esc_space = r"\ "
+        self.py = PythonSystem()
+        super().__init__(target=self.target_name, strict=strict)
+
+    @property
+    def shedskin_libdirs(self) -> list[str]:
+        """List of shedskin libdirs"""
+        return [d.replace(" ", self.esc_space) for d in self.gx.libdirs]
+
+    @property
+    def modules(self) -> list["python.Module"]:
+        """List of modules"""
+        return list(self.gx.modules.values())
+
+    @property
+    def filenames(self) -> list[str]:
+        """List of filenames"""
+        _filenames = []
+        for module in self.modules:
+            filename = os.path.splitext(module.filename)[0]  # strip .py
+            filename = filename.replace(" ", self.esc_space)  # make paths valid
+            if self.gx.outputdir and not module.builtin:
+                filename = os.path.abspath(
+                    os.path.join(self.gx.outputdir, os.path.basename(filename))
+                )
+            else:
+                filename = filename.replace(
+                    self.shedskin_libdirs[-1], env_var("SHEDSKIN_LIBDIR")
+                )
+            _filenames.append(filename)
+        return _filenames
+
+    @property
+    def SHEDSKIN_LIBDIR(self) -> str:
+        """Shedskin libdir"""
+        return self.shedskin_libdirs[-1]
+
+    @property
+    def CPPFILES(self) -> list[str]:
+        """Reverse sorted list of .cpp files"""
+        _cppfiles = " ".join(sorted([fn + ".cpp" for fn in self.filenames], reverse=True))
+        _cppfiles = _cppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
+        return _cppfiles
+
+    @property
+    def HPPFILES(self) -> list[str]:
+        """Reverse sorted list of .hpp files"""
+        _hppfiles = " ".join(sorted([fn + ".hpp" for fn in self.filenames], reverse=True))
+        _hppfiles = _hppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
+        return _hppfiles
+
+    @property
+    def TARGET(self) -> str:
+        """compilation product"""
+        return self.target_name
+
+    @property
+    def target_name(self) -> str:
+        """Get the target executable/library name"""
+        if self.gx.pyextension_product:
+            return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
+        else:
+            return self.gx.main_module.ident
+
+    def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
+        """Get Homebrew prefix"""
+        if entry:
+            res = check_output(f"brew --prefix {entry}")
+            if res:
+                return Path(res)
+            return None
+        else:
+            res = check_output("brew --prefix")
+            if res:
+                return Path(res)
+            return None
+
+    def configure(self) -> None:
+        """Configure the builder"""
+        self._setup_defaults()
+        self._setup_variables()
+        self._setup_platform()
+        self._add_feature_flags()
+        self._add_user_options()
+        self._add_module_linker_flags()
+
+    def _setup_defaults(self):
+        """Setup default model configuration"""
+        self.add_include_dirs(".")
+
+    def _setup_variables(self) -> None:
+        """Configure common variables"""
+        self.add_include_dirs(self.SHEDSKIN_LIBDIR)
+        for _dir in self.shedskin_libdirs[:-1]:
+            self.add_include_dirs(_dir)
+
+        if self.gx.pyextension_product:
+            self.add_include_dirs(self.py.include_dir)
+            if self.py.include_dir != self.py.config_h_dir:
+                self.add_include_dirs(self.py.config_h_dir)
+
+    def _setup_platform(self) -> None:
+        """Configure platform-specific settings"""
+        if PLATFORM == "Windows":
+            self._setup_windows()
+        else:
+            self._setup_unix()
+
+    def _setup_windows(self) -> None:
+        """Configure Windows-specific settings"""
+        self.add_cxxflags(
+            "-O2",
+            "-DWIN32",
+            "-std=c++17",
+            "-march=native",
+            "-Wno-deprecated",
+            "-Wl,--enable-auto-import",
+            "$(CPPFLAGS)",
+        )
+        self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
+        if self.gx.pyextension_product:
+            self.add_include_dirs(f"{self.py.prefix}\\include")
+            self.add_cxxflags("-D__SS_BIND")
+            self.add_ldflags("-shared")
+            self.add_link_dirs(f"{self.py.prefix}\\libs")
+            self.add_ldlibs(f"-lpython{self.py.ver}")
+
+    def _setup_unix(self) -> None:
+        """Configure Unix-like platform settings"""
+        if os.path.isdir("/usr/local/include"):
+            self.add_include_dirs("/usr/local/include")
+        if os.path.isdir("/opt/local/include"):
+            self.add_include_dirs("/opt/local/include")
+        if self.gx.pyextension_product:
+            self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
+
+        if PLATFORM == "Darwin":
+            self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated")
+            if prefix := self.homebrew_prefix():
+                self.add_include_dirs(f"{prefix}/include")
+                self.add_link_dirs(f"{prefix}/lib")
+                if self.gx.options.static_libs:
+                    self.add_ldlibs(
+                        f"{prefix}/lib/libgc.a",
+                        f"{prefix}/lib/libgccpp.a",
+                        f"{prefix}/lib/libpcre.a",
+                    )
+                else:
+                    self.add_ldlibs(
+                        "-lgc",
+                        "-lgctba",
+                        "-lpcre",
+                    )
+            else:
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
+            self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
+        else:
+            if self.gx.pyextension_product:
+                self.add_ldflags(
+                    self.py.libs,
+                    self.py.syslibs,
+                    self.py.linklib,
+                    "-Wno-register",
+                    "-shared",
+                    "-Xlinker",
+                    "-export-dynamic",
+                )
+                if not self.py.is_shared:
+                    self.add_link_dirs(self.py.libpl)
+            self.add_cxxflags("-O2", "-std=c++17", "-march=native")
+            self.add_ldlibs("-lgc", "-lgctba", "-lutil")
+
+    def _add_feature_flags(self) -> None:
+        """Add feature-specific compiler flags"""
+        if not self.gx.wrap_around_check:
+            self.add_cxxflags("-D__SS_NOWRAP")
+        if not self.gx.bounds_checking:
+            self.add_cxxflags("-D__SS_NOBOUNDS")
+        if not self.gx.assertions:
+            self.add_cxxflags("-D__SS_NOASSERT")
+        if self.gx.int32:
+            self.add_cxxflags("-D__SS_INT32")
+        if self.gx.int64:
+            self.add_cxxflags("-D__SS_INT64")
+        if self.gx.int128:
+            self.add_cxxflags("-D__SS_INT128")
+        if self.gx.float32:
+            self.add_cxxflags("-D__SS_FLOAT32")
+        if self.gx.float64:
+            self.add_cxxflags("-D__SS_FLOAT64")
+        if self.gx.backtrace:
+            self.add_cxxflags("-D__SS_BACKTRACE", "-rdynamic", "-fno-inline")
+        if self.gx.nogc:
+            self.add_cxxflags("-D__SS_NOGC")
+
+    def _add_user_options(self) -> None:
+        """Add user-specified commandline options"""
+        if self.gx.options.include_dirs:
+            for include_dir in self.gx.options.include_dirs:
+                self.add_include_dirs(include_dir)
+        if self.gx.options.link_dirs:
+            for link_dir in self.gx.options.link_dirs:
+                self.add_link_dirs(link_dir)
+        if self.gx.options.link_libs:
+            for link_lib in self.gx.options.link_libs:
+                if PLATFORM == "Windows":
+                    link_lib = link_lib.replace(" ", self.esc_space)
+                else:
+                    self.add_ldlibs(f"-l{link_lib}")
+
+    def _add_module_linker_flags(self) -> None:
+        """Add module-specific linker flags"""
+        module_ids = [m.ident for m in self.modules]
+        if "re" in module_ids:
+            self.add_ldlibs("-lpcre")
+        if "socket" in module_ids:
+            if PLATFORM == "Windows":
+                self.add_ldlibs("-lws2_32")
+            elif PLATFORM == "SunOS":
+                self.add_ldlibs("-lsocket", "-lnsl")
+        if "os" in module_ids:
+            if PLATFORM not in ["Windows", "Darwin", "SunOS"]:
+                self.add_ldlibs("-lutil")
+        if "hashlib" in module_ids:
+            self.add_ldlibs("-lcrypto")
+
+
 class MakefileGenerator:
     """Generates Makefile for C/C++ code"""
 
     def __init__(self, path: PathLike, strict: bool = False):
         self.path = path
-        self.strict = strict # raise error if variable or entry already exists
+        self.strict = strict  # raise error if variable or entry already exists
         self.cxx = "g++"
         self.vars: dict[str, PathLike] = {}  # variables
         self.var_order: list[str] = []  # write order of variables
@@ -246,7 +623,6 @@ class MakefileGenerator:
         # writer
         self.writer = MakefileWriter(path)
 
-
     def write(self, text: Optional[str] = None) -> None:
         """Write a line to the Makefile"""
         if not text:
@@ -261,6 +637,8 @@ class MakefileGenerator:
     def check_dir(self, path: PathLike) -> bool:
         """Check if a path is a valid directory"""
         str_path = str(path)
+        # check if path contains a variable
+        # FIXME: should check for multiple variables
         match = re.match(r".*\$+\((.+)\).*", str_path)
         if match:
             key = match.group(1)
@@ -283,7 +661,7 @@ class MakefileGenerator:
         assert hasattr(self, attr), f"Invalid attribute: {attr}"
         _list = getattr(self, attr)
         if not test_func:
-            test_func = lambda x: True
+            test_func = always_true
         for entry in entries:
             assert test_func(entry), f"Invalid entry: {entry}"
             if entry in _list:
@@ -366,11 +744,9 @@ class MakefileGenerator:
     def _setup_defaults(self):
         """Setup default model configuration"""
         self.add_include_dirs(".")
-        self.add_lflags("$(LDLIBS)", "$(LDFLAGS)")
 
     def _write_variables(self) -> None:
         """Write variables to the Makefile"""
-
         self.write("# project variables")
         for key in self.var_order:
             value = self.vars[key]
@@ -776,11 +1152,25 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
 def generate_makefile(gx: "config.GlobalInfo") -> None:
     """Generate a makefile for the Shedskin-compiled code"""
-    generator = ShedskinMakefileGenerator(gx)
-    generator.generate()
-
+    if gx.options.compile:
+        builder = ShedskinBuilder(gx)
+        builder.build(gx.options.dry_run)
+    else:
+        generator = ShedskinMakefileGenerator(gx)
+        generator.generate()
 
 if __name__ == "__main__":
+
+    def test_builder() -> None:
+        """Test Builder"""
+        b = Builder("product")
+        b.add_include_dirs("/opt/homebrew/include")
+        b.add_cxxflags()
+        b.add_cxxflags("-Wall", "-Wextra", "-std=c++11", "-O3")
+        b.add_ldflags("-shared", "-Wl,-rpath,/usr/local/lib", "-fPIC")
+        b.add_link_dirs("/usr/lib", "/usr/local/lib")
+        b.add_ldlibs("-lpthread")
+        b.build(dry_run=True)
 
     def test_makefile_generator() -> None:
         """Test MakefileGenerator"""
@@ -804,4 +1194,5 @@ if __name__ == "__main__":
         m.add_clean("test.o", "*.o")
         m.generate()
 
-    test_makefile_generator()
+    test_builder()
+    # test_makefile_generator()
