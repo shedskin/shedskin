@@ -19,6 +19,7 @@ The generated Makefile handles:
 """
 
 import os
+import shutil
 import subprocess
 import re
 import sys
@@ -245,11 +246,22 @@ class Builder:
         self.link_dirs: list[str] = []  # link directories
         self.ldlibs: list[str] = []  # link libraries
         self.ldflags: list[str] = []  # linker flags + link_dirs
-        self.clean: list[str] = []  # clean target
+        self.cleanups: list[str] = []  # cleanup post-build artifacts
 
     def _execute(self, cmd: str) -> None:
         """Execute a command"""
         os.system(cmd)
+
+    def _remove(self, path: PathLike) -> None:
+        """Remove a target"""
+        path = Path(path)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=False)
+        else:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
 
     def configure(self) -> None:
         """Configure the builder"""
@@ -262,6 +274,14 @@ class Builder:
             print(self.build_cmd)
         else:
             self._execute(self.build_cmd)
+            if self.cleanups:
+                self.clean()
+
+    def clean(self) -> None:
+        """Clean up build artifacts"""
+        for pattern in self.cleanups:
+            for path in Path(".").glob(pattern):
+                self._remove(path)
 
     @property
     def build_cmd(self) -> str:
@@ -365,6 +385,10 @@ class Builder:
         """Add linker flags to the configuration"""
         self._add_config_entries("ldflags", "", None, *entries)
 
+    def add_cleanups(self, *entries):
+        """Add cleanup patterns to the configuration"""
+        self._add_config_entries("cleanups", "", None, *entries)
+
     def _setup_defaults(self):
         """Setup default model configuration"""
         self.add_include_dirs(".")
@@ -415,14 +439,18 @@ class ShedskinBuilder(Builder):
     @property
     def CPPFILES(self) -> list[str]:
         """Reverse sorted list of .cpp files"""
-        _cppfiles = " ".join(sorted([fn + ".cpp" for fn in self.filenames], reverse=True))
+        _cppfiles = " ".join(
+            sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
+        )
         _cppfiles = _cppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
         return _cppfiles
 
     @property
     def HPPFILES(self) -> list[str]:
         """Reverse sorted list of .hpp files"""
-        _hppfiles = " ".join(sorted([fn + ".hpp" for fn in self.filenames], reverse=True))
+        _hppfiles = " ".join(
+            sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
+        )
         _hppfiles = _hppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
         return _hppfiles
 
@@ -460,6 +488,7 @@ class ShedskinBuilder(Builder):
         self._add_feature_flags()
         self._add_user_options()
         self._add_module_linker_flags()
+        self._add_cleanup_patterns()
 
     def _setup_defaults(self):
         """Setup default model configuration"""
@@ -600,6 +629,11 @@ class ShedskinBuilder(Builder):
                 self.add_ldlibs("-lutil")
         if "hashlib" in module_ids:
             self.add_ldlibs("-lcrypto")
+
+    def _add_cleanup_patterns(self) -> None:
+        """Add cleanup patterns to the configuration"""
+        if PLATFORM == "Darwin" and self.gx.pyextension_product:
+            self.add_cleanups("*.dSYM")
 
 
 class MakefileGenerator:
@@ -1158,6 +1192,7 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
     else:
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
+
 
 if __name__ == "__main__":
 
