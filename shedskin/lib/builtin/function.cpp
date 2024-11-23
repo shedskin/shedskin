@@ -184,14 +184,61 @@ str *__xrange::__repr__() {
     return __mod6(new str("range(%d, %d, %d)"), 3, a, b, s); /* XXX */
 }
 
-__xrange *__xrange::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s_) {
-    slicenr(x, l, u, s_, this->__len__());
+__xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_int step) {
+    __ss_int lower, upper;
+    __ss_int rangelen = this->__len__();
 
-    l = a+l*s;
-    u = a+u*s;
-    s_ = s*s_;
+    /* lower, upper bounds */
+    if(!(x&4)) {
+        step = 1;
+    }
 
-    return new __xrange(l, u, s_);
+    if(step < 0) {
+        lower = -1;
+        upper = lower + rangelen;
+    } else {
+        lower = 0;
+        upper = rangelen;
+    }
+
+    //printf("LOWER UPPER %d %d %d\n", lower, upper, step);
+
+    /* start */
+    if (!(x&1)) {
+        start = step < 0 ? upper : lower;
+    } else if (start < 0) {
+        start += rangelen;
+        if (start < 0) {
+            printf("FOUTJE\n"); // TODO
+        } else if(start < lower) {
+            start = lower;
+        }
+    } else if (start > upper) {
+        start = upper;
+    }
+
+    /* end */
+    if (!(x&2)) {
+        stop = step < 0 ? lower : upper;
+    } else if (stop < 0) {
+        stop += rangelen;
+        if (stop < 0) {
+            printf("FOUTJE\n"); // TODO
+        } else if(stop < lower) {
+            stop = lower;
+        }
+    } else if (stop > upper) {
+        stop = upper;
+    }
+
+//    printf("slice idcs %d %d\n", start, stop);
+
+    /* return sliced range object */
+    start = a+start*s;
+    stop = a+stop*s;
+    step = step*s;
+
+    return new __xrange(start, stop, step);
 }
 
 __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
