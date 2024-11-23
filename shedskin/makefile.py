@@ -130,12 +130,12 @@ class PythonSystem:
 
     @property
     def name_version(self) -> str:
-        """return name-<fullversion>: e.g. Python-3.11.7"""
+        """return <name>-<fullversion>: e.g. Python-3.11.7"""
         return f"{self.name}-{self.version}"
 
     @property
     def name_ver(self) -> str:
-        """return name.lower-<ver>: e.g. python3.11"""
+        """return <name.lower><ver>: e.g. python3.11"""
         return f"{self.name.lower()}{self.ver}"
 
     @property
@@ -250,6 +250,7 @@ class Builder:
 
     def _execute(self, cmd: str) -> None:
         """Execute a command"""
+        print(cmd)
         os.system(cmd)
 
     def _remove(self, path: PathLike) -> None:
@@ -273,6 +274,7 @@ class Builder:
         if dry_run:
             print(self.build_cmd)
         else:
+            print()
             self._execute(self.build_cmd)
             if self.cleanups:
                 self.clean()
