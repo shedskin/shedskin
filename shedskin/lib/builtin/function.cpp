@@ -201,8 +201,6 @@ __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_in
         upper = rangelen;
     }
 
-//    printf("LOWER UPPER %d %d %d\n", lower, upper, step);
-
     /* start */
     if (!(x&1)) {
         start = step < 0 ? upper : lower;
@@ -226,8 +224,6 @@ __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_in
     } else if (stop > upper) {
         stop = upper;
     }
-
-//    printf("slice idcs %d %d\n", start, stop);
 
     /* return sliced range object */
     start = a+start*s;
