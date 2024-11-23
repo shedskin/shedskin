@@ -283,6 +283,13 @@ class Builder:
             for path in Path(".").glob(pattern):
                 self._remove(path)
 
+    def run_executable(self) -> None:
+        """Run the executable"""
+        print()
+        print("-" * 80)
+        print(f"Running {self.target}")
+        self._execute(f"./{self.target}")
+
     @property
     def build_cmd(self) -> str:
         """Get the executable or extension build command"""
@@ -632,8 +639,13 @@ class ShedskinBuilder(Builder):
 
     def _add_cleanup_patterns(self) -> None:
         """Add cleanup patterns to the configuration"""
-        if PLATFORM == "Darwin" and self.gx.pyextension_product:
+        if PLATFORM == "Darwin" and self.gx.pyextension_product and not self.gx.options.nocleanup:
             self.add_cleanups("*.dSYM")
+        if not self.gx.options.nocleanup:
+            self.add_cleanups(
+                f"{self.target_name}.cpp",
+                f"{self.target_name}.hpp",
+            )
 
 
 class MakefileGenerator:
@@ -1189,9 +1201,14 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
     if gx.options.compile:
         builder = ShedskinBuilder(gx)
         builder.build(gx.options.dry_run)
+    elif gx.options.run:
+        builder = ShedskinBuilder(gx)
+        builder.build(gx.options.dry_run)
+        builder.run_executable()
     else:
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
+    
 
 
 if __name__ == "__main__":
