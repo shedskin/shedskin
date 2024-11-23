@@ -244,6 +244,7 @@ class Shedskin:
 
         arg("name", help="Python file or module to compile")
 
+        arg("-c", "--compile",      help="Directly compile translated code", action="store_true")
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-F", "--flags",        help="Provide alternate Makefile flags")
@@ -251,12 +252,15 @@ class Shedskin:
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
+        opt("-S", "--static-libs",  help="Use static compilation if possible", action="store_true")
         opt("-m", "--makefile",     help="Specify alternate Makefile name")
         opt("-o", "--outputdir",    help="Specify output directory for generated files")
 #        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
+        opt("-r", "--run",          help="Build and run executable", action="store_true")
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
+        opt("-D", "--dry-run",      help="Only print compilation command", action="store_true")
 
         opt("--int32",              help="Use 32-bit integers", action="store_true")
         opt("--int64",              help="Use 64-bit integers", action="store_true")
@@ -268,8 +272,8 @@ class Shedskin:
         opt("-b", "--nobounds",     help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
-        opt("-w", "--nowrap",             help="Disable wrap-around checking", action="store_true")
-
+        opt("-w", "--nowrap",       help="Disable wrap-around checking", action="store_true")
+        opt("--nocleanup",          help="Disable cleanup of generated files", action="store_true")
         parser_build = subparsers.add_parser('build', help="translate and build python module (CMake)")
         arg = opt = parser_build.add_argument
 
