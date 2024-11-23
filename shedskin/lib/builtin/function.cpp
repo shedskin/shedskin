@@ -201,16 +201,14 @@ __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_in
         upper = rangelen;
     }
 
-    //printf("LOWER UPPER %d %d %d\n", lower, upper, step);
+//    printf("LOWER UPPER %d %d %d\n", lower, upper, step);
 
     /* start */
     if (!(x&1)) {
         start = step < 0 ? upper : lower;
     } else if (start < 0) {
         start += rangelen;
-        if (start < 0) {
-            printf("FOUTJE\n"); // TODO
-        } else if(start < lower) {
+        if(start < lower) {
             start = lower;
         }
     } else if (start > upper) {
@@ -222,9 +220,7 @@ __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_in
         stop = step < 0 ? lower : upper;
     } else if (stop < 0) {
         stop += rangelen;
-        if (stop < 0) {
-            printf("FOUTJE\n"); // TODO
-        } else if(stop < lower) {
+        if(stop < lower) {
             stop = lower;
         }
     } else if (stop > upper) {

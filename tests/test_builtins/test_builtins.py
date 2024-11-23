@@ -304,6 +304,8 @@ def test_range_slicing():
     assert list(r[4:1:]) == []
     assert list(r[4:1:-2]) == [10, 6]
 
+    r = range(-5,-5,-5)
+    assert list(r[-5:-4:1]) == []
 
 def test_repr():
     assert repr(1) == '1'
