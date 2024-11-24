@@ -333,7 +333,7 @@ def open(name, flags):
     return 1
 
 def read(fd, n):
-    return ''
+    return b''
 
 def write(fd, s):
     return 1
@@ -426,7 +426,7 @@ def fsync(fd):
     pass
 
 def urandom(n):
-    return ''
+    return b''
 
 def utime(path, times):
     pass

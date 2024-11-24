@@ -499,9 +499,9 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
     return ret;
 }
 
-str *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
+bytes *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
     char c;
-    str *s = new str();
+    bytes *s = new bytes();
     size_t nr;
     for(__ss_int i=0; i<n; i++) {
         nr = (size_t)::read(fd, &c, 1);
@@ -1023,9 +1023,9 @@ void *lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     return NULL;
 }
 
-str *urandom(__ss_int n) {
+bytes *urandom(__ss_int n) {
     __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
-    str *s = read(fd, n);
+    bytes *s = read(fd, n);
     close(fd);
     return s;
 }
