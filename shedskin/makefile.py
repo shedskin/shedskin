@@ -2,7 +2,8 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.makefile: makefile generator
 
-This module generates Makefiles for building Shedskin-compiled C++ code.
+This module generates Makefiles for building Shedskin-compiled C++ code and
+provides a high-level interface for configuring and executing the build process.
 
 Key components:
 - Platform-specific configuration (Windows, macOS, Linux)
@@ -16,6 +17,13 @@ The generated Makefile handles:
 - Debug and profile builds
 - Static linking on macOS with `Homebrew`
 - Cleaning build artifacts
+
+Via its `ShedskinBuilder` class, it provides a high-level interface for:
+- Configuring build settings and flags
+- Managing dependencies and include paths
+- Executing the build process
+- Running the compiled executable
+- Supporting both normal builds and Python extension modules
 """
 
 import os
@@ -39,32 +47,18 @@ TestFunc: TypeAlias = Callable[[str], bool]
 # constants
 PLATFORM = platform.system()
 
-FLAGS = """\
-CXX?=g++
-CXXFLAGS?=-O2 -std=c++17 -march=native $(CPPFLAGS)
-LFLAGS=-lgc -lgctba -lutil $(LDFLAGS)
-"""
 
-FLAGS_MINGW = """\
-CXX?=g++
-CXXFLAGS?=-O2 -DWIN32 -std=c++17 -march=native -Wno-deprecated -Wl,--enable-auto-import $(CPPFLAGS)
-LFLAGS=-lgc -lpcre -lgccpp $(LDFLAGS)
-"""
+# -----------------------------------------------------------------------------
+# utility functions]
 
-FLAGS_OSX = """\
-CXX?=g++
-CXXFLAGS?=-O2 -std=c++17 -Wno-deprecated $(CPPFLAGS)
-LFLAGS=-lgc -lgctba -lpcre $(LDFLAGS)
-"""
-
-
-def always_true(x: Any) -> bool:
+def always_true(_: Any) -> bool:
     """dummy test function always returns True"""
     return True
 
 
 def env_var(name: str) -> str:
-    return "$(%s)" % name
+    """return environment variable"""
+    return f"${{{name}}}"
 
 
 def check_output(cmd: str) -> Optional[str]:
@@ -74,12 +68,14 @@ def check_output(cmd: str) -> Optional[str]:
     except FileNotFoundError:
         return None
 
+# -----------------------------------------------------------------------------
+# main classes
 
 class MakefileWriter:
     """Handles writing Makefile contents"""
 
     def __init__(self, path: PathLike):
-        self.makefile = open(path, "w")
+        self.makefile = open(path, "w", encoding="utf8")
 
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
@@ -91,6 +87,7 @@ class MakefileWriter:
 
 
 class PythonSystem:
+    """Python system information"""
     def __init__(self):
         self.name = "Python"
         self.version_info = sys.version_info
@@ -169,18 +166,16 @@ class PythonSystem:
         """dynamic link libname"""
         if PLATFORM == "Windows":
             return f"{self.libname}.dll"
-        elif PLATFORM == "Darwin":
+        if PLATFORM == "Darwin":
             return f"{self.libname}.dylib"
-        else:
-            return f"{self.libname}.so"
+        return f"{self.libname}.so"
 
     @property
     def dylib_linkname(self) -> str:
         """symlink to dylib"""
         if PLATFORM == "Darwin":
             return f"{self.libname}.dylib"
-        else:
-            return f"{self.libname}.so"
+        return f"{self.libname}.so"
 
     @property
     def prefix(self) -> str:
@@ -227,8 +222,7 @@ class PythonSystem:
         """suffix of python extension"""
         if PLATFORM == "Windows":
             return ".pyd"
-        else:
-            return ".so"
+        return ".so"
 
 
 class Builder:
@@ -366,8 +360,7 @@ class Builder:
             if entry in _list:
                 if self.strict:
                     raise ValueError(f"entry: {entry} already exists in {attr} list")
-                else:
-                    continue
+                continue
             _list.append(f"{prefix}{entry}")
 
     def add_include_dirs(self, *entries):
@@ -473,8 +466,7 @@ class ShedskinBuilder(Builder):
         """Get the target executable/library name"""
         if self.gx.pyextension_product:
             return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
-        else:
-            return self.gx.main_module.ident
+        return self.gx.main_module.ident
 
     def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
@@ -483,11 +475,10 @@ class ShedskinBuilder(Builder):
             if res:
                 return Path(res)
             return None
-        else:
-            res = check_output("brew --prefix")
-            if res:
-                return Path(res)
-            return None
+        res = check_output("brew --prefix")
+        if res:
+            return Path(res)
+        return None
 
     def configure(self) -> None:
         """Configure the builder"""
@@ -530,7 +521,6 @@ class ShedskinBuilder(Builder):
             "-march=native",
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
-            "$(CPPFLAGS)",
         )
         self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
         if self.gx.pyextension_product:
@@ -641,13 +631,14 @@ class ShedskinBuilder(Builder):
 
     def _add_cleanup_patterns(self) -> None:
         """Add cleanup patterns to the configuration"""
-        if PLATFORM == "Darwin" and self.gx.pyextension_product and not self.gx.options.nocleanup:
+        if self.gx.options.nocleanup:
+            return
+        if (PLATFORM == "Darwin" and self.gx.pyextension_product):
             self.add_cleanups("*.dSYM")
-        if not self.gx.options.nocleanup:
-            self.add_cleanups(
-                f"{self.target_name}.cpp",
-                f"{self.target_name}.hpp",
-            )
+        self.add_cleanups(
+            f"{self.target_name}.cpp",
+            f"{self.target_name}.hpp",
+        )
 
 
 class MakefileGenerator:
@@ -715,16 +706,14 @@ class MakefileGenerator:
             if entry in _list:
                 if self.strict:
                     raise ValueError(f"entry: {entry} already exists in {attr} list")
-                else:
-                    continue
+                continue
             _list.append(f"{prefix}{entry}")
         for key, value in kwargs.items():
             assert test_func(value), f"Invalid value: {value}"
             if key in self.vars:
                 if self.strict:
                     raise ValueError(f"variable: {key} already exists in vars dict")
-                else:
-                    continue
+                continue
             self.vars[key] = value
             _list.append(f"{prefix}$({key})")
             self.var_order.append(key)
@@ -921,8 +910,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Get the target executable/library name"""
         if self.gx.pyextension_product:
             return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
-        else:
-            return self.gx.main_module.ident
+        return self.gx.main_module.ident
 
     def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
@@ -931,11 +919,10 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             if res:
                 return Path(res)
             return None
-        else:
-            res = check_output("brew --prefix")
-            if res:
-                return Path(res)
-            return None
+        res = check_output("brew --prefix")
+        if res:
+            return Path(res)
+        return None
 
     def generate(self) -> None:
         """Generate the Makefile"""
@@ -1147,10 +1134,10 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _write_cpp_files(self) -> None:
         """Write C++ source and header file lists"""
-        cppfiles_str = " \\\n\t".join(self.cppfiles)
-        hppfiles_str = " \\\n\t".join(self.hppfiles)
-        self.write("CPPFILES=%s\n" % cppfiles_str)
-        self.write("HPPFILES=%s\n" % hppfiles_str)
+        cppfiles = " \\\n\t".join(self.cppfiles)
+        hppfiles = " \\\n\t".join(self.hppfiles)
+        self.write(f"CPPFILES={cppfiles}\n")
+        self.write(f"HPPFILES={hppfiles}\n")
 
     # --------------------------------------------------------------------------
     # Flags file management
@@ -1160,13 +1147,13 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Get the appropriate flags file for the current platform"""
         if self.gx.flags:
             return self.gx.flags
-        elif os.path.isfile("FLAGS"):
+        if os.path.isfile("FLAGS"):
             return Path("FLAGS")
-        elif os.path.isfile("/etc/shedskin/FLAGS"):
+        if os.path.isfile("/etc/shedskin/FLAGS"):
             return Path("/etc/shedskin/FLAGS")
-        elif PLATFORM == "Windows":
+        if PLATFORM == "Windows":
             return self.gx.shedskin_flags / "FLAGS.mingw"
-        elif PLATFORM == "Darwin":
+        if PLATFORM == "Darwin":
             return self.gx.shedskin_flags / "FLAGS.osx"
         return self.gx.shedskin_flags / "FLAGS"
 
@@ -1174,28 +1161,33 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Add compiler and linker flags from flags file"""
         flags_file = self._get_flags_file()
 
-        for line in open(flags_file):
-            line = line[:-1]
-            lvalue, rvalue = line.split("=", 1)
-            variable = lvalue.strip().rstrip("?")
-            entries = rvalue.split()
+        with open(flags_file, encoding="utf8") as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line[:-1]
+                lvalue, rvalue = line.split("=", 1)
+                variable = lvalue.strip().rstrip("?")
+                entries = rvalue.split()
 
-            if variable == "CXX":
-                self.cxx = entries[0]
-            elif variable == "INCLUDEDIRS":
-                self.add_include_dirs(*entries)
-            elif variable == "CFLAGS":
-                self.add_cflags(*entries)
-            elif variable == "CXXFLAGS":
-                self.add_cxxflags(*entries)
-            elif variable == "LINKDIRS":
-                self.add_link_dirs(*entries)
-            elif variable == "LDLIBS":
-                self.add_ldlibs(*entries)
-            elif variable == "LDFLAGS":
-                self.add_ldflags(*entries)
-            else:
-                self.add_variable(variable, " ".join(entries))
+                if variable == "CXX":
+                    self.cxx = entries[0]
+                elif variable == "INCLUDEDIRS":
+                    self.add_include_dirs(*entries)
+                elif variable == "CFLAGS":
+                    self.add_cflags(*entries)
+                elif variable == "CXXFLAGS":
+                    self.add_cxxflags(*entries)
+                elif variable == "LINKDIRS":
+                    self.add_link_dirs(*entries)
+                elif variable == "LDLIBS":
+                    self.add_ldlibs(*entries)
+                elif variable == "LDFLAGS":
+                    self.add_ldflags(*entries)
+                else:
+                    self.add_variable(variable, " ".join(entries))
+
+# -----------------------------------------------------------------------------
+# launching functions
 
 
 def generate_makefile(gx: "config.GlobalInfo") -> None:
@@ -1210,7 +1202,6 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
     else:
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
-    
 
 
 if __name__ == "__main__":
