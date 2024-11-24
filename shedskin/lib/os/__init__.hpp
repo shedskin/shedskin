@@ -81,7 +81,7 @@ void *dup2(__ss_int f1, __ss_int f2);
 void *close(__ss_int fd);
 __ss_int open(str *name_, __ss_int flags);
 file* fdopen(__ss_int fd, str* mode=NULL, __ss_int bufsize=-1);
-str *read(__ss_int fd, __ss_int n);
+bytes *read(__ss_int fd, __ss_int n);
 __ss_int write(__ss_int fd, str *s);
 
 class popen_pipe : public file {
@@ -279,7 +279,7 @@ void *unlink(str *path);
 void *fsync(__ss_int fd);
 void *lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
-str *urandom(__ss_int n);
+bytes *urandom(__ss_int n);
 
 __ss_bool access(str *path, __ss_int mode);
 tuple2<__ss_float, __ss_float> *times();

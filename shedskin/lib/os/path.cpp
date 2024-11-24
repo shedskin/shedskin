@@ -35,7 +35,7 @@ void __init() {
     const_3 = new str("..");
     const_4 = new str("/");
     const_5 = new str(":");
-    const_6 = new str(":/bin:/usr/bin");
+    const_6 = new str("/bin:/usr/bin");
     const_7 = new str("/dev/null");
     const_14 = new str("//");
     const_15 = new str("///");
@@ -48,7 +48,7 @@ void __init() {
     sep = const_4;
     pathsep = const_5;
     defpath = const_6;
-    altsep = const_0;
+    altsep = NULL;
     devnull = const_7;
 }
 
