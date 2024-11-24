@@ -42,6 +42,10 @@ def test_rdwr():
     os.close(fd)
 
 
+def test_system():
+    assert os.system('ls') == 0
+
+
 def test_exceptions():
     try:
         os.chdir("ontehunoe")
@@ -59,6 +63,7 @@ def test_all():
         test_env()
         test_urandom()
         test_rdwr()
+        test_system()
 
         #test_popen()  # TODO
 
