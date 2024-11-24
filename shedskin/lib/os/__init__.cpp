@@ -1043,32 +1043,6 @@ tuple<__ss_float> *times() {
     return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
 }
 
-/* str *tmpnam() { XXX raises compiler warning
-    char *buf;
-    if((buf = ::tmpnam(NULL)) == NULL)
-        throw new OSError(new str("os.tmpnam"));
-    return new str(buf);
-} */
-file *tmpfile() {
-    FILE *f;
-    if((f = ::tmpfile()) == NULL)
-        throw new OSError(new str("os.tmpfile"));
-    file *_file = new file(f);
-    _file->name = new str("<tmpfile>");
-    return _file;
-}
-/* str *tempnam(str *dir, str *prefix) { XXX raises compiler warning
-    char *name;
-    str *result;
-    char *pfx = NULL;
-    if(prefix) pfx = (char *)(prefix->c_str());
-    if((name = ::tempnam(dir->c_str(), pfx)) == NULL)
-        throw new OSError(new str("os.tempnam"));
-    result = new str(name);
-    free(name);
-    return result;
-} */
-
 __ss_int __ss_makedev(__ss_int major, __ss_int minor) {
     return (__ss_int)makedev((unsigned)major, (unsigned)minor);
 }

@@ -437,15 +437,6 @@ def access(path, mode):
 def times():
     return (1.0,)
 
-def tmpnam():
-    return ''
-
-def tempnam(dir, prefix=None):
-    return ''
-
-def tmpfile():
-    return file()
-
 def makedev(major, minor):
     return 1
 
