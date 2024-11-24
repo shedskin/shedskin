@@ -35,6 +35,13 @@ def test_posix():
     assert os.devnull == '/dev/null'
 
 
+def test_rdwr():
+    fd = os.open('/dev/null', os.O_RDWR)
+    assert os.write(fd, b'blah') == 4
+    assert os.read(fd, 10) == b''
+    os.close(fd)
+
+
 def test_exceptions():
     try:
         os.chdir("ontehunoe")
@@ -51,6 +58,7 @@ def test_all():
         test_posix()
         test_env()
         test_urandom()
+        test_rdwr()
 
         #test_popen()  # TODO
 
