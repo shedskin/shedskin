@@ -514,7 +514,7 @@ bytes *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
     return s;
 }
 
-__ss_int write(__ss_int fd, str *s) {
+__ss_int write(__ss_int fd, bytes *s) {
     size_t r;
     if((r=(size_t)::write(fd, s->c_str(), s->unit.size())) == std::string::npos)
         throw new OSError(new str("os.write"));
