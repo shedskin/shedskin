@@ -28,5 +28,5 @@ class Ray(object):
     self.origin = origin
     self.offset = offset
 
-  def __repr__(self):
-    return "[" + ', '.join([repr(self.origin), repr(self.offset)]) + "]"
+#  def __repr__(self):
+#    return "[" + ', '.join([repr(self.origin), repr(self.offset)]) + "]"

@@ -69,12 +69,12 @@ class Camera(object):
                         self.xIncrement.scale(self.cols - 0.5) + \
                         self.yIncrement.scale(self.rows - 0.5)
 
-  def __repr__(self):
-    s = ("eye %s; direction %s; up %s; dist %f; w %f; h %f; cols %d; " +
-         "rows %d; ortho %s") % (repr(self.eye), repr(self.direction),
-                                 repr(self.up), self.distance, self.w, self.h,
-                                 self.cols, self.rows, repr(self.ortho))
-    return s
+#  def __repr__(self):
+#    s = ("eye %s; direction %s; up %s; dist %f; w %f; h %f; cols %d; " +
+#         "rows %d; ortho %s") % (repr(self.eye), repr(self.direction),
+#                                 repr(self.up), self.distance, self.w, self.h,
+#                                 self.cols, self.rows, repr(self.ortho))
+#    return s
 
   def getDirectLighting(self, ray, hitLocation, lights, shape, surfaceNormal):
     material = shape.material
@@ -290,27 +290,27 @@ class Camera(object):
   # the first thing the ray hits, gather light from it to determine our local
   # diffuse lighting.  Add in local emissive lighting.  Later also spawn
   # reflection+transmission rays to add in those components of lighting as well.
-  def runImage(self):
-    return self.runPixelRange(((0, self.cols), (0, self.rows)))
+#  def runImage(self):
+#    return self.runPixelRange(((0, self.cols), (0, self.rows)))
 
-  def mapPointToScreen(self, point):
-    if self.ortho:
-      direction = self.direction
-    else:
-      diff = point - self.eye
-      if Roughly(diff.length_2(), 0):
-        return None
-      direction = diff.normalize()
-    ray = Ray(self.eye, direction)
-    hit = rayHitsPlane(-self.direction, self.screenCenter, ray)
-    if hit.hit:
-      assert not hit.inverted
-    # TODO: This won't map points behind the eye.
-      location = ray.origin + ray.offset.scale(hit.distance)
-      offset = self.screenTopLeft - location
-      distanceFromLeft = offset.dot(self.left)
-      distanceFromTop = offset.dot(self.up)
-      pixel = (int(distanceFromLeft / self.w * float(self.cols)),
-               int(distanceFromTop / self.h * float(self.rows)))
-      return pixel
-    return None
+#  def mapPointToScreen(self, point):
+#    if self.ortho:
+#      direction = self.direction
+#    else:
+#      diff = point - self.eye
+#      if Roughly(diff.length_2(), 0):
+#        return None
+#      direction = diff.normalize()
+#    ray = Ray(self.eye, direction)
+#    hit = rayHitsPlane(-self.direction, self.screenCenter, ray)
+#    if hit.hit:
+#      assert not hit.inverted
+#    # TODO: This won't map points behind the eye.
+#      location = ray.origin + ray.offset.scale(hit.distance)
+#      offset = self.screenTopLeft - location
+#      distanceFromLeft = offset.dot(self.left)
+#      distanceFromTop = offset.dot(self.up)
+#      pixel = (int(distanceFromLeft / self.w * float(self.cols)),
+#               int(distanceFromTop / self.h * float(self.rows)))
+#      return pixel
+#    return None

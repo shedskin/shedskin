@@ -35,15 +35,15 @@ class HitResult(object):
       self.distance = distance
       self.inverted = inverted
 
-  def __lt__(self, other):
-      return self.distance < other.distance
+#  def __lt__(self, other):
+#      return self.distance < other.distance
 
-  def __eq__(self, other):
-      return self.distance == other.distance
+#  def __eq__(self, other):
+#      return self.distance == other.distance
 
-  def __repr__(self):
-    return "[HitResult: " + repr(self.distance) + ":" + repr(self.shape) + \
-        " inverted: " + repr(self.inverted) + "]"
+#  def __repr__(self):
+#    return "[HitResult: " + repr(self.distance) + ":" + repr(self.shape) + \
+#        " inverted: " + repr(self.inverted) + "]"
 
 HIT = HitResult()
 
@@ -61,30 +61,30 @@ class Shape(object):
   # If bidirectional is set, check for hits with normals inverted as well as
   # non-inverted.
   # If inside is set, only check for hits from the inside.
-  def hitTest(self, ray, bidirectional=False, inside=False, best=None):
-    assert not inside or not bidirectional
-    assert False # Must override.
+#  def hitTest(self, ray, bidirectional=False, inside=False, best=None):
+#    assert not inside or not bidirectional
+#    assert False # Must override.
 
   # Used to do shadow ray calculations; later we should be able to return a list
   # of locations for soft shadows.
-  def getLocation(self):
-    assert False # Must override.
-    return Vector4(0, 0, 0, 1)
+#  def getLocation(self):
+#    assert False # Must override.
+#    return Vector4(0, 0, 0, 1)
 
   # Used to do lighting calculations.
-  def getNormal(self, location):
-    assert False # Must override.
-    return Vector4(0, 0, 0, 0)
+#  def getNormal(self, location):
+#    assert False # Must override.
+#    return Vector4(0, 0, 0, 0)
 
   # Used to scale lighting intensity as seen at a given point.  For example,
   # spherical lights die off as r^2, and triangular lights are dimmer if their
   # normal doesn't point at you.  This should return a float between 0 and 1.
-  def getIntensity(self, location):
-    assert False # Must override
-    return 0.0
+#  def getIntensity(self, location):
+#    assert False # Must override
+#    return 0.0
 
-  def __repr__(self):
-    return "[Shape: " + self.name + ", " + repr(self.material) + "]"
+#  def __repr__(self):
+#    return "[Shape: " + self.name + ", " + repr(self.material) + "]"
 
 class Sphere(Shape):
   def __init__(self, center, radius, material=None, name=None):
@@ -102,9 +102,9 @@ class Sphere(Shape):
     self.radius = radius
     self.r_2 = radius * radius
 
-  def __repr__(self):
-    return "[" + self.name + ": " + repr(self.center) + ", " + \
-        repr(self.radius) + "]"
+#  def __repr__(self):
+#    return "[" + self.name + ": " + repr(self.center) + ", " + \
+#        repr(self.radius) + "]"
 
   def hitTest(self, ray, bidirectional=False, inside=False, best=None):
 #{
@@ -171,9 +171,9 @@ class Polygon(Shape):
     self.center = Mean(points)
     self.r_2 = max([p.sublen(self.center) for p in points])
 
-  def __repr__(self):
-    return "[" + self.name + ": " + repr(self.points) + "; center: " + \
-        repr(self.center) + "; normal: " + repr(self.normal) + "]"
+#  def __repr__(self):
+#    return "[" + self.name + ": " + repr(self.points) + "; center: " + \
+#        repr(self.center) + "; normal: " + repr(self.normal) + "]"
 
   def hitTest(self, ray, bidirectional=False, inside=False, best=None):
 #{
