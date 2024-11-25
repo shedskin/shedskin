@@ -101,6 +101,8 @@ void *utime(str *path, tuple2<__ss_int, __ss_float> *times);
 void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
 void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
 
+bytes *urandom(__ss_int n);
+
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
 __ss_int __ss_WEXITSTATUS(__ss_int status);
@@ -276,8 +278,6 @@ void *unlink(str *path);
 
 void *fsync(__ss_int fd);
 void *lseek(__ss_int fd, __ss_int pos, __ss_int how);
-
-bytes *urandom(__ss_int n);
 
 __ss_bool access(str *path, __ss_int mode);
 tuple2<__ss_float, __ss_float> *times();
