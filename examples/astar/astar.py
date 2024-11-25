@@ -11,11 +11,11 @@ class Path:
         self.nodes = nodes
         self.totalCost = totalCost
 
-    def getNodes(self):
-        return self.nodes
+#    def getNodes(self):
+#        return self.nodes
 
-    def getTotalMoveCost(self):
-        return self.totalCost
+#    def getTotalMoveCost(self):
+#        return self.totalCost
 
 class Node:
     def __init__(self,location,mCost,lid,parent=None):
@@ -25,11 +25,11 @@ class Node:
         self.score = 0 # calculated score for this node
         self.lid = lid # set the location id - unique for each location in the map
 
-    def __eq__(self, n):
-        if n.lid == self.lid:
-            return True
-        else:
-            return False
+#    def __eq__(self, n):
+#        if n.lid == self.lid:
+#            return True
+#        else:
+#            return False
 
 class AStar:
 
