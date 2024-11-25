@@ -957,12 +957,12 @@ class TonyJpegDecoder:
     return outbuf
 
   # Below are difficult and complex HUFFMAN decoding !!!!!
-  def DumpHuffman(self, dctbl):
-    array2str = lambda array: " ".join(["%02x" % i for i in array])
-    print("dctbl: mincode: %s maxcode: %s valptr: %s bits: %s " % (array2str(dctbl.mincode), array2str(dctbl.maxcode), array2str(dctbl.valptr), array2str(dctbl.bits)))
-    print("dctbl: huffval: %s" % array2str(dctbl.huffval))
-    print("dctbl: look_nbits: %s" % array2str(dctbl.look_nbits))
-    print("dctbl: look_sym: %s" % array2str(dctbl.look_sym))
+#  def DumpHuffman(self, dctbl):
+#    array2str = lambda array: " ".join(["%02x" % i for i in array])
+#    print("dctbl: mincode: %s maxcode: %s valptr: %s bits: %s " % (array2str(dctbl.mincode), array2str(dctbl.maxcode), array2str(dctbl.valptr), array2str(dctbl.bits)))
+#    print("dctbl: huffval: %s" % array2str(dctbl.huffval))
+#    print("dctbl: look_nbits: %s" % array2str(dctbl.look_nbits))
+#    print("dctbl: look_sym: %s" % array2str(dctbl.look_sym))
 
   def HuffmanDecode(self, iBlock):
     """source is self.Data
@@ -1209,14 +1209,14 @@ class BMPFile:
 def bgr2rgb(bmpstr):
   return b"".join([b'%c%c%c'%(bmpstr[i*3+2],bmpstr[i*3+1],bmpstr[i*3]) for i in range(len(bmpstr)//3)])
 
-def padrgb(bmpstr):
-  return b"".join([b'%c\0'%bmpstr[i*3:i*3+3] for i in range(len(bmpstr)//3)])
+#def padrgb(bmpstr):
+#  return b"".join([b'%c\0'%bmpstr[i*3:i*3+3] for i in range(len(bmpstr)//3)])
 
-def avg(chrs):
-  if chrs:
-    return chr(int(sum([ord(c) for c in chrs])//len(chrs)))
-  else:
-    return ""
+#def avg(chrs):
+#  if chrs:
+#    return chr(int(sum([ord(c) for c in chrs])//len(chrs)))
+#  else:
+#    return ""
 
 def main():
 #    inputfile = open(sys.argv[1], 'rb')
