@@ -28,39 +28,39 @@ class Vector(object):
         """ Negated. """
         return Vector(-self.x, -self.y, -self.z)
 
-    def __neg__(self):
-        return self.negated()
+#    def __neg__(self):
+#        return self.negated()
 
     def plus(self, a):
         """ Add. """
         return Vector(self.x+a.x, self.y+a.y, self.z+a.z)
 
-    def __add__(self, a):
-        return self.plus(a)
+#    def __add__(self, a):
+#        return self.plus(a)
 
     def minus(self, a):
         """ Subtract. """
         return Vector(self.x-a.x, self.y-a.y, self.z-a.z)
 
-    def __sub__(self, a):
-        return self.minus(a)
+#    def __sub__(self, a):
+#        return self.minus(a)
 
     def times(self, a):
         """ Multiply. """
         return Vector(self.x*a, self.y*a, self.z*a)
 
-    def __mul__(self, a):
-        return self.times(a)
+#    def __mul__(self, a):
+#        return self.times(a)
 
     def dividedBy(self, a):
         """ Divide. """
         return Vector(self.x/a, self.y/a, self.z/a)
 
-    def __truediv__(self, a):
-        return self.dividedBy(float(a))
+#    def __truediv__(self, a):
+#        return self.dividedBy(float(a))
 
-    def __div__(self, a):
-        return self.dividedBy(float(a))
+#    def __div__(self, a):
+#        return self.dividedBy(float(a))
 
     def dot(self, a):
         """ Dot. """
@@ -85,22 +85,22 @@ class Vector(object):
             self.z * a.x - self.x * a.z,
             self.x * a.y - self.y * a.x)
 
-    def __getitem__(self, key):
-        return (self.x, self.y, self.z)[key]
+#    def __getitem__(self, key):
+#        return (self.x, self.y, self.z)[key]
 
-    def __setitem__(self, key, value):
-        l = [self.x, self.y, self.z]
-        l[key] = value
-        self.x, self.y, self.z = l
+#    def __setitem__(self, key, value):
+#        l = [self.x, self.y, self.z]
+#        l[key] = value
+#        self.x, self.y, self.z = l
 
-    def __len__(self):
-        return 3
+#    def __len__(self):
+#        return 3
 
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
+#    def __iter__(self):
+#        return iter((self.x, self.y, self.z))
 
-    def __repr__(self):
-        return 'Vector(%.2f, %.2f, %0.2f)' % (self.x, self.y, self.z) 
+#    def __repr__(self):
+#        return 'Vector(%.2f, %.2f, %0.2f)' % (self.x, self.y, self.z) 
 
 
 class Vertex(object):
@@ -141,8 +141,8 @@ class Vertex(object):
         return Vertex(self.pos.lerp(other.pos, t), 
                           self.normal.lerp(other.normal, t))
 
-    def __repr__(self):
-        return repr(self.pos)
+#    def __repr__(self):
+#        return repr(self.pos)
 
 
 class Plane(object):
@@ -175,8 +175,8 @@ class Plane(object):
         self.normal = self.normal.negated()
         self.w = -self.w
 
-    def __repr__(self):
-        return 'normal: {0} w: {1}'.format(self.normal, self.w)
+#    def __repr__(self):
+#        return 'normal: {0} w: {1}'.format(self.normal, self.w)
 
     def vertexLocation(self, polygon, i):
         t = self.normal.dot(polygon.vertices[i].pos) - self.w
@@ -282,10 +282,10 @@ class Polygon(object):
         map(lambda v: v.flip(), self.vertices)
         self.plane.flip()
 
-    def __repr__(self):
-        return reduce(lambda x,y: x+y,
-                      ['Polygon(['] + [repr(v) + ', ' \
-                                       for v in self.vertices] + ['])'], '')
+#    def __repr__(self):
+#        return reduce(lambda x,y: x+y,
+#                      ['Polygon(['] + [repr(v) + ', ' \
+#                                       for v in self.vertices] + ['])'], '')
 
 class BSPNode(object):
     """
