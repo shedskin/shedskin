@@ -64,8 +64,7 @@ def test_all():
         test_env()
         test_rdwr()
         test_system()
-
-        #test_popen()  # TODO
+        test_popen()
 
 
 if __name__ == '__main__':
