@@ -14,10 +14,10 @@ updates = 0
 udates = [0] * 324
 nodes = 0
 
-filename = None
-def setfilename(s):
-    global filename
-    filename = s
+#filename = None
+#def setfilename(s):
+#    global filename
+#    filename = s
 
 class Column:
     def __init__(self, name=None):
@@ -64,8 +64,8 @@ class Column:
         self.right.left = self
         self.left.right = self
 
-    def __str__(self):
-        return self.name
+#    def __str__(self):
+#        return self.name
 
 def search(k):
     global o, solutions, level, nodes
@@ -129,22 +129,22 @@ def printsolution(o):
             r = r.right
         print(s)
 
-def printmatrix(root):
-    c = root.right
-    while c != root:
-        r = c.down
-        while r != c:
-            printrow(r)
-            r = r.down
-        c = c.right
+#def printmatrix(root):
+#    c = root.right
+#    while c != root:
+#        r = c.down
+#        while r != c:
+#            printrow(r)
+#            r = r.down
+#        c = c.right
 
-def printrow(r):
-    s = r.column.name
-    next = r.right
-    while next != r:
-        s += ' ' + next.column.name
-        next = next.right
-    print(s)
+#def printrow(r):
+#    s = r.column.name
+#    next = r.right
+#    while next != r:
+#        s += ' ' + next.column.name
+#        next = next.right
+#    print(s)
 
 def setroot(r):
     global root
@@ -208,11 +208,11 @@ class Omino:
             orientations.append(orientation)
         self.orientations = orientations
 
-    def move(self, v):
-        newcells = []
-        for cell in self.cells:
-            newcells.append([cell[0] + v[0], cell[1] + v[1]])
-        self.cells = newcells
+#    def move(self, v):
+#        newcells = []
+#        for cell in self.cells:
+#            newcells.append([cell[0] + v[0], cell[1] + v[1]])
+#        self.cells = newcells
 
     def translate(self, v):
         r = []
