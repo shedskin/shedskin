@@ -323,8 +323,8 @@ class Site(object):
         self.y = y
         self.sitenum = sitenum
 
-    def dump(self):
-        print("Site #%d (%g, %g)" % (self.sitenum,self.x,self.y))
+#    def dump(self):
+#        print("Site #%d (%g, %g)" % (self.sitenum,self.x,self.y))
 
     def __lt__(self, other):
         if self.y == other.y:
@@ -355,10 +355,10 @@ class Edge(object):
         self.edgenum = 0
         self.deleted = False
 
-    def dump(self):
-        print("(#%d a=%g, b=%g, c=%g)" % (self.edgenum,self.a,self.b,self.c))
-        print("ep",self.ep)
-        print("reg",self.reg)
+#    def dump(self):
+#        print("(#%d a=%g, b=%g, c=%g)" % (self.edgenum,self.a,self.b,self.c))
+#        print("ep",self.ep)
+#        print("reg",self.reg)
 
     def setEndpoint(self, lrFlag, site):
         self.ep[lrFlag] = site
@@ -380,7 +380,7 @@ class Edge(object):
         dy = float(s2.y - s1.y)
         adx = abs(dx)  # make sure that the difference in positive
         ady = abs(dy)
-        
+
         # get the slope of the line
         newedge.c = float(s1.x * dx + s1.y * dy + (dx*dx + dy*dy)*0.5)  
         if adx > ady :
@@ -410,16 +410,16 @@ class Halfedge(object):
         self.vertex = None  # Site()
         self.ystar  = BIG_FLOAT
 
-    def dump(self):
-        print("Halfedge--------------------------")
-        print("left: ",    self.left  )
-        print("right: ",   self.right )
-        print("edge: ",    self.edge  )
-        print("pm: ",      self.pm    )
-        print("vertex: ", end=' ')
-        if self.vertex: self.vertex.dump()
-        else: print("None")
-        print("ystar: ",   self.ystar )
+#    def dump(self):
+#        print("Halfedge--------------------------")
+#        print("left: ",    self.left  )
+#        print("right: ",   self.right )
+#        print("edge: ",    self.edge  )
+#        print("pm: ",      self.pm    )
+#        print("vertex: ", end=' ')
+#        if self.vertex: self.vertex.dump()
+#        else: print("None")
+#        print("ystar: ",   self.ystar )
 
     def __lt__(self, other):
         if self.ystar == other.ystar:
@@ -427,8 +427,8 @@ class Halfedge(object):
         else:
             return self.ystar < other.ystar
 
-    def __eq__(self, other):
-        return self.ystar == other.ystar and self.vertex.x == other.vertex.x
+#    def __eq__(self, other):
+#        return self.ystar == other.ystar and self.vertex.x == other.vertex.x
 
     def leftreg(self,default):
         if not self.edge: 
@@ -614,8 +614,8 @@ class PriorityQueue(object):
         for i in range(self.hashsize):
             self.hash.append(Halfedge())
 
-    def __len__(self):
-        return self.count
+#    def __len__(self):
+#        return self.count
 
     def isEmpty(self):
         return self.count == 0
@@ -703,8 +703,8 @@ class SiteList(object):
     def iterator(self):
         return iter(self.__sites) #SiteList.Iterator(self.__sites)
 
-    def __iter__(self):
-        return iter(self.__sites) #SiteList.Iterator(self.__sites)
+#    def __iter__(self):
+#        return iter(self.__sites) #SiteList.Iterator(self.__sites)
 
     def __len__(self):
         return len(self.__sites)
@@ -720,35 +720,35 @@ class SiteList(object):
 
 
 #------------------------------------------------------------------
-def computeVoronoiDiagram(points):
-    """ Takes a list of point objects (which must have x and y fields).
-        Returns a 3-tuple of:
-
-           (1) a list of 2-tuples, which are the x,y coordinates of the 
-               Voronoi diagram vertices
-           (2) a list of 3-tuples (a,b,c) which are the equations of the
-               lines in the Voronoi diagram: a*x + b*y = c
-           (3) a list of 3-tuples, (l, v1, v2) representing edges of the 
-               Voronoi diagram.  l is the index of the line, v1 and v2 are
-               the indices of the vetices at the end of the edge.  If 
-               v1 or v2 is -1, the line extends to infinity.
-    """
-    siteList = SiteList(points)
-    context  = Context()
-    voronoi(siteList,context)
-    return (context.vertices,context.lines,context.edges)
+#def computeVoronoiDiagram(points):
+#    """ Takes a list of point objects (which must have x and y fields).
+#        Returns a 3-tuple of:
+#
+#           (1) a list of 2-tuples, which are the x,y coordinates of the 
+#               Voronoi diagram vertices
+#           (2) a list of 3-tuples (a,b,c) which are the equations of the
+#               lines in the Voronoi diagram: a*x + b*y = c
+#           (3) a list of 3-tuples, (l, v1, v2) representing edges of the 
+#               Voronoi diagram.  l is the index of the line, v1 and v2 are
+#               the indices of the vetices at the end of the edge.  If 
+#               v1 or v2 is -1, the line extends to infinity.
+#    """
+#    siteList = SiteList(points)
+#    context  = Context()
+#    voronoi(siteList,context)
+#    return (context.vertices,context.lines,context.edges)
 
 #------------------------------------------------------------------
-def computeDelaunayTriangulation(points):
-    """ Takes a list of point objects (which must have x and y fields).
-        Returns a list of 3-tuples: the indices of the points that form a
-        Delaunay triangle.
-    """
-    siteList = SiteList(points)
-    context  = Context()
-    context.triangulate = True
-    voronoi(siteList,context)
-    return context.triangles
+#def computeDelaunayTriangulation(points):
+#    """ Takes a list of point objects (which must have x and y fields).
+#        Returns a list of 3-tuples: the indices of the points that form a
+#        Delaunay triangle.
+#    """
+#    siteList = SiteList(points)
+#    context  = Context()
+#    context.triangulate = True
+#    voronoi(siteList,context)
+#    return context.triangles
 
 #-----------------------------------------------------------------------------
 if __name__=="__main__":
