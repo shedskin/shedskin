@@ -172,8 +172,8 @@ class Task(TaskState):
         taskWorkArea.taskList = self
         taskWorkArea.taskTab[i] = self
 
-    def fn(self,pkt,r):
-        raise NotImplementedError
+#    def fn(self,pkt,r):
+#        raise NotImplementedError
 
 
     def addPacket(self,p,old):
