@@ -2,7 +2,6 @@
 
 #include "__init__.hpp"
 #include "path.hpp"
-#include "random.hpp"
 
 #include <cstdlib>
 #include <sstream>
@@ -601,10 +600,7 @@ void *utime(str *path, tuple2<__ss_float, __ss_float> *times) { HOPPA }
 
 bytes *urandom(__ss_int n) {
 #ifdef WIN32
-    bytes * b = new bytes(10); // TODO use bcrypt.h..
-    for(__ss_int i=0; i<n; i++)
-        b->append(__random__::randrange(__ss_int(256)));
-    return b;
+    throw new NotImplementedError();  // TODO use bcrypt.h..
 #else
     __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
     bytes *s = read(fd, n);
