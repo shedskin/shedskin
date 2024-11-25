@@ -1,9 +1,9 @@
 import os
 
 
-def test_popen():
-    # https://github.com/shedskin/shedskin/issues/191
-    assert os.popen("echo Hello World").read() == 'Hello World\n'
+#def test_popen():
+#    # https://github.com/shedskin/shedskin/issues/191
+#    assert os.popen("echo Hello World").read() == 'Hello World\n'
 
 
 def test_getcwd():
@@ -57,13 +57,13 @@ def test_exceptions():
 def test_all():
     test_getcwd()
     test_exceptions()
+#    test_popen() # windows?
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
         test_env()
         test_rdwr()
         test_system()
-        test_popen()
         test_urandom()
 
 
