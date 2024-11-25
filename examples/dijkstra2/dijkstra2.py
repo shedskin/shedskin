@@ -24,16 +24,18 @@ class Graph:
         va.neighs.append((vb, weight))
         vb.neighs.append((va, weight))
 
+
 class Vertex:
     def __init__(self, id_):
         self.id_ = id_
         self.neighs = []
 
-    def __repr__(self):
-        return repr(self.id_)
+#    def __repr__(self):
+#        return repr(self.id_)
 
-    def __lt__(self, other):
-        return self.id_ < other.id_
+#    def __lt__(self, other):
+#        return self.id_ < other.id_
+
 
 def bidirectional_dijkstra(G, source_id, target_id):
     source, target = G.vertices[source_id], G.vertices[target_id]

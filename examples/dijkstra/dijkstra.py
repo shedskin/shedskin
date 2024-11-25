@@ -27,10 +27,13 @@ class Edge(object):
         self.u = u
         self.v = v
         self.d = d
-    def __str__(self):
-        return "[%s --%3.2f--> %s]" % (self.u.name, self.d, self.v.name)
-    def __repr__(self):
-        return str(self)
+
+#    def __str__(self):
+#        return "[%s --%3.2f--> %s]" % (self.u.name, self.d, self.v.name)
+
+#    def __repr__(self):
+#        return str(self)
+
 
 class Graph(object):
     def __init__(self):
