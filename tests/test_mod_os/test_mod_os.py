@@ -57,7 +57,6 @@ def test_exceptions():
 def test_all():
     test_getcwd()
     test_exceptions()
-    test_urandom()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
@@ -65,6 +64,7 @@ def test_all():
         test_rdwr()
         test_system()
         test_popen()
+        test_urandom()
 
 
 if __name__ == '__main__':
