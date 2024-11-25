@@ -9,13 +9,11 @@ using namespace __shedskin__;
 namespace __os__ {
 
 extern str * default_0;
-extern str * default_3;
-extern str * default_5;
+extern str * default_1;
 extern str * default_2;
-extern void * default_7;
+extern str * default_3;
 extern str * default_4;
-extern str * default_6;
-extern __ss_bool  default_1;
+extern str * default_5;
 
 extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;

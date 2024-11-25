@@ -67,13 +67,11 @@ extern char **environ;
 namespace __os__ {
 
 str * default_0;
-str * default_3;
-str * default_5;
+str * default_1;
 str * default_2;
-void * default_7;
+str * default_3;
 str * default_4;
-str * default_6;
-__ss_bool  default_1;
+str * default_5;
 
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
@@ -1342,13 +1340,11 @@ void __init() {
     str *const_1 = __char_cache['r'];
 
     default_0 = const_0;
-    default_1 = False;
+    default_1 = const_1;
     default_2 = const_1;
     default_3 = const_1;
     default_4 = const_1;
     default_5 = const_1;
-    default_6 = const_1;
-    default_7 = NULL;
 
     cl___cstat = new class_("__cstat");
 
