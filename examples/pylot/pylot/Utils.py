@@ -21,19 +21,19 @@ debug = False
 
 debug_rays = []
 
-def nop():
-  pass
+#def nop():
+#  pass
 
-def set_debug(val):
-  global debug
-  debug = val
+#def set_debug(val):
+#  global debug
+#  debug = val
+#
+#def get_debug():
+#  return debug
 
-def get_debug():
-  return debug
-
-def debug_print(string):
-  if debug:
-    print(string)
+#def debug_print(string):
+#  if debug:
+#    print(string)
 
 #{
 # Warning: not thread-safe

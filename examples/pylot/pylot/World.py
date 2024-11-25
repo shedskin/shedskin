@@ -29,8 +29,8 @@ class World(object):
 #}
     self.shapes = shapes
 
-  def __repr__(self):
-    return repr(self.shapes)
+#  def __repr__(self):
+#    return repr(self.shapes)
 
   def intersect(self, ray, ignore=None, inside=None, insideMaterial=None):
 #{

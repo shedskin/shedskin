@@ -72,14 +72,14 @@ class Material(object):
       self.specular = Color.BLACK
     self.emissive = emissive
 
-  def __repr__(self):
-    return "[Material: " + self.name + "\n" + \
-           "\tcolor: " + repr(self.color) + \
-           "\tattenuation_distances: " + repr(self.attenuation_distances) + \
-           "\treflective: " + repr(self.reflective) + \
-           "\tspecular: " + repr(self.specular) + \
-           "\temissive: " + repr(self.emissive) + \
-           "\tindexOfRefraction: " + repr(self.indexOfRefraction) + "]"
+#  def __repr__(self):
+#    return "[Material: " + self.name + "\n" + \
+#           "\tcolor: " + repr(self.color) + \
+#           "\tattenuation_distances: " + repr(self.attenuation_distances) + \
+#           "\treflective: " + repr(self.reflective) + \
+#           "\tspecular: " + repr(self.specular) + \
+#           "\temissive: " + repr(self.emissive) + \
+#           "\tindexOfRefraction: " + repr(self.indexOfRefraction) + "]"
 
   def isLightSource(self):
     return self.emissive is not None

@@ -47,11 +47,11 @@ class Vector4(object):
                    self.z - other.z,
                    self.w - other.w)
 
-  def toList(self):
-    return [self.x, self.y, self.z, self.w]
+#  def toList(self):
+#    return [self.x, self.y, self.z, self.w]
 
-  def __repr__(self):
-    return "(" + ", ".join([str(i) for i in self.toList()]) + ")"
+#  def __repr__(self):
+#    return "(" + ", ".join([str(i) for i in self.toList()]) + ")"
 
 # Consider __eq__
 
@@ -88,11 +88,11 @@ class Vector4(object):
                   -self.y * other.x + self.x * other.y,
                   0)
 
-  def componentProduct(self, other):
-    return Vector4(self.x * other.x,
-                   self.y * other.y,
-                   self.z * other.z,
-                   self.w * other.w)
+#  def componentProduct(self, other):
+#    return Vector4(self.x * other.x,
+#                   self.y * other.y,
+#                   self.z * other.z,
+#                   self.w * other.w)
 
   def length(self):
     return math.sqrt(self.length_2())
@@ -150,8 +150,8 @@ def Point(x, y, z):
 def Offset(x, y, z):
   return Vector4(x, y, z, 0)
 
-def Zero():
-  return Point(0, 0, 0)
+#def Zero():
+#  return Point(0, 0, 0)
 
 def Mean(vectors):
 #{
