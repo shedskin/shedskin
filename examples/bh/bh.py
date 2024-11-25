@@ -209,14 +209,14 @@ class Node(object):
         self.mass = 0.0 # mass of the node
         self.pos = Vec3() # Position of the node
 
-    def load_tree(self, p, xpic, l, root):
-        raise NotImplementedError()
+#    def load_tree(self, p, xpic, l, root):
+#        raise NotImplementedError()
 
-    def hack_cofm(self):
-        raise NotImplementedError()
+#    def hack_cofm(self):
+#        raise NotImplementedError()
 
-    def walk_sub_tree(self, dsq, hg):
-        raise NotImplementedError()
+#    def walk_sub_tree(self, dsq, hg):
+#        raise NotImplementedError()
 
     @staticmethod
     def old_sub_index(ic, l):
@@ -226,8 +226,8 @@ class Node(object):
                 i += Cell.NSUB >> (k + 1)
         return i
 
-    def __repr__(self):
-        return "%f : %f" % (self.mass, self.pos)
+#    def __repr__(self):
+#        return "%f : %f" % (self.mass, self.pos)
 
     def grav_sub(self, hg):
         """Compute a single body-body or body-cell interaction"""
@@ -379,12 +379,12 @@ class Body(Node):
             hg = self.grav_sub(hg)
         return hg
 
-    def __repr__(self):
-        """
-        Return a string represenation of a body.
-        @return a string represenation of a body.
-        """
-        return "Body " + Node.__repr__(self)
+#    def __repr__(self):
+#        """
+#        Return a string represenation of a body.
+#        @return a string represenation of a body.
+#        """
+#        return "Body " + Node.__repr__(self)
 
 
 class Cell(Node):
@@ -461,12 +461,12 @@ class Cell(Node):
         # in the original olden version drsp is multiplied by 1.0
         return drsq < dsq
 
-    def __repr__(self):
-        """
-        Return a string represenation of a cell.
-        @return a string represenation of a cell.
-        """
-        return "Cell " + Node.__repr__(self)
+#    def __repr__(self):
+#        """
+#        Return a string represenation of a cell.
+#        @return a string represenation of a cell.
+#        """
+#        return "Cell " + Node.__repr__(self)
 
 
 class Tree:
