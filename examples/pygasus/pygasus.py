@@ -567,26 +567,26 @@ def ppuProcessRegs(adr, val):
 #                    tpFone(x,y)
                 ppuVRAMAdrValue+=ppuAdrIncrement
 
-def dump_and_die():
-        print("A: ",hex(A))
-        print("X: ",hex(X))
-        print("Y: ",hex(Y))
-        print("PC: ",hex(PC))
-        print("P: ",hex(P))
-        print("S: ",hex(S))
-        print("savepc: ",hex(savepc))
-        print("saveflags: ",hex(saveflags))
-        print("sum: ",hex(sum))
-        print("value: ",hex(value))
-        exit(1)
+#def dump_and_die():
+#        print("A: ",hex(A))
+#        print("X: ",hex(X))
+#        print("Y: ",hex(Y))
+#        print("PC: ",hex(PC))
+#        print("P: ",hex(P))
+#        print("S: ",hex(S))
+#        print("savepc: ",hex(savepc))
+#        print("saveflags: ",hex(saveflags))
+#        print("sum: ",hex(sum))
+#        print("value: ",hex(value))
+#        exit(1)
 
-def dump_and_dont_die():
-        print("A: ",hex(A)+"\t\t"+"X: ",hex(X)+"\t\t"+ "Y: ",hex(Y)+"\t\t"+ "PC: ",hex(PC)+"\t\t"+ "P: ",hex(P)+"\t\t"+ "S: ",hex(S)+"\t\t"+ "savepc: ",hex(savepc)+"\t\t"+ "saveflags: ",hex(saveflags)+"\t\t"+ "sum: ",hex(sum)+"\t\t"+"value: ",hex(value))
+#def dump_and_dont_die():
+#        print("A: ",hex(A)+"\t\t"+"X: ",hex(X)+"\t\t"+ "Y: ",hex(Y)+"\t\t"+ "PC: ",hex(PC)+"\t\t"+ "P: ",hex(P)+"\t\t"+ "S: ",hex(S)+"\t\t"+ "savepc: ",hex(savepc)+"\t\t"+ "saveflags: ",hex(saveflags)+"\t\t"+ "sum: ",hex(sum)+"\t\t"+"value: ",hex(value))
 
 
-def verbose(s):
-#        return
-        print("%.2x %.2x %.2x %.4x %.2x %.2x %.2x (%1.4x) %s %s"%(A,X,Y,PC,P,S,opcode,savepc, str(instruction[opcode]).split()[1][1:],s))
+#def verbose(s):
+##        return
+#        print("%.2x %.2x %.2x %.4x %.2x %.2x %.2x (%1.4x) %s %s"%(A,X,Y,PC,P,S,opcode,savepc, str(instruction[opcode]).split()[1][1:],s))
 
 def pGetMem(adr):
         global ppuStatusRegstr, ppuAdr2007Ofset, ppuVRAMAdrValue,ppuVRAMBuffer__
@@ -1616,14 +1616,14 @@ def pNmi():
         PC=pGetMem(0xfffa)
         PC|=pGetMem(0xfffb)<<8
 
-def pIrq():
-        global S,P,PC
-        pPutMem(0x100+S,PC>>8);S=(S-1)&0xff
-        pPutMem(0x100+S,PC&0xff);S=(S-1)&0xff
-        pPutMem(0x100+S,P);S=(S-1)&0xff
-        P|=0x4
-        PC=pGetMem(0xfffe)
-        PC|=pGetMem(0xffff)<<8
+#def pIrq():
+#        global S,P,PC
+#        pPutMem(0x100+S,PC>>8);S=(S-1)&0xff
+#        pPutMem(0x100+S,PC&0xff);S=(S-1)&0xff
+#        pPutMem(0x100+S,P);S=(S-1)&0xff
+#        P|=0x4
+#        PC=pGetMem(0xfffe)
+#        PC|=pGetMem(0xffff)<<8
 
 def pExec():
         global ticks,opcode,PC, ppuStatusRegstr,PS, keys, ppuVRAMAdrValue,addr0,tilesModified
