@@ -959,7 +959,6 @@ void *setstate(list<__ss_float> *state) {
 
 __ss_int randrange(__ss_int stop) {
 
-    printf("randraaa\n");
     return _inst->randrange(0, stop, 1);
 }
 
