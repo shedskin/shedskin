@@ -104,9 +104,9 @@ class Square:
            if update:
                self.reference = reference
        return reference
-    
-    def __repr__(self):
-        return repr(to_xy(self.pos))
+
+#    def __repr__(self):
+#        return repr(to_xy(self.pos))
 
 class EmptySet:
     def __init__(self, board):
@@ -154,7 +154,7 @@ class ZobristHash:
 
     def add(self):
         self.hash_set.add(self.hash)
-    
+
     def dupe(self):
         return self.hash in self.hash_set
 
@@ -261,6 +261,7 @@ class Board:
                     count += 1
         return count
 
+    '''
     def check(self):
        for square in self.squares:
            if square.color == EMPTY:
@@ -304,6 +305,7 @@ class Board:
            for square in self.squares:
                if square.color == EMPTY:
                    empties2.add(square.pos)
+    '''
 
     def __repr__(self):
         result = []
