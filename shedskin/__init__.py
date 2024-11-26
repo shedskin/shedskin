@@ -16,7 +16,7 @@ import platform
 import sys
 import time
 
-from . import cmake, config, cpp, error, graph, infer, log
+from . import cmake, config, cpp, error, graph, infer, log, stats
 
 from typing import List, Optional
 
@@ -188,7 +188,10 @@ class Shedskin:
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx)
         error.print_errors()
-        self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
+        analysis_time = (time.time() - t0)
+        if self.gx.options.collect_stats:
+            stats.insert_pymodule(self.gx.module_path, analysis_time)
+        self.log.info('\n[elapsed time: %.2f seconds]', analysis_time)
 
     def build(self) -> None:
         """Build the main module"""
@@ -274,6 +277,8 @@ class Shedskin:
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("-w", "--nowrap",       help="Disable wrap-around checking", action="store_true")
         opt("--nocleanup",          help="Disable cleanup of generated files", action="store_true")
+        opt("--collect-stats",      help="Collect module nwords, sloc and analysis time in cache dir db", action="store_true")
+
         parser_build = subparsers.add_parser('build', help="translate and build python module (CMake)")
         arg = opt = parser_build.add_argument
 

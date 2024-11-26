@@ -43,37 +43,14 @@ from .utils import CYAN, GREEN, RED, RESET, WHITE
 Pathlike = Union[pathlib.Path, str]
 
 
-def get_pkg_path() -> pathlib.Path:
-    """Return the path to the shedskin package"""
-    _pkg_path = pathlib.Path(__file__).parent
-    assert _pkg_path.name == "shedskin"
-    return _pkg_path
-
-
 def pkg_path() -> None:
     """Used by cmake to get the shedskin package path automatically"""
-    sys.stdout.write(str(get_pkg_path()))
-
-
-def get_user_cache_dir() -> pathlib.Path:
-    """Get user cache directory depending on platform"""
-    system = platform.system()
-    if system == "Darwin":
-        return pathlib.Path("~/Library/Caches/shedskin").expanduser()
-    if system == "Linux":
-        return pathlib.Path("~/.cache/shedskin").expanduser()
-    if system == "Windows":
-        profile = os.getenv("USERPROFILE")
-        if not profile:
-            raise SystemExit("USERPROFILE environment variable not set on windows")
-        user_dir = pathlib.Path(profile)
-        return user_dir / "AppData" / "Local" / "shedskin" / "Cache"
-    raise SystemExit(f"{system} os not supported")
+    sys.stdout.write(str(config.get_pkg_path()))
 
 
 def user_cache_dir() -> None:
     """Used by CMakeLists.txt execute process"""
-    sys.stdout.write(str(get_user_cache_dir()))
+    sys.stdout.write(str(config.get_user_cache_dir()))
 
 
 class ConanBDWGC:
