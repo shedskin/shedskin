@@ -7,6 +7,8 @@
 #include "math.hpp"
 #include "time.hpp"
 
+#include <random>
+
 using namespace __shedskin__;
 namespace __random__ {
 
@@ -34,6 +36,9 @@ public:
     __ss_float gauss_next;
     list<int> *mt;
     int mti;
+
+    std::mt19937 gen; // seed the generator
+    std::uniform_real_distribution<> distr;
 
     Random();
     Random(int a);
@@ -263,19 +268,12 @@ template <class A> void *Random::seed(A a) {
             If no argument is provided, current time is used for seeding.
     */
 
-    long h;
-
     if(__is_none(a)) {
-        int secs, usec;
-        __ss_float hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        h = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
+        std::random_device rd;
+        gen.seed(rd());
+    } else {
+        gen.seed(hasher(a));
     }
-    else
-        h = hasher(a);
-
-    srand((unsigned int)h);
 
     return NULL;
 }
