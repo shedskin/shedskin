@@ -173,7 +173,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return rand() / ((__ss_float)RAND_MAX+1); // TODO use more advanced C++ alternative
+    return distr(gen);
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
@@ -211,7 +211,7 @@ __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
     return (alpha*__power(-__math__::log(u), (1.0/beta)));
 }
 
-Random::Random() {
+Random::Random() : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
     this->mt = ((new list<int>(1, 0)))->__mul__(N);
@@ -220,6 +220,7 @@ Random::Random() {
     this->gauss_switch = 0;
     this->seed((void *)NULL);
     this->VERSION = 2;
+
 }
 
 Random::Random(int a) {
