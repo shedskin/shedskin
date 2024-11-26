@@ -188,10 +188,17 @@ class Shedskin:
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx)
         error.print_errors()
-        analysis_time = (time.time() - t0)
+        elapsed_secs = (time.time() - t0)
         if self.gx.options.collect_stats:
-            stats.insert_pymodule(self.gx.module_path, analysis_time)
-        self.log.info('\n[elapsed time: %.2f seconds]', analysis_time)
+            stats.insert_pymodule(self.gx.module_path, elapsed_secs)
+            len_name = len(self.module_name) + 1
+            print()
+            print("NAME"+(' '*len_name), "NWORDS", "SLOC", "ELAPSED (secs)")
+            for row in stats.get_latest_stats():                
+                self.log.info(f"{row[0]:{len_name}} {row[1]:7} {row[2]:5} {row[3]:5.1f}")
+            print()
+        else:
+            self.log.info('\n[elapsed time: %.2f seconds]', elapsed_secs)
 
     def build(self) -> None:
         """Build the main module"""

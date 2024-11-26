@@ -801,8 +801,13 @@ class MakefileGenerator:
 
     def _write_filelist(self, name: str, files: list[str]) -> None:
         """Write a file list to the Makefile"""
-        filelist = " \\\n\t".join(files)
-        self.write(f"{name}=\\\n\t{filelist}\n")
+        if not files:
+            return
+        if len(files) == 1:
+            self.write(f"{name}={files[0]}")
+        else:
+            filelist = " \\\n\t".join(files)
+            self.write(f"{name}=\\\n\t{filelist}\n")
 
     def _write_variables(self) -> None:
         """Write variables to the Makefile"""
@@ -846,6 +851,7 @@ class MakefileGenerator:
         """Write phony targets to the Makefile"""
         if self.phony:
             phone_targets = " ".join(self.phony)
+            self.write()
             self.write(f".PHONY: {phone_targets}")
             self.write()
 
