@@ -14,6 +14,7 @@ class Individual:
         self.ngenes = ngenes
         self.genome = [random()<0.5 for i in range(ngenes)]
         self.fitness = infiniteNeg
+
     def bin2dec(self, inf=0, sup=0): 
         if sup == 0: sup = self.ngenes - 1 
         result = 0
@@ -21,16 +22,19 @@ class Individual:
             if self.genome[i]:
                 result += 1 << (i-inf)
         return result
+
     def computeFitness(self):
         self.fitness = self.fitnessFun(self.computeValuesGenome())
-    def __repr__(self):
-        return "".join([str(int(gene)) for gene in self.genome])
 
     def fitnessFun(self, x):
         return x + abs(sin(32*x))
+
     def computeValuesGenome(self, xMin=0, xMax=pi):
         scaleFactor = (xMax-xMin) / (1<<self.ngenes)
         return self.bin2dec() * scaleFactor
+
+#    def __repr__(self):
+#        return "".join([str(int(gene)) for gene in self.genome])
 
 
 class SGA:

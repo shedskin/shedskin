@@ -30,8 +30,8 @@ class boardRep(object):
     def __eq__(self, other):
         return self.__fields == other.fields()
 
-    def __ne__(self, other):
-        return self.__fields != other.fields()
+#    def __ne__(self, other):
+#        return self.__fields != other.fields()
 
     def __hash__(self):
         rep = ""

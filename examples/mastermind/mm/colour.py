@@ -21,8 +21,8 @@ class Colours:
     purple = 2
     yellow = 3
     white = 4
-    black = 5 
+    black = 5
 
-    def getNumberOfColours(self):
-        return self.numberOfColours
+#    def getNumberOfColours(self):
+#        return self.numberOfColours
 

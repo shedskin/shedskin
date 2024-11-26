@@ -33,7 +33,7 @@ class face(object):
         elif frontFace == self.RIGHT:
             cmap = [6,3,0,7,4,1,8,5,2]
             return self.num2coord(cmap[self.coord2num((row,col))])
-        
+
     def getDownFacePos(self, frontFace, row, col):
         if frontFace == self.FRONT or frontFace == self.UP or frontFace == self.DOWN:
             return (row, col)
@@ -87,19 +87,19 @@ class face(object):
     def __getitem__(self, key):
         x,y = self.getCoords(key)
         return self.struc[x][y]
-    
+
     def __setitem__(self, key, value):
         x,y = self.getCoords(key)
         self.struc[x][y] = value
 
-    def __len__(self):
-        return 3
+#    def __len__(self):
+#        return 3
 
-    def __str__(self):
-        return str(self.struc)
+#    def __str__(self):
+#        return str(self.struc)
 
-    def __repr__(self):
-        return str(self)
+#    def __repr__(self):
+#        return str(self)
 
     def isSolved(self):
         c = self.struc[0][0]
@@ -144,7 +144,7 @@ class cube(object):
 
     def endRecord(self):
         self.recording = False
-        
+
     def getFaces(self, frontFace):
         if not frontFace or frontFace == self.FRONT:
             return self.FRONT, self.BACK, self.LEFT, self.RIGHT, self.UP, self.DOWN
@@ -161,7 +161,7 @@ class cube(object):
 
     def inverseMove(self, move):
         return move[0] if len(move)==2 else (move+"'")
-        
+
     def turn(self, face, clockwise=True):
         FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(face)
         if self.recording:
@@ -270,9 +270,6 @@ class cube(object):
         RIGHT[(FRONT, 1)] = up[0]
         RIGHT[(FRONT, 4)] = up[1]
         RIGHT[(FRONT, 7)] = up[2]
-        
-        
-        
 
     def randomize(self, turns = 100):
         for i in range(turns):
@@ -280,22 +277,22 @@ class cube(object):
                 self.turn(random.choice(self.faces))
             else:
                 self.turnMiddle(random.choice(self.faces))
-                
+
     def isSolved(self):
         for f in self.faces:
             if not f.isSolved(): return False
         return True
 
-    def __str__(self):
-        x = ""
-        for f in self.faces:
-            x += l+" : "+str(f)+"\n"
-        return x[:-1]
+#    def __str__(self):
+#        x = ""
+#        for f in self.faces:
+#            x += l+" : "+str(f)+"\n"
+#        return x[:-1]
 
     def strCube(self,face=None,replCol=True):
         faces = self.getFaces(face)
         o = "FBLRUD"
-        
+
         x = """
         U0 U1 U2
         U3 U4 U5   
@@ -320,11 +317,11 @@ class cube(object):
 
         return x
 
-    def getColName(self, num):
-        return self.colLet[num]
-    
-    def __repr__(self):
-        return self.strCube(self.UP)
+#    def getColName(self, num):
+#        return self.colLet[num]
+
+#    def __repr__(self):
+#        return self.strCube(self.UP)
 
     def primeCube(self, frontFace = None):
         if frontFace is None: frontFace = self.FRONT
@@ -366,16 +363,16 @@ class cube(object):
                 cnt += 1
         return cnt >= 2
 
-    def cornerHasColsTL(self, frontFace, needColors):
-        FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(frontFace)
-        colors = (FRONT[(FRONT, 0)],
-                LEFT[(FRONT, 2)],
-                UP[(FRONT, 6)])
-        cnt = 0
-        for color in needColors:
-            if color in colors:
-                cnt += 1
-        return cnt >= 2
+#    def cornerHasColsTL(self, frontFace, needColors):
+#        FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(frontFace)
+#        colors = (FRONT[(FRONT, 0)],
+#                LEFT[(FRONT, 2)],
+#                UP[(FRONT, 6)])
+#        cnt = 0
+#        for color in needColors:
+#            if color in colors:
+#                cnt += 1
+#        return cnt >= 2
 
     def stepOneCompleteFace(self, frontFace, upCol):
         FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(frontFace)
@@ -384,7 +381,7 @@ class cube(object):
         u0 = UP[(FRONT, 6)]
         u1 = UP[(FRONT, 8)]
         return (u0 == upCol) and (u0 == u1) and (f0 == f1)
-    
+
     def stepOne(self, frontFace=None, check=True):
         counter = 0
         skip = []

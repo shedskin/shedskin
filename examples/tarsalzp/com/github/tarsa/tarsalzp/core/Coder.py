@@ -104,11 +104,11 @@ class Coder(object):
             packedOptions.shl8()
         Coder.doEncode(encoder, intervalLength)
 
-    @staticmethod
-    def encodeRaw(inputStream, outputStream, intervalLength, options):
-        Coder.checkInterval(intervalLength)
-        encoder = Encoder(inputStream, outputStream, options)
-        Coder.doEncode(encoder, intervalLength)
+#    @staticmethod
+#    def encodeRaw(inputStream, outputStream, intervalLength, options):
+#        Coder.checkInterval(intervalLength)
+#        encoder = Encoder(inputStream, outputStream, options)
+#        Coder.doEncode(encoder, intervalLength)
 
     @staticmethod
     def doEncode(encoder, intervalLength):

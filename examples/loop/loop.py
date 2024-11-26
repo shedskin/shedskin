@@ -43,17 +43,17 @@ class Simple_loop(object):
     def add_node(self, basic_block):
         self.basic_blocks_.add(basic_block)
 
-    def add_child_loop(self, loop):
-        self.children_.add(loop)
+#    def add_child_loop(self, loop):
+#        self.children_.add(loop)
 
     def dump(self):
         # Simplified for readability purposes.
         print("loop-%d, nest: %d, depth: %d" % (self.counter_, self.nesting_level_, self.depth_level_))
 
     # Getters/Setters
-    def set_parent(self, parent):
-        self.parent_ = parent
-        parent.add_child_loop(self)
+#    def set_parent(self, parent):
+#        self.parent_ = parent
+#        parent.add_child_loop(self)
 
     def set_nesting_level(self, level):
         self.nesting_level_ = level
@@ -100,22 +100,22 @@ class Loop_structure_graph(object):
         for liter in loop.children_:
             pass # self.dump_rec(liter, indent + 1)
 
-    def calculate_nesting_level(self):
-        # link up all 1st level loops to artificial root node.
-        for loop in self.loops_:
-            if loop.is_root_:
-                continue
-            if not loop.parent_:
-                loop.set_parent(self.root_)
+#    def calculate_nesting_level(self):
+#        # link up all 1st level loops to artificial root node.
+#        for loop in self.loops_:
+#            if loop.is_root_:
+#                continue
+#            if not loop.parent_:
+#                loop.set_parent(self.root_)
+#
+#        # recursively traverse the tree and assign levels.
+#        self.calculate_nesting_level_rec(self.root_, 0)
 
-        # recursively traverse the tree and assign levels.
-        self.calculate_nesting_level_rec(self.root_, 0)
-
-    def calculate_nesting_level_rec(self, loop, depth):
-        loop.depth_level_ = depth
-        for ch in loop.children_:
-            calculate_nesting_level_rec(ch, depth + 1)
-            loop.nesting_level_ = max(loop.nesting_level_, 1 + ch.nesting_level_)
+#    def calculate_nesting_level_rec(self, loop, depth):
+#        loop.depth_level_ = depth
+#        for ch in loop.children_:
+#            calculate_nesting_level_rec(ch, depth + 1)
+#            loop.nesting_level_ = max(loop.nesting_level_, 1 + ch.nesting_level_)
 
 
 #======================================================

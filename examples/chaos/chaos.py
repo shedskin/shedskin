@@ -42,11 +42,11 @@ class GVector(object):
                     self.z * l1 + other.z * l2)
         return v
 
-    def __str__(self):
-        return "<%f, %f, %f>" % (self.x, self.y, self.z)
+#    def __str__(self):
+#        return "<%f, %f, %f>" % (self.x, self.y, self.z)
 
-    def __repr__(self):
-        return "GVector(%f, %f, %f)" % (self.x, self.y, self.z)
+#    def __repr__(self):
+#        return "GVector(%f, %f, %f)" % (self.x, self.y, self.z)
 
 def GetKnots(points, degree):
     knots = [0] * degree + list(range(1, len(points) - degree))
@@ -112,11 +112,11 @@ degree of the Spline."""
              I = dom[1] - 1
         return I
 
-    def __len__(self):
-        return len(self.points)
+#    def __len__(self):
+#        return len(self.points)
 
-    def __repr__(self):
-        return "Spline(%r, %r, %r)" % (self.points, self.degree, self.knots)
+#    def __repr__(self):
+#        return "Spline(%r, %r, %r)" % (self.points, self.degree, self.knots)
 
 
 def save_im(im, fn):

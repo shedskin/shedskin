@@ -40,7 +40,7 @@ class NN:
         self.ai = [1.0]*self.ni
         self.ah = [1.0]*self.nh
         self.ao = [1.0]*self.no
-        
+
         # create weights
         self.wi = makeMatrix(self.ni, self.nh)
         self.wo = makeMatrix(self.nh, self.no)
@@ -126,14 +126,14 @@ class NN:
         for p in patterns:
             print(p[0], '->', self.update(p[0]))
 
-    def weights(self):
-        print('Input weights:')
-        for i in range(self.ni):
-            print(self.wi[i])
-        print()
-        print('Output weights:')
-        for j in range(self.nh):
-            print(self.wo[j])
+#    def weights(self):
+#        print('Input weights:')
+#        for i in range(self.ni):
+#            print(self.wi[i])
+#        print()
+#        print('Output weights:')
+#        for j in range(self.nh):
+#            print(self.wo[j])
 
     def train(self, patterns, iterations=10000, N=0.5, M=0.1):
         # N: learning rate

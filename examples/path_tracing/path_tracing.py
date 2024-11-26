@@ -35,8 +35,8 @@ class V3(object):
     def mul(self, v):
         return V3(self.x * v.x, self.y * v.y, self.z * v.z)
 
-    def div(self, v):
-        return V3(self.x / v.x, self.y / v.y, self.z / v.z)
+#    def div(self, v):
+#        return V3(self.x / v.x, self.y / v.y, self.z / v.z)
 
     def muls(self, s):
         return V3(self.x * s, self.y * s, self.z * s)
@@ -195,11 +195,11 @@ class Renderer(object):
             V3(0.0, 0.0, 0.0) for i in range(scene.output.width * scene.output.height)
         ]
 
-    def clearBuffer(self):
-        for i in range(len(self.buffer)):
-            self.buffer[i].x = 0.0
-            self.buffer[i].y = 0.0
-            self.buffer[i].z = 0.0
+#    def clearBuffer(self):
+#        for i in range(len(self.buffer)):
+#            self.buffer[i].x = 0.0
+#            self.buffer[i].y = 0.0
+#            self.buffer[i].z = 0.0
 
     def iterate(self):
         scene = self.scene

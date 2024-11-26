@@ -7,16 +7,12 @@ from . import colour
 class Code:
     """Class representing a collection of pegs"""
 
-    #__defaultCodeSize = 4
-    #__pegList = []
-
     def __init__(self, __pegList=None):
-    #    self.__pegList = __pegList
         self.__defaultCodeSize = 4
         self.__pegList = __pegList
 
-    def setPegs(self, __pegList):
-        self.__pegList = __pegList
+#    def setPegs(self, __pegList):
+#        self.__pegList = __pegList
 
     def setRandomCode(self, codeSize=-1):
         if codeSize == -1:

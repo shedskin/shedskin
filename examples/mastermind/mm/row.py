@@ -8,11 +8,11 @@ class Row:
         self.__guess = guess
         self.__result = result
 
-    def setGuess(self,guess):
-        self.__guess = guess
+#    def setGuess(self,guess):
+#        self.__guess = guess
 
-    def setResult(self,result):
-        self.__result = result
+#    def setResult(self,result):
+#        self.__result = result
 
     def getGuess(self):
         return self.__guess

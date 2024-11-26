@@ -434,8 +434,8 @@ class ChartItem:
             return False
         return self.label == other.label and self.vec == other.vec
 
-    def __lt__(self, other):
-        return self.vec < other.vec
+#    def __lt__(self, other):
+#        return self.vec < other.vec
 
 
 class Edge:
