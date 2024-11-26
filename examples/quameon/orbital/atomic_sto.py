@@ -86,10 +86,10 @@ class atomic_STO(orbital_base):
     (vec,r) = self.box.dist_v(p,self.npos[self.npos_idx])
     return vec[0],vec[1],vec[2],r*r
 
-  def compute_value(self,p,n_orb):
-    (x,y,z,r2) = self.get_coords(p)
-    val = self.primitive.compute_value(self.exp,[x,y,z])
-    return [val]
+#  def compute_value(self,p,n_orb):
+#    (x,y,z,r2) = self.get_coords(p)
+#    val = self.primitive.compute_value(self.exp,[x,y,z])
+#    return [val]
 
   def compute_value2(self,p,n_orb):
     (vec,r) = self.box.dist_v(p,self.npos[self.npos_idx])

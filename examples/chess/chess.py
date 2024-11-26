@@ -41,12 +41,12 @@ def evaluate(board):
   evals = (0, 100, 300, 330, 510, 950, 100000, -100000, -950, -510, -330, -300, -100)
   return sum([evals[board[i]] for i in squares])
 
-def printBoard(board):
-  for i in range(7,-1,-1):
-    for j in range(8):
-      ix = i * 16 + j
-      print((pieces[board[ix]]))
-    print()
+#def printBoard(board):
+#  for i in range(7,-1,-1):
+#    for j in range(8):
+#      ix = i * 16 + j
+#      print((pieces[board[ix]]))
+#    print()
 
 def move(board, mv):
   ix = (mv >> 8) & 0xff

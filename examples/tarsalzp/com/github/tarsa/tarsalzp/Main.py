@@ -64,12 +64,12 @@ class Main(object):
         self.err("\tliteralCoderStep=" + str(options.literalCoderStep))
         self.err("\tliteralCoderLimit=" + str(options.literalCoderLimit))
 
-    def printError(self, cause):
-        self.err("Error happened.")
-        if (cause is not None) and (len(cause.strip()) > 0):
-            self.err(cause)
-        self.err("")
-        self.printHelp()
+#    def printError(self, cause):
+#        self.err("Error happened.")
+#        if (cause is not None) and (len(cause.strip()) > 0):
+#            self.err(cause)
+#        self.err("")
+#        self.printHelp()
 
     def convertOptions(self, args):
         optionsMap = {}

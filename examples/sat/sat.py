@@ -47,7 +47,7 @@ class UnionClause:
     def __init__(self, lits, solver):
         self.lits = lits
         self.solver = solver
-    
+
     # Try to infer new facts.
     # We can do this only when all of our literals are False except one,
     # which is undecided. That is,
@@ -95,7 +95,7 @@ class UnionClause:
         self.solver.watch_lit(lit, self)
         return self.solver.enqueue(self.lits[0], self)
 
-    def undo(self, lit): pass
+#    def undo(self, lit): pass
 
     # Why is lit True?
     # Or, why are we causing a conflict (if lit is None)?
@@ -121,7 +121,7 @@ class VarInfo(object):
         self.level = -1         # The decision level at which we got a value (when not None)
         self.undo = []          # Constraints to update if we become unbound (by backtracking)
         self.obj = obj          # The object this corresponds to (for our caller and for debugging)
-    
+
     def __repr__(self):
         return '%s=%s' % (self.name, {NONE: 'None', TRUE: 'True', FALSE: 'False'}[self.value])
 
@@ -198,7 +198,7 @@ class SATProblem(object):
 
     #   while var_info.undo:
     #       var_info.undo.pop().undo(lit)
-    
+
     def cancel(self):
         n_this_level = len(self.trail) - self.trail_lim[-1]
         if DEBUG: debug("backtracking from level %d (%d assignments)" %
@@ -211,7 +211,7 @@ class SATProblem(object):
     def cancel_until(self, level):
         while self.get_decision_level() > level:
             self.cancel()
-    
+
     # Process the propQ.
     # Returns None when done, or the clause that caused a conflict.
     def propagate(self):
@@ -233,23 +233,23 @@ class SATProblem(object):
 
                     # Re-add remaining watches
                     self.watches[wi] += watches[i+1:]
-                    
+
                     # No point processing the rest of the queue as
                     # we'll have to backtrack now.
                     self.propQ = []
 
                     return clause
         return None
-    
-    def impossible(self):
-        self.toplevel_conflict = True
+
+#    def impossible(self):
+#        self.toplevel_conflict = True
 
     def get_varinfo_for_lit(self, lit):
         if lit >= 0:
             return self.assigns[lit]
         else:
             return self.assigns[neg(lit)]
-    
+
     def lit_value(self, lit):
         if lit >= 0:
             value = self.assigns[lit].value
@@ -263,7 +263,7 @@ class SATProblem(object):
                 return TRUE
             else:
                 return NONE
-    
+
     # Call cb when lit becomes True
     def watch_lit(self, lit, cb):
         #debug("%s is watching for %s to become True" % (cb, self.name_lit(lit)))
@@ -303,7 +303,7 @@ class SATProblem(object):
         if lit >= 0:
             return self.assigns[lit].name
         return "not(%s)" % self.assigns[neg(lit)].name
-    
+
     def add_clause(self, lits):
         # Public interface. Only used before the solve starts.
         assert lits

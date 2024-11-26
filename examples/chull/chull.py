@@ -24,8 +24,8 @@ class Vector:
 	def __sub__(self,other):
 		return Vector(other.x-self.x,other.y-self.y,other.z-self.z)
 	
-	def __add__(self,other):
-		return Vector(other.x+self.x,other.y+self.y,other.z+self.z)
+#	def __add__(self,other):
+#		return Vector(other.x+self.x,other.y+self.y,other.z+self.z)
 
 class Vertex:
 	def __init__(self,v,vnum=None,duplicate=None,onhull=False,mark=False):

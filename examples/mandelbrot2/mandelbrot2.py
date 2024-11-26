@@ -54,14 +54,14 @@ class kohn_bmp:
     def write_word(self, n):
         self.out.write(b'%c%c' % ((n&255),(n>>8)&255))
 
-    def write_pixel_bw(self, y):
-        self.out.write(b'%c' % y)
-        self.xpos = self.xpos + 1
-        if self.xpos == self.width:
-            while self.xpos < self.width_bytes:
-                self.out.write(b'\x00')
-                self.xpos = self.xpos + 1
-            self.xpos = 0
+#    def write_pixel_bw(self, y):
+#        self.out.write(b'%c' % y)
+#        self.xpos = self.xpos + 1
+#        if self.xpos == self.width:
+#            while self.xpos < self.width_bytes:
+#                self.out.write(b'\x00')
+#                self.xpos = self.xpos + 1
+#            self.xpos = 0
 
     def write_pixel(self, red, green, blue):
         self.out.write(b'%c%c%c' % (int(blue&255), int(green&255), int(red&255)))

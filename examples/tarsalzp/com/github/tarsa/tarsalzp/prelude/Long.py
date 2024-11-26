@@ -45,8 +45,8 @@ class Long(object):
         self.c = ((self.c & 0x00ff) << 8) + ((self.d & 0xff00) >> 8)
         self.d = (self.d & 0x00ff) << 8
 
-    def shr8(self):
-        self.d = ((self.d & 0xff00) >> 8) + ((self.c & 0x00ff) << 8)
-        self.c = ((self.c & 0xff00) >> 8) + ((self.b & 0x00ff) << 8)
-        self.b = ((self.b & 0xff00) >> 8) + ((self.a & 0x00ff) << 8)
-        self.a = (self.a & 0xff00) >> 8
+#    def shr8(self):
+#        self.d = ((self.d & 0xff00) >> 8) + ((self.c & 0x00ff) << 8)
+#        self.c = ((self.c & 0xff00) >> 8) + ((self.b & 0x00ff) << 8)
+#        self.b = ((self.b & 0xff00) >> 8) + ((self.a & 0x00ff) << 8)
+#        self.a = (self.a & 0xff00) >> 8
