@@ -1041,10 +1041,19 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _setup_unix(self) -> None:
         """Configure Unix-like platform settings"""
-        if os.path.isdir("/usr/local/include"):
-            self.add_include_dirs("/usr/local/include")
-        if os.path.isdir("/opt/local/include"):
-            self.add_include_dirs("/opt/local/include")
+        prefixes = [
+            "/usr",
+            "/usr/local",
+            "/opt/local",
+        ]
+        for prefix in prefixes:
+            include_dir = os.path.join(prefix, 'include')
+            link_dir = os.path.join(prefix, 'lib')
+            if os.path.isdir(include_dir):
+                self.add_include_dirs(include_dir)
+            if os.path.isdir(link_dir):
+                self.add_link_dirs(link_dir)
+
         if self.gx.pyextension_product:
             self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
 
@@ -1059,8 +1068,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE)"
                 )
-                self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")
-                self.add_variable("HPPFILES", "$(GENERATED_HPPFILES) $(BUILTIN_HPPFILES)")
 
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
@@ -1082,6 +1089,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++17", "-march=native", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lgctba", "-lutil")
+
+        self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")
+        self.add_variable("HPPFILES", "$(GENERATED_HPPFILES) $(BUILTIN_HPPFILES)")
 
     def _add_feature_flags(self) -> None:
         """Add feature-specific compiler flags"""
