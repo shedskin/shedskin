@@ -43,9 +43,9 @@ def count_words(pyfile: Path) -> int:
 def count_lines(pyfile: Path) -> int:
     """Count the lines in a Python file"""
     with open(pyfile) as f:
-        return len(remove_comments_and_docstrings(f.read()).splitlines())
+        return len(compress_code(f.read()).splitlines())
 
-def remove_comments_and_docstrings(source):
+def compress_code(source):
     io_obj = io.StringIO(source)
     out = ""
     prev_toktype = tokenize.INDENT
@@ -67,6 +67,8 @@ def remove_comments_and_docstrings(source):
             if prev_toktype != tokenize.INDENT:
                 if prev_toktype != tokenize.NEWLINE:
                     if start_col > 0:
+                        if len(token_string.splitlines()) > 1:  # compress multi-line strings
+                            token_string = "'<compressed>'"
                         out += token_string
         else:
             out += token_string
