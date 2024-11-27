@@ -10,7 +10,7 @@ from .triangle import Triangle
 from .vector3f import Vector3f_str, ZERO, ONE, MAX
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))')
+SEARCH = re.compile(r'(\(.+\))\s*(\(.+\))')
 
 MAX_TRIANGLES = 0x100000
 
