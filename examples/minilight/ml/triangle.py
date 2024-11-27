@@ -9,7 +9,7 @@ from random import random
 from .vector3f import Vector3f_str, ZERO, ONE, MAX
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))')
+SEARCH = re.compile(r'(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))')
 
 TOLERANCE = 1.0 / 1024.0
 
