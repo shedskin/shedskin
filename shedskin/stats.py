@@ -41,7 +41,7 @@ def count_lines(pyfile: Path) -> int:
     """Count the lines in a Python file"""
     with open(pyfile) as f:
         lines = f.readlines()
-    return len([line for line in lines if not line.startswith('#')]) 
+    return len([line for line in lines if line.strip() and not line.startswith('#')])
 
 def name_exists(name: str) -> bool:
     """Check if a module name exists in the database"""
@@ -51,11 +51,13 @@ def name_exists(name: str) -> bool:
         cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
         return cur.fetchone()[0]
 
-def insert_pymodule(filename: str, elapsed_secs: float) -> None:
+def insert_pymodule(gx: "config.globalinfo", elapsed_secs: float) -> None:
     """Insert a Python module into the database"""
+    filename = gx.module_path
     pyfile = Path(filename)
-    nwords = count_words(pyfile)
-    sloc = count_lines(pyfile)
+    modules = [m for _, m in gx.modules.items() if not m.builtin]
+    nwords = sum(count_words(m.filename) for m in modules)
+    sloc = sum(count_lines(m.filename) for m in modules)
     name = pyfile.stem
     db_path = get_db_path()
     if not db_path.exists():
