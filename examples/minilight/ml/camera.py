@@ -10,7 +10,7 @@ from .raytracer import RayTracer
 from .vector3f import Vector3f, Vector3f_str
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\S+)')
+SEARCH = re.compile(r'(\(.+\))\s*(\(.+\))\s*(\S+)')
 
 class Camera(object):
 
