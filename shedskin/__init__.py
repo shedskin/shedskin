@@ -190,7 +190,7 @@ class Shedskin:
         error.print_errors()
         elapsed_secs = (time.time() - t0)
         if self.gx.options.collect_stats:
-            stats.insert_pymodule(self.gx.module_path, elapsed_secs)
+            stats.insert_pymodule(self.gx, elapsed_secs)
             len_name = len(self.module_name) + 1
             print()
             print("NAME"+(' '*len_name), "NWORDS", "SLOC", "ELAPSED (secs)")

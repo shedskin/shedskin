@@ -2,9 +2,12 @@
 Statistics about the project.
 """
 
-import sqlite3
-from textwrap import dedent
+import io
 from pathlib import Path
+from textwrap import dedent
+import tokenize
+
+import sqlite3
 
 from . import config
 
@@ -40,8 +43,40 @@ def count_words(pyfile: Path) -> int:
 def count_lines(pyfile: Path) -> int:
     """Count the lines in a Python file"""
     with open(pyfile) as f:
-        lines = f.readlines()
-    return len([line for line in lines if not line.startswith('#')]) 
+        return len(compress_code(f.read()).splitlines())
+
+def compress_code(source):
+    io_obj = io.StringIO(source)
+    out = ""
+    prev_toktype = tokenize.INDENT
+    last_lineno = -1
+    last_col = 0
+    for tok in tokenize.generate_tokens(io_obj.readline):
+        token_type = tok[0]
+        token_string = tok[1]
+        start_line, start_col = tok[2]
+        end_line, end_col = tok[3]
+        ltext = tok[4]
+        if start_line > last_lineno:
+            last_col = 0
+        if start_col > last_col:
+            out += (" " * (start_col - last_col))
+        if token_type == tokenize.COMMENT:
+            pass
+        elif token_type == tokenize.STRING:
+            if prev_toktype != tokenize.INDENT:
+                if prev_toktype != tokenize.NEWLINE:
+                    if start_col > 0:
+                        if len(token_string.splitlines()) > 1:  # compress multi-line strings
+                            token_string = "'<compressed>'"
+                        out += token_string
+        else:
+            out += token_string
+        prev_toktype = token_type
+        last_col = end_col
+        last_lineno = end_line
+    out = '\n'.join(l for l in out.splitlines() if l.strip())
+    return out
 
 def name_exists(name: str) -> bool:
     """Check if a module name exists in the database"""
@@ -51,11 +86,13 @@ def name_exists(name: str) -> bool:
         cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
         return cur.fetchone()[0]
 
-def insert_pymodule(filename: str, elapsed_secs: float) -> None:
+def insert_pymodule(gx: "config.globalinfo", elapsed_secs: float) -> None:
     """Insert a Python module into the database"""
+    filename = gx.module_path
     pyfile = Path(filename)
-    nwords = count_words(pyfile)
-    sloc = count_lines(pyfile)
+    modules = [m for _, m in gx.modules.items() if not m.builtin]
+    nwords = sum(count_words(m.filename) for m in modules)
+    sloc = sum(count_lines(m.filename) for m in modules)
     name = pyfile.stem
     db_path = get_db_path()
     if not db_path.exists():
