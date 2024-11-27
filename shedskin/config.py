@@ -7,6 +7,7 @@
 
 import argparse
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -18,9 +19,14 @@ if TYPE_CHECKING:
     from . import python
     from .utils import ProgressBar
 
+# types aliases
 CartesianProduct: TypeAlias = Tuple[Tuple["python.Class", int], ...]
 
+# constants
+PLATFORM = platform.system()
 
+
+# classes
 class GlobalInfo:  # XXX add comments, split up
     """Global configuration and state for the shedskin compiler"""
 
@@ -162,3 +168,26 @@ class GlobalInfo:  # XXX add comments, split up
                 % (shedskin_libdir, system_libdir)
             )
             sys.exit(1)
+
+# utility functions
+
+def get_pkg_path() -> Path:
+    """Return the path to the shedskin package"""
+    _pkg_path = Path(__file__).parent
+    assert _pkg_path.name == "shedskin"
+    return _pkg_path
+
+
+def get_user_cache_dir() -> Path:
+    """Get user cache directory depending on platform"""
+    if PLATFORM == "Darwin":
+        return Path("~/Library/Caches/shedskin").expanduser()
+    if PLATFORM == "Linux":
+        return Path("~/.cache/shedskin").expanduser()
+    if PLATFORM == "Windows":
+        profile = os.getenv("USERPROFILE")
+        if not profile:
+            raise SystemExit("USERPROFILE environment variable not set on windows")
+        user_dir = Path(profile)
+        return user_dir / "AppData" / "Local" / "shedskin" / "Cache"
+    raise SystemExit(f"{PLATFORM} os not supported")
