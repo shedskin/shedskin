@@ -2,9 +2,12 @@
 Statistics about the project.
 """
 
-import sqlite3
-from textwrap import dedent
+import io
 from pathlib import Path
+from textwrap import dedent
+import tokenize
+
+import sqlite3
 
 from . import config
 
@@ -40,8 +43,38 @@ def count_words(pyfile: Path) -> int:
 def count_lines(pyfile: Path) -> int:
     """Count the lines in a Python file"""
     with open(pyfile) as f:
-        lines = f.readlines()
-    return len([line for line in lines if line.strip() and not line.startswith('#')])
+        return len(remove_comments_and_docstrings(f.read()).splitlines())
+
+def remove_comments_and_docstrings(source):
+    io_obj = io.StringIO(source)
+    out = ""
+    prev_toktype = tokenize.INDENT
+    last_lineno = -1
+    last_col = 0
+    for tok in tokenize.generate_tokens(io_obj.readline):
+        token_type = tok[0]
+        token_string = tok[1]
+        start_line, start_col = tok[2]
+        end_line, end_col = tok[3]
+        ltext = tok[4]
+        if start_line > last_lineno:
+            last_col = 0
+        if start_col > last_col:
+            out += (" " * (start_col - last_col))
+        if token_type == tokenize.COMMENT:
+            pass
+        elif token_type == tokenize.STRING:
+            if prev_toktype != tokenize.INDENT:
+                if prev_toktype != tokenize.NEWLINE:
+                    if start_col > 0:
+                        out += token_string
+        else:
+            out += token_string
+        prev_toktype = token_type
+        last_col = end_col
+        last_lineno = end_line
+    out = '\n'.join(l for l in out.splitlines() if l.strip())
+    return out
 
 def name_exists(name: str) -> bool:
     """Check if a module name exists in the database"""
