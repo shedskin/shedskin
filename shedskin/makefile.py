@@ -231,60 +231,127 @@ class Builder:
     def __init__(self, target: PathLike, strict: bool = False):
         self.target = target
         self.strict = strict  # raise error if entry already exists
-        self.cppfiles: list[str] = []
-        self.hppfiles: list[str] = []
-        self.cxx = "g++"
-        self.include_dirs: list[str] = []  # include directories
-        self.cflags: list[str] = []  # c compiler flags
-        self.cxxflags: list[str] = []  # c++ compiler flags
-        self.link_dirs: list[str] = []  # link directories
-        self.ldlibs: list[str] = []  # link libraries
-        self.ldflags: list[str] = []  # linker flags + link_dirs
-        self.cleanups: list[str] = []  # cleanup post-build artifacts
+        self._cc = "gcc"
+        self._cxx = "g++"
+        self._cppfiles: list[str] = []
+        self._hppfiles: list[str] = []
+        self._include_dirs: list[str] = []  # include directories
+        self._cflags: list[str] = []  # c compiler flags
+        self._cxxflags: list[str] = []  # c++ compiler flags
+        self._link_dirs: list[str] = []  # link directories
+        self._ldlibs: list[str] = []  # link libraries
+        self._ldflags: list[str] = []  # linker flags + link_dirs
+        self._cleanups: list[str] = []  # cleanup post-build artifacts
 
-    def _execute(self, cmd: str) -> None:
-        """Execute a command"""
-        print(cmd)
-        os.system(cmd)
+    @property
+    def cc(self) -> str:
+        """c compiler"""
+        return self._cc
 
-    def _remove(self, path: PathLike) -> None:
-        """Remove a target"""
-        path = Path(path)
-        if path.is_dir():
-            shutil.rmtree(path, ignore_errors=False)
-        else:
-            try:
-                path.unlink()
-            except FileNotFoundError:
-                pass
+    @cc.setter
+    def cc(self, value: str) -> None:
+        """set c compiler"""
+        self._cc = value
 
-    def configure(self) -> None:
-        """Configure the builder"""
-        self._setup_defaults()
+    @property
+    def cxx(self) -> str:
+        """c++ compiler"""
+        return self._cxx
 
-    def build(self, dry_run: bool = False) -> None:
-        """configure, then build executable or extension"""
-        self.configure()
-        if dry_run:
-            print(self.build_cmd)
-        else:
-            print()
-            self._execute(self.build_cmd)
-            if self.cleanups:
-                self.clean()
+    @cxx.setter
+    def cxx(self, value: str) -> None:
+        """set c++ compiler"""
+        self._cxx = value
 
-    def clean(self) -> None:
-        """Clean up build artifacts"""
-        for pattern in self.cleanups:
-            for path in Path(".").glob(pattern):
-                self._remove(path)
+    @property
+    def cppfiles(self) -> list[str]:
+        """c++ files"""
+        return self._cppfiles
 
-    def run_executable(self) -> None:
-        """Run the executable"""
-        print()
-        print("-" * 80)
-        print(f"Running {self.target}")
-        self._execute(f"./{self.target}")
+    @cppfiles.setter
+    def cppfiles(self, value: list[str]) -> None:
+        """set c++ files"""
+        self._cppfiles = value
+
+    @property
+    def hppfiles(self) -> list[str]:
+        """hpp files"""
+        return self._hppfiles
+
+    @hppfiles.setter
+    def hppfiles(self, value: list[str]) -> None:
+        """set hpp files"""
+        self._hppfiles = value
+
+    @property
+    def include_dirs(self) -> list[str]:
+        """include directories"""
+        return self._include_dirs
+
+    @include_dirs.setter
+    def include_dirs(self, value: list[str]) -> None:
+        """set include directories"""
+        self._include_dirs = value
+
+    @property
+    def cflags(self) -> list[str]:
+        """c compiler flags"""
+        return self._cflags
+
+    @cflags.setter
+    def cflags(self, value: list[str]) -> None:
+        """set c compiler flags"""
+        self._cflags = value
+
+    @property
+    def cxxflags(self) -> list[str]:
+        """c++ compiler flags"""
+        return self._cxxflags
+
+    @cxxflags.setter
+    def cxxflags(self, value: list[str]) -> None:
+        """set c++ compiler flags"""
+        self._cxxflags = value
+
+    @property
+    def link_dirs(self) -> list[str]:
+        """link directories"""
+        return self._link_dirs
+
+    @link_dirs.setter
+    def link_dirs(self, value: list[str]) -> None:
+        """set link directories"""
+        self._link_dirs = value
+
+    @property
+    def ldlibs(self) -> list[str]:
+        """link libraries"""
+        return self._ldlibs
+
+    @ldlibs.setter
+    def ldlibs(self, value: list[str]) -> None:
+        """set link libraries"""
+        self._ldlibs = value
+
+    @property
+    def ldflags(self) -> list[str]:
+        """linker flags"""
+        return self._ldflags
+
+    @ldflags.setter
+    def ldflags(self, value: list[str]) -> None:
+        """set linker flags"""
+        self._ldflags = value
+
+    @property
+    def cleanups(self) -> list[str]:
+        """cleanup post-build artifacts"""
+        return self._cleanups
+
+    @cleanups.setter
+    def cleanups(self, value: list[str]) -> None:
+        """set cleanup post-build artifacts"""
+        self._cleanups = value
 
     @property
     def build_cmd(self) -> str:
@@ -363,33 +430,83 @@ class Builder:
                 continue
             _list.append(f"{prefix}{entry}")
 
+    def _execute(self, cmd: str) -> None:
+        """Execute a command"""
+        print(cmd)
+        os.system(cmd)
+
+    def _remove(self, path: PathLike) -> None:
+        """Remove a target"""
+        path = Path(path)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=False)
+        else:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+
+    def configure(self) -> None:
+        """Configure the builder"""
+        self._setup_defaults()
+
+    def build(self, dry_run: bool = False) -> None:
+        """configure, then build executable or extension"""
+        self.configure()
+        if dry_run:
+            print(self.build_cmd)
+        else:
+            print()
+            self._execute(self.build_cmd)
+            if self.cleanups:
+                self.clean()
+
+    def clean(self) -> None:
+        """Clean up build artifacts"""
+        for pattern in self.cleanups:
+            for path in Path(".").glob(pattern):
+                self._remove(path)
+
+    def run_executable(self) -> None:
+        """Run the executable"""
+        print(f"Running {self.target}")
+        self._execute(f"./{self.target}")
+
+    def add_cppfiles(self, *entries: str) -> None:
+        """Add c++ files to the configuration"""
+        self._add_config_entries("_cppfiles", "", None, *entries)
+
+    def add_hppfiles(self, *entries: str) -> None:
+        """Add hpp files to the configuration"""
+        self._add_config_entries("_hppfiles", "", None, *entries)
+
     def add_include_dirs(self, *entries):
         """Add include directories to the configuration"""
-        self._add_config_entries("include_dirs", "-I", os.path.isdir, *entries)
+        self._add_config_entries("_include_dirs", "-I", os.path.isdir, *entries)
 
     def add_cflags(self, *entries):
         """Add compiler flags to the configuration"""
-        self._add_config_entries("cflags", "", None, *entries)
+        self._add_config_entries("_cflags", "", None, *entries)
 
     def add_cxxflags(self, *entries):
         """Add c++ compiler flags to the configuration"""
-        self._add_config_entries("cxxflags", "", None, *entries)
+        self._add_config_entries("_cxxflags", "", None, *entries)
 
     def add_link_dirs(self, *entries):
         """Add link directories to the configuration"""
-        self._add_config_entries("link_dirs", "-L", os.path.isdir, *entries)
+        self._add_config_entries("_link_dirs", "-L", os.path.isdir, *entries)
 
     def add_ldlibs(self, *entries):
         """Add link libraries to the configuration"""
-        self._add_config_entries("ldlibs", "", None, *entries)
+        self._add_config_entries("_ldlibs", "", None, *entries)
 
     def add_ldflags(self, *entries):
         """Add linker flags to the configuration"""
-        self._add_config_entries("ldflags", "", None, *entries)
+        self._add_config_entries("_ldflags", "", None, *entries)
 
     def add_cleanups(self, *entries):
         """Add cleanup patterns to the configuration"""
-        self._add_config_entries("cleanups", "", None, *entries)
+        self._add_config_entries("_cleanups", "", None, *entries)
 
     def _setup_defaults(self):
         """Setup default model configuration"""
@@ -434,27 +551,21 @@ class ShedskinBuilder(Builder):
         return _filenames
 
     @property
+    def cppfiles(self) -> list[str]:
+        """List of .cpp files"""
+        _cppfiles = sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
+        return self.normalize_filenames(_cppfiles)
+
+    @property
+    def hppfiles(self) -> list[str]:
+        """List of .hpp files"""
+        _hppfiles = sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
+        return self.normalize_filenames(_hppfiles)
+
+    @property
     def SHEDSKIN_LIBDIR(self) -> str:
         """Shedskin libdir"""
         return self.shedskin_libdirs[-1]
-
-    @property
-    def CPPFILES(self) -> list[str]:
-        """Reverse sorted list of .cpp files"""
-        _cppfiles = " ".join(
-            sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
-        )
-        _cppfiles = _cppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
-        return _cppfiles
-
-    @property
-    def HPPFILES(self) -> list[str]:
-        """Reverse sorted list of .hpp files"""
-        _hppfiles = " ".join(
-            sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
-        )
-        _hppfiles = _hppfiles.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
-        return _hppfiles
 
     @property
     def TARGET(self) -> str:
@@ -467,6 +578,13 @@ class ShedskinBuilder(Builder):
         if self.gx.pyextension_product:
             return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
         return self.gx.main_module.ident
+
+    def normalize_filenames(self, filenames: list[str]) -> list[str]:
+        """Normalize filenames"""
+        return [
+            filename.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
+            for filename in filenames
+        ]
 
     def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
@@ -490,7 +608,7 @@ class ShedskinBuilder(Builder):
         self._add_module_linker_flags()
         self._add_cleanup_patterns()
 
-    def _setup_defaults(self):
+    def _setup_defaults(self) -> None:
         """Setup default model configuration"""
         self.add_include_dirs(".")
 
