@@ -110,7 +110,7 @@ class Mastermind:
 def main():
     m = Mastermind()
     guesses = 8
-    if len(sys.argv) > 1 and re.match("\d", sys.argv[1]) is not None:
+    if len(sys.argv) > 1 and re.match(r"\d", sys.argv[1]) is not None:
         guesses = int(sys.argv[1])
     m.play(guesses)
 
