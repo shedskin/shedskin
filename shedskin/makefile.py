@@ -393,7 +393,7 @@ class Builder:
 
     def _setup_defaults(self):
         """Setup default model configuration"""
-        self.add_include_dirs(".")
+        self.add_include_dirs(os.getcwd())
 
 
 class ShedskinBuilder(Builder):
@@ -675,18 +675,35 @@ class MakefileGenerator:
 
     def check_dir(self, path: PathLike) -> bool:
         """Check if a path is a valid directory"""
+        defaults = {"HOME": "$(HOME)", "PWD": "$(PWD)", "CURDIR": "$(CURDIR)"}
         str_path = str(path)
         # check if path contains a variable
         # FIXME: should check for multiple variables
+        if str(path) in defaults.values():
+            return True
         match = re.match(r".*\$+\((.+)\).*", str_path)
         if match:
             key = match.group(1)
+            if key in defaults:
+                return True
             assert key in self.vars, f"Invalid variable: {key}"
             assert os.path.isdir(
                 self.vars[key]
             ), f"Value of variable {key} is not a directory: {self.vars[key]}"
             return True
         return os.path.isdir(str_path)
+
+    def _normalize_path(self, path: str) -> str:
+        """Normalize a path"""
+        cwd = os.getcwd()
+        home = os.path.expanduser("~")
+        return path.replace(cwd, "$(CURDIR)").replace(home, "$(HOME)")
+
+    def _normalize_paths(self, filenames: list[str]) -> list[str]:
+        """Replace filenames with current directory"""
+        cwd = os.getcwd()
+        home = os.path.expanduser("~")
+        return [f.replace(cwd, "$(CURDIR)").replace(home, "$(HOME)") for f in filenames]
 
     def _add_entry_or_variable(
         self,
@@ -780,7 +797,17 @@ class MakefileGenerator:
 
     def _setup_defaults(self):
         """Setup default model configuration"""
-        self.add_include_dirs(".")
+        self.add_include_dirs("$(CURDIR)") # CURDIR is absolute path to the current directory
+
+    def _write_filelist(self, name: str, files: list[str]) -> None:
+        """Write a file list to the Makefile"""
+        if not files:
+            return
+        if len(files) == 1:
+            self.write(f"{name}={files[0]}")
+        else:
+            filelist = " \\\n\t".join(files)
+            self.write(f"{name}=\\\n\t{filelist}\n")
 
     def _write_variables(self) -> None:
         """Write variables to the Makefile"""
@@ -824,6 +851,7 @@ class MakefileGenerator:
         """Write phony targets to the Makefile"""
         if self.phony:
             phone_targets = " ".join(self.phony)
+            self.write()
             self.write(f".PHONY: {phone_targets}")
             self.write()
 
@@ -890,7 +918,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 )
             else:
                 filename = filename.replace(
-                    self.shedskin_libdirs[-1], env_var("SHEDSKIN_LIBDIR")
+                    self.shedskin_libdirs[-1], ("$(SHEDSKIN_LIBDIR)")
                 )
             _filenames.append(filename)
         return _filenames
@@ -898,12 +926,34 @@ class ShedskinMakefileGenerator(MakefileGenerator):
     @property
     def cppfiles(self) -> list[str]:
         """Reverse sorted list of .cpp files"""
-        return sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
+        return sorted(self._normalize_paths(
+            fn + ".cpp" for fn in self.filenames), reverse=True)
 
     @property
     def hppfiles(self) -> list[str]:
         """Reverse sorted list of .hpp files"""
-        return sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
+        return sorted(self._normalize_paths(
+            fn + ".hpp" for fn in self.filenames), reverse=True)
+
+    @property
+    def generated_cppfiles(self) -> list[str]:
+        """List of generated cppfiles"""
+        return [f for f in self.cppfiles if "$(SHEDSKIN_LIBDIR)" not in f]
+
+    @property
+    def builtin_cppfiles(self) -> list[str]:
+        """List of builtin cppfiles"""
+        return [f for f in self.cppfiles if "$(SHEDSKIN_LIBDIR)" in f]
+
+    @property
+    def generated_hppfiles(self) -> list[str]:
+        """List of generated hppfiles"""
+        return [f for f in self.hppfiles if "$(SHEDSKIN_LIBDIR)" not in f]
+
+    @property
+    def builtin_hppfiles(self) -> list[str]:
+        """List of builtin hppfiles"""
+        return [f for f in self.hppfiles if "$(SHEDSKIN_LIBDIR)" in f]
 
     @property
     def target_name(self) -> str:
@@ -929,6 +979,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         if self.gx.nomakefile:
             return
 
+        self._setup_defaults()
         self._setup_variables()
         self._setup_platform()
 
@@ -942,17 +993,19 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         self._add_phony_targets()
 
         self._write_variables()
+        self._write_phony()
         self._write_targets()
         self._write_clean()
-        self._write_phony()
+        self._write_reset()
 
         self.writer.close()
 
     def _setup_variables(self) -> None:
         """Configure common variables"""
-        self.add_include_dirs(SHEDSKIN_LIBDIR=self.shedskin_libdirs[-1])
+        self.add_include_dirs(SHEDSKIN_LIBDIR=self._normalize_path(
+            self.shedskin_libdirs[-1]))
         for _dir in self.shedskin_libdirs[:-1]:
-            self.add_include_dirs(_dir)
+            self.add_include_dirs(self._normalize_path(_dir))
 
         if self.gx.pyextension_product:
             self.add_include_dirs(PY_INCLUDE=self.py.include_dir)
@@ -1006,6 +1059,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE)"
                 )
+                self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")
+                self.add_variable("HPPFILES", "$(GENERATED_HPPFILES) $(BUILTIN_HPPFILES)")
+
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
@@ -1134,10 +1190,15 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _write_cpp_files(self) -> None:
         """Write C++ source and header file lists"""
-        cppfiles = " \\\n\t".join(self.cppfiles)
-        hppfiles = " \\\n\t".join(self.hppfiles)
-        self.write(f"CPPFILES={cppfiles}\n")
-        self.write(f"HPPFILES={hppfiles}\n")
+        self._write_filelist("BUILTIN_CPPFILES", self.builtin_cppfiles)
+        self._write_filelist("BUILTIN_HPPFILES", self.builtin_hppfiles)
+        self._write_filelist("GENERATED_CPPFILES", self.generated_cppfiles)
+        self._write_filelist("GENERATED_HPPFILES", self.generated_hppfiles)
+
+    def _write_reset(self) -> None:
+        """Write reset target"""
+        self.write(f"reset: clean\n\t@rm -f $(GENERATED_CPPFILES) $(GENERATED_HPPFILES)")
+        self.write()
 
     # --------------------------------------------------------------------------
     # Flags file management
