@@ -27,18 +27,17 @@ Via its `ShedskinBuilder` class, it provides a high-level interface for:
 """
 
 import os
+import platform
+import re
 import shutil
 import subprocess
-import re
 import sys
 import sysconfig
-import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeAlias
 
 if TYPE_CHECKING:
-    from . import config
-    from . import python
+    from . import config, python
 
 # type aliases
 PathLike: TypeAlias = Path | str
@@ -539,13 +538,13 @@ class ShedskinBuilder(Builder):
 
     def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
         self.gx = gx
-        super().__init__(target=self.target_name, strict=strict)
         self.esc_space = r"\ "
         self.py = PythonSystem()
         self._generated_cppfiles: list[str] = []
         self._generated_hppfiles: list[str] = []
         self._builtin_cppfiles: list[str] = []
         self._builtin_hppfiles: list[str] = []
+        super().__init__(target=self.target_name, strict=strict)
 
     @property
     def target_name(self) -> str:
