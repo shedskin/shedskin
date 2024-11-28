@@ -51,6 +51,7 @@ PLATFORM = platform.system()
 # -----------------------------------------------------------------------------
 # utility functions]
 
+
 def always_true(_: Any) -> bool:
     """dummy test function always returns True"""
     return True
@@ -68,8 +69,10 @@ def check_output(cmd: str) -> Optional[str]:
     except FileNotFoundError:
         return None
 
+
 # -----------------------------------------------------------------------------
 # main classes
+
 
 class MakefileWriter:
     """Handles writing Makefile contents"""
@@ -88,6 +91,7 @@ class MakefileWriter:
 
 class PythonSystem:
     """Python system information"""
+
     def __init__(self):
         self.name = "Python"
         self.version_info = sys.version_info
@@ -111,17 +115,17 @@ class PythonSystem:
         return self.ver.replace(".", "")
 
     @property
-    def major(self) -> str:
+    def major(self) -> int:
         """major component of semantic version: 3 in 3.11.7"""
         return self.version_info.major
 
     @property
-    def minor(self) -> str:
+    def minor(self) -> int:
         """minor component of semantic version: 11 in 3.11.7"""
         return self.version_info.minor
 
     @property
-    def patch(self) -> str:
+    def patch(self) -> int:
         """patch component of semantic version: 7 in 3.11.7"""
         return self.version_info.micro
 
@@ -241,7 +245,8 @@ class Builder:
         self._link_dirs: list[str] = []  # link directories
         self._ldlibs: list[str] = []  # link libraries
         self._ldflags: list[str] = []  # linker flags + link_dirs
-        self._cleanups: list[str] = []  # cleanup post-build artifacts
+        self._cleanup_patterns: list[str] = []  # post-build cleanup by glob pattern
+        self._cleanup_targets: list[str] = []  # post-build cleanup by path
 
     @property
     def cc(self) -> str:
@@ -344,14 +349,24 @@ class Builder:
         self._ldflags = value
 
     @property
-    def cleanups(self) -> list[str]:
-        """cleanup post-build artifacts"""
-        return self._cleanups
+    def cleanup_patterns(self) -> list[str]:
+        """cleanup post-build by glob pattern"""
+        return self._cleanup_patterns
 
-    @cleanups.setter
-    def cleanups(self, value: list[str]) -> None:
-        """set cleanup post-build artifacts"""
-        self._cleanups = value
+    @cleanup_patterns.setter
+    def cleanup_patterns(self, value: list[str]) -> None:
+        """set cleanup post-build by glob pattern"""
+        self._cleanup_patterns = value
+
+    @property
+    def cleanup_targets(self) -> list[str]:
+        """cleanup post-build by path"""
+        return self._cleanup_targets
+
+    @cleanup_targets.setter
+    def cleanup_targets(self, value: list[str]) -> None:
+        """set cleanup post-build by path"""
+        self._cleanup_targets = value
 
     @property
     def build_cmd(self) -> str:
@@ -361,7 +376,7 @@ class Builder:
     @property
     def TARGET(self) -> str:
         """compilation product"""
-        return self.target
+        return str(self.target)
 
     @property
     def CPPFILES(self) -> str:
@@ -458,14 +473,16 @@ class Builder:
         else:
             print()
             self._execute(self.build_cmd)
-            if self.cleanups:
+            if self.cleanup_patterns or self.cleanup_targets:
                 self.clean()
 
     def clean(self) -> None:
         """Clean up build artifacts"""
-        for pattern in self.cleanups:
+        for pattern in self.cleanup_patterns:
             for path in Path(".").glob(pattern):
                 self._remove(path)
+        for target in self.cleanup_targets:
+            self._remove(target)
 
     def run_executable(self) -> None:
         """Run the executable"""
@@ -504,9 +521,13 @@ class Builder:
         """Add linker flags to the configuration"""
         self._add_config_entries("_ldflags", "", None, *entries)
 
-    def add_cleanups(self, *entries):
+    def add_cleanup_patterns(self, *entries):
         """Add cleanup patterns to the configuration"""
-        self._add_config_entries("_cleanups", "", None, *entries)
+        self._add_config_entries("_cleanup_patterns", "", None, *entries)
+
+    def add_cleanup_targets(self, *entries):
+        """Add cleanup targets to the configuration"""
+        self._add_config_entries("_cleanup_targets", "", None, *entries)
 
     def _setup_defaults(self):
         """Setup default model configuration"""
@@ -518,9 +539,20 @@ class ShedskinBuilder(Builder):
 
     def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
         self.gx = gx
+        super().__init__(target=self.target_name, strict=strict)
         self.esc_space = r"\ "
         self.py = PythonSystem()
-        super().__init__(target=self.target_name, strict=strict)
+        self._generated_cppfiles: list[str] = []
+        self._generated_hppfiles: list[str] = []
+        self._builtin_cppfiles: list[str] = []
+        self._builtin_hppfiles: list[str] = []
+
+    @property
+    def target_name(self) -> str:
+        """Get the target executable/library name"""
+        if self.gx.pyextension_product:
+            return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
+        return self.gx.main_module.ident
 
     @property
     def shedskin_libdirs(self) -> list[str]:
@@ -533,34 +565,9 @@ class ShedskinBuilder(Builder):
         return list(self.gx.modules.values())
 
     @property
-    def filenames(self) -> list[str]:
-        """List of filenames"""
-        _filenames = []
-        for module in self.modules:
-            filename = os.path.splitext(module.filename)[0]  # strip .py
-            filename = filename.replace(" ", self.esc_space)  # make paths valid
-            if self.gx.outputdir and not module.builtin:
-                filename = os.path.abspath(
-                    os.path.join(self.gx.outputdir, os.path.basename(filename))
-                )
-            else:
-                filename = filename.replace(
-                    self.shedskin_libdirs[-1], env_var("SHEDSKIN_LIBDIR")
-                )
-            _filenames.append(filename)
-        return _filenames
-
-    @property
-    def cppfiles(self) -> list[str]:
-        """List of .cpp files"""
-        _cppfiles = sorted([fn + ".cpp" for fn in self.filenames], reverse=True)
-        return self.normalize_filenames(_cppfiles)
-
-    @property
-    def hppfiles(self) -> list[str]:
-        """List of .hpp files"""
-        _hppfiles = sorted([fn + ".hpp" for fn in self.filenames], reverse=True)
-        return self.normalize_filenames(_hppfiles)
+    def generated_files(self) -> list[str]:
+        """Generated files"""
+        return self._generated_cppfiles + self._generated_hppfiles
 
     @property
     def SHEDSKIN_LIBDIR(self) -> str:
@@ -571,20 +578,6 @@ class ShedskinBuilder(Builder):
     def TARGET(self) -> str:
         """compilation product"""
         return self.target_name
-
-    @property
-    def target_name(self) -> str:
-        """Get the target executable/library name"""
-        if self.gx.pyextension_product:
-            return f"{self.gx.main_module.ident}{self.py.extension_suffix}"
-        return self.gx.main_module.ident
-
-    def normalize_filenames(self, filenames: list[str]) -> list[str]:
-        """Normalize filenames"""
-        return [
-            filename.replace(env_var("SHEDSKIN_LIBDIR"), self.SHEDSKIN_LIBDIR)
-            for filename in filenames
-        ]
 
     def homebrew_prefix(self, entry: Optional[str] = None) -> Optional[Path]:
         """Get Homebrew prefix"""
@@ -601,6 +594,7 @@ class ShedskinBuilder(Builder):
     def configure(self) -> None:
         """Configure the builder"""
         self._setup_defaults()
+        self._setup_sourcefiles()
         self._setup_variables()
         self._setup_platform()
         self._add_feature_flags()
@@ -610,7 +604,34 @@ class ShedskinBuilder(Builder):
 
     def _setup_defaults(self) -> None:
         """Setup default model configuration"""
-        self.add_include_dirs(".")
+        self.add_include_dirs(os.getcwd())
+
+    def _setup_sourcefiles(self) -> None:
+        """Setup initial cppfiles and hppfiles"""
+        for module in self.modules:
+            filename = os.path.splitext(module.filename)[0]  # strip .py
+            filename = filename.replace(" ", self.esc_space)  # make paths valid
+            if self.gx.outputdir and not module.builtin:
+                filename = os.path.abspath(
+                    os.path.join(self.gx.outputdir, os.path.basename(filename))
+                )
+            else:
+                filename = filename.replace(
+                    self.shedskin_libdirs[-1], self.SHEDSKIN_LIBDIR
+                )
+            if self.SHEDSKIN_LIBDIR in filename:
+                self._builtin_cppfiles.append(filename + ".cpp")
+                self._builtin_hppfiles.append(filename + ".hpp")
+            else:
+                self._generated_cppfiles.append(filename + ".cpp")
+                self._generated_hppfiles.append(filename + ".hpp")
+
+        self.add_cppfiles(
+            *sorted(self._generated_cppfiles + self._builtin_cppfiles, reverse=True)
+        )
+        self.add_hppfiles(
+            *sorted(self._generated_hppfiles + self._builtin_hppfiles, reverse=True)
+        )
 
     def _setup_variables(self) -> None:
         """Configure common variables"""
@@ -751,12 +772,9 @@ class ShedskinBuilder(Builder):
         """Add cleanup patterns to the configuration"""
         if self.gx.options.nocleanup:
             return
-        if (PLATFORM == "Darwin" and self.gx.pyextension_product):
-            self.add_cleanups("*.dSYM")
-        self.add_cleanups(
-            f"{self.target_name}.cpp",
-            f"{self.target_name}.hpp",
-        )
+        if PLATFORM == "Darwin" and self.gx.pyextension_product:
+            self.add_cleanup_patterns("*.dSYM")
+        self.add_cleanup_targets(*self.generated_files)
 
 
 class MakefileGenerator:
@@ -915,7 +933,9 @@ class MakefileGenerator:
 
     def _setup_defaults(self):
         """Setup default model configuration"""
-        self.add_include_dirs("$(CURDIR)") # CURDIR is absolute path to the current directory
+        self.add_include_dirs(
+            "$(CURDIR)"
+        )  # CURDIR is absolute path to the current directory
 
     def _write_filelist(self, name: str, files: list[str]) -> None:
         """Write a file list to the Makefile"""
@@ -1044,14 +1064,16 @@ class ShedskinMakefileGenerator(MakefileGenerator):
     @property
     def cppfiles(self) -> list[str]:
         """Reverse sorted list of .cpp files"""
-        return sorted(self._normalize_paths(
-            fn + ".cpp" for fn in self.filenames), reverse=True)
+        return sorted(
+            self._normalize_paths([fn + ".cpp" for fn in self.filenames]), reverse=True
+        )
 
     @property
     def hppfiles(self) -> list[str]:
         """Reverse sorted list of .hpp files"""
-        return sorted(self._normalize_paths(
-            fn + ".hpp" for fn in self.filenames), reverse=True)
+        return sorted(
+            self._normalize_paths([fn + ".hpp" for fn in self.filenames]), reverse=True
+        )
 
     @property
     def generated_cppfiles(self) -> list[str]:
@@ -1120,8 +1142,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _setup_variables(self) -> None:
         """Configure common variables"""
-        self.add_include_dirs(SHEDSKIN_LIBDIR=self._normalize_path(
-            self.shedskin_libdirs[-1]))
+        self.add_include_dirs(
+            SHEDSKIN_LIBDIR=self._normalize_path(self.shedskin_libdirs[-1])
+        )
         for _dir in self.shedskin_libdirs[:-1]:
             self.add_include_dirs(self._normalize_path(_dir))
 
@@ -1165,8 +1188,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             "/opt/local",
         ]
         for prefix in prefixes:
-            include_dir = os.path.join(prefix, 'include')
-            link_dir = os.path.join(prefix, 'lib')
+            include_dir = os.path.join(prefix, "include")
+            link_dir = os.path.join(prefix, "lib")
             if os.path.isdir(include_dir):
                 self.add_include_dirs(include_dir)
             if os.path.isdir(link_dir):
@@ -1177,7 +1200,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
         if PLATFORM == "Darwin":
             if prefix := self.homebrew_prefix():
-                self.add_variable("HOMEBREW_PREFIX", prefix)
+                self.add_variable("HOMEBREW_PREFIX", str(prefix))
                 self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
@@ -1269,7 +1292,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Add targets to the Makefile"""
         self.add_target("all", deps=[self.target_name])
         # executable (normal, debug, profile) or extension module
-        _out = "-o "
+        # _out = "-o "
         _ext = ""
         targets = [("", "")]
         if not self.gx.pyextension_product:
@@ -1325,7 +1348,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _write_reset(self) -> None:
         """Write reset target"""
-        self.write(f"reset: clean\n\t@rm -f $(GENERATED_CPPFILES) $(GENERATED_HPPFILES)")
+        self.write("reset: clean\n\t@rm -f $(GENERATED_CPPFILES) $(GENERATED_HPPFILES)")
         self.write()
 
     # --------------------------------------------------------------------------
@@ -1374,6 +1397,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                     self.add_ldflags(*entries)
                 else:
                     self.add_variable(variable, " ".join(entries))
+
 
 # -----------------------------------------------------------------------------
 # launching functions

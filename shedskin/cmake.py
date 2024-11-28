@@ -156,7 +156,7 @@ class ShedskinDependencyManager:
         self.source_dir = pathlib.Path(source_dir)
         self.build_dir = self.source_dir / "build"
         # self.deps_dir = self.build_dir / "deps"
-        self.deps_dir = get_user_cache_dir()
+        self.deps_dir = config.get_user_cache_dir()
         # self.deps_dir = pathlib.Path.home() / ".cache" / "shedskin"
         self.include_dir = self.deps_dir / "include"
         self.lib_dir = self.deps_dir / "lib"
@@ -477,7 +477,7 @@ def add_shedskin_product(
 
 def get_cmakefile_template(**kwds: str) -> str:
     """Return a cmake template"""
-    _pkg_path = get_pkg_path()
+    _pkg_path = config.get_pkg_path()
     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
