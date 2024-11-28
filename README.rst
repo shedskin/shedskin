@@ -42,7 +42,7 @@ Shed Skin only supports a restricted subset of Python, so one should not expect 
 Installation
 ------------
 
-Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `0.`_ on how to install these.
+Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation <https://shedskin.github.io/shedskin/>`_ on how to install these.
 
 
 
