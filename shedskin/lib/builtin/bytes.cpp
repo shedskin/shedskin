@@ -183,15 +183,22 @@ bytes *bytes::__add__(bytes *b) {
 }
 
 bytes *bytes::__iadd__(bytes *b) {
-    unit = unit + b->unit;
+    if (frozen)
+        return __add__(b);
+    else
+        unit += b->unit;
     return this;
 }
 
 bytes *bytes::__imul__(__ss_int n) {
-    __GC_STRING s = unit;
-    for(__ss_int i=0; i<n-1; i++)
-        unit += s;
-    return this;
+    if (frozen)
+        return __mul__(n);
+    else {
+        __GC_STRING s = unit;
+        for(__ss_int i=0; i<n-1; i++)
+            unit += s;
+        return this;
+    }
 }
 
 bytes *bytes::__mul__(__ss_int n) { /* optimize */

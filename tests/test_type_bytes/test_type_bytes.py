@@ -298,6 +298,32 @@ def test_contains():
     assert 108 in bs
 
 
+def test_iadd_imul():
+    a = b'lal'
+    c = a
+    a += b'lol'
+    assert a == b'lallol'
+    assert c == b'lal'
+
+    a = bytearray(b'lal')
+    c = a
+    a += b'lol'
+    assert a == b'lallol'
+    assert c == b'lallol'
+
+    a = b'lal'
+    c = a
+    a *= 2
+    assert a == b'lallal'
+    assert c == b'lal'
+
+    a = bytearray(b'lal')
+    c = a
+    a *= 2
+    assert a == bytearray(b'lallal')
+    assert c == b'lallal'
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -345,6 +371,7 @@ def test_all():
     test_bytes_hash()
     test_bytes_builtin()
     test_contains()
+    test_iadd_imul()
 
 
 if __name__ == "__main__":
