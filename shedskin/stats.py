@@ -1,5 +1,19 @@
-"""
-Statistics about the project.
+"""shedskin.stats: project statistics.
+
+This module provides statistics and metrics about Python code compiled with Shedskin.
+
+Key features:
+- SQLite database for storing compilation metrics
+- Word and line counting utilities
+- Code compression/cleaning for accurate line counts
+
+Functions:
+- get_db_path(): Get path to SQLite metrics database
+- create_db(): Initialize SQLite database schema
+- count_words(): Count words in a Python source file
+- count_lines(): Count lines of code (excluding comments/whitespace)
+- compress_code(): Clean code by removing comments and extra whitespace
+
 """
 
 import io
@@ -7,10 +21,71 @@ from pathlib import Path
 from textwrap import dedent
 import tokenize
 
+from typing import Any
+
 import sqlite3
 
 from . import config
 
+
+CREATE_TABLE = """\
+CREATE TABLE pymodule (
+    name text not null,
+    filename text not null,
+    n_words int default 0,
+    sloc int default 0,
+    elapsed_secs float default 0.0,
+
+    n_constraints int default 0,
+    n_vars int default 0,
+    n_funcs int default 0,
+    n_classes int default 0,
+    n_cnodes int default 0,
+    n_types int default 0,
+    n_orig_types int default 0,
+    n_modules int default 0,
+    n_templates int default 0,
+    n_inheritance_relations int default 0,
+    n_inheritance_temp_vars int default 0,
+    n_parent_nodes int default 0,
+    n_inherited int default 0,
+    n_assign_target int default 0,
+    n_alloc_info int default 0,
+    n_new_alloc_info int default 0,
+    n_iterations int default 0,
+    total_iterations int default 0,
+    n_called int default 0,
+    added_allocs int default 0,
+    added_funcs int default 0,
+    cpa_limit int default 0,
+
+    wrap_around_check bool default true,
+    bounds_checking bool default true,
+    assertions bool default true,
+    executable_product bool default true,
+    pyextension_product bool default false,
+    int32 bool default false,
+    int64 bool default false,
+    int128 bool default false,
+    float32 bool default false,
+    float64 bool default false,
+    silent bool default false,
+    nogc bool default false,
+    backtrace bool default false,
+
+    ran_at datetime default current_timestamp
+)
+"""
+
+def insert_from_dict(table: str, entry: dict[str, Any]):
+    fields = entry.keys()
+    n_fields = len(fields)
+    fields_str = ", ".join(fields)
+    slots = ", ".join("?"*n_fields)
+    return (
+        f"insert into {table} ({fields_str}) values ({slots})", 
+        tuple(entry.values())
+    )
 
 def get_db_path() -> Path:
     """Get the path to the SQLite database"""
@@ -23,16 +98,7 @@ def create_db() -> None:
         db_path.parent.mkdir(parents=True)
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
-        cur.execute(dedent("""
-            CREATE TABLE pymodule (
-                name text not null,
-                filename text not null,
-                nwords int default 0,
-                sloc int default 0,
-                elapsed_secs float default 0.0,
-                ran_at datetime default current_timestamp
-            )
-            """))
+        cur.execute(CREATE_TABLE)
         con.commit()
 
 def count_words(pyfile: Path) -> int:
@@ -45,7 +111,8 @@ def count_lines(pyfile: Path) -> int:
     with open(pyfile) as f:
         return len(compress_code(f.read()).splitlines())
 
-def compress_code(source):
+def compress_code(source: str) -> str:
+    """Compress the code by removing comments and unnecessary whitespace"""
     io_obj = io.StringIO(source)
     out = ""
     prev_toktype = tokenize.INDENT
@@ -86,40 +153,45 @@ def name_exists(name: str) -> bool:
         cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
         return cur.fetchone()[0]
 
+def get_stats(gx: "config.globalinfo", elapsed_secs: float) -> None:
+    modules = [m for _, m in gx.modules.items() if not m.builtin]
+    n_words = sum(count_words(m.filename) for m in modules)
+    sloc = sum(count_lines(m.filename) for m in modules)
+    return gx.get_stats(n_words, sloc, elapsed_secs)
+
 def insert_pymodule(gx: "config.globalinfo", elapsed_secs: float) -> None:
     """Insert a Python module into the database"""
-    filename = gx.module_path
-    pyfile = Path(filename)
-    modules = [m for _, m in gx.modules.items() if not m.builtin]
-    nwords = sum(count_words(m.filename) for m in modules)
-    sloc = sum(count_lines(m.filename) for m in modules)
-    name = pyfile.stem
     db_path = get_db_path()
     if not db_path.exists():
         create_db()
+    stats_dict = get_stats(gx, elapsed_secs)
+    insert, values = insert_from_dict("pymodule", stats_dict)
     with sqlite3.connect(db_path) as con:
-        cur = con.cursor()        
-        cur.execute("INSERT INTO pymodule "
-                    "(name, filename, nwords, sloc, elapsed_secs) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (name, str(filename), nwords, sloc, elapsed_secs))
-        con.commit()
+        cur = con.cursor()
+        cur.execute(insert, values)
+
+def dump_current_stats(gx: "config.globalinfo", elapsed_secs: float) -> None:
+    stats_dict = get_stats(gx, elapsed_secs)
+    print()
+    for key, value in stats_dict.items():
+        print(f"{key:>24}: {value}")
+    print()
 
 def get_latest_stats() -> list[tuple[str, int, int, float]]:
     """Get the latest statistics from the database"""
     db_path = get_db_path()
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
-        cur.execute("SELECT name, nwords, sloc, round(elapsed_secs, 1) "
+        cur.execute("SELECT name, n_words, sloc, round(elapsed_secs, 1) "
                     "FROM pymodule order by ran_at desc limit 1")
         return cur.fetchall()
-
 
 def get_all_stats() -> list[tuple[str, int, int, float]]:
     """Get all statistics from the database"""
     db_path = get_db_path()
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
-        cur.execute("SELECT name, nwords, sloc, round(elapsed_secs, 1) "
+        cur.execute("SELECT name, n_words, sloc, round(elapsed_secs, 1) "
                     "FROM pymodule order by ran_at desc")
         return cur.fetchall()
+
