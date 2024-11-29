@@ -189,11 +189,7 @@ class Shedskin:
         elapsed_secs = (time.time() - t0)
         if self.gx.options.collect_stats:
             stats.insert_pymodule(self.gx, elapsed_secs)
-            self.log.info("")
-            self.log.info("{:<20} {:<10} {:<10} {:<10} ".format("NAME", "NWORDS", "SLOC", "ELAPSED (secs)"))
-            for row in stats.get_latest_stats():
-                self.log.info(f"{row[0]:<20} {row[1]:<10} {row[2]:<10} {row[3]:<10}")
-            self.log.info("")
+            stats.dump_current_stats(self.gx, elapsed_secs)
         else:
             self.log.info('\n[elapsed time: %.2f seconds]', elapsed_secs)
 
