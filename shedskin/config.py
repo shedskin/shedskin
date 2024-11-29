@@ -139,6 +139,52 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_limited: bool = False
         self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
+    def get_stats(self, n_words: int = 0, sloc: int = 0, elapsed: float = 0) -> dict[str, Any]:
+        pyfile = Path(self.module_path)
+        return {
+            "name": pyfile.stem,
+            "filename": str(pyfile),
+            "n_words": n_words,
+            "sloc": sloc,
+            "elapsed_secs": round(elapsed,2),
+            "n_constraints": len(self.constraints),
+            "n_vars": len(self.allvars),
+            "n_funcs": len(self.allfuncs),
+            "n_classes": len(self.allclasses),
+            "n_cnodes": len(self.cnode.keys()),
+            "n_types": len(self.types.keys()),
+            "n_orig_types": len(self.orig_types.keys()),
+            "n_modules": len(self.modules.keys()),
+            "n_templates": self.templates,
+            "n_inheritance_relations": len(self.inheritance_relations.keys()),
+            "n_inheritance_temp_vars": len(self.inheritance_temp_vars.keys()),
+            "n_parent_nodes": len(self.parent_nodes.keys()),
+            "n_inherited": len(self.inherited),
+            "n_assign_target": len(self.assign_target.keys()),
+            "n_alloc_info": len(self.alloc_info.keys()),
+            "n_new_alloc_info": len(self.new_alloc_info.keys()),
+            "n_iterations": self.iterations,
+            "total_iterations": self.total_iterations,
+            "n_called": len(self.called),
+            "added_allocs": self.added_allocs,
+            "added_funcs": self.added_funcs,
+            "cpa_limit": self.cpa_limit,
+            # commandline-options
+            "wrap_around_check" : self.wrap_around_check,
+            "bounds_checking" : self.bounds_checking,
+            "assertions" : self.assertions,
+            "executable_product" : self.executable_product,
+            "pyextension_product" : self.pyextension_product,
+            "int32" : self.int32,
+            "int64" : self.int64,
+            "int128" : self.int128,
+            "float32" : self.float32,
+            "float64" : self.float64,
+            "silent" : self.silent,
+            "nogc" : self.nogc,
+            "backtrace" : self.backtrace,
+        }
+
     def init_directories(self) -> None:
         """Initialize directory paths"""
         abspath = os.path.abspath(__file__)  # sanitize mixed fwd/bwd slashes (mingw)
@@ -168,6 +214,10 @@ class GlobalInfo:  # XXX add comments, split up
                 % (shedskin_libdir, system_libdir)
             )
             sys.exit(1)
+
+
+
+
 
 # utility functions
 
