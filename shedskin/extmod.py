@@ -20,17 +20,12 @@ CPython side.
 """
 
 import logging
+from typing import TYPE_CHECKING, Iterable, List, Optional
 
-from . import infer
-from . import python
-from . import typestr
-
-
-from typing import TYPE_CHECKING, Optional, List, Iterable
+from . import infer, python, typestr
 
 if TYPE_CHECKING:
-    from . import config
-    from . import cpp
+    from . import config, cpp
 
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]

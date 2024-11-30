@@ -5,13 +5,10 @@
 import ast
 import logging
 import sys
-
-from typing import TYPE_CHECKING, Optional, Tuple, Union, TypeAlias
+from typing import TYPE_CHECKING, Optional, Tuple, TypeAlias, Union
 
 if TYPE_CHECKING:
-    from . import config
-    from . import graph
-    from . import python
+    from . import config, graph, python
 
 Error: TypeAlias = Tuple[int, str, Optional[int], str]
 

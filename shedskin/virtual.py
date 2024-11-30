@@ -26,14 +26,9 @@ With 'observed usage' we mean that this is concluded based just on the call to
 """
 
 import ast
-
-from . import config
-from . import infer
-from . import python
-from . import typestr
-from . import cpp
-
 from typing import Any
+
+from . import config, cpp, infer, python, typestr
 
 
 def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> None:

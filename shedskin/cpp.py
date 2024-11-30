@@ -37,34 +37,17 @@ while maintaining Python's dynamic behavior.
 """
 
 import ast
+import functools
 import io
 import string
 import struct
 import textwrap
-import functools
 from pathlib import Path
+from typing import (IO, TYPE_CHECKING, Any, Dict, Iterator, List, Optional,
+                    Tuple, TypeAlias, Union)
 
-from . import ast_utils
-from . import error
-from . import extmod
-from . import infer
-from . import makefile
-from . import python
-from . import typestr
-from . import virtual
-
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    List,
-    Any,
-    IO,
-    Tuple,
-    TypeAlias,
-    Union,
-    Dict,
-    Iterator,
-)
+from . import (ast_utils, error, extmod, infer, makefile, python, typestr,
+               virtual)
 
 if TYPE_CHECKING:
     from . import config
@@ -4391,5 +4374,5 @@ def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
             gv.insert_consts(declare=True)
             gv.insert_extras(".hpp")
             gv.insert_extras(".cpp")
-    if not analyze:
-        makefile.generate_makefile(gx)
+    # if not analyze:
+    #     makefile.generate_makefile(gx)
