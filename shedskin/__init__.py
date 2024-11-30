@@ -176,7 +176,12 @@ class Shedskin:
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx, analyze=True)
         error.print_errors()
-        self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
+        prebuild_secs = time.time() - t0
+        if self.gx.options.collect_stats:
+            stats.insert_pymodule(self.gx, prebuild_secs)
+            stats.print_current_stats(self.gx, prebuild_secs)
+        else:
+            self.log.info(f'\n[prebuild time: {prebuild_secs:.2f} seconds]')
 
     def translate(self) -> None:
         """Translate the main module"""
@@ -212,16 +217,16 @@ class Shedskin:
         """Build the main module"""
         self.pre_analyze()
         cmake.generate_cmakefile(self.gx)
-        builder = cmake.CMakeBuilder(self.gx.options)
+        builder = cmake.CMakeBuilder(self.gx)
         builder.build()
 
     def test(self) -> None:
         """Run tests"""
         if self.gx.options.run_errs:
-            testrunner = cmake.TestRunner(self.gx.options)
+            testrunner = cmake.TestRunner(self.gx)
             testrunner.run_error_tests()
         else:
-            testrunner = cmake.TestRunner(self.gx.options)
+            testrunner = cmake.TestRunner(self.gx)
             testrunner.run_tests()
 
     def run(self) -> None:
@@ -252,17 +257,25 @@ class Shedskin:
         # common options
         arg = opt = parser.add_argument
 
+        # ---------------------------------------------------------------------
+        # analyze subcommand
+
         parser_analyze = subparsers.add_parser('analyze', help="analyze and validate python module")
         arg = opt = parser_analyze.add_argument
 
         arg("name", help="Python file or module to analyze")
+
+        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+
+        # ---------------------------------------------------------------------
+        # translate
 
         parser_translate = subparsers.add_parser('translate', help="translate python module to cpp (Makefile)")
         arg = opt = parser_translate.add_argument
 
         arg("name", help="Python file or module to compile")
 
-        arg("-c", "--compile",      help="Directly compile translated code", action="store_true")
+        opt("-c", "--compile",      help="Directly compile translated code", action="store_true")
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-F", "--flags",        help="Provide alternate Makefile flags")
@@ -292,7 +305,11 @@ class Shedskin:
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("-w", "--nowrap",       help="Disable wrap-around checking", action="store_true")
         opt("--nocleanup",          help="Disable cleanup of generated files", action="store_true")
-        opt("--collect-stats",      help="Collect module nwords, sloc and analysis time in cache dir db", action="store_true")
+
+        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+
+        # ---------------------------------------------------------------------
+        # build subcommand
 
         parser_build = subparsers.add_parser('build', help="translate and build python module (CMake)")
         arg = opt = parser_build.add_argument
@@ -335,6 +352,11 @@ class Shedskin:
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
+        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+
+        # ---------------------------------------------------------------------
+        # run subcommand
+
         parser_run = subparsers.add_parser('run', help="translate, build and run module (CMake)")
         arg = opt = parser_run.add_argument
 
@@ -376,6 +398,11 @@ class Shedskin:
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
+        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+
+        # ---------------------------------------------------------------------
+        # test subcommand
+
         parser_test = subparsers.add_parser('test', help="run tests")
         arg = opt = parser_test.add_argument
 
@@ -406,9 +433,13 @@ class Shedskin:
         opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
+        opt("--collect-stats",    help="Collect and report shedskin stats", action="store_true")
 
         opt("-c", "--cfg",        help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
         opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")
+
+        # ---------------------------------------------------------------------
+        # parse command line
 
         # make 'translate' the default subparser
         for _arg in sys.argv[1:]:
