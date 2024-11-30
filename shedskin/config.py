@@ -138,23 +138,16 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_limited: bool = False
         self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
-    def get_stats(
-        self,
-        n_words: int = 0,
-        sloc: int = 0,
-        prebuild_secs: float = 0.0,
-        build_secs: float = 0.0,
-        run_secs: float = 0.0,
-    ) -> dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         pyfile = Path(self.module_path)
         return {
             "name": pyfile.stem,
             "filename": str(pyfile),
-            "n_words": n_words,
-            "sloc": sloc,
-            "prebuild_secs": round(prebuild_secs, 2),
-            "build_secs": round(build_secs, 2),
-            "run_secs": round(run_secs, 2),
+            "n_words": 0,
+            "sloc": 0,
+            "prebuild_secs": 0.0,
+            "build_secs": 0.0,
+            "run_secs": 0.0,
             "n_constraints": len(self.constraints),
             "n_vars": len(self.allvars),
             "n_funcs": len(self.allfuncs),

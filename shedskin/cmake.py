@@ -526,6 +526,11 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_NOGC")
     compile_opts = " ".join(compile_options)
 
+    cmdline_options = []
+    if gx.options.collect_stats:
+        cmdline_options.append("--collect-stats")
+    cmdline_opts = " ".join(cmdline_options)
+
     for module in modules:
         if module.builtin and module.filename.is_relative_to(gx.shedskin_lib):
             entry = module.filename.relative_to(gx.shedskin_lib)
@@ -561,7 +566,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
-            ),
+                cmdline_options=cmdline_opts,
+            )
         )
         master_clfile.write_text(master_clfile_content)
 
@@ -580,6 +586,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                cmdline_options=cmdline_opts,
             )
         )
 
@@ -595,9 +602,10 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
 class CMakeBuilder:
     """Shedskin cmake builder"""
 
-    def __init__(self, options: argparse.Namespace):
-        self.options = options
-        if len(pathlib.Path(options.name).parts) == 1:
+    def __init__(self, gx: config.GlobalInfo):
+        self.gx = gx
+        self.options = gx.options
+        if len(pathlib.Path(self.options.name).parts) == 1:
             self.source_dir = pathlib.Path.cwd()
             self.build_dir = self.source_dir / "build"
         else:
@@ -728,6 +736,9 @@ class CMakeBuilder:
         if self.options.debug:
             cfg_options.append("-DDEBUG=ON")
 
+        if self.options.collect_stats:
+            cfg_options.append("-DCOLLECT_STATS=ON")
+
         if self.options.generator:
             cfg_options.append(f"-G{self.options.generator}")
 
@@ -851,8 +862,9 @@ class CMakeBuilder:
 class TestRunner(CMakeBuilder):
     """Basic test runner"""
 
-    def __init__(self, options: argparse.Namespace):
-        self.options = options
+    def __init__(self, gx: config.GlobalInfo):
+        self.gx = gx
+        self.options = gx.options
         self.source_dir = pathlib.Path.cwd()
         self.build_dir = pathlib.Path("build")
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))

@@ -25,7 +25,7 @@ from typing import Any
 
 from . import config
 
-CREATE_TABLE = """\
+CREATE_DB = """\
 CREATE TABLE pymodule (
     name text not null,
     filename text not null,
@@ -107,7 +107,7 @@ def create_db() -> None:
         db_path.parent.mkdir(parents=True)
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
-        cur.execute(CREATE_TABLE)
+        cur.execute(CREATE_DB)
         con.commit()
 
 
@@ -170,16 +170,22 @@ def name_exists(name: str) -> bool:
 
 
 def get_stats(
-    gx: "config.globalinfo", prebuild_secs: float, build_secs: float, run_secs: float
+    gx: "config.globalinfo", prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
 ) -> None:
+    _sd = gx.get_stats()
     modules = [m for _, m in gx.modules.items() if not m.builtin]
-    n_words = sum(count_words(m.filename) for m in modules)
-    sloc = sum(count_lines(m.filename) for m in modules)
-    return gx.get_stats(n_words, sloc, prebuild_secs, build_secs, run_secs)
-
+    _sd["n_words"] = sum(count_words(m.filename) for m in modules)
+    _sd["sloc"] = sum(count_lines(m.filename) for m in modules)
+    _sd["prebuild_secs"] = round(prebuild_secs, 2)
+    _sd["build_secs"] = round(build_secs, 2)
+    _sd["run_secs"] = round(run_secs, 2)
+    return _sd
 
 def insert_pymodule(
-    gx: "config.globalinfo", prebuild_secs: float, build_secs: float, run_secs: float
+    gx: config.GlobalInfo,
+    prebuild_secs: float,
+    build_secs: float = 0.0,
+    run_secs: float = 0.0,
 ) -> None:
     """Insert a Python module into the database"""
     db_path = get_db_path()
@@ -193,7 +199,7 @@ def insert_pymodule(
 
 
 def print_current_stats(
-    gx: "config.globalinfo", prebuild_secs: float, build_secs: float, run_secs: float
+    gx: config.GlobalInfo, prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
 ) -> None:
     """Print current statistics of the current run."""
     stats_dict = get_stats(gx, prebuild_secs, build_secs, run_secs)
@@ -242,7 +248,7 @@ def get_latest_stats() -> list[tuple[str, int, int, float, float, float]]:
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
         cur.execute(
-            "SELECT name, n_words, sloc, round(prebuild_secs, 1), round(build_secs, 1), round(run_secs, 1) "
+            "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
             "FROM pymodule order by ran_at desc limit 1"
         )
         return cur.fetchall()
@@ -254,7 +260,7 @@ def get_all_stats() -> list[tuple[str, int, int, float, float, float]]:
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
         cur.execute(
-            "SELECT name, n_words, sloc, round(prebuild_secs, 1), round(build_secs, 1), round(run_secs, 1) "
+            "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
             "FROM pymodule order by ran_at desc"
         )
         return cur.fetchall()
