@@ -1398,24 +1398,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                     self.add_variable(variable, " ".join(entries))
 
 
-# -----------------------------------------------------------------------------
-# launching functions
-
-
-def generate_makefile(gx: "config.GlobalInfo") -> None:
-    """Generate a makefile for the Shedskin-compiled code"""
-    if gx.options.compile:
-        builder = ShedskinBuilder(gx)
-        builder.build(gx.options.dry_run)
-    elif gx.options.run:
-        builder = ShedskinBuilder(gx)
-        builder.build(gx.options.dry_run)
-        builder.run_executable()
-    else:
-        generator = ShedskinMakefileGenerator(gx)
-        generator.generate()
-
-
 if __name__ == "__main__":
 
     def test_builder() -> None:

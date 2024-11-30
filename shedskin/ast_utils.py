@@ -29,8 +29,7 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
-
-from typing import List, Tuple, Union, Any
+from typing import Any, List, Tuple, Union
 
 from . import config
 

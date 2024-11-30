@@ -15,10 +15,9 @@ import pathlib
 import platform
 import sys
 import time
-
-from . import cmake, config, cpp, error, graph, infer, log, stats
-
 from typing import List, Optional
+
+from . import cmake, config, cpp, error, graph, infer, log, makefile, stats
 
 
 class Shedskin:
@@ -185,13 +184,29 @@ class Shedskin:
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx)
-        error.print_errors()
-        elapsed_secs = (time.time() - t0)
-        if self.gx.options.collect_stats:
-            stats.insert_pymodule(self.gx, elapsed_secs)
-            stats.dump_current_stats(self.gx, elapsed_secs)
+        prebuild_secs = time.time() - t0
+        build_secs = 0.0
+        run_secs = 0.0
+        if self.gx.options.compile or self.gx.options.run:
+            builder = makefile.ShedskinBuilder(self.gx)
+            builder.build(self.gx.options.dry_run)
+            build_secs = time.time() - t0 - prebuild_secs
+            if self.gx.options.run:
+                builder.run_executable()
+                run_secs = time.time() - t0 - build_secs
         else:
-            self.log.info('\n[elapsed time: %.2f seconds]', elapsed_secs)
+            generator = makefile.ShedskinMakefileGenerator(self.gx)
+            generator.generate()
+        if self.gx.options.collect_stats:
+            stats.insert_pymodule(self.gx, prebuild_secs, build_secs, run_secs)
+            stats.print_current_stats(self.gx, prebuild_secs, build_secs, run_secs)
+            # stats.print_all_stats()
+        else:
+            self.log.info(f'[prebuild time: {prebuild_secs:>5.2f} seconds]')
+            if build_secs > 0:
+                self.log.info(f'[build time: {build_secs:>8.2f} seconds]')
+            if run_secs > 0:
+                self.log.info(f'[run time: {run_secs:>10.2f} seconds]')
 
     def build(self) -> None:
         """Build the main module"""

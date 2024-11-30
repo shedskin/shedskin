@@ -65,27 +65,13 @@ import itertools
 import logging
 import random
 import sys
+from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple,
+                    TypeAlias, Union)
 
-from . import ast_utils
-from . import error
-from . import python
-from . import utils
-
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    List,
-    Tuple,
-    Any,
-    TypeAlias,
-    Union,
-    Dict,
-    Iterable,
-)
+from . import ast_utils, error, python, utils
 
 if TYPE_CHECKING:
-    from . import config
-    from . import graph
+    from . import config, graph
 
 Types: TypeAlias = set[
     Tuple["python.Class", int]
