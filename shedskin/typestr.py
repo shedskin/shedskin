@@ -22,27 +22,14 @@ from the Python type information gathered during type inference.
 
 import ast
 import logging
-
-from . import error
-from . import python
-from . import infer
-
 # type-checking
-from typing import (
-    Optional,
-    TYPE_CHECKING,
-    Tuple,
-    TypeAlias,
-    Dict,
-    Type,
-    Any,
-    Iterable,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Type,
+                    TypeAlias, Union)
+
+from . import error, infer, python
 
 if TYPE_CHECKING:
-    from . import config
-    from . import graph
+    from . import config, graph
 
 Types: TypeAlias = set[Tuple["python.Class", int]]  # TODO merge with cpp.py version
 

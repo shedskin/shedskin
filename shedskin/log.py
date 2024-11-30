@@ -3,10 +3,9 @@
 """shedskin.log: provides logging support"""
 
 import logging
+from typing import Optional
 
 from . import utils
-
-from typing import Optional
 
 
 class ShedskinFormatter(logging.Formatter):

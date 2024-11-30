@@ -10,13 +10,12 @@ import os
 import platform
 import sys
 from pathlib import Path
-
-from typing import TYPE_CHECKING, Optional, Any, Tuple, List, Union, TypeAlias
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeAlias, Union
 
 if TYPE_CHECKING:
     import ast
-    from . import infer
-    from . import python
+
+    from . import infer, python
     from .utils import ProgressBar
 
 # types aliases
@@ -139,14 +138,23 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_limited: bool = False
         self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
-    def get_stats(self, n_words: int = 0, sloc: int = 0, elapsed: float = 0) -> dict[str, Any]:
+    def get_stats(
+        self,
+        n_words: int = 0,
+        sloc: int = 0,
+        prebuild_secs: float = 0.0,
+        build_secs: float = 0.0,
+        run_secs: float = 0.0,
+    ) -> dict[str, Any]:
         pyfile = Path(self.module_path)
         return {
             "name": pyfile.stem,
             "filename": str(pyfile),
             "n_words": n_words,
             "sloc": sloc,
-            "elapsed_secs": round(elapsed,2),
+            "prebuild_secs": round(prebuild_secs, 2),
+            "build_secs": round(build_secs, 2),
+            "run_secs": round(run_secs, 2),
             "n_constraints": len(self.constraints),
             "n_vars": len(self.allvars),
             "n_funcs": len(self.allfuncs),
@@ -170,19 +178,19 @@ class GlobalInfo:  # XXX add comments, split up
             "added_funcs": self.added_funcs,
             "cpa_limit": self.cpa_limit,
             # commandline-options
-            "wrap_around_check" : self.wrap_around_check,
-            "bounds_checking" : self.bounds_checking,
-            "assertions" : self.assertions,
-            "executable_product" : self.executable_product,
-            "pyextension_product" : self.pyextension_product,
-            "int32" : self.int32,
-            "int64" : self.int64,
-            "int128" : self.int128,
-            "float32" : self.float32,
-            "float64" : self.float64,
-            "silent" : self.silent,
-            "nogc" : self.nogc,
-            "backtrace" : self.backtrace,
+            "wrap_around_check": self.wrap_around_check,
+            "bounds_checking": self.bounds_checking,
+            "assertions": self.assertions,
+            "executable_product": self.executable_product,
+            "pyextension_product": self.pyextension_product,
+            "int32": self.int32,
+            "int64": self.int64,
+            "int128": self.int128,
+            "float32": self.float32,
+            "float64": self.float64,
+            "silent": self.silent,
+            "nogc": self.nogc,
+            "backtrace": self.backtrace,
         }
 
     def init_directories(self) -> None:
@@ -216,10 +224,8 @@ class GlobalInfo:  # XXX add comments, split up
             sys.exit(1)
 
 
-
-
-
 # utility functions
+
 
 def get_pkg_path() -> Path:
     """Return the path to the shedskin package"""

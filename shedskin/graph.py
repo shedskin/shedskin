@@ -31,18 +31,14 @@ Key components:
 
 import ast
 import copy
-import pathlib
-import string
 import os
+import pathlib
 import re
+import string
 import sys
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeAlias, Union
 
-from . import ast_utils
-from . import error
-from . import infer
-from . import python
-
-from typing import TYPE_CHECKING, Optional, List, Tuple, Any, Union, TypeAlias
+from . import ast_utils, error, infer, python
 
 if TYPE_CHECKING:
     from . import config

@@ -34,7 +34,7 @@ import subprocess
 import sys
 import textwrap
 import time
-from typing import Optional, Union, List, Callable
+from typing import Callable, List, Optional, Union
 
 from . import config
 from .utils import CYAN, GREEN, RED, RESET, WHITE
