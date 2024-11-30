@@ -37,18 +37,15 @@ bridging the gap between Python's dynamic types and C++'s static typing.
 import ast
 import importlib.util
 import os
+import pathlib
 import re
 import sys
-import pathlib
-
-
 # type-checking
-from typing import Optional, TYPE_CHECKING, List, Tuple, TypeAlias, Union, NamedTuple
+from typing import (TYPE_CHECKING, List, NamedTuple, Optional, Tuple,
+                    TypeAlias, Union)
 
 if TYPE_CHECKING:
-    from . import config
-    from . import graph
-    from . import infer
+    from . import config, graph, infer
 
 Parent: TypeAlias = Union["Class", "Function"]
 AllParent: TypeAlias = Union["Class", "Function", "StaticClass"]
