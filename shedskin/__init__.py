@@ -178,10 +178,20 @@ class Shedskin:
         error.print_errors()
         prebuild_secs = time.time() - t0
         if self.gx.options.collect_stats:
-            stats.insert_pymodule(self.gx, prebuild_secs)
-            stats.print_current_stats(self.gx, prebuild_secs)
+            stats_mgr = stats.ShedskinStatsManager(self.gx)
+            stats_mgr.insert_pymodule(prebuild_secs)
+            stats_mgr.print_current_stats(prebuild_secs)
         else:
             self.log.info(f'\n[prebuild time: {prebuild_secs:.2f} seconds]')
+
+    def print_times(self, prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0) -> None:
+        """Print the times"""
+        _out = [f"prebuild time: {prebuild_secs:.2f} secs"]
+        if build_secs > 0:
+            _out.append(f"build time: {build_secs:.2f} secs")
+        if run_secs > 0:
+            _out.append(f"run time: {run_secs:.2f} secs")
+        self.log.info("\n[" + ", ".join(_out) + "]\n")
 
     def translate(self) -> None:
         """Translate the main module"""
@@ -203,15 +213,12 @@ class Shedskin:
             generator = makefile.ShedskinMakefileGenerator(self.gx)
             generator.generate()
         if self.gx.options.collect_stats:
-            stats.insert_pymodule(self.gx, prebuild_secs, build_secs, run_secs)
-            stats.print_current_stats(self.gx, prebuild_secs, build_secs, run_secs)
-            # stats.print_all_stats()
+            stats_mgr = stats.ShedskinStatsManager(self.gx)
+            stats_mgr.insert_pymodule(prebuild_secs, build_secs, run_secs)
+            stats_mgr.print_current_stats(prebuild_secs, build_secs, run_secs)
+            # stats_mgr.print_all_stats()
         else:
-            self.log.info(f'[prebuild time: {prebuild_secs:>5.2f} seconds]')
-            if build_secs > 0:
-                self.log.info(f'[build time: {build_secs:>8.2f} seconds]')
-            if run_secs > 0:
-                self.log.info(f'[run time: {run_secs:>10.2f} seconds]')
+            self.print_times(prebuild_secs, build_secs, run_secs)
 
     def build(self) -> None:
         """Build the main module"""

@@ -20,11 +20,17 @@ import io
 import sqlite3
 import tokenize
 from pathlib import Path
-from textwrap import dedent
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeAlias, Optional
 
 from . import config
 
+if TYPE_CHECKING:
+    from . import python
+
+# types aliases
+PathLike: TypeAlias = Path | str
+
+# constanta
 CREATE_DB = """\
 CREATE TABLE pymodule (
     name text not null,
@@ -84,183 +90,186 @@ EXCLUDE_FIELDS = [
 ]
 
 
-def insert_from_dict(table: str, entry: dict[str, Any]):
-    fields = entry.keys()
-    n_fields = len(fields)
-    fields_str = ", ".join(fields)
-    slots = ", ".join("?" * n_fields)
-    return (
-        f"insert into {table} ({fields_str}) values ({slots})",
-        tuple(entry.values()),
-    )
+class ShedskinStatsManager:
+    """Handles capture and persistence of shedskin-related metrics"""
 
+    def __init__(self, gx: config.GlobalInfo, db_path: Optional[PathLike] = None):
+        self.gx = gx
+        self.db_path = self.get_db_path(db_path)
 
-def get_db_path() -> Path:
-    """Get the path to the SQLite database"""
-    return config.get_user_cache_dir() / "shedskin.db"
+    @property
+    def modules(self) -> list["python.Module"]:
+        """Get the list of modules"""
+        return [m for _, m in self.gx.modules.items() if not m.builtin]
 
-
-def create_db() -> None:
-    """Create the SQLite database"""
-    db_path = get_db_path()
-    if not db_path.parent.exists():
-        db_path.parent.mkdir(parents=True)
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(CREATE_DB)
-        con.commit()
-
-
-def count_words(pyfile: Path) -> int:
-    """Count the words in a Python file"""
-    text = pyfile.read_text()
-    return len(text.split())
-
-
-def count_lines(pyfile: Path) -> int:
-    """Count the lines in a Python file"""
-    with open(pyfile) as f:
-        return len(compress_code(f.read()).splitlines())
-
-
-def compress_code(source: str) -> str:
-    """Compress the code by removing comments and unnecessary whitespace"""
-    io_obj = io.StringIO(source)
-    out = ""
-    prev_toktype = tokenize.INDENT
-    last_lineno = -1
-    last_col = 0
-    for tok in tokenize.generate_tokens(io_obj.readline):
-        token_type = tok[0]
-        token_string = tok[1]
-        start_line, start_col = tok[2]
-        end_line, end_col = tok[3]
-        ltext = tok[4]
-        if start_line > last_lineno:
-            last_col = 0
-        if start_col > last_col:
-            out += " " * (start_col - last_col)
-        if token_type == tokenize.COMMENT:
-            pass
-        elif token_type == tokenize.STRING:
-            if prev_toktype != tokenize.INDENT:
-                if prev_toktype != tokenize.NEWLINE:
-                    if start_col > 0:
-                        if (
-                            len(token_string.splitlines()) > 1
-                        ):  # compress multi-line strings
-                            token_string = "'<compressed>'"
-                        out += token_string
+    def get_db_path(self, db_path: Optional[PathLike] = None) -> Path:
+        """Get the path to the SQLite database"""
+        if not db_path:
+            db_path = config.get_user_cache_dir() / "shedskin.db"
+            if not db_path.parent.exists():
+                db_path.parent.mkdir(parents=True)
         else:
-            out += token_string
-        prev_toktype = token_type
-        last_col = end_col
-        last_lineno = end_line
-    out = "\n".join(l for l in out.splitlines() if l.strip())
-    return out
+            db_path = Path(db_path)
+            if not db_path.exists():
+                raise FileNotFoundError(f"Database file not found: {db_path}")
+        return db_path
 
+    def create_db(self) -> None:
+        """Create the SQLite database"""
+        with sqlite3.connect(self.db_path) as con:
+            cur = con.cursor()
+            cur.execute(CREATE_DB)
+            con.commit()
 
-def name_exists(name: str) -> bool:
-    """Check if a module name exists in the database"""
-    db_path = get_db_path()
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
-        return cur.fetchone()[0]
+    def count_words(self, pyfile: Path) -> int:
+        """Count the words in a Python file"""
+        text = pyfile.read_text()
+        return len(text.split())
 
+    def count_lines(self, pyfile: Path) -> int:
+        """Count the lines in a Python file"""
+        with open(pyfile) as f:
+            return len(self.compress_code(f.read()).splitlines())
 
-def get_stats(
-    gx: "config.globalinfo", prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
-) -> None:
-    _sd = gx.get_stats()
-    modules = [m for _, m in gx.modules.items() if not m.builtin]
-    _sd["n_words"] = sum(count_words(m.filename) for m in modules)
-    _sd["sloc"] = sum(count_lines(m.filename) for m in modules)
-    _sd["prebuild_secs"] = round(prebuild_secs, 2)
-    _sd["build_secs"] = round(build_secs, 2)
-    _sd["run_secs"] = round(run_secs, 2)
-    return _sd
+    def compress_code(self, source: str) -> str:
+        """Compress the code by removing comments and unnecessary whitespace"""
+        io_obj = io.StringIO(source)
+        out = ""
+        prev_toktype = tokenize.INDENT
+        last_lineno = -1
+        last_col = 0
+        for tok in tokenize.generate_tokens(io_obj.readline):
+            token_type = tok[0]
+            token_string = tok[1]
+            start_line, start_col = tok[2]
+            end_line, end_col = tok[3]
+            _ = tok[4]  # ltext
+            if start_line > last_lineno:
+                last_col = 0
+            if start_col > last_col:
+                out += " " * (start_col - last_col)
+            if token_type == tokenize.COMMENT:
+                pass
+            elif token_type == tokenize.STRING:
+                if prev_toktype != tokenize.INDENT:
+                    if prev_toktype != tokenize.NEWLINE:
+                        if start_col > 0:
+                            if (
+                                len(token_string.splitlines()) > 1
+                            ):  # compress multi-line strings
+                                token_string = "'<compressed>'"
+                            out += token_string
+            else:
+                out += token_string
+            prev_toktype = token_type
+            last_col = end_col
+            last_lineno = end_line
+        out = "\n".join(line for line in out.splitlines() if line.strip())
+        return out
 
-def insert_pymodule(
-    gx: config.GlobalInfo,
-    prebuild_secs: float,
-    build_secs: float = 0.0,
-    run_secs: float = 0.0,
-) -> None:
-    """Insert a Python module into the database"""
-    db_path = get_db_path()
-    if not db_path.exists():
-        create_db()
-    stats_dict = get_stats(gx, prebuild_secs, build_secs, run_secs)
-    insert, values = insert_from_dict("pymodule", stats_dict)
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(insert, values)
+    def name_exists(self, name: str) -> bool:
+        """Check if a module name exists in the database"""
+        with sqlite3.connect(self.db_path) as con:
+            cur = con.cursor()
+            cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
+            return cur.fetchone()[0]
 
+    def insert_from_dict(self, table: str, entry: dict[str, Any]):
+        """Insert a dictionary into a table row"""
+        fields = entry.keys()
+        n_fields = len(fields)
+        fields_str = ", ".join(fields)
+        slots = ", ".join("?" * n_fields)
+        return (
+            f"insert into {table} ({fields_str}) values ({slots})",
+            tuple(entry.values()),
+        )
 
-def print_current_stats(
-    gx: config.GlobalInfo, prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
-) -> None:
-    """Print current statistics of the current run."""
-    stats_dict = get_stats(gx, prebuild_secs, build_secs, run_secs)
-    print()
-    for key, value in stats_dict.items():
-        if key in EXCLUDE_FIELDS:
-            continue  # skip excluded fields
-        if isinstance(value, bool) and not value:
-            continue  # skip boolean fields that are false
-        print(f"{key:>24}: {value}")
-    print()
+    def get_stats(
+        self, prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
+    ) -> dict[str, Any]:
+        """Get partial statistics dictionary and populate with additional values"""
+        _sd = self.gx.get_stats()  # partial stats from config
+        _sd.update(
+            dict(
+                n_words=sum(self.count_words(m.filename) for m in self.modules),
+                sloc=sum(self.count_lines(m.filename) for m in self.modules),
+                prebuild_secs=round(prebuild_secs, 2),
+                build_secs=round(build_secs, 2),
+                run_secs=round(run_secs, 2),
+            )
+        )
+        return _sd
 
+    def insert_pymodule(
+        self,
+        prebuild_secs: float,
+        build_secs: float = 0.0,
+        run_secs: float = 0.0,
+    ) -> None:
+        """Insert a Python module into the database"""
+        stats_dict = self.get_stats(prebuild_secs, build_secs, run_secs)
+        insert, values = self.insert_from_dict("pymodule", stats_dict)
+        with sqlite3.connect(self.db_path) as con:
+            cur = con.cursor()
+            cur.execute(insert, values)
 
-def print_rows(rows: list[tuple[str, int, int, float, float, float]]) -> None:
-    """Print rows of statistics"""
-    max_name_len = max(len(row[0]) for row in rows)
-    print(
-        "NAME".ljust(max_name_len + 1),
-        "WORDS".rjust(5),
-        "SLOC".rjust(4),
-        "STIME".rjust(5),
-        "BTIME".rjust(5),
-        "RTIME".rjust(5),
-    )
-    for name, n_words, sloc, prebuild_secs, build_secs, run_secs in rows:
+    def print_current_stats(
+        self, prebuild_secs: float, build_secs: float = 0.0, run_secs: float = 0.0
+    ) -> None:
+        """Print current statistics of the current run."""
+        stats_dict = self.get_stats(prebuild_secs, build_secs, run_secs)
+        print()
+        for key, value in stats_dict.items():
+            if key in EXCLUDE_FIELDS:
+                continue  # skip excluded fields
+            if isinstance(value, bool) and not value:
+                continue  # skip boolean fields that are false
+            print(f"{key:>24}: {value}")
+        print()
+
+    def print_rows(self, rows: list[tuple[str, int, int, float, float, float]]) -> None:
+        """Print rows of statistics"""
+        max_name_len = max(len(row[0]) for row in rows)
         print(
-            f"{name:<{max_name_len + 1}} {n_words:<5} {sloc:<4} {prebuild_secs:<5.1f} {build_secs:<5.1f} {run_secs:<5.1f}"
+            "NAME".ljust(max_name_len + 1),
+            "WORDS".rjust(5),
+            "SLOC".rjust(4),
+            "STIME".rjust(5),
+            "BTIME".rjust(5),
+            "RTIME".rjust(5),
         )
+        for name, n_words, sloc, prebuild_secs, build_secs, run_secs in rows:
+            print(
+                f"{name:<{max_name_len + 1}} {n_words:<5} {sloc:<4} {prebuild_secs:<5.1f} {build_secs:<5.1f} {run_secs:<5.1f}"
+            )
 
+    def print_latest_stats(self) -> None:
+        """Print the statistics of the most recent run."""
+        rows = self.get_latest_stats()
+        self.print_rows(rows)
 
-def print_latest_stats() -> None:
-    """Print the statistics of the most recent run."""
-    rows = get_latest_stats()
-    print_rows(rows)
+    def print_all_stats(self) -> None:
+        """Print all statistics from the database"""
+        rows = self.get_all_stats()
+        self.print_rows(rows)
 
+    def get_latest_stats(self) -> list[tuple[str, int, int, float, float, float]]:
+        """Get the latest statistics from the database"""
+        with sqlite3.connect(self.db_path) as con:
+            cur = con.cursor()
+            cur.execute(
+                "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
+                "FROM pymodule order by ran_at desc limit 1"
+            )
+            return cur.fetchall()
 
-def print_all_stats() -> None:
-    """Print all statistics from the database"""
-    rows = get_all_stats()
-    print_rows(rows)
-
-
-def get_latest_stats() -> list[tuple[str, int, int, float, float, float]]:
-    """Get the latest statistics from the database"""
-    db_path = get_db_path()
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(
-            "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
-            "FROM pymodule order by ran_at desc limit 1"
-        )
-        return cur.fetchall()
-
-
-def get_all_stats() -> list[tuple[str, int, int, float, float, float]]:
-    """Get all statistics from the database"""
-    db_path = get_db_path()
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(
-            "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
-            "FROM pymodule order by ran_at desc"
-        )
-        return cur.fetchall()
+    def get_all_stats(self) -> list[tuple[str, int, int, float, float, float]]:
+        """Get all statistics from the database"""
+        with sqlite3.connect(self.db_path) as con:
+            cur = con.cursor()
+            cur.execute(
+                "SELECT name, n_words, sloc, prebuild_secs, build_secs, run_secs "
+                "FROM pymodule order by ran_at desc"
+            )
+            return cur.fetchall()
