@@ -134,9 +134,23 @@ def test_partition():
     assert b"a and b and c".partition(b"and") == (b'a ', b'and', b' b and c')
     assert b'aa-bb-cc'.partition(b'-') ==  (b'aa', b'-', b'bb-cc')
 
-def test_removeprefix(): pass
+def test_removeprefix():
+    a = b'bla://hop'
+    b = a.removeprefix(b'bla://')
+    assert b == b'hop'
+    b = a.removeprefix(b'ble://')
+    assert b == b'bla://hop'
+    b = a.removeprefix(b'')
+    assert b == b'bla://hop'
 
-def test_removesuffix(): pass
+def test_removesuffix():
+    a = b'bla://hop'
+    c = a.removesuffix(b'hop')
+    assert c == b'bla://'
+    c = a.removesuffix(b'wop')
+    assert c == b'bla://hop'
+    c = a.removesuffix(b'')
+    assert c == b'bla://hop'
 
 def test_replace():
     assert b'bla'.replace(b'la', b'bla') == b'bbla'
