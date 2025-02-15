@@ -104,6 +104,9 @@ public:
     str *ljust(__ss_int width, str *fillchar=0);
     str *rjust(__ss_int width, str *fillchar=0);
 
+    str *removeprefix(str *prefix);
+    str *removesuffix(str *suffix);
+
     __ss_int __cmp__(pyobj *p);
     long __hash__();
 

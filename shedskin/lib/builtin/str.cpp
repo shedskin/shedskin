@@ -700,6 +700,22 @@ str *str::casefold() {
     return r;
 }
 
+str *str::removeprefix(str *prefix) {
+    size_t l = prefix->unit.size();
+    if(startswith(prefix))
+        return new str(unit.data()+l, unit.size()-l);
+    else
+        return this;
+}
+
+str *str::removesuffix(str *suffix) {
+    size_t l = suffix->unit.size();
+    if(endswith(suffix))
+        return new str(unit.data(), unit.size()-l);
+    else
+        return this;
+}
+
 str *str::capitalize() {
     str *r = new str(unit);
     r->unit[0] = (char)::toupper(r->unit[0]);

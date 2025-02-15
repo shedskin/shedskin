@@ -421,6 +421,11 @@ class str_(pyseq):
     def center(self, width, fillchar=''):
         return ''
 
+    def removeprefix(self, prefix):
+        return ''
+    def removesuffix(self, suffix):
+        return ''
+
     def __slice__(self, x, l, u, s):
         return self
     def __hash__(self):
@@ -513,6 +518,11 @@ class bytes_(pyseq):
         return True
     def endswith(self, e, start=0, end=0):
         return True
+
+    def removeprefix(self, prefix):
+        return b''
+    def removesuffix(self, suffix):
+        return b''
 
     def center(self, width, fillchar=b''):
         return b''
