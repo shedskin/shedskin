@@ -199,6 +199,7 @@ class Shedskin:
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx)
+        error.print_errors()
         prebuild_secs = time.time() - t0
         build_secs = 0.0
         run_secs = 0.0
