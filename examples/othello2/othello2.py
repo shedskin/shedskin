@@ -397,7 +397,7 @@ def vs_cpu_ugi(max_depth):
             else:
                 sys.stdout.write('response false\n')
 
-        elif line.startswith('go '):
+        elif line.startswith('go'):
             move = minimax_ab(state, color, 0, max_depth, True)
             sys.stdout.write('bestmove %s\n' % human_move(move))
 
@@ -431,10 +431,9 @@ def vs_cpu_ugi(max_depth):
                 elif segs[s] == 'moves':
                     for hmove in segs[s + 1:]:
                         if hmove != 'moves':
-                            do_move(state, color, parse_move(hmove.lower()))
-
-                            if possible_moves(state, color^1) != 0:
-                                color = color^1
+                            if hmove != '0000':
+                                do_move(state, color, parse_move(hmove.lower()))
+                            color = color^1
                     break
 
                 s += 1
