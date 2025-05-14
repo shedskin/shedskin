@@ -251,6 +251,7 @@ class Shedskin:
     def commandline(cls, bypassargs:Optional[List[str]]=None) -> None:
         """command line api"""
         sys.setrecursionlimit(100000)
+        os.system("") # hack tht enables color output for Microsoft Windows cmd
 
         # --- command-line options
         parser = argparse.ArgumentParser(
