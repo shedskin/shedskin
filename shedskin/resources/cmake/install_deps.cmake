@@ -24,7 +24,7 @@ function(common)
         set(LIB_DEPS
             ${install_dir}/lib/libgc.a
             ${install_dir}/lib/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre.a>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre2-8.a>
         )
         set(LIB_DIRS ${install_dir}/lib)
         set(LIB_INCLUDES ${install_dir}/include)
@@ -32,7 +32,7 @@ function(common)
         set(LIB_DEPS
             ${SPM_LIB_DIRS}/libgc.a
             ${SPM_LIB_DIRS}/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre.a>            
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre2-8.a>            
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
@@ -72,7 +72,7 @@ function(common)
         set(LIB_DEPS 
             "-lgc"
             "-lgccpp"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )

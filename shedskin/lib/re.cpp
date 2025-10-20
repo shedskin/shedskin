@@ -1,5 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#include <stdint.h>
 #include "re.hpp"
 
 namespace __re__ {
@@ -13,27 +14,34 @@ const __ss_int
     U = 0x20, __ss_UNICODE  = 0x20,
     X = 0x40, VERBOSE       = 0x40;
 
-const unsigned char *local_table;
+//PCRE structures
+pcre2_general_context *general_context;
+pcre2_compile_context *locale_context, *non_locale_context;
+const uint8_t *locale_tables;
 
 class_ *cl_error;
 
 //match_object functions
 str *match_object::group(__ss_int /* n */, __ss_int matchid)
 {
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
     return new str(re->__group(&string->unit, captured, matchid));
 }
 
 str *match_object::group(__ss_int /* n */, str *mname)
 {
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
     return new str(re->__group(&string->unit, captured, mname));
 }
 
 //index functions
 __ss_int match_object::__index(__ss_int matchid, char isend)
 {
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
+
     if(matchid > lastindex) throw new error(new str("group does not exist or is unmatched"));
 
-    return captured[matchid * 2 + isend];
+    return (__ss_int) captured[matchid * 2 + isend];
 }
 
 __ss_int match_object::__index(str *mname, char isend)
@@ -76,6 +84,7 @@ tuple2<__ss_int, __ss_int> *match_object::span(str *mname)
 
 str *match_object::expand(str *tpl)
 {
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
     return new str(re->__expand(&string->unit, captured, tpl->unit));
 }
 
@@ -83,12 +92,13 @@ tuple2<str *, str *> *match_object::groups(str *defval)
 {
     tuple<str *> *r;
     int i;
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
 
     r = new tuple<str *>();
 
     for(i = 1; i <= re->capture_count; i++)
     {
-        if(captured[i * 2] != -1)
+        if(captured[i * 2] != PCRE2_UNSET)
             r->units.push_back(new str(string->unit.substr((size_t)(captured[i * 2]), (size_t)(captured[i * 2 + 1] - captured[i * 2]))));
 
         else r->units.push_back(defval ? new str(defval->unit) : 0);
@@ -99,6 +109,7 @@ tuple2<str *, str *> *match_object::groups(str *defval)
 
 dict<str *, str *> *match_object::groupdict(str *defval)
 {
+    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
     dict<str *, str *> *r;
     int t;
     r = new dict<str *, str *>();
@@ -109,7 +120,7 @@ dict<str *, str *> *match_object::groupdict(str *defval)
     FOR_IN(k,re->groupindex,1,2,3)
         t = re->groupindex->__getitem__(k);
 
-        if(captured[t * 2] != -1) r->__setitem__(new str(k->unit),
+        if(captured[t * 2] != PCRE2_UNSET) r->__setitem__(new str(k->unit),
             new str(string->unit.substr((size_t)(captured[t * 2]), (size_t)(captured[t * 2 + 1] - captured[t * 2]))));
 
         else r->__setitem__(new str(k->unit), defval ? new str(defval->unit) : 0);
@@ -127,22 +138,22 @@ str *re_object::__repr__() {
 }
 
 //these are for internal use
-__GC_STRING re_object::__group(__GC_STRING *subj, int *captured, __ss_int matchid)
+__GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int matchid)
 {
     if(matchid > capture_count || matchid < 0) throw new error(new str("group does not exist"));
-    if(captured[matchid * 2] == -1) throw new error(new str("group is unmatched"));
+    if(captured[matchid * 2] == PCRE2_UNSET) throw new error(new str("group is unmatched"));
 
     return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
 }
 
-__GC_STRING re_object::__group(__GC_STRING *subj, int *captured, str *mname)
+__GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, str *mname)
 {
     if(!groupindex->has_key(mname)) throw new error(new str("no such group exists"));
 
     return __group(subj, captured, groupindex->__getitem__(mname));
 }
 
-__GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tpl)
+__GC_STRING re_object::__expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_STRING tpl)
 {
     __GC_STRING out;
     size_t i, j, len;
@@ -230,12 +241,12 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tp
 
 
 //replacing pcre's allocation functions with ours using the garbage collector
-void *re_malloc(size_t n)
+void *re_malloc(PCRE2_SIZE n, void *)
 {
     return GC_MALLOC(n);
 }
 
-void re_free(void *o)
+void re_free(void *o, void *)
 {
     GC_FREE(o);
 }
@@ -243,30 +254,29 @@ void re_free(void *o)
 str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 {
     __GC_STRING *s, out;
-    int *captured, clen, i, cur;
+    PCRE2_SIZE i, cur;
     const char *c_subj;
-
-    //temporary data
-    clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
+    PCRE2_SIZE *captured;
 
     out = "";
 
     s = &subj->unit;
     c_subj = s->c_str();
-    for(cur = i = 0; maxn <= 0 || cur < maxn; cur++)
+    for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
         //get a match
-        if(pcre_exec(
+        if(pcre2_match(
             compiled_pattern,
-            study_info,
-            c_subj,
+            (PCRE2_SPTR) c_subj,
             (int)s->size(),
             i,
             0,
-            captured,
-            clen
+            match_data,
+            NULL
         ) <= 0) break;
+
+        captured = pcre2_get_ovector_pointer(match_data);
 
         //append stuff we skipped
         out += s->substr((size_t)i, (size_t)(captured[0] - i));
@@ -281,9 +291,9 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 
     //extra
     out += s->substr((size_t)i);
-    if(howmany) *howmany = cur;
+    if(howmany) *howmany = (int) cur;
 
-    GC_FREE(captured);
+    pcre2_match_data_free(match_data);
 
     return new str(out);
 }
@@ -336,31 +346,30 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
 {
     __GC_STRING *subjs;
     list<str *> *r;
-    int *captured, clen, i, j, cur;
-    const char *c_subj;
-
-    //temporary data
-    clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
+    PCRE2_SIZE i, j, cur;
+    PCRE2_SPTR c_subj;
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
+    PCRE2_SIZE *captured;
 
     //'permanent' (in respect to the lifetime of this function)
     r = new list<str *>();
 
     subjs = &subj->unit;
-    c_subj = subjs->c_str();
-    for(cur = i = 0; maxn <= 0 || cur < maxn; cur++)
+    c_subj = (PCRE2_SPTR) subjs->c_str();
+    for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
         //get a match
-        if(pcre_exec(
+        if(pcre2_match(
             compiled_pattern,
-            study_info,
             c_subj,
             (int)subjs->size(),
             i,
             flags_,
-            captured,
-            clen
+            match_data,
+            NULL
         ) <= 0) break;
+
+        captured = pcre2_get_ovector_pointer(match_data);
 
         //this whole subroutine is very similar to findall, so we might as well save some code and merge them...
         if(onlyfind)
@@ -384,9 +393,9 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
             r->append(new str(subjs->substr((size_t)i, (size_t)(captured[0] - i))));
 
             //append all the submatches to list
-            for(j = 1; j <= capture_count; j++)
+            for(j = 1; j <= (PCRE2_SIZE) capture_count; j++)
             {
-                if(captured[j * 2] != -1) r->append(new str(subjs->substr((size_t)captured[j * 2], (size_t)(captured[j * 2 + 1] - captured[j * 2]))));
+                if(captured[j * 2] != PCRE2_UNSET) r->append(new str(subjs->substr((size_t)captured[j * 2], (size_t)(captured[j * 2 + 1] - captured[j * 2]))));
                 else r->append(0); //should this be new str() ?
             }
         }
@@ -397,7 +406,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
 
     if(!onlyfind) r->append(new str(subjs->substr((size_t)i)));
 
-    GC_FREE(captured);
+    pcre2_match_data_free(match_data);
 
     return r;
 }
@@ -424,6 +433,7 @@ match_iter::match_iter(re_object *ro_, str *subj_, __ss_int pos_, __ss_int endpo
 match_object *match_iter::__next__(void)
 {
     match_object *mobj;
+    PCRE2_SIZE *captured;
 
     if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->unit.size()) throw new StopIteration();
 
@@ -431,8 +441,10 @@ match_object *match_iter::__next__(void)
     mobj = ro->__exec(subj, pos, endpos, flags);
     if(!mobj) throw new StopIteration();
 
-    if(mobj->captured[1] == pos) pos++;
-    else pos = mobj->captured[1];
+    captured = pcre2_get_ovector_pointer(mobj->match_data);
+
+    if(captured[1] == (PCRE2_SIZE) pos) pos++;
+    else pos = (__ss_int) captured[1];
 
     return mobj;
 }
@@ -448,13 +460,10 @@ __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int en
 match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
 {
     match_object *mobj;
-    int *captured, clen, r, t, mx_i, nendpos;
-    str *mx_s;
-    mx_s = NULL;
-
-    //allocate captured array
-    clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
+    int r, t, mx_i, nendpos;
+    str *mx_s = NULL;
+    PCRE2_SIZE *captured;
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
 
     //sanity checking
     if(endpos == -1) nendpos = (__ss_int)subj->unit.size() - 1;
@@ -463,15 +472,14 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
 
     if(subj->unit.size()!=0 and (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
-    r = pcre_exec(
+    r = pcre2_match(
         compiled_pattern,
-        study_info,
-        subj->c_str(),
+        (PCRE2_SPTR) subj->c_str(),
         nendpos + 1,
         pos,
         flags_,
-        captured,
-        clen
+        match_data,
+        NULL
     );
 
     //no match was found (dont have to worry about freeing thanks to the garbage collector)
@@ -482,11 +490,13 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     mobj->re = this;
 
     //extra info
-    mobj->captured = captured;
+    mobj->match_data = match_data;
     mobj->pos = pos;
     mobj->endpos = endpos;
     mobj->string = subj;
     mobj->lastindex = r - 1;
+
+    captured = pcre2_get_ovector_pointer(match_data);
 
     //find lastgroup
     mx_i = -1;
@@ -497,7 +507,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     dict<str *, __ss_int> *__1;
     FOR_IN(k,groupindex,1,2,3)
         t = groupindex->__getitem__(k);
-        if(captured[t * 2] != -1 && t > mx_i)
+        if(captured[t * 2] != PCRE2_UNSET && t > mx_i)
         {
             mx_s = k;
             mx_i = t;
@@ -511,7 +521,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
 
 match_object *re_object::match(str *subj, __ss_int pos, __ss_int endpos)
 {
-    return __exec(subj, pos, endpos, PCRE_ANCHORED);
+    return __exec(subj, pos, endpos, PCRE2_ANCHORED);
 }
 
 match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
@@ -524,7 +534,7 @@ match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
 __ss_int __convert_flags(__ss_int flags)
 {
     int ta[] = {IGNORECASE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE},
-        tb[] = {PCRE_CASELESS, PCRE_MULTILINE, PCRE_DOTALL, PCRE_UTF8, PCRE_EXTENDED};
+        tb[] = {PCRE2_CASELESS, PCRE2_MULTILINE, PCRE2_DOTALL, PCRE2_UTF, PCRE2_EXTENDED};
     int i, r;
 
     r = 0;
@@ -538,28 +548,34 @@ re_object *compile(str *pat, __ss_int flags)
 {
     re_object *reobj;
     __GC_STRING fullerr;
-    pcre *cpat;
-    char *errmsg, *nametable;
-    int options, erroff, ntlen, nteach, i;
+    pcre2_code *cpat;
+    int errorcode;
+    PCRE2_SIZE erroroffset;
+    PCRE2_SPTR nametable;
+    uint32_t options, ntlen, nteach, i;
 
     //convert flags
     options = __convert_flags(flags);
 
     //attempt a compilation
-    cpat = pcre_compile(
-        pat->c_str(),
+    cpat = pcre2_compile(
+        (PCRE2_SPTR) pat->c_str(),
+        PCRE2_ZERO_TERMINATED,
         options,
-        (const char **)&errmsg,
-        &erroff,
-        (flags & LOCALE ? local_table : 0)
+        &errorcode,
+        &erroroffset,
+        (flags & LOCALE ? locale_context : non_locale_context)
     );
 
     //...
     if(!cpat)
     {
-        fullerr = "char " + erroff;
+        PCRE2_UCHAR errormessage[128];
+        pcre2_get_error_message(errorcode, errormessage, sizeof(errormessage));
+
+        fullerr = "char " + erroroffset;
         fullerr += ":";
-        fullerr += errmsg;
+        fullerr += (char *) errormessage;
 
         throw new error(new str(fullerr));
     }
@@ -568,15 +584,12 @@ re_object *compile(str *pat, __ss_int flags)
     reobj = new re_object();
     reobj->compiled_pattern = cpat;
 
-    //might as well study it
-    reobj->study_info = pcre_study(cpat, 0, (const char **)&errmsg);
-
     //any named indices?
     reobj->groupindex = new dict<str *, __ss_int>();
 
-    pcre_fullinfo(cpat, reobj->study_info, PCRE_INFO_NAMECOUNT, (void *)&ntlen);
-    pcre_fullinfo(cpat, reobj->study_info, PCRE_INFO_NAMEENTRYSIZE, (void *)&nteach);
-    pcre_fullinfo(cpat, reobj->study_info, PCRE_INFO_NAMETABLE, (void *)&nametable);
+    pcre2_pattern_info(cpat, PCRE2_INFO_NAMECOUNT, (void *)&ntlen);
+    pcre2_pattern_info(cpat, PCRE2_INFO_NAMEENTRYSIZE, (void *)&nteach);
+    pcre2_pattern_info(cpat, PCRE2_INFO_NAMETABLE, (void *)&nametable);
 
     for(i = 0; i < ntlen; i++)
     {
@@ -589,7 +602,7 @@ re_object *compile(str *pat, __ss_int flags)
     //extra info
     reobj->pattern = new str(pat->unit);
     reobj->flags = flags;
-    pcre_fullinfo(cpat, 0, PCRE_INFO_CAPTURECOUNT, &reobj->capture_count);
+    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &reobj->capture_count);
 
     return reobj;
 }
@@ -647,7 +660,7 @@ match_object *search(str *pat, str *subj, __ss_int flags)
 
 match_object *match(str *pat, str *subj, __ss_int flags)
 {
-    return __exec_once(pat, subj, flags | PCRE_ANCHORED);
+    return __exec_once(pat, subj, flags | PCRE2_ANCHORED);
 }
 
 __iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
@@ -719,11 +732,13 @@ void __init(void)
 {
     cl_error = new class_("error");
 
-    pcre_malloc = &re_malloc;
-    pcre_free = &re_free;
+    general_context = pcre2_general_context_create(re_malloc, re_free, NULL);
+    non_locale_context = pcre2_compile_context_create(general_context);
+    locale_context = pcre2_compile_context_create(general_context);
 
-    local_table = pcre_maketables();
-
+    setlocale(LC_CTYPE, "");
+    locale_tables = pcre2_maketables(general_context);
+    pcre2_set_character_tables(locale_context, locale_tables);
 }
 
 }

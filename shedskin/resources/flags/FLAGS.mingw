@@ -1,4 +1,4 @@
 CXX?=g++
 CXXFLAGS?=-O2 -DWIN32 -std=c++17 -march=native -Wno-deprecated -Wl,--enable-auto-import $(CPPFLAGS)
-LDLIBS?=-lgc -lpcre -lgccpp
+LDLIBS?=-lgc -lpcre2-8 -lgccpp
 

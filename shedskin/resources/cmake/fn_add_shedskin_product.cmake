@@ -111,11 +111,7 @@ function(add_shedskin_product)
     if(SHEDSKIN_CMDLINE_OPTIONS)
         join(${SHEDSKIN_CMDLINE_OPTIONS} " " opts)
     else()
-        if(COLLECT_STATS)
-            set(opts "--collect-stats")
-        else()
-            set(opts)
-        endif()
+        set(opts)
     endif()
 
     if(SIMPLE_PROJECT)
@@ -215,11 +211,11 @@ function(add_shedskin_product)
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
-        set(LIBGPCRE libpcre.a)
+        set(LIBGPCRE libpcre2-8.a)
     else() # i.e windows
         set(LIBGCa gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE pcre.lib)
+        set(LIBPCRE pcre2-8.lib)
     endif ()
 
     if(ENABLE_EXTERNAL_PROJECT)
@@ -276,7 +272,7 @@ function(add_shedskin_product)
         set(LIB_DEPS
             "-lgc"
             "-lgccpp"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )
