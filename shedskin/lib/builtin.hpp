@@ -262,8 +262,8 @@ template <class T> class __seqiter : public __iter<T> {
 public:
     __ss_int counter, size;
     pyseq<T> *p;
-    __seqiter<T>();
-    __seqiter<T>(pyseq<T> *p);
+    __seqiter();
+    __seqiter(pyseq<T> *p);
     T __next__();
 };
 

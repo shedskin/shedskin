@@ -12,7 +12,7 @@ public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
 
-    __dictiterkeys<K, V>(dict<K, V> *p);
+    __dictiterkeys(dict<K, V> *p);
     K __next__();
 
     inline str *__str__() { return new str("dict_keys"); }
@@ -23,7 +23,7 @@ public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
 
-    __dictitervalues<K, V>(dict<K, V> *p);
+    __dictitervalues(dict<K, V> *p);
     V __next__();
 
     inline str *__str__() { return new str("dict_values"); }
@@ -34,7 +34,7 @@ public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
 
-    __dictiteritems<K, V>(dict<K, V> *p);
+    __dictiteritems(dict<K, V> *p);
     tuple2<K, V> *__next__();
 
     inline str *__str__() { return new str("dict_items"); }
