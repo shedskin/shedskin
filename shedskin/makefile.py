@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.makefile: makefile generator
 
 This module generates Makefiles for building Shedskin-compiled C++ code and
@@ -660,7 +660,7 @@ class ShedskinBuilder(Builder):
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
         )
-        self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
+        self.add_ldlibs("-lgc", "-lpcre2-8", "-lgccpp")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -686,16 +686,16 @@ class ShedskinBuilder(Builder):
                     self.add_ldlibs(
                         f"{prefix}/lib/libgc.a",
                         f"{prefix}/lib/libgccpp.a",
-                        f"{prefix}/lib/libpcre.a",
+                        f"{prefix}/lib/libpcre2-8.a",
                     )
                 else:
                     self.add_ldlibs(
                         "-lgc",
                         "-lgctba",
-                        "-lpcre",
+                        "-lpcre2-8",
                     )
             else:
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-8")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -755,7 +755,7 @@ class ShedskinBuilder(Builder):
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
         if "re" in module_ids:
-            self.add_ldlibs("-lpcre")
+            self.add_ldlibs("-lpcre2-8")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32")
@@ -1171,7 +1171,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-Wl,--enable-auto-import",
                 "$(CPPFLAGS)",
             )
-            self.add_ldlibs("-lgc", "-lpcre", "-lgccpp")
+            self.add_ldlibs("-lgc", "-lpcre2-8", "-lgccpp")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -1204,14 +1204,14 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
                 self.add_variable("STATIC_GCCPP", "$(HOMEBREW_LIB)/libgccpp.a")
-                self.add_variable("STATIC_PCRE", "$(HOMEBREW_LIB)/libpcre.a")
+                self.add_variable("STATIC_PCRE", "$(HOMEBREW_LIB)/libpcre2-8.a")
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE)"
                 )
 
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre")
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-8")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -1275,7 +1275,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
         if "re" in module_ids:
-            self.add_ldlibs("-lpcre")
+            self.add_ldlibs("-lpcre2-8")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32")
@@ -1396,6 +1396,24 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                     self.add_ldflags(*entries)
                 else:
                     self.add_variable(variable, " ".join(entries))
+
+
+# -----------------------------------------------------------------------------
+# launching functions
+
+
+def generate_makefile(gx: "config.GlobalInfo") -> None:
+    """Generate a makefile for the Shedskin-compiled code"""
+    if gx.options.compile:
+        builder = ShedskinBuilder(gx)
+        builder.build(gx.options.dry_run)
+    elif gx.options.run:
+        builder = ShedskinBuilder(gx)
+        builder.build(gx.options.dry_run)
+        builder.run_executable()
+    else:
+        generator = ShedskinMakefileGenerator(gx)
+        generator.generate()
 
 
 if __name__ == "__main__":
