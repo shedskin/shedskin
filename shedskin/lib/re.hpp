@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __RE_HPP
 #define __RE_HPP
@@ -8,10 +8,12 @@
 
 #include "builtin.hpp"
 
+#define PCRE2_CODE_UNIT_WIDTH 8
+
 #ifndef __sun
-#include <pcre.h>
+#include <pcre2.h>
 #else
-#include <pcre/pcre.h>
+#include <pcre2/pcre2.h>
 #endif
 
 
@@ -53,7 +55,7 @@ public:
     re_object *re;
 
     //internal: captured subpatterns
-    int *captured;
+    pcre2_match_data *match_data;
 
     //self-explanatory
     __ss_int pos, endpos;
@@ -129,13 +131,12 @@ public:
     __ss_int flags;
 
     //internal functions
-    __GC_STRING __group(__GC_STRING *subj, int *captured, __ss_int m);
-    __GC_STRING __group(__GC_STRING *subj, int *captured, str *m);
-    __GC_STRING __expand(__GC_STRING *subj, int *captured, __GC_STRING tpl);
+    __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int m);
+    __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, str *m);
+    __GC_STRING __expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_STRING tpl);
 
-    //the compiled pattern + extra info for optimization
-    pcre *compiled_pattern;
-    pcre_extra *study_info;
+    //the compiled pattern
+    pcre2_code *compiled_pattern;
 
     match_object *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags_ = 0);
     str *__subn(str *repl, str *subj, __ss_int maxn = -1, int *howmany = 0);
@@ -182,8 +183,8 @@ match_object *__exec_once(str *subj, __ss_int flags);
 //internal functions
 void __init(void);
 
-void *re_malloc(size_t n);
-void re_free(void *o);
+void *re_malloc(size_t n, void *);
+void re_free(void *o, void *);
 
 }
 #endif
