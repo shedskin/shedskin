@@ -12,7 +12,7 @@ public:
     set<T> *p;
     typename __GC_SET<T>::iterator it;
 
-    __setiter<T>(set<T> *p);
+    __setiter(set<T> *p);
     T __next__();
 };
 
