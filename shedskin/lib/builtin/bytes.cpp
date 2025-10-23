@@ -19,7 +19,7 @@ bytes::bytes(bytes *b, int frozen_) : hash(-1), frozen(frozen_) {
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size, int frozen_) : unit(s, (size_t)size), hash(-1), frozen(frozen_) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, size_t size, int frozen_) : unit(s, size), hash(-1), frozen(frozen_) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
