@@ -320,14 +320,13 @@ class ShedskinDependencyManager:
             pcre2_build,
             prefix=self.deps_dir,
             BUILD_SHARED_LIBS=False,
-            PCRE_BUILD_PCREGREP=False,
-            PCRE_BUILD_PCRECPP=True,
-            PCRE_SUPPORT_LIBREADLINE=False,
-            PCRE_SUPPORT_LIBEDIT=False,
-            PCRE_SUPPORT_LIBZ=False,
-            PCRE_SUPPORT_LIBBZ2=False,
-            PCRE_BUILD_TESTS=False,
-            PCRE_SHOW_REPORT=False,
+            PCRE2_BUILD_PCRE2GREP=False,
+            PCRE2_SUPPORT_LIBREADLINE=False,
+            PCRE2_SUPPORT_LIBEDIT=False,
+            PCRE2_SUPPORT_LIBZ=False,
+            PCRE2_SUPPORT_LIBBZ2=False,
+            PCRE2_BUILD_TESTS=False,
+            PCRE2_SHOW_REPORT=False,
         )
         self.cmake_build(pcre2_build)
         self.cmake_install(pcre2_build)

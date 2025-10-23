@@ -40,16 +40,16 @@ function(common)
         set(LIB_DEPS
             BDWgc::gc
             BDWgc::gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE::PCRE>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE2::PCRE2>
         )
         set(LIB_DIRS
             ${BDWgc_LIB_DIRS}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE_LIB_DIRS}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE2_LIB_DIRS}>
         )
-        # include PCRE headers irrespective (even if not used) to prevent header not found error
+        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
         set(LIB_INCLUDES
             ${BDWgc_INCLUDE_DIRS}
-            ${PCRE_INCLUDE_DIRS}
+            ${PCRE2_INCLUDE_DIRS}
         )
     else() 
         # adding -lutil for every use of os is not a good idea should only be temporary
