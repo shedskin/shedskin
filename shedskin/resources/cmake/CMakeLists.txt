@@ -84,7 +84,7 @@ elseif(ENABLE_CONAN)
     endif()
     include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
     find_package(BDWgc)
-    find_package(PCRE)
+    find_package(PCRE2)
 
 elseif(ENABLE_EXTERNAL_PROJECT)
     set(install_dir ${CMAKE_CURRENT_BINARY_DIR}/install)
@@ -99,10 +99,10 @@ elseif(ENABLE_EXTERNAL_PROJECT)
                        -Denable_cplusplus=ON
     )
     ExternalProject_Add(
-        pcre
+        pcre2
         INSTALL_DIR    ${install_dir}
-        URL            https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz
-        URL_MD5        01b80f8177ab91da63e7e5c5d5dfcb83
+        GIT_REPOSITORY https://github.com/PCRE2Project/pcre2.git
+        GIT_TAG        6ae58beca071f13ccfed31d03b3f479ab520639b
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
     )
 endif()

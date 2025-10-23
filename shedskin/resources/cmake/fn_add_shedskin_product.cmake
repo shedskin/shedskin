@@ -211,18 +211,18 @@ function(add_shedskin_product)
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
-        set(LIBGPCRE libpcre2-8.a)
+        set(LIBPCRE2 libpcre2-8.a)
     else() # i.e windows
         set(LIBGCa gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE pcre2-8.lib)
+        set(LIBPCRE2 pcre2-8.lib)
     endif ()
 
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
             ${install_dir}/lib/${LIBGC}
             ${install_dir}/lib/${LIBGCCPP}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE2}>
         )
         set(LIB_DIRS ${install_dir}/lib)
         set(LIB_INCLUDES ${install_dir}/include)
@@ -232,7 +232,7 @@ function(add_shedskin_product)
             ${SPM_LIB_DIRS}/${LIBGCCPP}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
@@ -240,16 +240,16 @@ function(add_shedskin_product)
         set(LIB_DEPS
             BDWgc::gc
             BDWgc::gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE::PCRE>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE2::PCRE2>
         )
         set(LIB_DIRS
             ${BDWgc_LIB_DIRS}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE_LIB_DIRS}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE2_LIB_DIRS}>
         )
-        # include PCRE headers irrespective (even if not used) to prevent header not found error
+        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
         set(LIB_INCLUDES
             ${BDWgc_INCLUDE_DIRS}
-            ${PCRE_INCLUDE_DIRS}
+            ${PCRE2_INCLUDE_DIRS}
         )
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
