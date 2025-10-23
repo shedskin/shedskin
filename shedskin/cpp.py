@@ -4354,7 +4354,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.append('new bytes("%s"' % self.expand_special_chars(value))
                 if b"\0" in value:
-                    self.append(", %d" % len(value))
+                    self.append(", (size_t)%d" % len(value))
                 self.append(")")
 
         else:
