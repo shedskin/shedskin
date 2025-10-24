@@ -54,6 +54,21 @@ def is_constant(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant)
 
 
+def is_str(node: ast.AST) -> bool:
+    """Check if a node is a str constant"""
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def is_num(node: ast.AST) -> bool:
+    """Check if a node is a numeric constant"""
+    return isinstance(node, ast.Constant) and isinstance(node.value, (int, float))
+
+
+def is_bytes(node: ast.AST) -> bool:
+    """Check if a node is a bytes constant"""
+    return isinstance(node, ast.Constant) and isinstance(node.value, bytes)
+
+
 def is_none(node: ast.AST) -> bool:
     """Check if a node is the None constant"""
     if isinstance(node, ast.Name) and node.id == "None":
@@ -70,7 +85,7 @@ def is_literal(node: ast.AST) -> bool:
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
         node = node.operand
     # RESOLVE: Isn't Str node also literal
-    return isinstance(node, ast.Num) and isinstance(node.n, (int, float))
+    return is_num(node)
 
 
 def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
