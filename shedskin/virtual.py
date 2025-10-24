@@ -189,10 +189,10 @@ def upgrade_cl(
 
     # --- register virtual var
     elif ident in ["__getattr__", "__setattr__"] and subclasses:
-        var = infer.default_var(gx, node.args[0].s, abstract_cl)
+        var = infer.default_var(gx, node.args[0].value, abstract_cl)
         for subcl in subclasses:
             if var.name in subcl.vars and subcl.vars[var.name] in gx.merged_inh:
                 gx.types.setdefault(gx.cnode[var, 0, 0], set()).update(
                     gx.merged_inh[subcl.vars[var.name]]
                 )  # XXX shouldn't this be merged automatically already?
-        abstract_cl.virtualvars.setdefault(node.args[0].s, set()).update(subclasses)
+        abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)

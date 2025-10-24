@@ -718,7 +718,7 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
         gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
 
         for n in inode(gx, var).in_:  # XXX
-            if isinstance(n.thing, (ast.Num, ast.Str)):
+            if isinstance(n.thing, ast.Constant):
                 add_constraint(gx, n, gx.cnode[var, dcpa, 0])
 
     for func in cl.funcs.values():
@@ -1094,8 +1094,8 @@ def redirect(
         func = list(callnode.types())[0][0].funcs["__inititer__"]  # XXX use __init__?
 
     # array
-    if constructor and ident == "array" and isinstance(callfunc.args[0], ast.Str):
-        typecode = callfunc.args[0].s
+    if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
+        typecode = callfunc.args[0].value
         array_type = None
         if typecode in "bBhHiIlL":
             array_type = "int"
@@ -1110,13 +1110,13 @@ def redirect(
     if (
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ("__getitem__", "__getunit__")
-        and isinstance(callfunc.args[0], ast.Num)
-        and callfunc.args[0].n in (0, 1)
+        and ast_utils.is_num(callfunc.args[0])
+        and callfunc.args[0].value in (0, 1)
         and func.parent
         and func.parent.mv.module.builtin
         and func.parent.ident == "tuple2"
     ):
-        if callfunc.args[0].n == 0:
+        if callfunc.args[0].value == 0:
             assert isinstance(func.parent, python.Class)
             func = func.parent.funcs["__getfirst__"]
         else:
@@ -1131,10 +1131,10 @@ def redirect(
         if (
             isinstance(func.parent, python.Class)
             and callfunc.args
-            and isinstance(callfunc.args[0], ast.Str)
-            and callfunc.args[0].s in func.parent.properties
+            and ast_utils.is_str(callfunc.args[0])
+            and callfunc.args[0].value in func.parent.properties
         ):
-            arg = callfunc.args[0].s
+            arg = callfunc.args[0].value
             if callfunc.func.attr == "__setattr__":
                 assert isinstance(func.parent, python.Class)
                 func = func.parent.funcs[func.parent.properties[arg][1]]
@@ -1268,12 +1268,12 @@ def connect_getsetattr(
         and not (
             isinstance(func.parent, python.Class)
             and callfunc.args
-            and isinstance(callfunc.args[0], ast.Str)
-            and callfunc.args[0].s in func.parent.properties
+            and ast_utils.is_str(callfunc.args[0])
+            and callfunc.args[0].value in func.parent.properties
         )
     ):
-        assert isinstance(callfunc.args[0], ast.Str)
-        varname = callfunc.args[0].s
+        assert ast_utils.is_str(callfunc.args[0])
+        varname = callfunc.args[0].value
         parent = func.parent
         assert isinstance(parent, (python.Class, python.StaticClass))
 

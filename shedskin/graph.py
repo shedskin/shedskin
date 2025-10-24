@@ -109,11 +109,11 @@ def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
     x = 0
     for i, n in enumerate(nodes):
         if not n or ast_utils.is_none(n):
-            nodes2.append(ast.Num(0))
+            nodes2.append(ast.Constant(0))
         else:
             nodes2.append(n)
             x |= 1 << i
-    nodes2.insert(0, ast.Num(x))
+    nodes2.insert(0, ast.Constant(x))
     return nodes2
 
 
@@ -258,10 +258,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 if count == 1:
                     return None
                 child = None
-        elif isinstance(child, ast.Num):
-            child = type(child.n)
-        elif isinstance(child, ast.Str):
-            child = type(child.s)
+        elif isinstance(child, ast.Constant):
+            child = type(child.value)
         elif isinstance(child, ast.Name) and child.id in ("True", "False"):
             child = bool
         elif isinstance(child, ast.Tuple):
@@ -385,7 +383,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if len(merged) == 1:
                 return (cl,) + merged.pop()
 
-        elif isinstance(node, (ast.Num, ast.Str)):
+        elif isinstance(node, ast.Constant):
             return (list(infer.inode(self.gx, node).types())[0][0],)
 
         return ()
@@ -400,7 +398,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Add a dynamic constraint for a constructor argument"""
         self.gx.assign_target[child] = parent
-        cu = ast.Str(varname)
+        cu = ast.Constant(varname)
         self.visit(cu, func)
         fakefunc = ast.Call(
             ast.Attribute(parent, "__setattr__", ast.Load()), [cu, child], []
@@ -468,11 +466,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 "assuming constant format string", self.gx, node, mv=self, warning=True
             )
             assert var
-            fmt = var.const_assign[0].s
-        elif isinstance(node, ast.Num):
-            fmt = node.n
-        elif isinstance(node, ast.Str):
-            fmt = node.s
+            fmt = var.const_assign[0].value
+        elif isinstance(node, ast.Constant):
+            fmt = node.value
         else:
             error.error("non-constant format string", self.gx, node, mv=self)
         char_type = {
@@ -535,11 +531,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for o, c, t, d in info:
             if d != 0 or c == "s":
                 if t == "int":
-                    result.append(ast.Num(1))
+                    result.append(ast.Constant(1))
                 elif t == "bytes":
-                    result.append(ast.Str(b""))
+                    result.append(ast.Constant(b""))
                 elif t == "float":
-                    result.append(ast.Num(1.0))
+                    result.append(ast.Constant(1.0))
                 elif t == "bool":
                     result.append(ast.Name("True", ast.Load()))
         return ast.Tuple(result, ast.Load())
@@ -1667,7 +1663,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )  # XXX multiple targets possible please
             fakefunc2 = ast.Call(
                 ast.Attribute(node.target.value, "__setattr__", ast.Load()),
-                [ast.Str(node.target.attr), fakefunc],
+                [ast.Constant(node.target.attr), fakefunc],
                 [],
             )
             self.visit(fakefunc2, func)
@@ -2086,7 +2082,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.assign_target[rvalue] = lvalue.value
             fakefunc = ast.Call(
                 ast.Attribute(lvalue.value, "__setattr__", ast.Load()),
-                [ast.Str(lvalue.attr), rvalue],
+                [ast.Constant(lvalue.attr), rvalue],
                 [],
             )
             self.visit(fakefunc, func)
@@ -2121,7 +2117,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
             fakefunc = ast.Call(
-                ast.Attribute(rvalue, "__getunit__", ast.Load()), [ast.Num(i)], []
+                ast.Attribute(rvalue, "__getunit__", ast.Load()), [ast.Constant(i)], []
             )
 
             fakenode.callfuncs.append(fakefunc)
@@ -2207,9 +2203,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and node.func.value.id in getmv().imports
                 and node.func.attr == "__getattr__"
             ):  # XXX analyze_callfunc
-                assert isinstance(node.args[0], ast.Str)
+                assert ast_utils.is_str(node.args[0])
                 if (
-                    node.args[0].s in getmv().imports[node.func.value.id].mv.globals
+                    node.args[0].value in getmv().imports[node.func.value.id].mv.globals
                 ):  # XXX bleh
                     self.add_constraint(
                         (
@@ -2217,7 +2213,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                                 self.gx,
                                 getmv()
                                 .imports[node.func.value.id]
-                                .mv.globals[node.args[0].s],
+                                .mv.globals[node.args[0].value],
                             ),
                             newnode,
                         ),
@@ -2231,8 +2227,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ident = node.func.id = "__print"  # XXX
 
             if ident == "open" and len(node.args) > 1:
-                if isinstance(node.args[1], ast.Str):
-                    if "b" in node.args[1].s:
+                if ast_utils.is_str(node.args[1]):
+                    if "b" in node.args[1].value:
                         ident = node.func.id = "open_binary"
 
                 else:
@@ -2491,7 +2487,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ast.FunctionDef(
                     "__hash__",
                     make_arg_list(["self"]),
-                    [ast.Return(ast.Num(0))],
+                    [ast.Return(ast.Constant(0))],
                     [],
                 ),
                 newclass,
@@ -2519,7 +2515,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             fakefunc = ast.Call(
                 ast.Attribute(node.value, "__getattr__", ast.Load()),
-                [ast.Str(node.attr)],
+                [ast.Constant(node.attr)],
                 [],
             )
             self.visit(node.value, func)

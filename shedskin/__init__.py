@@ -159,7 +159,7 @@ class Shedskin:
 
         # --- some checks
         major, minor = sys.version_info[:2]
-        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13)]:
+        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14)]:
             self.log.error('Shed Skin is not compatible with this version of Python')
             sys.exit(1)
 
