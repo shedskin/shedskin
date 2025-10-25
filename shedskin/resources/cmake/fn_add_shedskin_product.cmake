@@ -238,9 +238,8 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
     elseif(ENABLE_CONAN)
         set(LIB_DEPS
-            BDWgc::gc
-            BDWgc::gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE2::PCRE2>
+            BDWgc::BDWgc
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2>
         )
         set(LIB_DIRS
             ${BDWgc_LIB_DIRS}
