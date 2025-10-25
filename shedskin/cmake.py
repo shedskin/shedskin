@@ -58,7 +58,7 @@ class ConanBDWGC:
     def __init__(
         self,
         name: str = "bdwgc",
-        version: str = "8.2.2",
+        version: str = "8.2.8",
         cplusplus: bool = True,
         cord: bool = False,
         gcj_support: bool = False,
