@@ -141,7 +141,7 @@ class ConanDependencyManager:
 
     def install(self) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && conan install .. --build=missing")
+        os.system(f"cd {self.build_dir} && conan profile detect && conan install .. --build=missing")
 
 
 class ShedskinDependencyManager:
