@@ -120,19 +120,19 @@ class ConanDependencyManager:
         {pcre2}
 
         [generators]
-        cmake_find_package
-        cmake_paths
+        CMakeDeps
+        CMakeToolchain
 
         [options]
-        bdwgc:cplusplus={bdwgc.cplusplus}
-        bdwgc:cord={bdwgc.cord}
-        bdwgc:gcj_support={bdwgc.gcj_support}
-        bdwgc:java_finalization={bdwgc.java_finalization}
-        bdwgc:shared={bdwgc.shared}
-        pcre2:build_pcre2grep={pcre2.build_pcre2grep}
-        pcre2:shared={pcre2.shared}
-        pcre2:with_bzip2={pcre2.with_bzip2}
-        pcre2:with_zlib={pcre2.with_zlib}
+        bdwgc/*:cplusplus={bdwgc.cplusplus}
+        bdwgc/*:cord={bdwgc.cord}
+        bdwgc/*:gcj_support={bdwgc.gcj_support}
+        bdwgc/*:java_finalization={bdwgc.java_finalization}
+        bdwgc/*:shared={bdwgc.shared}
+        pcre2/*:build_pcre2grep={pcre2.build_pcre2grep}
+        pcre2/*:shared={pcre2.shared}
+        pcre2/*:with_bzip2={pcre2.with_bzip2}
+        pcre2/*:with_zlib={pcre2.with_zlib}
         """
         )
         conanfile = self.source_dir / "conanfile.txt"
@@ -350,7 +350,7 @@ def add_shedskin_product(
     # disable_extension: bool = False,
     # disable_test: bool = False,
     # has_lib: bool = False,
-    enble_conan: bool = False,
+    enable_conan: bool = False,
     enable_externalproject: bool = False,
     enable_spm: bool = False,
     debug: bool = False,
@@ -411,7 +411,7 @@ def add_shedskin_product(
 
     if enable_externalproject:
         add(1, "ENABLE_EXTERNALPROJECT")
-    elif enble_conan:
+    elif enable_conan:
         add(1, "ENABLE_CONAN")
     elif enable_spm:
         add(1, "ENABLE_SPM")
