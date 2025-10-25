@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.cmake: CMake generator and builder for Shedskin
 
 This module provides functionality for generating CMake build files and managing
@@ -58,7 +58,7 @@ class ConanBDWGC:
     def __init__(
         self,
         name: str = "bdwgc",
-        version: str = "8.2.2",
+        version: str = "8.2.8",
         cplusplus: bool = True,
         cord: bool = False,
         gcj_support: bool = False,
@@ -78,22 +78,20 @@ class ConanBDWGC:
 
 
 class ConanPCRE:
-    """Conan pcre dependency"""
+    """Conan pcre2 dependency"""
 
     def __init__(
         self,
-        name: str = "pcre",
-        version: str = "8.45",
-        build_pcrecpp: bool = True,
-        build_pcregrep: bool = False,
+        name: str = "pcre2",
+        version: str = "10.44",
+        build_pcre2grep: bool = False,
         shared: bool = False,
         with_bzip2: bool = False,
         with_zlib: bool = False,
     ):
         self.name = name
         self.version = version
-        self.build_pcrecpp = build_pcrecpp
-        self.build_pcregrep = build_pcregrep
+        self.build_pcre2grep = build_pcre2grep
         self.shared = shared
         self.with_bzip2 = with_bzip2
         self.with_zlib = with_zlib
@@ -109,33 +107,32 @@ class ConanDependencyManager:
         self.source_dir = pathlib.Path(source_dir)
         self.build_dir = self.source_dir / "build"
         self.bdwgc = ConanBDWGC()
-        self.pcre = ConanPCRE()
+        self.pcre2 = ConanPCRE()
 
     def generate_conanfile(self) -> None:
         """Generate conanfile.txt"""
         bdwgc = self.bdwgc
-        pcre = self.pcre
+        pcre2 = self.pcre2
         content = textwrap.dedent(
             f"""
         [requires]
         {bdwgc}
-        {pcre}
+        {pcre2}
 
         [generators]
-        cmake_find_package
-        cmake_paths
+        CMakeDeps
+        CMakeToolchain
 
         [options]
-        bdwgc:cplusplus={bdwgc.cplusplus}
-        bdwgc:cord={bdwgc.cord}
-        bdwgc:gcj_support={bdwgc.gcj_support}
-        bdwgc:java_finalization={bdwgc.java_finalization}
-        bdwgc:shared={bdwgc.shared}
-        pcre:build_pcrecpp={pcre.build_pcrecpp}
-        pcre:build_pcregrep={pcre.build_pcregrep}
-        pcre:shared={pcre.shared}
-        pcre:with_bzip2={pcre.with_bzip2}
-        pcre:with_zlib={pcre.with_zlib}
+        bdwgc/*:cplusplus={bdwgc.cplusplus}
+        bdwgc/*:cord={bdwgc.cord}
+        bdwgc/*:gcj_support={bdwgc.gcj_support}
+        bdwgc/*:java_finalization={bdwgc.java_finalization}
+        bdwgc/*:shared={bdwgc.shared}
+        pcre2/*:build_pcre2grep={pcre2.build_pcre2grep}
+        pcre2/*:shared={pcre2.shared}
+        pcre2/*:with_bzip2={pcre2.with_bzip2}
+        pcre2/*:with_zlib={pcre2.with_zlib}
         """
         )
         conanfile = self.source_dir / "conanfile.txt"
@@ -144,7 +141,7 @@ class ConanDependencyManager:
 
     def install(self) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && conan install .. --build=missing")
+        os.system(f"cd {self.build_dir} && conan profile detect && conan install .. --build=missing")
 
 
 class ShedskinDependencyManager:
@@ -216,18 +213,18 @@ class ShedskinDependencyManager:
         """Check if required targets exist"""
         libgc = self.lib_dir / f"libgc{self.lib_suffix}"
         libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
-        libpcre = self.lib_dir / f"libgccpp{self.lib_suffix}"
+        libpcre2 = self.lib_dir / f"libpcre2-8{self.lib_suffix}"
         gc_h = self.include_dir / "gc.h"
-        pcre_h = self.include_dir / "pcre.h"
+        pcre2_h = self.include_dir / "pcre2.h"
 
-        targets = [libgc, libgccpp, libpcre, gc_h, pcre_h]
+        targets = [libgc, libgccpp, libpcre2, gc_h, pcre2_h]
         return all(t.exists() for t in targets)
 
     def install_all(self) -> None:
         """Install all dependencies"""
         if not self.targets_exist():
             self.install_bdwgc()
-            self.install_pcre()
+            self.install_pcre2()
         else:
             print(f"{WHITE}SPM:{RESET} targets exist, no need to run.")
 
@@ -310,30 +307,29 @@ class ShedskinDependencyManager:
     #         self.cmake_build(pcre_build)
     #         self.cmake_install(pcre_build)
 
-    def install_pcre(self) -> None:
-        """Download / build / install pcre"""
-        pcre_repo = "https://github.com/luvit/pcre.git"
-        pcre_src = self.src_dir / "pcre"
-        pcre_build = pcre_src / "build"
-        print("download / build / install pcre")
-        self.git_clone(pcre_repo, pcre_src)
-        pcre_build.mkdir(parents=True, exist_ok=True)
+    def install_pcre2(self) -> None:
+        """Download / build / install pcre2"""
+        pcre2_repo = "https://github.com/PCRE2Project/pcre2.git"
+        pcre2_src = self.src_dir / "pcre2"
+        pcre2_build = pcre2_src / "build"
+        print("download / build / install pcre2")
+        self.git_clone(pcre2_repo, pcre2_src)
+        pcre2_build.mkdir(parents=True, exist_ok=True)
         self.cmake_generate(
-            pcre_src,
-            pcre_build,
+            pcre2_src,
+            pcre2_build,
             prefix=self.deps_dir,
             BUILD_SHARED_LIBS=False,
-            PCRE_BUILD_PCREGREP=False,
-            PCRE_BUILD_PCRECPP=True,
-            PCRE_SUPPORT_LIBREADLINE=False,
-            PCRE_SUPPORT_LIBEDIT=False,
-            PCRE_SUPPORT_LIBZ=False,
-            PCRE_SUPPORT_LIBBZ2=False,
-            PCRE_BUILD_TESTS=False,
-            PCRE_SHOW_REPORT=False,
+            PCRE2_BUILD_PCRE2GREP=False,
+            PCRE2_SUPPORT_LIBREADLINE=False,
+            PCRE2_SUPPORT_LIBEDIT=False,
+            PCRE2_SUPPORT_LIBZ=False,
+            PCRE2_SUPPORT_LIBBZ2=False,
+            PCRE2_BUILD_TESTS=False,
+            PCRE2_SHOW_REPORT=False,
         )
-        self.cmake_build(pcre_build)
-        self.cmake_install(pcre_build)
+        self.cmake_build(pcre2_build)
+        self.cmake_install(pcre2_build)
 
 
 def add_shedskin_product(
@@ -354,7 +350,7 @@ def add_shedskin_product(
     # disable_extension: bool = False,
     # disable_test: bool = False,
     # has_lib: bool = False,
-    enble_conan: bool = False,
+    enable_conan: bool = False,
     enable_externalproject: bool = False,
     enable_spm: bool = False,
     debug: bool = False,
@@ -415,7 +411,7 @@ def add_shedskin_product(
 
     if enable_externalproject:
         add(1, "ENABLE_EXTERNALPROJECT")
-    elif enble_conan:
+    elif enable_conan:
         add(1, "ENABLE_CONAN")
     elif enable_spm:
         add(1, "ENABLE_SPM")

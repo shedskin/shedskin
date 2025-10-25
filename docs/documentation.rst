@@ -187,7 +187,7 @@ Dependencies
 To compile and run programs produced by shedskin the following libraries are needed:
 
 * g++, the C++ compiler (version 4.2 or higher).
-* pcre development files
+* pcre2 development files
 * Python development files
 * Boehm garbage collection
 
@@ -195,7 +195,7 @@ To install these libraries under Ubuntu, type:
 
 ::
 
-  sudo apt-get install g++ libpcre++-dev python-all-dev libgc-dev
+  sudo apt-get install g++ libpcre2-dev python-all-dev libgc-dev
 
 If the Boehm garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha6 from the `website <http://www.hboehm.info/gc/>`__, unpack it, and install it as follows:
 
@@ -206,7 +206,7 @@ If the Boehm garbage collector is not available via your package manager, the fo
   make check
   sudo make install
 
-If the PCRE library is not available via your package manager, the following is known to work. Download for example version 8.12 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
+If the PCRE2 library is not available via your package manager, the following is known to work. Download for example version 10.44 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
 
 ::
 
@@ -235,7 +235,7 @@ Dependencies
 To compile and run programs produced by shedskin the following libraries are needed:
 
 * g++, the C++ compiler (version 4.2 or higher; comes with the Apple XCode development environment?)
-* pcre development files
+* pcre2 development files
 * Python development files
 * Boehm garbage collection
 
@@ -248,7 +248,7 @@ If the Boehm garbage collector is not available via your package manager, the fo
   make check
   sudo make install
 
-If the PCRE library is not available via your package manager, the following is known to work. Download for example version 8.12 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
+If the PCRE2 library is not available via your package manager, the following is known to work. Download for example version 10.44 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
 
 ::
 
@@ -378,15 +378,15 @@ After compiling this module as an extension module with Shed Skin, we can pass i
 Distributing binaries
 ---------------------
 
-To use a generated (linux/OSX) binary on another system, make sure ``libgc`` and ``libpcre3`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
+To use a generated (linux/OSX) binary on another system, make sure ``libgc`` and ``libpcre2-8-0`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
 
 ::
 
   $ ldd test
   libgc.so.1 => /usr/lib/libgc.so.1
-  libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3
+  libpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0
   $ cp /usr/lib/libgc.so.1 .
-  $ cp /lib/x86_64-linux-gnu/libpcre.so.3 .
+  $ cp /lib/x86_64-linux-gnu/libpcre2-8.so.0 .
   $ LD_LIBRARY_PATH=. ./test
 
 Note that both systems have to be 32- or 64-bit for this to work. If not, Shed Skin must be installed on the other system, to recompile the binary.
