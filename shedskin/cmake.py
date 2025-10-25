@@ -752,6 +752,7 @@ class CMakeBuilder:
 
         if self.options.conan:
             cfg_options.append("-DENABLE_CONAN=ON")
+            cfg_options.append(f"-DCMAKE_PREFIX_PATH={self.source_dir}")
 
         elif self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
