@@ -679,7 +679,6 @@ class CMakeBuilder:
         opts = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} --preset conan-release {opts} --verbose"
         self.log.info(bld_cmd)
-        print("bld_cmd:", bld_cmd)
         assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options: list[str]) -> None:
