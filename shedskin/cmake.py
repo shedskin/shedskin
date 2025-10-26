@@ -669,9 +669,10 @@ class CMakeBuilder:
 
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
-        cmd = f"cmake --preset conan-release"
-        self.log.info(cmd)
-        assert os.system(cmd) == 0
+        opts = " ".join(options)
+        cfg_cmd = f"cmake --preset conan-release {opts}"
+        self.log.info(cfg_cmd)
+        assert os.system(cfg_cmd) == 0
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
