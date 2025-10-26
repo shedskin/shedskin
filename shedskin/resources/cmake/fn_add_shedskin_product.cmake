@@ -238,12 +238,12 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
     elseif(ENABLE_CONAN)
         set(LIB_DEPS
-            BDWgc::BDWgc
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2>
+            BDWgc::BDWgc -lgc -lgccpp
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
         )
         set(LIB_DIRS
-            ${BDWgc_LIB_DIRS}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE2_LIB_DIRS}>
+            ${bdwgc_LIB_DIRS_RELEASE}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${pcre2_LIB_DIRS_RELEASE}>
         )
         # include PCRE2 headers irrespective (even if not used) to prevent header not found error
         set(LIB_INCLUDES
