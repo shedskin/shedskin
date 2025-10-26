@@ -487,6 +487,21 @@ def check_cmake_availability() -> None:
         raise RuntimeError("cmake not available in path")
 
 
+def get_cmake_preset(mode) -> str:
+    """Return a usable cmake preset"""
+    output = subprocess.run(
+        ["cmake", f"--list-presets={mode}"], encoding="utf-8", capture_output=True, text=True
+    ).stdout
+
+    # look for a quoted string and return it
+    # cmake does not provide a nicer way
+    for line in output.splitlines():
+        parts = line.split('"')
+        if len(parts) > 2:
+            return parts[1]
+
+    return None
+
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """Improved generator using built-in machinery"""
     path = gx.main_module.filename
@@ -670,14 +685,16 @@ class CMakeBuilder:
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
-        cfg_cmd = f"cmake --preset conan-release {opts}"
+        preset = get_cmake_preset("configure")
+        cfg_cmd = f"cmake --preset {preset} {opts}"
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
         opts = " ".join(options)
-        bld_cmd = f"cmake --build {self.build_dir} --preset conan-release {opts} --verbose"
+        preset = get_cmake_preset("build")
+        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
 
@@ -689,7 +706,8 @@ class CMakeBuilder:
         else:
             cfg = ""
 
-        tst_cmd = f"ctest {cfg} --output-on-failure --preset conan-release {opts}"
+        preset = get_cmake_preset("test")
+        tst_cmd = f"ctest {cfg} --output-on-failure --preset {preset} {opts}"
         print(tst_cmd)
         self.log.info(tst_cmd)
         assert os.system(tst_cmd) == 0
