@@ -2,12 +2,11 @@ import os
 import os.path
 import glob
 
-if os.path.exists("testdata"):
-    testdata = "testdata"
-elif os.path.exists("testdata"):
-    testdata = "../testdata"
-else:
-    testdata = "../../testdata"
+testdir = os.curdir
+while not os.path.exists(os.path.join(testdir, "testdata")) and os.path.exists(os.pardir):
+    testdir = os.path.join(testdir, os.pardir)
+testdata = os.path.join(testdir, "testdata")
+assert os.path.exists(testdata)
 
 def test_glob():
     txts = os.path.join(testdata, 'globdir', '*.txt')
