@@ -18,3 +18,6 @@ pcre2/*:build_pcre2grep=False
 pcre2/*:shared=False
 pcre2/*:with_bzip2=False
 pcre2/*:with_zlib=False
+
+[layout]
+cmake_layout

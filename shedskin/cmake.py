@@ -133,6 +133,9 @@ class ConanDependencyManager:
         pcre2/*:shared={pcre2.shared}
         pcre2/*:with_bzip2={pcre2.with_bzip2}
         pcre2/*:with_zlib={pcre2.with_zlib}
+
+        [layout]
+        cmake_layout
         """
         )
         conanfile = self.source_dir / "conanfile.txt"
@@ -141,7 +144,7 @@ class ConanDependencyManager:
 
     def install(self) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && conan profile detect && conan install .. --build=missing")
+        os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing")
 
 
 class ShedskinDependencyManager:
@@ -666,17 +669,14 @@ class CMakeBuilder:
 
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
-        opts = " ".join(options)
-        cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
-        if generator:
-            cfg_cmd += ' -G "{generator}"'
-        self.log.info(cfg_cmd)
-        assert os.system(cfg_cmd) == 0
+        cmd = f"cmake --preset conan-release"
+        self.log.info(cmd)
+        assert os.system(cmd) == 0
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
         opts = " ".join(options)
-        bld_cmd = f"cmake --build {self.build_dir} {opts}"
+        bld_cmd = f"cmake --build {self.build_dir} --preset conan-release {opts}"
         self.log.info(bld_cmd)
         print("bld_cmd:", bld_cmd)
         assert os.system(bld_cmd) == 0
@@ -689,7 +689,8 @@ class CMakeBuilder:
         else:
             cfg = ""
 
-        tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
+        tst_cmd = f"ctest {cfg} --output-on-failure --preset conan-release {opts}"
+        print(tst_cmd)
         self.log.info(tst_cmd)
         assert os.system(tst_cmd) == 0
 
@@ -752,7 +753,6 @@ class CMakeBuilder:
 
         if self.options.conan:
             cfg_options.append("-DENABLE_CONAN=ON")
-            cfg_options.append(f"-DCMAKE_PREFIX_PATH={self.source_dir}")
 
         elif self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
