@@ -505,6 +505,9 @@ def get_cmake_preset(mode, build_type) -> str:
     # choose any preset that looks as if it might be specifically appropriate
     # for the build type
     build_type = build_type.lower()
+    print("Presets:", presets)
+    print("Mode:", mode)
+    print("Build type:", build_type)
 
     for preset in presets:
         if build_type in preset:
@@ -762,7 +765,7 @@ class CMakeBuilder:
             cfg_options.append(f"-G{self.options.generator}")
 
         if self.options.build_type:
-            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.build_type}")
+            cfg_options.append(f"-DCMAKE_BUILD_TYPE={self.options.build_type}")
 
         if self.options.jobs:
             bld_options.append(f"--parallel {self.options.jobs}")
