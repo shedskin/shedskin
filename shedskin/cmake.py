@@ -145,6 +145,7 @@ class ConanDependencyManager:
     def install(self, build_type) -> None:
         """Install conan dependencies"""
         os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing -s build_type={build_type}")
+        os.system("conan profile show")
 
 
 class ShedskinDependencyManager:
@@ -708,6 +709,8 @@ class CMakeBuilder:
         """Activate cmake build"""
         opts = " ".join(options)
         preset = get_cmake_preset("build", self.options.build_type)
+        print("Want to use preset:", preset)
+        assert 1 == 0
         bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
