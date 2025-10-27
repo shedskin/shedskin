@@ -488,7 +488,7 @@ def check_cmake_availability() -> None:
         raise RuntimeError("cmake not available in path")
 
 
-def get_cmake_preset(mode) -> str:
+def get_cmake_preset(mode, debug=False) -> str:
     """Return a usable cmake preset"""
     output = subprocess.run(
         ["cmake", f"--list-presets={mode}"], encoding="utf-8", capture_output=True, text=True
@@ -496,12 +496,23 @@ def get_cmake_preset(mode) -> str:
 
     # look for a quoted string and return it
     # cmake does not provide a nicer way
+    presets = []
+
     for line in output.splitlines():
         parts = line.split('"')
         if len(parts) > 2:
-            return parts[1]
+            presets.append(parts[1])
 
-    return None
+    # choose any preset that looks as if it might be specifically appropriate
+    # for the build type
+    build_type = debug and "debug" or "release"
+
+    for preset in presets:
+        if build_type in preset:
+            return preset
+
+    # if nothing looks appropriate, just choose the first preset
+    return presets and presets[0] or None
 
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """Improved generator using built-in machinery"""
@@ -686,7 +697,7 @@ class CMakeBuilder:
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
-        preset = get_cmake_preset("configure")
+        preset = get_cmake_preset("configure", self.options.debug)
         cfg_cmd = f"cmake --preset {preset} {opts}"
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
@@ -694,7 +705,7 @@ class CMakeBuilder:
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
         opts = " ".join(options)
-        preset = get_cmake_preset("build")
+        preset = get_cmake_preset("build", self.options.debug)
         bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
@@ -707,7 +718,7 @@ class CMakeBuilder:
         else:
             cfg = ""
 
-        preset = get_cmake_preset("test")
+        preset = get_cmake_preset("test", self.options.debug)
         tst_cmd = f"ctest {cfg} --output-on-failure --preset {preset} {opts}"
         print(tst_cmd)
         self.log.info(tst_cmd)
