@@ -332,9 +332,9 @@ class str_(pyseq):
         return ('',)
     def rpartition(self, sep):
         return ('',)
-    def rsplit(self, sep='', maxsplit=-1):
+    def rsplit(self, sep=None, maxsplit=-1):
         return ['']
-    def split(self, sep='', maxsplit=-1):
+    def split(self, sep=None, maxsplit=-1):
         return ['']
     def join(self, l):
         return self
@@ -451,9 +451,9 @@ class bytes_(pyseq):
         return (b'',)
     def rpartition(self, sep):
         return (b'',)
-    def rsplit(self, sep='', maxsplit=-1):
+    def rsplit(self, sep=None, maxsplit=-1):
         return [b'']
-    def split(self, sep='', maxsplit=-1):
+    def split(self, sep=None, maxsplit=-1):
         return [b'']
     def join(self, l):
         return self
