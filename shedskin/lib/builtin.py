@@ -125,6 +125,10 @@ class bool_:
         return ''
 
 class float_:
+    @staticmethod
+    def from_number(i):
+        return 1
+
     def __add__(self, b):
         return b.__with_float__()
     def __sub__(self, b):
