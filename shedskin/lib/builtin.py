@@ -656,9 +656,9 @@ class dict(pyiter):
     def __delete__(self, k):
         self.__key__(k)
 
+    @staticmethod
     def fromkeys(l, b=None):
         return {l.unit: b}
-    fromkeys = staticmethod(fromkeys) # XXX classmethod
 
     def keys(self):
         yield self.unit
