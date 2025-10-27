@@ -463,8 +463,8 @@ def lookup_class(
 ) -> Optional["Class"]:  # XXX lookup_var first?
     """Find a class by name"""
     if isinstance(node, ast.Name):
-        if node.id == "int":  # TODO generalize
-            return mv.ext_classes["int_"]
+        if node.id in ("int", "float", "bytes"):  # TODO bool, bytearray?
+            return mv.ext_classes[node.id + "_"]
         elif node.id in mv.classes:
             return mv.classes[node.id]
         elif node.id in mv.ext_classes:
