@@ -144,8 +144,7 @@ class ConanDependencyManager:
 
     def install(self, build_type) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing -s build_type={build_type}")
-        os.system("conan profile show")
+        os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing -s:a build_type={build_type}")
 
 
 class ShedskinDependencyManager:
@@ -506,9 +505,6 @@ def get_cmake_preset(mode, build_type) -> str:
     # choose any preset that looks as if it might be specifically appropriate
     # for the build type
     build_type = build_type.lower()
-    print("Presets:", presets)
-    print("Mode:", mode)
-    print("Build type:", build_type)
 
     for preset in presets:
         if build_type in preset:
@@ -709,8 +705,6 @@ class CMakeBuilder:
         """Activate cmake build"""
         opts = " ".join(options)
         preset = get_cmake_preset("build", self.options.build_type)
-        print("Want to use preset:", preset)
-        assert 1 == 0
         bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
@@ -805,7 +799,7 @@ class CMakeBuilder:
         if self.options.conan:
             dpm = ConanDependencyManager(self.source_dir)
             dpm.generate_conanfile()
-            dpm.install(self.options.build_type)
+            dpm.install(self.options.build_type or "Debug")
 
         elif self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
