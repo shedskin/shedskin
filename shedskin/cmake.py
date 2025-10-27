@@ -142,9 +142,10 @@ class ConanDependencyManager:
         if not conanfile.exists():
             conanfile.write_text(content)
 
-    def install(self) -> None:
+    def install(self, debug=False) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing")
+        build_type = debug and "Debug" or "Release"
+        os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing -s build_type={build_type}")
 
 
 class ShedskinDependencyManager:
@@ -794,7 +795,7 @@ class CMakeBuilder:
         if self.options.conan:
             dpm = ConanDependencyManager(self.source_dir)
             dpm.generate_conanfile()
-            dpm.install()
+            dpm.install(self.options.debug)
 
         elif self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
