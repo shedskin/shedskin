@@ -142,9 +142,8 @@ class ConanDependencyManager:
         if not conanfile.exists():
             conanfile.write_text(content)
 
-    def install(self, debug=False) -> None:
+    def install(self, build_type) -> None:
         """Install conan dependencies"""
-        build_type = debug and "Debug" or "Release"
         os.system(f"cd {self.build_dir} && (conan profile detect || true) && conan install .. --build=missing -s build_type={build_type}")
 
 
@@ -488,7 +487,7 @@ def check_cmake_availability() -> None:
         raise RuntimeError("cmake not available in path")
 
 
-def get_cmake_preset(mode, debug=False) -> str:
+def get_cmake_preset(mode, build_type) -> str:
     """Return a usable cmake preset"""
     output = subprocess.run(
         ["cmake", f"--list-presets={mode}"], encoding="utf-8", capture_output=True, text=True
@@ -505,7 +504,7 @@ def get_cmake_preset(mode, debug=False) -> str:
 
     # choose any preset that looks as if it might be specifically appropriate
     # for the build type
-    build_type = debug and "debug" or "release"
+    build_type = build_type.lower()
 
     for preset in presets:
         if build_type in preset:
@@ -697,7 +696,7 @@ class CMakeBuilder:
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
-        preset = get_cmake_preset("configure", self.options.debug)
+        preset = get_cmake_preset("configure", self.options.build_type)
         cfg_cmd = f"cmake --preset {preset} {opts}"
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
@@ -705,7 +704,7 @@ class CMakeBuilder:
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
         opts = " ".join(options)
-        preset = get_cmake_preset("build", self.options.debug)
+        preset = get_cmake_preset("build", self.options.build_type)
         bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
@@ -713,14 +712,8 @@ class CMakeBuilder:
     def cmake_test(self, options: list[str]) -> None:
         """Activate ctest"""
         opts = " ".join(options)
-        if platform.system() == "Windows":
-            cfg = f"-C {self.options.build_type}"
-        else:
-            cfg = ""
-
-        preset = get_cmake_preset("test", self.options.debug)
-        tst_cmd = f"ctest {cfg} --output-on-failure --preset {preset} {opts}"
-        print(tst_cmd)
+        preset = get_cmake_preset("test", self.options.build_type)
+        tst_cmd = f"ctest --output-on-failure --preset {preset} {opts}"
         self.log.info(tst_cmd)
         assert os.system(tst_cmd) == 0
 
@@ -806,7 +799,7 @@ class CMakeBuilder:
         if self.options.conan:
             dpm = ConanDependencyManager(self.source_dir)
             dpm.generate_conanfile()
-            dpm.install(self.options.debug)
+            dpm.install(self.options.build_type)
 
         elif self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
