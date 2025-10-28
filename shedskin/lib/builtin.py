@@ -9,6 +9,9 @@ class int_:
     def bit_count(i):
         return 1
 
+    def is_integer(self):
+        return True
+
     def __add__(self, b):
         return b.__with_int__()
     def __sub__(self, b):

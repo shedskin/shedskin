@@ -2941,8 +2941,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif (
                 ident == "is_integer"
                 and isinstance(node.func, ast.Attribute)
-                and (python.def_class(self.gx, "float_"), 0)
-                in self.mergeinh[node.func.value]
+                and ((python.def_class(self.gx, "float_"), 0) in self.mergeinh[node.func.value]
+                     or (python.def_class(self.gx, "int_"), 0) in self.mergeinh[node.func.value])
             ):
                 assert isinstance(node.func, ast.Attribute)
                 self.visitm("__ss_is_integer(", node.func.value, ")", func)
