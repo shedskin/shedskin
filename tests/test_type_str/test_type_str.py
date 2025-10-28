@@ -185,6 +185,7 @@ def test_rsplit():
 
     s = 'hop  hap  hup hup  woef '
     assert s.rsplit('  ', maxsplit=2) == ['hop  hap', 'hup hup', 'woef ']
+    assert s.rsplit(maxsplit=2) == ['hop  hap  hup', 'hup', 'woef']
 
 def test_split():
     assert 'bla'.split('l') == ['b', 'a']
@@ -197,6 +198,8 @@ def test_split():
 
     s = 'hop  hap  hup hup  woef '
     assert s.split('  ', maxsplit=2) == ['hop', 'hap', 'hup hup  woef ']
+    assert s.split(maxsplit=2) == ['hop', 'hap', 'hup hup  woef ']
+
 
 def test_splitlines():
     assert "ab\ncd\r\nef\rghi\n".splitlines() == ['ab', 'cd', 'ef', 'ghi']

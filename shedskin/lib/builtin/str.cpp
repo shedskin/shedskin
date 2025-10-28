@@ -237,67 +237,29 @@ tuple2<str *, str *> *str::rpartition(str *separator)
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
-list<str *> *str::rsplit(str *separator, __ss_int maxsep) // TODO reimplement like ::split
+list<str *> *str::rsplit(str *separator, __ss_int maxsep)
 {
-    __GC_STRING ts;
-    list<str *> *r = new list<str *>();
-    size_t i, j, curi, tslen;
-    size_t maxsep2 = (size_t)maxsep;
+    __GC_STRING r = unit;
+    std::reverse(r.begin(), r.end());
+    str *sep;
 
-    curi = 0;
-    i = j = this->unit.size() - 1;
-
-    //split by whitespace
-    if(!separator)
-    {
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
-        {
-            j = unit.find_last_not_of(ws, i);
-            if(j == std::string::npos) break;
-
-            i = unit.find_last_of(ws, j);
-
-            r->append(new str(unit.substr(i + 1, j - i)));
-            curi++;
-        }
-
-        //thus we only bother about extra stuff here if we *have* found more whitespace
-        if(i != std::string::npos && j != std::string::npos && (j = unit.find_last_not_of(ws, i)) != std::string::npos)
-            r->append(new str(unit.substr(0, j)));
+    if(separator) {
+        __GC_STRING s = separator->unit;
+        std::reverse(s.begin(), s.end());
+        sep = new str(s);
     }
-
-    //split by seperator
     else
-    {
-        ts = separator->unit;
-        tslen = ts.length();
+        sep = NULL;
 
-        i++;
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
-        {
-            j = i;
-            i--;
+    list<str *> *result = (new str(r))->split(sep, maxsep); // not common enough to warrant fast implementation, so defer to ::split
 
-            i = unit.rfind(ts, i);
-            if(i == std::string::npos)
-            {
-                i = j;
-                break;
-            }
-
-            r->append(new str(unit.substr(i + tslen, j - i - tslen)));
-
-            curi++;
-        }
-
-        //either left over (beyond max) or very last match (see loop break)
-        if(i != std::string::npos)
-            r->append(new str(unit.substr(0, i)));
+    std::reverse(result->units.begin(), result->units.end());
+    for(size_t i = 0; i < result->units.size(); i++) {
+        str *t = result->units[i];
+        std::reverse(t->unit.begin(), t->unit.end());
     }
 
-    r->reverse();
-
-    return r;
+    return result;
 }
 
 __ss_bool str::istitle()
