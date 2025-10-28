@@ -385,7 +385,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<IF:$<BOOL:${WIN32}>,${WIN32_FLAGS},>
+            $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -518,7 +518,8 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<IF:$<BOOL:${WIN32}>,${WIN32_FLAGS},>
+            $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
+            $<$<BOOL:${WIN32}>:/NODEFAULTLIB>
             # $<$<BOOL:${WIN32}>:/LD>
         )
 
