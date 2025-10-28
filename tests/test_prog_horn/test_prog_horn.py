@@ -1,12 +1,12 @@
 import os
 
 def test_horn():
-    if os.path.exists("testdata"):
-        testdata = "testdata"
-    elif os.path.exists("testdata"):
-        testdata = "../testdata"
-    else:
-        testdata = "../../testdata"
+    testdir = os.curdir
+    while not os.path.exists(os.path.join(testdir, "testdata")) and os.path.exists(os.pardir):
+        testdir = os.path.join(testdir, os.pardir)
+    testdata = os.path.join(testdir, "testdata")
+    assert os.path.exists(testdata)
+
     datafile = os.path.join(testdata, 'uuf250-010.cnf')
     argv = ["", datafile]  # [list(str)]
 
