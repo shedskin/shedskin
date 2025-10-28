@@ -211,18 +211,18 @@ function(add_shedskin_product)
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
-        set(LIBGPCRE libpcre2-8.a)
+        set(LIBPCRE2 libpcre2-8.a)
     else() # i.e windows
         set(LIBGCa gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE pcre2-8.lib)
+        set(LIBPCRE2 pcre2-8.lib)
     endif ()
 
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
             ${install_dir}/lib/${LIBGC}
             ${install_dir}/lib/${LIBGCCPP}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE2}>
         )
         set(LIB_DIRS ${install_dir}/lib)
         set(LIB_INCLUDES ${install_dir}/include)
@@ -232,24 +232,23 @@ function(add_shedskin_product)
             ${SPM_LIB_DIRS}/${LIBGCCPP}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE}>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
     elseif(ENABLE_CONAN)
         set(LIB_DEPS
-            BDWgc::gc
-            BDWgc::gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE::PCRE>
+            BDWgc::BDWgc -lgc -lgccpp
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
         )
         set(LIB_DIRS
-            ${BDWgc_LIB_DIRS}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE_LIB_DIRS}>
+            ${bdwgc_LIB_DIRS_RELEASE}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${pcre2_LIB_DIRS_RELEASE}>
         )
-        # include PCRE headers irrespective (even if not used) to prevent header not found error
+        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
         set(LIB_INCLUDES
             ${BDWgc_INCLUDE_DIRS}
-            ${PCRE_INCLUDE_DIRS}
+            ${PCRE2_INCLUDE_DIRS}
         )
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
@@ -291,6 +290,14 @@ function(add_shedskin_product)
         message("LIB_DIRS: " ${LIB_DIRS})
         message("LIB_INCLUDES: " ${LIB_INCLUDES})
         message("ENABLE_WARNINGS: " ${ENABLE_WARNINGS})
+    endif()
+
+    if(WIN32)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(WIN32_FLAGS /MDd)
+        else()
+            set(WIN32_FLAGS /MD)
+        endif()
     endif()
 
     # -------------------------------------------------------------------------
@@ -378,7 +385,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<$<BOOL:${WIN32}>:/MD>
+            $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -511,7 +518,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<$<BOOL:${WIN32}>:/MD>
+            $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
             # $<$<BOOL:${WIN32}>:/LD>
         )
 

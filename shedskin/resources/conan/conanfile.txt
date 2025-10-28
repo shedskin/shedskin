@@ -1,21 +1,23 @@
 # mkdir build && cd build && conan install .. --build=missing
 
 [requires]
-bdwgc/8.2.2
-pcre/8.45
+bdwgc/8.2.8
+pcre2/10.44
 
 [generators]
-cmake_find_package
-cmake_paths
+CMakeDeps
+CMakeToolchain
 
 [options]
-bdwgc:cplusplus=True
-bdwgc:cord=False
-bdwgc:gcj_support=False
-bdwgc:java_finalization=False
-bdwgc:shared=False
-pcre:build_pcrecpp=True
-pcre:build_pcregrep=False
-pcre:shared=False
-pcre:with_bzip2=False
-pcre:with_zlib=False
+bdwgc/*:cplusplus=True
+bdwgc/*:cord=False
+bdwgc/*:gcj_support=False
+bdwgc/*:java_finalization=False
+bdwgc/*:shared=False
+pcre2/*:build_pcre2grep=False
+pcre2/*:shared=False
+pcre2/*:with_bzip2=False
+pcre2/*:with_zlib=False
+
+[layout]
+cmake_layout

@@ -9,7 +9,7 @@ shedskin
             src
                 bdwgc
                     build
-                pcre
+                pcre2
                     build
 """
 import os
@@ -70,17 +70,17 @@ class ShedskinPackageManager:
     def targets_exist(self):
         libgc = self.lib_dir / f'libgc{self.lib_suffix}'
         libgccpp = self.lib_dir / f'libgccpp{self.lib_suffix}'
-        libpcre = self.lib_dir / f'libgccpp{self.lib_suffix}'
+        libpcre2 = self.lib_dir / f'libpcre2-8{self.lib_suffix}'
         gc_h = self.include_dir / 'gc.h'
-        pcre_h = self.include_dir / 'pcre.h'
+        pcre2_h = self.include_dir / 'pcre2.h'
  
-        targets = [libgc, libgccpp, libpcre, gc_h, pcre_h]
+        targets = [libgc, libgccpp, libpcre2, gc_h, pcre2_h]
         return all(t.exists() for t in targets)
 
     def install_all(self):
         if not self.targets_exist():
             self.install_bdwgc()
-            self.install_pcre()
+            self.install_pcre2()
         else:
             print(f'{WHITE}SPM:{RESET} targets exist, no need to run.')
 
@@ -104,31 +104,30 @@ class ShedskinPackageManager:
         cmake_build(bdwgc_build)
         cmake_install(bdwgc_build)
 
-    def install_pcre(self):
-        """download / build / install pcre"""
-        pcre_url = 'https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz'
-        pcre_archive = self.downloads_dir / 'pcre-8.45.tar.gz'
-        pcre_src = self.src_dir / 'pcre-8.45'
-        pcre_build = pcre_src / 'build'
+    def install_pcre2(self):
+        """download / build / install pcre2"""
+        pcre2_url = 'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.44/pcre2-10.44.tar.gz'
+        pcre2_archive = self.downloads_dir / 'pcre2-10.44.tar.gz'
+        pcre2_src = self.src_dir / 'pcre2-10.44'
+        pcre2_build = pcre2_src / 'build'
 
-        print("download / build / install pcre")
-        wget(pcre_url, self.downloads_dir)
-        tar(pcre_archive, self.src_dir)
-        # pcre_archive.unlink()
-        pcre_build.mkdir(parents=True, exist_ok=True)
-        cmake_generate(pcre_src, pcre_build, prefix=self.deps_dir,
+        print("download / build / install pcre2")
+        wget(pcre2_url, self.downloads_dir)
+        tar(pcre2_archive, self.src_dir)
+        # pcre2_archive.unlink()
+        pcre2_build.mkdir(parents=True, exist_ok=True)
+        cmake_generate(pcre2_src, pcre2_build, prefix=self.deps_dir,
             BUILD_SHARED_LIBS=False,
-            PCRE_BUILD_PCREGREP=False,
-            PCRE_BUILD_PCRECPP=True,
-            PCRE_SUPPORT_LIBREADLINE=False,
-            PCRE_SUPPORT_LIBEDIT=False,
-            PCRE_SUPPORT_LIBZ=False,
-            PCRE_SUPPORT_LIBBZ2=False,
-            PCRE_BUILD_TESTS=False,
-            PCRE_SHOW_REPORT=False,
+            PCRE2_BUILD_PCRE2GREP=False,
+            PCRE2_SUPPORT_LIBREADLINE=False,
+            PCRE2_SUPPORT_LIBEDIT=False,
+            PCRE2_SUPPORT_LIBZ=False,
+            PCRE2_SUPPORT_LIBBZ2=False,
+            PCRE2_BUILD_TESTS=False,
+            PCRE2_SHOW_REPORT=False,
         )
-        cmake_build(pcre_build)
-        cmake_install(pcre_build)
+        cmake_build(pcre2_build)
+        cmake_install(pcre2_build)
 
 
 if __name__ == '__main__':
