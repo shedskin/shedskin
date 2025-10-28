@@ -705,7 +705,7 @@ class CMakeBuilder:
         """Activate cmake build"""
         opts = " ".join(options)
         preset = get_cmake_preset("build", self.options.build_type)
-        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
+        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
 
@@ -847,12 +847,6 @@ class CMakeBuilder:
                 tst_options.append("--progress")
 
         self.cmake_config(cfg_options)
-
-        # output the generated presets and exit
-        f = open(self.build_dir / "generators" / "CMakePresets.json")
-        print("----")
-        print(f.read())
-        assert 1 == 0
 
         # print("cfg_options:", cfg_options)
         # print("bld_options:", bld_options)
