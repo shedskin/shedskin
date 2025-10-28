@@ -48,9 +48,9 @@ jobs:
     - name: Test shedskin
       run: |
         cd tests
-        shedskin test --conan
+        shedskin test --conan --build-type Release
 
     - name: Test shedskin examples
       run: |
         cd examples
-        shedskin test --conan
+        shedskin test --conan --build-type Release
