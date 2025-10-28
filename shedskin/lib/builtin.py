@@ -9,6 +9,9 @@ class int_:
     def bit_count(i):
         return 1
 
+    def is_integer(self):
+        return True
+
     def __add__(self, b):
         return b.__with_int__()
     def __sub__(self, b):
@@ -125,6 +128,10 @@ class bool_:
         return ''
 
 class float_:
+    @staticmethod
+    def from_number(i):
+        return 1
+
     def __add__(self, b):
         return b.__with_float__()
     def __sub__(self, b):
@@ -328,9 +335,9 @@ class str_(pyseq):
         return ('',)
     def rpartition(self, sep):
         return ('',)
-    def rsplit(self, sep='', maxsplit=-1):
+    def rsplit(self, sep=None, maxsplit=-1):
         return ['']
-    def split(self, sep='', maxsplit=-1):
+    def split(self, sep=None, maxsplit=-1):
         return ['']
     def join(self, l):
         return self
@@ -447,9 +454,9 @@ class bytes_(pyseq):
         return (b'',)
     def rpartition(self, sep):
         return (b'',)
-    def rsplit(self, sep='', maxsplit=-1):
+    def rsplit(self, sep=None, maxsplit=-1):
         return [b'']
-    def split(self, sep='', maxsplit=-1):
+    def split(self, sep=None, maxsplit=-1):
         return [b'']
     def join(self, l):
         return self
@@ -652,9 +659,9 @@ class dict(pyiter):
     def __delete__(self, k):
         self.__key__(k)
 
+    @staticmethod
     def fromkeys(l, b=None):
         return {l.unit: b}
-    fromkeys = staticmethod(fromkeys) # XXX classmethod
 
     def keys(self):
         yield self.unit

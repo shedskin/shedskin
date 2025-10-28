@@ -229,15 +229,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         name = "const_" + str(number)
                         self.start("    " + name + " = ")
                         if (
-                            isinstance(todo[number], ast.Str)
-                            and len(todo[number].s.encode("utf-8")) == 1
+                            ast_utils.is_str(todo[number])
+                            and len(todo[number].value.encode("utf-8")) == 1
                         ):
-                            self.append("__char_cache[%d]" % ord(todo[number].s))
+                            self.append("__char_cache[%d]" % ord(todo[number].value))
                         elif (
-                            isinstance(todo[number], ast.Bytes)
-                            and len(todo[number].s) == 1
+                            ast_utils.is_bytes(todo[number])
+                            and len(todo[number].value) == 1
                         ):
-                            self.append("__byte_cache[%d]" % ord(todo[number].s))
+                            self.append("__byte_cache[%d]" % ord(todo[number].value))
                         else:
                             self.visit(
                                 todo[number], infer.inode(self.gx, todo[number]).parent
@@ -441,7 +441,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ):  # XXX
             return None
         for other in self.consts:  # XXX use mapping
-            if node.s == other.s:
+            if node.value == other.value:
                 return self.consts[other]
         self.consts[node] = "const_" + str(len(self.consts))
         return self.consts[node]
@@ -736,7 +736,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Expr, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an expression node"""
-        if not isinstance(node.value, ast.Str):
+        if not ast_utils.is_str(node.value):
             self.start("")
             self.visit(node.value, func)
             self.eol()
@@ -2360,8 +2360,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a power operation"""
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
-            if not isinstance(right, ast.Num) or (
-                isinstance(right.n, (int, float)) and right.n < 0
+            if not ast_utils.is_num(right) or (
+                isinstance(right.value, (int, float)) and right.value < 0
             ):
                 error.error(
                     "pow(int, int) returns int after compilation",
@@ -2423,14 +2423,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- beauty fix for '1 +- nj' notation
         if (
             inline in ["+", "-"]
-            and isinstance(right, ast.Num)
-            and isinstance(right.n, complex)
+            and ast_utils.is_num(right)
+            and isinstance(right.value, complex)
         ):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
                 self.append("mcomplex(")
                 self.visit(left, func)
                 self.append(
-                    ", " + {"+": "", "-": "-"}[inline] + str(right.n.imag) + ")"
+                    ", " + {"+": "", "-": "-"}[inline] + str(right.value.imag) + ")"
                 )
                 return
 
@@ -2763,8 +2763,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.library_func(funcs, "array", "array", "__init__"):
             if (
                 not node.args
-                or not isinstance(node.args[0], ast.Str)
-                or node.args[0].s not in "bBhHiIlLfd"
+                or not ast_utils.is_str(node.args[0])
+                or node.args[0].value not in "bBhHiIlLfd"
             ):
                 error.error(
                     "non-constant or unsupported type code",
@@ -2924,15 +2924,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # tuple2.__getitem -> __getfirst__/__getsecond
             if (
                 ident == "__getitem__"
-                and isinstance(node.args[0], ast.Num)
-                and isinstance(node.args[0].n, int)
-                and node.args[0].n in (0, 1)
+                and ast_utils.is_num(node.args[0])
+                and isinstance(node.args[0].value, int)
+                and node.args[0].value in (0, 1)
                 and self.only_classes(objexpr, ("tuple2",))
             ):
                 assert isinstance(node.func, ast.Attribute)
                 self.visit(node.func.value, func)
                 self.append(
-                    "->%s()" % ["__getfirst__", "__getsecond__"][node.args[0].n]
+                    "->%s()" % ["__getfirst__", "__getsecond__"][node.args[0].value]
                 )
                 return
 
@@ -2941,8 +2941,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif (
                 ident == "is_integer"
                 and isinstance(node.func, ast.Attribute)
-                and (python.def_class(self.gx, "float_"), 0)
-                in self.mergeinh[node.func.value]
+                and ((python.def_class(self.gx, "float_"), 0) in self.mergeinh[node.func.value]
+                     or (python.def_class(self.gx, "int_"), 0) in self.mergeinh[node.func.value])
             ):
                 assert isinstance(node.func, ast.Attribute)
                 self.visitm("__ss_is_integer(", node.func.value, ")", func)
@@ -4002,8 +4002,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ident = cl.ident
                 if cl.ident in [
                     "dict",
-                    "int_",
                     "defaultdict",
+                    "int_",
+                    "float_",
+                    "bytes_",
                 ]:  # own namespace because of template vars
                     self.append("__" + cl.ident + "__::")
                 elif isinstance(node.value, ast.Attribute):
@@ -4354,7 +4356,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.append('new bytes("%s"' % self.expand_special_chars(value))
                 if b"\0" in value:
-                    self.append(", %d" % len(value))
+                    self.append(", (size_t)%d" % len(value))
                 self.append(")")
 
         else:

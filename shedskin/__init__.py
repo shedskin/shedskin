@@ -159,7 +159,7 @@ class Shedskin:
 
         # --- some checks
         major, minor = sys.version_info[:2]
-        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13)]:
+        if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14)]:
             self.log.error('Shed Skin is not compatible with this version of Python')
             sys.exit(1)
 
@@ -463,8 +463,8 @@ class Shedskin:
 
         ss = cls(args)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.10 ***')
-        ss.log.info('Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.11 ***')
+        ss.log.info('Copyright 2005-2025 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         ss.log.info('')
 
         if args.subcmd == 'analyze':
