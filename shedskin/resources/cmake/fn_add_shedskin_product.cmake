@@ -293,7 +293,7 @@ function(add_shedskin_product)
     endif()
 
     if(WIN32)
-        if(DEBUG)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             set(WIN32_FLAGS /MDd)
         else()
             set(WIN32_FLAGS /MD)
