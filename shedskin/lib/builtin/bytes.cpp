@@ -342,66 +342,27 @@ list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
 
 list<bytes *> *bytes::rsplit(bytes *separator, __ss_int maxsep)
 {
-    __GC_STRING ts;
-    list<bytes *> *r = new list<bytes *>();
-    size_t i, j, curi, tslen;
-    size_t maxsep2 = (size_t)maxsep;
+    __GC_STRING r = unit;
+    std::reverse(r.begin(), r.end());
+    bytes *sep;
 
-    curi = 0;
-    i = j = this->unit.size() - 1;
-
-    //split by whitespace
-    if(!separator)
-    {
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
-        {
-            j = unit.find_last_not_of(ws, i);
-            if(j == std::string::npos) break;
-
-            i = unit.find_last_of(ws, j);
-
-            //this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
-            r->append(new bytes(unit.substr(i + 1, j - i), frozen));
-            curi++;
-        }
-
-        //thus we only bother about extra stuff here if we *have* found more whitespace
-        if(i != std::string::npos && j != std::string::npos && (j = unit.find_last_not_of(ws, i)) != std::string::npos)
-            r->append(new bytes(unit.substr(0, j), frozen));
+    if(separator) {
+        __GC_STRING s = separator->unit;
+        std::reverse(s.begin(), s.end());
+        sep = new bytes(s, frozen);
     }
-
-    //split by seperator
     else
-    {
-        ts = separator->unit;
-        tslen = ts.length();
+        sep = NULL;
 
-        i++;
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
-        {
-            j = i;
-            i--;
+    list<bytes *> *result = (new bytes(r, frozen))->split(sep, maxsep); // not common enough to warrant fast implementation, so defer to ::split
 
-            i = unit.rfind(ts, i);
-            if(i == std::string::npos)
-            {
-                i = j;
-                break;
-            }
-
-            r->append(new bytes(unit.substr(i + tslen, j - i - tslen), frozen));
-
-            curi++;
-        }
-
-        //either left over (beyond max) or very last match (see loop break)
-        if(i != std::string::npos)
-            r->append(new bytes(unit.substr(0, i), frozen));
+    std::reverse(result->units.begin(), result->units.end());
+    for(size_t i = 0; i < result->units.size(); i++) {
+        bytes *t = result->units[i];
+        std::reverse(t->unit.begin(), t->unit.end());
     }
 
-    r->reverse();
-
-    return r;
+    return result;
 }
 
 tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
