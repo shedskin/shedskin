@@ -173,7 +173,11 @@ template<class T> T __mul2(__ss_float n, T a) { return a->__mul__(n); }
 template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(__ss_float n, T a) { return a->__rdiv__(n); }
 
-/* float.is_integer */
+/* {int, float}.is_integer */
+
+inline __ss_bool __ss_is_integer(__ss_int i) {
+    return True;
+}
 
 inline __ss_bool __ss_is_integer(__ss_float d) {
     return __mbool((long long)d == d);
