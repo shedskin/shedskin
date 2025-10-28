@@ -528,7 +528,6 @@ function(add_shedskin_product)
             "-dynamic" # can be excluded because it is already the default
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
-            $<$<BOOL:${WIN32}>:/NODEFAULTLIB:python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}_d.lib>
         )
 
         target_link_libraries(${EXT} PRIVATE
