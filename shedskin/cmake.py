@@ -705,7 +705,7 @@ class CMakeBuilder:
         """Activate cmake build"""
         opts = " ".join(options)
         preset = get_cmake_preset("build", self.options.build_type)
-        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts}"
+        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
 
