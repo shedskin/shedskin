@@ -292,6 +292,14 @@ function(add_shedskin_product)
         message("ENABLE_WARNINGS: " ${ENABLE_WARNINGS})
     endif()
 
+    if(${WIN32})
+        if(${DEBUG})
+            set(WIN32_FLAGS /MDd)
+        else()
+            set(WIN32_FLAGS /MD)
+        endif()
+    endif()
+
     # -------------------------------------------------------------------------
     # build executable section
 
@@ -377,7 +385,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<$<BOOL:${WIN32}>:/MD>
+            $<IF:$<BOOL:${WIN32}>,${WIN32_FLAGS},>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -510,7 +518,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
-            $<$<BOOL:${WIN32}>:/MD>
+            $<IF:$<BOOL:${WIN32}>,${WIN32_FLAGS},>
             # $<$<BOOL:${WIN32}>:/LD>
         )
 
