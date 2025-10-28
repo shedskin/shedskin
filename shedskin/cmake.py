@@ -848,6 +848,12 @@ class CMakeBuilder:
 
         self.cmake_config(cfg_options)
 
+        # output the generated presets and exit
+        f = open(self.build_dir / "generators" / "CMakePresets.json")
+        print("----")
+        print(f.read())
+        assert 1 == 0
+
         # print("cfg_options:", cfg_options)
         # print("bld_options:", bld_options)
         self.cmake_build(bld_options)
