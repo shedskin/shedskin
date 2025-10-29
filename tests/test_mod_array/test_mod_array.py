@@ -11,12 +11,11 @@ def test_typecodes():
 
 
 def test_file():
-    if os.path.exists("testdata"):
-        testdata = "testdata"
-    elif os.path.exists("testdata"):
-        testdata = "../testdata"
-    else:
-        testdata = "../../testdata"
+    testdir = os.curdir
+    while not os.path.exists(os.path.join(testdir, "testdata")) and os.path.exists(os.pardir):
+        testdir = os.path.join(testdir, os.pardir)
+    testdata = os.path.join(testdir, "testdata")
+    assert os.path.exists(testdata)
 
     arr = array.array('i', range(10))
     with open(testdata + "/blabla", "wb") as f:

@@ -1204,9 +1204,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
                 self.add_variable("STATIC_GCCPP", "$(HOMEBREW_LIB)/libgccpp.a")
-                self.add_variable("STATIC_PCRE", "$(HOMEBREW_LIB)/libpcre2-8.a")
+                self.add_variable("STATIC_PCRE2", "$(HOMEBREW_LIB)/libpcre2-8.a")
                 self.add_variable(
-                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE)"
+                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
                 )
 
             if self.no_flag_file:
