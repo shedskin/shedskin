@@ -116,13 +116,15 @@ def test_args():
     assert repr(e) == "Exception('bert')"
 
 
-# def test_type_error():
-#     error = False
-#     try:
-#         1 + 'a'
-#     except TypeError:
-#         error = True
-#     assert error
+def test_else():
+    a = 5
+    try:
+        a = 6
+    except:
+        a = 7
+    else:
+        a = 8
+    assert a == 8
 
 
 # class SalaryNotInRangeError(Exception):
@@ -155,10 +157,8 @@ def test_args():
 
 def test_all():
     test_key_error()
-    # test_type_error() # cpp translated code will not compile :-)
     test_assert_error()
     test_index_error()
-    # test_my_error()
     test_value_error()
     test_os_error()
     test_custom_error()
@@ -167,6 +167,7 @@ def test_all():
     test_system_exit_error()
     # test_custom_salary_error() # FIXME: super not supported
     test_args()
+    test_else()
 
 
 if __name__ == '__main__':

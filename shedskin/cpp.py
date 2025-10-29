@@ -862,7 +862,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Visit a while node"""
         self.print()
         if node.orelse:
-            self.output("%s = 0;" % self.mv.tempcount[node.orelse[0]])
+            self.output("%s = 0;" % self.mv.tempcount[node, 'orelse'])
 
         self.start("while (")
         self.bool_test(node.test, func)
@@ -877,7 +877,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("}")
 
         if node.orelse:
-            self.output("if (!%s) {" % self.mv.tempcount[node.orelse[0]])
+            self.output("if (!%s) {" % self.mv.tempcount[node, 'orelse'])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
@@ -1331,11 +1331,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print(self.line)
         self.indent()
         if node.orelse:
-            self.output("%s = 0;" % self.mv.tempcount[node.orelse[0]])
+            self.output("%s = 0;" % self.mv.tempcount[node, 'orelse'])
         for child in node.body:
             self.visit(child, func)
         if node.orelse:
-            self.output("%s = 1;" % self.mv.tempcount[node.orelse[0]])
+            self.output("%s = 1;" % self.mv.tempcount[node, 'orelse'])
         self.deindent()
         self.start("}")
 
@@ -1392,7 +1392,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # else
         if node.orelse:
-            self.output("if(%s) { // else" % self.mv.tempcount[node.orelse[0]])
+            self.output("if(%s) { // else" % self.mv.tempcount[node, 'orelse'])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
@@ -1510,7 +1510,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         assname = self.cpp_name(assname)
         self.print()
         if node.orelse:
-            self.output("%s = 0;" % self.mv.tempcount[node.orelse[0]])
+            self.output("%s = 0;" % self.mv.tempcount[node, 'orelse'])
         if ast_utils.is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenumerate(node):
@@ -1683,7 +1683,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("END_FOR")
         if node.orelse:
-            self.output("if (!%s) {" % self.mv.tempcount[node.orelse[0]])
+            self.output("if (!%s) {" % self.mv.tempcount[node, 'orelse'])
             self.indent()
             for child in node.orelse:
                 self.visit(child, func)
@@ -2107,7 +2107,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit a break statement"""
         if self.gx.loopstack[-1].orelse:
-            orelse_tempcount_id = self.gx.loopstack[-1].orelse[0]
+            orelse_tempcount_id = (self.gx.loopstack[-1], 'orelse')
             if orelse_tempcount_id in self.mv.tempcount:
                 self.output("%s = 1;" % self.mv.tempcount[orelse_tempcount_id])
         self.output("break;")
