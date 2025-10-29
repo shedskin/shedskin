@@ -1618,7 +1618,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.orelse:
             for child in node.orelse:
                 self.visit(child, func)
-            self.temp_var_int(node.orelse[0], func)
+            self.temp_var_int((node, 'orelse'), func)
 
     def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
         """Visit a yield statement"""
@@ -1678,7 +1678,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- for-else
         if node.orelse:
-            self.temp_var_int(node.orelse[0], func)
+            self.temp_var_int((node, 'orelse'), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1758,7 +1758,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.loopstack.pop()
 
         if node.orelse:
-            self.temp_var_int(node.orelse[0], func)
+            self.temp_var_int((node, 'orelse'), func)
             for child in node.orelse:
                 self.visit(child, func)
 
