@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14"]
 
     steps:
     - uses: actions/checkout@v4
@@ -38,9 +38,9 @@ jobs:
     - name: Test shedskin
       run: |
         cd tests
-        shedskin test --conan
+        shedskin test --conan --build-type Release
 
     - name: Test shedskin examples
       run: |
         cd examples
-        shedskin test --conan
+        shedskin test --conan --build-type Release
