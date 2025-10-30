@@ -696,24 +696,45 @@ class CMakeBuilder:
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
-        preset = get_cmake_preset("configure", self.options.build_type)
-        cfg_cmd = f"cmake --preset {preset} {opts}"
+
+        if self.options.conan:
+            preset = get_cmake_preset("configure", self.options.build_type)
+            cfg_cmd = f"cmake --preset {preset} {opts}"
+        else:
+            cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
+            if generator:
+                cfg_cmd += ' -G "{generator}"'
+
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
         opts = " ".join(options)
-        preset = get_cmake_preset("build", self.options.build_type)
-        bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
+
+        if self.options.conan:
+            preset = get_cmake_preset("build", self.options.build_type)
+            bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
+        else:
+            bld_cmd = f"cmake --build {self.build_dir} {opts}"
+
         self.log.info(bld_cmd)
         assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options: list[str]) -> None:
         """Activate ctest"""
         opts = " ".join(options)
-        preset = get_cmake_preset("test", self.options.build_type)
-        tst_cmd = f"ctest --output-on-failure --preset {preset} {opts}"
+
+        if self.options.conan:
+            preset = get_cmake_preset("test", self.options.build_type)
+            tst_cmd = f"ctest --output-on-failure --preset {preset} {opts}"
+        else:
+            if platform.system() == "Windows":
+                cfg = f"-C {self.options.build_type}"
+            else:
+                cfg = ""
+            tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
+
         self.log.info(tst_cmd)
         assert os.system(tst_cmd) == 0
 
