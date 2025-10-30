@@ -2136,7 +2136,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig: ast.Call) -> Optional[ast.AST]:
+    def super_call(self, orig: ast.Call, func: Optional["python.Function"]) -> Optional[ast.AST]:
         """Handle a super call"""
         node = orig.func
         assert isinstance(node, ast.Attribute)
@@ -2147,6 +2147,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             and node.value.func.id == "super"
         ):
             if (
+                func
+                and isinstance(func.parent, python.Class)
+                and len(node.value.args) == 0
+            ):
+                if func.parent.node.bases:
+                    return func.parent.node.bases[0]
+            elif (
                 len(node.value.args) >= 2
                 and isinstance(node.value.args[1], ast.Name)
                 and node.value.args[1].id == "self"
@@ -2156,8 +2163,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 if cl.node.bases:
                     return cl.node.bases[0]
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
-
-        return None
 
     def visit_Pass(
         self, node: ast.Pass, func: Optional["python.Function"] = None
@@ -2179,7 +2184,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # XXX import math; math.e
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.ctx, ast.Load):
             # rewrite super(..) call
-            base = self.super_call(node)
+            base = self.super_call(node, func)
             if base:
                 node.func = ast.Attribute(
                     copy.deepcopy(base), node.func.attr, ast.Load()

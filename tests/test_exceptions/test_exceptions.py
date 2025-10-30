@@ -127,32 +127,32 @@ def test_else():
     assert a == 8
 
 
-# class SalaryNotInRangeError(Exception):
-#     """Exception raised for errors in the input salary.
+class SalaryNotInRangeError(Exception):
+    """Exception raised for errors in the input salary.
 
-#     Attributes:
-#         salary -- input salary which caused the error
-#         message -- explanation of the error
+    Attributes:
+        salary -- input salary which caused the error
+        message -- explanation of the error
 
-#     from: https://www.programiz.com/python-programming/user-defined-exception
-#     """
+    from: https://www.programiz.com/python-programming/user-defined-exception
+    """
 
-#     def __init__(self, salary, message="Salary is not in (5000, 15000) range"):
-#         self.salary = salary
-#         self.message = message
-#         super().__init__(self.message)
+    def __init__(self, salary, message="Salary is not in (5000, 15000) range"):
+        self.salary = salary
+        self.message = message
+        super().__init__(self.message)
 
 
-# def test_custom_salary_error():
-#     error = False
-#     salary = 1000
-#     try:
-#         if not 5000 < salary < 15000:
-#             raise SalaryNotInRangeError(salary)
-#     except SalaryNotInRangeError as e:
-#         assert e.message == "Salary is not in (5000, 15000) range"
-#         error = True
-#     assert error
+def test_custom_salary_error():
+    error = False
+    salary = 1000
+    try:
+        if not 5000 < salary < 15000:
+            raise SalaryNotInRangeError(salary)
+    except SalaryNotInRangeError as e:
+        assert e.message == "Salary is not in (5000, 15000) range"
+        error = True
+    assert error
 
 
 def test_all():
@@ -165,7 +165,7 @@ def test_all():
     test_custom_error2()
     test_custom_error3()
     test_system_exit_error()
-    # test_custom_salary_error() # FIXME: super not supported
+    test_custom_salary_error()
     test_args()
     test_else()
 
