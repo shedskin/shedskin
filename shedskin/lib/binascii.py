@@ -8,7 +8,7 @@ class Incomplete(Exception):
 
 def a2b_uu(string):
     return b''
-def b2a_uu(data):
+def b2a_uu(data, backtick=False):
     return b''
 def a2b_base64(string):
     return b''
