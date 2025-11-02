@@ -57,6 +57,9 @@ def test_crc():
     crc = binascii.crc32(s)
     assert crc == 1546323114
 
+    crc = binascii.crc32(s, 12)
+    assert crc == 2762308548
+
     crc = binascii.crc_hqx(s, 12)
     assert crc == 53552
 
