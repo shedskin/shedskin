@@ -16,7 +16,7 @@ def b2a_base64(data):
     return b''
 def a2b_qp(string, header=False):
     return b''
-def b2a_qp(data, quotetabs=False, istext=False, header=False):
+def b2a_qp(data, quotetabs=False, istext=True, header=False):
     return b''
 
 def b2a_hex(data, sep=None, bytes_per_sep=1):
