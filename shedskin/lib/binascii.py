@@ -19,12 +19,12 @@ def a2b_qp(string, header=False):
 def b2a_qp(data, quotetabs=False, istext=False, header=False):
     return b''
 
-def b2a_hex(data):
+def b2a_hex(data, sep=None, bytes_per_sep=1):
     return b''
 def a2b_hex(data):
     return b''
 
-def hexlify(data):
+def hexlify(data, sep=None, bytes_per_sep=1):
     return b''
 def unhexlify(data):
     return b''

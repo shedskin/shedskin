@@ -4,15 +4,31 @@ import binascii
 s = b"my guitar wants to strum all night long"
 
 
-def test_b2a_a2b():
+def test_qp():
     b2a = binascii.b2a_qp(s)
     assert b2a == b'my guitar wants to strum all night long'
     a2b = binascii.a2b_qp(b2a)
     assert a2b == s
 
+
+def test_uu():
     b2a = binascii.b2a_uu(s)
     assert b2a == b'G;7D@9W5I=&%R(\'=A;G1S(\'1O(\'-T<G5M(&%L;"!N:6=H="!L;VYG\n'
     a2b = binascii.a2b_uu(b2a)
+    assert a2b == s
+
+
+def test_base64():
+    b2a = binascii.b2a_base64(s)
+    assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
+    a2b = binascii.a2b_base64(b2a)
+    assert a2b == s
+
+
+def test_hex():  # b2a_hex == hexlify
+    b2a = binascii.hexlify(s)
+    assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
+    a2b = binascii.unhexlify(b2a)
     assert a2b == s
 
     b2a = binascii.b2a_hex(s)
@@ -20,17 +36,21 @@ def test_b2a_a2b():
     a2b = binascii.a2b_hex(b2a)
     assert a2b == s
 
-    b2a = binascii.b2a_base64(s)
-    assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
-    a2b = binascii.a2b_base64(b2a)
-    assert a2b == s
+    b = b'hoepa'
+    t = binascii.b2a_hex(b, '-', 1)
+    assert t == b'68-6f-65-70-61'
 
+    b = b'hoepa'
+    t = binascii.hexlify(b, sep='-')
+    assert t == b'68-6f-65-70-61'
 
-def test_hexlify():
-    b2a = binascii.hexlify(s)
-    assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
-    a2b = binascii.unhexlify(b2a)
-    assert a2b == s
+    b = b'hoepa'
+    t = binascii.b2a_hex(b, sep='-', bytes_per_sep=2)
+    assert t == b'68-6f65-7061'
+
+    b = b'hoep'
+    t = binascii.hexlify(b, sep='-', bytes_per_sep=2)
+    assert t == b'686f-6570'
 
 
 def test_crc():
@@ -42,8 +62,10 @@ def test_crc():
 
 
 def test_all():
-    test_b2a_a2b()
-    test_hexlify()
+    test_qp()
+    test_uu()
+    test_base64()
+    test_hex()
     test_crc()
 
 
