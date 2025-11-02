@@ -10,10 +10,12 @@ def a2b_uu(string):
     return b''
 def b2a_uu(data, backtick=False):
     return b''
-def a2b_base64(string):
+
+def a2b_base64(string, strict_mode=False):
     return b''
 def b2a_base64(data, newline=True):
     return b''
+
 def a2b_qp(string, header=False):
     return b''
 def b2a_qp(data, quotetabs=False, istext=True, header=False):
@@ -23,7 +25,6 @@ def b2a_hex(data, sep=None, bytes_per_sep=1):
     return b''
 def a2b_hex(data):
     return b''
-
 def hexlify(data, sep=None, bytes_per_sep=1):
     return b''
 def unhexlify(data):
