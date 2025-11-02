@@ -290,7 +290,10 @@ int find_valid(char *s, size_t slen, int num)
 }
 
 // from python 2.7.1
-bytes *a2b_base64(bytes *pascii) {
+bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode) {
+    if(strict_mode && pascii->unit[0] == BASE64_PAD)
+        throw new Error(new str("Leading padding not allowed"));  // TODO check new strict_mode behaviour in python source
+
     char * ascii_data = &pascii->unit[0];
     size_t ascii_len = pascii->unit.size();
     if (ascii_len > PY_SSIZE_T_MAX-3) {

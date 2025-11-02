@@ -24,9 +24,8 @@ class Error : public Exception {
 public:
 
     Error() {}
-    Error(str *msg) {
+    Error(str *msg): Exception(msg) {
         this->__class__ = cl_Error;
-        __init__(msg);
     }
 };
 
@@ -35,9 +34,8 @@ class Incomplete : public Exception {
 public:
 
     Incomplete() {}
-    Incomplete(str *msg) {
+    Incomplete(str *msg): Exception(msg) {
         this->__class__ = cl_Incomplete;
-        __init__(msg);
     }
 };
 
@@ -50,7 +48,7 @@ extern void * default_5;
 
 bytes *a2b_uu(bytes *string);
 bytes *b2a_uu(bytes *data, __ss_bool backtick);
-bytes *a2b_base64(bytes *string);
+bytes *a2b_base64(bytes *string, __ss_bool strict_mode);
 bytes *b2a_base64(bytes *data, __ss_bool newline);
 bytes *a2b_qp(bytes *string, __ss_bool header);
 bytes *b2a_qp(bytes *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
