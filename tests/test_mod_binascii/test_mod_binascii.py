@@ -45,6 +45,11 @@ def test_base64():
     a2b = binascii.a2b_base64(b2a)
     assert a2b == s
 
+    b2a = binascii.b2a_base64(s, newline=False)
+    assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n'
+    a2b = binascii.a2b_base64(b2a)
+    assert a2b == s
+
 
 def test_hex():  # b2a_hex == hexlify
     b2a = binascii.hexlify(s)

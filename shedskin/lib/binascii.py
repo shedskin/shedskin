@@ -12,7 +12,7 @@ def b2a_uu(data, backtick=False):
     return b''
 def a2b_base64(string):
     return b''
-def b2a_base64(data):
+def b2a_base64(data, newline=True):
     return b''
 def a2b_qp(string, header=False):
     return b''
