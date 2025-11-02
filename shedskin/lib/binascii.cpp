@@ -372,7 +372,7 @@ bytes *a2b_base64(bytes *pascii) {
     return binary;
 }
 
-bytes *b2a_base64(bytes *binary) {
+bytes *b2a_base64(bytes *binary, __ss_bool newline) {
 
     __ss_int bin_len = binary->__len__();
 /*    if (bin_len > BASE64_MAXBIN) {
@@ -407,7 +407,8 @@ bytes *b2a_base64(bytes *binary) {
         *ascii_data++ = (char)table_b2a_base64[(leftchar&0xf) << 2];
         *ascii_data++ = BASE64_PAD;
     }
-    *ascii_data++ = '\n';       /* Append a courtesy newline */
+    if (newline)
+        *ascii_data++ = '\n';       /* Append a courtesy newline */
 
     // resize to ascii_data - start
     ascii->unit.resize((size_t)(ascii_data-ascii_start));
