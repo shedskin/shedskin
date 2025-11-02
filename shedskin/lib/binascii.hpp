@@ -56,9 +56,9 @@ bytes *a2b_qp(bytes *string, __ss_bool header);
 bytes *b2a_qp(bytes *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
 __ss_int crc_hqx(bytes *data, __ss_int crc);
 __ss_int crc32(bytes *data, __ss_int crc=0);
-bytes *b2a_hex(bytes *data);
+bytes *b2a_hex(bytes *data, str *sep=0, __ss_int bytes_per_sep=1);
+bytes *hexlify(bytes *data, str *sep=0, __ss_int bytes_per_sep=1);
 bytes *a2b_hex(bytes *data);
-bytes *hexlify(bytes *data);
 bytes *unhexlify(bytes *data);
 
 void __init();

@@ -29,12 +29,18 @@ class Incomplete
 
 class_ *cl_Incomplete;
 
-bytes *hexlify(bytes *data) {
+bytes *hexlify(bytes *data, str *sep, __ss_int bytes_per_sep) {
     // output will be twice as long
     size_t len = data->unit.size();
     __GC_STRING hexstr = __GC_STRING(data->unit);
-    hexstr.reserve(len<<1);
-    hexstr.resize(len<<1);
+    size_t result_len = (len<<1);
+    if(sep) {
+        if(sep->unit.size() != 1)
+            throw new ValueError(new str("sep must be length 1."));
+        result_len += ((float)(len-1)) / bytes_per_sep;
+    }
+    hexstr.reserve(result_len);
+    hexstr.resize(result_len);
     bytes *hex = new bytes(hexstr);
 
     char * curdata = &data->unit[0];
@@ -42,8 +48,13 @@ bytes *hexlify(bytes *data) {
     char * end = curdata+len;
     char c;
     // from python's implementation (2.7.1, if it matters)
+    size_t remaining = len;
     while(curdata <= end)
     {
+        if(sep and !(remaining % bytes_per_sep) and remaining != len) {
+            for(int j=0; j<sep->unit.size(); j++)
+                *(curhex++) = sep->unit[j];
+        }
         c = (*curdata>>4) & 0xf;
         c = (c>9) ? c+'a'-10 : c + '0';
         *(curhex++) = c;
@@ -51,6 +62,7 @@ bytes *hexlify(bytes *data) {
         c = (c>9) ? c+'a'-10 : c + '0';
         *(curhex++) = c;
         curdata++;
+        remaining -= 1;
     }
     return hex;
 }
@@ -810,13 +822,13 @@ __ss_int crc32(bytes *data, __ss_int signed_crc) {
     return (__ss_int)(crc ^ 0xFFFFFFFFU);
 }
 
-bytes *b2a_hex(bytes *data) {
-    
-    return hexlify(data);
+bytes *b2a_hex(bytes *data, str*sep, __ss_int bytes_per_sep) {
+
+    return hexlify(data, sep, bytes_per_sep);
 }
 
 bytes *a2b_hex(bytes *data) {
-    
+
     return unhexlify(data);
 }
 
