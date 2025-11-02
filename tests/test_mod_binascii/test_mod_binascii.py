@@ -10,6 +10,20 @@ def test_qp():
     a2b = binascii.a2b_qp(b2a)
     assert a2b == s
 
+    b2a = binascii.b2a_qp(s, header=True)
+    assert b2a == b'my_guitar_wants_to_strum_all_night_long'
+    a2b = binascii.a2b_qp(b2a, header=True)
+    assert a2b == s
+
+    a2b = binascii.b2a_qp(b'hoei\npap\r  hoempa\troempa  ', header=True)
+    assert a2b == b'hoei\npap\r__hoempa\troempa_=20'
+
+    a2b = binascii.b2a_qp(b'hoei\npap\r  hoempa\troempa  ', quotetabs=True, header=True)
+    assert a2b == b'hoei\npap\r=20=20hoempa=09roempa=20=20'
+
+    a2b = binascii.b2a_qp(b'hoei\npap\r  hoempa\troempa  ', istext=False, quotetabs=True, header=True)
+    assert a2b == b'hoei=0Apap=0D=20=20hoempa=09roempa=20=20'
+
 
 def test_uu():
     b2a = binascii.b2a_uu(s)
