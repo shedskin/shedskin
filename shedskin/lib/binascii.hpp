@@ -49,7 +49,7 @@ extern __ss_bool  default_2;
 extern void * default_5;
 
 bytes *a2b_uu(bytes *string);
-bytes *b2a_uu(bytes *data);
+bytes *b2a_uu(bytes *data, __ss_bool backtick);
 bytes *a2b_base64(bytes *string);
 bytes *b2a_base64(bytes *data);
 bytes *a2b_qp(bytes *string, __ss_bool header);

@@ -199,7 +199,7 @@ bytes *a2b_uu(bytes *string) {
     return binary;
 }
 
-bytes *b2a_uu(bytes *binary) {
+bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
     __ss_int bin_len = binary->__len__();
     if ( bin_len > 45 ) {
         /* The 45 is a limit that appears in all uuencode's */
@@ -231,7 +231,10 @@ bytes *b2a_uu(bytes *binary) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
-            *ascii_data++ = (char)(this_ch + ' ');
+            if(backtick && !this_ch)
+                *ascii_data++ = '`';
+            else
+                *ascii_data++ = (char)(this_ch + ' ');
         }
     }
     *ascii_data++ = '\n';       /* Append a courtesy newline */

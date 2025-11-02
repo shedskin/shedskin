@@ -31,6 +31,13 @@ def test_uu():
     a2b = binascii.a2b_uu(b2a)
     assert a2b == s
 
+    t = b'hoepa'
+    b2a = binascii.b2a_uu(t)
+    assert b2a == b'%:&]E<&$ \n'
+
+    b2a = binascii.b2a_uu(t, backtick=True)
+    assert b2a == b'%:&]E<&$`\n'
+
 
 def test_base64():
     b2a = binascii.b2a_base64(s)
