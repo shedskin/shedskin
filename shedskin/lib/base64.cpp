@@ -1,34 +1,36 @@
 /* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "base64.hpp"
+#include "binascii.hpp"
 
 namespace __base64__ {
 
 str *__name__;
 
+// TODO why the difference with binascii.b2a_base64..?
 
 bytes *b64encode(bytes *s, bytes *altchars) {
-    return NULL;
+    return __binascii__::b2a_base64(s, False);
 }
 
 bytes *standard_b64encode(bytes *s) {
-    return NULL;
+    return b64encode(s, NULL);
 }
 
 bytes *urlsafe_b64encode(bytes *s) {
-    return NULL;
+    return b64encode(s, NULL); // TODO replace +/
 }
 
 bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate) {
-    return NULL;
+    return __binascii__::a2b_base64(s, True);
 }
 
 bytes *standard_b64decode(bytes *s) {
-    return NULL;
+    return b64decode(s, NULL, False);
 }
 
 bytes *urlsafe_b64decode(bytes *s) {
-    return NULL;
+    return b64decode(s, NULL, False); // TODO replace +/
 }
 
 void __init() {
