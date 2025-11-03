@@ -108,6 +108,7 @@ The following people have contributed to Shed Skin development:
   Brian Blais
   Paul Boddie
   François Boutines
+  Wyatt S. Carpenter
   Djamel Cherif
   James Coughlan
   Mark Dewing
