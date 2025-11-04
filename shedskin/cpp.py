@@ -658,9 +658,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("void __init() {")
         self.indent()
         if self.module == self.gx.main_module and not self.gx.pyextension_product:
-            self.output('__name__ = new str("__main__");\n')
+            module_ident = '__main__'
         else:
-            self.output('__name__ = new str("%s");\n' % self.module.ident)
+            module_ident = self.module.ident
+        self.output('__name__ = new str("%s");\n' % module_ident)
 
         for child in node.body:
             if isinstance(child, ast.FunctionDef):
@@ -671,7 +672,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         self.init_defaults(child2)
                 if child.name in self.mv.classes:
                     cl = self.mv.classes[child.name]
-                    self.output("cl_" + cl.ident + ' = new class_("%s");' % (cl.ident))
+                    self.output("cl_" + cl.ident + ' = new class_("%s.%s");' % (module_ident, cl.ident))
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
