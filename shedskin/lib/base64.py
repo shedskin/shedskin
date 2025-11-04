@@ -1,5 +1,8 @@
 # Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE)
 
+import binascii
+
+
 def b64encode(s, altchars=None):
     return b''
 
