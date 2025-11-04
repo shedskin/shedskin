@@ -392,7 +392,7 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline) {
     
     for( ; bin_len > 0 ; bin_len--, bin_data++ ) {
         /* Shift the data into our buffer */
-        leftchar = (leftchar << 8) | *bin_data;
+        leftchar = (leftchar << 8) | (unsigned char)(*bin_data);
         leftbits += 8;
 
         /* See if there are 6-bit groups ready */

@@ -50,6 +50,14 @@ def test_base64():
     a2b = binascii.a2b_base64(b2a)
     assert a2b == s
 
+    input_bytes = bytes(range(256))
+    output_bytes = b'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==\n'
+
+    b2a = binascii.b2a_base64(input_bytes)
+    assert b2a == output_bytes
+#    a2b = binascii.a2b_base64(b2a)
+#    assert a2b == input_bytes
+
 
 def test_hex():  # b2a_hex == hexlify
     b2a = binascii.hexlify(s)
