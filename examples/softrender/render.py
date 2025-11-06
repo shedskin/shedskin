@@ -28,7 +28,6 @@ class Vector4:
         return Vector4(self.x / length, self.y / length, self.z / length, self.w / length)
 
     def mul(self, r):  # TODO scalar/instance mul convention?
-        assert isinstance(r, float) or isinstance(r, int)
         return Vector4(self.x * r, self.y * r, self.z * r, self.w * r)
 
     def sub(self, r):
@@ -144,7 +143,6 @@ class Quaternion:
         return Quaternion(-self.x, -self.y, -self.z, self.w)
 
     def mul(self, r):
-        assert isinstance(r, Quaternion)
         return Quaternion(
             self.x * r.w + self.w * r.x + self.y * r.z - self.z * r.y,
             self.y * r.w + self.w * r.y + self.z * r.x - self.x * r.z,
@@ -351,9 +349,9 @@ class Gradients:
         ]
 
         self.lightAmt = [
-            saturate(minYVert.normal.dot(lightDir)) * 0.9 + 0.5,
-            saturate(midYVert.normal.dot(lightDir)) * 0.9 + 0.5,
-            saturate(maxYVert.normal.dot(lightDir)) * 0.9 + 0.5,
+            saturate(minYVert.normal.dot(lightDir)) * 0.5 + 0.5,
+            saturate(midYVert.normal.dot(lightDir)) * 0.5 + 0.5,
+            saturate(maxYVert.normal.dot(lightDir)) * 0.5 + 0.5,
         ]
         self.texCoordX = [
             minYVert.texCoords.x * self.oneOverZ[0],
@@ -595,12 +593,6 @@ class RenderContext:
 
     def copy_pixel(self, destX, destY, srcX, srcY, src, lightAmt):
         destIndex = (destX + destY * self.width) * 4
-
-        if lightAmt > 1:  # TODO check java
-            lightAmt = 1.0
-        elif lightAmt < 0:
-            lightAmt = 0
-
         components = self.bitmap.components
 
         if src is not None:
