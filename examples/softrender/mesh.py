@@ -16,8 +16,8 @@ class Mesh:
                 vertices.append((x / scale, y / scale, z / scale))
 
             elif line.startswith('vt '):
-                u, v = map(float, line[2:].split())
-                texcoords.append((u, 1.0 - v))
+                tu, tv = map(float, line[2:].split())
+                texcoords.append((tu, 1.0 - tv))
 
             elif line.startswith('vn '):
                 x, y, z = map(float, line[2:].split())
@@ -32,15 +32,15 @@ class Mesh:
                     v, t, n = map(int, token.split('/'))  # TODO n is ignored!
                     if not normals:
                         n = 0
-                    idx = index.get((v, t, n))
-                    if idx is None:
+                    idx = index.get((v, t, n), -1)
+                    if idx == -1:
                         x, y, z = vertices[v-1]
-                        u, v = texcoords[t-1]  # TODO handle missing t like n
+                        tu, tv = texcoords[t-1]  # TODO handle missing t like n
                         if normals and n-1 < len(normals):
                             a, b, c = normals[n-1]
                         else:
                             a, b, c = 0, 0, 0
-                        vertex = Vertex(Vector4(x, y, z, 1), Vector4(u, v, 0, 0), Vector4(a, b, c, 0))
+                        vertex = Vertex(Vector4(x, y, z, 1), Vector4(tu, tv, 0, 0), Vector4(a, b, c, 0))
                         index[v, t, n] = idx = len(self.vertices)
                         self.vertices.append(vertex)
                     idcs.append(idx)
@@ -62,16 +62,16 @@ class Mesh:
                 normal = v1.cross(v2).normalized()
 
                 for j in (i0, i1, i2):
-                    v = self.vertices[j]
-                    key = (v.pos.x, v.pos.y, v.pos.z)
+                    vtx = self.vertices[j]
+                    key = (vtx.pos.x, vtx.pos.y, vtx.pos.z)
                     if key in pos_normal:
                         havenormal = pos_normal[key]
                     else:
                         havenormal = Vector4(0, 0, 0, 0)
                     pos_normal[key] = havenormal.add(normal)
 
-            for v in self.vertices:
-                v.normal = pos_normal[v.pos.x, v.pos.y, v.pos.z].normalized()
+            for vtx in self.vertices:
+                vtx.normal = pos_normal[vtx.pos.x, vtx.pos.y, vtx.pos.z].normalized()
 
     def draw(self, context, view_projection, transform, texture, lightDir):
         mvp = view_projection.mul(transform)

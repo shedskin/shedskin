@@ -138,8 +138,8 @@ class RenderContext(Bitmap):
                     srcX = int(texCoordX * z * (texture.width - 1) + 0.5)
                     srcY = int(texCoordY * z * (texture.width - 1) + 0.5)
                 else:
-                    srcX = None
-                    srcY = None
+                    srcX = 0
+                    srcY = 0
 
                 self.copy_pixel(i, j, srcX, srcY, texture, lightAmt)
 
