@@ -50,9 +50,6 @@ class Vector4:
     def lerp(self, dest, lerpFactor):
         return dest.sub(self).mul(lerpFactor).add(self)
 
-    def __str__(self):
-        return f'Vector4({self.x}, {self.y}, {self.z}, {self.w})'
-
 
 class Matrix4:
     def __init__(self):
@@ -184,13 +181,7 @@ class Vertex:
         return Vertex(Vector4(self.pos.x/w, self.pos.y/w, self.pos.z/w, w), self.texCoords, self.normal)
 
     def triangle_area_times_two(self, b, c):
-        x1 = b.pos.x - self.pos.x
-        y1 = b.pos.y - self.pos.y
-
-        x2 = c.pos.x - self.pos.x
-        y2 = c.pos.y - self.pos.y
-
-        return x1 * y2 - x2 * y1
+        return ((b.pos.x - self.pos.x) * (c.pos.y - self.pos.y)) - ((c.pos.x - self.pos.x) * (b.pos.y - self.pos.y))
 
     def get(self, index):
         if index == 0:
@@ -261,7 +252,7 @@ class Mesh:
                 x, y, z = map(float, line[2:].split())
                 normals.append((x, y, z))
 
-        index = {} # create unique vertices for vertex-texcoords-normal combinations
+        index = {}  # create unique vertices for vertex-texcoords-normal combinations
 
         for line in open(filename):
             if line.startswith('f '):
@@ -286,13 +277,11 @@ class Mesh:
                 for i in range(len(idcs)-2):  # TODO inline in above
                     self.faces.extend([idcs[0], idcs[i+1], idcs[i+2]])
 
-        if not normals:
+        if not normals:  # calculate vertex normals if not specified
             pos_normal = {}
 
             for i in range(0, len(self.faces), 3):
-                i0 = self.faces[i]
-                i1 = self.faces[i+1]
-                i2 = self.faces[i+2]
+                i0, i1, i2 = self.faces[i:i+3]
 
                 v1 = self.vertices[i1].pos.sub(self.vertices[i0].pos)
                 v2 = self.vertices[i2].pos.sub(self.vertices[i0].pos)
