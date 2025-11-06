@@ -14,10 +14,17 @@ Copyright (c) 2025, Mark Dufour
 import math
 import time
 
-from render import *
+from PIL import Image
 import pygame
 
+from render import *
+
 WIDTH, HEIGHT = 1600, 1200
+
+
+def load_texture(filename):
+    image = Image.open(filename)
+    return Bitmap(image.width, image.height, image.convert('RGBA').tobytes())
 
 
 def main():
@@ -32,7 +39,7 @@ def main():
     frame_count = 0
 
     mesh = Mesh("buddha2.obj", scale=200)
-    texture = Bitmap("buddha2.jpg")
+    texture = load_texture("buddha2.jpg")
     transform = Transform(Vector4(0.0, 0.3, 3.0))
     transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
     lightDir = Vector4(0, 0, -1)
@@ -43,7 +50,7 @@ def main():
 #    lightDir = Vector4(0, -1, 0)
 
 #    mesh = Mesh("smoothMonkey1.obj")
-#    texture = Bitmap("bricks2.jpg")
+#    texture = load_texture("bricks2.jpg")
 #    transform = Transform(Vector4(0.0, 0, 3.0))
 #    lightDir = Vector4(1, 0, 0)
 
@@ -55,12 +62,12 @@ def main():
         t0 = time.time()
 
         # draw
-        target.clear(0)
+        target.clear()
         target.clear_zbuffer()
 
         mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, lightDir)
 
-        buf = bytes(target.components)
+        buf = bytes(target.bitmap.components)
         img = pygame.image.frombuffer(buf, screen, 'RGBA')
         surface.fill((0,0,0)) # TODO should not be needed
         surface.blit(img, (0, 0))
