@@ -7,6 +7,8 @@ https://github.com/BennyQBD/3DSoftwareRenderer/blob/master/LICENSE.txt
 
 Copyright (c) 2014, Benny Bobaganoosh
 
+Copyright (c) 2025, Mark Dufour
+
 '''
 
 import math
@@ -44,7 +46,7 @@ def main():
     lightDir = Vector4(0, 0, -1)
 
 #    mesh = Mesh("monkey0.obj")
-#    texture = None #Bitmap("bricks2.jpg")
+#    texture = None
 #    transform = Transform(Vector4(0.0, 0, 3.0))
 #    lightDir = Vector4(0, -1, 0)
 

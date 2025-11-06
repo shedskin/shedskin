@@ -26,3 +26,21 @@ class Vertex:
         y2 = c.pos.y - self.pos.y
 
         return x1 * y2 - x2 * y1
+
+    def get(self, index):
+        if index == 0:
+            return self.pos.x
+        elif index == 1:
+            return self.pos.y
+        elif index == 2:
+            return self.pos.z
+        elif index == 3:
+            return self.pos.w
+        raise IndexError
+
+    def lerp(self, other, lerpAmt):
+        return Vertex(
+                   self.pos.lerp(other.pos, lerpAmt),
+                   self.texCoords.lerp(other.texCoords, lerpAmt),
+                   self.normal.lerp(other.normal, lerpAmt)
+               )
