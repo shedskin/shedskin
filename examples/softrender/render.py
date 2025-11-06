@@ -9,7 +9,7 @@ class Bitmap:
     def __init__(self, width, height, components=None):
         self.width = width
         self.height = height
-        self.components = components or [0] * width * height * 4
+        self.components = components or bytearray(width * height * 4)
 
     def clear(self):
         for i in range(self.width * self.height * 4):
@@ -133,12 +133,6 @@ class Quaternion:
         self.z = z
         self.w = w
 
-    @staticmethod
-    def from_axis_angle(axis, angle):
-        sin_half_angle = math.sin(angle / 2)
-        cos_half_angle = math.cos(angle / 2)
-        return Quaternion(axis.x * sin_half_angle, axis.y * sin_half_angle, axis.z * sin_half_angle, cos_half_angle)
-
     def length(self):
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
 
@@ -164,6 +158,13 @@ class Quaternion:
             Vector4(2.0 * (self.x * self.y + self.w * self.z), 1.0 - 2.0 * (self.x * self.x + self.z * self.z), 2.0 * (self.y * self.z - self.w * self.x)),
             Vector4(1.0 - 2.0 * (self.y * self.y + self.z * self.z), 2.0 * (self.x * self.y - self.w * self.z), 2.0 * (self.x * self.z + self.w * self.y)),
         )
+
+
+# TODO static_method not exported in extmod
+def quaternion_from_axis_angle(axis, angle):
+    sin_half_angle = math.sin(angle / 2)
+    cos_half_angle = math.cos(angle / 2)
+    return Quaternion(axis.x * sin_half_angle, axis.y * sin_half_angle, axis.z * sin_half_angle, cos_half_angle)
 
 
 class Vertex:
@@ -479,11 +480,11 @@ class RenderContext:
 
     def ClipPolygonAxis(self, vertices, auxillaryList, componentIndex):
         self.ClipPolygonComponent(vertices, componentIndex, 1.0, auxillaryList)
-        vertices.clear()
+        vertices[:] = [] #.clear()  # TODO clear unsupported
         if not auxillaryList:
             return False
         self.ClipPolygonComponent(auxillaryList, componentIndex, -1.0, vertices)
-        auxillaryList.clear()
+        auxillaryList[:] = [] #.clear()  # TODO
         return bool(vertices)
 
     def ClipPolygonComponent(self, vertices, componentIndex, componentFactor, result):
@@ -617,12 +618,11 @@ class RenderContext:
 
 if __name__ == '__main__':
     mesh = Mesh("buddha2.obj")
-    texture = Bitmap(1, 1, [1])
-    transform = Transform(Vector4(0.0, 0.3, 3.0))
-    transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
+    texture = Bitmap(1, 1, b'')
+    v = Vector4(0.0, 0.0, 0.0)
+    transform = Transform(v).rotate(quaternion_from_axis_angle(v, 80.0))
     target = RenderContext(0, 0)
     target.clear()
     target.clear_zbuffer()
     camera = Camera(Matrix4().init_perspective(1.0, 1.0, 0.1, 1000.0))
-    lightDir = Vector4(0, 0, -1)
-    mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, lightDir)
+    mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, v)
