@@ -1,38 +1,16 @@
 import math
 
-from PIL import Image
 
 
 class Bitmap:
-    def __init__(self, filename):
-        image = Image.open(filename)
-        self.width = image.width
-        self.height = image.height
-        self.components = image.convert('RGBA').tobytes()
-#        self.width = 1
-#        self.height = 1
-#        self.components = [1]
+    def __init__(self, width, height, components=None):
+        self.width = width
+        self.height = height
+        self.components = components or [0] * width * height * 4
 
-    def copy_pixel(self, destX, destY, srcX, srcY, src, lightAmt):
-        destIndex = (destX + destY * self.width) * 4
-
-        if lightAmt > 1:  # TODO check java
-            lightAmt = 1.0
-        elif lightAmt < 0:
-            lightAmt = 0
-
-        if src is not None:
-            srcIndex = (srcX + srcY * src.width) * 4
-
-            self.components[destIndex    ] = int(src.components[srcIndex    ] * lightAmt)
-            self.components[destIndex + 1] = int(src.components[srcIndex + 1] * lightAmt)
-            self.components[destIndex + 2] = int(src.components[srcIndex + 2] * lightAmt)
-            self.components[destIndex + 3] = int(src.components[srcIndex + 3] * lightAmt)
-        else:
-            self.components[destIndex    ] = int(lightAmt * 255)
-            self.components[destIndex + 1] = int(lightAmt * 255)
-            self.components[destIndex + 2] = int(lightAmt * 255)
-            self.components[destIndex + 3] = int(lightAmt * 255)
+    def clear(self):
+        for i in range(self.width * self.height * 4):
+            self.components[i] = 0
 
 
 class Vector4:
@@ -477,16 +455,15 @@ class Edge:
         self.lightAmt += self.lightAmtStep
 
 
-class RenderContext(Bitmap):
+class RenderContext:
     def __init__(self, width, height):
+        self.bitmap = Bitmap(width, height)
         self.width = width
         self.height = height
         self.zbuffer = [0.0] * width * height
-        self.components = [0] * width * height * 4
 
-    def clear(self, val):
-        for i in range(self.width * self.height * 4):
-            self.components[i] = val
+    def clear(self):
+        self.bitmap.clear()
 
     def clear_zbuffer(self):
         inf = float('inf')
@@ -621,13 +598,36 @@ class RenderContext(Bitmap):
             lightAmt += lightAmtXStep
 
 
+    def copy_pixel(self, destX, destY, srcX, srcY, src, lightAmt):
+        destIndex = (destX + destY * self.width) * 4
+
+        if lightAmt > 1:  # TODO check java
+            lightAmt = 1.0
+        elif lightAmt < 0:
+            lightAmt = 0
+
+        components = self.bitmap.components
+
+        if src is not None:
+            srcIndex = (srcX + srcY * src.width) * 4
+            components[destIndex    ] = int(src.components[srcIndex    ] * lightAmt)
+            components[destIndex + 1] = int(src.components[srcIndex + 1] * lightAmt)
+            components[destIndex + 2] = int(src.components[srcIndex + 2] * lightAmt)
+            components[destIndex + 3] = int(src.components[srcIndex + 3] * lightAmt)
+        else:
+            components[destIndex    ] = int(lightAmt * 255)
+            components[destIndex + 1] = int(lightAmt * 255)
+            components[destIndex + 2] = int(lightAmt * 255)
+            components[destIndex + 3] = int(lightAmt * 255)
+
+
 if __name__ == '__main__':
     mesh = Mesh("buddha2.obj")
-    texture = Bitmap("buddha2.jpg")
+    texture = Bitmap(1, 1, [1])
     transform = Transform(Vector4(0.0, 0.3, 3.0))
     transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
     target = RenderContext(0, 0)
-    target.clear(0)
+    target.clear()
     target.clear_zbuffer()
     camera = Camera(Matrix4().init_perspective(1.0, 1.0, 0.1, 1000.0))
     lightDir = Vector4(0, 0, -1)
