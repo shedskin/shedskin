@@ -72,9 +72,3 @@ class Matrix4:
             for j in range(4):
                 res.m[i][j] = m[i][0] * r[0][j] + m[i][1] * r[1][j] + m[i][2] * r[2][j] + m[i][3] * r[3][j]
         return res
-
-    def print(self):
-        for i in range(4):
-            for j in range(4):
-                print(self.m[i][j], ',', end='')
-            print()

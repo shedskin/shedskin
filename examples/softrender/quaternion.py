@@ -23,9 +23,6 @@ class Quaternion:
         length = self.length()
         return Quaternion(self.x / length, self.y / length, self.z / length, self.w / length)
 
-#    def mul(self, f):
-#        return Quaternion(self.x * f, self.y * f, self.z * f, self.w * f)
-
     def conjugate(self):
         return Quaternion(-self.x, -self.y, -self.z, self.w)
 

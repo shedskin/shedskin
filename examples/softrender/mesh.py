@@ -27,13 +27,11 @@ class Mesh:
 
         for line in open(filename):
             if line.startswith('f '):
-                print('gogo', line[2:].split())
                 idcs = []
                 for token in line[2:].split():
                     v, t, n = map(int, token.split('/'))  # TODO n is ignored!
                     if not normals:
                         n = 0
-                    print('VTN', v, t, n)
                     idx = index.get((v, t, n))
                     if idx is None:
                         x, y, z = vertices[v-1]
@@ -42,17 +40,12 @@ class Mesh:
                             a, b, c = normals[n-1]
                         else:
                             a, b, c = 0, 0, 0
-                        print('VTX NORMAL', a, b, c)
                         vertex = Vertex(Vector4(x, y, z, 1), Vector4(u, v, 0, 0), Vector4(a, b, c, 0))
                         index[v, t, n] = idx = len(self.vertices)
                         self.vertices.append(vertex)
-                    else:
-                        print('ALREADY')
                     idcs.append(idx)
 
-                print('idcs', idcs)
                 for i in range(len(idcs)-2):  # TODO inline in above
-                    print('fa', [idcs[0], idcs[i+1], idcs[i+2]])
                     self.faces.extend([idcs[0], idcs[i+1], idcs[i+2]])
 
         if not normals:
@@ -67,7 +60,6 @@ class Mesh:
                 v2 = self.vertices[i2].pos.sub(self.vertices[i0].pos)
 
                 normal = v1.cross(v2).normalized()
-                print('NORMAL', normal)
 
                 for j in (i0, i1, i2):
                     v = self.vertices[j]
@@ -78,21 +70,8 @@ class Mesh:
                         havenormal = Vector4(0, 0, 0, 0)
                     pos_normal[key] = havenormal.add(normal)
 
-#                print('INITNORMAL', self.vertices[i0].normal)
-#                print('INITNORMAL', self.vertices[i1].normal)
-#                print('INITNORMAL', self.vertices[i2].normal)
-#
-#                self.vertices[i0].normal = self.vertices[i0].normal.add(normal)
-#                self.vertices[i1].normal = self.vertices[i1].normal.add(normal)
-#                self.vertices[i2].normal = self.vertices[i2].normal.add(normal)
-#
-#                print('INITNORMALB', self.vertices[i0].normal)
-#                print('INITNORMALB', self.vertices[i1].normal)
-#                print('INITNORMALB', self.vertices[i2].normal)
-
             for v in self.vertices:
                 v.normal = pos_normal[v.pos.x, v.pos.y, v.pos.z].normalized()
-                print('NN', v.pos.x, v.pos.y, v.pos.z, v.normal)
 
     def draw(self, context, view_projection, transform, texture, lightDir):
         mvp = view_projection.mul(transform)
