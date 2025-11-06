@@ -252,17 +252,16 @@ class Mesh:
             if line.startswith('f '):
                 idcs = []
                 for token in line[2:].split():
-                    v, t, n = map(int, token.split('/'))  # TODO n is ignored!
+                    v, t, n = map(int, token.split('/'))
                     if not normals:
                         n = 0
                     idx = index.get((v, t, n), -1)
                     if idx == -1:
                         x, y, z = vertices[v-1]
-                        tu, tv = texcoords[t-1]  # TODO handle missing t like n
+                        tu, tv = texcoords[t-1]
+                        a = b = c = 0
                         if normals and n-1 < len(normals):
                             a, b, c = normals[n-1]
-                        else:
-                            a, b, c = 0, 0, 0
                         vertex = Vertex(Vector4(x, y, z, 1), Vector4(tu, tv, 0, 0), Vector4(a, b, c, 0))
                         index[v, t, n] = idx = len(self.vertices)
                         self.vertices.append(vertex)
@@ -279,7 +278,6 @@ class Mesh:
 
                 v1 = self.vertices[i1].pos.sub(self.vertices[i0].pos)
                 v2 = self.vertices[i2].pos.sub(self.vertices[i0].pos)
-
                 normal = v1.cross(v2).normalized()
 
                 for j in (i0, i1, i2):
@@ -309,16 +307,12 @@ class Mesh:
 
 class Gradients:
     def __init__(self, minYVert, midYVert, maxYVert, lightDir):
+        self.depth = [minYVert.pos.z, midYVert.pos.z, maxYVert.pos.z]
+
         self.oneOverZ = [
             1.0 / minYVert.pos.w,
             1.0 / midYVert.pos.w,
-            1.0 / maxYVert.pos.w,
-        ]
-
-        self.depth = [
-            minYVert.pos.z,
-            midYVert.pos.z,
-            maxYVert.pos.z,
+            1.0 / maxYVert.pos.w
         ]
 
         self.lightAmt = [
@@ -326,6 +320,7 @@ class Gradients:
             saturate(midYVert.normal.dot(lightDir)) * 0.5 + 0.5,
             saturate(maxYVert.normal.dot(lightDir)) * 0.5 + 0.5,
         ]
+
         self.texCoordX = [
             minYVert.texCoords.x * self.oneOverZ[0],
             midYVert.texCoords.x * self.oneOverZ[1],
