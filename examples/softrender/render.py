@@ -1,6 +1,9 @@
 import math
 
 
+def saturate(val):
+    return max(0.0, min(val, 1.0))
+
 
 class Bitmap:
     def __init__(self, width, height, components=None):
@@ -15,10 +18,7 @@ class Bitmap:
 
 class Vector4:
     def __init__(self, x, y, z, w=1.0):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
+        self.x, self.y, self.z, self.w = x, y, z, w
 
     def length(self):
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
@@ -335,10 +335,6 @@ class Mesh:
             )
 
 
-def saturate(val):
-    return max(0.0, min(val, 1.0))
-
-
 class Gradients:
     def __init__(self, minYVert, midYVert, maxYVert, lightDir):
         self.oneOverZ = [
@@ -379,10 +375,8 @@ class Gradients:
         oneOverdY = -oneOverdX
 
         self.texCoordXXStep = self.CalcXStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdX);
-
         self.texCoordXYStep = self.CalcYStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdY);
         self.texCoordYXStep = self.CalcXStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdX);
-
         self.texCoordYYStep = self.CalcYStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdY);
         self.oneOverZXStep  = self.CalcXStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdX);
         self.oneOverZYStep  = self.CalcYStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdY);
