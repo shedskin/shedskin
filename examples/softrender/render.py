@@ -418,6 +418,9 @@ class RenderContext:
         self.height = height
         self.zbuffer = [0.0] * width * height
 
+        self.screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
+        self.identity = Matrix4().init_identity()
+
     def clear(self):
         self.bitmap.clear()
 
@@ -471,12 +474,9 @@ class RenderContext:
             previousInside = currentInside
 
     def fill_triangle(self, v1, v2, v3, texture, lightDir):
-        screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
-        identity = Matrix4().init_identity()
-
-        minYVert = v1.transform(screenSpaceTransform, identity).perspective_divide()
-        midYVert = v2.transform(screenSpaceTransform, identity).perspective_divide()
-        maxYVert = v3.transform(screenSpaceTransform, identity).perspective_divide()
+        minYVert = v1.transform(self.screenSpaceTransform, self.identity).perspective_divide()
+        midYVert = v2.transform(self.screenSpaceTransform, self.identity).perspective_divide()
+        maxYVert = v3.transform(self.screenSpaceTransform, self.identity).perspective_divide()
 
         if minYVert.triangle_area_times_two(maxYVert, midYVert) < 0:
             if maxYVert.pos.y < midYVert.pos.y:

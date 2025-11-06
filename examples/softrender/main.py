@@ -9,16 +9,17 @@ Copyright (c) 2014, Benny Bobaganoosh
 
 Copyright (c) 2025, Mark Dufour
 
-Implements the following in ~500 LOC:
+Implements the following in < 500 LOC:
 
 - reading of .obj files
 - rendering polygons
+- perspective-correct texture mapping
 - z-buffering
 - back-face and frustum culling
 - clipping
-- perspective-correct texture mapping
 - gouraud shading
-- only 'math' as dependency!
+
+Becomes ~13 times faster after compilation with Shedskin.
 
 '''
 
@@ -81,7 +82,7 @@ def main():
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-        clock.tick(60)
+#        clock.tick(60)
 
         delta = (time.time()-t0)
 
