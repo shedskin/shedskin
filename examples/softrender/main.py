@@ -9,6 +9,17 @@ Copyright (c) 2014, Benny Bobaganoosh
 
 Copyright (c) 2025, Mark Dufour
 
+Implements the following in ~500 LOC:
+
+- reading of .obj files
+- rendering polygons
+- z-buffering
+- back-face and frustum culling
+- clipping
+- perspective-correct texture mapping
+- gouraud shading
+- only 'math' as dependency!
+
 '''
 
 import math
