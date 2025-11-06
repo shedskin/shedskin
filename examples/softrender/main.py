@@ -14,15 +14,7 @@ Copyright (c) 2025, Mark Dufour
 import math
 import time
 
-from bitmap import Bitmap
-from camera import Camera
-from matrix4 import Matrix4
-from mesh import Mesh
-from quaternion import Quaternion
-from rendercontext import RenderContext
-from transform import Transform
-from vector4 import Vector4
-
+from render import *
 import pygame
 
 WIDTH, HEIGHT = 1600, 1200
