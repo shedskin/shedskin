@@ -35,5 +35,8 @@ class Vector4:
             0,
         )
 
+    def lerp(self, dest, lerpFactor):
+        return dest.sub(self).mul(lerpFactor).add(self)
+
     def __str__(self):
         return f'Vector4({self.x}, {self.y}, {self.z}, {self.w})'

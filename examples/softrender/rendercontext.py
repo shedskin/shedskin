@@ -25,21 +25,50 @@ class RenderContext(Bitmap):
 
     def draw_triangle(self, v1, v2, v3, texture, lightDir):
         print('DRAW TRIANGLE')
-#        print(v1.pos.x)
-#        print(v1.pos.y)
-#        print(v1.pos.z)
-#        print(v2.pos.x)
-#        print(v2.pos.y)
-#        print(v2.pos.z)
-#        print(v3.pos.x)
-#        print(v3.pos.y)
-#        print(v3.pos.z)
 
         if v1.inside_view_frustum() and v2.inside_view_frustum() and v3.inside_view_frustum():
             self.fill_triangle(v1, v2, v3, texture, lightDir);
         else:
             print('NEEDS CLIPPING!')
-#            assert False
+            vertices = [v1, v2, v3]
+            auxillaryList = []
+            if (self.ClipPolygonAxis(vertices, auxillaryList, 0) and
+                self.ClipPolygonAxis(vertices, auxillaryList, 1) and
+                self.ClipPolygonAxis(vertices, auxillaryList, 2)):
+                initialVertex = vertices[0]
+                for i in range(1, len(vertices)-1):
+                    self.fill_triangle(initialVertex, vertices[i], vertices[i+1], texture, lightDir)
+
+    def ClipPolygonAxis(self, vertices, auxillaryList, componentIndex):
+        self.ClipPolygonComponent(vertices, componentIndex, 1.0, auxillaryList)
+        vertices.clear()
+        if not auxillaryList:
+            return False
+        self.ClipPolygonComponent(auxillaryList, componentIndex, -1.0, vertices)
+        auxillaryList.clear()
+        return bool(vertices)
+
+    def ClipPolygonComponent(self, vertices, componentIndex, componentFactor, result):
+        previousVertex = vertices[len(vertices) - 1]
+        previousComponent = previousVertex.get(componentIndex) * componentFactor
+        previousInside = previousComponent <= previousVertex.pos.w
+
+        for currentVertex in vertices:
+            currentComponent = currentVertex.get(componentIndex) * componentFactor
+            currentInside = currentComponent <= currentVertex.pos.w
+
+            if currentInside ^ previousInside:
+                lerpAmt = ((previousVertex.pos.w - previousComponent) /
+                           ((previousVertex.pos.w - previousComponent) -
+                           (currentVertex.pos.w - currentComponent)))
+                result.append(previousVertex.lerp(currentVertex, lerpAmt))
+
+            if currentInside:
+                result.append(currentVertex)
+
+            previousVertex = currentVertex
+            previousComponent = currentComponent
+            previousInside = currentInside
 
     def fill_triangle(self, v1, v2, v3, texture, lightDir):
         print('FILL TRIANGLE')
