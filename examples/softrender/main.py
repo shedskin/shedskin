@@ -37,21 +37,21 @@ def main():
     clock = pygame.time.Clock()
     frame_count = 0
 
-#    mesh = Mesh("buddha2.obj", scale=200)
-#    texture = Bitmap("buddha2.jpg")
-#    transform = Transform(Vector4(0.0, 0.3, 3.0))
-#    transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
-#    lightDir = Vector4(0, 0, -1)
+    mesh = Mesh("buddha2.obj", scale=200)
+    texture = Bitmap("buddha2.jpg")
+    transform = Transform(Vector4(0.0, 0.3, 3.0))
+    transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
+    lightDir = Vector4(0, 0, -1)
 
 #    mesh = Mesh("monkey0.obj")
 #    texture = None #Bitmap("bricks2.jpg")
 #    transform = Transform(Vector4(0.0, 0, 3.0))
 #    lightDir = Vector4(0, -1, 0)
 
-    mesh = Mesh("smoothMonkey1.obj")
-    texture = Bitmap("bricks2.jpg")
-    transform = Transform(Vector4(0.0, 0, 3.0))
-    lightDir = Vector4(1, 0, 0)
+#    mesh = Mesh("smoothMonkey1.obj")
+#    texture = Bitmap("bricks2.jpg")
+#    transform = Transform(Vector4(0.0, 0, 3.0))
+#    lightDir = Vector4(1, 0, 0)
 
     camera = Camera(Matrix4().init_perspective(math.radians(70.0), float(WIDTH)/HEIGHT, 0.1, 1000.0))
 
