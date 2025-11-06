@@ -7,8 +7,7 @@ def saturate(val):
 
 class Bitmap:
     def __init__(self, width, height, components=None):
-        self.width = width
-        self.height = height
+        self.width, self.height = width, height
         self.components = components or bytearray(width * height * 4)
 
     def clear(self):
@@ -119,10 +118,7 @@ class Matrix4:
 
 class Quaternion:
     def __init__(self, x, y, z, w):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
+        self.x, self.y, self.z, self.w = x, y, z, w
 
     def length(self):
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
@@ -247,7 +243,6 @@ class Mesh:
                 normals.append((x, y, z))
 
         index = {}  # create unique vertices for vertex-texcoords-normal combinations
-
         for line in open(filename):
             if line.startswith('f '):
                 idcs = []
@@ -267,7 +262,7 @@ class Mesh:
                         self.vertices.append(vertex)
                     idcs.append(idx)
 
-                for i in range(len(idcs)-2):  # TODO inline in above
+                for i in range(len(idcs)-2):
                     self.faces.extend([idcs[0], idcs[i+1], idcs[i+2]])
 
         if not normals:  # calculate vertex normals if not specified
@@ -341,16 +336,16 @@ class Gradients:
 
         oneOverdY = -oneOverdX
 
-        self.texCoordXXStep = self.CalcXStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdX);
-        self.texCoordXYStep = self.CalcYStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdY);
-        self.texCoordYXStep = self.CalcXStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdX);
-        self.texCoordYYStep = self.CalcYStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdY);
-        self.oneOverZXStep  = self.CalcXStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdX);
-        self.oneOverZYStep  = self.CalcYStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdY);
-        self.depthXStep     = self.CalcXStep(self.depth,     minYVert, midYVert, maxYVert, oneOverdX);
-        self.depthYStep     = self.CalcYStep(self.depth,     minYVert, midYVert, maxYVert, oneOverdY);
-        self.lightAmtXStep  = self.CalcXStep(self.lightAmt,  minYVert, midYVert, maxYVert, oneOverdX);
-        self.lightAmtYStep  = self.CalcYStep(self.lightAmt,  minYVert, midYVert, maxYVert, oneOverdY);
+        self.texCoordXXStep = self.CalcXStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdX)
+        self.texCoordXYStep = self.CalcYStep(self.texCoordX, minYVert, midYVert, maxYVert, oneOverdY)
+        self.texCoordYXStep = self.CalcXStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdX)
+        self.texCoordYYStep = self.CalcYStep(self.texCoordY, minYVert, midYVert, maxYVert, oneOverdY)
+        self.oneOverZXStep  = self.CalcXStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdX)
+        self.oneOverZYStep  = self.CalcYStep(self.oneOverZ,  minYVert, midYVert, maxYVert, oneOverdY)
+        self.depthXStep     = self.CalcXStep(self.depth,     minYVert, midYVert, maxYVert, oneOverdX)
+        self.depthYStep     = self.CalcYStep(self.depth,     minYVert, midYVert, maxYVert, oneOverdY)
+        self.lightAmtXStep  = self.CalcXStep(self.lightAmt,  minYVert, midYVert, maxYVert, oneOverdX)
+        self.lightAmtYStep  = self.CalcYStep(self.lightAmt,  minYVert, midYVert, maxYVert, oneOverdY)
 
     def CalcXStep(self, values, minYVert, midYVert, maxYVert, oneOverdX):
         return (((values[1] - values[2]) *
@@ -408,7 +403,7 @@ class Edge:
         self.lightAmtStep = gradients.lightAmtYStep + gradients.lightAmtXStep * self.xStep
 
     def step(self):
-        self.x += self.xStep;
+        self.x += self.xStep
         self.texCoordX += self.texCoordXStep
         self.texCoordY += self.texCoordYStep
         self.oneOverZ += self.oneOverZStep
@@ -433,7 +428,7 @@ class RenderContext:
 
     def draw_triangle(self, v1, v2, v3, texture, lightDir):
         if v1.inside_view_frustum() and v2.inside_view_frustum() and v3.inside_view_frustum():
-            self.fill_triangle(v1, v2, v3, texture, lightDir);
+            self.fill_triangle(v1, v2, v3, texture, lightDir)
         else:
             vertices = [v1, v2, v3]
             auxillaryList = []
@@ -477,7 +472,7 @@ class RenderContext:
 
     def fill_triangle(self, v1, v2, v3, texture, lightDir):
         screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
-        identity = Matrix4().init_identity();
+        identity = Matrix4().init_identity()
 
         minYVert = v1.transform(screenSpaceTransform, identity).perspective_divide()
         midYVert = v2.transform(screenSpaceTransform, identity).perspective_divide()
@@ -519,8 +514,8 @@ class RenderContext:
             right.step()
 
     def draw_scanline(self, gradients, left, right, j, texture):
-        xMin = math.ceil(left.x);
-        xMax = math.ceil(right.x);
+        xMin = math.ceil(left.x)
+        xMax = math.ceil(right.x)
 
         xPrestep = xMin - left.x
 
