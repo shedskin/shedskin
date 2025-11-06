@@ -24,7 +24,7 @@ WIDTH, HEIGHT = 1600, 1200
 
 def load_texture(filename):
     image = Image.open(filename)
-    return Bitmap(image.width, image.height, image.convert('RGBA').tobytes())
+    return Bitmap(image.width, image.height, list(image.convert('RGBA').tobytes()))
 
 
 def main():
