@@ -14,7 +14,6 @@ class RenderContext(Bitmap):
         self.components = [0] * width * height * 4
 
     def clear(self, val):
-#        print('CLEAR!!', val)
         for i in range(self.width * self.height * 4):
             self.components[i] = val
 
@@ -24,12 +23,9 @@ class RenderContext(Bitmap):
             self.zbuffer[i] = inf
 
     def draw_triangle(self, v1, v2, v3, texture, lightDir):
-        print('DRAW TRIANGLE')
-
         if v1.inside_view_frustum() and v2.inside_view_frustum() and v3.inside_view_frustum():
             self.fill_triangle(v1, v2, v3, texture, lightDir);
         else:
-            print('NEEDS CLIPPING!')
             vertices = [v1, v2, v3]
             auxillaryList = []
             if (self.ClipPolygonAxis(vertices, auxillaryList, 0) and
@@ -71,14 +67,7 @@ class RenderContext(Bitmap):
             previousInside = currentInside
 
     def fill_triangle(self, v1, v2, v3, texture, lightDir):
-        print('FILL TRIANGLE')
-
-#        print('WH', self.width, self.height)
         screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
-
-#        print('SST')
-#        screenSpaceTransform.print()
-
         identity = Matrix4().init_identity();
 
         minYVert = v1.transform(screenSpaceTransform, identity).perspective_divide()
@@ -99,16 +88,8 @@ class RenderContext(Bitmap):
                 texture,
                 lightDir,
             )
-        else:
-            print('INVIS')
 
     def scan_triangle(self, minYVert, midYVert, maxYVert, handedness, texture, lightDir):
-        print('scan triangle')
-        print('minyvert', minYVert.pos.x, minYVert.pos.y, minYVert.pos.z)
-        print('midyvert', midYVert.pos.x, midYVert.pos.y, midYVert.pos.z)
-        print('maxyvert', maxYVert.pos.x, maxYVert.pos.y, maxYVert.pos.z)
-        print('handedness', handedness)
-
         gradients = Gradients(minYVert, midYVert, maxYVert, lightDir)
 
         topToBottom    = Edge(gradients, minYVert, maxYVert, 0)
@@ -132,8 +113,6 @@ class RenderContext(Bitmap):
         xMin = math.ceil(left.x);
         xMax = math.ceil(right.x);
 
-        print('scanline', j, xMin, xMax)
-
         xPrestep = xMin - left.x
 
         texCoordXXStep = gradients.texCoordXXStep
@@ -148,13 +127,6 @@ class RenderContext(Bitmap):
         depth = left.depth + depthXStep * xPrestep
         lightAmt = left.lightAmt + lightAmtXStep * xPrestep
 
-#        print('texX', texCoordX, texCoordXXStep)
-#        print('texY', texCoordY, texCoordYXStep)
-
-#        print('oneOverZ', oneOverZ, oneOverZXStep)
-#        print('depth', depth, depthXStep)
-        print('lightAmt', lightAmt, lightAmtXStep)
-
         for i in range(xMin, xMax):
             index = i + j * self.width
 
@@ -168,8 +140,6 @@ class RenderContext(Bitmap):
                 else:
                     srcX = None
                     srcY = None
-
-#                print('src', srcX, srcY)
 
                 self.copy_pixel(i, j, srcX, srcY, texture, lightAmt)
 
