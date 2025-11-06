@@ -204,26 +204,16 @@ class Vertex:
         raise IndexError
 
     def lerp(self, other, lerpAmt):
-        return Vertex(
-                   self.pos.lerp(other.pos, lerpAmt),
-                   self.texCoords.lerp(other.texCoords, lerpAmt),
-                   self.normal.lerp(other.normal, lerpAmt)
-               )
+        return Vertex(self.pos.lerp(other.pos, lerpAmt),
+                      self.texCoords.lerp(other.texCoords, lerpAmt),
+                      self.normal.lerp(other.normal, lerpAmt))
 
 
 class Transform:
     def __init__(self, pos=None, rot=None, scale=None):
-        if pos is None:
-            pos = Vector4(0.0, 0.0, 0.0, 0.0)
-        self.pos = pos
-
-        if rot is None:
-            rot = Quaternion(0.0, 0.0, 0.0, 1.0)
-        self.rot = rot
-
-        if scale is None:
-            scale = Vector4(1.0, 1.0, 1.0, 1.0)
-        self.scale = scale
+        self.pos = pos or Vector4(0.0, 0.0, 0.0, 0.0)
+        self.rot = rot or Quaternion(0.0, 0.0, 0.0, 1.0)
+        self.scale = scale or Vector4(1.0, 1.0, 1.0, 1.0)
 
     def rotate(self, rotation):
         return Transform(self.pos, rotation.mul(self.rot).normalized(), self.scale)
@@ -404,7 +394,7 @@ class Edge:
 
         yDist = maxYVert.pos.y - minYVert.pos.y
         xDist = maxYVert.pos.x - minYVert.pos.x
-        if yDist == 0:  # TODO in java div-0 creates inf.. nicer solution?
+        if yDist == 0:
             self.xStep = 0
         else:
             self.xStep = xDist / yDist
@@ -545,7 +535,7 @@ class RenderContext:
         if handedness:
             left, right = right, left
 
-        for j in range(b.yStart, b.yEnd):  # TODO b? simplify?
+        for j in range(b.yStart, b.yEnd):
             self.draw_scanline(gradients, left, right, j, texture)
             left.step()
             right.step()
@@ -573,14 +563,12 @@ class RenderContext:
 
             if depth < self.zbuffer[index]:
                 self.zbuffer[index] = depth
-                z = 1.0/oneOverZ
+                z = 1.0 / oneOverZ
 
+                srcX = srcY = 0
                 if texture:
                     srcX = int(texCoordX * z * (texture.width - 1) + 0.5)
                     srcY = int(texCoordY * z * (texture.width - 1) + 0.5)
-                else:
-                    srcX = 0
-                    srcY = 0
 
                 self.copy_pixel(i, j, srcX, srcY, texture, lightAmt)
 
