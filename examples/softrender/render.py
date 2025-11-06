@@ -40,12 +40,7 @@ class Vector4:
         return self.x * r.x + self.y * r.y + self.z * r.z + self.w * r.w
 
     def cross(self, r):
-        return Vector4(
-            self.y * r.z - self.z * r.y,
-            self.z * r.x - self.x * r.z,
-            self.x * r.y - self.y * r.x,
-            0,
-        )
+        return Vector4(self.y * r.z - self.z * r.y, self.z * r.x - self.x * r.z, self.x * r.y - self.y * r.x, 0)
 
     def lerp(self, dest, lerpFactor):
         return dest.sub(self).mul(lerpFactor).add(self)
@@ -144,8 +139,7 @@ class Quaternion:
             self.x * r.w + self.w * r.x + self.y * r.z - self.z * r.y,
             self.y * r.w + self.w * r.y + self.z * r.x - self.x * r.z,
             self.z * r.w + self.w * r.z + self.x * r.y - self.y * r.x,
-            self.w * r.w - self.x * r.x - self.y * r.y - self.z * r.z,
-        )
+            self.w * r.w - self.x * r.x - self.y * r.y - self.z * r.z)
 
     def to_rotation_matrix(self):
         return Matrix4().init_rotation(
