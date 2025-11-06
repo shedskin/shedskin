@@ -82,7 +82,7 @@ def main():
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-#        clock.tick(60)
+        clock.tick(60)
 
         delta = (time.time()-t0)
 
