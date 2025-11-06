@@ -19,12 +19,12 @@ import pygame
 
 from render import *
 
-WIDTH, HEIGHT = 1600, 1200
+WIDTH, HEIGHT = 800, 600
 
 
 def load_texture(filename):
     image = Image.open(filename)
-    return Bitmap(image.width, image.height, list(image.convert('RGBA').tobytes()))
+    return Bitmap(image.width, image.height, image.convert('RGBA').tobytes())
 
 
 def main():
@@ -41,8 +41,8 @@ def main():
     mesh = Mesh("buddha2.obj", scale=200)
     texture = load_texture("buddha2.jpg")
     transform = Transform(Vector4(0.0, 0.3, 3.0))
-    transform = transform.rotate(Quaternion.from_axis_angle(Vector4(1, 0, 0), 80))
-    lightDir = Vector4(0, 0, -1)
+    transform = transform.rotate(quaternion_from_axis_angle(Vector4(1, 0, 0), 80))
+    lightDir = Vector4(0, 1, -1)
 
 #    mesh = Mesh("monkey0.obj")
 #    texture = None
@@ -67,8 +67,7 @@ def main():
 
         mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, lightDir)
 
-        buf = bytes(target.bitmap.components)
-        img = pygame.image.frombuffer(buf, screen, 'RGBA')
+        img = pygame.image.frombuffer(target.bitmap.components, screen, 'RGBA')
         surface.fill((0,0,0)) # TODO should not be needed
         surface.blit(img, (0, 0))
         pygame.display.flip()
@@ -77,7 +76,7 @@ def main():
 
         delta = (time.time()-t0)
 
-        transform = transform.rotate(Quaternion.from_axis_angle(Vector4(0, 1, 0), delta))
+        transform = transform.rotate(quaternion_from_axis_angle(Vector4(0, 1, 0), delta/2))
 
         if frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
