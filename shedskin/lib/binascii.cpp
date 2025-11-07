@@ -358,9 +358,9 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode) {
         }
     }
 
-    if (leftbits != 0) {
-        throw new Error(0); // "Incorrect padding"
-    }
+/*    if (leftbits != 0) {
+        throw new Error(new str("Incorrect padding"));
+    } */ 
 
     /* And set string size correctly. If the result string is empty
     ** (because the input was all invalid) return the shared empty
