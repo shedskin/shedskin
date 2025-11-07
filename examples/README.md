@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-80 programs that work with Shed Skin 0.9.10
+80+ programs that work with Shed Skin 0.9.11
 
 ## Example Overview
 
@@ -72,6 +72,7 @@ lines  name                 description
    129 score4               connect four/four-in-a-row
    204 sha                  SHA-1 algorithm
     84 sieve                prime number sieves
+   458 softrender           advanced 3D software renderer   (extmod, GUI)
     82 sokoban              sokoban solver
     99 solitaire            solitaire encryption algorithm
    196 stereo               stereo computer vision          (extmod, GUI)
