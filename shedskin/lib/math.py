@@ -24,8 +24,8 @@ def sqrt(x): return 1.0
 def sin(x): return 1.0
 def fabs(x): return 1.0
 def factorial(x): return 1
-def floor(x): return 1.0
-def ceil(x): return 1.0
+def floor(x): return 1
+def ceil(x): return 1
 def exp(x): return 1.0
 def log10(x): return 1.0
 def acos(x): return 1.0
