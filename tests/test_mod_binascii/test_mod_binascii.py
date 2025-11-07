@@ -44,7 +44,11 @@ def test_uu():
     b2a = binascii.b2a_uu(t, backtick=True)
     assert b2a == b'%:&]E<&$`\n'
 
-    # TODO test bytes(range(256))
+    output_bytes = b''
+    for i in range(0, 256, 45):
+        input_bytes = bytes(range(i, min(i+45, 256)))
+        output_bytes += binascii.b2a_uu(input_bytes)
+    assert output_bytes == b'M  $" P0%!@<("0H+# T.#Q 1$A,4%187&!D:&QP=\'A\\@(2(C)"4F)R@I*BLL\nM+2XO,#$R,S0U-C<X.3H[/#T^/T!!0D-$149\'2$E*2TQ-3D]045)35%565UA9\nM6EM<75Y?8&%B8V1E9F=H:6IK;&UN;W!Q<G-T=79W>\'EZ>WQ]?G^ @8*#A(6&\nMAXB)BHN,C8Z/D)&2DY25EI>8F9J;G)V>GZ"AHJ.DI::GJ*FJJZRMKJ^PL;*S\nMM+6VM[BYNKN\\O;Z_P,\'"P\\3%QL?(R<K+S,W.S]#1TM/4U=;7V-G:V]S=WM_@\n?X>+CY.7FY^CIZNOL[>[O\\/\'R\\_3U]O?X^?K[_/W^_P  \n'
 
 
 def test_base64():
