@@ -26,7 +26,7 @@ class Vector4:
         length = self.length()
         return Vector4(self.x / length, self.y / length, self.z / length, self.w / length)
 
-    def mul(self, r):  # TODO scalar/instance mul convention?
+    def mul(self, r):
         return Vector4(self.x * r, self.y * r, self.z * r, self.w * r)
 
     def sub(self, r):

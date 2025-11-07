@@ -5,6 +5,8 @@ Converted to Python from:
 
 https://github.com/BennyQBD/3DSoftwareRenderer/blob/master/LICENSE.txt
 
+https://www.youtube.com/watch?v=Y_vvC2G7vRo&list=PLEETnX-uPtBUbVOok816vTl1K9vV1GgH5
+
 Copyright (c) 2014, Benny Bobaganoosh
 
 Copyright (c) 2025, Mark Dufour
