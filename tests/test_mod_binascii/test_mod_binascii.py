@@ -24,6 +24,12 @@ def test_qp():
     a2b = binascii.b2a_qp(b'hoei\npap\r  hoempa\troempa  ', istext=False, quotetabs=True, header=True)
     assert a2b == b'hoei=0Apap=0D=20=20hoempa=09roempa=20=20'
 
+    output_bytes = b'=00=01=02=03=04=05=06=07=08=09\n=0B=0C\r=0E=0F=10=11=12=13=14=15=16=17=18=19=1A=1B=1C=1D=1E=1F !"#$%&\'()*+,-=\n./0123456789:;<=3D>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuv=\nwxyz{|}~=7F=80=81=82=83=84=85=86=87=88=89=8A=8B=8C=8D=8E=8F=90=91=92=93=94=\n=95=96=97=98=99=9A=9B=9C=9D=9E=9F=A0=A1=A2=A3=A4=A5=A6=A7=A8=A9=AA=AB=AC=AD=\n=AE=AF=B0=B1=B2=B3=B4=B5=B6=B7=B8=B9=BA=BB=BC=BD=BE=BF=C0=C1=C2=C3=C4=C5=C6=\n=C7=C8=C9=CA=CB=CC=CD=CE=CF=D0=D1=D2=D3=D4=D5=D6=D7=D8=D9=DA=DB=DC=DD=DE=DF=\n=E0=E1=E2=E3=E4=E5=E6=E7=E8=E9=EA=EB=EC=ED=EE=EF=F0=F1=F2=F3=F4=F5=F6=F7=F8=\n=F9=FA=FB=FC=FD=FE=FF'
+    input_bytes = bytes(range(256))
+    b2a = binascii.b2a_qp(input_bytes)
+    assert b2a == output_bytes
+    # TODO reverse
+
 
 def test_uu():
     b2a = binascii.b2a_uu(s)
@@ -37,6 +43,8 @@ def test_uu():
 
     b2a = binascii.b2a_uu(t, backtick=True)
     assert b2a == b'%:&]E<&$`\n'
+
+    # TODO test bytes(range(256))
 
 
 def test_base64():
@@ -55,7 +63,7 @@ def test_base64():
 
     b2a = binascii.b2a_base64(input_bytes)
     assert b2a == output_bytes
-#    a2b = binascii.a2b_base64(b2a)
+#    a2b = binascii.a2b_base64(b2a)  # TODO
 #    assert a2b == input_bytes
 
 
@@ -85,6 +93,12 @@ def test_hex():  # b2a_hex == hexlify
     b = b'hoep'
     t = binascii.hexlify(b, sep='-', bytes_per_sep=2)
     assert t == b'686f-6570'
+
+    output_bytes = b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff'
+    input_bytes = bytes(range(256))
+    b2a = binascii.b2a_hex(input_bytes)
+    assert b2a == output_bytes
+    # TODO reverse
 
 
 def test_crc():
