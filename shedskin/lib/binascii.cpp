@@ -222,7 +222,7 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
     for( ; bin_len > 0 || leftbits != 0 ; bin_len--, bin_data++ ) {
         /* Shift the data (or padding) into our buffer */
         if ( bin_len > 0 )              /* Data */
-            leftchar = (leftchar << 8) | *bin_data;
+            leftchar = (leftchar << 8) | (unsigned char)(*bin_data);
         else                            /* Padding */
             leftchar <<= 8;
         leftbits += 8;
