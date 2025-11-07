@@ -115,7 +115,7 @@ static char table_a2b_hex[] = {
 bytes *unhexlify(bytes *hex) {
     // output will be half as long
     __ss_int len = hex->__len__();
-    if ( len&1 ) throw new Error(0); //new str("Odd-length string"));
+    if ( len&1 ) throw new Error(new str("Odd-length string"));
     bytes *data = new bytes("",len>>1,1);
 
     char * curdata = &data->unit[0];
@@ -128,7 +128,7 @@ bytes *unhexlify(bytes *hex) {
         top = table_a2b_hex[(int)*(curhex++)];
         bot = table_a2b_hex[(int)*(curhex++)];
         if (top==-1 || bot==-1)
-            throw new Error(0); //new str("Invalid hex"));
+            throw new Error(new str("Invalid hex"));
         *(curdata++) = (char)((top<<4) + bot);
     }
     return data;
@@ -164,7 +164,7 @@ bytes *a2b_uu(bytes *string) {
             ** '`' as zero instead of space.
             */
             if ( this_ch < ' ' || this_ch > (' ' + 64)) {
-                throw new Error(0);
+                throw new Error(new str("Illegal char"));
             }
             this_ch = (this_ch - ' ') & 077;
         }
@@ -203,7 +203,7 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
     __ss_int bin_len = binary->__len__();
     if ( bin_len > 45 ) {
         /* The 45 is a limit that appears in all uuencode's */
-        throw new Error(0); //At most 45 bytes at once
+        throw new Error(new str("At most 45 bytes at once"));
     }
 
     char * bin_data = &binary->unit[0];
