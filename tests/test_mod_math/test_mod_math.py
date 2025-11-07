@@ -96,11 +96,15 @@ def test_math():
 
     assert math.copysign(1.0, -2.0) == -1.0
 
+    assert math.floor(1.5) == 1
+    assert math.ceil(1.5) == 2
+
 
 def test_all():
     test_fsum()
     test_pow()
     test_math()
+
 
 if __name__ == '__main__':
     test_all()
