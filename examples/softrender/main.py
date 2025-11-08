@@ -33,7 +33,7 @@ import pygame
 
 from render import *
 
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1600, 1200
 
 
 def load_texture(filename):
