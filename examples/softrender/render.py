@@ -328,10 +328,8 @@ class Gradients:
         ]
 
         oneOverdX = (1.0 /
-            (((midYVert.pos.x - maxYVert.pos.x) *
-            (minYVert.pos.y - maxYVert.pos.y)) -
-            ((minYVert.pos.x - maxYVert.pos.x) *
-            (midYVert.pos.y - maxYVert.pos.y))))
+            (((midYVert.pos.x - maxYVert.pos.x) * (minYVert.pos.y - maxYVert.pos.y)) -
+            ((minYVert.pos.x - maxYVert.pos.x) * (midYVert.pos.y - maxYVert.pos.y))))
 
         oneOverdY = -oneOverdX
 
@@ -413,8 +411,7 @@ class Edge:
 class RenderContext:
     def __init__(self, width, height):
         self.bitmap = Bitmap(width, height)
-        self.width = width
-        self.height = height
+        self.width, self.height = width, height
         self.zbuffer = [0.0] * width * height
 
         self.screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
