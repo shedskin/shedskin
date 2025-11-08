@@ -547,6 +547,10 @@ class bytes_(pyseq):
     def swapcase(self):
         return b''
 
+    @staticmethod
+    def fromhex(s):
+        return b''
+
     def hex(self, sep=''): # TODO bytes_per_sep
         return ''
 
