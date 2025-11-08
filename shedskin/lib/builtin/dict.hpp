@@ -78,6 +78,9 @@ public:
     __ss_bool __ge__(dict<K,V> *s);
     __ss_bool __le__(dict<K,V> *s);
 
+    dict<K,V> *__or__(dict<K,V> *s);
+    dict<K,V> *__ior__(dict<K,V> *s);
+
     V setdefault(K k, V v=0);
 
     __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
@@ -353,13 +356,19 @@ template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
 
 
 template <class K, class V> __ss_bool dict<K,V>::has_key(K key) {
-	return __contains__(key);
+    return __contains__(key);
 }
 
 template <class K, class V> void *dict<K,V>::clear()
 {
     gcd.clear();
     return NULL;
+}
+
+template<class K, class V> dict<K,V> *dict<K,V>::copy() {
+    dict<K,V> *c = new dict<K,V>;
+    c->gcd = gcd;
+    return c;
 }
 
 template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
@@ -370,23 +379,27 @@ template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
     return NULL;
 }
 
+template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
+    dict<K,V> *result = copy();
+    result->update(other);
+    return result;
+}
+
+template<class K, class V> dict<K,V> *dict<K,V>::__ior__(dict<K,V> *other) {
+    update(other);
+    return this;
+}
+
 template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-		__setitem__(e->__getitem__(0), e->__getitem__(1));
+        __setitem__(e->__getitem__(0), e->__getitem__(1));
     END_FOR
     return NULL;
 }
-
-template<class K, class V> dict<K,V> *dict<K,V>::copy() {
-    dict<K,V> *c = new dict<K,V>;
-    c->gcd = gcd;
-    return c;
-}
-
 
 /* dictiterkeys/values/items */
 
