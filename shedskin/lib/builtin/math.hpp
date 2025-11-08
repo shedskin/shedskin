@@ -196,4 +196,10 @@ namespace __int___ {
     }
 }
 
+namespace __bytes___ {
+    inline bytes *fromhex(str *s) {
+        return NULL;
+    }
+}
+
 #endif
