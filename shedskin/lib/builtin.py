@@ -670,6 +670,14 @@ class dict(pyiter):
     def items(self):
         yield (self.unit, self.value)
 
+    def __or__(self, e):
+        return self
+
+    def __ior__(self, other):
+        item = iter(other).__next__()
+        self.__setunit__(item[0], item[1])
+        return self
+
 class pyset(pyiter):
     def __inititer__(self, i):
         self.__setunit__(iter(i).__next__())

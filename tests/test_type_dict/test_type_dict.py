@@ -114,6 +114,17 @@ def test_pop():
     assert len(d) == 0
 
 
+def test_merge():
+    d = {1: '2', 2: '4'}
+    e = {2: '5', 3: '6'}
+
+    result = {1: '2', 2: '5', 3: '6'}
+    assert d | e == result
+
+    d |= e
+    assert d == result
+
+
 def test_all():
     test_dict()
     test_dict_get()
@@ -127,6 +138,7 @@ def test_all():
     # test_func_as_value()
     test_dict_fromkeys()
     test_pop()
+    test_merge()
 
 
 if __name__ == "__main__":
