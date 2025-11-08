@@ -56,14 +56,6 @@ class Matrix4:
         m[3][0] = 0; m[3][1] = 0; m[3][2] = 0; m[3][3] = 1
         return self
 
-    def init_identity(self):
-        m = self.m
-        m[0][0] = 1; m[0][1] = 0; m[0][2] = 0; m[0][3] = 0
-        m[1][0] = 0; m[1][1] = 1; m[1][2] = 0; m[1][3] = 0
-        m[2][0] = 0; m[2][1] = 0; m[2][2] = 1; m[2][3] = 0
-        m[3][0] = 0; m[3][1] = 0; m[3][2] = 0; m[3][3] = 1
-        return self
-
     def init_translation(self, x, y, z):
         m = self.m
         m[0][0] = 1; m[0][1] = 0; m[0][2] = 0; m[0][3] = x
@@ -157,8 +149,12 @@ class Vertex:
         self.texCoords = texCoords
         self.normal = normal
 
-    def transform(self, transform, normalTransform):
-        return Vertex(transform.transform(self.pos), self.texCoords, normalTransform.transform(self.normal).normalized())
+    def transform(self, transform, normalTransform=None):
+        if normalTransform:
+            normal = normalTransform.transform(self.normal).normalized()
+        else:
+            normal = self.normal
+        return Vertex(transform.transform(self.pos), self.texCoords, normal)
 
     def inside_view_frustum(self):
         return (abs(self.pos.x) <= abs(self.pos.w) and
@@ -415,7 +411,6 @@ class RenderContext:
         self.zbuffer = [0.0] * width * height
 
         self.screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
-        self.identity = Matrix4().init_identity()
 
     def clear(self):
         self.bitmap.clear()
@@ -470,9 +465,9 @@ class RenderContext:
             previousInside = currentInside
 
     def fill_triangle(self, v1, v2, v3, texture, lightDir):
-        minYVert = v1.transform(self.screenSpaceTransform, self.identity).perspective_divide()
-        midYVert = v2.transform(self.screenSpaceTransform, self.identity).perspective_divide()
-        maxYVert = v3.transform(self.screenSpaceTransform, self.identity).perspective_divide()
+        minYVert = v1.transform(self.screenSpaceTransform).perspective_divide()
+        midYVert = v2.transform(self.screenSpaceTransform).perspective_divide()
+        maxYVert = v3.transform(self.screenSpaceTransform).perspective_divide()
 
         if minYVert.triangle_area_times_two(maxYVert, midYVert) < 0:
             if maxYVert.pos.y < midYVert.pos.y:
