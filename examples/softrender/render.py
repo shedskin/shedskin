@@ -23,8 +23,7 @@ class Vector4:
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
 
     def normalized(self):
-        length = self.length()
-        return Vector4(self.x / length, self.y / length, self.z / length, self.w / length)
+        return self.mul(1 / self.length())
 
     def mul(self, r):
         return Vector4(self.x * r, self.y * r, self.z * r, self.w * r)
