@@ -1,4 +1,5 @@
-
+# float.as_integer_ratio requires almost arbitrary-size arithmetic
+# so we don't support int.as_integer_ratio either
 
 def test_int():
     assert int("12") == 12

@@ -244,4 +244,12 @@ namespace __bytes___ {
     }
 }
 
+namespace __bytearray__ {
+    inline bytes *fromhex(str *s) {
+        bytes *b = __bytes___::fromhex(s);
+        b->frozen = 0;
+        return b;
+    }
+}
+
 #endif

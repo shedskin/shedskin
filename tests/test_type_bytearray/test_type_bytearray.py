@@ -138,6 +138,14 @@ def test_bytearray_misc():
     assert b"hop %s" % bytearray(b"hup") == b'hop hup'
     assert list(bytearray(4)) == [0,0,0,0]
 
+
+def test_hex():
+    b = bytearray.fromhex('aabb cc')
+    assert b == bytearray(b'\xaa\xbb\xcc')
+    assert b.hex() == 'aabbcc'
+    assert b.hex(sep='?') == 'aa?bb?cc'
+
+
 def test_all():
     test_bytearray()
     test_bytearray_clear()
@@ -155,6 +163,7 @@ def test_all():
     # test_bytearray_hash()
     test_bytearray_slice()
     test_bytearray_misc()
+    test_hex()
 
 if __name__ == "__main__":
     test_all()

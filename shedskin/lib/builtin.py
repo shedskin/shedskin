@@ -9,9 +9,9 @@ class int_:
     def bit_count(i):
         return 1
 
-    @staticmethod
-    def as_integer_ratio(i):
-        return (1,)
+#    @staticmethod
+#    def as_integer_ratio(i):
+#        return (1,)
 
     def is_integer(self):
         return True
