@@ -1,7 +1,3 @@
-# TODO hex(bytes_per_sep), bytes.fromhex
-
-# bytes
-
 def test_capitalize():
     assert b'bla bla'.capitalize() == b'Bla bla'
 
@@ -338,6 +334,13 @@ def test_iadd_imul():
     assert c == b'lallal'
 
 
+def test_hex():
+    assert b'ABCD'.hex() == '41424344'
+    assert b'ABCD'.hex(sep='-', bytes_per_sep=3) == '41-424344'
+
+    # TODO bytesfromhex
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -386,6 +389,7 @@ def test_all():
     test_bytes_builtin()
     test_contains()
     test_iadd_imul()
+    test_hex()
 
 
 if __name__ == "__main__":

@@ -100,7 +100,7 @@ public:
     bytes *ljust(__ss_int width, bytes *fillchar=0);
     bytes *rjust(__ss_int width, bytes *fillchar=0);
 
-    str *hex(str *sep=0);
+    str *hex(str *sep=0, __ss_int bytes_per_sep=1);
 
     str *__str__();
     str *__repr__();
