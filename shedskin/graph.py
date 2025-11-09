@@ -2266,7 +2266,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=getmv(),
                     warning=True,
                 )
-                return
 
             if python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
