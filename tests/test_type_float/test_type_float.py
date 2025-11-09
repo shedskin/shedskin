@@ -1,3 +1,5 @@
+# float.as_integer_ratio requires almost arbitrary-size arithmetic
+
 def test_float():
     x = 1.0
     assert x == 1.0

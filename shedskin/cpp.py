@@ -4008,7 +4008,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     "float_",
                     "bytes_",
                 ]:  # own namespace because of template vars
-                    self.append("__" + cl.ident + "__::")
+                    if isinstance(node.value, ast.Name) and node.value.id == 'bytearray':
+                        self.append("__bytearray__::")
+                    else:
+                        self.append("__" + cl.ident + "__::")
                 elif isinstance(node.value, ast.Attribute):
                     submodule = python.lookup_module(
                         node.value.value, infer.inode(self.gx, node).mv
