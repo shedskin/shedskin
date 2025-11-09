@@ -338,7 +338,11 @@ def test_hex():
     assert b'ABCD'.hex() == '41424344'
     assert b'ABCD'.hex(sep='-', bytes_per_sep=3) == '41-424344'
 
-    # TODO bytesfromhex
+
+def test_fromhex():
+    assert bytes.fromhex('aabbcc') == b'\xaa\xbb\xcc'
+    assert bytes.fromhex('  aabbcc') == b'\xaa\xbb\xcc'
+    assert bytes.fromhex('aabb  \tcc \n') == b'\xaa\xbb\xcc'
 
 
 def test_all():
@@ -390,6 +394,7 @@ def test_all():
     test_contains()
     test_iadd_imul()
     test_hex()
+    test_fromhex()
 
 
 if __name__ == "__main__":
