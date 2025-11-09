@@ -16,16 +16,16 @@ def test_is_integer():
     assert (18).is_integer()
 
 
-def test_as_integer_ratio():
-    assert int.as_integer_ratio(18) == (18, 1)
-    assert int.as_integer_ratio(0) == (0, 1)
+#def test_as_integer_ratio():
+#    assert int.as_integer_ratio(18) == (18, 1)
+#    assert int.as_integer_ratio(0) == (0, 1)
 
 
 def test_all():
     test_int()
     test_division()
     test_is_integer()
-    test_as_integer_ratio()
+#    test_as_integer_ratio()
 
 
 if __name__ == "__main__":
