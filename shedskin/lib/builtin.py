@@ -551,7 +551,7 @@ class bytes_(pyseq):
     def fromhex(s):
         return b''
 
-    def hex(self, sep=''): # TODO bytes_per_sep
+    def hex(self, sep='', bytes_per_sep=1):
         return ''
 
     def __slice__(self, x, l, u, s):

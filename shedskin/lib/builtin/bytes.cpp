@@ -613,30 +613,45 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     return new bytes(s, frozen);
 }
 
-str *bytes::hex(str *separator) {
-    str *result = new str();
-    size_t l = this->unit.size();
+str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
+    // output will be twice as long
+    size_t len = unit.size();
+    __GC_STRING hexstr = __GC_STRING(unit);
+    size_t result_len = (len<<1);
+    if(sep) {
+        if(sep->unit.size() != 1)
+            throw new ValueError(new str("sep must be length 1."));
+        result_len += ((float)(len-1)) / bytes_per_sep;
+    }
+    hexstr.reserve(result_len);
+    hexstr.resize(result_len);
+    str *hex = new str(hexstr);
 
-    for(size_t i=0; i<l; i++) {
-        unsigned char low = unit[i] & 0xf;
-        unsigned char high = (unit[i] >> 4) & 0xf;
-
-        if(high < 10)
-            result->unit += '0' + (char)high;
-        else
-            result->unit += 'a' - 10 + (char)high;
-
-        if(low < 10)
-            result->unit += '0' + (char)low;
-        else
-            result->unit += 'a' - 10 + (char)low;
-
-        if(separator and i != l-1)
-            result->unit += separator->unit;
+    char * curdata = &unit[0];
+    char * curhex = &hex->unit[0];
+    char * end = curdata+len;
+    char c;
+    // from python's implementation (2.7.1, if it matters)
+    size_t remaining = len;
+    while(curdata <= end)
+    {
+        if(sep and !(remaining % bytes_per_sep) and remaining != len) {
+            for(int j=0; j<sep->unit.size(); j++)
+                *(curhex++) = sep->unit[j];
+        }
+        c = (*curdata>>4) & 0xf;
+        c = (c>9) ? c+'a'-10 : c + '0';
+        *(curhex++) = c;
+        c = (*curdata) & 0xf;
+        c = (c>9) ? c+'a'-10 : c + '0';
+        *(curhex++) = c;
+        curdata++;
+        remaining -= 1;
     }
 
-    return result;
+    return hex;
 }
+
 
 bytes *bytes::center(__ss_int w, bytes *fillchar) {
     size_t width = (size_t)w;
