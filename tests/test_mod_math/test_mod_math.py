@@ -39,7 +39,6 @@ def test_pow():
 
 
 def test_math():
-
     assert math.isinf(float("inf")) 
     assert math.isnan(float("nan"))
     assert '%.8f' % math.cosh(2)  == '3.76219569'
@@ -56,7 +55,6 @@ def test_math():
     assert math.factorial(1) == 1
     assert math.factorial(2) == 2
     assert math.factorial(5) == 120
-#    assert math.factorial(5.))
 
     assert -2 % 3 == 1
     assert -2.0 % 3 == 1.0
@@ -68,9 +66,12 @@ def test_math():
     assert -2.0 % -3 == -2.0
     assert -2.0 % -3.0 == -2.0
     assert 2.0 % -3.0 == -1.0
-#    assert "%g" % 3.0 == '3'  # TODO
 
-#    assert "%g" % math.log(10) == '2.30259'
+    assert math.log(1/math.e) == -1
+    assert math.log(math.e) == 1
+    assert math.log(math.e**2) == 2
+    assert '%.3f' % math.log(10) == '2.303'
+
     assert '%.8f' % (math.log1p(1 / math.e - 1) + 0.5) == '-0.50000000'
     assert math.log1p(0) == 0.0
     assert '%.8f' % (math.log1p(math.e - 1) + 0.5) == '1.50000000'
