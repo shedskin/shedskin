@@ -230,10 +230,10 @@ namespace __bytes___ {
             }
             else {
                 if(count == 0) {
-                    high = table_a2b_hex[c];
+                    high = table_a2b_hex[(unsigned char)c];
                     count += 1;
                 } else {
-                    result->unit += (high << 4) | table_a2b_hex[c];
+                    result->unit += (char)((high << 4) | table_a2b_hex[(unsigned char)c]);
                     count = 0;
                 }
             }

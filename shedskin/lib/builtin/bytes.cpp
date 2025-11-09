@@ -621,7 +621,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     if(sep) {
         if(sep->unit.size() != 1)
             throw new ValueError(new str("sep must be length 1."));
-        result_len += ((float)(len-1)) / bytes_per_sep;
+        result_len += (len-1) / bytes_per_sep;
     }
     hexstr.reserve(result_len);
     hexstr.resize(result_len);
@@ -636,7 +636,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     while(curdata <= end)
     {
         if(sep and !(remaining % bytes_per_sep) and remaining != len) {
-            for(int j=0; j<sep->unit.size(); j++)
+            for(size_t j=0; j<sep->unit.size(); j++)
                 *(curhex++) = sep->unit[j];
         }
         c = (*curdata>>4) & 0xf;
