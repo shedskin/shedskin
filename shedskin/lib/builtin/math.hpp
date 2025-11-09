@@ -197,8 +197,50 @@ namespace __int___ {
 }
 
 namespace __bytes___ {
-    inline bytes *fromhex(str *s) {
-        return NULL;
+    static char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+         0, 1, 2, 3,  4, 5, 6, 7,  8, 9,-1,-1, -1,-1,-1,-1,
+        -1,10,11,12, 13,14,15,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,10,11,12, 13,14,15,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    };
+
+    inline bytes *fromhex(str *s) { // merge with binascii.unhexlify? which does not ignore whitespace
+        __GC_STRING separator = " \n\r\t";
+        bytes *result = new bytes();
+        size_t count = 0;
+        unsigned char high, low;
+        size_t i=0;
+        for(; i < s->unit.size(); i++) {
+            char c = s->unit[i];
+            if(separator.find_first_of(c) != std::string::npos) {
+                if(count == 1)
+                    throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
+            }
+            else {
+                if(count == 0) {
+                    high = table_a2b_hex[c];
+                    count += 1;
+                } else {
+                    result->unit += (high << 4) | table_a2b_hex[c];
+                    count = 0;
+                }
+            }
+        }
+        if(count == 1) // TODO bug in cpython?
+            throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
+        return result;
     }
 }
 

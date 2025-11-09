@@ -1,5 +1,6 @@
 import binascii
 
+# TODO some functions accept strs in addition to bytes..
 
 s = b"my guitar wants to strum all night long"
 
