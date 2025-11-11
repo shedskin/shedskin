@@ -58,7 +58,7 @@ class array:
 
     def count(self, v):
         return 1
-    def index(self, v, start=0, stop=1000000): # TODO stop..
+    def index(self, v, start=0, stop=0):
         return 1
     def __contains__(self, e):
         return True
