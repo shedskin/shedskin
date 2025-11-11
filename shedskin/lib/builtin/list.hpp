@@ -144,7 +144,7 @@ template<class T> PyObject *list<T>::__to_py__() {
 #endif
 
 template<class T> void list<T>::clear() {
-    units.clear(0);
+    units.clear();
 }
 
 template<class T> void list<T>::resize(__ss_int i) {
