@@ -6,6 +6,7 @@ def test_int():
     assert int("ff", 16) == 255
     assert int("20", 8) == 16
 
+
 def test_division():
     assert 9 /  2 == 4.5
     assert 9 // 2 == 4
@@ -17,16 +18,23 @@ def test_is_integer():
     assert (18).is_integer()
 
 
-#def test_as_integer_ratio():
-#    assert int.as_integer_ratio(18) == (18, 1)
-#    assert int.as_integer_ratio(0) == (0, 1)
+def test_bit_length():  # TODO should work also via int-expr.bit_length..? same for the others
+    assert int.bit_length(-123456) == 17
+    assert int.bit_length(-8) == 4
+    assert int.bit_length(-1) == 1
+
+    assert int.bit_length(0) == 0
+
+    assert int.bit_length(1) == 1
+    assert int.bit_length(8) == 4
+    assert int.bit_length(123456) == 17
 
 
 def test_all():
     test_int()
     test_division()
     test_is_integer()
-#    test_as_integer_ratio()
+    test_bit_length()
 
 
 if __name__ == "__main__":
