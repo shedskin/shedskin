@@ -1,7 +1,3 @@
-
-# bytearray
-
-
 def test_bytearray():
     BLA = bytearray(b'bla')
     BA = bytearray(b'-')
@@ -36,20 +32,24 @@ def test_bytearray():
     assert 3*BLA == bytearray(b'blablabla')
     assert BLA*3 == bytearray(b'blablabla')
 
+
 def test_bytearray_clear():
     ba = bytearray(b'bla')
     ba.clear()
     assert ba == bytearray(b'')
 
+
 def test_bytearray_getitem():
     ba = bytearray(b'bla')
     assert ba[1] == ord('l')
+
 
 def test_bytearray_append():
     ba = bytearray(b'bla')
     ba.append(81)
     ba.append(187)
     assert ba == bytearray(b'blaQ\xbb')
+
 
 def test_bytearray_del():
     ba = bytearray(b'bla')
@@ -58,9 +58,11 @@ def test_bytearray_del():
     del ba[-2]
     assert ba == bytearray(b'a')
 
+
 def test_bytearray_copy():
     ba = bytearray(b'bla')
     ba.copy() == bytearray(b'bla')
+
 
 def test_bytearray_concat():
     ba = bytearray(b'bla')
@@ -68,11 +70,13 @@ def test_bytearray_concat():
     assert ba*2 == bytearray(b'blabla')
     assert ba+ba == bytearray(b'blabla')
 
+
 def test_bytearray_pop():
     ba = bytearray(b'bla')
     assert ba.pop(0) == ord('b')
     assert ba.pop() == ord('a')
     assert ba == bytearray(b'l')
+
 
 def test_bytearray_extend():
     ba = bytearray(b'bla')
@@ -84,15 +88,18 @@ def test_bytearray_extend():
     ba.extend(BA)
     assert ba == bytearray(b'bla\x01\x02ab-')
 
+
 def test_bytearray_reverse():
     ba = bytearray(b'bla')
     ba.reverse()
     assert ba == bytearray(b'alb')
 
+
 def test_bytearray_remove():
     ba = bytearray(b'bla')
     ba.remove(ord('l'))
     assert ba == bytearray(b'ba')
+
 
 def test_bytearray_addition_assign():
     ba = bytearray(b'bla')
@@ -103,6 +110,7 @@ def test_bytearray_addition_assign():
     ba *= 2
     assert ba == bytearray(b'blaabblaab')
 
+
 def test_bytearray_insert():
     ba = bytearray(b'bla')
     ba.insert(1, ord('u'))
@@ -110,11 +118,14 @@ def test_bytearray_insert():
     ba.insert(-2, ord('w'))
     assert ba == bytearray(b'buwla')
 
-# def test_bytearray_hash():
-#     try:
-#         h = hash(bytearray(b'bla'))
-#     except TypeError:
-#         print('bytearray unhashable')
+
+def test_bytearray_hash():
+    try:
+        h = hash(bytearray(b'bla'))
+    except TypeError:
+        return
+    assert False
+
 
 def test_bytearray_slice():
     ba = bytearray(b'blablabla')
@@ -125,6 +136,7 @@ def test_bytearray_slice():
     assert ba == bytearray(b'bblaabla')
     del ba[::2]
     assert ba == bytearray(b'baba')
+
 
 def test_bytearray_misc():
     assert bytearray() == bytearray(b'')
@@ -160,10 +172,11 @@ def test_all():
     test_bytearray_remove()
     test_bytearray_addition_assign()
     test_bytearray_insert()
-    # test_bytearray_hash()
+    test_bytearray_hash()
     test_bytearray_slice()
     test_bytearray_misc()
     test_hex()
+
 
 if __name__ == "__main__":
     test_all()
