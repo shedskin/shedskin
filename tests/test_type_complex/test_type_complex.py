@@ -68,7 +68,7 @@ def test_from_class():
 def test_from_number():
     assert complex.from_number(18) == 18+0j
     assert complex.from_number(18.8) == 18.8+0j
-    # TODO from complex
+    assert complex.from_number(8+9j) == 8+9j
 
 
 def test_all():
