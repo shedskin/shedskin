@@ -193,4 +193,11 @@ template<> PyObject *__to_py(complex c);
 template<> complex __to_ss(PyObject *p);
 #endif
 
+namespace __ss_complex__ {
+    template<class T> complex from_number(T t) {
+        return mcomplex(t);
+    }
+}
+
 #endif
+
