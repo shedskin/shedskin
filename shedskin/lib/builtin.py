@@ -225,6 +225,9 @@ class list(pyseq):
     def remove(self, u):
         u == self.unit
 
+    def clear(self):
+        pass
+
     def __getitem__(self, i):
         return self.unit
     def __setitem__(self, i, u):
