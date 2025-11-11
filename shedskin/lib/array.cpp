@@ -56,7 +56,7 @@ void __init() {
 
     buffy = malloc(8);
     default_0 = NULL;
-    typecodes = new str("bBuhHiIlLqQfd");
+    typecodes = new str("bBuwhHiIlLqQfd");
 }
 
 } // module namespace

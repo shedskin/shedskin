@@ -3,7 +3,7 @@ import os.path
 
 
 def test_typecodes():
-    assert array.typecodes == 'bBuhHiIlLqQfd'
+    assert array.typecodes == 'bBuwhHiIlLqQfd'
 
     arr = array.array('i')
     assert arr.typecode == 'i'
@@ -114,6 +114,9 @@ def test_sequence_mutable():
     arr[::2] = array.array('i', [17, 18])
     assert arr.tolist() == [17, 21, 18, 12]
 
+    arr.clear()
+    assert len(arr) == 0
+
 
 def test_all():
     test_typecodes()
@@ -122,8 +125,6 @@ def test_all():
     test_file()
     test_sequence_immutable()
     test_sequence_mutable()
-
-    # TODO array.clear.. check sys.version?
 
 
 if __name__ == '__main__':
