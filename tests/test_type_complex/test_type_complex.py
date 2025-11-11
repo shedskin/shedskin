@@ -43,7 +43,7 @@ def test_complex():
     assert hash(h) == 669002024
 
 
-def test_complex_from_string():
+def test_from_string():
     assert complex(" 2.4+0j") == complex(2.4)
     assert complex("2.4") == complex(2.4)
     assert complex(" .4j") == complex(0, .4)
@@ -61,14 +61,21 @@ class PI:
         return 3.14
 
 
-def test_complex_from_class():
-    assert complex(PI()) == complex(3.14, 0)
+def test_from_class():
+    assert complex(PI()) == complex(3.14, 0)  # TODO __complex__, __index__
+
+
+def test_from_number():
+    assert complex.from_number(18) == 18+0j
+    assert complex.from_number(18.8) == 18.8+0j
+    # TODO from complex
 
 
 def test_all():
     test_complex()
-    test_complex_from_string()
-    test_complex_from_class()
+    test_from_string()
+    test_from_class()
+    test_from_number()
 
 
 if __name__ == "__main__":
