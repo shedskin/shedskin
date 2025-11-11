@@ -18,6 +18,11 @@ def test_list_misc():
     ident(ah).append(1.0)
     assert ah ==  [1, 1.0]
 
+def test_list_clear():
+    some_list = [ 1, 2, 3, 4 ]
+    some_list.clear()
+    assert len(some_list) == 0
+
 def test_list_comp():
     bla = [1,2]
     dinges = [1,2]
@@ -145,6 +150,7 @@ def test_all():
     test_list_append()
     test_list_assign()
     test_list_cmp()
+    test_list_clear()
     test_list_comp()
     test_list_del()
     test_list_index1()
