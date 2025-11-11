@@ -60,6 +60,9 @@ template<class T> inline complex mcomplex(T t) {
     c.real = __float(t); c.imag = 0;
     return c;
 }
+template<> inline complex mcomplex(complex c) {
+    return mcomplex(c.real, c.imag);
+}
 
 /* operators */
 

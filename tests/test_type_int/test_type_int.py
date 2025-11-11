@@ -6,6 +6,9 @@ def test_int():
     assert int("ff", 16) == 255
     assert int("20", 8) == 16
 
+    assert int(8.8) == 8
+    assert int(7) == 7
+
 
 def test_division():
     assert 9 /  2 == 4.5
