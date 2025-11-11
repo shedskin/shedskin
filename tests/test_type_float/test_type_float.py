@@ -11,6 +11,7 @@ def test_float():
     assert float('+1.23') == 1.23
     assert float('-1.23') == -1.23
     assert float(1) == 1.0
+    assert float(7.8) == 7.8
 
 
 def test_inf():
