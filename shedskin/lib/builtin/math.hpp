@@ -191,9 +191,18 @@ namespace __int___ {
         return (__ss_int)std::bitset<std::numeric_limits<unsigned int>::digits>((unsigned int)i).count();
 #endif
     }
+
+    inline __ss_int bit_length(__ss_int i) {
+        if(i == 0)
+            return 0;
+        return std::floor(std::log2(std::abs(i))) + 1;
+        //return (__ss_int)std::bit_width(i); // TODO available from C++20
+    }
+
 /*    inline tuple<__ss_int> *as_integer_ratio(__ss_int i) {
         return new tuple<__ss_int>(2, i, 1);
     } */
+
 }
 
 namespace __bytes___ {
