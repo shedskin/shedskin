@@ -13,7 +13,7 @@ def test_float():
     assert float(1) == 1.0
 
 
-def test_float_inf():
+def test_inf():
     assert float(" \n iNf") == float('inf')
     float("INF") == float('inf')
     float(" -inf") == float('-inf')
@@ -23,15 +23,21 @@ def test_float_inf():
     float("-infinITY") == float('-inf')
 
 
-def test_float_is_integer():
+def test_is_integer():
     assert (17.0).is_integer()
     assert not (17.5).is_integer()
 
 
+def test_from_number():
+    assert float.from_number(18) == 18.0
+    assert float.from_number(18.87) == 18.87
+
+
 def test_all():
     test_float()
-    test_float_inf()
-    test_float_is_integer()
+    test_inf()
+    test_is_integer()
+    test_from_number()
 
 
 if __name__ == "__main__":
