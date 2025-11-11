@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "fnmatch.hpp"
 
@@ -88,6 +88,37 @@ list<str *> *filter(list<str *> *names, str *pat) {
             if (___bool(cpat->match(name))) {
 #else
             if (___bool(cpat->match(__os__::__path__::normcase(name)))) {
+#endif
+                result->append(name);
+            }
+        END_FOR
+
+    return result;
+}
+
+list<str *> *filterfalse(list<str *> *names, str *pat) {
+    /**
+    Return the subset of the list NAMES that do not match PAT
+    */
+    list<str *> *__0, *result;
+    str *name, *res;
+    __re__::re_object *cpat;
+    __ss_int __2;
+    list<str *>::for_in_loop __123;
+
+    result = (new list<str *>());
+    pat = __os__::__path__::normcase(pat);
+    if ((!_cache->__contains__(pat))) {
+        res = translate(pat);
+        _cache->__setitem__(pat, __re__::compile(res));
+    }
+    cpat = _cache->__getitem__(pat);
+
+        FOR_IN(name,names,0,2,123)
+#ifndef WIN32
+            if (!___bool(cpat->match(name))) {
+#else
+            if (!___bool(cpat->match(__os__::__path__::normcase(name)))) {
 #endif
                 result->append(name);
             }

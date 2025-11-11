@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __FNMATCH_HPP
 #define __FNMATCH_HPP
@@ -17,8 +17,9 @@ extern dict<str *, __re__::re_object *> *_cache;
 extern str *__name__;
 
 __ss_bool fnmatch(str *name, str *pat);
-list<str *> *filter(list<str *> *names, str *pat);
 __ss_bool fnmatchcase(str *name, str *pat);
+list<str *> *filter(list<str *> *names, str *pat);
+list<str *> *filterfalse(list<str *> *names, str *pat);
 str *translate(str *pat);
 
 void __init(void);
