@@ -4007,6 +4007,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     "int_",
                     "float_",
                     "bytes_",
+                    "complex",
                 ]:  # own namespace because of template vars
                     if isinstance(node.value, ast.Name) and node.value.id == 'bytearray':
                         self.append("__bytearray__::")

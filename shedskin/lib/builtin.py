@@ -134,7 +134,7 @@ class bool_:
 class float_:
     @staticmethod
     def from_number(i):
-        return 1
+        return 1.0
 
     def __add__(self, b):
         return b.__with_float__()
@@ -773,8 +773,14 @@ class set(pyset):
         self.__setunit__(iter(b).__next__())
 
 class complex:
+    @staticmethod
+    def from_number(i):
+        return complex(i)
+
     def __init__(self, real=None, imag=None):
+        real.__complex__()  # TODO to sep function like float, int?
         real.__float__()
+        real.__index__()
         self.real = self.imag = 1.0
 
     def __add__(self, c):
@@ -816,8 +822,6 @@ class complex:
 
     def __repr__(self):
         return ''
-
-complex(1.0, 1.0)
 
 class object: pass
 
@@ -879,12 +883,14 @@ def bytearray(x=None):
 #x.__bytes__()
     return b''
 
-def int(x=None, base=1):  # TODO also __index__?
+def int(x=None, base=1):
     x.__int__()
+    x.__index__()
     return 1
 
-def float(x=None):  # TODO also __index__?
+def float(x=None):
     x.__float__()
+    x.__index__()
     return 1.0
 
 def chr(x):
