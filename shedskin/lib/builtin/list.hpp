@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifdef SS_DECL
 
@@ -144,7 +144,7 @@ template<class T> PyObject *list<T>::__to_py__() {
 #endif
 
 template<class T> void list<T>::clear() {
-    units.resize(0);
+    units.clear();
 }
 
 template<class T> void list<T>::resize(__ss_int i) {
