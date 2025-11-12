@@ -448,7 +448,7 @@ def connect_actual_formal(
         or (func.mv.module.ident == "random" and func.ident == "randrange")
         or (
             func.mv.module.ident == "builtin"
-            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit")
+            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit", "map")
         )
     ):
         skip_defaults = True

@@ -586,7 +586,7 @@ template<class R, TP> R imapiter##N<R, FP>::__next__() {                        
     }                                                                                                    \
 }                                                                                                        \
                                                                                                          \
-template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, R (*function_)(FP), DP) { \
+template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, __ss_bool strict, R (*function_)(FP), DP) { \
     return new imapiter##N<R, FP>(function_, VP);                                                        \
 }
 
