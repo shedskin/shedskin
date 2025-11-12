@@ -14,6 +14,23 @@ def test_float():
     assert float(7.8) == 7.8
 
 
+def test_division():
+    assert 9.3 / 3.1 == 3.0
+    assert -1.1 / 11 == -0.1
+
+    assert 9 / 3.0 == 3.0
+    assert 9 / 3.0 == 3
+
+    assert -1.1 / 11 == -0.1
+
+    assert 7.7 // 7.0 == 1
+
+
+def test_multiplication():
+    assert 2.5 * 4.0 == 10.0
+    assert 2.5 * -4.0 == -10.0
+
+
 def test_inf():
     assert float(" \n iNf") == float('inf')
     float("INF") == float('inf')
@@ -39,6 +56,8 @@ def test_all():
     test_inf()
     test_is_integer()
     test_from_number()
+    test_division()
+    test_multiplication()
 
 
 if __name__ == "__main__":

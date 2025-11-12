@@ -10,8 +10,14 @@ def test_int():
     assert int(7) == 7
 
 
+def test_multiplication():
+    assert 9 * 2 == 18
+    assert -9 * 2 == -18
+
+
 def test_division():
     assert 9 /  2 == 4.5
+    assert 8 /  2 == 4.0
     assert 9 // 2 == 4
 
 
@@ -36,6 +42,7 @@ def test_bit_length():  # TODO should work also via int-expr.bit_length..? same 
 def test_all():
     test_int()
     test_division()
+    test_multiplication()
     test_is_integer()
     test_bit_length()
 

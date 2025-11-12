@@ -1,5 +1,4 @@
 
-
 def test_addition():
     # int
     a = 2
@@ -34,6 +33,7 @@ def test_addition():
     assert [3,4] + [1,2] == [3, 4, 1, 2]
     e += [1, 0]
     assert e == [2,1,0]
+
 
 def test_subtraction():
     x = 4
@@ -92,14 +92,12 @@ def test_misc():
 
     assert e == {(4, 5): 0}
 
+
 def test_all():
     test_addition()
     test_subtraction()
-    # test_multiplication()
-    # test_division()
     test_misc()
 
+
 if __name__ == '__main__':
-    test_all() 
-
-
+    test_all()
