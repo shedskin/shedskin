@@ -1098,14 +1098,6 @@ class __xrange(pyseq):
 def range(a, b=1, s=1):  # TODO use class directly
     return __xrange()
 
-def zip(__kw_strict=False, *args):
-    elem = iter(args).__next__()
-    yield (elem,)
-def __zip2(arg1, arg2, __kw_strict=False):
-    elem1 = iter(arg1).__next__()
-    elem2 = iter(arg2).__next__()
-    yield (elem1, elem2)
-
 def max(__kw_key=0, *arg): # XXX 0
     __cmp(arg, arg)
     __kw_key(arg)
@@ -1183,11 +1175,19 @@ def exit(code=0):
 def quit(code=0):
     pass
 
-def map(func, *iter1):
+def zip(__kw_strict=False, *args):
+    elem = iter(args).__next__()
+    yield (elem,)
+def __zip2(arg1, arg2, __kw_strict=False):
+    elem1 = iter(arg1).__next__()
+    elem2 = iter(arg2).__next__()
+    yield (elem1, elem2)
+
+def map(func, __kw_strict=False, *iter1):
     yield func(*iter(iter1).__next__())
-def __map3(func, iter1, iter2):
+def __map3(func, iter1, iter2, __kw_strict=False):
     yield func(iter(iter1).__next__(), iter(iter2).__next__())
-def __map4(func, iter1, iter2, iter3): # XXX
+def __map4(func, iter1, iter2, iter3, __kw_strict=False):
     yield func(iter(iter1).__next__(), iter(iter2).__next__(), iter(iter3).__next__())
 
 def filter(func, iter1):
