@@ -7,17 +7,15 @@ class A:
 
 class B(A):
     def __init__(self, x, y):
-        # super().__init__(x) ## this form is not supported
-        super(B, self).__init__(x)
+        super().__init__(x) ## this form is not supported
         self.y = y
-
 
 
 class C(B):
     def __init__(self, x, y, z):
-        # super().__init__(x, y) ## this form is not supported
         super(C, self).__init__(x, y)
         self.z = z
+
 
 def test_super():
     c = C('a', 'b', 'c')
@@ -49,14 +47,10 @@ def test_init():
     assert c.z == 'c'
 
 
-
 def test_all():
     test_super()
     test_init()
 
 
-
-
 if __name__ == '__main__':
-    test_all() 
-
+    test_all()
