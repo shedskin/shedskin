@@ -633,7 +633,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     char c;
     // from python's implementation (2.7.1, if it matters)
     size_t remaining = len;
-    while(curdata <= end)
+    while(curdata < end)
     {
         if(sep and !(remaining % bytes_per_sep) and remaining != len) {
             for(size_t j=0; j<sep->unit.size(); j++)
