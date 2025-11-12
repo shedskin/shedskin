@@ -10,10 +10,10 @@ class Integer:
 
     def __gte__(self, other):
         return self.x >= other.x
-    
+
     def __lt__(self, other):
         return self.x < other.x
-    
+
     def __lte__(self, other):
         return self.x <= other.x
 
@@ -52,10 +52,6 @@ def test_float_class():
     assert d.v == 0.0
 
 
-
-
-
-
 class Num:
     def __init__(self, value):
         self.value = value
@@ -84,58 +80,59 @@ def test_num():
     assert sum(numbers).value == Num(18).value
 
 
-# class Vec2D:
-#     # from: https://zetcode.com/python/magicmethods
+class Vec2D:
+    # from: https://zetcode.com/python/magicmethods
 
-#     def __init__(self, x, y):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
-#         self.x = x
-#         self.y = y
+    def __add__(self, other):
+        return Vec2D(self.x + other.x, self.y + other.y)
 
-#     def __add__(self, other):
-#         return Vec2D(self.x + other.x, self.y + other.y)
+    def __sub__(self, other):
+        return Vec2D(self.x - other.x, self.y - other.y)
 
-#     def __sub__(self, other):
-#         return Vec2D(self.x - other.x, self.y - other.y)
+    def __mul__(self, other):
+        return self.x * other.x + self.y * other.y
 
-#     def __mul__(self, other):
-#         return self.x * other.x + self.y * other.y
+    def length(self):
+        return pow(self.x ** 2 + self.y ** 2, 1/2)
 
-#     # def __abs__(self):
-#     #     return pow(self.x ** 2 + self.y ** 2, 1/2)
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
-#     def __eq__(self, other):
-#         return self.x == other.x and self.y == other.y
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-#     def __str__(self):
-#         return '(%s, %s)' % (self.x, self.y)
-
-#     def __ne__(self, other):
-#         return not self.__eq__(other)  
+    def __str__(self):
+        return '(%s, %s)' % (self.x, self.y)
 
 
-# def test_vector2d():
-#     u = Vec2D(0, 1)
-#     v = Vec2D(2, 3)
-#     w = Vec2D(-1, 1)
+def test_vector2d():
+     u = Vec2D(0, 1)
+     v = Vec2D(2, 3)
+     w = Vec2D(-1, 1)
+     assert u == u
+     assert u != v
 
-#     a = u + v
-#     assert a == Vec2D(2, 4)
-#     assert a != w
+     a = u + v
+     assert a == Vec2D(2, 4)
+     assert a != w
 
-#     a = u - v
-#     assert a == Vec2D(-2, -2)
+     a = u - v
+     assert a == Vec2D(-2, -2)
 
-#     a = u * v
+     b = u * v
+     assert b == 3
 
-#     # assert a == 3
-#     # abs(u) == 1.0 ## mixing types
-#     assert u != v
+     assert u.length() == 1.0
+
 
 def test_all():
     test_int_class()
     test_float_class()
-    # test_vector2d()
+    test_vector2d()
     test_num()
 
 
