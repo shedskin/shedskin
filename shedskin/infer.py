@@ -375,8 +375,8 @@ def analyze_args(
             argnr += 1
             formals.append(formal)
         elif i >= default_start:
+            default = func.defaults[i - default_start]
             if not skip_defaults:
-                default = func.defaults[i - default_start]
                 if formal.startswith("__kw_"):
                     actuals.insert(0, default)
                     formals.insert(0, formal)
@@ -384,6 +384,10 @@ def analyze_args(
                     actuals.append(default)
                     formals.append(formal)
                 defaults.append(default)
+            elif func.mv.module.ident == 'bisect':  # TODO generalize
+                if formal.startswith("__kw_"):
+                    actuals.insert(0, default)
+                    formals.insert(0, formal)
         else:
             missing = True
 
