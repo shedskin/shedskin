@@ -42,8 +42,8 @@
 
 #define FOR_IN_DICT(m, temp, iter, pos) \
     __ ## temp = m; \
-    __ ## iter = m->gcd.begin(); \
-	while (__ ## iter != m->gcd.end() ) { \
+    __ ## iter = (__ ## temp)->gcd.begin(); \
+    while (__ ## iter != (__ ## temp)->gcd.end() ) { \
 
 #define END_FOR }
 
