@@ -9,6 +9,7 @@ def test_classic1():
     assert "%.2f" % 4.1 == '4.10'
     assert "%d %x %d" % (10, 11, 12) == '10 b 12'
     assert "%d %s" % (1, "een") == '1 een'
+    assert '%s' % b'bert' == "b'bert'"
 
 
 def test_classic2():
@@ -56,7 +57,7 @@ def test_classic3():
 def test_str_precision():
     assert ('%.8s' % 'abracadabra') == 'abracada'
     assert ('%.8r' % 'abracadabra') == "'abracad"
-#    assert ('%.8s' % b'abracadabra') == "b'abraca"  # TODO github issue
+    assert ('%.8s' % b'abracadabra') == "b'abraca"
     assert ('%.8r' % b'abracadabra') == "b'abraca"
 
 
