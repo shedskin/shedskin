@@ -52,8 +52,8 @@ def test_re_subn():
     assert re.subn('a', 'ama', 'amadeus') == ('amamamadeus', 2)
     assert re.compile('a').subn('ama', 'amadeus') == ('amamamadeus', 2)
 
-    # assert re.subn("b*", "x", "xyz") == ('xxxyxzx', 4) ## causes crash!
-    # assert re.subn("b*", "x", "xyz", 2) == ('xxxyz', 2) ## case not equal
+    assert re.subn("b*", "x", "xyz") == ('xxxyxzx', 4) ## causes crash!
+    assert re.subn("b*", "x", "xyz", 2) == ('xxxyz', 2) ## case not equal
 
 def test_re_split():
     assert re.split("(?::+)", ":a:b::c") == ['', 'a', 'b', 'c'] 
