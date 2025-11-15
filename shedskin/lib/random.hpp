@@ -13,7 +13,6 @@ using namespace __shedskin__;
 namespace __random__ {
 
 class Random;
-class WichmannHill;
 
 extern class_ *cl_Random;
 class Random : public pyobj {
@@ -62,6 +61,7 @@ public:
     __ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
     __ss_float expovariate(__ss_float lambd);
     __ss_int getrandbits(__ss_int k);
+    bytes *randbytes(__ss_int n);
     virtual void *setstate(list<__ss_float> *state);
     __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
@@ -73,25 +73,6 @@ public:
     virtual list<__ss_float> *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
-
-extern class_ *cl_WichmannHill;
-class WichmannHill : public Random {
-public:
-    tuple2<int, int> *_seed;
-
-    void *__whseed(int x, int y, int z);
-    __ss_float random();
-    void *seed();
-    void *seed(int a);
-    WichmannHill();
-    WichmannHill(int a);
-    void *whseed();
-    void *whseed(int a);
-    void *setstate(list<__ss_float> *state);
-    int jumpahead(int n);
-    list<__ss_float> *getstate();
-};
-
 
 extern int  UPPER;
 extern __ss_float  LOG4;
@@ -136,6 +117,7 @@ __ss_float betavariate(__ss_float alpha, __ss_float beta);
 __ss_float paretovariate(__ss_float alpha);
 __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
 __ss_int getrandbits(__ss_int k);
+bytes * randbytes(__ss_int n);
 
 template <class A> A choice(pyseq<A> *seq) {
 

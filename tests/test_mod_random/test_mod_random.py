@@ -2,6 +2,7 @@ import random
 
 random.seed(42)
 
+
 def isntRightTurn(e):
     p0, p1 = e[-3]
     q0, q1 = e[-2]
@@ -17,6 +18,7 @@ def half(points):
             del extrema[-2]
     return extrema
 
+
 def test_random1():
     points = [(random.random(), random.random()) for i in range(200)]
     points = sorted(set(points))
@@ -31,6 +33,7 @@ def test_random1():
     # ]
     ## XXX output is different in python and c++
     assert len(points) == 200 
+
 
 def test_random2():
     random.seed(37)
@@ -71,6 +74,7 @@ def test_random2():
     b = random.getrandbits(30)
     # print('')
 
+
 def test_random3():
     random.seed(1)
     f = random.triangular()
@@ -87,10 +91,20 @@ def test_random3():
     random.seed(4)
 
 
+rr = random.Random()  # TODO test all methods
+
+
+def test_randbytes():
+    assert len(random.randbytes(4)) == 4
+    assert len(rr.randbytes(5)) == 5
+
+
 def test_all():
     test_random1()
     test_random2()
     test_random3()
+    test_randbytes()
+
 
 if __name__ == '__main__':
     test_all()
