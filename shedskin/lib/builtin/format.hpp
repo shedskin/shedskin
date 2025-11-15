@@ -110,7 +110,7 @@ template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int ar
     __mod_float(result, pos, c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int f_precision) {
+template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, __ss_int f_precision) {
     std::string s;
     if(c=='s')
         s = __str(arg)->unit;
@@ -122,9 +122,9 @@ template <class T> void __mod_str(str *result, size_t &, char c, T arg, __ss_int
     else
         result->unit += s.substr(0, (size_t)f_precision);
 }
-template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
+template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
     std::string s;
-    if(c=='s')
+    if(flag) // bytes % bytes
         s = arg->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
@@ -147,7 +147,7 @@ template<> inline void __mod_char(str *result, size_t &, char, str *arg) {
     result->unit += arg->unit[0];
 }
 
-template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
+template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
     size_t namepos, startpos;
     str *name = NULL;
     std::string fmtchars = "0123456789# -+.*";
@@ -293,10 +293,10 @@ template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result
             case 's':
             case 'r':
                 if(name) {
-                    __mod_str(result, pos, c, __mod_dict_arg(arg, name), f_precision);
+                    __mod_str(flag, result, pos, c, __mod_dict_arg(arg, name), f_precision);
                     break;
                 } else {
-                    __mod_str(result, pos, c, arg, f_precision);
+                    __mod_str(flag, result, pos, c, arg, f_precision);
                     return;
                 }
 
@@ -321,7 +321,7 @@ template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     size_t fmtlen = fmt->unit.size();
     size_t j = 0;
 
-    (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
+    (__mod_one(0, fmt, fmtlen, j, result, pos, args), ...);
 
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
@@ -345,7 +345,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
 
     size_t l = t->units.size();
     for(size_t i=0;i<l; i++)
-        __mod_one(fmt, fmtlen, j, result, pos, t->units[i]);
+        __mod_one(0, fmt, fmtlen, j, result, pos, t->units[i]);
 
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
@@ -368,7 +368,7 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
     str *sfmt = new str();
     sfmt->unit = fmt->unit;
 
-    (__mod_one(sfmt, fmtlen, j, result, pos, args), ...);
+    (__mod_one(1, sfmt, fmtlen, j, result, pos, args), ...);
 
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
