@@ -78,11 +78,11 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo(args)
 
-        if args.subcmd in ['build', 'run', 'test']:
+        if args.subcmd in ['build', 'run', 'runtests']:
             # ensure cmake is available and installed.
             cmake.check_cmake_availability()
 
-        if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'test'
+        if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'runtests'
 
             if args.nobounds:
                 gx.bounds_checking = False
@@ -228,7 +228,7 @@ class Shedskin:
         builder = cmake.CMakeBuilder(self.gx)
         builder.build()
 
-    def test(self) -> None:
+    def runtests(self) -> None:
         """Run tests"""
         if self.gx.options.run_errs:
             testrunner = cmake.TestRunner(self.gx)
@@ -261,7 +261,8 @@ class Shedskin:
 
         subparsers = parser.add_subparsers(
             title='subcommands',
-            dest='subcmd')
+            dest='subcmd',
+        )
 
         # common options
         arg = opt = parser.add_argument
@@ -412,7 +413,7 @@ class Shedskin:
         # ---------------------------------------------------------------------
         # test subcommand
 
-        parser_test = subparsers.add_parser('test', help="run tests")
+        parser_test = subparsers.add_parser('runtests', help='run tests')
         arg = opt = parser_test.add_argument
 
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
@@ -455,7 +456,7 @@ class Shedskin:
             if _arg in ('-h', '--help'):
                 break
         else:
-            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
+            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'runtests'):
                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args(args=bypassargs)
@@ -476,8 +477,8 @@ class Shedskin:
         if args.subcmd == 'build':
             ss.build()
 
-        if args.subcmd == 'test':
-            ss.test()
+        if args.subcmd == 'runtests':
+            ss.runtests()
 
         if args.subcmd == 'run':
             ss.build()
