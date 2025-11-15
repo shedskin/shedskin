@@ -40,8 +40,6 @@ General notes on the underlying Mersenne Twister core generator:
   to another distant state and rely on the large period
   to avoid overlapping sequences.
 
-Note: The jumpahead method is implemented for WichmannHill, but not yet for
-Random (Mersenne Twister).
 */
 
 namespace __random__ {
@@ -484,6 +482,10 @@ __ss_int Random::getrandbits(__ss_int k) {
     return randrange((__ss_int)1<<k);
 }
 
+bytes *Random::randbytes(__ss_int n) {
+    return __random__::randbytes(n);
+}
+
 void *Random::setstate(list<__ss_float> *state) {
     /**
     Restore internal state from object returned by getstate().
@@ -577,258 +579,6 @@ __ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {
     return __math__::fmod((mean+(arc*(this->random()-0.5))), __math__::pi);
 }
 
-/**
-class WichmannHill
-*/
-
-class_ *cl_WichmannHill;
-
-void *WichmannHill::__whseed(int x, int y, int z) {
-    /**
-    Set the Wichmann-Hill seed from (x, y, z).
-
-            These must be integers in the range [0, 256).
-    */
-    tuple2<int, int> *__59, *__60, *__61;
-    int __62, __63, __64, secs, t, usec;
-    __ss_float hophop;
-
-    if ((!(((0<=x)&&(x<256)) && ((0<=y)&&(y<256)) && ((0<=z)&&(z<256))))) {
-        throw ((new ValueError(const_11)));
-    }
-    if ((0==x) && (x==y) && (y==z)) {
-        hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        t = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
-        __59 = divmod(t, 256);
-        t = __59->__getfirst__();
-        x = __59->__getsecond__();
-        __60 = divmod(t, 256);
-        t = __60->__getfirst__();
-        y = __60->__getsecond__();
-        __61 = divmod(t, 256);
-        t = __61->__getfirst__();
-        z = __61->__getsecond__();
-    }
-    if (x==0) {
-        x = 1;
-    }
-    if (y==0) {
-        y = 1;
-    }
-    if (z==0) {
-        z = 1;
-    }
-    __62 = x;
-    __63 = y;
-    __64 = z;
-    this->_seed = (new tuple2<int, int>(3, __62, __63, __64));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    return NULL;
-}
-
-__ss_float WichmannHill::random() {
-    /**
-    Get the next random number in the range [0.0, 1.0).
-    */
-    tuple2<int, int> *__46;
-    int __47, __48, __49, x, y, z;
-
-    __46 = this->_seed;
-    x = __46->__getfast__(0);
-    y = __46->__getfast__(1);
-    z = __46->__getfast__(2);
-    x = __mods((171*x), 30269);
-    y = __mods((172*y), 30307);
-    z = __mods((170*z), 30323);
-    __47 = x;
-    __48 = y;
-    __49 = z;
-    this->_seed = (new tuple2<int, int>(3, __47, __48, __49));
-    return __math__::fmod((((__float(x)/30269.0)+(__float(y)/30307.0))+(__float(z)/30323.0)), 1.0);
-}
-
-void *WichmannHill::seed() {
-    return this->seed(-1);
-}
-void *WichmannHill::seed(int a) {
-    /**
-    Initialize internal state from hashable object.
-
-            If provided, the seed, a, should be a non-negative integer.
-            If no argument is provided, current time is used for seeding.
-
-            Distinct values between 0 and 27814431486575L inclusive are guaranteed
-            to yield distinct internal states (this guarantee is specific to the
-            default Wichmann-Hill generator).
-    */
-    tuple2<int, int> *__40, *__41, *__42;
-    int __43, __44, __45, secs, usec, x, y, z;
-    __ss_float hophop;
-
-    if (a==-1) {
-        hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        a = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
-    }
-    __40 = divmod(a, 30268);
-    a = __40->__getfirst__();
-    x = __40->__getsecond__();
-    __41 = divmod(a, 30306);
-    a = __41->__getfirst__();
-    y = __41->__getsecond__();
-    __42 = divmod(a, 30322);
-    a = __42->__getfirst__();
-    z = __42->__getsecond__();
-    __43 = (__int(x)+1);
-    __44 = (__int(y)+1);
-    __45 = (__int(z)+1);
-    this->_seed = (new tuple2<int, int>(3, __43, __44, __45));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    return NULL;
-}
-
-WichmannHill::WichmannHill() {
-    this->__class__ = cl_WichmannHill;
-
-    this->seed(-1);
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->VERSION = 1;
-}
-
-WichmannHill::WichmannHill(int a) {
-    this->__class__ = cl_WichmannHill;
-
-    this->seed(a);
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->VERSION = 1;
-}
-
-void *WichmannHill::whseed() {
-    return this->whseed(-1);
-}
-void *WichmannHill::whseed(int a) {
-    /**
-    Seed from current time or non-negative integer argument.
-
-            If no argument is provided, current time is used for seeding.
-
-            This is obsolete, provided for compatibility with the seed routine
-            used prior to Python 2.1.  Use the .seed() method instead.
-    */
-    tuple2<int, int> *__65, *__66, *__67;
-    int x, y, z;
-
-    if (a==-1) {
-        this->__whseed(((int )(0)), ((int )(0)), ((int )(0)));
-        return NULL;
-    }
-    __65 = divmod(a, 256);
-    a = __65->__getfirst__();
-    x = __65->__getsecond__();
-    __66 = divmod(a, 256);
-    a = __66->__getfirst__();
-    y = __66->__getsecond__();
-    __67 = divmod(a, 256);
-    a = __67->__getfirst__();
-    z = __67->__getsecond__();
-    x = __mods((x+a), 256);
-    y = __mods((y+a), 256);
-    z = __mods((z+a), 256);
-    if (x==0) {
-        x = 1;
-    }
-    if (y==0) {
-        y = 1;
-    }
-    if (z==0) {
-        z = 1;
-    }
-    this->__whseed(x, y, z);
-    return NULL;
-}
-
-void *WichmannHill::setstate(list<__ss_float> *state) {
-    /**
-    Restore internal state from object returned by getstate().
-    */
-    __ss_float xf, yf, zf;
-    list<__ss_float> *__51;
-    int __52, __53, __54, version;
-
-    version = __int(state->__getfast__(0));
-    if (version==1) {
-        __51 = state->__slice__(3, 1, 4, 0);
-        xf = __51->__getfast__(0);
-        yf = __51->__getfast__(1);
-        zf = __51->__getfast__(2);
-        __52 = __int(xf);
-        __53 = __int(yf);
-        __54 = __int(zf);
-        this->_seed = (new tuple2<int, int>(3, __52, __53, __54));
-        this->gauss_switch = __int(state->__getfast__(4));
-        this->gauss_next = state->__getfast__(5);
-    }
-    else {
-        throw ((new ValueError(__mod6(const_10, 2, version, this->VERSION))));
-    }
-    return NULL;
-}
-
-int WichmannHill::jumpahead(int n) {
-    /**
-    Act as if n calls to random() were made, but quickly.
-
-            n is an int, greater than or equal to 0.
-
-            Example use:  If you have 2 threads and know that each will
-            consume no more than a million random numbers, create two Random
-            objects r1 and r2, then do
-                r2.setstate(r1.getstate())
-                r2.jumpahead(1000000)
-            Then r1 and r2 will use guaranteed-disjoint segments of the full
-            period.
-    */
-    tuple2<int, int> *__55;
-    int __56, __57, __58, x, y, z;
-
-    if (!(n>=0)) {
-        throw ((new ValueError(const_12)));
-    }
-    __55 = this->_seed;
-    x = __55->__getfast__(0);
-    y = __55->__getfast__(1);
-    z = __55->__getfast__(2);
-    x = __mods(__int((x*__power(171, n, 30269))), (__ss_int)30269);
-    y = __mods(__int((y*__power(172, n, 30307))), (__ss_int)30307);
-    z = __mods(__int((z*__power(170, n, 30323))), (__ss_int)30323);
-    __56 = x;
-    __57 = y;
-    __58 = z;
-    this->_seed = (new tuple2<int, int>(3, __56, __57, __58));
-    return 0;
-}
-
-list<__ss_float> *WichmannHill::getstate() {
-    /**
-    Return internal state; can be passed to setstate() later.
-    */
-    tuple2<int, int> *__50;
-    int x, y, z;
-
-    __50 = this->_seed;
-    x = __50->__getfast__(0);
-    y = __50->__getfast__(1);
-    z = __50->__getfast__(2);
-    return (new list<__ss_float>(6, __float(this->VERSION), __float(x), __float(y), __float(z), __float(this->gauss_switch), this->gauss_next));
-}
-
 void __init() {
     const_0 = new str("non-integer arg 1 for randrange()");
     const_1 = new str("non-integer stop for randrange()");
@@ -864,11 +614,9 @@ void __init() {
     const_33 = new str("getstate");
     const_34 = new str("setstate");
     const_35 = new str("jumpahead");
-    const_36 = new str("WichmannHill");
 
     __name__ = new str("random");
 
-    cl_WichmannHill = new class_("WichmannHill");
     cl_Random = new class_("Random");
 
     /**
@@ -1051,6 +799,14 @@ __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode) {
 }
 __ss_float triangular(__ss_float low, __ss_float high, void *mode) {
     return _inst->triangular(low, high, mode);
+}
+
+bytes *randbytes(__ss_int n) {
+    bytes *result = new bytes();
+    result->unit.resize(n);
+    for(__ss_int i=0; i < n; i++)
+        result->__setitem__(i, (__ss_int)(255*random()));
+    return result;
 }
 
 } // module namespace
