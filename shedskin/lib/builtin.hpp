@@ -137,7 +137,7 @@ public:
     virtual __ss_int __len__();
     virtual __ss_int __int__();
 
-    virtual __ss_bool __nonzero__();
+    virtual __ss_bool __bool__();
     virtual __ss_int __index__();
 
     static const bool is_pyseq = false;

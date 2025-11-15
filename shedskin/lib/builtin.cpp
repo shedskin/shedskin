@@ -329,7 +329,7 @@ pyobj *pyobj::__deepcopy__(dict<void *, pyobj *> *) { return this; }
 __ss_int pyobj::__len__() { return 1; } /* XXX exceptions? */
 __ss_int pyobj::__int__() { return 0; }
 
-__ss_bool pyobj::__nonzero__() { return __mbool(__len__() != 0); }
+__ss_bool pyobj::__bool__() { return __mbool(__len__() != 0); }
 
 __ss_int pyobj::__index__() { throw new TypeError(new str("no such method: '__index__'")); }
 
