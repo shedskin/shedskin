@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from . import config, cpp
 
 logger = logging.getLogger("extmod")
-OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]
+OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__bool__"]
 OVERLOAD = [
     "__add__",
     "__sub__",

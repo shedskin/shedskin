@@ -82,7 +82,7 @@ class D:
     def __repr__(self):
         return "__repr__"
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     def __len__(self):
