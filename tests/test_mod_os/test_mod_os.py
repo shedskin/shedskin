@@ -1,14 +1,28 @@
+# popen deprecated in favor of subprocess.. consider subprocess support?
+
 import os
 
-
-#def test_popen():
-#    # https://github.com/shedskin/shedskin/issues/191
-#    assert os.popen("echo Hello World").read() == 'Hello World\n'
-
-
 def test_getcwd():
-    os.getcwd()
+    assert len(os.getcwd()) > 1
 
+
+def test_chdir():
+    os.chdir('.')
+
+
+def test_exceptions():
+    try:
+        os.chdir("ontehunoe")
+    except FileNotFoundError as e:
+        assert e.errno == 2
+        assert e.filename == "ontehunoe"
+
+
+def test_listdir():
+    assert len(os.listdir()) > 0
+
+
+# following currently only tested under posix
 
 def test_env():
     os.environ['bert'] = 'value'
@@ -46,18 +60,11 @@ def test_system():
     assert os.system('ls') == 0
 
 
-def test_exceptions():
-    try:
-        os.chdir("ontehunoe")
-    except FileNotFoundError as e:
-        assert e.errno == 2
-        assert e.filename == "ontehunoe"
-
-
 def test_all():
     test_getcwd()
+    test_chdir()
     test_exceptions()
-#    test_popen() # windows?
+    test_listdir()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
