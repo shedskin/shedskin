@@ -26,7 +26,7 @@ typedef OSError error;
 
 class __cstat;
 
-list<str *> *listdir(str *path);
+list<str *> *listdir(str *path=0);
 str *getcwd();
 void *chdir(str *dir);
 str *getenv(str *name_, str *alternative=0);
