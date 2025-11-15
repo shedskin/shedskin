@@ -265,6 +265,9 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
     c_subj = s->c_str();
     for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
+        if(i > s->size())
+            break;
+
         //get a match
         if(pcre2_match(
             compiled_pattern,
@@ -279,18 +282,25 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         captured = pcre2_get_ovector_pointer(match_data);
 
         //append stuff we skipped
-        out += s->substr((size_t)i, (size_t)(captured[0] - i));
+        if(i < s->size())
+            out += s->substr((size_t)i, (size_t)(captured[0] - i));
 
         //replace section
         out += __expand(s, captured, repl->unit);
 
         //move our index
-        if(i == captured[1]) i++;
-        else i = captured[1];
+        if(i == captured[1]) {
+            if(i < s->size())
+                out += s->at(i);
+            i++;
+        } else {
+            i = captured[1];
+        }
     }
 
     //extra
-    out += s->substr((size_t)i);
+    if(i < s->size())
+        out += s->substr((size_t)i);
     if(howmany) *howmany = (int) cur;
 
     pcre2_match_data_free(match_data);
