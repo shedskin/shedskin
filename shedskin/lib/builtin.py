@@ -1044,9 +1044,8 @@ def divmod(a, b):
     return a.__divmod__(b)
 
 def bool(x):
-    x.__nonzero__()
+    x.__bool__()
     x.__len__()
-    x.__index__()
     return True
 
 def repr(x):
