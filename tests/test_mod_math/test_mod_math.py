@@ -107,6 +107,17 @@ def test_math():
     assert math.inf == float('inf')
     math.nan # also in python this is not equal to float('nan')..
 
+    assert '%.1f' % math.cbrt(27) == '3.0'
+    assert '%.1f' % math.log2(256) == '8.0'
+    assert '%.1f' % math.exp2(8.7) == '415.9'
+
+    assert math.isfinite(0.0)
+    assert math.isfinite(1.0)
+    assert not math.isfinite(math.inf)
+    assert not math.isfinite(math.nan)
+    assert not math.isfinite(float('inf'))
+    assert not math.isfinite(float('nan'))
+
 
 def test_all():
     test_fsum()
