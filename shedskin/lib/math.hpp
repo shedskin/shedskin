@@ -11,6 +11,9 @@ namespace __math__ {
 
 extern __ss_float pi;
 extern __ss_float e;
+extern __ss_float tau;
+extern __ss_float inf;
+extern __ss_float nan;
 
 void __init();
 

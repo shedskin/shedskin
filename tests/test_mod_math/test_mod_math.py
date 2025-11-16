@@ -100,6 +100,13 @@ def test_math():
     assert math.floor(1.5) == 1
     assert math.ceil(1.5) == 2
 
+    assert math.e == 2.7182818284590451
+    assert math.pi == 3.1415926535897931
+    assert math.tau == 6.283185307179586
+
+    assert math.inf == float('inf')
+    math.nan # also in python this is not equal to float('nan')..
+
 
 def test_all():
     test_fsum()
