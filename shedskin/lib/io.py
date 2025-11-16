@@ -3,7 +3,7 @@
 
 class BytesIO(file_binary):
     def __init__(self, initial_bytes=b''):
-        pass
+        self.unit = b''
 
     def getvalue(self):
         return b''
@@ -11,7 +11,7 @@ class BytesIO(file_binary):
 
 class StringIO(file):
     def __init__(self, initial_value=''):
-        pass
+        self.unit = ''
 
     def getvalue(self):
         return ''

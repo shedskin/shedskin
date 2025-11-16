@@ -35,10 +35,10 @@ public:
     virtual str *  read(int n=-1);
     virtual str *  readline(int n=-1);
     list<str *> *  readlines(__ss_int size_hint=-1);
-    virtual void * seek(__ss_int i, __ss_int w=0);
+    virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
     virtual void * truncate(int size);
-    virtual void * write(str *s);
+    virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
     __iter<str *> *xreadlines();
     virtual void __enter__();
@@ -80,10 +80,10 @@ public:
     virtual bytes *  read(int n=-1);
     virtual bytes *  readline(int n=-1);
     list<bytes *> *  readlines(__ss_int size_hint=-1);
-    virtual void * seek(__ss_int i, __ss_int w=0);
+    virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
     virtual void * truncate(int size);
-    virtual void * write(bytes *b);
+    virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
     __iter<bytes *> *xreadlines();
     virtual void __enter__();

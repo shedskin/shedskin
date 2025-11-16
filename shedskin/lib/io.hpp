@@ -17,13 +17,14 @@ public:
 
     bytes *read(int n=-1);
     bytes *readline(int n=-1);
-    void *seek(__ss_int i, __ss_int w=0);
+    list<bytes *> *readlines(__ss_int hint=-1);
+    __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     void *truncate(int size=-1) {
         s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
-    void *write(bytes *data);
+    __ss_int write(bytes *data);
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }
@@ -40,13 +41,14 @@ public:
 
     str *read(int n=-1);
     str *readline(int n=-1);
-    void *seek(__ss_int i, __ss_int w=0);
+    list<str *> *readlines(__ss_int hint=-1);
+    __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     void *truncate(int size=-1) {
         s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
-    void *write(str *data);
+    __ss_int write(str *data);
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }
