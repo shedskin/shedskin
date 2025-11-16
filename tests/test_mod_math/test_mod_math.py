@@ -118,6 +118,9 @@ def test_math():
     assert not math.isfinite(float('inf'))
     assert not math.isfinite(float('nan'))
 
+    assert math.isqrt(18) == 4
+    assert math.comb(17, 14) == 680
+
 
 def test_all():
     test_fsum()
