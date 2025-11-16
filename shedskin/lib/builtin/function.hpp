@@ -643,19 +643,31 @@ template<class R, class T1, class T2> inline imapiter2<R, T1, T2 >::imapiter2(R 
 
 template<class R, class T1, class T2> R imapiter2<R, T1, T2 >::__next__ ()
 {
-    if (this->exhausted)
-    {
-          throw new StopIteration ();
+    T1 t1;
+    T2 t2;
+
+    size_t n_exhausted = 0;
+
+    try  {
+        t1 = this->iter1->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
     }
-    try
-    {
-        return this->function (this->iter1->__next__ (), this->iter2->__next__ ());
+    try  {
+        t2 = this->iter2->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
     }
-    catch (StopIteration *)
-    {
+
+    if (n_exhausted) {
         this->exhausted = true;
-        throw;
+        if (this->strict and n_exhausted != 2)
+            throw new ValueError(new str("map() arguments of different lengths"));
+        else
+            throw new StopIteration();
     }
+
+    return this->function(t1, t2);
 }
 
 template<class R, class T1, class T2> inline imapiter2<R, T1, T2> *map(int, __ss_bool strict_, R (*function_) (T1, T2), pyiter<T1> *iterable1, pyiter<T2> *iterable2)
@@ -705,19 +717,37 @@ template <class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3>
 
 template<class R, class T1, class T2, class T3> R imapiter3< R, T1, T2, T3 >::__next__()
 {
-    if (this->exhausted)
-    {
-          throw new StopIteration ();
+    T1 t1;
+    T2 t2;
+    T3 t3;
+
+    size_t n_exhausted = 0;
+
+    try  {
+        t1 = this->iter1->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
     }
-    try
-    {
-        return this->function (this->iter1->__next__ (), this->iter2->__next__ (), this->iter3->__next__ ());
+    try  {
+        t2 = this->iter2->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
     }
-    catch (StopIteration *)
-    {
+    try  {
+        t3 = this->iter3->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+
+    if (n_exhausted) {
         this->exhausted = true;
-        throw;
+        if (this->strict and n_exhausted != 3)
+            throw new ValueError(new str("map() arguments of different lengths"));
+        else
+            throw new StopIteration();
     }
+
+    return this->function(t1, t2, t3);
 }
 
 template<class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3> *map(int, __ss_bool strict_, R (*function_) (T1, T2, T3), pyiter<T1> *iterable1, pyiter<T2> *iterable2, pyiter<T3> *iterable3)
