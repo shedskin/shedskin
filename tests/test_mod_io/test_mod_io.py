@@ -20,7 +20,7 @@ def test_io_from_file():
 def test_io_read_from_binary_string():
         sio = io.BytesIO(b"blaat")
         assert sio.seek(-3, 2) == 2
-        sio.read() == b'aat'
+        assert sio.read() == b'aat'
 
 def test_io_write_to_binary_string():
         sio = io.BytesIO()
@@ -78,10 +78,9 @@ def test_bytesio():
 def test_all():
     test_stringio()
     test_bytesio()
-
-    # test_io_from_file()
-    # test_io_read_from_binary_string()
-    # test_io_write_to_binary_string()
+    test_io_from_file()
+    test_io_read_from_binary_string()
+    test_io_write_to_binary_string()
 
 
 if __name__ == '__main__':

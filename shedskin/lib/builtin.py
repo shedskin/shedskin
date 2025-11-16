@@ -940,12 +940,12 @@ class file(pyiter):
         return iter(self)
 
     def write(self, s):
-        pass
+        return 1
     def writelines(self, it):
         pass
 
     def seek(self, i, w=0):
-        pass
+        return 1
     def tell(self):
         return 1
 
@@ -993,12 +993,12 @@ class file_binary(pyiter):
         return iter(self)
 
     def write(self, s):
-        pass
+        return 1
     def writelines(self, it):
         pass
 
     def seek(self, i, w=0):
-        pass
+        return 1
     def tell(self):
         return 1
 

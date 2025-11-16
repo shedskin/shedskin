@@ -56,14 +56,15 @@ file *open(bytes *name, str *flags) {
     return new file(new str(name->unit), flags);
 }
 
-void *file::write(str *s) {
+__ss_int file::write(str *s) {
+    __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
+        size = (__ss_int)(s->unit.size());
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
             throw new OSError();
     }
-    return NULL;
+    return size;
 }
 
 void *file::writelines(pyiter<str *> *iter) {
@@ -78,13 +79,14 @@ void *file::writelines(pyiter<str *> *iter) {
     return NULL;
 }
 
-void *file::seek(__ss_int i, __ss_int w) {
+__ss_int file::seek(__ss_int i, __ss_int w) {
+    int pos=-1;
     __check_closed();
     if(f) {
-        if(fseek(f, i, w) == -1)
+        if((pos = fseek(f, i, w)) == -1)
             throw new OSError();
     }
-    return NULL;
+    return pos;
 }
 
 __ss_int file::tell() {
@@ -286,14 +288,15 @@ file_binary *open_binary(bytes *name, str *flags) {
     return new file_binary(new str(name->unit), flags);
 }
 
-void *file_binary::write(bytes *s) {
+__ss_int file_binary::write(bytes *s) {
+    __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
+        size = (__ss_int)(s->unit.size());
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
             throw new OSError();
     }
-    return NULL;
+    return size;
 }
 
 void *file_binary::writelines(pyiter<bytes *> *iter) {
@@ -308,13 +311,14 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
     return NULL;
 }
 
-void *file_binary::seek(__ss_int i, __ss_int w) {
+__ss_int file_binary::seek(__ss_int i, __ss_int w) {
+    int pos = -1;
     __check_closed();
     if(f) {
-        if(fseek(f, i, w) == -1)
+        if((pos = fseek(f, i, w)) == -1)
             throw new OSError();
     }
-    return NULL;
+    return pos;
 }
 
 __ss_int file_binary::tell() {
