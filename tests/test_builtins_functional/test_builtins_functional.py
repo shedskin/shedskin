@@ -60,6 +60,25 @@ def test_map():
     assert list(map(lambda a, b: a * b, [1, 2, 3], [4, 5])) == [4, 10]
     assert list(map(lambda a, b, c: a + b + c, [1, 2, 3], [3, 4, 5], [5, 4, 3])) == [9, 10, 11]
 
+    a = iter([1,2,3])
+    b = iter([1,2])
+    error = False
+    try:
+        list(map(lambda a,b:a+b, a, b, strict=True))
+    except ValueError:
+        error = True
+    assert error
+
+    a = iter([1,2])
+    b = iter([1,2,3])
+    c = iter([1,2,3])
+    error = False
+    try:
+        list(map(lambda a,b,c:a+b-c, a, b, c, strict=True))
+    except ValueError:
+        error = True
+    assert error
+
 
 def test_map_nested():
     foo3 = lambda a, b, c: "%d %.2f %s" % (a, b, c)
