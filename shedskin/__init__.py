@@ -460,7 +460,11 @@ class Shedskin:
                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args(args=bypassargs)
-        # print(args)
+
+        if platform.system() == 'Windows' and args.subcmd in ('build', 'run'):
+            args.build_type = 'Release'  # Debug doesn't work in CI, possibly because of missing debug symbols
+            if not args.spm and not args.extproject:  # make --conan default under windows..
+                args.conan = True
 
         ss = cls(args)
 
