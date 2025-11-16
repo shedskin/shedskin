@@ -548,70 +548,212 @@ template <class A> A next(__iter<A> *iter1, A fillvalue) {
 template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, __zero<A>()); }
 template <class A> A next(__iter<A> *iter1) { return iter1->__next__(); }
 
-/* map */
+/* map (1 iter) */
 
-#define I(N, TP, FP, RP, AP, DP, CP, VP)                                                                 \
-template<class R, TP> class imapiter##N : public __iter<R> {                                             \
-public:                                                                                                  \
-    bool exhausted;                                                                                      \
-    R (*function)(FP);                                                                                   \
-    RP                                                                                                   \
-                                                                                                         \
-    imapiter##N();                                                                                       \
-    imapiter##N(R (*function)(FP), DP);                                                                  \
-                                                                                                         \
-    R __next__();                                                                                        \
-    inline str * __str__() { return new str("<map object>"); }                                           \
-};                                                                                                       \
-                                                                                                         \
-template<class R, TP> inline imapiter##N<R, FP>::imapiter##N() {                                         \
-    this->exhausted = true;                                                                              \
-}                                                                                                        \
-template<class R, TP> inline imapiter##N<R, FP>::imapiter##N(R (*function_)(FP), DP) {                   \
-    this->exhausted = false;                                                                             \
-    this->function = function_;                                                                          \
-    AP                                                                                                   \
-}                                                                                                        \
-                                                                                                         \
-template<class R, TP> R imapiter##N<R, FP>::__next__() {                                                 \
-    if (this->exhausted) {                                                                               \
-        throw new StopIteration();                                                                       \
-    }                                                                                                    \
-                                                                                                         \
-    try  {                                                                                               \
-        return this->function(CP);                                                                       \
-    } catch (StopIteration *) {                                                                          \
-        this->exhausted = true;                                                                          \
-        throw;                                                                                           \
-    }                                                                                                    \
-}                                                                                                        \
-                                                                                                         \
-template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, __ss_bool strict, R (*function_)(FP), DP) { \
-    return new imapiter##N<R, FP>(function_, VP);                                                        \
+// TODO use variadic template instead?
+
+template <class R, class T1> class imapiter1: public __iter <R> {
+public:
+    bool exhausted;
+    __ss_bool strict;
+
+    R (*function) (T1);
+    __iter<T1> *iter1;
+
+    imapiter1();
+    imapiter1(R (*function) (T1), pyiter < T1 > *iterable1, __ss_bool strict_);
+    R __next__();
+
+    inline str *__str__ ()
+    {
+        return new str("<map object>");
+    }
+};
+
+template <class R, class T1> inline imapiter1<R, T1>::imapiter1()
+{
+    this->exhausted = true;
 }
 
-#define S ,
-#define L(P) class T##P
-#define F(P) T##P
-#define E(P) __iter<T##P> *iter##P;
-#define A(P) this->iter##P = iterable##P->__iter__();
-#define D(P) pyiter<T##P> *iterable##P
-#define C(P) this->iter##P->__next__()
-#define V(P) iterable##P
+template<class R, class T1> inline imapiter1<R, T1>::imapiter1(R (*function_) (T1), pyiter<T1> *iterable1, __ss_bool strict_)
+{
+    this->exhausted = false;
+    this->strict = strict_;
+    this->function = function_;
+    this->iter1 = iterable1->__iter__ ();
+}
 
-I(1, L(1), F(1), E(1), A(1), D(1), C(1), V(1))
-I(2, L(1) S L(2), F(1) S F(2), E(1) E(2), A(1) A(2), D(1) S D(2), C(1) S C(2), V(1) S V(2))
-I(3, L(1) S L(2) S L(3), F(1) S F(2) S F(3), E(1) E(2) E(3), A(1) A(2) A(3), D(1) S D(2) S D(3), C(1) S C(2) S C(3), V(1) S V(2) S V(3))
+template<class R, class T1> R imapiter1<R, T1>::__next__()
+{
+    if (this->exhausted)
+    {
+        throw new StopIteration();
+    }
+    try
+    {
+        return this->function(this->iter1->__next__ ());
+    }
+    catch (StopIteration *)
+    {
+        this->exhausted = true;
+        throw;
+    }
+}
 
-#undef S
-#undef L
-#undef F
-#undef E
-#undef A
-#undef D
-#undef C
-#undef V
-#undef I
+template <class R, class T1> inline imapiter1<R, T1> *map(int, __ss_bool strict_, R (*function_) (T1), pyiter<T1> *iterable1)
+{
+    return new imapiter1<R, T1>(function_, iterable1, strict_);
+}
+
+/* map (2 iters) */
+
+template<class R, class T1, class T2> class imapiter2: public __iter<R> {
+public:
+    bool exhausted;
+    __ss_bool strict;
+
+    R (*function) (T1, T2);
+    __iter<T1> *iter1;
+    __iter<T2> *iter2;
+
+    imapiter2();
+    imapiter2(R (*function) (T1, T2), pyiter<T1> *iterable1, pyiter<T2> *iterable2, __ss_bool strict_);
+
+    R __next__();
+
+    inline str *__str__()
+    {
+        return new str ("<map object>");
+    }
+};
+
+template<class R, class T1, class T2> inline imapiter2<R, T1, T2>::imapiter2()
+{
+    this->exhausted = true;
+}
+
+template<class R, class T1, class T2> inline imapiter2<R, T1, T2 >::imapiter2(R (*function_) (T1, T2), pyiter<T1> *iterable1, pyiter<T2> *iterable2, __ss_bool strict_)
+{
+    this->exhausted = false;
+    this->strict = strict_;
+    this->function = function_;
+    this->iter1 = iterable1->__iter__ ();
+    this->iter2 = iterable2->__iter__ ();
+}
+
+template<class R, class T1, class T2> R imapiter2<R, T1, T2 >::__next__ ()
+{
+    T1 t1;
+    T2 t2;
+
+    size_t n_exhausted = 0;
+
+    try  {
+        t1 = this->iter1->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+    try  {
+        t2 = this->iter2->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+
+    if (n_exhausted) {
+        this->exhausted = true;
+        if (this->strict and n_exhausted != 2)
+            throw new ValueError(new str("map() arguments of different lengths"));
+        else
+            throw new StopIteration();
+    }
+
+    return this->function(t1, t2);
+}
+
+template<class R, class T1, class T2> inline imapiter2<R, T1, T2> *map(int, __ss_bool strict_, R (*function_) (T1, T2), pyiter<T1> *iterable1, pyiter<T2> *iterable2)
+{
+    return new imapiter2<R, T1, T2>(function_, iterable1, iterable2, strict_);
+}
+
+/* map (3 iters) */
+
+template<class R, class T1, class T2, class T3> class imapiter3: public __iter<R> {
+public:
+    bool exhausted;
+    __ss_bool strict;
+
+    R (*function) (T1, T2, T3);
+
+    __iter<T1> *iter1;
+    __iter<T2> *iter2;
+    __iter<T3> *iter3;
+
+    imapiter3();
+    imapiter3(R (*function) (T1, T2, T3), pyiter<T1> *iterable1, pyiter<T2> *iterable2, pyiter<T3> *iterable3, __ss_bool strict_);
+
+    R __next__ ();
+
+    inline str *__str__ ()
+    {
+        return new str ("<map object>");
+    }
+};
+
+template<class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3>::imapiter3()
+{
+    this->exhausted = true;
+}
+
+template <class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3>::imapiter3(R (*function_) (T1, T2, T3), pyiter<T1> *iterable1, pyiter<T2> *iterable2, pyiter<T3> *iterable3, __ss_bool strict_)
+{
+    this->exhausted = false;
+    this->strict = strict_;
+
+    this->function = function_;
+    this->iter1 = iterable1->__iter__ ();
+    this->iter2 = iterable2->__iter__ ();
+    this->iter3 = iterable3->__iter__ ();
+}
+
+template<class R, class T1, class T2, class T3> R imapiter3< R, T1, T2, T3 >::__next__()
+{
+    T1 t1;
+    T2 t2;
+    T3 t3;
+
+    size_t n_exhausted = 0;
+
+    try  {
+        t1 = this->iter1->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+    try  {
+        t2 = this->iter2->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+    try  {
+        t3 = this->iter3->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+
+    if (n_exhausted) {
+        this->exhausted = true;
+        if (this->strict and n_exhausted != 3)
+            throw new ValueError(new str("map() arguments of different lengths"));
+        else
+            throw new StopIteration();
+    }
+
+    return this->function(t1, t2, t3);
+}
+
+template<class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3> *map(int, __ss_bool strict_, R (*function_) (T1, T2, T3), pyiter<T1> *iterable1, pyiter<T2> *iterable2, pyiter<T3> *iterable3)
+{
+    return new imapiter3 < R, T1, T2, T3 > (function_, iterable1, iterable2, iterable3, strict_);
+}
 
 /* filter */
 
