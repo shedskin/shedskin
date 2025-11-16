@@ -46,6 +46,7 @@ def fsum(x): return 1.0
 
 def sqrt(x): return 1.0
 def cbrt(x): return 1.0
+def isqrt(x): return 1
 
 def fabs(x): return 1.0
 def fmod(x, y): return 1.0
@@ -58,3 +59,5 @@ def ceil(x): return 1
 
 def pow(x, y): return 1.0
 def hypot(x, y): return 1.0
+
+def comb(n, k): return 1

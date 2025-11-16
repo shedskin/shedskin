@@ -84,6 +84,10 @@ inline __ss_float cbrt(__ss_float x) {
     return std::cbrt(x);
 }
 
+inline __ss_int isqrt(__ss_float x) {
+    return floor(std::sqrt(x)); // TODO optimize?
+}
+
 inline __ss_float acos(__ss_float x) {
     return std::acos(x);
 }
@@ -201,6 +205,18 @@ inline __ss_float log1p(__ss_float x) {
 
 inline __ss_int trunc(__ss_float x) {
     return (__ss_int)::trunc(x);
+}
+
+inline __ss_int comb(__ss_int n, __ss_int k) { // TODO faster/std version?
+    if(n < 0)
+        throw new ValueError(new str("n must be a non-negative number"));
+    if(k < 0)
+        throw new ValueError(new str("k must be a non-negative number"));
+    __ss_int b=1;
+    for(int p=1; p<=k; p++) {
+        b = b*(n+1-p)/p;
+    }
+    return b;
 }
 
 inline __ss_float fsum(pyiter<__ss_float> *iterable) {
