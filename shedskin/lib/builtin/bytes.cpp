@@ -616,6 +616,8 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
 str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
     // output will be twice as long
     size_t len = unit.size();
+    if(len == 0)
+        return new str();
     __GC_STRING hexstr = __GC_STRING(unit);
     size_t result_len = (len<<1);
     if(sep) {
