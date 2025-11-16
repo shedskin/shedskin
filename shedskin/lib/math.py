@@ -2,6 +2,7 @@
 
 e = pi = tau = inf = nan = 1.0
 
+def isfinite(x): return True
 def isinf(x): return True
 def isnan(x): return True
 
@@ -28,6 +29,7 @@ def erfc(x): return 1.0
 
 def expm1(x): return 1.0
 def exp(x): return 1.0
+def exp2(x): return 1.0
 def frexp(x): return (1.0, 1)
 def ldexp(x, y): return 1.0
 
@@ -36,12 +38,14 @@ def lgamma(x): return 1.0
 
 def log(x, base=1): return 1.0
 def log1p(x): return 1.0
+def log2(x): return 1.0
 def log10(x): return 1.0
 
 def trunc(x): return 1
 def fsum(x): return 1.0
 
 def sqrt(x): return 1.0
+def cbrt(x): return 1.0
 
 def fabs(x): return 1.0
 def fmod(x, y): return 1.0

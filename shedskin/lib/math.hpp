@@ -57,8 +57,16 @@ inline __ss_float exp(__ss_float x) {
     return std::exp(x);
 }
 
+inline __ss_float exp2(__ss_float x) {
+    return std::exp2(x);
+}
+
 inline __ss_float log(__ss_float x) {
     return std::log(x);
+}
+
+inline __ss_float log2(__ss_float x) {
+    return std::log2(x);
 }
 
 inline __ss_float log(__ss_float x, __ss_float base) {
@@ -71,6 +79,9 @@ inline __ss_float log10(__ss_float x) {
 
 inline __ss_float sqrt(__ss_float x) {
     return std::sqrt(x);
+}
+inline __ss_float cbrt(__ss_float x) {
+    return std::cbrt(x);
 }
 
 inline __ss_float acos(__ss_float x) {
@@ -127,6 +138,10 @@ inline __ss_float tanh(__ss_float x) {
 
 inline __ss_float pow(__ss_float x, __ss_float y) {
     return std::pow(x,y);
+}
+
+inline __ss_bool isfinite(__ss_float x) {
+    return __mbool(std::isfinite(x));
 }
 
 inline __ss_bool isinf(__ss_float x) {
