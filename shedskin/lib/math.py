@@ -61,3 +61,8 @@ def pow(x, y): return 1.0
 def hypot(x, y): return 1.0
 
 def comb(n, k): return 1
+def perm(n, k=None): return 1
+
+def gcd(*args): return 1
+def lcm(*args): return 1
+
