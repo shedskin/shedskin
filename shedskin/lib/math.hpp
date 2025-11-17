@@ -5,6 +5,7 @@
 
 #include "builtin.hpp"
 #include <math.h>
+#include <numeric>
 
 using namespace __shedskin__;
 namespace __math__ {
@@ -253,6 +254,37 @@ inline __ss_float fsum(pyiter<__ss_float> *iterable) {
 
     return __sum(partials);
 }
+
+template<class ... Args> __ss_int gcd(int, __ss_int x, Args ... args) {
+    return ((x = std::gcd(x, args)), ...);
+}
+inline __ss_int gcd(int, __ss_int x) {
+    return x;
+}
+inline __ss_int gcd(int) {
+    return 0;
+}
+
+template<class ... Args> __ss_int lcm(int, __ss_int x, Args ... args) {
+    return ((x = std::lcm(x, args)), ...);
+}
+inline __ss_int lcm(int, __ss_int x) {
+    return x;
+}
+inline __ss_int lcm(int) {
+    return 1;
+}
+
+inline __ss_int perm(__ss_int n, __ss_int k) {
+    __ss_int result = 1;
+    for(__ss_int i = n-k+1; i <= n; i++)
+        result *= i;
+    return result;
+}
+inline __ss_int perm(__ss_int n) {
+    return factorial(n);
+}
+
 
 } // module namespace
 #endif

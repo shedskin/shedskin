@@ -121,6 +121,30 @@ def test_math():
     assert math.isqrt(18) == 4
     assert math.comb(17, 14) == 680
 
+    assert math.gcd(2*2*3, 2*2*3*4, 2*3*5*7) == 2*3
+    assert math.lcm(2*2*3, 2*2*3*4, 2*3*5*7, 2*2*3*4*5, 1681) == 1680*1681
+
+    assert math.gcd(0, 0, 0) == 0
+    assert math.lcm(0, 0, 0) == 0
+
+    assert math.gcd(1, 0) == 1
+    assert math.lcm(0, 1) == 0
+
+    assert math.gcd(15) == 15
+    assert math.lcm(14) == 14
+
+    assert math.gcd() == 0
+    assert math.lcm() == 1
+
+    assert math.perm(0) == 1
+    assert math.perm(0, 0) == 1
+
+    assert math.perm(7) == 5040
+
+    assert math.perm(7, 7) == 5040
+    assert math.perm(7, 6) == 5040
+    assert math.perm(7, 3) == 210
+
 
 def test_all():
     test_fsum()
