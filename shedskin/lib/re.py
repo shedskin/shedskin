@@ -65,12 +65,12 @@ class re_object:
     def split(self, s, maxn=0):
         return ['']
 
-    def sub(self, tpl, s, maxn=0):
-        tpl(match_object())
+    def sub(self, repl, string, count=0):
+        repl(match_object())
         return ''
 
-    def subn(self, tpl, s, maxn=0):
-        tpl(match_object())
+    def subn(self, repl, string, count=0):
+        repl(match_object())
         return ('', 0)
 
     def finditer(self, s, pos=0, endpos=-1):
@@ -94,12 +94,12 @@ def search(pat, s, flags=0):
 def split(pat, s, maxn=0):
     return ['']
 
-def sub(pat, tpl, s, maxn=0):
-    tpl(match_object())
+def sub(pattern, repl, string, count=0):
+    repl(match_object())
     return ''
 
-def subn(pat, tpl, s, maxn=0):
-    tpl(match_object())
+def subn(pattern, repl, string, count=0):
+    repl(match_object())
     return ('', 0)
 
 def finditer(pat, s, pos=0, endpos=-1):
