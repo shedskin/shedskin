@@ -28,6 +28,8 @@ def erf(x): return 1.0
 def erfc(x): return 1.0
 
 def expm1(x): return 1.0
+def fma(x, y, z): return 1.0
+
 def exp(x): return 1.0
 def exp2(x): return 1.0
 def frexp(x): return (1.0, 1)
@@ -66,3 +68,7 @@ def perm(n, k=None): return 1
 def gcd(*args): return 1
 def lcm(*args): return 1
 
+def prod(iterable, start=1):
+    elem = iter(iterable).__next__()
+    elem.__mul__(elem)
+    return elem
