@@ -185,6 +185,10 @@ inline __ss_float expm1(__ss_float x) {
     return ::expm1(x);
 }
 
+inline __ss_float fma(__ss_float x, __ss_float y, __ss_float z) {
+    return ::fma(x, y, z);
+}
+
 inline tuple2<__ss_float, __ss_int> *frexp(__ss_float x) {
     int n;
     __ss_float mantisa = std::frexp(x, &n);
@@ -283,6 +287,44 @@ inline __ss_int perm(__ss_int n, __ss_int k) {
 }
 inline __ss_int perm(__ss_int n) {
     return factorial(n);
+}
+
+template<class T> inline T __mul(T a, T b) { return a->__mul__(b); }
+#ifdef __SS_LONG
+template<> inline __ss_int __mul(__ss_int a, __ss_int b) { return a*b; }
+#endif
+template<> inline int __mul(int a, int b) { return a*b; }
+template<> inline __ss_float __mul(__ss_float a, __ss_float b) { return a*b; }
+// TODO complex?
+
+template<class A> A prod(pyiter<A> *iterable, A start) {
+    __ss_int __2;
+    pyiter<A> *__1;
+    typename pyiter<A>::for_in_loop __3;
+    A x;
+    A result = start;
+
+    FOR_IN(x,iterable,1,2,3)
+        result = __mul(result, x);
+    END_FOR
+
+    return result;
+}
+
+inline __ss_float prod(pyiter<__ss_float> *iterable) {
+    return prod(iterable, 1.0);
+}
+
+inline __ss_int prod(pyiter<__ss_int> *iterable) {
+    return prod(iterable, 1);
+}
+
+inline __ss_float prod(pyiter<__ss_float> *iterable, __ss_int start) {
+    return prod(iterable, (__ss_float)start);
+}
+
+inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
+    return prod(iterable) * start;
 }
 
 

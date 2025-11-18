@@ -44,7 +44,10 @@ def test_math():
     assert '%.8f' % math.cosh(2)  == '3.76219569'
     assert '%.8f' % math.erf(2)   == '0.99532227'
     assert '%.8f' % math.erfc(2)  == '0.00467773'
+
     assert '%.8f' % math.expm1(2) == '6.38905610'
+    assert int(100 * math.fma(2.7, 3.3, 1.1)) == 1001
+
     assert math.frexp(2) == (0.5, 2)
     assert math.gamma(2) == 1.0
     assert math.lgamma(2) == 0.0
@@ -146,10 +149,33 @@ def test_math():
     assert math.perm(7, 3) == 210
 
 
+class Bert:
+    def __init__(self, x):
+        self.x = x
+
+    def __mul__(self, b):
+        return Bert(self.x * b.x)
+
+
+def test_prod():
+    assert math.prod([2,3,4]) == 24
+    assert math.prod([2,3,4], start=2) == 48
+
+    assert '%.2f' % (math.prod([2.1,3.1,4.1])) == '26.69'
+
+    assert '%.2f' % (math.prod([2.2,3.1,4.4], start=2.2)) == '66.02'
+
+    assert math.prod((Bert(3), Bert(4)), start=Bert(2)).x == 24
+
+    assert math.prod([2,3,4], start=2.0) == 48.0
+    assert '%.2f' %  (math.prod([2.1,3,4], start=2)) == '50.40'
+
+
 def test_all():
     test_fsum()
     test_pow()
     test_math()
+    test_prod()
 
 
 if __name__ == '__main__':
