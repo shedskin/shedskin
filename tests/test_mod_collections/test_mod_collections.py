@@ -76,11 +76,24 @@ def test_collections_deque2():
     assert not list(d)
 
 
+def test_collections_deque3():
+    d = deque([1,2,2,2,3,4])  # TODO maxlen arg
+    assert d.count(2) == 3
+    assert d.count(5) == 0
+
+    assert d.index(3) == 4  # TODO start, stop args
+    #d.index(17)  # TODO better valueerror msg
+
+    d.reverse()
+    assert list(d) == [4,3,2,2,2,1]
+
+
 def test_all():
     test_collections_defaultdict1()
     test_collections_defaultdict2()
     test_collections_deque1()
     test_collections_deque2()
+    test_collections_deque3()
 
 
 if __name__ == '__main__':
