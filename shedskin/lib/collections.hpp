@@ -152,6 +152,34 @@ public:
        return NULL;
    }
 
+   void *reverse() {
+       std::reverse(units.begin(), units.end());
+       return NULL;
+   }
+
+   __ss_int count(A value) {
+       __ss_int result = 0;
+       iter = units.begin();
+       while(iter != units.end()) {
+            if(__eq(*iter, value))
+                result++;
+            iter++;
+       }
+       return result;
+   }
+
+   __ss_int index(A value, __ss_int start=0, __ss_int stop=0) {
+       __ss_int result = 0;
+       iter = units.begin();
+       while(iter != units.end()) {
+            if(__eq(*iter, value))
+                return result;
+            result++;
+            iter++;
+       }
+       throw new ValueError(new str("value is not in deque"));
+   }
+
    __ss_int truth() {
        return !units.empty();
    }
