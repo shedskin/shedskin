@@ -1,5 +1,7 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE)
 
+
+# TODO purge, match_object.__getitem__, fullmatch, re_object.groups attr,
 
 I = IGNORECASE = 2
 L = LOCALE = 4
@@ -13,7 +15,7 @@ class PatternError(Exception): pass
 class error(Exception): pass  # deprecated alias for PatternError
 
 
-class match_object:
+class match_object:  # TODO __getitem__(g)
     def __init__(self):
         self.pos = 0
         self.endpos = 0
@@ -22,7 +24,7 @@ class match_object:
         self.re = re_object()
         self.string = ''
 
-    def expand(self, tpl):
+    def expand(self, template):
         return ''
 
     def group(self, *args):
@@ -32,37 +34,37 @@ class match_object:
     def __group1(self, arg):
         return ''
 
-    def start(self, i=0):
+    def start(self, group=0):
         return 1
 
-    def end(self, i=0):
+    def end(self, group=0):
         return 1
 
     def span(self, group=0):
         return (1,)
 
-    def groups(self, defval=None):
+    def groups(self, default=None):
         return ('',)
 
-    def groupdict(self, defval=None):
+    def groupdict(self, default=None):
         return {'' : ''}
 
     def __repr__(self):
         return ''
 
-class re_object:
-    def __init__(self):
+class re_object:  # TODO fullmatch
+    def __init__(self):  # TODO .groups
         self.flags = 0
         self.groupindex = {'' : ''}
         self.pattern = ''
 
-    def match(self, s, pos=0, endpos=-1):
+    def match(self, string, pos=0, endpos=-1):
         return match_object()
 
-    def search(self, s, pos=0, endpos=-1):
+    def search(self, string, pos=0, endpos=-1):
         return match_object()
 
-    def split(self, s, maxn=0):
+    def split(self, string, maxsplit=0):
         return ['']
 
     def sub(self, repl, string, count=0):
@@ -73,40 +75,40 @@ class re_object:
         repl(match_object())
         return ('', 0)
 
-    def finditer(self, s, pos=0, endpos=-1):
+    def finditer(self, string, pos=0, endpos=-1):
         return __iter(match_object())
 
-    def findall(self, s, flags=0):
+    def findall(self, string, pos=0, endpos=-1):
         return ['']
 
     def __repr__(self):
         return ''
 
-def compile(pat, flgs=0):
+def compile(pattern, flags=0):
     return re_object()
 
-def match(pat, s, flags=0):
+def match(pattern, string, flags=0):  # TODO fullmatch
     return match_object()
 
-def search(pat, s, flags=0):
+def search(pattern, string, flags=0):
     return match_object()
 
-def split(pat, s, maxn=0):
+def split(pattern, string, maxsplit=0, flags=0):
     return ['']
 
-def sub(pattern, repl, string, count=0):
+def sub(pattern, repl, string, count=0, flags=0):
     repl(match_object())
     return ''
 
-def subn(pattern, repl, string, count=0):
+def subn(pattern, repl, string, count=0, flags=0):
     repl(match_object())
     return ('', 0)
 
-def finditer(pat, s, pos=0, endpos=-1):
+def finditer(pattern, string, flags=0):
     return __iter(match_object())
 
-def findall(pat, s, flags=0):
+def findall(pattern, string, flags=0):
     return ['']
 
-def escape(s):
+def escape(pattern):
     return ''
