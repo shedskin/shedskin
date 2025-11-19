@@ -183,6 +183,8 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
     return __mbool((long long)d == d);
 }
 
+/* int.{bit_count, bit_length */
+
 namespace __int___ {
     inline __ss_int bit_count(__ss_int i) {
 #ifdef __SS_LONG
@@ -203,6 +205,13 @@ namespace __int___ {
         return new tuple<__ss_int>(2, i, 1);
     } */
 
+}
+
+inline __ss_int __ss_bit_count(__ss_int i) {
+    return __int___::bit_count(i);
+}
+inline __ss_int __ss_bit_length(__ss_int i) {
+    return __int___::bit_length(i);
 }
 
 namespace __bytes___ {
@@ -226,7 +235,7 @@ namespace __bytes___ {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     };
 
-    inline bytes *fromhex(str *s) { // merge with binascii.unhexlify? which does not ignore whitespace
+    inline bytes *fromhex(void *, str *s) { // merge with binascii.unhexlify? which does not ignore whitespace
         __GC_STRING separator = " \n\r\t";
         bytes *result = new bytes();
         size_t count = 0;
@@ -255,15 +264,15 @@ namespace __bytes___ {
 }
 
 namespace __bytearray__ {
-    inline bytes *fromhex(str *s) {
-        bytes *b = __bytes___::fromhex(s);
+    inline bytes *fromhex(void *, str *s) {
+        bytes *b = __bytes___::fromhex(NULL, s);
         b->frozen = 0;
         return b;
     }
 }
 
 namespace __float___ {
-    template<class T> __ss_float from_number(T t) {
+    template<class T> __ss_float from_number(void *, T t) {
         return __float(t);
     }
 }
