@@ -14,6 +14,8 @@ public:
     list(str *s);
 
     void clear();
+    list<T> *copy();
+
     void *__setitem__(__ss_int i, T e);
     void *__delitem__(__ss_int i);
     int empty();
@@ -145,6 +147,10 @@ template<class T> PyObject *list<T>::__to_py__() {
 
 template<class T> void list<T>::clear() {
     units.clear();
+}
+
+template<class T> list<T> *list<T>::copy() {
+    return new list<T>(this);
 }
 
 template<class T> void list<T>::resize(__ss_int i) {
