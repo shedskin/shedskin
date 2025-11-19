@@ -327,6 +327,70 @@ inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
     return prod(iterable) * start;
 }
 
+template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {
+    __iter<A> *p_iter = p->__iter__();
+    __iter<A> *q_iter = q->__iter__();
+
+    A a, b;
+    __ss_float sum = 0;
+    size_t n_exhausted;
+
+    for(;;) {
+        n_exhausted = 0;
+
+        try  {
+            a = p_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        try  {
+            b = q_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        if(n_exhausted == 2)
+            break;
+        else if (n_exhausted > 0)
+            throw new ValueError(new str("both points must have the same number of dimensions"));
+
+        sum += (a-b)*(a-b);
+    }
+
+    return sqrt(sum);
+}
+
+template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
+    __iter<A> *p_iter = p->__iter__();
+    __iter<A> *q_iter = q->__iter__();
+
+    A a, b;
+    __ss_float sum = 0;
+    size_t n_exhausted;
+
+    for(;;) {
+        n_exhausted = 0;
+
+        try  {
+            a = p_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        try  {
+            b = q_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        if(n_exhausted == 2)
+            break;
+        else if (n_exhausted > 0)
+            throw new ValueError(new str("Inputs are not the same length"));
+
+        sum += a*b;
+    }
+
+    return sum;
+}
+
 inline __ss_bool isclose(__ss_float a, __ss_float b, __ss_float rel_tol=1e-09, __ss_float abs_tol=0.0) {
     if (a == b)
         return True;
