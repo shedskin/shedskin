@@ -995,7 +995,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod": # and getmv().module.builtin:
+                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
