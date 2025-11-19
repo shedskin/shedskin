@@ -74,6 +74,9 @@ def test_random2():
     b = random.getrandbits(30)
     # print('')
 
+    s = "%.8f" % random.binomialvariate()
+    s = "%.8f" % random.binomialvariate(n=10, p=0.3)
+
 
 def test_random3():
     random.seed(1)
