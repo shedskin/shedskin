@@ -327,6 +327,16 @@ inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
     return prod(iterable) * start;
 }
 
+inline __ss_bool isclose(__ss_float a, __ss_float b, __ss_float rel_tol=1e-09, __ss_float abs_tol=0.0) {
+    if (a == b)
+        return True;
+
+    if (!std::isfinite(a) || !std::isfinite(b))
+        return False;
+
+    __ss_float diff = fabs(a - b);
+    return __mbool(diff <= abs_tol || diff <= fabs(rel_tol * a) || diff <= fabs(rel_tol * b));
+}
 
 } // module namespace
 #endif

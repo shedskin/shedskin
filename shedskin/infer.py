@@ -455,7 +455,8 @@ def connect_actual_formal(
             and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit", "map")
         )
     ):
-        skip_defaults = True
+        if not (func.mv.module.ident == "math" and func.ident == "isclose"):
+            skip_defaults = True
 
     actuals, formals, _, extra, _error = analyze_args(
         gx, expr, func, skip_defaults=skip_defaults, merge=merge
