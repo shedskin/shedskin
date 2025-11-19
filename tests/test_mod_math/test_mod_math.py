@@ -179,12 +179,24 @@ def test_isclose():
     assert math.isclose(7.0, 7.000000001)
 
 
+def test_dist():
+    assert math.dist(iter([1.0, 3.0]), (4.0, 7.0)) == 5.0
+    assert math.dist(iter([1, 3]), (4, 7)) == 5.0
+
+
+def test_sumprod():
+    assert math.sumprod([1,2],[3,4]) == 11
+    assert math.sumprod([1,2.1],[3.3,4]) == 11.7
+
+
 def test_all():
     test_fsum()
     test_pow()
     test_math()
     test_prod()
     test_isclose()
+    test_dist()
+    test_sumprod()
 
 
 if __name__ == '__main__':
