@@ -1,3 +1,6 @@
-b''.hex(':', 2)
+def hop(a,b):
+    pass
 
-#*WARNING* 46.py:1: call with incorrect number of arguments
+hop(1,2,c=3)
+
+#*WARNING* 46.py:4: call with incorrect number of arguments
