@@ -209,6 +209,14 @@ __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
     return (alpha*__power(-__math__::log(u), (1.0/beta)));
 }
 
+__ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
+    __ss_int success = 0;
+    for(__ss_int i=0; i<n; i++)
+        if(random() < p)
+            success++;
+    return success;
+}
+
 Random::Random() : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
@@ -784,6 +792,11 @@ __ss_float paretovariate(__ss_float alpha) {
 __ss_float weibullvariate(__ss_float alpha, __ss_float beta) {
 
     return _inst->weibullvariate(alpha, beta);
+}
+
+__ss_int binomialvariate(__ss_int n, __ss_float p) {
+
+    return _inst->binomialvariate(n, p);
 }
 
 __ss_int getrandbits(__ss_int k) {

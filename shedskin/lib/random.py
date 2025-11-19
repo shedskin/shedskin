@@ -32,17 +32,18 @@ class Random:
     def sample(self, population, k): return [iter(population).__next__()]
     def uniform(self, a, b): return 1.0
     def triangular(self, low=0.0, high=1.0, mode=None): return 1.0
-    def normalvariate(self, mu, sigma): return 1.0
+    def normalvariate(self, mu=0.0, sigma=1.0): return 1.0
     def lognormvariate(self, mu, sigma): return 1.0
     def cunifvariate(self, mean, arc): return 1.0
-    def expovariate(self, lambd): return 1.0
+    def expovariate(self, lambd=1.0): return 1.0
     def vonmisesvariate(self, mu, kappa): return 1.0
     def gammavariate(self, alpha, beta): return 1.0
     def stdgamma(self, alpha, ainv, bbb, ccc): return 1.0
-    def gauss(self, mu, sigma): return 1.0
+    def gauss(self, mu=0.0, sigma=1.0): return 1.0
     def betavariate(self, alpha, beta): return 1.0
     def paretovariate(self, alpha): return 1.0
     def weibullvariate(self, alpha, beta): return 1.0
+    def binomialvariate(self, n=1, p=0.5): return 1
 
 
 _inst = Random()
@@ -61,14 +62,15 @@ def shuffle(x): pass
 def sample(population, k): return [iter(population).__next__()]
 def uniform(a, b): return 1.0
 def triangular(low=0.0, high=1.0, mode=None): return 1.0
-def normalvariate(mu, sigma): return 1.0
+def normalvariate(mu=0.0, sigma=1.0): return 1.0
 def lognormvariate(mu, sigma): return 1.0
 def cunifvariate(mean, arc): return 1.0
-def expovariate(lambd): return 1.0
+def expovariate(lambd=1.0): return 1.0
 def vonmisesvariate(mu, kappa): return 1.0
 def gammavariate(alpha, beta): return 1.0
 def stdgamma(alpha, ainv, bbb, ccc): return 1.0
-def gauss(mu, sigma): return 1.0
+def gauss(mu=0.0, sigma=1.0): return 1.0
 def betavariate(alpha, beta): return 1.0
 def paretovariate(alpha): return 1.0
 def weibullvariate(alpha, beta): return 1.0
+def binomialvariate(n=1, p=0.5): return 1
