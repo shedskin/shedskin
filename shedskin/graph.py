@@ -655,6 +655,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for cl in self.classes.values():
             for ancestor in cl.ancestors_upto(None)[1:]:
                 cl.staticmethods.extend(ancestor.staticmethods)
+                cl.classmethods.extend(ancestor.classmethods)
                 cl.properties.update(ancestor.properties)
 
                 for func in ancestor.funcs.values():
@@ -994,7 +995,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod"and getmv().module.builtin:
+                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
@@ -2408,7 +2409,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     isinstance(lvalue, ast.Name)
                     and isinstance(rvalue, ast.Call)
                     and isinstance(rvalue.func, ast.Name)
-                    and rvalue.func.id in ["staticmethod", "property"]
+                    and rvalue.func.id in ["staticmethod", "classmethod", "property"]
                 ):
                     if rvalue.func.id == "property":
                         if len(rvalue.args) == 1 and isinstance(
@@ -2431,8 +2432,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                                 rvalue,
                                 mv=getmv(),
                             )
-                    else:
+                    elif rvalue.func.id == "staticmethod":
                         newclass.staticmethods.append(lvalue.id)
+                    else:
+                        newclass.classmethods.append(lvalue.id)
                     skip.append(child)
 
         # --- children
