@@ -35,6 +35,14 @@ class deque(pyiter):
     def reverse(self):
         pass
 
+    def copy(self):
+        d = deque()
+        d.unit = self.unit
+        return d
+
+    def insert(self, index, value):
+        pass
+
     def __getitem__(self, i):
         return self.unit
     def __setitem__(self, i, e):
