@@ -67,6 +67,7 @@ public:
     int _init_genrand(int s);
     __ss_float gauss(__ss_float mu, __ss_float sigma);
     template <class A> A choice(pyseq<A> *seq);
+    template <class A> list<A> *choices(pyseq<A> *seq, __ss_int k=1);
     template <class A> void *shuffle(list<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
     template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
@@ -97,10 +98,6 @@ __ss_int randrange(__ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
 __ss_int randint(__ss_int a, __ss_int b);
-template <class A> A choice(pyseq<A> *seq);
-template <class A> void *shuffle(list<A> *x);
-template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
-template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
 __ss_float uniform(__ss_float a, __ss_float b);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_float mode);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode);
@@ -122,6 +119,11 @@ bytes * randbytes(__ss_int n);
 template <class A> A choice(pyseq<A> *seq) {
 
     return _inst->choice(seq);
+}
+
+template <class A> list<A> *choices(pyseq<A> *seq, __ss_int k) {
+
+    return _inst->choices(seq, k);
 }
 
 template <class A> void *shuffle(list<A> *x) {
@@ -237,6 +239,13 @@ template <class A> A Random::choice(pyseq<A> *seq) {
     */
 
     return seq->__getitem__(__int((this->random()*len(seq))));
+}
+
+template <class A> list<A> *Random::choices(pyseq<A> *seq, __ss_int k) {
+    list<A> *result = new list<A>();
+    for(__ss_int i=0; i<k; i++)
+        result->append(choice(seq));
+    return result;
 }
 
 template<class T> inline int __is_none(T *t) { return !t; }
