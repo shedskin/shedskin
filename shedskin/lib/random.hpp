@@ -50,6 +50,7 @@ public:
     __ss_float normalvariate(__ss_float mu, __ss_float sigma);
     template <class A> void *seed(A a);
     __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
+    __ss_int binomialvariate(__ss_int n=1, __ss_float p=0.5);
     int _init_by_array(list<int> *init_key);
     __ss_int randint(__ss_int a, __ss_int b);
     __ss_float vonmisesvariate(__ss_float mu, __ss_float kappa);
@@ -113,6 +114,7 @@ __ss_float gauss(__ss_float mu, __ss_float sigma);
 __ss_float betavariate(__ss_float alpha, __ss_float beta);
 __ss_float paretovariate(__ss_float alpha);
 __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
+__ss_int binomialvariate(__ss_int n=1, __ss_float p=0.5);
 __ss_int getrandbits(__ss_int k);
 bytes * randbytes(__ss_int n);
 
