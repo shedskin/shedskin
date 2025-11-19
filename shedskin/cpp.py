@@ -2940,13 +2940,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
-                ident == "is_integer"
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio")
                 and isinstance(node.func, ast.Attribute)
                 and ((python.def_class(self.gx, "float_"), 0) in self.mergeinh[node.func.value]
                      or (python.def_class(self.gx, "int_"), 0) in self.mergeinh[node.func.value])
             ):
                 assert isinstance(node.func, ast.Attribute)
-                self.visitm("__ss_is_integer(", node.func.value, ")", func)
+                self.visitm(f"__ss_{ident}(", node.func.value, ")", func)
                 return
             else:
                 self.visitm(node.func, "(", func)
