@@ -155,6 +155,14 @@ def test_list_cmp():
     assert [2, 3] > [1, 2, 3]
 
 
+def test_list_copy():
+    l = [1,2,3]
+    a = l.copy()
+    a.append(4)
+    assert a == [1,2,3,4]
+    assert l == [1,2,3]
+
+
 def test_all():
     test_list_append()
     test_list_assign()
@@ -169,6 +177,7 @@ def test_all():
     test_list_nested()
     test_list_slice()
     test_list_subsets()
+    test_list_copy()
     test_tuple_in_list()
 
 
