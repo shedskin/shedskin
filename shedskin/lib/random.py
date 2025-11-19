@@ -27,6 +27,7 @@ class Random:
     def randbytes(self, n): return b''
     def getrandbits(self, k): return 1
     def choice(self, seq): return seq[seq.__len__()]
+    def choices(self, seq, k=1): return [seq[seq.__len__()]]
     def shuffle(self, x): pass
     def sample(self, population, k): return [iter(population).__next__()]
     def uniform(self, a, b): return 1.0
@@ -55,6 +56,7 @@ def randint(a, b): return 1
 def randbytes(n): return b''
 def getrandbits(k): return 1
 def choice(seq): return seq[seq.__len__()]
+def choices(seq, k=1): return [seq[seq.__len__()]]
 def shuffle(x): pass
 def sample(population, k): return [iter(population).__next__()]
 def uniform(a, b): return 1.0
