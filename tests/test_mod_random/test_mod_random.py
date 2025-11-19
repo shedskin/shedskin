@@ -99,11 +99,17 @@ def test_randbytes():
     assert len(rr.randbytes(5)) == 5
 
 
+def test_choices():
+    assert len(random.choices(range(100), k=5)) == 5
+    assert len(random.choices(list(range(100)), k=5)) == 5
+
+
 def test_all():
     test_random1()
     test_random2()
     test_random3()
     test_randbytes()
+    test_choices()
 
 
 if __name__ == '__main__':
