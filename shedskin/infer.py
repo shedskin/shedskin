@@ -358,6 +358,11 @@ def analyze_args(
     if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
         args.insert(0, None)
 
+    kwextra = []
+    for kw in kwdict:
+        if kw not in formal_args and f'__kw_{kw}' not in formal_args:
+            kwextra.append(kw)
+
     argnr = 0
     actuals: List[Optional[ast.AST]] = []
     formals = []
@@ -394,7 +399,7 @@ def analyze_args(
     extra = args[argnr:]
 
     _error = bool(
-        (missing or extra)
+        (missing or extra or kwextra)
         and not func.node.args.vararg
         and not func.node.args.kwarg
         and not get_starargs(expr)

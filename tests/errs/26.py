@@ -3,7 +3,7 @@ a = 1
 a = lambda x: x
 
 import re
-re.findall()
+re.findall('pat', 'str')
 
 import socket
 socket.socket().gettimeout()
@@ -48,6 +48,6 @@ m.woeh(1,2)
 #*WARNING* 26.py:19: non-constant or unsupported type code
 #*WARNING* 26.py:23: calling functions with different numbers of arguments
 #*WARNING* 26.py:27: assuming constant format string
-#*WARNING* 26.py:35: staticmethod 'woeh' called without using class name
-#*WARNING* 26.py:39: staticmethod 'woeh' called without using class name
+#*WARNING* 26.py:35: staticmethod/classmethod 'woeh' called without using class name
+#*WARNING* 26.py:39: staticmethod/classmethod 'woeh' called without using class name
 
