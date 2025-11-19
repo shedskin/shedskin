@@ -561,7 +561,7 @@ def analyze_callfunc(
 
         if cl:
             # staticmethod call
-            if ident in cl.staticmethods:
+            if ident in cl.staticmethods or ident in cl.classmethods:
                 direct_call = cl.funcs[ident]
                 return (
                     objexpr,
@@ -944,7 +944,7 @@ def possible_functions(
             (t[0].funcs[ident], t[1], t)
             for t in objtypes
             if ident in t[0].funcs
-            and not (isinstance(t[0], python.Class) and ident in t[0].staticmethods)
+            and not (isinstance(t[0], python.Class) and (ident in t[0].staticmethods or ident in t[0].classmethods))
         ]
 
     return funcs
@@ -1064,7 +1064,7 @@ def redirect(
     # staticmethod
     if (
         isinstance(func.parent, python.Class)
-        and func.ident in func.parent.staticmethods
+        and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
     ):
         dcpa = 1
 
