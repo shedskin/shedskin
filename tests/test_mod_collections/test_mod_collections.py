@@ -88,12 +88,31 @@ def test_collections_deque3():
     assert list(d) == [4,3,2,2,2,1]
 
 
+def test_collections_deque4():
+    d = deque([1,2,3,4])
+    assert list(d) == [1,2,3,4]
+
+    d.insert(1, 7)
+    assert list(d) == [1,7,2,3,4]
+
+    e = d.copy()
+    assert list(e) == [1,7,2,3,4]
+
+    d.append(3)
+    assert list(d) == [1,7,2,3,4,3]
+
+    assert d.index(3) == 3
+    assert d.index(3, 4) == 5
+    assert d.index(2, 1, -2) == 2
+
+
 def test_all():
     test_collections_defaultdict1()
     test_collections_defaultdict2()
     test_collections_deque1()
     test_collections_deque2()
     test_collections_deque3()
+    test_collections_deque4()
 
 
 if __name__ == '__main__':
