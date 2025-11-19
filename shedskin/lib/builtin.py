@@ -133,8 +133,8 @@ class bool_:
         return ''
 
 class float_:
-    @staticmethod  # TODO @classmethod
-    def from_number(i):
+    @classmethod
+    def from_number(i):  # TODO cls arg
         return 1.0
 
     def __add__(self, b):
@@ -447,7 +447,7 @@ class str_(pyseq):
         return 1
 
 class bytes_(pyseq):
-    @staticmethod  # TODO @classmethod
+    @classmethod  # TODO cls arg
     def fromhex(s):
         return b''
 
@@ -606,7 +606,7 @@ class bytes_(pyseq):
         pass
 
 class dict(pyiter):
-    @staticmethod  # TODO @classmethod
+    @classmethod  # TODO cls arg
     def fromkeys(l, b=None):
         return {l.unit: b}
 
@@ -777,7 +777,7 @@ class set(pyset):
         self.__setunit__(iter(b).__next__())
 
 class complex:
-    @staticmethod  # TODO @classmethod
+    @classmethod  # TODO cls arg
     def from_number(i):
         return complex(i)
 
