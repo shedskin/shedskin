@@ -163,6 +163,7 @@ class Class(PyObject):
         self.virtualvars: dict[str, set["Class"]] = {}  # 'virtual' variables
         self.properties: dict[str, List[str]] = {}
         self.staticmethods: List[str] = []
+        self.classmethods: List[str] = []
         self.splits: dict[
             int, int
         ] = {}  # contour: old contour (used between iterations)

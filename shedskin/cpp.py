@@ -1789,7 +1789,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if (
             declare
             and isinstance(func.parent, python.Class)
-            and func.ident in func.parent.staticmethods
+            and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
         ):
             header = "static " + header
         if is_init and not formaldecs:
@@ -2912,9 +2912,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=self.mv,
                     )
-                if isinstance(cl, python.Class) and ident in cl.staticmethods:
+                if isinstance(cl, python.Class) and (ident in cl.staticmethods or ident in cl.classmethods):
                     error.error(
-                        "staticmethod '%s' called without using class name" % ident,
+                        "staticmethod/classmethod '%s' called without using class name" % ident,
                         self.gx,
                         node,
                         warning=True,
@@ -2940,13 +2940,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
-                ident == "is_integer"
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio")
                 and isinstance(node.func, ast.Attribute)
                 and ((python.def_class(self.gx, "float_"), 0) in self.mergeinh[node.func.value]
                      or (python.def_class(self.gx, "int_"), 0) in self.mergeinh[node.func.value])
             ):
                 assert isinstance(node.func, ast.Attribute)
-                self.visitm("__ss_is_integer(", node.func.value, ")", func)
+                self.visitm(f"__ss_{ident}(", node.func.value, ")", func)
                 return
             else:
                 self.visitm(node.func, "(", func)
@@ -4000,7 +4000,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(module.full_path() + "::")
 
             # class.attr: staticmethod
-            elif cl and node.attr in cl.staticmethods:
+            elif cl and (node.attr in cl.staticmethods or node.attr in cl.classmethods):
                 ident = cl.ident
                 if cl.ident in [
                     "dict",

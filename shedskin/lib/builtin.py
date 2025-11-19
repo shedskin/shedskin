@@ -5,16 +5,13 @@ class class_:
         return self.__name__
 
 class int_:
-    @staticmethod
-    def bit_count(i):
+    def bit_count(self, i):
         return 1
 
-    @staticmethod
-    def bit_length(i):
+    def bit_length(self, i):
         return 1
 
-#    @staticmethod
-#    def as_integer_ratio(i):
+#    def as_integer_ratio(self, i):
 #        return (1,)
 
     def is_integer(self):
@@ -136,8 +133,8 @@ class bool_:
         return ''
 
 class float_:
-    @staticmethod
-    def from_number(i):
+    @classmethod
+    def from_number(cls, i):
         return 1.0
 
     def __add__(self, b):
@@ -450,6 +447,10 @@ class str_(pyseq):
         return 1
 
 class bytes_(pyseq):
+    @classmethod
+    def fromhex(cls, s):
+        return b''
+
     def strip(self, chars=''):
         return b''
     def lstrip(self, chars=''):
@@ -554,10 +555,6 @@ class bytes_(pyseq):
     def swapcase(self):
         return b''
 
-    @staticmethod
-    def fromhex(s):
-        return b''
-
     def hex(self, sep='', bytes_per_sep=1):
         return ''
 
@@ -609,6 +606,10 @@ class bytes_(pyseq):
         pass
 
 class dict(pyiter):
+    @classmethod
+    def fromkeys(cls, l, b=None):
+        return {l.unit: b}
+
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)
 
@@ -673,10 +674,6 @@ class dict(pyiter):
 
     def __delete__(self, k):
         self.__key__(k)
-
-    @staticmethod
-    def fromkeys(l, b=None):
-        return {l.unit: b}
 
     def keys(self):
         yield self.unit
@@ -780,8 +777,8 @@ class set(pyset):
         self.__setunit__(iter(b).__next__())
 
 class complex:
-    @staticmethod
-    def from_number(i):
+    @classmethod
+    def from_number(cls, i):
         return complex(i)
 
     def __init__(self, real=None, imag=None):

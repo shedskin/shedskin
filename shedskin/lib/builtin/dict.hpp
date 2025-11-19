@@ -444,7 +444,7 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
 /* dict.fromkeys */
 
 namespace __dict__ {
-    template<class A, class B> dict<A, B> *fromkeys(pyiter<A> *f, B b) {
+    template<class A, class B> dict<A, B> *fromkeys(void *, pyiter<A> *f, B b) {
         dict<A, B> *d = new dict<A, B>();
         typename pyiter<A>::for_in_unit e;
         typename pyiter<A>::for_in_loop __3;
@@ -456,8 +456,8 @@ namespace __dict__ {
         return d;
     }
 
-    template<class A> dict<A, void *> *fromkeys(pyiter<A> *f) {
-        return fromkeys(f, (void *)0);
+    template<class A> dict<A, void *> *fromkeys(void *, pyiter<A> *f) {
+        return fromkeys(NULL, f, (void *)0);
     }
 
 }
