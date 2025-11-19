@@ -16,7 +16,7 @@ bytes *standard_b64encode(bytes *s) {
 }
 
 bytes *urlsafe_b64encode(bytes *s) {
-    return b64encode(s, NULL); // TODO replace +/
+    return b64encode(s, new bytes("-_"));
 }
 
 bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate) {
@@ -28,7 +28,7 @@ bytes *standard_b64decode(bytes *s) {
 }
 
 bytes *urlsafe_b64decode(bytes *s) {
-    return b64decode(s, NULL, False); // TODO replace +/
+    return b64decode(s, new bytes("-_"), False);
 }
 
 void __init() {
