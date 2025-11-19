@@ -994,6 +994,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
+                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod"and getmv().module.builtin:
+                    parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
                 elif parent and is_property_setter(dec):
@@ -1009,6 +1011,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if (
                 not inherited_from
                 and func.ident not in parent.staticmethods
+                and func.ident not in parent.classmethods
                 and (not func.formals or func.formals[0] != "self")
             ):
                 error.error(
