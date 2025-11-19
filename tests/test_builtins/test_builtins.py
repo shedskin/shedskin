@@ -134,8 +134,8 @@ def test_hash():
 def test_int():
     assert int(100.2) == 100
 
-    assert int.bit_count(12345) == 6
-    assert int.bit_count(0b11111111111111111111111111111111) == 32
+    assert (12345).bit_count() == 6
+    assert (0b11111111111111111111111111111111).bit_count() == 32
 #    assert int.bit_count(-12345) == 6
 
 # def test_getattr():
