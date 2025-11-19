@@ -995,7 +995,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
+                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod": # and getmv().module.builtin:
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
@@ -1090,7 +1090,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- register function
         if isinstance(parent, python.Class):
-            if func.ident not in parent.staticmethods:  # XXX use flag
+            if func.ident not in parent.staticmethods and func.ident not in parent.classmethods:  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
 

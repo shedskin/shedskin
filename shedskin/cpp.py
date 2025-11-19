@@ -1789,7 +1789,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if (
             declare
             and isinstance(func.parent, python.Class)
-            and func.ident in func.parent.staticmethods
+            and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
         ):
             header = "static " + header
         if is_init and not formaldecs:
@@ -2912,9 +2912,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=self.mv,
                     )
-                if isinstance(cl, python.Class) and ident in cl.staticmethods:
+                if isinstance(cl, python.Class) and (ident in cl.staticmethods or ident in cl.classmethods):
                     error.error(
-                        "staticmethod '%s' called without using class name" % ident,
+                        "staticmethod/classmethod '%s' called without using class name" % ident,
                         self.gx,
                         node,
                         warning=True,
