@@ -171,11 +171,20 @@ def test_prod():
     assert '%.2f' %  (math.prod([2.1,3,4], start=2)) == '50.40'
 
 
+def test_isclose():
+    assert math.isclose(math.inf, math.inf)
+    assert not math.isclose(math.nan, math.nan)
+    assert math.isclose(7.0, 7.0)
+    assert not math.isclose(7.0, 7.00000001)
+    assert math.isclose(7.0, 7.000000001)
+
+
 def test_all():
     test_fsum()
     test_pow()
     test_math()
     test_prod()
+    test_isclose()
 
 
 if __name__ == '__main__':
