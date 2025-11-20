@@ -44,7 +44,6 @@ public:
     void *frombytes(bytes *b);
 
     list<T> *tolist();
-    bytes *tostring();
     bytes *tobytes();
 
     T __getitem__(__ss_int i);
@@ -123,10 +122,6 @@ template<> template<> void *array<int>::extend(list<__ss_int> *l);
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     extend(iter);
     return NULL;
-}
-
-template<class T> bytes *array<T>::tostring() {
-    return tobytes();
 }
 
 template<class T> bytes *array<T>::tobytes() {
@@ -380,7 +375,7 @@ template<class T> void *array<T>::byteswap() { /* standard C function? */
 }
 
 template<class T> void *array<T>::tofile(file_binary *f) {
-    f->write(this->tostring());
+    f->write(this->tobytes());
     return NULL;
 }
 
