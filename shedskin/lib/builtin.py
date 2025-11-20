@@ -238,17 +238,16 @@ class list(pyseq):
     def __len__(self):
         return 1
     def __add__(self, b):
-        return self
-        return b
+        return [self.unit, b.unit]
     def __mul__(self, b):
-        return self
+        return [self.unit]
     def __iadd__(self, b):
         self.unit = b.unit
         return self
     def __imul__(self, n):
         return self
     def __slice__(self, x, lower, upper, step):
-        return self
+        return [self.unit]
     def __delslice__(self, a, b):
         pass
     def __setslice__(self, x, lower, upper, step, r):
@@ -745,7 +744,7 @@ class pyset(pyiter):
         return set(b)
 
     def copy(self):
-        return self
+        return set(self)
 
     def __hash__(self):
         return 1
