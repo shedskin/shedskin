@@ -19,8 +19,6 @@ class array:
 
     def tolist(self):
         return [self.unit]
-    def tostring(self):
-        return b''
     def tobytes(self):
         return b''
 
