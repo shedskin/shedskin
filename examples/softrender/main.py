@@ -33,12 +33,12 @@ import pygame
 
 from render import *
 
-WIDTH, HEIGHT = 1600, 1200
+WIDTH, HEIGHT = 800, 600
 
 
 def load_texture(filename):
     image = Image.open(filename)
-    return Bitmap(image.width, image.height, image.convert('RGBA').tobytes())
+    return Bitmap(image.width, image.height, image.convert('RGBX').tobytes())
 
 
 def main():
@@ -47,7 +47,6 @@ def main():
 
     surface = pygame.display.set_mode(screen)
     drawsurf = pygame.Surface(screen).convert()
-    drawsurf.set_colorkey((0, 0, 0))
 
     clock = pygame.time.Clock()
     frame_count = 0
@@ -79,8 +78,7 @@ def main():
         target.clear_zbuffer()
         mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, lightDir)
 
-        img = pygame.image.frombuffer(target.bitmap.components, screen, 'RGBA')
-        surface.fill((0,0,0)) # TODO should not be needed
+        img = pygame.image.frombuffer(target.bitmap.components, screen, 'RGBX')
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
