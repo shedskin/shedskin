@@ -735,6 +735,11 @@ void *bytes::clear() {
     return NULL;
 }
 
+void *bytes::resize(__ss_int size) {
+    unit.resize(size, '\x00');
+    return NULL;
+}
+
 void *bytes::append(__ss_int i) {
     unit += (char)i;
     return NULL;

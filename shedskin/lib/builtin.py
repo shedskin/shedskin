@@ -572,6 +572,9 @@ class bytes_(pyseq):
     def clear(self):
         pass
 
+    def resize(self, size):
+        pass
+
     def append(self, x):
         pass
 
