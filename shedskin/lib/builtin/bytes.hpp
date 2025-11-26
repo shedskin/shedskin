@@ -124,6 +124,7 @@ public:
     /* bytearray */
 
     void *clear();
+    void *resize(__ss_int size);
     void *append(__ss_int i);
     __ss_int pop(__ss_int i=-1);
     bytes *copy();
