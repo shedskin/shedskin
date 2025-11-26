@@ -39,6 +39,14 @@ def test_bytearray_clear():
     assert ba == bytearray(b'')
 
 
+def test_bytearray_resize():
+    b = bytearray(b'blup')
+    b.resize(2)
+    assert b == b'bl'
+    b.resize(4)
+    assert b == b'bl\x00\x00'
+
+
 def test_bytearray_getitem():
     ba = bytearray(b'bla')
     assert ba[1] == ord('l')
@@ -161,6 +169,7 @@ def test_hex():
 def test_all():
     test_bytearray()
     test_bytearray_clear()
+    test_bytearray_resize()
     test_bytearray_append()
     test_bytearray_del()
     test_bytearray_copy()
