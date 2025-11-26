@@ -803,6 +803,14 @@ void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter
     return NULL;
 }
 
+void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b) {
+    if(x == 0)
+        unit = b->unit;
+    else
+        __setslice__(x, l, u, s, (pyiter<__ss_int> *)b);
+    return NULL;
+}
+
 void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     list<__ss_int> *ll = new list<__ss_int>(this);
     ll->__delete__(x, l, u, s);
