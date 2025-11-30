@@ -11,28 +11,37 @@ str *__name__;
 
 unsigned char stackie[1024*1024];
 unsigned char *SP = stackie;
+size_t stackleft = 1024*1024;
 
 
 class StackFrame {
 private:
     unsigned char *__SP;
+    size_t __sl;
 
 public:
     StackFrame() {
-//        printf("enter at %X\n", SP);
-        this->__SP = SP;
+        __SP = SP;
+        __sl = stackleft;
     }
 
     ~StackFrame() {
-        SP = this->__SP;
-//        printf("exit at %X\n", SP);
+        SP = __SP;
+        stackleft = __sl;
     }
 
     unsigned char *nieuw(size_t sz) {
         unsigned char *mymem = SP;
-        SP += sz;
-//        printf("write at %X\n", mymem);
-        return mymem;
+
+        if(sz > stackleft) {
+            printf("DOE HEAP ALLOCATIE\n");
+            return 0;
+
+        } else {
+            SP += sz;
+            stackleft -= sz;
+            return mymem;
+        }
     }
 
 //    template<T> T new(..) { // bypass 'new' and allocate on stack!
@@ -42,8 +51,8 @@ public:
 //    }
 };
 
-//    tuple<__ss_int> *t = __sss.new<tuple<__ss_int>>(2, 7, 8);
 
+//    tuple<__ss_int> *t = __sss.new<tuple<__ss_int>>(2, 7, 8);
 
 /**
 class Vector
@@ -60,22 +69,10 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 
 __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
     StackFrame __sss;
-//    printf("inner\n");
 
     Vector *v = (Vector *)(__sss.nieuw(sizeof(Vector)));
     v->__init__(x, y, z);
-
-//    v->x = x;
-//    v->y = y;
-//    v->z = z;
-
-//    Vector *v = (Vector *)alloca(sizeof(Vector));
-//    Vector __v(x,y,z);
-
-//    Vector *v = new Vector(x, y, z);
     return ((v->x+v->y)+v->z);
-
-//    return x+y+z;
 }
 
 void *__ss_main() {
