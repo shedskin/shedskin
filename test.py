@@ -1,3 +1,5 @@
+# non-escaping Vector
+
 class Vector:
     def __init__(self, x, y, z):
         self.x = x
@@ -6,7 +8,7 @@ class Vector:
 
 
 def woef(x, y, z):
-    v = Vector(x, y, z)
+    v = Vector(x, y, z)  # HERE
     return v.x + v.y + v.z
 
 

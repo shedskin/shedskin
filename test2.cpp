@@ -8,6 +8,43 @@ str *const_0;
 
 str *__name__;
 
+unsigned char *SP;
+unsigned char *SPEND;
+unsigned char stackie[1024*1024];
+
+
+class StackFrame {
+public:
+    unsigned char *__SP;
+
+    StackFrame();
+    ~StackFrame();
+
+    template<class T> T *neu();
+};
+
+
+StackFrame::StackFrame() {
+    __SP = SP;
+}
+
+StackFrame::~StackFrame() {
+    SP = __SP;
+}
+
+template<class T> T *StackFrame::neu() {
+    unsigned char *mymem = SP;
+
+    size_t sz = sizeof(T);
+
+    if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
+        printf("DOE HEAP!!");
+        return 0;
+    } else {
+        SP += sz;
+        return (T *)mymem; // reinterpret or whatever?
+    }
+}
 
 
 tuple<__ss_int> *blaap(__ss_int x, __ss_int y) {
@@ -36,6 +73,9 @@ void __init() {
     const_0 = new str("__main__");
 
     __name__ = new str("__main__");
+
+    SP = stackie;
+    SPEND = stackie+1024*1024;
 
     if (__eq(__test2__::__name__, const_0)) {
         __ss_main();

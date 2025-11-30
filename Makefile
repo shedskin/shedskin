@@ -13,24 +13,24 @@ LDLIBS=-lgc -lgctba -lutil
 
 BUILTIN_CPPFILES=$(SHEDSKIN_LIBDIR)/builtin.cpp
 BUILTIN_HPPFILES=$(SHEDSKIN_LIBDIR)/builtin.hpp
-GENERATED_CPPFILES=$(CURDIR)/test.cpp
-GENERATED_HPPFILES=$(CURDIR)/test.hpp
+GENERATED_CPPFILES=$(CURDIR)/test2.cpp
+GENERATED_HPPFILES=$(CURDIR)/test2.hpp
 
 .PHONY: all clean
 
-all: test
+all: test2
 
-test: $(CPPFILES) $(HPPFILES)
-	$(CXX)  $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test
+test2: $(CPPFILES) $(HPPFILES)
+	$(CXX)  $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test2
 
-test_debug: $(CPPFILES) $(HPPFILES)
-	$(CXX) -g -ggdb $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test_debug
+test2_debug: $(CPPFILES) $(HPPFILES)
+	$(CXX) -g -ggdb $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test2_debug
 
-test_prof: $(CPPFILES) $(HPPFILES)
-	$(CXX) -pg -ggdb $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test_prof
+test2_prof: $(CPPFILES) $(HPPFILES)
+	$(CXX) -pg -ggdb $(CXXFLAGS) $(CPPFILES) $(LDLIBS) $(LDFLAGS) -o test2_prof
 
 clean:
-	@rm -rf test test_prof test_debug
+	@rm -rf test2 test2_prof test2_debug
 
 reset: clean
 	@rm -f $(GENERATED_CPPFILES) $(GENERATED_HPPFILES)
