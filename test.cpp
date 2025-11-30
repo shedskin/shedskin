@@ -9,6 +9,39 @@ str *const_0;
 str *__name__;
 
 
+unsigned char stackie[1024*1024];
+unsigned char *SP = stackie;
+
+
+class StackFrame {
+public:
+    unsigned char *SP;
+
+    StackFrame() {
+//        printf("enter\n");
+        this->SP = SP;
+    }
+
+    ~StackFrame() {
+        SP = this->SP;
+//        printf("exit\n");
+    }
+
+    unsigned char *nieuw(size_t sz) {
+        unsigned char *mymem = SP;
+        SP += sz;
+        return mymem;
+    }
+
+//    template<T> T new(..) { // bypass 'new' and allocate on stack!
+//        void *mymem = SP;
+//        SP += sizeof(T);
+//        return (T *)mymem; // reinterpret_cast or whatever?
+//    }
+};
+
+//    tuple<__ss_int> *t = __sss.new<tuple<__ss_int>>(2, 7, 8);
+
 
 /**
 class Vector
@@ -24,10 +57,17 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 }
 
 __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
-    Vector *v;
+    StackFrame __sss;
+//    printf("inner\n");
 
-    v = (new Vector(x, y, z));
-    return ((v->x+v->y)+v->z);
+    __sss.nieuw(12); //sizeof(Vector));
+//    Vector *v = (Vector *)alloca(sizeof(Vector));
+//    Vector __v(x,y,z);
+
+//    Vector *v = new Vector(x, y, z);
+//    return ((v->x+v->y)+v->z);
+
+    return x+y+z;
 }
 
 void *__ss_main() {
