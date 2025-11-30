@@ -4,6 +4,48 @@
 
 namespace __render__ {
 
+unsigned char *SP;
+unsigned char *SPEND;
+const size_t STACKSIZE = 10*1024*1024;
+unsigned char stackie[STACKSIZE];
+
+
+class StackFrame {
+public:
+    unsigned char *__SP;
+    bool __merge;
+
+    StackFrame(bool merge=false);
+    ~StackFrame();
+
+    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
+};
+
+
+StackFrame::StackFrame(bool merge) {
+    __SP = SP;
+    __merge = merge;
+}
+
+StackFrame::~StackFrame() {
+    if(!__merge)
+        SP = __SP;
+}
+
+template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
+    unsigned char *mymem = SP;
+
+    size_t sz = sizeof(T);
+
+    if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
+        printf("DOE HEAP!!");
+        return new T(x, y, z);
+    } else {
+        SP += sz;
+        return new(mymem)T(x, y, z);
+    }
+}
+
 str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7;
 bytes *const_8;
 
@@ -4360,6 +4402,9 @@ PyMODINIT_FUNC PyInit_render(void) {
     __shedskin__::__init();
     __math__::__init();
     __render__::__init();
+
+    SP = stackie;
+    SPEND = stackie+STACKSIZE;
 
     PyObject *m;
 
