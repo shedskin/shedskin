@@ -11,7 +11,7 @@ extern str *const_0;
 extern str *__name__;
 
 
-tuple<__ss_int> *blaap(__ss_int x, __ss_int y);
+__ss_int woef(__ss_int x, __ss_int y, __ss_int z);
 void *__ss_main();
 
 } // module namespace

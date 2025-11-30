@@ -1,18 +1,16 @@
-# return tuple escaping once
+# non-escaping tuple
 
-def blaap(x, y):
-    return (2*x, 3*y)
+def woef(x, y, z):
+    v = (x, y, z)
+    return sum(v)
 
 
 def main():
     s = 0
-    for i in range(10**8):
-        a, b = blaap(i, i+1)
-        s += a + b
+    for x in range(10**8):
+        s += woef(x, x+1, x-1)
     print(s)
 
 
 if __name__ == '__main__':
     main()
-
-
