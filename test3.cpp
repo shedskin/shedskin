@@ -10,27 +10,30 @@ str *__name__;
 
 unsigned char *SP;
 unsigned char *SPEND;
-const size_t STACKSIZE = 1024*1024;
+const size_t STACKSIZE = 10*1024*1024;
 unsigned char stackie[STACKSIZE];
 
 
 class StackFrame {
 public:
     unsigned char *__SP;
+    bool __merge;
 
-    StackFrame();
+    StackFrame(bool merge=false);
     ~StackFrame();
 
     template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
 };
 
 
-StackFrame::StackFrame() {
+StackFrame::StackFrame(bool merge) {
     __SP = SP;
+    __merge = merge;
 }
 
 StackFrame::~StackFrame() {
-    SP = __SP;
+    if(!__merge)
+        SP = __SP;
 }
 
 template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
@@ -39,7 +42,7 @@ template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
     size_t sz = sizeof(T);
 
     if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
-//        printf("DOE HEAP!!");
+        printf("DOE HEAP!!");
         return new T(x, y, z);
     } else {
         SP += sz;
@@ -62,10 +65,14 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 }
 
 Vector *woef(__ss_int x, __ss_int y, __ss_int z) {
-    return (new Vector(x, y, z));
+    StackFrame __sss(true);
+
+    return __sss.neu<Vector>(x, y, z);
 }
 
 __ss_int draw() {
+    StackFrame __sss;
+
     __ss_int __0, __1, s, x;
     Vector *v;
 
