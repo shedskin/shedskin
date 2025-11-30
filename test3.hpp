@@ -15,9 +15,9 @@ extern str *__name__;
 extern class_ *cl_Vector;
 class Vector : public pyobj {
 public:
+    __ss_int y;
     __ss_int x;
     __ss_int z;
-    __ss_int y;
 
     Vector() {}
     Vector(__ss_int x, __ss_int y, __ss_int z) {
@@ -28,6 +28,7 @@ public:
 };
 
 Vector *woef(__ss_int x, __ss_int y, __ss_int z);
+__ss_int draw();
 void *__ss_main();
 
 } // module namespace

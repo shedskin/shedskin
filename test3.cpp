@@ -30,7 +30,7 @@ StackFrame::StackFrame() {
 }
 
 StackFrame::~StackFrame() {
-//    SP = __SP;
+    SP = __SP;
 }
 
 template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
@@ -47,6 +47,7 @@ template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
     }
 }
 
+
 /**
 class Vector
 */
@@ -61,22 +62,30 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 }
 
 Vector *woef(__ss_int x, __ss_int y, __ss_int z) {
-    StackFrame __sss;
-
-    return __sss.neu<Vector>(x, y, z);
+    return (new Vector(x, y, z));
 }
 
-void *__ss_main() {
-    StackFrame __sss;
-
+__ss_int draw() {
     __ss_int __0, __1, s, x;
     Vector *v;
 
     s = __ss_int(0LL);
 
-    FAST_FOR(x,0,__power(__ss_int(10LL), __ss_int(8LL)),1,0,1)
+    FAST_FOR(x,0,__power(__ss_int(10LL), __ss_int(5LL)),1,0,1)
         v = woef(x, (x+__ss_int(1LL)), (x-__ss_int(1LL)));
         s = (s+((v->x+v->y)+v->z));
+    END_FOR
+
+    return s;
+}
+
+void *__ss_main() {
+    __ss_int __2, __3, s, x;
+
+    s = __ss_int(0LL);
+
+    FAST_FOR(x,0,__power(__ss_int(10LL), __ss_int(3LL)),1,2,3)
+        s = (s+draw());
     END_FOR
 
     print(s);

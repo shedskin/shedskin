@@ -11,11 +11,17 @@ def woef(x, y, z):
     return Vector(x, y, z)  # HERE
 
 
-def main():
+def draw():
     s = 0
-    for x in range(10**8):
+    for x in range(10**5):
         v = woef(x, x+1, x-1)
         s += v.x + v.y + v.z
+    return s
+
+def main():
+    s = 0
+    for x in range(10**3):
+        s += draw()
     print(s)
 
 
