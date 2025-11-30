@@ -18,7 +18,7 @@ public:
     StackFrame(bool merge=false);
     ~StackFrame();
 
-    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
+    template<class T> T *neu(Vector4 *, Vector4 *, Vector4 *);
 };
 
 
@@ -32,17 +32,17 @@ StackFrame::~StackFrame() {
         SP = __SP;
 }
 
-template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
+template<class T> T *StackFrame::neu(Vector4 *v1, Vector4 *v2, Vector4 *v3) {
     unsigned char *mymem = SP;
 
     size_t sz = sizeof(T);
 
     if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
         printf("DOE HEAP!!");
-        return new T(x, y, z);
+        return new T(v1, v2, v3);
     } else {
         SP += sz;
-        return new(mymem)T(x, y, z);
+        return new(mymem)T(v1, v2, v3);
     }
 }
 
@@ -436,10 +436,13 @@ __ss_bool Vertex::inside_view_frustum() {
 }
 
 Vertex *Vertex::perspective_divide() {
+    StackFrame __sss(true);
+
     __ss_float w;
 
     w = (this->pos)->w;
-    return (new Vertex((new Vector4(((this->pos)->x/w), ((this->pos)->y/w), ((this->pos)->z/w), w)), this->texCoords, this->normal));
+
+    return __sss.neu<Vertex>((new Vector4(((this->pos)->x/w), ((this->pos)->y/w), ((this->pos)->z/w), w)), this->texCoords, this->normal);
 }
 
 __ss_float Vertex::triangle_area_times_two(Vertex *b, Vertex *c) {
@@ -867,6 +870,8 @@ void *RenderContext::ClipPolygonComponent(list<Vertex *> *vertices, __ss_int com
 }
 
 void *RenderContext::fill_triangle(Vertex *v1, Vertex *v2, Vertex *v3, Bitmap *texture, Vector4 *lightDir) {
+    StackFrame __sss;
+
     Vertex *__163, *__164, *__165, *__166, *__167, *__168, *maxYVert, *midYVert, *minYVert;
 
     minYVert = (v1->transform(this->screenSpaceTransform, NULL))->perspective_divide();
