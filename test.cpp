@@ -20,15 +20,8 @@ public:
     StackFrame();
     ~StackFrame();
 
-    unsigned char *nieuw(size_t sz);
-
-//    template<T> T new(..) { // bypass 'new' and allocate on stack!
-//        void *mymem = SP;
-//        SP += sizeof(T);
-//        return (T *)mymem; // reinterpret_cast or whatever?
-//    }
+    template<class T> T *neu();
 };
-
 
 
 StackFrame::StackFrame() {
@@ -39,21 +32,19 @@ StackFrame::~StackFrame() {
     SP = __SP;
 }
 
-unsigned char *StackFrame::nieuw(size_t sz) {
+template<class T> T *StackFrame::neu() {
     unsigned char *mymem = SP;
+
+    size_t sz = sizeof(T);
 
     if(SP + sz >= SPEND) {
         printf("DOE HEAP!!");
         return 0;
     } else {
         SP += sz;
-        return mymem;
+        return (T *)mymem; // reinterpret or whatever?
     }
-
 }
-
-
-//    tuple<__ss_int> *t = __sss.new<tuple<__ss_int>>(2, 7, 8);
 
 /**
 class Vector
@@ -71,7 +62,7 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
     StackFrame __sss;
 
-    Vector *v = (Vector *)(__sss.nieuw(sizeof(Vector)));
+    Vector *v = __sss.neu<Vector>();
     v->__init__(x, y, z);
     return ((v->x+v->y)+v->z);
 }
