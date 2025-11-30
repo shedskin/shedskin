@@ -21,7 +21,7 @@ public:
     StackFrame();
     ~StackFrame();
 
-    template<class T> T *neu();
+    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
 };
 
 
@@ -33,7 +33,7 @@ StackFrame::~StackFrame() {
     SP = __SP;
 }
 
-template<class T> T *StackFrame::neu() {
+template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
     unsigned char *mymem = SP;
 
     size_t sz = sizeof(T);
@@ -44,7 +44,7 @@ template<class T> T *StackFrame::neu() {
     } else {
         SP += sz;
 //        printf("alloc at %x\n", mymem);
-        return new(mymem)T;
+        return new(mymem)T(3, x, y, z);
     }
 }
 
@@ -55,13 +55,19 @@ __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
     tuple<__ss_int> *v;
 
 //    printf("neu\n");
-    v = __sss.neu<tuple<__ss_int> >();
+    v = __sss.neu<tuple<__ss_int> >(x, y, z);
 
 //    printf("wut %d\n", v->units.size());
 
-    v->units.push_back(x);
-    v->units.push_back(y);
-    v->units.push_back(z);
+//    v->units.reserve(3);
+
+//    printf("capacity %d\n", v->units.capacity());
+
+//    v->units.push_back(x);
+//    v->units.push_back(y);
+//    v->units.push_back(z);
+
+//   printf("size capacity %d %d\n", v->units.size(), v->units.capacity());
 
 //    printf("pushed %d\n"), v->units.size();
 
