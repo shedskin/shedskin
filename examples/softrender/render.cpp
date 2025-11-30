@@ -18,7 +18,7 @@ public:
     StackFrame(bool merge=false);
     ~StackFrame();
 
-    template<class T> T *neu(Vector4 *, Vector4 *, Vector4 *);
+    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
 };
 
 
@@ -32,17 +32,17 @@ StackFrame::~StackFrame() {
         SP = __SP;
 }
 
-template<class T> T *StackFrame::neu(Vector4 *v1, Vector4 *v2, Vector4 *v3) {
+template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
     unsigned char *mymem = SP;
 
     size_t sz = sizeof(T);
 
     if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
         printf("DOE HEAP!!");
-        return new T(v1, v2, v3);
+        return new T(x, y, z);
     } else {
         SP += sz;
-        return new(mymem)T(v1, v2, v3);
+        return new(mymem)T(x, y, z);
     }
 }
 
@@ -418,8 +418,6 @@ void *Vertex::__init__(Vector4 *pos, Vector4 *texCoords, Vector4 *normal) {
 }
 
 Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
-    StackFrame __sss(true);
-
     Vector4 *normal;
 
     if (___bool(normalTransform)) {
@@ -428,7 +426,7 @@ Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
     else {
         normal = this->normal;
     }
-    return __sss.neu<Vertex>(transform->transform(this->pos), this->texCoords, normal);
+    return (new Vertex(transform->transform(this->pos), this->texCoords, normal));
 }
 
 __ss_bool Vertex::inside_view_frustum() {
@@ -438,13 +436,10 @@ __ss_bool Vertex::inside_view_frustum() {
 }
 
 Vertex *Vertex::perspective_divide() {
-    StackFrame __sss(true);
-
     __ss_float w;
 
     w = (this->pos)->w;
-
-    return __sss.neu<Vertex>((new Vector4(((this->pos)->x/w), ((this->pos)->y/w), ((this->pos)->z/w), w)), this->texCoords, this->normal);
+    return (new Vertex((new Vector4(((this->pos)->x/w), ((this->pos)->y/w), ((this->pos)->z/w), w)), this->texCoords, this->normal));
 }
 
 __ss_float Vertex::triangle_area_times_two(Vertex *b, Vertex *c) {
@@ -681,18 +676,13 @@ void *Mesh::__init__(str *filename, __ss_int scale) {
 }
 
 void *Mesh::draw(RenderContext *context, Matrix4 *view_projection, Matrix4 *transform, Bitmap *texture, Vector4 *lightDir) {
-    StackFrame __sss;
-
     Matrix4 *mvp;
     __ss_int __147, __148, i;
 
     mvp = view_projection->mul(transform);
 
     FAST_FOR(i,__ss_int(0),len(this->faces),__ss_int(3),147,148)
-        context->draw_triangle(
-                ((this->vertices)->__getfast__((this->faces)->__getfast__(i)))->transform(mvp, transform),
-                ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(1)))))->transform(mvp, transform),
-                ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(2)))))->transform(mvp, transform), texture, lightDir);
+        context->draw_triangle(((this->vertices)->__getfast__((this->faces)->__getfast__(i)))->transform(mvp, transform), ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(1)))))->transform(mvp, transform), ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(2)))))->transform(mvp, transform), texture, lightDir);
     END_FOR
 
     return NULL;
@@ -877,8 +867,6 @@ void *RenderContext::ClipPolygonComponent(list<Vertex *> *vertices, __ss_int com
 }
 
 void *RenderContext::fill_triangle(Vertex *v1, Vertex *v2, Vertex *v3, Bitmap *texture, Vector4 *lightDir) {
-    StackFrame __sss;
-
     Vertex *__163, *__164, *__165, *__166, *__167, *__168, *maxYVert, *midYVert, *minYVert;
 
     minYVert = (v1->transform(this->screenSpaceTransform, NULL))->perspective_divide();
@@ -1493,22 +1481,6 @@ int __ss_set___ss_render_Vector4_z(__ss_render_Vector4Object *self, PyObject *va
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Vector4_x(__ss_render_Vector4Object *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->x);
-}
-
-int __ss_set___ss_render_Vector4_x(__ss_render_Vector4Object *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->x = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
 PyObject *__ss_get___ss_render_Vector4_w(__ss_render_Vector4Object *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->w);
@@ -1518,6 +1490,22 @@ int __ss_set___ss_render_Vector4_w(__ss_render_Vector4Object *self, PyObject *va
     (void)closure;
     try {
         self->__ss_object->w = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Vector4_x(__ss_render_Vector4Object *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->x);
+}
+
+int __ss_set___ss_render_Vector4_x(__ss_render_Vector4Object *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->x = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -1543,8 +1531,8 @@ int __ss_set___ss_render_Vector4_y(__ss_render_Vector4Object *self, PyObject *va
 
 PyGetSetDef __ss_render_Vector4GetSet[] = {
     {(char *)"z", (getter)__ss_get___ss_render_Vector4_z, (setter)__ss_set___ss_render_Vector4_z, (char *)"", NULL},
-    {(char *)"x", (getter)__ss_get___ss_render_Vector4_x, (setter)__ss_set___ss_render_Vector4_x, (char *)"", NULL},
     {(char *)"w", (getter)__ss_get___ss_render_Vector4_w, (setter)__ss_set___ss_render_Vector4_w, (char *)"", NULL},
+    {(char *)"x", (getter)__ss_get___ss_render_Vector4_x, (setter)__ss_set___ss_render_Vector4_x, (char *)"", NULL},
     {(char *)"y", (getter)__ss_get___ss_render_Vector4_y, (setter)__ss_set___ss_render_Vector4_y, (char *)"", NULL},
     {NULL}
 };
@@ -1600,8 +1588,8 @@ PyObject *__ss_render_Vector4__reduce__(PyObject *self, PyObject *args, PyObject
     PyTuple_SetItem(t, 1, a);
     PyObject *b = PyTuple_New(4);
     PyTuple_SetItem(b, 0, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->z));
-    PyTuple_SetItem(b, 1, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->x));
-    PyTuple_SetItem(b, 2, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->w));
+    PyTuple_SetItem(b, 1, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->w));
+    PyTuple_SetItem(b, 2, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->x));
     PyTuple_SetItem(b, 3, __to_py(((__ss_render_Vector4Object *)self)->__ss_object->y));
     PyTuple_SetItem(t, 2, b);
     return t;
@@ -1611,8 +1599,8 @@ PyObject *__ss_render_Vector4__setstate__(PyObject *self, PyObject *args, PyObje
     (void)kwargs;
     PyObject *state = PyTuple_GetItem(args, 0);
     ((__ss_render_Vector4Object *)self)->__ss_object->z = __to_ss<__ss_float >(PyTuple_GetItem(state, 0));
-    ((__ss_render_Vector4Object *)self)->__ss_object->x = __to_ss<__ss_float >(PyTuple_GetItem(state, 1));
-    ((__ss_render_Vector4Object *)self)->__ss_object->w = __to_ss<__ss_float >(PyTuple_GetItem(state, 2));
+    ((__ss_render_Vector4Object *)self)->__ss_object->w = __to_ss<__ss_float >(PyTuple_GetItem(state, 1));
+    ((__ss_render_Vector4Object *)self)->__ss_object->x = __to_ss<__ss_float >(PyTuple_GetItem(state, 2));
     ((__ss_render_Vector4Object *)self)->__ss_object->y = __to_ss<__ss_float >(PyTuple_GetItem(state, 3));
     Py_INCREF(Py_None);
     return Py_None;
@@ -2946,22 +2934,6 @@ void __ss_render_MeshDealloc(__ss_render_MeshObject *self) {
     __ss_proxy->__delitem__(self->__ss_object);
 }
 
-PyObject *__ss_get___ss_render_Mesh_faces(__ss_render_MeshObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->faces);
-}
-
-int __ss_set___ss_render_Mesh_faces(__ss_render_MeshObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->faces = __to_ss<list<__ss_int> *>(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
 PyObject *__ss_get___ss_render_Mesh_vertices(__ss_render_MeshObject *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->vertices);
@@ -2978,9 +2950,25 @@ int __ss_set___ss_render_Mesh_vertices(__ss_render_MeshObject *self, PyObject *v
     return 0;
 }
 
+PyObject *__ss_get___ss_render_Mesh_faces(__ss_render_MeshObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->faces);
+}
+
+int __ss_set___ss_render_Mesh_faces(__ss_render_MeshObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->faces = __to_ss<list<__ss_int> *>(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
 PyGetSetDef __ss_render_MeshGetSet[] = {
-    {(char *)"faces", (getter)__ss_get___ss_render_Mesh_faces, (setter)__ss_set___ss_render_Mesh_faces, (char *)"", NULL},
     {(char *)"vertices", (getter)__ss_get___ss_render_Mesh_vertices, (setter)__ss_set___ss_render_Mesh_vertices, (char *)"", NULL},
+    {(char *)"faces", (getter)__ss_get___ss_render_Mesh_faces, (setter)__ss_set___ss_render_Mesh_faces, (char *)"", NULL},
     {NULL}
 };
 
@@ -3034,8 +3022,8 @@ PyObject *__ss_render_Mesh__reduce__(PyObject *self, PyObject *args, PyObject *k
     PyTuple_SetItem(a, 0, (PyObject *)&__ss_render_MeshObjectType);
     PyTuple_SetItem(t, 1, a);
     PyObject *b = PyTuple_New(2);
-    PyTuple_SetItem(b, 0, __to_py(((__ss_render_MeshObject *)self)->__ss_object->faces));
-    PyTuple_SetItem(b, 1, __to_py(((__ss_render_MeshObject *)self)->__ss_object->vertices));
+    PyTuple_SetItem(b, 0, __to_py(((__ss_render_MeshObject *)self)->__ss_object->vertices));
+    PyTuple_SetItem(b, 1, __to_py(((__ss_render_MeshObject *)self)->__ss_object->faces));
     PyTuple_SetItem(t, 2, b);
     return t;
 }
@@ -3043,8 +3031,8 @@ PyObject *__ss_render_Mesh__reduce__(PyObject *self, PyObject *args, PyObject *k
 PyObject *__ss_render_Mesh__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {
     (void)kwargs;
     PyObject *state = PyTuple_GetItem(args, 0);
-    ((__ss_render_MeshObject *)self)->__ss_object->faces = __to_ss<list<__ss_int> *>(PyTuple_GetItem(state, 0));
-    ((__ss_render_MeshObject *)self)->__ss_object->vertices = __to_ss<list<Vertex *> *>(PyTuple_GetItem(state, 1));
+    ((__ss_render_MeshObject *)self)->__ss_object->vertices = __to_ss<list<Vertex *> *>(PyTuple_GetItem(state, 0));
+    ((__ss_render_MeshObject *)self)->__ss_object->faces = __to_ss<list<__ss_int> *>(PyTuple_GetItem(state, 1));
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -3160,15 +3148,15 @@ void __ss_render_GradientsDealloc(__ss_render_GradientsObject *self) {
     __ss_proxy->__delitem__(self->__ss_object);
 }
 
-PyObject *__ss_get___ss_render_Gradients_texCoordY(__ss_render_GradientsObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Gradients_depthXStep(__ss_render_GradientsObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->texCoordY);
+    return __to_py(self->__ss_object->depthXStep);
 }
 
-int __ss_set___ss_render_Gradients_texCoordY(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Gradients_depthXStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->texCoordY = __to_ss<list<__ss_float> *>(value);
+        self->__ss_object->depthXStep = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3185,6 +3173,54 @@ int __ss_set___ss_render_Gradients_depth(__ss_render_GradientsObject *self, PyOb
     (void)closure;
     try {
         self->__ss_object->depth = __to_ss<list<__ss_float> *>(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Gradients_texCoordYXStep(__ss_render_GradientsObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->texCoordYXStep);
+}
+
+int __ss_set___ss_render_Gradients_texCoordYXStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->texCoordYXStep = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Gradients_lightAmt(__ss_render_GradientsObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->lightAmt);
+}
+
+int __ss_set___ss_render_Gradients_lightAmt(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->lightAmt = __to_ss<list<__ss_float> *>(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Gradients_oneOverZ(__ss_render_GradientsObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->oneOverZ);
+}
+
+int __ss_set___ss_render_Gradients_oneOverZ(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->oneOverZ = __to_ss<list<__ss_float> *>(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3224,15 +3260,15 @@ int __ss_set___ss_render_Gradients_lightAmtXStep(__ss_render_GradientsObject *se
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Gradients_texCoordYYStep(__ss_render_GradientsObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Gradients_texCoordY(__ss_render_GradientsObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->texCoordYYStep);
+    return __to_py(self->__ss_object->texCoordY);
 }
 
-int __ss_set___ss_render_Gradients_texCoordYYStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Gradients_texCoordY(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->texCoordYYStep = __to_ss<__ss_float >(value);
+        self->__ss_object->texCoordY = __to_ss<list<__ss_float> *>(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3256,38 +3292,6 @@ int __ss_set___ss_render_Gradients_texCoordXYStep(__ss_render_GradientsObject *s
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Gradients_lightAmtYStep(__ss_render_GradientsObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->lightAmtYStep);
-}
-
-int __ss_set___ss_render_Gradients_lightAmtYStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->lightAmtYStep = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
-PyObject *__ss_get___ss_render_Gradients_oneOverZ(__ss_render_GradientsObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->oneOverZ);
-}
-
-int __ss_set___ss_render_Gradients_oneOverZ(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->oneOverZ = __to_ss<list<__ss_float> *>(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
 PyObject *__ss_get___ss_render_Gradients_depthYStep(__ss_render_GradientsObject *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->depthYStep);
@@ -3304,15 +3308,15 @@ int __ss_set___ss_render_Gradients_depthYStep(__ss_render_GradientsObject *self,
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Gradients_texCoordYXStep(__ss_render_GradientsObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Gradients_lightAmtYStep(__ss_render_GradientsObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->texCoordYXStep);
+    return __to_py(self->__ss_object->lightAmtYStep);
 }
 
-int __ss_set___ss_render_Gradients_texCoordYXStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Gradients_lightAmtYStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->texCoordYXStep = __to_ss<__ss_float >(value);
+        self->__ss_object->lightAmtYStep = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3336,6 +3340,22 @@ int __ss_set___ss_render_Gradients_texCoordX(__ss_render_GradientsObject *self, 
     return 0;
 }
 
+PyObject *__ss_get___ss_render_Gradients_texCoordYYStep(__ss_render_GradientsObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->texCoordYYStep);
+}
+
+int __ss_set___ss_render_Gradients_texCoordYYStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->texCoordYYStep = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
 PyObject *__ss_get___ss_render_Gradients_texCoordXXStep(__ss_render_GradientsObject *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->texCoordXXStep);
@@ -3345,22 +3365,6 @@ int __ss_set___ss_render_Gradients_texCoordXXStep(__ss_render_GradientsObject *s
     (void)closure;
     try {
         self->__ss_object->texCoordXXStep = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
-PyObject *__ss_get___ss_render_Gradients_depthXStep(__ss_render_GradientsObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->depthXStep);
-}
-
-int __ss_set___ss_render_Gradients_depthXStep(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->depthXStep = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3384,38 +3388,22 @@ int __ss_set___ss_render_Gradients_oneOverZXStep(__ss_render_GradientsObject *se
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Gradients_lightAmt(__ss_render_GradientsObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->lightAmt);
-}
-
-int __ss_set___ss_render_Gradients_lightAmt(__ss_render_GradientsObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->lightAmt = __to_ss<list<__ss_float> *>(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
 PyGetSetDef __ss_render_GradientsGetSet[] = {
-    {(char *)"texCoordY", (getter)__ss_get___ss_render_Gradients_texCoordY, (setter)__ss_set___ss_render_Gradients_texCoordY, (char *)"", NULL},
+    {(char *)"depthXStep", (getter)__ss_get___ss_render_Gradients_depthXStep, (setter)__ss_set___ss_render_Gradients_depthXStep, (char *)"", NULL},
     {(char *)"depth", (getter)__ss_get___ss_render_Gradients_depth, (setter)__ss_set___ss_render_Gradients_depth, (char *)"", NULL},
+    {(char *)"texCoordYXStep", (getter)__ss_get___ss_render_Gradients_texCoordYXStep, (setter)__ss_set___ss_render_Gradients_texCoordYXStep, (char *)"", NULL},
+    {(char *)"lightAmt", (getter)__ss_get___ss_render_Gradients_lightAmt, (setter)__ss_set___ss_render_Gradients_lightAmt, (char *)"", NULL},
+    {(char *)"oneOverZ", (getter)__ss_get___ss_render_Gradients_oneOverZ, (setter)__ss_set___ss_render_Gradients_oneOverZ, (char *)"", NULL},
     {(char *)"oneOverZYStep", (getter)__ss_get___ss_render_Gradients_oneOverZYStep, (setter)__ss_set___ss_render_Gradients_oneOverZYStep, (char *)"", NULL},
     {(char *)"lightAmtXStep", (getter)__ss_get___ss_render_Gradients_lightAmtXStep, (setter)__ss_set___ss_render_Gradients_lightAmtXStep, (char *)"", NULL},
-    {(char *)"texCoordYYStep", (getter)__ss_get___ss_render_Gradients_texCoordYYStep, (setter)__ss_set___ss_render_Gradients_texCoordYYStep, (char *)"", NULL},
+    {(char *)"texCoordY", (getter)__ss_get___ss_render_Gradients_texCoordY, (setter)__ss_set___ss_render_Gradients_texCoordY, (char *)"", NULL},
     {(char *)"texCoordXYStep", (getter)__ss_get___ss_render_Gradients_texCoordXYStep, (setter)__ss_set___ss_render_Gradients_texCoordXYStep, (char *)"", NULL},
-    {(char *)"lightAmtYStep", (getter)__ss_get___ss_render_Gradients_lightAmtYStep, (setter)__ss_set___ss_render_Gradients_lightAmtYStep, (char *)"", NULL},
-    {(char *)"oneOverZ", (getter)__ss_get___ss_render_Gradients_oneOverZ, (setter)__ss_set___ss_render_Gradients_oneOverZ, (char *)"", NULL},
     {(char *)"depthYStep", (getter)__ss_get___ss_render_Gradients_depthYStep, (setter)__ss_set___ss_render_Gradients_depthYStep, (char *)"", NULL},
-    {(char *)"texCoordYXStep", (getter)__ss_get___ss_render_Gradients_texCoordYXStep, (setter)__ss_set___ss_render_Gradients_texCoordYXStep, (char *)"", NULL},
+    {(char *)"lightAmtYStep", (getter)__ss_get___ss_render_Gradients_lightAmtYStep, (setter)__ss_set___ss_render_Gradients_lightAmtYStep, (char *)"", NULL},
     {(char *)"texCoordX", (getter)__ss_get___ss_render_Gradients_texCoordX, (setter)__ss_set___ss_render_Gradients_texCoordX, (char *)"", NULL},
+    {(char *)"texCoordYYStep", (getter)__ss_get___ss_render_Gradients_texCoordYYStep, (setter)__ss_set___ss_render_Gradients_texCoordYYStep, (char *)"", NULL},
     {(char *)"texCoordXXStep", (getter)__ss_get___ss_render_Gradients_texCoordXXStep, (setter)__ss_set___ss_render_Gradients_texCoordXXStep, (char *)"", NULL},
-    {(char *)"depthXStep", (getter)__ss_get___ss_render_Gradients_depthXStep, (setter)__ss_set___ss_render_Gradients_depthXStep, (char *)"", NULL},
     {(char *)"oneOverZXStep", (getter)__ss_get___ss_render_Gradients_oneOverZXStep, (setter)__ss_set___ss_render_Gradients_oneOverZXStep, (char *)"", NULL},
-    {(char *)"lightAmt", (getter)__ss_get___ss_render_Gradients_lightAmt, (setter)__ss_set___ss_render_Gradients_lightAmt, (char *)"", NULL},
     {NULL}
 };
 
@@ -3469,21 +3457,21 @@ PyObject *__ss_render_Gradients__reduce__(PyObject *self, PyObject *args, PyObje
     PyTuple_SetItem(a, 0, (PyObject *)&__ss_render_GradientsObjectType);
     PyTuple_SetItem(t, 1, a);
     PyObject *b = PyTuple_New(15);
-    PyTuple_SetItem(b, 0, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordY));
+    PyTuple_SetItem(b, 0, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->depthXStep));
     PyTuple_SetItem(b, 1, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->depth));
-    PyTuple_SetItem(b, 2, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZYStep));
-    PyTuple_SetItem(b, 3, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmtXStep));
-    PyTuple_SetItem(b, 4, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordYYStep));
-    PyTuple_SetItem(b, 5, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordXYStep));
-    PyTuple_SetItem(b, 6, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmtYStep));
-    PyTuple_SetItem(b, 7, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZ));
-    PyTuple_SetItem(b, 8, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->depthYStep));
-    PyTuple_SetItem(b, 9, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordYXStep));
-    PyTuple_SetItem(b, 10, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordX));
-    PyTuple_SetItem(b, 11, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordXXStep));
-    PyTuple_SetItem(b, 12, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->depthXStep));
-    PyTuple_SetItem(b, 13, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZXStep));
-    PyTuple_SetItem(b, 14, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmt));
+    PyTuple_SetItem(b, 2, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordYXStep));
+    PyTuple_SetItem(b, 3, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmt));
+    PyTuple_SetItem(b, 4, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZ));
+    PyTuple_SetItem(b, 5, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZYStep));
+    PyTuple_SetItem(b, 6, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmtXStep));
+    PyTuple_SetItem(b, 7, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordY));
+    PyTuple_SetItem(b, 8, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordXYStep));
+    PyTuple_SetItem(b, 9, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->depthYStep));
+    PyTuple_SetItem(b, 10, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->lightAmtYStep));
+    PyTuple_SetItem(b, 11, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordX));
+    PyTuple_SetItem(b, 12, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordYYStep));
+    PyTuple_SetItem(b, 13, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->texCoordXXStep));
+    PyTuple_SetItem(b, 14, __to_py(((__ss_render_GradientsObject *)self)->__ss_object->oneOverZXStep));
     PyTuple_SetItem(t, 2, b);
     return t;
 }
@@ -3491,21 +3479,21 @@ PyObject *__ss_render_Gradients__reduce__(PyObject *self, PyObject *args, PyObje
 PyObject *__ss_render_Gradients__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {
     (void)kwargs;
     PyObject *state = PyTuple_GetItem(args, 0);
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordY = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 0));
+    ((__ss_render_GradientsObject *)self)->__ss_object->depthXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 0));
     ((__ss_render_GradientsObject *)self)->__ss_object->depth = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 1));
-    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 2));
-    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmtXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 3));
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordYYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 4));
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordXYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 5));
-    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmtYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 6));
-    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZ = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 7));
-    ((__ss_render_GradientsObject *)self)->__ss_object->depthYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 8));
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordYXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 9));
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordX = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 10));
-    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordXXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 11));
-    ((__ss_render_GradientsObject *)self)->__ss_object->depthXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 12));
-    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 13));
-    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmt = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 14));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordYXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 2));
+    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmt = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 3));
+    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZ = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 4));
+    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 5));
+    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmtXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 6));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordY = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 7));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordXYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 8));
+    ((__ss_render_GradientsObject *)self)->__ss_object->depthYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 9));
+    ((__ss_render_GradientsObject *)self)->__ss_object->lightAmtYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 10));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordX = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 11));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordYYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 12));
+    ((__ss_render_GradientsObject *)self)->__ss_object->texCoordXXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 13));
+    ((__ss_render_GradientsObject *)self)->__ss_object->oneOverZXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 14));
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -3614,15 +3602,15 @@ int __ss_set___ss_render_Edge_xStep(__ss_render_EdgeObject *self, PyObject *valu
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Edge_yStart(__ss_render_EdgeObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Edge_x(__ss_render_EdgeObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->yStart);
+    return __to_py(self->__ss_object->x);
 }
 
-int __ss_set___ss_render_Edge_yStart(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Edge_x(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->yStart = __to_ss<__ss_int >(value);
+        self->__ss_object->x = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3646,15 +3634,15 @@ int __ss_set___ss_render_Edge_yEnd(__ss_render_EdgeObject *self, PyObject *value
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Edge_x(__ss_render_EdgeObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Edge_yStart(__ss_render_EdgeObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->x);
+    return __to_py(self->__ss_object->yStart);
 }
 
-int __ss_set___ss_render_Edge_x(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Edge_yStart(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->x = __to_ss<__ss_float >(value);
+        self->__ss_object->yStart = __to_ss<__ss_int >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3662,47 +3650,15 @@ int __ss_set___ss_render_Edge_x(__ss_render_EdgeObject *self, PyObject *value, v
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Edge_texCoordXStep(__ss_render_EdgeObject *self, void *closure) {
+PyObject *__ss_get___ss_render_Edge_oneOverZ(__ss_render_EdgeObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->texCoordXStep);
+    return __to_py(self->__ss_object->oneOverZ);
 }
 
-int __ss_set___ss_render_Edge_texCoordXStep(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_Edge_oneOverZ(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->texCoordXStep = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
-PyObject *__ss_get___ss_render_Edge_depthStep(__ss_render_EdgeObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->depthStep);
-}
-
-int __ss_set___ss_render_Edge_depthStep(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->depthStep = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
-PyObject *__ss_get___ss_render_Edge_texCoordX(__ss_render_EdgeObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->texCoordX);
-}
-
-int __ss_set___ss_render_Edge_texCoordX(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->texCoordX = __to_ss<__ss_float >(value);
+        self->__ss_object->oneOverZ = __to_ss<__ss_float >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -3742,6 +3698,54 @@ int __ss_set___ss_render_Edge_lightAmt(__ss_render_EdgeObject *self, PyObject *v
     return 0;
 }
 
+PyObject *__ss_get___ss_render_Edge_depth(__ss_render_EdgeObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->depth);
+}
+
+int __ss_set___ss_render_Edge_depth(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->depth = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Edge_texCoordXStep(__ss_render_EdgeObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->texCoordXStep);
+}
+
+int __ss_set___ss_render_Edge_texCoordXStep(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->texCoordXStep = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
+PyObject *__ss_get___ss_render_Edge_texCoordX(__ss_render_EdgeObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->texCoordX);
+}
+
+int __ss_set___ss_render_Edge_texCoordX(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->texCoordX = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
 PyObject *__ss_get___ss_render_Edge_texCoordY(__ss_render_EdgeObject *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->texCoordY);
@@ -3774,6 +3778,22 @@ int __ss_set___ss_render_Edge_texCoordYStep(__ss_render_EdgeObject *self, PyObje
     return 0;
 }
 
+PyObject *__ss_get___ss_render_Edge_depthStep(__ss_render_EdgeObject *self, void *closure) {
+    (void)closure;
+    return __to_py(self->__ss_object->depthStep);
+}
+
+int __ss_set___ss_render_Edge_depthStep(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
+    (void)closure;
+    try {
+        self->__ss_object->depthStep = __to_ss<__ss_float >(value);
+    } catch (Exception *e) {
+        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
+        return -1;
+    }
+    return 0;
+}
+
 PyObject *__ss_get___ss_render_Edge_oneOverZStep(__ss_render_EdgeObject *self, void *closure) {
     (void)closure;
     return __to_py(self->__ss_object->oneOverZStep);
@@ -3790,53 +3810,21 @@ int __ss_set___ss_render_Edge_oneOverZStep(__ss_render_EdgeObject *self, PyObjec
     return 0;
 }
 
-PyObject *__ss_get___ss_render_Edge_oneOverZ(__ss_render_EdgeObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->oneOverZ);
-}
-
-int __ss_set___ss_render_Edge_oneOverZ(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->oneOverZ = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
-PyObject *__ss_get___ss_render_Edge_depth(__ss_render_EdgeObject *self, void *closure) {
-    (void)closure;
-    return __to_py(self->__ss_object->depth);
-}
-
-int __ss_set___ss_render_Edge_depth(__ss_render_EdgeObject *self, PyObject *value, void *closure) {
-    (void)closure;
-    try {
-        self->__ss_object->depth = __to_ss<__ss_float >(value);
-    } catch (Exception *e) {
-        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
-        return -1;
-    }
-    return 0;
-}
-
 PyGetSetDef __ss_render_EdgeGetSet[] = {
     {(char *)"xStep", (getter)__ss_get___ss_render_Edge_xStep, (setter)__ss_set___ss_render_Edge_xStep, (char *)"", NULL},
-    {(char *)"yStart", (getter)__ss_get___ss_render_Edge_yStart, (setter)__ss_set___ss_render_Edge_yStart, (char *)"", NULL},
-    {(char *)"yEnd", (getter)__ss_get___ss_render_Edge_yEnd, (setter)__ss_set___ss_render_Edge_yEnd, (char *)"", NULL},
     {(char *)"x", (getter)__ss_get___ss_render_Edge_x, (setter)__ss_set___ss_render_Edge_x, (char *)"", NULL},
-    {(char *)"texCoordXStep", (getter)__ss_get___ss_render_Edge_texCoordXStep, (setter)__ss_set___ss_render_Edge_texCoordXStep, (char *)"", NULL},
-    {(char *)"depthStep", (getter)__ss_get___ss_render_Edge_depthStep, (setter)__ss_set___ss_render_Edge_depthStep, (char *)"", NULL},
-    {(char *)"texCoordX", (getter)__ss_get___ss_render_Edge_texCoordX, (setter)__ss_set___ss_render_Edge_texCoordX, (char *)"", NULL},
+    {(char *)"yEnd", (getter)__ss_get___ss_render_Edge_yEnd, (setter)__ss_set___ss_render_Edge_yEnd, (char *)"", NULL},
+    {(char *)"yStart", (getter)__ss_get___ss_render_Edge_yStart, (setter)__ss_set___ss_render_Edge_yStart, (char *)"", NULL},
+    {(char *)"oneOverZ", (getter)__ss_get___ss_render_Edge_oneOverZ, (setter)__ss_set___ss_render_Edge_oneOverZ, (char *)"", NULL},
     {(char *)"lightAmtStep", (getter)__ss_get___ss_render_Edge_lightAmtStep, (setter)__ss_set___ss_render_Edge_lightAmtStep, (char *)"", NULL},
     {(char *)"lightAmt", (getter)__ss_get___ss_render_Edge_lightAmt, (setter)__ss_set___ss_render_Edge_lightAmt, (char *)"", NULL},
+    {(char *)"depth", (getter)__ss_get___ss_render_Edge_depth, (setter)__ss_set___ss_render_Edge_depth, (char *)"", NULL},
+    {(char *)"texCoordXStep", (getter)__ss_get___ss_render_Edge_texCoordXStep, (setter)__ss_set___ss_render_Edge_texCoordXStep, (char *)"", NULL},
+    {(char *)"texCoordX", (getter)__ss_get___ss_render_Edge_texCoordX, (setter)__ss_set___ss_render_Edge_texCoordX, (char *)"", NULL},
     {(char *)"texCoordY", (getter)__ss_get___ss_render_Edge_texCoordY, (setter)__ss_set___ss_render_Edge_texCoordY, (char *)"", NULL},
     {(char *)"texCoordYStep", (getter)__ss_get___ss_render_Edge_texCoordYStep, (setter)__ss_set___ss_render_Edge_texCoordYStep, (char *)"", NULL},
+    {(char *)"depthStep", (getter)__ss_get___ss_render_Edge_depthStep, (setter)__ss_set___ss_render_Edge_depthStep, (char *)"", NULL},
     {(char *)"oneOverZStep", (getter)__ss_get___ss_render_Edge_oneOverZStep, (setter)__ss_set___ss_render_Edge_oneOverZStep, (char *)"", NULL},
-    {(char *)"oneOverZ", (getter)__ss_get___ss_render_Edge_oneOverZ, (setter)__ss_set___ss_render_Edge_oneOverZ, (char *)"", NULL},
-    {(char *)"depth", (getter)__ss_get___ss_render_Edge_depth, (setter)__ss_set___ss_render_Edge_depth, (char *)"", NULL},
     {NULL}
 };
 
@@ -3891,19 +3879,19 @@ PyObject *__ss_render_Edge__reduce__(PyObject *self, PyObject *args, PyObject *k
     PyTuple_SetItem(t, 1, a);
     PyObject *b = PyTuple_New(14);
     PyTuple_SetItem(b, 0, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->xStep));
-    PyTuple_SetItem(b, 1, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->yStart));
+    PyTuple_SetItem(b, 1, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->x));
     PyTuple_SetItem(b, 2, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->yEnd));
-    PyTuple_SetItem(b, 3, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->x));
-    PyTuple_SetItem(b, 4, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordXStep));
-    PyTuple_SetItem(b, 5, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->depthStep));
-    PyTuple_SetItem(b, 6, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordX));
-    PyTuple_SetItem(b, 7, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->lightAmtStep));
-    PyTuple_SetItem(b, 8, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->lightAmt));
-    PyTuple_SetItem(b, 9, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordY));
-    PyTuple_SetItem(b, 10, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordYStep));
-    PyTuple_SetItem(b, 11, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->oneOverZStep));
-    PyTuple_SetItem(b, 12, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->oneOverZ));
-    PyTuple_SetItem(b, 13, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->depth));
+    PyTuple_SetItem(b, 3, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->yStart));
+    PyTuple_SetItem(b, 4, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->oneOverZ));
+    PyTuple_SetItem(b, 5, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->lightAmtStep));
+    PyTuple_SetItem(b, 6, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->lightAmt));
+    PyTuple_SetItem(b, 7, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->depth));
+    PyTuple_SetItem(b, 8, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordXStep));
+    PyTuple_SetItem(b, 9, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordX));
+    PyTuple_SetItem(b, 10, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordY));
+    PyTuple_SetItem(b, 11, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->texCoordYStep));
+    PyTuple_SetItem(b, 12, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->depthStep));
+    PyTuple_SetItem(b, 13, __to_py(((__ss_render_EdgeObject *)self)->__ss_object->oneOverZStep));
     PyTuple_SetItem(t, 2, b);
     return t;
 }
@@ -3912,19 +3900,19 @@ PyObject *__ss_render_Edge__setstate__(PyObject *self, PyObject *args, PyObject 
     (void)kwargs;
     PyObject *state = PyTuple_GetItem(args, 0);
     ((__ss_render_EdgeObject *)self)->__ss_object->xStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 0));
-    ((__ss_render_EdgeObject *)self)->__ss_object->yStart = __to_ss<__ss_int >(PyTuple_GetItem(state, 1));
+    ((__ss_render_EdgeObject *)self)->__ss_object->x = __to_ss<__ss_float >(PyTuple_GetItem(state, 1));
     ((__ss_render_EdgeObject *)self)->__ss_object->yEnd = __to_ss<__ss_int >(PyTuple_GetItem(state, 2));
-    ((__ss_render_EdgeObject *)self)->__ss_object->x = __to_ss<__ss_float >(PyTuple_GetItem(state, 3));
-    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 4));
-    ((__ss_render_EdgeObject *)self)->__ss_object->depthStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 5));
-    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordX = __to_ss<__ss_float >(PyTuple_GetItem(state, 6));
-    ((__ss_render_EdgeObject *)self)->__ss_object->lightAmtStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 7));
-    ((__ss_render_EdgeObject *)self)->__ss_object->lightAmt = __to_ss<__ss_float >(PyTuple_GetItem(state, 8));
-    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordY = __to_ss<__ss_float >(PyTuple_GetItem(state, 9));
-    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 10));
-    ((__ss_render_EdgeObject *)self)->__ss_object->oneOverZStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 11));
-    ((__ss_render_EdgeObject *)self)->__ss_object->oneOverZ = __to_ss<__ss_float >(PyTuple_GetItem(state, 12));
-    ((__ss_render_EdgeObject *)self)->__ss_object->depth = __to_ss<__ss_float >(PyTuple_GetItem(state, 13));
+    ((__ss_render_EdgeObject *)self)->__ss_object->yStart = __to_ss<__ss_int >(PyTuple_GetItem(state, 3));
+    ((__ss_render_EdgeObject *)self)->__ss_object->oneOverZ = __to_ss<__ss_float >(PyTuple_GetItem(state, 4));
+    ((__ss_render_EdgeObject *)self)->__ss_object->lightAmtStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 5));
+    ((__ss_render_EdgeObject *)self)->__ss_object->lightAmt = __to_ss<__ss_float >(PyTuple_GetItem(state, 6));
+    ((__ss_render_EdgeObject *)self)->__ss_object->depth = __to_ss<__ss_float >(PyTuple_GetItem(state, 7));
+    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordXStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 8));
+    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordX = __to_ss<__ss_float >(PyTuple_GetItem(state, 9));
+    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordY = __to_ss<__ss_float >(PyTuple_GetItem(state, 10));
+    ((__ss_render_EdgeObject *)self)->__ss_object->texCoordYStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 11));
+    ((__ss_render_EdgeObject *)self)->__ss_object->depthStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 12));
+    ((__ss_render_EdgeObject *)self)->__ss_object->oneOverZStep = __to_ss<__ss_float >(PyTuple_GetItem(state, 13));
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -4171,15 +4159,15 @@ void __ss_render_RenderContextDealloc(__ss_render_RenderContextObject *self) {
     __ss_proxy->__delitem__(self->__ss_object);
 }
 
-PyObject *__ss_get___ss_render_RenderContext_width(__ss_render_RenderContextObject *self, void *closure) {
+PyObject *__ss_get___ss_render_RenderContext_height(__ss_render_RenderContextObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->width);
+    return __to_py(self->__ss_object->height);
 }
 
-int __ss_set___ss_render_RenderContext_width(__ss_render_RenderContextObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_RenderContext_height(__ss_render_RenderContextObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->width = __to_ss<__ss_int >(value);
+        self->__ss_object->height = __to_ss<__ss_int >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -4203,15 +4191,15 @@ int __ss_set___ss_render_RenderContext_bitmap(__ss_render_RenderContextObject *s
     return 0;
 }
 
-PyObject *__ss_get___ss_render_RenderContext_height(__ss_render_RenderContextObject *self, void *closure) {
+PyObject *__ss_get___ss_render_RenderContext_width(__ss_render_RenderContextObject *self, void *closure) {
     (void)closure;
-    return __to_py(self->__ss_object->height);
+    return __to_py(self->__ss_object->width);
 }
 
-int __ss_set___ss_render_RenderContext_height(__ss_render_RenderContextObject *self, PyObject *value, void *closure) {
+int __ss_set___ss_render_RenderContext_width(__ss_render_RenderContextObject *self, PyObject *value, void *closure) {
     (void)closure;
     try {
-        self->__ss_object->height = __to_ss<__ss_int >(value);
+        self->__ss_object->width = __to_ss<__ss_int >(value);
     } catch (Exception *e) {
         PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));
         return -1;
@@ -4268,9 +4256,9 @@ int __ss_set___ss_render_RenderContext_screenSpaceTransform(__ss_render_RenderCo
 }
 
 PyGetSetDef __ss_render_RenderContextGetSet[] = {
-    {(char *)"width", (getter)__ss_get___ss_render_RenderContext_width, (setter)__ss_set___ss_render_RenderContext_width, (char *)"", NULL},
-    {(char *)"bitmap", (getter)__ss_get___ss_render_RenderContext_bitmap, (setter)__ss_set___ss_render_RenderContext_bitmap, (char *)"", NULL},
     {(char *)"height", (getter)__ss_get___ss_render_RenderContext_height, (setter)__ss_set___ss_render_RenderContext_height, (char *)"", NULL},
+    {(char *)"bitmap", (getter)__ss_get___ss_render_RenderContext_bitmap, (setter)__ss_set___ss_render_RenderContext_bitmap, (char *)"", NULL},
+    {(char *)"width", (getter)__ss_get___ss_render_RenderContext_width, (setter)__ss_set___ss_render_RenderContext_width, (char *)"", NULL},
     {(char *)"zbuffer", (getter)__ss_get___ss_render_RenderContext_zbuffer, (setter)__ss_set___ss_render_RenderContext_zbuffer, (char *)"", NULL},
     {(char *)"zbuffer_reset", (getter)__ss_get___ss_render_RenderContext_zbuffer_reset, (setter)__ss_set___ss_render_RenderContext_zbuffer_reset, (char *)"", NULL},
     {(char *)"screenSpaceTransform", (getter)__ss_get___ss_render_RenderContext_screenSpaceTransform, (setter)__ss_set___ss_render_RenderContext_screenSpaceTransform, (char *)"", NULL},
@@ -4327,9 +4315,9 @@ PyObject *__ss_render_RenderContext__reduce__(PyObject *self, PyObject *args, Py
     PyTuple_SetItem(a, 0, (PyObject *)&__ss_render_RenderContextObjectType);
     PyTuple_SetItem(t, 1, a);
     PyObject *b = PyTuple_New(6);
-    PyTuple_SetItem(b, 0, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->width));
+    PyTuple_SetItem(b, 0, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->height));
     PyTuple_SetItem(b, 1, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->bitmap));
-    PyTuple_SetItem(b, 2, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->height));
+    PyTuple_SetItem(b, 2, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->width));
     PyTuple_SetItem(b, 3, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->zbuffer));
     PyTuple_SetItem(b, 4, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->zbuffer_reset));
     PyTuple_SetItem(b, 5, __to_py(((__ss_render_RenderContextObject *)self)->__ss_object->screenSpaceTransform));
@@ -4340,9 +4328,9 @@ PyObject *__ss_render_RenderContext__reduce__(PyObject *self, PyObject *args, Py
 PyObject *__ss_render_RenderContext__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {
     (void)kwargs;
     PyObject *state = PyTuple_GetItem(args, 0);
-    ((__ss_render_RenderContextObject *)self)->__ss_object->width = __to_ss<__ss_int >(PyTuple_GetItem(state, 0));
+    ((__ss_render_RenderContextObject *)self)->__ss_object->height = __to_ss<__ss_int >(PyTuple_GetItem(state, 0));
     ((__ss_render_RenderContextObject *)self)->__ss_object->bitmap = __to_ss<Bitmap *>(PyTuple_GetItem(state, 1));
-    ((__ss_render_RenderContextObject *)self)->__ss_object->height = __to_ss<__ss_int >(PyTuple_GetItem(state, 2));
+    ((__ss_render_RenderContextObject *)self)->__ss_object->width = __to_ss<__ss_int >(PyTuple_GetItem(state, 2));
     ((__ss_render_RenderContextObject *)self)->__ss_object->zbuffer = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 3));
     ((__ss_render_RenderContextObject *)self)->__ss_object->zbuffer_reset = __to_ss<list<__ss_float> *>(PyTuple_GetItem(state, 4));
     ((__ss_render_RenderContextObject *)self)->__ss_object->screenSpaceTransform = __to_ss<Matrix4 *>(PyTuple_GetItem(state, 5));

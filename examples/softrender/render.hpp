@@ -56,8 +56,8 @@ extern class_ *cl_Vector4;
 class Vector4 : public pyobj {
 public:
     __ss_float z;
-    __ss_float x;
     __ss_float w;
+    __ss_float x;
     __ss_float y;
 
     Vector4() {}
@@ -179,8 +179,8 @@ public:
 extern class_ *cl_Mesh;
 class Mesh : public pyobj {
 public:
-    list<__ss_int> *faces;
     list<Vertex *> *vertices;
+    list<__ss_int> *faces;
 
     Mesh() {}
     Mesh(str *filename, __ss_int scale) {
@@ -195,21 +195,21 @@ public:
 extern class_ *cl_Gradients;
 class Gradients : public pyobj {
 public:
-    list<__ss_float> *texCoordY;
+    __ss_float depthXStep;
     list<__ss_float> *depth;
+    __ss_float texCoordYXStep;
+    list<__ss_float> *lightAmt;
+    list<__ss_float> *oneOverZ;
     __ss_float oneOverZYStep;
     __ss_float lightAmtXStep;
-    __ss_float texCoordYYStep;
+    list<__ss_float> *texCoordY;
     __ss_float texCoordXYStep;
-    __ss_float lightAmtYStep;
-    list<__ss_float> *oneOverZ;
     __ss_float depthYStep;
-    __ss_float texCoordYXStep;
+    __ss_float lightAmtYStep;
     list<__ss_float> *texCoordX;
+    __ss_float texCoordYYStep;
     __ss_float texCoordXXStep;
-    __ss_float depthXStep;
     __ss_float oneOverZXStep;
-    list<__ss_float> *lightAmt;
 
     Gradients() {}
     Gradients(Vertex *minYVert, Vertex *midYVert, Vertex *maxYVert, Vector4 *lightDir) {
@@ -226,19 +226,19 @@ extern class_ *cl_Edge;
 class Edge : public pyobj {
 public:
     __ss_float xStep;
-    __ss_int yStart;
-    __ss_int yEnd;
     __ss_float x;
-    __ss_float texCoordXStep;
-    __ss_float depthStep;
-    __ss_float texCoordX;
+    __ss_int yEnd;
+    __ss_int yStart;
+    __ss_float oneOverZ;
     __ss_float lightAmtStep;
     __ss_float lightAmt;
+    __ss_float depth;
+    __ss_float texCoordXStep;
+    __ss_float texCoordX;
     __ss_float texCoordY;
     __ss_float texCoordYStep;
+    __ss_float depthStep;
     __ss_float oneOverZStep;
-    __ss_float oneOverZ;
-    __ss_float depth;
 
     Edge() {}
     Edge(Gradients *gradients, Vertex *minYVert, Vertex *maxYVert, __ss_int minYVertIndex) {
@@ -253,9 +253,9 @@ public:
 extern class_ *cl_RenderContext;
 class RenderContext : public pyobj {
 public:
-    __ss_int width;
-    Bitmap *bitmap;
     __ss_int height;
+    Bitmap *bitmap;
+    __ss_int width;
     list<__ss_float> *zbuffer;
     list<__ss_float> *zbuffer_reset;
     Matrix4 *screenSpaceTransform;
