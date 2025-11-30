@@ -20,7 +20,7 @@ public:
     StackFrame();
     ~StackFrame();
 
-    template<class T> T *neu();
+    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
 };
 
 
@@ -32,7 +32,7 @@ StackFrame::~StackFrame() {
     SP = __SP;
 }
 
-template<class T> T *StackFrame::neu() {
+template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
     unsigned char *mymem = SP;
 
     size_t sz = sizeof(T);
@@ -42,7 +42,7 @@ template<class T> T *StackFrame::neu() {
         return 0;
     } else {
         SP += sz;
-        return (T *)mymem; // reinterpret or whatever?
+        return new(mymem)T(x, y, z);
     }
 }
 
@@ -62,8 +62,7 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
     StackFrame __sss;
 
-    Vector *v = __sss.neu<Vector>();
-    v->__init__(x, y, z);
+    Vector *v = __sss.neu<Vector>(x, y, z);
     return ((v->x+v->y)+v->z);
 }
 
