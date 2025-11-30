@@ -37,7 +37,7 @@ template<class T> T *StackFrame::neu() {
 
     size_t sz = sizeof(T);
 
-    if(SP + sz >= SPEND) {
+    if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
         printf("DOE HEAP!!");
         return 0;
     } else {
