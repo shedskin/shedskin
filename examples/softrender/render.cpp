@@ -418,6 +418,8 @@ void *Vertex::__init__(Vector4 *pos, Vector4 *texCoords, Vector4 *normal) {
 }
 
 Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
+    StackFrame __sss(true);
+
     Vector4 *normal;
 
     if (___bool(normalTransform)) {
@@ -426,7 +428,7 @@ Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
     else {
         normal = this->normal;
     }
-    return (new Vertex(transform->transform(this->pos), this->texCoords, normal));
+    return __sss.neu<Vertex>(transform->transform(this->pos), this->texCoords, normal);
 }
 
 __ss_bool Vertex::inside_view_frustum() {
@@ -679,13 +681,18 @@ void *Mesh::__init__(str *filename, __ss_int scale) {
 }
 
 void *Mesh::draw(RenderContext *context, Matrix4 *view_projection, Matrix4 *transform, Bitmap *texture, Vector4 *lightDir) {
+    StackFrame __sss;
+
     Matrix4 *mvp;
     __ss_int __147, __148, i;
 
     mvp = view_projection->mul(transform);
 
     FAST_FOR(i,__ss_int(0),len(this->faces),__ss_int(3),147,148)
-        context->draw_triangle(((this->vertices)->__getfast__((this->faces)->__getfast__(i)))->transform(mvp, transform), ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(1)))))->transform(mvp, transform), ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(2)))))->transform(mvp, transform), texture, lightDir);
+        context->draw_triangle(
+                ((this->vertices)->__getfast__((this->faces)->__getfast__(i)))->transform(mvp, transform),
+                ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(1)))))->transform(mvp, transform),
+                ((this->vertices)->__getfast__((this->faces)->__getfast__((i+__ss_int(2)))))->transform(mvp, transform), texture, lightDir);
     END_FOR
 
     return NULL;
