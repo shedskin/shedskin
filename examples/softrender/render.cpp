@@ -6,7 +6,7 @@ namespace __render__ {
 
 unsigned char *SP;
 unsigned char *SPEND;
-const size_t STACKSIZE = 10*1024*1024;
+const size_t STACKSIZE = 20*1024*1024;
 unsigned char stackie[STACKSIZE];
 
 size_t allocs = 0;
@@ -40,9 +40,9 @@ template<class T> T *StackFrame::neu(Vector4 *x, Vector4 *y, Vector4 *z) {
 
     size_t sz = sizeof(T);
 
-    allocs += 1;
-    if(allocs % 10000 == 0)
-        printf("allocs %d\n", allocs);
+//    allocs += 1;
+//    if(allocs % 10000 == 0)
+//        printf("allocs %d\n", allocs);
 
     if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
         printf("DOE HEAP!!");
@@ -58,13 +58,13 @@ template<class T> T *StackFrame::neu4(__ss_float x, __ss_float y, __ss_float z, 
 
     size_t sz = sizeof(T);
 
-    allocs += 1;
-    if(allocs % 10000 == 0)
-        printf("allocs %d\n", allocs);
+//    allocs += 1;
+//    if(allocs % 10000 == 0)
+//        printf("allocs %d\n", allocs);
 
     if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
         printf("DOE HEAP!!");
-        return new T(x, y, z);
+        return new T(x, y, z, w);
     } else {
         SP += sz;
         return new(mymem)T(x, y, z, w);
@@ -351,10 +351,12 @@ Matrix4 *Matrix4::init_perspective(__ss_float fov, __ss_float aspectRatio, __ss_
 }
 
 Vector4 *Matrix4::transform(Vector4 *r) {
+    StackFrame __sss(true);
+
     list<list<__ss_float> *> *m;
 
     m = this->m;
-    return (new Vector4((((((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(3))*r->w))));
+    return __sss.neu4<Vector4>((((((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(0)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(1)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(2)))->__getfast__(__ss_int(3))*r->w)), (((((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(0))*r->x)+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(1))*r->y))+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(2))*r->z))+((m->__getfast__(__ss_int(3)))->__getfast__(__ss_int(3))*r->w)));
 }
 
 Matrix4 *Matrix4::mul(Matrix4 *other) {
@@ -443,6 +445,8 @@ void *Vertex::__init__(Vector4 *pos, Vector4 *texCoords, Vector4 *normal) {
 }
 
 Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
+    StackFrame __sss(true);
+
     Vector4 *normal;
 
     if (___bool(normalTransform)) {
@@ -451,7 +455,7 @@ Vertex *Vertex::transform(Matrix4 *transform, Matrix4 *normalTransform) {
     else {
         normal = this->normal;
     }
-    return (new Vertex(transform->transform(this->pos), this->texCoords, normal));
+    return __sss.neu<Vertex>(transform->transform(this->pos), this->texCoords, normal);
 }
 
 __ss_bool Vertex::inside_view_frustum() {
@@ -703,6 +707,9 @@ void *Mesh::__init__(str *filename, __ss_int scale) {
 }
 
 void *Mesh::draw(RenderContext *context, Matrix4 *view_projection, Matrix4 *transform, Bitmap *texture, Vector4 *lightDir) {
+    StackFrame __sss;
+//    printf("draw SP %X\n", SP);
+
     Matrix4 *mvp;
     __ss_int __147, __148, i;
 
