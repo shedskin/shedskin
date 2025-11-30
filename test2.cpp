@@ -43,16 +43,31 @@ template<class T> T *StackFrame::neu() {
         return 0;
     } else {
         SP += sz;
-        return (T *)mymem; // reinterpret or whatever?
+//        printf("alloc at %x\n", mymem);
+        return new(mymem)T;
     }
 }
 
 
 __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
+    StackFrame __sss;
+
     tuple<__ss_int> *v;
 
-    v = (new tuple<__ss_int>(3,x,y,z));
-    return __sum(v);
+//    printf("neu\n");
+    v = __sss.neu<tuple<__ss_int> >();
+
+//    printf("wut %d\n", v->units.size());
+
+    v->units.push_back(x);
+    v->units.push_back(y);
+    v->units.push_back(z);
+
+//    printf("pushed %d\n"), v->units.size();
+
+    __ss_int ssum =  __sum(v);
+//    printf("sum %d\n", ssum);
+    return ssum;
 }
 
 void *__ss_main() {
