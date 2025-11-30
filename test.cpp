@@ -8,41 +8,19 @@ str *const_0;
 
 str *__name__;
 
-
+unsigned char *SP;
+unsigned char *SPEND;
 unsigned char stackie[1024*1024];
-unsigned char *SP = stackie;
-size_t stackleft = 1024*1024;
 
 
 class StackFrame {
-private:
-    unsigned char *__SP;
-    size_t __sl;
-
 public:
-    StackFrame() {
-        __SP = SP;
-        __sl = stackleft;
-    }
+    unsigned char *__SP;
 
-    ~StackFrame() {
-        SP = __SP;
-        stackleft = __sl;
-    }
+    StackFrame();
+    ~StackFrame();
 
-    unsigned char *nieuw(size_t sz) {
-        unsigned char *mymem = SP;
-
-        if(sz > stackleft) {
-            printf("DOE HEAP ALLOCATIE\n");
-            return 0;
-
-        } else {
-            SP += sz;
-            stackleft -= sz;
-            return mymem;
-        }
-    }
+    unsigned char *nieuw(size_t sz);
 
 //    template<T> T new(..) { // bypass 'new' and allocate on stack!
 //        void *mymem = SP;
@@ -50,6 +28,29 @@ public:
 //        return (T *)mymem; // reinterpret_cast or whatever?
 //    }
 };
+
+
+
+StackFrame::StackFrame() {
+    __SP = SP;
+}
+
+StackFrame::~StackFrame() {
+    SP = __SP;
+}
+
+unsigned char *StackFrame::nieuw(size_t sz) {
+    unsigned char *mymem = SP;
+
+    if(SP + sz >= SPEND) {
+        printf("DOE HEAP!!");
+        return 0;
+    } else {
+        SP += sz;
+        return mymem;
+    }
+
+}
 
 
 //    tuple<__ss_int> *t = __sss.new<tuple<__ss_int>>(2, 7, 8);
@@ -94,6 +95,9 @@ void __init() {
     const_0 = new str("__main__");
 
     __name__ = new str("__main__");
+
+    SP = stackie;
+    SPEND = stackie+1024*1024;
 
     cl_Vector = new class_("__main__.Vector");
     if (__eq(__test__::__name__, const_0)) {
