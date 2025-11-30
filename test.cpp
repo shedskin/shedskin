@@ -14,22 +14,24 @@ unsigned char *SP = stackie;
 
 
 class StackFrame {
-public:
-    unsigned char *SP;
+private:
+    unsigned char *__SP;
 
+public:
     StackFrame() {
-//        printf("enter\n");
-        this->SP = SP;
+//        printf("enter at %X\n", SP);
+        this->__SP = SP;
     }
 
     ~StackFrame() {
-        SP = this->SP;
-//        printf("exit\n");
+        SP = this->__SP;
+//        printf("exit at %X\n", SP);
     }
 
     unsigned char *nieuw(size_t sz) {
         unsigned char *mymem = SP;
         SP += sz;
+//        printf("write at %X\n", mymem);
         return mymem;
     }
 
@@ -60,20 +62,28 @@ __ss_int woef(__ss_int x, __ss_int y, __ss_int z) {
     StackFrame __sss;
 //    printf("inner\n");
 
-    __sss.nieuw(12); //sizeof(Vector));
+    Vector *v = (Vector *)(__sss.nieuw(sizeof(Vector)));
+    v->__init__(x, y, z);
+
+//    v->x = x;
+//    v->y = y;
+//    v->z = z;
+
 //    Vector *v = (Vector *)alloca(sizeof(Vector));
 //    Vector __v(x,y,z);
 
 //    Vector *v = new Vector(x, y, z);
-//    return ((v->x+v->y)+v->z);
+    return ((v->x+v->y)+v->z);
 
-    return x+y+z;
+//    return x+y+z;
 }
 
 void *__ss_main() {
     __ss_int __0, __1, s, x;
 
     s = __ss_int(0LL);
+
+    printf("stackie address %X\n", SP);
 
     FAST_FOR(x,0,__power(__ss_int(10LL), __ss_int(8LL)),1,0,1)
         s = (s+woef(x, (x+__ss_int(1LL)), (x-__ss_int(1LL))));
