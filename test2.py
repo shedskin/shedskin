@@ -1,7 +1,7 @@
 # non-escaping tuple
 
 def woef(x, y, z):
-    v = (x, y, z)
+    v = (x, y, z)  # HERE
     return sum(v)
 
 
