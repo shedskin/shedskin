@@ -18,6 +18,7 @@ def draw():
         s += v.x + v.y + v.z
     return s
 
+
 def main():
     s = 0
     for x in range(10**3):
