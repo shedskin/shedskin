@@ -8,7 +8,44 @@ str *const_0;
 
 str *__name__;
 
+unsigned char *SP;
+unsigned char *SPEND;
+const size_t STACKSIZE = 1024*1024;
+unsigned char stackie[STACKSIZE];
 
+
+class StackFrame {
+public:
+    unsigned char *__SP;
+
+    StackFrame();
+    ~StackFrame();
+
+    template<class T> T *neu(__ss_int x, __ss_int y, __ss_int z);
+};
+
+
+StackFrame::StackFrame() {
+    __SP = SP;
+}
+
+StackFrame::~StackFrame() {
+//    SP = __SP;
+}
+
+template<class T> T *StackFrame::neu(__ss_int x, __ss_int y, __ss_int z) {
+    unsigned char *mymem = SP;
+
+    size_t sz = sizeof(T);
+
+    if(SP + sz >= SPEND) { // DEZE CHECKT MAAKT ALLES 10 KEER TRAGER :S
+//        printf("DOE HEAP!!");
+        return new T(x, y, z);
+    } else {
+        SP += sz;
+        return new(mymem)T(x, y, z);
+    }
+}
 
 /**
 class Vector
@@ -24,10 +61,14 @@ void *Vector::__init__(__ss_int x, __ss_int y, __ss_int z) {
 }
 
 Vector *woef(__ss_int x, __ss_int y, __ss_int z) {
-    return (new Vector(x, y, z));
+    StackFrame __sss;
+
+    return __sss.neu<Vector>(x, y, z);
 }
 
 void *__ss_main() {
+    StackFrame __sss;
+
     __ss_int __0, __1, s, x;
     Vector *v;
 
@@ -46,6 +87,9 @@ void __init() {
     const_0 = new str("__main__");
 
     __name__ = new str("__main__");
+
+    SP = stackie;
+    SPEND = stackie+STACKSIZE;
 
     cl_Vector = new class_("__main__.Vector");
     if (__eq(__test3__::__name__, const_0)) {
