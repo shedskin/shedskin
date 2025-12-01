@@ -17,7 +17,7 @@ import sys
 import time
 from typing import List, Optional
 
-from . import cmake, config, cpp, error, graph, infer, log, makefile, stats
+from . import cmake, config, cpp, mem, error, graph, infer, log, makefile, stats
 
 
 class Shedskin:
@@ -199,6 +199,7 @@ class Shedskin:
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx)
+        mem.report(self.gx)
         error.print_errors()
         prebuild_secs = time.time() - t0
         build_secs = 0.0
