@@ -26,7 +26,7 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         self.mv = module.mv
 
         self.connections = connections # var assignment dataflow
-        self.start_values = start_values  # 'esc'/'ret'
+        self.start_values = start_values  # 'esc'/'ret'/'cap'
 
     def visit_Return(
         self, node: ast.Return, func: Optional["python.Function"] = None
@@ -90,6 +90,8 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
                 self.connections.append((formal, b))
 #                print('hum', formal, '<-', b)
 
+
+    # TODO nodes without assignment don't escape
     # TODO methods
     # TODO setattr
     # TODO walrus
@@ -105,14 +107,38 @@ def report(gx: "config.GlobalInfo") -> None:
             cv.visit(module.ast)
 
     for a, b in connections:
-        print('conn', a, '<-', b)
+#        print('conn', a, '<-', b)
 
         for v in (a, b):
             if isinstance(v, python.Variable) and not v.parent:
                 start_values[v] = 'esc'
 
-    print()
+#    for k, v in start_values.items():
+#        print('init', k, v)
+
+    values = {}
+    for a, b in connections:
+        values[a] = 'cap'
+        values[b] = 'cap'
 
     for k, v in start_values.items():
-        print('init', k, v)
+        values[k] = v
 
+    while True:
+        changed = False
+
+        for a, b in connections:
+            if values[a] == 'esc':
+                if values[b] != 'esc':
+                    values[b] = 'esc'
+                    changed = True
+            elif values[a] == 'ret':
+                if values[b] != 'esc':
+                    values[b] = 'ret'
+                    changed = True
+
+        if not changed:
+            break
+
+    for k, v in values.items():
+        print(k, v)
