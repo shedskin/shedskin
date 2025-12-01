@@ -18,18 +18,22 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
     """Visitor for generating connection graph from Python ASTs"""
 
     def __init__(
-        self, gx: "config.GlobalInfo", module: "python.Module"
+        self, gx: "config.GlobalInfo", module: "python.Module", connections, start_values
     ):
         self.gx = gx
         self.module = module
         self.mergeinh = self.gx.merged_inh
         self.mv = module.mv
 
+        self.connections = connections # var assignment dataflow
+        self.start_values = start_values  # 'esc'/'ret'
+
     def visit_Return(
         self, node: ast.Return, func: Optional["python.Function"] = None
     ) -> None:
         if func and isinstance(node.value, ast.Name):
-            print('return', python.lookup_var(node.value.id, func, self.mv))
+            v = python.lookup_var(node.value.id, func, self.mv)
+            self.start_values[v] = 'ret'
 
     def visit_FunctionDef(
         self,
@@ -49,9 +53,11 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
             a = python.lookup_var(node.targets[0].id, func, self.mv)
             if isinstance(node.value, ast.Name):
                 b = python.lookup_var(node.value.id, func, self.mv)
-                print('assign var', a, '<-', b)
+                self.connections.append((a, b))
+#                print('assign var', a, '<-', b)
             elif not isinstance(node.value, ast.Constant):
-                print('assign node', a, '<-', node.value)
+                self.connections.append((a, node.value))
+#                print('assign node', a, '<-', node.value)
 
     def visit_Call(
         self,
@@ -81,7 +87,8 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         for actual, formal in pairs:
             if isinstance(actual, ast.Name):
                 b = python.lookup_var(actual.id, func, self.mv)
-                print('hum', formal, '<-', b)
+                self.connections.append((formal, b))
+#                print('hum', formal, '<-', b)
 
     # TODO methods
     # TODO setattr
@@ -89,7 +96,17 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
 
 
 def report(gx: "config.GlobalInfo") -> None:
+    connections = []
+    start_values = {}
+
     for module in gx.modules.values():
         if not module.builtin:
-            cv = ConnectionGraphVisitor(gx, module)
+            cv = ConnectionGraphVisitor(gx, module, connections, start_values)
             cv.visit(module.ast)
+
+    for a, b in connections:
+        print('conn', a, '<-', b)
+
+    for k, v in start_values.items():
+        print('init', k, v)
+
