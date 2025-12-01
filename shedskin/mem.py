@@ -10,6 +10,7 @@ from . import ast_utils
 from . import python
 
 Parent: TypeAlias = Union["python.Class", "python.Function"]
+Types: TypeAlias = set[Tuple["python.Class", int]]
 
 
 class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
@@ -25,8 +26,10 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
     def visit_Return(
         self, node: ast.Return, func: Optional["python.Function"] = None
     ) -> None:
-        if isinstance(node.value, ast.Name):
-            print('return', func, python.lookup_var(node.value.id, func, self.mv))
+        if func and isinstance(node.value, ast.Name):
+            print('return', func.ident, node.value.id) #python.lookup_var(node.value.id, func, self.mv))
+
+    # TODO methods
 
     def visit_FunctionDef(
         self,
@@ -39,10 +42,18 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
             for child in node.body:
                 self.visit(child, func)
 
+    def visit_Assign(
+        self, node: ast.Assign, func: Optional["python.Function"] = None
+    ) -> None:
+        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            if isinstance(node.value, ast.Name):
+                print('assign var', node.targets[0].id, '<-', node.value.id)
+            else:
+                print('assign node', node.targets[0].id, '<-', node.value)
+
 
 def report(gx: "config.GlobalInfo") -> None:
     for module in gx.modules.values():
         if not module.builtin:
             cv = ConnectionGraphVisitor(gx, module)
             cv.visit(module.ast)
-    print('mem report!')
