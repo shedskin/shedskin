@@ -14,7 +14,6 @@ Parent: TypeAlias = Union["python.Class", "python.Function"]
 Types: TypeAlias = set[Tuple["python.Class", int]]
 
 
-# TODO nodes without assignment don't escape
 # TODO methods
 # TODO setattr
 # TODO walrus
@@ -96,6 +95,7 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         self.constructors.add(node)
+
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
@@ -112,7 +112,6 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         func: Optional["python.Function"] = None,
         argtypes: Optional[Types] = None,
     ) -> None:
-        """Visit a call node"""
         (
             objexpr,
             ident,
@@ -193,3 +192,7 @@ def report(gx: "config.GlobalInfo") -> None:
     for k, v in values.items():
         if k in constructors:
             print(f'{k.lineno}:', v, ast.unparse(k))
+
+    for k in constructors:
+        if k not in values:
+            print('NOVAL', ast.unparse(k))
