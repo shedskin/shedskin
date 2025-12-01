@@ -48,7 +48,7 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
             if isinstance(node.value, ast.Name):
                 print('assign var', node.targets[0].id, '<-', node.value.id)
-            else:
+            elif not isinstance(node.value, ast.Constant):
                 print('assign node', node.targets[0].id, '<-', node.value)
 
 
