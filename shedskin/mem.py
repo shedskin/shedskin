@@ -31,8 +31,6 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         if func and isinstance(node.value, ast.Name):
             print('return', python.lookup_var(node.value.id, func, self.mv))
 
-    # TODO methods
-
     def visit_FunctionDef(
         self,
         node: ast.FunctionDef,
@@ -85,7 +83,9 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
                 b = python.lookup_var(actual.id, func, self.mv)
                 print('hum', formal, '<-', b)
 
+    # TODO methods
     # TODO setattr
+    # TODO walrus
 
 
 def report(gx: "config.GlobalInfo") -> None:
