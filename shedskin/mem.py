@@ -35,8 +35,9 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         declare: bool = False,
     ) -> None:
         if node.name in self.mv.funcs:
-            print('HEI!', node.name)
             func = self.mv.funcs[node.name]
+            for child in node.body:
+                self.visit(child, func)
 
 
 def report(gx: "config.GlobalInfo") -> None:
