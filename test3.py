@@ -1,4 +1,4 @@
-# non-escaping Vector
+# Vector escapes 1 level higher
 
 class Vector:
     def __init__(self, x, y, z):
