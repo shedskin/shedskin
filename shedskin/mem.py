@@ -107,6 +107,12 @@ def report(gx: "config.GlobalInfo") -> None:
     for a, b in connections:
         print('conn', a, '<-', b)
 
+        for v in (a, b):
+            if isinstance(v, python.Variable) and not v.parent:
+                start_values[v] = 'esc'
+
+    print()
+
     for k, v in start_values.items():
         print('init', k, v)
 
