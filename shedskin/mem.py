@@ -8,6 +8,7 @@ from typing import (IO, TYPE_CHECKING, Any, Dict, Iterator, List, Optional,
 
 from . import ast_utils
 from . import python
+from . import infer
 
 Parent: TypeAlias = Union["python.Class", "python.Function"]
 Types: TypeAlias = set[Tuple["python.Class", int]]
@@ -21,13 +22,14 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
     ):
         self.gx = gx
         self.module = module
+        self.mergeinh = self.gx.merged_inh
         self.mv = module.mv
 
     def visit_Return(
         self, node: ast.Return, func: Optional["python.Function"] = None
     ) -> None:
         if func and isinstance(node.value, ast.Name):
-            print('return', func.ident, node.value.id) #python.lookup_var(node.value.id, func, self.mv))
+            print('return', python.lookup_var(node.value.id, func, self.mv))
 
     # TODO methods
 
@@ -46,10 +48,44 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Assign, func: Optional["python.Function"] = None
     ) -> None:
         if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            a = python.lookup_var(node.targets[0].id, func, self.mv)
             if isinstance(node.value, ast.Name):
-                print('assign var', node.targets[0].id, '<-', node.value.id)
+                b = python.lookup_var(node.value.id, func, self.mv)
+                print('assign var', a, '<-', b)
             elif not isinstance(node.value, ast.Constant):
-                print('assign node', node.targets[0].id, '<-', node.value)
+                print('assign node', a, '<-', node.value)
+
+    def visit_Call(
+        self,
+        node: ast.Call,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
+        """Visit a call node"""
+        (
+            objexpr,
+            ident,
+            direct_call,
+            method_call,
+            constructor,
+            parent_constr,
+            anon_func,
+        ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
+
+        funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+
+        target = funcs[0]
+
+        pairs, rest, err = infer.connect_actual_formal(
+            self.gx, node, target, parent_constr, merge=self.mergeinh
+        )
+
+        for actual, formal in pairs:
+            if isinstance(actual, ast.Name):
+                b = python.lookup_var(actual.id, func, self.mv)
+                print('hum', formal, '<-', b)
+
+    # TODO setattr
 
 
 def report(gx: "config.GlobalInfo") -> None:
