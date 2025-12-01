@@ -14,11 +14,21 @@ Parent: TypeAlias = Union["python.Class", "python.Function"]
 Types: TypeAlias = set[Tuple["python.Class", int]]
 
 
+# TODO nodes without assignment don't escape
+# TODO methods
+# TODO setattr
+# TODO walrus
+
+# TODO raise
+# TODO connect return
+# TODO generic builtin container visiting
+
+
 class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
     """Visitor for generating connection graph from Python ASTs"""
 
     def __init__(
-        self, gx: "config.GlobalInfo", module: "python.Module", connections, start_values
+        self, gx: "config.GlobalInfo", module: "python.Module", connections, start_values, constructors
     ):
         self.gx = gx
         self.module = module
@@ -27,13 +37,20 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
 
         self.connections = connections # var assignment dataflow
         self.start_values = start_values  # 'esc'/'ret'/'cap'
+        self.constructors = constructors
 
     def visit_Return(
         self, node: ast.Return, func: Optional["python.Function"] = None
     ) -> None:
-        if func and isinstance(node.value, ast.Name):
-            v = python.lookup_var(node.value.id, func, self.mv)
-            self.start_values[v] = 'ret'
+        if func:
+            if isinstance(node.value, ast.Name):
+                v = python.lookup_var(node.value.id, func, self.mv)
+                self.start_values[v] = 'ret'
+            else:
+                self.start_values[node.value] = 'ret'
+
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
 
     def visit_FunctionDef(
         self,
@@ -59,6 +76,30 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
                 self.connections.append((a, node.value))
 #                print('assign node', a, '<-', node.value)
 
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
+
+    def visit_Tuple(
+        self,
+        node: ast.Tuple,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
+        self.constructors.add(node)
+
+    def visit_List(
+        self,
+        node: ast.List,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
+    ) -> None:
+        self.constructors.add(node)
+
+    def visit_ListComp(
+        self, node: ast.ListComp, func: Optional["python.Function"] = None
+    ) -> None:
+        self.constructors.add(node)
+
     def visit_Call(
         self,
         node: ast.Call,
@@ -76,7 +117,12 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
 
+        if constructor:
+            self.constructors.add(node)
+
         funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+        if not funcs:
+            return
 
         target = funcs[0]
 
@@ -90,20 +136,18 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
                 self.connections.append((formal, b))
 #                print('hum', formal, '<-', b)
 
-
-    # TODO nodes without assignment don't escape
-    # TODO methods
-    # TODO setattr
-    # TODO walrus
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
 
 
 def report(gx: "config.GlobalInfo") -> None:
     connections = []
     start_values = {}
+    constructors = set()
 
     for module in gx.modules.values():
         if not module.builtin:
-            cv = ConnectionGraphVisitor(gx, module, connections, start_values)
+            cv = ConnectionGraphVisitor(gx, module, connections, start_values, constructors)
             cv.visit(module.ast)
 
     for a, b in connections:
@@ -141,4 +185,5 @@ def report(gx: "config.GlobalInfo") -> None:
             break
 
     for k, v in values.items():
-        print(k, v)
+        if k in constructors:
+            print(f'{k.lineno}:', v, ast.unparse(k))
