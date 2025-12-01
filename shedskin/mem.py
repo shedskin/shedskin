@@ -86,6 +86,8 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         self.constructors.add(node)
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
 
     def visit_List(
         self,
@@ -94,11 +96,15 @@ class ConnectionGraphVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         self.constructors.add(node)
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
 
     def visit_ListComp(
         self, node: ast.ListComp, func: Optional["python.Function"] = None
     ) -> None:
         self.constructors.add(node)
+        for child in ast.iter_child_nodes(node):
+            self.visit(child, func)
 
     def visit_Call(
         self,
