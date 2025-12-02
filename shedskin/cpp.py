@@ -3763,17 +3763,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             elif (
                 len(node.generators) == 1
-                and not ast_utils.is_fastfor(node.generators[0])
                 and not self.fastenumerate(node.generators[0])
                 and not self.fastzip2(node.generators[0])
                 and not node.generators[0].ifs
-                and self.one_class(
-                    node.generators[0].iter, ("tuple", "list", "str_", "dict", "set")
-                )
+                and ((ast_utils.is_fastfor(node.generators[0])
+                      and len(node.generators[0].iter.args) == 1
+                      and isinstance(node.generators[0].iter.args[0], ast.Constant))
+                     or self.one_class(node.generators[0].iter,
+                                       ("list", "tuple", "str_", "dict", "set", "bytes_")))
             ):
+                if ast_utils.is_fastfor(node.generators[0]):
+                    tv = self.mv.tempcount[node.generators[0].target]
+                else:
+                    tv = self.mv.tempcount[node.generators[0].iter]
                 self.start(
                     "__ss_result->units["
-                    + self.mv.tempcount[node.generators[0].iter]
+                    + tv
                     + "] = "
                 )
                 self.visit(node.elt, lcfunc)
@@ -3794,8 +3799,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         iter = self.cpp_name(var)
 
         if ast_utils.is_fastfor(qual):
+            if (len(node.generators) == 1 and
+                not qual.ifs and
+                not genexpr and
+                not node in self.gx.setcomp_to_lc.values() and
+                not node in self.gx.dictcomp_to_lc.values() and
+                len(qual.iter.args) == 1 and
+                isinstance(qual.iter.args[0], ast.Constant)
+            ):
+                self.output(f"__ss_result->resize({qual.iter.args[0].value});")
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
-        elif self.fastenumerate(qual):
+        elif self.fastenumerate(qual):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         elif self.fastzip2(qual):
@@ -3820,7 +3834,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 not genexpr and
                 not node in self.gx.setcomp_to_lc.values() and
                 not node in self.gx.dictcomp_to_lc.values()):
-                if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set")):
+                if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set", "bytes_")):
                     self.output("__ss_result->resize(len(" + itervar + "));")
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
