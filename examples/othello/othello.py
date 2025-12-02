@@ -5,9 +5,10 @@ board = [[empty for x in range(8)] for y in range(8)]
 board[3][3] = board[4][4] = white
 board[3][4] = board[4][3] = black
 player = {white: 'human', black: 'lalaoth'}
-depth = 6
+depth = 4
 directions = [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]
 corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
+flips = 0
 
 def possible_move(board, x, y, color):
     if board[x][y] != empty:
@@ -29,10 +30,12 @@ def flip_in_direction(board, x, y, direction, color):
         else: return other_color
 
 def flip_stones(board, move, color):
+    global flips
     for direction in directions:
         if flip_in_direction(board, move[0], move[1], direction, color):
              x, y = move[0]+direction[0], move[1]+direction[1]
              while board[x][y] != color:
+               flips += 1
                board[x][y] = color
                x, y = x+direction[0], y+direction[1]
     board[move[0]][move[1]] = color
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     while possible_moves(board, black) or possible_moves(board, white):
         if possible_moves(board, turn):
             print_board(board, turn)
-            if turn == black:
+            if True: #turn == black:
                 move, mobility = best_move(board, turn, turn)
                 print('move:', human_move(move))
             else:
@@ -93,7 +96,6 @@ if __name__ == '__main__':
                 continue
             else:
                 flip_stones(board, move, turn)
-                break # XXX shedskin; remove to play against computer
         turn = -turn
     print_board(board, turn)
     if stone_count(board, black) == stone_count(board, white):
@@ -101,3 +103,4 @@ if __name__ == '__main__':
     else:
         if stone_count(board, black) > stone_count(board, white): print(player[black], 'wins!')
         else: print(player[white], 'wins!')
+    print('flips', flips)
