@@ -1000,5 +1000,22 @@ inline __ss_float ___round(__ss_float a, int n) {
 
 str *input(str *msg = 0);
 
+/* in range */
+
+inline __ss_bool __ss_in_range(__ss_int i, __ss_int a, __ss_int b, __ss_int s=1) {
+    if(s > 0 and (i < a or i >= b))
+        return False;
+    else if(s < 0 and (i > a or i <= b))
+        return False;
+    else if((i-a)%s != 0)
+        return False;
+
+    return True;
+}
+
+inline __ss_bool __ss_in_range(__ss_int i, __ss_int a) {
+    return __ss_in_range(i, 0, a);
+}
+
 #endif
 #endif

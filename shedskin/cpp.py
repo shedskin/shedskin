@@ -2504,6 +2504,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
 
+        # int in range(..)
+        if (
+            middle == "__contains__"
+            and self.one_class(right, ("int_",))
+            and isinstance(left, ast.Call)
+            and isinstance(left.func, ast.Name)
+            and left.func.id == 'range'
+        ):
+            if prefix == '!':
+                self.append(prefix)
+            self.append('__ss_in_range(')
+            self.visit(right, func)
+            self.append(', ')
+            for arg in left.args:
+                self.visit(arg, func)
+                if arg is not left.args[-1]:
+                    self.append(', ')
+            self.append(')')
+            return
+
         # expr (not) in [const, ..]/(const, ..)
         if (
             middle == "__contains__"
