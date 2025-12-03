@@ -28,8 +28,8 @@ Under Windows:
 
 ::
 
-    shedskin build --conan test
-    build/Debug/test.exe
+    shedskin build test
+    build/Release/test.exe
 
 
 Restrictions
