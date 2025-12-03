@@ -3818,16 +3818,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, self.mv)
         iter = self.cpp_name(var)
 
+        # attempt to resize/reserve list (vector) space
+        # to avoid heap allocations (for 1 elem, 2 elems, 4 elems.. :S)
+        try_reserve = (not genexpr and
+                       not node in self.gx.setcomp_to_lc.values() and
+                       not node in self.gx.dictcomp_to_lc.values())
+
         if ast_utils.is_fastfor(qual):
-            if (len(node.generators) == 1 and
-                not qual.ifs and
-                not genexpr and
-                not node in self.gx.setcomp_to_lc.values() and
-                not node in self.gx.dictcomp_to_lc.values() and
-                len(qual.iter.args) == 1 and
-                isinstance(qual.iter.args[0], ast.Constant)
-            ):
-                self.output(f"__ss_result->resize({qual.iter.args[0].value});")
+            if try_reserve:
+                if (len(node.generators) == 1 and
+                    not qual.ifs and
+                    len(qual.iter.args) == 1 and  # TODO more than one arguments to range()
+                    isinstance(qual.iter.args[0], ast.Constant)
+                ):
+                    self.output(f"__ss_result->resize({qual.iter.args[0].value});")
+                elif qual is node.generators[0]:
+                    self.output(f"__ss_result->units.reserve({4*len(node.generators)});")
+
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
@@ -3849,13 +3856,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             pref, tail = self.forin_preftail(qual)
 
-            if (len(node.generators) == 1 and
-                not qual.ifs and
-                not genexpr and
-                not node in self.gx.setcomp_to_lc.values() and
-                not node in self.gx.dictcomp_to_lc.values()):
-                if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set", "bytes_")):
+            if try_reserve:
+                if (len(node.generators) == 1 and
+                    not qual.ifs and
+                    self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set", "bytes_"))
+                ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
+                else:
+                    self.output(f"__ss_result->units.reserve({4*len(node.generators)});")
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
