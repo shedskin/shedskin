@@ -7,6 +7,7 @@ public:
     uint8_t value;
     inline __ss_int operator+(__ss_bool b);
     inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator!=(__ss_bool b);
     inline __ss_bool operator&(__ss_bool b);
     inline __ss_bool operator|(__ss_bool b);
     inline __ss_bool operator^(__ss_bool b);
@@ -21,6 +22,7 @@ public:
 
 inline __ss_int __ss_bool::operator+(__ss_bool b) { return value+b.value; }
 inline __ss_bool __ss_bool::operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
+inline __ss_bool __ss_bool::operator!=(__ss_bool b) { __ss_bool c; c.value=value!=b.value; return c; }
 inline __ss_bool __ss_bool::operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
 inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
 inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
