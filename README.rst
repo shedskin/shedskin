@@ -29,7 +29,7 @@ Under Windows:
 ::
 
     shedskin build test
-    build/Release/test.exe
+    build\Release\test.exe
 
 
 Restrictions
