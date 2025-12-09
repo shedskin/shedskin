@@ -215,7 +215,7 @@ inline __ss_int __ss_bit_length(__ss_int i) {
 }
 
 namespace __bytes___ {
-    static char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
+    static signed char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
