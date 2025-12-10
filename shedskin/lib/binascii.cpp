@@ -58,7 +58,7 @@ for i in xrange(0,256,16):
 
 */
 
-static char table_a2b_hex[] = {
+static signed char table_a2b_hex[] = {
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -93,7 +93,7 @@ bytes *unhexlify(bytes *hex) {
     {
         top = table_a2b_hex[(int)*(curhex++)];
         bot = table_a2b_hex[(int)*(curhex++)];
-        if (top==-1 || bot==-1)
+        if (top==(char)-1 || bot==(char)-1)
             throw new Error(new str("Invalid hex"));
         *(curdata++) = (char)((top<<4) + bot);
     }
@@ -219,7 +219,7 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
 
 
 
-int find_valid(char *s, size_t slen, int num, char *table_a2b_base64)
+int find_valid(char *s, size_t slen, int num, signed char *table_a2b_base64)
 {
     /* Finds & returns the (num+1)th
     ** valid character for base64, or -1 if none.
@@ -245,7 +245,7 @@ int find_valid(char *s, size_t slen, int num, char *table_a2b_base64)
 
 // from python 2.7.1
 bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
-    char table_a2b_base64[] = {
+    signed char table_a2b_base64[] = {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -257,8 +257,8 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     };
 
     if(altchars) { // TODO check len
-        table_a2b_base64[altchars->unit[0]] = 62;
-        table_a2b_base64[altchars->unit[1]] = 63;
+        table_a2b_base64[(unsigned char)altchars->unit[0]] = 62;
+        table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
     }
     else {
         table_a2b_base64['+'] = 62;
@@ -435,7 +435,7 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
             else {
                 top = table_a2b_hex[(unsigned char)data[in]];
                 bot = table_a2b_hex[(unsigned char)data[in+1]];
-                if (top==-1 || bot==-1)
+                if (top==(char)-1 || bot==(char)-1)
                     odata[out++] = '=';
                 else
                 {

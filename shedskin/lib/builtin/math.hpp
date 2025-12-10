@@ -197,7 +197,7 @@ namespace __int___ {
     inline __ss_int bit_length(__ss_int i) {
         if(i == 0)
             return 0;
-        return std::floor(std::log2(std::abs(i))) + 1;
+        return (__ss_int)(std::floor(std::log2(std::abs(i)))) + 1;
         //return (__ss_int)std::bit_width(i); // TODO available from C++20
     }
 
@@ -215,7 +215,7 @@ inline __ss_int __ss_bit_length(__ss_int i) {
 }
 
 namespace __bytes___ {
-    static char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
+    static signed char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,

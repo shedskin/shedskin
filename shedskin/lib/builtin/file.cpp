@@ -60,9 +60,10 @@ __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
     if(f) {
-        size = (__ss_int)(s->unit.size());
-        if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
+        size_t s_size = s->unit.size();
+        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
             throw new OSError();
+        size = (__ss_int)s_size;
     }
     return size;
 }
@@ -292,9 +293,10 @@ __ss_int file_binary::write(bytes *s) {
     __ss_int size = -1;
     __check_closed();
     if(f) {
-        size = (__ss_int)(s->unit.size());
-        if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
+        size_t s_size = s->unit.size();
+        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
             throw new OSError();
+        size = (__ss_int)s_size;
     }
     return size;
 }

@@ -86,7 +86,7 @@ inline __ss_float cbrt(__ss_float x) {
 }
 
 inline __ss_int isqrt(__ss_float x) {
-    return floor(std::sqrt(x)); // TODO optimize?
+    return (__ss_int)(floor(std::sqrt(x))); // TODO optimize?
 }
 
 inline __ss_float acos(__ss_float x) {
