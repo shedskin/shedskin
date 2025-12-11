@@ -717,9 +717,9 @@ template <class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3>
 
 template<class R, class T1, class T2, class T3> R imapiter3< R, T1, T2, T3 >::__next__()
 {
-    T1 t1;
-    T2 t2;
-    T3 t3;
+    T1 t1 = __zero<T1>(); // avoid uninitialized error
+    T2 t2 = __zero<T2>();
+    T3 t3 = __zero<T3>();
 
     size_t n_exhausted = 0;
 
