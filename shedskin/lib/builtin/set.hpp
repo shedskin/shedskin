@@ -92,10 +92,16 @@ public:
     __ss_bool isdisjoint(set<T> *s);
     __ss_bool isdisjoint(pyiter<T> *s);
 
+    __ss_bool __gt__(pyobj *);
+    __ss_bool __lt__(pyobj *);
+    __ss_bool __ge__(pyobj *);
+    __ss_bool __le__(pyobj *);
+
     __ss_bool __gt__(set<T> *s);
     __ss_bool __lt__(set<T> *s);
     __ss_bool __ge__(set<T> *s);
     __ss_bool __le__(set<T> *s);
+
     __ss_bool __eq__(pyobj *p);
 
     __setiter<T> *__iter__() {
@@ -233,6 +239,12 @@ template<class T> T set<T>::pop() {
     gcs.erase(it);
     return t;
 }
+
+/* suppress -Wvirtual-overloaded warnings TODO better to always use pyobj *? */
+template<class T> __ss_bool set<T>::__lt__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__gt__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__ge__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__le__(pyobj *) { return False; }
 
 template<class T> __ss_bool set<T>::__ge__(set<T> *s) {
     return issuperset(s);
