@@ -197,7 +197,7 @@ namespace __int___ {
     inline __ss_int bit_length(__ss_int i) {
         if(i == 0)
             return 0;
-        return std::floor(std::log2(std::abs(i))) + 1;
+        return (__ss_int)(std::floor(std::log2(std::abs(i)))) + 1;
         //return (__ss_int)std::bit_width(i); // TODO available from C++20
     }
 

@@ -63,7 +63,7 @@ __ss_int BytesIO::write(bytes *data) {
         pos += (int)size;
         s->unit.erase((size_t)pos, size);
     }
-    return data->unit.size();
+    return (__ss_int)data->unit.size();
 }
 
 bytes *BytesIO::getvalue() {
@@ -120,7 +120,7 @@ __ss_int StringIO::write(str *data) {
         pos += (int)size;
         s->unit.erase((size_t)pos, size);
     }
-    return data->unit.size();
+    return (__ss_int)data->unit.size();
 }
 
 str *StringIO::getvalue() {
