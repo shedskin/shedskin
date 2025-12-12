@@ -28,7 +28,7 @@ template <class A, class B> void *insort_left(B (*key)(A), list<A> *a, A x, __ss
     return NULL;
 }
 
-template <class A> void *insort_left(__ss_int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
+template <class A> void *insort_left(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
 
@@ -63,7 +63,7 @@ template <class A, class B> void *insort_right(B (*key)(A), list<A> *a, A x, __s
     return NULL;
 }
 
-template <class A> void *insort_right(__ss_int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
+template <class A> void *insort_right(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
 
@@ -100,7 +100,7 @@ template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, A x, _
     return lo;
 }
 
-template <class A> __ss_int bisect_left(__ss_int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
+template <class A> __ss_int bisect_left(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
 
@@ -128,7 +128,7 @@ template <class A, class B> __ss_int bisect_right(B (*key)(A), list<A> *a, B x, 
     return lo;
 }
 
-template <class A> __ss_int bisect_right(__ss_int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
+template <class A> __ss_int bisect_right(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
 
