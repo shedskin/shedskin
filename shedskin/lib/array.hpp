@@ -13,7 +13,7 @@ extern str *__name__;
 extern void *buffy;
 extern str *typecodes;
 
-unsigned int get_itemsize(char typechar);
+size_t get_itemsize(char typechar);
 
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
@@ -21,7 +21,7 @@ public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
     char typechar;
-    unsigned int itemsize;
+    size_t itemsize;
 
     array(str *typecode_) {
         this->__class__ = cl_array;
@@ -181,7 +181,7 @@ template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     array<T> *a = new array<T>(typecode);
     size_t len = this->units.size();
     a->units.resize(len*n);
-    for(size_t i=0; i<n; i++)
+    for(size_t i=0; i<(size_t)n; i++)
         memcpy(&(a->units[i*len]), &(this->units[0]), len);
     return a;
 }
@@ -218,8 +218,8 @@ template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
 
 template<class T> __ss_int array<T>::count(T t) {
     __ss_int result = 0;
-    size_t len = this->__len__();
-    for(size_t i=0; i<len; i++)
+    __ss_int len = this->__len__();
+    for(__ss_int i=0; i<len; i++)
         if(__eq(t, this->__getitem__(i)))
             result += 1;
     return result;
@@ -249,7 +249,7 @@ template<class T> void *array<T>::remove(T t) {
 }
 
 template<class T> T array<T>::pop(__ss_int i) {
-    size_t len = this->__len__();
+    __ss_int len = this->__len__();
     if(len==0)
         throw new IndexError(new str("pop from empty list"));
     if(i<0) i = len+i;
@@ -267,16 +267,16 @@ template<class T> void *array<T>::clear() {
 
 template<class T> void array<T>::fillbuf(T t) {
     switch(typechar) {
-        case 'b': *((signed char *)buffy) = t; break;
-        case 'B': *((unsigned char *)buffy) = t; break;
-        case 'h': *((signed short *)buffy) = t; break;
-        case 'H': *((unsigned short *)buffy) = t; break;
-        case 'i': *((signed int *)buffy) = t; break;
-        case 'I': *((unsigned int *)buffy) = t; break;
-        case 'l': *((signed long *)buffy) = t; break;
-        case 'L': *((unsigned long *)buffy) = t; break;
-        case 'f': *((float *)buffy) = t; break;
-        case 'd': *((double *)buffy) = t; break;
+        case 'b': *((signed char *)buffy) = (signed char)t; break;
+        case 'B': *((unsigned char *)buffy) = (unsigned char)t; break;
+        case 'h': *((signed short *)buffy) = (signed short)t; break;
+        case 'H': *((unsigned short *)buffy) = (unsigned short)t; break;
+        case 'i': *((signed int *)buffy) = (signed int)t; break;
+        case 'I': *((unsigned int *)buffy) = (unsigned int)t; break;
+        case 'l': *((signed long *)buffy) = (signed long)t; break;
+        case 'L': *((unsigned long *)buffy) = (unsigned long)t; break;
+        case 'f': *((float *)buffy) = (float)t; break;
+        case 'd': *((double *)buffy) = (double)t; break;
     }
 }
 
@@ -380,7 +380,7 @@ template<class T> void *array<T>::tofile(file_binary *f) {
 }
 
 template<class T> void *array<T>::fromfile(file_binary *f, __ss_int n) {
-    bytes *s = f->read(n*itemsize);
+    bytes *s = f->read(n*(__ss_int)itemsize);
     size_t len = s->__len__();
     size_t bytes = (len/itemsize)*itemsize;
     for(size_t i=0; i<bytes; i++)
@@ -408,11 +408,11 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
         memcpy(&(c->units[0]), &(this->units[l*itemsize]), (u-l)*itemsize);
     } else if(s > 0)
         for(int i=l; i<u; i += s)
-            for(int j=0; j<itemsize; j++)
+            for(size_t j=0; j<itemsize; j++)
                 c->units.push_back(units[i*itemsize+j]);
     else
         for(int i=l; i>u; i += s)
-            for(int j=0; j<itemsize; j++)
+            for(size_t j=0; j<itemsize; j++)
                 c->units.push_back(units[i*itemsize+j]);
     return c;
 }
