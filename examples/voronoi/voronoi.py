@@ -47,9 +47,11 @@ def generateScreen(points, rows=40, cols=80):
 from time import time
 
 if __name__ == '__main__':
-    points = generateRandomPoints(10)
-    print()
     t1 = time()
-    print(generateScreen(points, 40, 80))
+    print()
+    for n in range(50):
+        points = generateRandomPoints(10)
+        screen = generateScreen(points, 40, 80)
+    print(screen)
     t2 = time()
     print(round(t2-t1, 3))
