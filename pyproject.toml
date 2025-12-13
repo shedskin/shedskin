@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shedskin"
-version = "0.9.11"
+version = "0.9.12"
 description = "Shed Skin is a restricted-Python-to-C++ compiler."
 authors = [
 	"Mark Dufour and contributors",

@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.__init__: main entrypoint
 
 Contains the `Shedskin` class, the main entrypoint to shedskin, a Restricted-Python-to-C++
@@ -468,7 +468,7 @@ class Shedskin:
 
         ss = cls(args)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.11 ***')
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.12 ***')
         ss.log.info('Copyright 2005-2025 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         ss.log.info('')
 
