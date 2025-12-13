@@ -14,8 +14,9 @@ __ss_bool  default_3;
 __ss_bool  default_2;
 void * default_5;
 
-// XXX
+#ifndef PY_SSIZE_T_MAX
 #define PY_SSIZE_T_MAX INT_MAX 
+#endif
 
 /**
 class Error
