@@ -101,7 +101,7 @@ __ss_int file::tell() {
     return -1;
 }
 
-str *file::readline(int n) {
+str *file::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
     if (options.universal_mode) {
@@ -145,7 +145,7 @@ static void __throw_io_error() {
     throw new OSError();
 }
 
-str *file::read(int n) {
+str *file::read(__ss_int n) {
     __check_closed();
     if(n == 1) {
         const int c = GETC(f);
@@ -218,7 +218,7 @@ __ss_bool file::isatty()
 #endif // WIN32
 }
 
-void *file::truncate(int size) {
+void *file::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
@@ -334,7 +334,7 @@ __ss_int file_binary::tell() {
     return -1;
 }
 
-bytes *file_binary::readline(int n) {
+bytes *file_binary::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
     if (options.universal_mode) {
@@ -376,7 +376,7 @@ bytes *file_binary::readline(int n) {
     return b;
 }
 
-bytes *file_binary::read(int n) {
+bytes *file_binary::read(__ss_int n) {
     __check_closed();
     if(n == 1) {
         const int c = GETC(f);
@@ -451,7 +451,7 @@ __ss_bool file_binary::isatty()
 #endif // WIN32
 }
 
-void *file_binary::truncate(int size) {
+void *file_binary::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
