@@ -181,7 +181,7 @@ public:
 
    __ss_int index(A value, __ss_int start, __ss_int stop) {
        __ss_int one = 1;
-       slicenr(7, start, stop, one, units.size());
+       slicenr(7, start, stop, one, this->__len__());
        for(__ss_int i=start; i < stop; i++) {
            if(__eq(units[i], value))
                return i;
@@ -190,11 +190,11 @@ public:
    }
 
    __ss_int index(A value) {
-       return index(value, 0, units.size());
+       return index(value, 0, this->__len__());
    }
 
    __ss_int index(A value, __ss_int start) {
-       return index(value, start, units.size());
+       return index(value, start, this->__len__());
    }
 
    __ss_int truth() {
@@ -240,7 +240,7 @@ public:
 
     __dequereviter(deque<T> *p_) {
         p = p_;
-        i = p_->units.size()-1;
+        i = (__ss_int)(p_->units.size())-1;
     }
 
     T __next__() {
