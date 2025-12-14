@@ -78,9 +78,10 @@ def bruteforce(rows, columns):
             #print board
 
 if __name__ == "__main__":
-    rows, columns = 4, 3
-    bruteforce(rows, columns)
-    print(count)
+    for n in range(30):
+        rows, columns = 4, 3
+        bruteforce(rows, columns)
+        print(count)
 #    try:
 #        rows, columns = int(argv[1]), int(argv[2])
 #    except IndexError:
