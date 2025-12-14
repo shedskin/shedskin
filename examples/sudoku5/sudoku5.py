@@ -83,5 +83,7 @@ if __name__ == "__main__":
         [0, 0, 0, 4, 1, 9, 0, 0, 5],
         [0, 0, 0, 0, 8, 0, 0, 7, 9],
     ]
-    for solution in solve_sudoku((3, 3), grid):
-        print("\n".join(str(s) for s in solution))
+    for n in range(5000):
+        for solution in solve_sudoku((3, 3), grid):
+            if n == 4999:
+                print("\n".join(str(s) for s in solution))
