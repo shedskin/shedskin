@@ -161,7 +161,7 @@ template<class T> inline pairwiseiter<T> *pairwise(pyiter<T> *iterable) {
 template<class T> class cycleiter : public __iter<T> {
 public:
     bool exhausted;
-    int position;
+    size_t position;
     __iter<T> *iter;
     __GC_VECTOR(T) cache;
 
