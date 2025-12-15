@@ -475,5 +475,5 @@ def uncompress_it(inputfile, outputfile):
 
 if __name__ == "__main__":
     sys.setrecursionlimit(10000)
-    test()
-    pass
+    for n in range(100):
+        test()
