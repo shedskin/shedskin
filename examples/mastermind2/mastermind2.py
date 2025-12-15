@@ -140,12 +140,13 @@ def main():
     random.seed(1)
     print('-' * 60)
 
-    names = "s_bestinfo s_samplebest s_worstinfo s_allrand s_trynodup s_bestinfo".split()
-    eval_strategy('s_bestinfo', s_bestinfo)
-    eval_strategy('s_samplebest', s_samplebest)
-    eval_strategy('s_worstinfo', s_worstinfo)
-    eval_strategy('s_trynodup', s_trynodup)
-    eval_strategy('s_allrand', s_allrand)
+#    names = "s_bestinfo s_samplebest s_worstinfo s_allrand s_trynodup s_bestinfo".split()
+    for n in range(100):
+        eval_strategy('s_bestinfo', s_bestinfo)
+        eval_strategy('s_samplebest', s_samplebest)
+        eval_strategy('s_worstinfo', s_worstinfo)
+        eval_strategy('s_trynodup', s_trynodup)
+        eval_strategy('s_allrand', s_allrand)
 
 if __name__ == '__main__':
     main()
