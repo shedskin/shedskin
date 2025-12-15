@@ -113,7 +113,7 @@ def dijkstra(G, t, s):
     return S
 
 if __name__ == '__main__':
-    for n in range(100):
+    for n in range(5000):
         G = Graph()
         s = G.V[random.randint(0, len(G.V) - 1)]
         while True:
@@ -122,9 +122,12 @@ if __name__ == '__main__':
                 break
         S = dijkstra(G, t, s)
         if S:
-            print("dijkstra %s ---> %s: " % (s, t), S, G.distance(s, S))
+            if n == 4999:
+                print("dijkstra %s ---> %s: " % (s, t), S, G.distance(s, S))
             for inter in S[:-1]:
                 S1 = dijkstra(G, t, inter)
-                print("\t => dijkstra %s ---> %s: " % (inter, t), S1, G.distance(inter, S1))
+                if n == 4999:
+                    print("\t => dijkstra %s ---> %s: " % (inter, t), S1, G.distance(inter, S1))
                 if S1 != S[ (len(S) - len(S1)) : ]:
-                    print("************ ALARM! **************")
+                    if n == 4999:
+                        print("************ ALARM! **************")
