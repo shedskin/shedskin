@@ -963,7 +963,7 @@ if __name__ == "__main__":
     print("Type s to solve the cube")
     print("Type q to quit")
     c = cube()
-    for x in range(100):
+    for x in range(1000):
         c.randomize()
         print(c.strCube())
         c.solveCube()
