@@ -160,8 +160,8 @@ def print_eps(points, cluster_centers, W=400, H=400):
  
  
 def main():
-    npoints = 30000
-    k = 7 # # clusters
+    npoints = 60000
+    k = 20 # # clusters
  
     points = generate_points(npoints, 10)
     cluster_centers = lloyd(points, k)
