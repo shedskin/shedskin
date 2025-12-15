@@ -165,7 +165,7 @@ if __name__ == "__main__":
         usage()
     elif True: #args[1] == "-test":
         s = Solitaire()
-        for n in range(2000):
+        for n in range(12000):
             for txt, key, cipher in testCases:
                 coded = s.encrypt(txt, key)
                 assert cipher == coded
