@@ -230,5 +230,5 @@ def main2():
             break
             #print(' %03i   %012i   %i  ' %(t,binary(t),types[t]))
 
-for x in range(10):
+for x in range(400):
     main2()
