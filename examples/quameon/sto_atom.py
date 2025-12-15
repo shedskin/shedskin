@@ -94,7 +94,7 @@ def run_qmc():
    qmcl.nstep = 20
 
    #  Increase this number to make the run longer
-   qmcl.nblock = 200000
+   qmcl.nblock = 50000
 
    qmcl.add_observable(en_d)
    qmcl.compute_energy()
