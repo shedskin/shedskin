@@ -1234,4 +1234,5 @@ def main():
     print('converted %s to %s' % (inputfile, bmpfile))
 
 if __name__ == '__main__':
-    main()
+    for n in range(50):
+        main()
