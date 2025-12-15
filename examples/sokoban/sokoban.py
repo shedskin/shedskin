@@ -94,7 +94,8 @@ class Board(object):
         return "No solution"
 
 
-level = """\
+for n in range(30):
+    level = """\
 #######
 #     #
 #     #
@@ -104,7 +105,7 @@ level = """\
 #.#  @#
 #######"""
 
-print(level)
-print()
-b = Board(level)
-print(b.solve())
+    print(level)
+    print()
+    b = Board(level)
+    print(b.solve())
