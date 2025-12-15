@@ -6,10 +6,13 @@ import pygame.image
 import pygasus
 print(pygasus)
 
-def main():
+def main(test):
     pygame.init()
     hScreen=pygame.display.set_mode((256,240))
-    pygasus.read_ines(sys.argv[1])
+    if test:
+        pygasus.read_ines('mario_bros.nes')
+    else:
+        pygasus.read_ines(sys.argv[1])
     pygasus.pReset()
     pygasus.setkeys({
         'q': pygame.K_q, 'w': pygame.K_w, 'a': pygame.K_a, 's': pygame.K_s,
@@ -37,9 +40,11 @@ def main():
         pygame.display.flip()
         hScreen.fill([0,0,0])
         total += (time.time()-t0)
-        if counter % 60 == 0:
+        if not test and counter % 60 == 0:
             print('FPS:', 60/total)
             total = 0
+        if test and counter == 2000:
+            break
 
 if __name__ == '__main__':
-   main()
+   main(len(sys.argv) > 1 and sys.argv[1] == 'test')
