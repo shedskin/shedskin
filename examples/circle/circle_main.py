@@ -16,7 +16,7 @@ import sys, os, time
 from random import randrange
 
 import pygame # if pygame is absent this program may just print coords
-from pygame.locals import QUIT, K_ESCAPE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
+from pygame.locals import QUIT, K_q, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 
 import circle
 print('using', circle)
@@ -80,7 +80,7 @@ def get_input():
     key = pygame.key.get_pressed()
 
     for event in pygame.event.get():
-        if event.type == QUIT or key[K_ESCAPE]:
+        if event.type == QUIT or key[K_q]:
             pygame.quit()
             sys.exit()
         elif event.type == MOUSEBUTTONDOWN and dragged is None:
@@ -94,16 +94,18 @@ def get_input():
         elif event.type == MOUSEBUTTONUP:
             dragged = None
 
-def run():
+def run(test):
     global dragged
 
     iterations = 0
     t0 = time.time()
     while True:
         iterations += 1
-        if iterations % 10 == 0:
+        if not test and iterations % 10 == 0:
             print(time.time()-t0)
             t0 = time.time()
+        if test and iterations == 200:
+            break
         get_input()
 
         surface.fill((0, 0, 0))
@@ -120,4 +122,7 @@ def run():
 
 setup()
 circle.setup(SCREEN_WIDTH, SCREEN_HEIGHT)
-run()
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    run(True)
+else:
+    run(False)
