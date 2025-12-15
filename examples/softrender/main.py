@@ -26,6 +26,7 @@ Becomes ~13 times faster after compilation with Shedskin.
 '''
 
 import math
+import sys
 import time
 
 from PIL import Image
@@ -41,7 +42,7 @@ def load_texture(filename):
     return Bitmap(image.width, image.height, image.convert('RGBX').tobytes())
 
 
-def main():
+def main(test):
     screen = (WIDTH, HEIGHT)
     pygame.init()
 
@@ -82,15 +83,18 @@ def main():
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-        clock.tick(60)
+        if not test:
+            clock.tick(60)
 
         delta = (time.time()-t0)
 
         transform = transform.rotate(quaternion_from_axis_angle(Vector4(0, 1, 0), delta/2))
 
-        if frame_count % 10 == 0:
+        if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
+        if test and frame_count == 50:
+            break
 
 if __name__ == '__main__':
-    main()
+    main(len(sys.argv) > 1 and sys.argv[1] == 'test')
