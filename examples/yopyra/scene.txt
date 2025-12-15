@@ -1,7 +1,7 @@
 # scene descripting for yopyraSS.py
 
 # (optional, default 320 240) size = size of the final image
-size 80 60
+size 320 240
 
 nbounces 5
 
