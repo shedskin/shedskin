@@ -517,4 +517,5 @@ def main():
     print(p.solve())
 
 if __name__ == '__main__':
-    main()
+    for n in range(20):
+        main()
