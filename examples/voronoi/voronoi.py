@@ -49,7 +49,7 @@ from time import time
 if __name__ == '__main__':
     t1 = time()
     print()
-    for n in range(50):
+    for n in range(500):
         points = generateRandomPoints(10)
         screen = generateScreen(points, 40, 80)
     print(screen)
