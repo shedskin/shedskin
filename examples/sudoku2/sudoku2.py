@@ -224,7 +224,7 @@ class board(object):
 
 
 def main():
-    for n in range(500):
+    for n in range(1000):
         puzzle = board()
         puzzle.fread("testdata/b6.pz")
         print(puzzle)
