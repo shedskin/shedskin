@@ -456,7 +456,7 @@ def speed_test(max_depth):
 
 
 if __name__ == '__main__':
-    max_depth = 10
+    max_depth = 11
     mode = None
 
     for i, arg in enumerate(sys.argv[1:]):
