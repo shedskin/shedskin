@@ -4,7 +4,7 @@ import time
 
 import pygame
 
-import render
+import doom
 
 '''
 Minimal DOOM WAD renderer
@@ -22,7 +22,7 @@ Based on Java implementation by Leonardo Ono:
 
 https://github.com/leonardo-ono/JavaDoomWADMapRendererTests
 
-Compile with Shedskin for good performance (shedskin -e render && make)!
+Compile with Shedskin for good performance (shedskin -e doom && make)!
 
 http://github.com/shedskin/shedskin
 
@@ -34,13 +34,13 @@ MUSIC = 'E1M1.FLAC'
 
 
 def main(test):
-    screen = (render.WIDTH, render.HEIGHT)
+    screen = (doom.WIDTH, doom.HEIGHT)
     pygame.init()
     surface = pygame.display.set_mode(screen)
     drawsurf = pygame.Surface(screen).convert()
     drawsurf.set_colorkey((0, 0, 0))
 
-    map_ = render.Map(WAD, MAP)
+    map_ = doom.Map(WAD, MAP)
     player = map_.player
     palette = map_.palette
     frame_count = 0
@@ -122,8 +122,8 @@ def main(test):
         # render!
         t0 = time.time()
 
-        buf = render.render(map_, frame_count)
-        img = pygame.image.frombuffer(buf, (render.WIDTH, render.HEIGHT), 'P')
+        buf = doom.render(map_, frame_count)
+        img = pygame.image.frombuffer(buf, (doom.WIDTH, doom.HEIGHT), 'P')
         img.set_palette(palette)
         surface.blit(img, (0, 0))
         pygame.display.flip()
