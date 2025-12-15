@@ -1115,9 +1115,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def generate(self) -> None:
         """Generate the Makefile"""
-        if self.gx.nomakefile:
-            return
-
         self._setup_defaults()
         self._setup_variables()
         self._setup_platform()
@@ -1412,6 +1409,9 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
         builder.build(gx.options.dry_run)
         builder.run_executable()
     else:
+        if gx.nomakefile:
+            return
+
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
 
