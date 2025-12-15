@@ -211,8 +211,9 @@ class Shedskin:
                 builder.run_executable()
                 run_secs = time.time() - t0 - build_secs
         else:
-            generator = makefile.ShedskinMakefileGenerator(self.gx)
-            generator.generate()
+            if not self.gx.nomakefile:
+                generator = makefile.ShedskinMakefileGenerator(self.gx)
+                generator.generate()
         if self.gx.options.collect_stats:
             stats_mgr = stats.ShedskinStatsManager(self.gx)
             stats_mgr.insert_pymodule(prebuild_secs, build_secs, run_secs)
