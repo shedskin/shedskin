@@ -78,7 +78,7 @@ def bruteforce(rows, columns):
             #print board
 
 if __name__ == "__main__":
-    for n in range(30):
+    for n in range(150):
         rows, columns = 4, 3
         bruteforce(rows, columns)
         print(count)
