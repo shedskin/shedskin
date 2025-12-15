@@ -159,7 +159,7 @@ def demo():
     ]
 
     # create a network with two input, two hidden, and one output nodes
-    n = NN(2, 50, 1)
+    n = NN(2, 400, 1)
     # train it with some patterns
     n.train(pat)
     # test it
