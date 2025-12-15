@@ -77,15 +77,19 @@ class MakefileWriter:
     """Handles writing Makefile contents"""
 
     def __init__(self, path: PathLike):
-        self.makefile = open(path, "w", encoding="utf8")
+        self.makefile = None
+        self.path = path
 
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
+        if self.makefile is None:
+            self.makefile = open(self.path, "w", encoding="utf8")
         print(line, file=self.makefile)
 
     def close(self) -> None:
         """Close the Makefile"""
-        self.makefile.close()
+        if self.makefile is not None:
+            self.makefile.close()
 
 
 class PythonSystem:
