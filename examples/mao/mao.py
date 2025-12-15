@@ -11,8 +11,8 @@ from array import array
 
 random.seed(1)
 
-WIDTH = 128
-HEIGHT = WIDTH
+WIDTH = 300
+HEIGHT = 300
 NSUBSAMPLES = 2
 NAO_SAMPLES = 8
 
