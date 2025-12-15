@@ -1,4 +1,5 @@
 import math
+import sys
 import time
 
 import pygame
@@ -32,7 +33,7 @@ MAP = 'E1M1'
 MUSIC = 'E1M1.FLAC'
 
 
-def main():
+def main(test):
     screen = (render.WIDTH, render.HEIGHT)
     pygame.init()
     surface = pygame.display.set_mode(screen)
@@ -127,14 +128,20 @@ def main():
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-        clock.tick(60)
+        if not test:
+            clock.tick(60)
 
         delta = (time.time()-t0)
 
-        if frame_count % 10 == 0:
+        if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
+        if test and frame_count == 1000:
+            break
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        main(True)
+    else:
+        main(False)
