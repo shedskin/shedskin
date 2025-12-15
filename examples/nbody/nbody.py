@@ -122,7 +122,7 @@ neptune.mass = 5.15138902046611451e-05 * solar_mass
 def main() :
     try :
         #n = int(sys.argv[1])
-        n = 600000
+        n = 2000000
     except :
         print("Usage: %s <N>" % sys.argv[0])
 
