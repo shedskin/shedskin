@@ -1038,7 +1038,7 @@ def range_check(array_len, from_index, to_index):
         raise IndexError(str(to_index))
 
 def main():
-    l = list(range(1000000))
+    l = list(range(3000000))
     random.shuffle(l)
     timsort(l)
 
