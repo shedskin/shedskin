@@ -399,7 +399,7 @@ class Richards(object):
         return True
 
 r = Richards()
-iterations = 10
+iterations = 10000
 result = r.run(iterations)
 print(result)
 
