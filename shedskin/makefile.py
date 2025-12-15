@@ -77,19 +77,15 @@ class MakefileWriter:
     """Handles writing Makefile contents"""
 
     def __init__(self, path: PathLike):
-        self.makefile = None
-        self.path = path
+        self.makefile = open(path, "w", encoding="utf8")
 
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
-        if self.makefile is None:
-            self.makefile = open(self.path, "w", encoding="utf8")
         print(line, file=self.makefile)
 
     def close(self) -> None:
         """Close the Makefile"""
-        if self.makefile is not None:
-            self.makefile.close()
+        self.makefile.close()
 
 
 class PythonSystem:
@@ -1119,9 +1115,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def generate(self) -> None:
         """Generate the Makefile"""
-        if self.gx.nomakefile:
-            return
-
         self._setup_defaults()
         self._setup_variables()
         self._setup_platform()
@@ -1416,6 +1409,9 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
         builder.build(gx.options.dry_run)
         builder.run_executable()
     else:
+        if gx.nomakefile:
+            return
+
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
 
