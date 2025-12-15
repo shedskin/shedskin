@@ -102,7 +102,7 @@ def touch(itemstr, weight=1.0):
     for name in itemstr.split():
         unitbyname[name].setext(weight)
 
-def run(times=50000):
+def run(times=200000):
     """Run n-cycles and display result"""
     for i in range(times):
         for pool in pools:
