@@ -20,6 +20,7 @@
 import multiprocessing
 import queue
 import random
+import sys
 import time
 
 import pygame
@@ -59,7 +60,7 @@ def imageFromBlock(r, pixels):
     return Image.frombytes('RGB', (w, h), pixels)
 
 
-def main(q_in, q_out):
+def main(q_in, q_out, test):
     screen = (WIDTH, WIDTH)
     pygame.init()
     surface = pygame.display.set_mode(screen)
@@ -111,6 +112,8 @@ def main(q_in, q_out):
 
             if count == 0:
                 print("That took %.3f seconds." % (time.time() - startTime))
+                if test:
+                    ingame = False
                 break
 
         clock.tick(60)
@@ -125,4 +128,4 @@ if __name__ == '__main__':
     q_in = multiprocessing.Queue()
     q_out = multiprocessing.Queue()
 
-    main(q_in, q_out)
+    main(q_in, q_out, sys.argv[1:] == ['test'])
