@@ -96,7 +96,8 @@ def printboard(values):
     return values
 
 if __name__ == '__main__':
-    solve_file("testdata/top95.txt", '\n', printboard)
+    for n in range(20):
+        solve_file("testdata/top95.txt", '\n', printboard)
 
 ## References used:
 ## http://www.scanraid.com/BasicStrategies.htm
