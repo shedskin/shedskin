@@ -165,7 +165,7 @@ class soduko:
                             assert False, "bugger7"
 
 def main():
-    for x in range(50):
+    for x in range(2000):
         t = soduko(["800000600",
                        "040500100",
                        "070090000",
@@ -179,7 +179,8 @@ def main():
         t.check()
         t.one_level_supposition()
         t.check()
-        print(t)
+        if(x==1999):
+            print(t)
 
 if __name__ == '__main__':
     main()
