@@ -32,7 +32,7 @@ import time
 from PIL import Image
 import pygame
 
-from render import *
+from softrender import *
 
 WIDTH, HEIGHT = 800, 600
 
