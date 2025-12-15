@@ -364,7 +364,7 @@ template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
     __iter<A> *q_iter = q->__iter__();
 
     A a, b;
-    __ss_float sum = 0;
+    A sum = 0;
     size_t n_exhausted;
 
     for(;;) {
