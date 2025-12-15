@@ -190,5 +190,5 @@ def main():
 
 
 iterations = 0
-for x in range(30):
+for x in range(250):
     main()
