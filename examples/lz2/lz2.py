@@ -292,6 +292,6 @@ def hardertest():
     os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
 if __name__ == '__main__':
-    for n in range(100):
+    for n in range(1000):
         test()
         hardertest()
