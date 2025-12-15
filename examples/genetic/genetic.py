@@ -112,7 +112,7 @@ class SGA:
 if __name__ == '__main__':
     sga = SGA()
     sga.generationsMax = 12000
-    sga.genomeSize = 80
+    sga.genomeSize = 160
     sga.popSize = 120
     sga.geneMutationProb = 0.01
     sga.run()
