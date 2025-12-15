@@ -482,5 +482,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    for n in range(5):
+        main()
 
