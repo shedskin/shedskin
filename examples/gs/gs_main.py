@@ -80,7 +80,7 @@ def load_image(wm, pos, filename, w, h):
     wm.load_image(pos, arr.tolist(), w, h)
 
 
-def main():
+def main(test):
     screen = (WIDTH, HEIGHT)
     pygame.init()
     surface = pygame.display.set_mode(screen)
@@ -138,14 +138,17 @@ def main():
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-        clock.tick(60)
+        if not test:
+            clock.tick(60)
 
         delta = (time.time()-t0)
 
-        if frame_count % 10 == 0:
+        if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
+        if test and frame_count == 200:
+            ingame = False
 
 
 if __name__ == '__main__':
-    main()
+    main(len(sys.argv) > 1 and sys.argv[1] == 'test')

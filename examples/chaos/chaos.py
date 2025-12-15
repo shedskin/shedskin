@@ -256,4 +256,4 @@ def main(n):
 
 
 if __name__ == "__main__":
-    main(50)
+    main(300)

@@ -368,4 +368,5 @@ def speedTest():
   print(res)
 
 if __name__ == '__main__':
-    speedTest()
+    for n in range(30):
+        speedTest()

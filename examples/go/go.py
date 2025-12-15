@@ -16,7 +16,7 @@ GTP code by Folkert van Heusden <mail@vanheusden.com>
 import random, math, sys, time
 
 SIZE = 9
-GAMES = 15000
+GAMES = 30000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}

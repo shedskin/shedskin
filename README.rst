@@ -121,6 +121,7 @@ The following people have contributed to Shed Skin development:
   Salvatore Ferro
   FFAO
   Victor Garcia
+  Davide Gessa
   Luis M. Gonzales
   Fahrzin Hemmati
   Folkert van Heusden

@@ -478,6 +478,6 @@ class FilebasedMazeGame(MazeGame):
 
 if __name__ == '__main__':
     game = FilebasedMazeGame()
-    for x in range(10000):
+    for x in range(250000):
         solver = game.runGame()
     solver.printResult()
