@@ -56,7 +56,7 @@ def adler32(data):
         s2 = (s2 + s1) % 65521
     return (s2 << 16) + s1
 
-w, h = 500, 300
+w, h = 3000, 2000
 img = []
 for y in range(h):
     for x in range(w):
