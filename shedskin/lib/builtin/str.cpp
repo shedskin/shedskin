@@ -437,8 +437,12 @@ __ss_bool str::__eq__(pyobj *p) {
 }
 
 str *str::__mul__(__ss_int n) { /* optimize */
+    if(n==1)
+        return this;
+    else if (n<=0)
+        return __ss_empty_str;
+
     str *r = new str();
-    if(n<=0) return r;
     size_t ns = (size_t)n;
     __GC_STRING &s = r->unit;
     size_t ulen = this->unit.size();
