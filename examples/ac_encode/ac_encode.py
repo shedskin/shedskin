@@ -206,6 +206,6 @@ def test():
     pass
 
 if __name__ == '__main__':
-    for n in range(1000):
+    for n in range(2000):
         test()
         hardertest()
