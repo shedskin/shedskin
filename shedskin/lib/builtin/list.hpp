@@ -382,7 +382,15 @@ template<class T> list<T> *list<T>::__imul__(__ss_int n) {
     return this;
 }
 
-template<class T> __ss_int list<T>::index(T a) { return index(a, 0, this->__len__()); }
+template<class T> __ss_int list<T>::index(T a) {
+    auto begin = this->units.begin();
+    auto end = this->units.end();
+    auto it = std::find(begin, end, a);
+    if (it == end)
+        throw new ValueError(new str("list.index(x): x not in list"));
+    return std::distance(begin, it);
+}
+
 template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, this->__len__()); }
 template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
