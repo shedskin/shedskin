@@ -30,6 +30,7 @@ __ss_bool False;
 str *__case_swap_cache;
 
 char __str_cache[4000];
+str *__ss_empty_str;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
@@ -97,6 +98,7 @@ void __init() {
         __str_cache[4*i+1] = '0' + (char)((i/10) % 10);
         __str_cache[4*i+2] = '0' + (char)((i/100) % 10);
     }
+    __ss_empty_str = new str();
 
     __case_swap_cache = new str();
     for(int i=0; i<256; i++) {
