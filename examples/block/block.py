@@ -423,10 +423,9 @@ def hardertest():
     inputfile.close()
     #    print "DONE uncompressing"
 
-    print("Checking for differences...")
-    os.system("diff testdata/BentCoinFile tmp2")
-    os.system("wc tmp.zip testdata/BentCoinFile tmp2")
-    pass
+#    print("Checking for differences...")
+#    os.system("diff testdata/BentCoinFile tmp2")
+#    os.system("wc tmp.zip testdata/BentCoinFile tmp2")
 
 
 f = 0.01
