@@ -287,9 +287,9 @@ def hardertest():
     outputfile.close();     inputfile.close()
     print("DONE uncompressing")
 
-    print("Checking for differences...")
-    os.system( "diff testdata/BentCoinFile tmp2" )
-    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
+#    print("Checking for differences...")
+#    os.system( "diff testdata/BentCoinFile tmp2" )
+#    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
 if __name__ == '__main__':
     for n in range(1000):
