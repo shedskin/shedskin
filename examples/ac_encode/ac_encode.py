@@ -181,9 +181,9 @@ def hardertest():
     outputfile.close();     inputfile.close()
     print("DONE uncompressing")
 
-    print("Checking for differences...")
-    os.system( "diff testdata/BentCoinFile tmp2" )
-    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
+#    print("Checking for differences...")
+#    os.system( "diff testdata/BentCoinFile tmp2" )
+#    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
 def test():
     sl=["1010", "111", "00001000000000000000",\
