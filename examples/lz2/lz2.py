@@ -141,7 +141,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
         oldpointer = -2      # indicates that no match has been found. Used for debugging.
         while  (eof_sent == 0 ) and (to<=L) :   # extend the search
             if verbose > 2:  searchstatus(fr,to,L,c);  pass
-            pointer = c[0:fr].find( c[fr:to] )
+            pointer = c.find( c[fr:to], 0, fr )
             if verbose > 2: print("result:",pointer , to) ; pass
             if ( pointer == -1) or (to>=L ) :
                 if (pointer!=-1): oldpointer = pointer ;  pass
