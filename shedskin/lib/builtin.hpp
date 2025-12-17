@@ -448,6 +448,8 @@ template<class T> T __seqiter<T>::__next__() {
         throw new ValueError(new str("not enough values to unpack"));
 #endif
 
+tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
+
 /* init/exit */
 
 void __init();
