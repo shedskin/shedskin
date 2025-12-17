@@ -3317,7 +3317,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         rvalue_node, ("list", "str_", "bytes_", "tuple", "tuple2")
                     ):
                         self.output(
-                            "__unpack_check(%s, %d);" % (temp, len(lvalue.elts))
+                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
                         )
                     else:
                         rtypes = self.mergeinh[rvalue_node]
@@ -3330,7 +3330,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                         temp = temp + "_list"
                         self.output(
-                            "__unpack_check(%s, %d);" % (temp, len(lvalue.elts))
+                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
                         )
 
                 self.start()
