@@ -438,12 +438,15 @@ template<class T> T __seqiter<T>::__next__() {
 
 /* tuple unpacking */
 
-template<class T> void __unpack_check(T t, int expected) {
-    if(len(t) > (__ss_int)expected)
-	 throw new ValueError(new str("too many values to unpack"));
-    else if(len(t) < (__ss_int)expected)
-	 throw new ValueError(new str("not enough values to unpack"));
-}
+#ifdef __SS_NOBOUNDS
+    #define __SS_UNPACK_CHECK(t, expected)
+#else
+#define __SS_UNPACK_CHECK(t, expected) \
+    if(len(t) > (__ss_int)expected) \
+        throw new ValueError(new str("too many values to unpack")); \
+    else if(len(t) < (__ss_int)expected) \
+        throw new ValueError(new str("not enough values to unpack"));
+#endif
 
 /* init/exit */
 
