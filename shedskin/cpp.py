@@ -1158,7 +1158,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts.startswith("pyseq") or ts.startswith("pyiter"):  # XXX
             argtypes = self.gx.merged_inh[node]
         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
-        self.append("(new " + ts[:-2] + "(")
+        if ts == 'tuple<__ss_int> *' and len(node.elts) == 2:
+            self.append("(__ss_tuple_int(")
+        else:
+            self.append("(new " + ts[:-2] + "(")
         return argtypes
 
     def visit_Dict(
