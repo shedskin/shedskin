@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python
 
 ''' 
 UCT go player in python, by mark.dufour@gmail.com.
