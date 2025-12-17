@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   jastrow/simple_pade.py - single term Pade Jastrow factor

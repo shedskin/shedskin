@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
  average.py - compute statistics for regular and weighted data

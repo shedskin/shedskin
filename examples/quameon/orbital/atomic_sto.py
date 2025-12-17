@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   atomic_sto.py - Slater Type Orbitals

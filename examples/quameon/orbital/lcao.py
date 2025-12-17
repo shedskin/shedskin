@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   orbital/lcao.py - Linear Combination of Atomic Orbitals

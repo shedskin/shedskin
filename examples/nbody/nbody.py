@@ -1,4 +1,4 @@
-#!/usr/bin/python -OO
+#!/usr/bin/env python
 # The Computer Language Shootout Benchmarks
 # http://shootout.alioth.debian.org/
 #

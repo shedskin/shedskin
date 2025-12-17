@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   wave_func.py - compute the wave fuction and local energy

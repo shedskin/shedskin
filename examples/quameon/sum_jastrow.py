@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   sum_jastrow.py - compute sums of individual jastrow terms

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   jastrow/base_jastrow.py - base class for jastrow factors
