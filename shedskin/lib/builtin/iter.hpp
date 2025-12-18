@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -44,6 +44,13 @@
     __ ## temp = m; \
     __ ## iter = (__ ## temp)->gcd.begin(); \
     while (__ ## iter != (__ ## temp)->gcd.end() ) { \
+
+#define FOR_IN_FILE(l, f, temp) \
+    __ ## temp = f; \
+    while (! __ ## temp->__eof()) { \
+        l = __ ## temp->readline(); \
+        if (__ ## temp->__eof() and len(l) == 0) \
+            break;
 
 #define END_FOR }
 
