@@ -42,6 +42,7 @@ public:
     set<T> *copy();
 
     void *update(int, set<T> *s);
+    void *update(int, list<T> *l);
     template <class U> void *update(int, U *other);
     template <class U, class V> void *update(int, U *other, V *other2);
     template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
@@ -339,8 +340,14 @@ template <class T> void *set<T>::clear()
 }
 
 template<class T> void *set<T>::update(int, set<T> *s) {
-   for (const auto& key : s->gcs)
-       gcs.insert(key);
+    gcs.reserve(4);
+    gcs.insert(s->gcs.begin(),s->gcs.end());
+    return NULL;
+}
+
+template<class T> void *set<T>::update(int, list<T> *l) {
+    gcs.reserve(4);
+    gcs.insert(l->units.begin(),l->units.end());
     return NULL;
 }
 
