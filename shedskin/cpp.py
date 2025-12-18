@@ -1489,6 +1489,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node.iter.func.attr == "items"
         )
 
+    def fastfileiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
+        """Check if a node is a fast line-in-file iterator loop"""
+        return (
+            isinstance(node.target, ast.Name)
+            and self.only_classes(node.iter, ("file",))
+        )
+
     def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1513,6 +1520,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assname = self.mv.tempcount[node.target]
         assname = self.cpp_name(assname)
         self.print()
+
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, 'orelse'])
         if ast_utils.is_fastfor(node):
@@ -1525,6 +1533,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, True, False)
         elif self.fastdictiter(node):
             self.do_fastdictiter(node, func, False)
+            self.forbody(node, None, assname, func, True, False)
+        elif self.fastfileiter(node):
+            self.do_fastfileiter(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
@@ -1600,6 +1611,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
+
+    def do_fastfileiter(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
+        """Generate a fast for-line-in-file loop"""
+        self.start("FOR_IN_FILE(")
+        self.visitm(node.target, ',', node.iter, ',', self.mv.tempcount[node][2:], ')', func)
+        self.print(self.line)
+        self.indent()
 
     def do_fastdictiter(
         self,
