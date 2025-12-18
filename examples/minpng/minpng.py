@@ -60,6 +60,6 @@ w, h = 3000, 2000
 img = []
 for y in range(h):
     for x in range(w):
-        img.extend([b'%c' % (x % 256), b'%c' % (y % 256), b'\0'])
+        img.append(bytes([x % 256, y % 256, 0]))  # TODO int.to_bytes should be even faster, as no intermediate bytes object
 
 open('minpng.png', 'wb').write(to_png(w, h, b''.join(img)))
