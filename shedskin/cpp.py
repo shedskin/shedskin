@@ -39,6 +39,7 @@ while maintaining Python's dynamic behavior.
 import ast
 import functools
 import io
+import math
 import string
 import struct
 import textwrap
@@ -2836,7 +2837,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident in [
                 "abs",
                 "int",
-                "float",
                 "str",
                 "bytes",
                 "bytearray",
@@ -2849,6 +2849,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 "zip",
             ]:
                 self.append("__" + ident + "(")
+            elif ident == "float":
+                self.append('float(' if self.gx.float32 else 'double(')
             elif ident in ["min", "max", "iter", "round"]:
                 self.append("___" + ident + "(")
             elif ident == "bool":
@@ -3123,8 +3125,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if double and self.mergeinh[arg] == set(
                 [(python.def_class(self.gx, "int_"), 0)]
             ):
+                if self.gx.float32:
+                    self.append("float(")
+                else:
+                    self.append("double(")
                 cast = True
-                self.append("(__ss_float(")
             elif castnull and ast_utils.is_none(arg):
                 cast = True
                 self.append("((void *)(")
@@ -4325,21 +4330,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append("NULL")
 
         elif value.__class__.__name__ in ("int", "long"):  # isinstance(value, int):
-            self.append("__ss_int(")
-            self.append(str(value))
-            if self.gx.int64 or self.gx.int128:
-                self.append("LL")
-            self.append(")")
-
-        elif isinstance(value, float):
-            self.append("__ss_float(")
-            if str(value) in ["inf", "1.#INF", "Infinity"]:
-                self.append("INFINITY")
-            elif str(value) in ["-inf", "-1.#INF", "-Infinity"]:
-                self.append("-INFINITY")
+            if self.gx.int64:
+                self.append(f'int64_t({str(value)})')
+            elif self.gx.int128:
+                self.append(f'int128_t({str(value)})')
             else:
                 self.append(str(value))
-            self.append(")")
+
+        elif isinstance(value, float):
+            if str(value) in ["inf", "1.#INF", "Infinity"]:
+                self.append('std::numeric_limits<float>::infinity()' if self.gx.float32 else 'std::numeric_limits<double>::infinity()')
+            elif str(value) in ["-inf", "-1.#INF", "-Infinity"]:
+                self.append('-std::numeric_limits<float>::infinity()' if self.gx.float32 else '-std::numeric_limits<double>::infinity()')
+            else:
+                self.append('(' + str(value) + ')')
 
         elif isinstance(value, complex):
             self.append("mcomplex(%s, %s)" % (value.real, value.imag))

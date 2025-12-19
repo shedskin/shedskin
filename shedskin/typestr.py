@@ -288,7 +288,7 @@ def typestrnew(
     # --- annotation or c++ code
     conv1 = {
         "int_": "__ss_int",
-        "float_": "__ss_float",
+        "float_": None,
         "str_": "str",
         "none": "int",
         "bool_": "__ss_bool",
@@ -297,7 +297,7 @@ def typestrnew(
     }
     conv2 = {
         "int_": "int",
-        "float_": "float",
+        "float_": None,
         "str_": "str",
         "class_": "class",
         "none": "None",
@@ -352,14 +352,14 @@ def typestrnew(
         if set(lcp) == set(
             [python.def_class(gx, "int_"), python.def_class(gx, "float_")]
         ):
-            return conv["float_"]
+            return 'float' if gx.float32 else 'double'
         elif not node or (
             infer.inode(gx, node).mv and infer.inode(gx, node).mv.module.builtin
         ):
             if python.def_class(gx, "complex") in lcp:  # XXX
                 return conv["complex"]
             elif python.def_class(gx, "float_") in lcp:
-                return conv["float_"]
+                return 'float' if gx.float32 else 'double'
             elif python.def_class(gx, "int_") in lcp:
                 return conv["int_"]
             else:
@@ -411,8 +411,10 @@ def typestrnew(
         raise ExtmodError()
 
     # --- simple built-in types
-    if cl.ident in ["int_", "float_", "bool_", "complex"]:
+    if cl.ident in ["int_", "bool_", "complex"]:
         return conv[cl.ident]
+    elif cl.ident == 'float_':
+        return 'float' if gx.float32 else 'double'
     elif cl.ident == "str_":
         return cl.ident[:-1] + ptr
     elif cl.ident in ("bytes_", "bytearray"):
