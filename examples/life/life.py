@@ -38,7 +38,7 @@ def add(board, pos):
 def snext(board):
     """ Calculates the next stage """
     new = defaultdict(int, board)
-    for pos in list(board.keys()):
+    for pos in list(board):
         near = add(board, pos)
         item = board[pos]
         if near not in (2, 3) and item:
