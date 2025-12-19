@@ -15,7 +15,7 @@ void __throw_no_char() {
     throw new TypeError(new str("array item must be char"));
 }
 
-unsigned int get_itemsize(char typechar) {
+size_t get_itemsize(char typechar) {
     switch(typechar) {
         case 'b': return sizeof(signed char);
         case 'B': return sizeof(unsigned char);

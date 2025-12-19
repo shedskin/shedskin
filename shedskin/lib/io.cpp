@@ -41,15 +41,21 @@ bytes *BytesIO::readline(int n) {
     }
 }
 
-void *BytesIO::seek(__ss_int i, __ss_int w) {
+list<bytes *> *BytesIO::readlines(__ss_int hint) {
+    bytes *rest = s->__slice__(1, pos, 0, 0);
+    pos = len(s);
+    return rest->splitlines(True);
+}
+
+__ss_int BytesIO::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(w==0) pos = i;
     else if(w==1) pos += i;
     else pos = len(s)+i;
-    return NULL;
+    return pos; 
 }
 
-void *BytesIO::write(bytes *data) {
+__ss_int BytesIO::write(bytes *data) {
     __check_closed();
     if(data) {
         const size_t size = data->unit.size();
@@ -57,7 +63,7 @@ void *BytesIO::write(bytes *data) {
         pos += (int)size;
         s->unit.erase((size_t)pos, size);
     }
-    return 0;
+    return (__ss_int)data->unit.size();
 }
 
 bytes *BytesIO::getvalue() {
@@ -92,15 +98,21 @@ str *StringIO::readline(int n) {
     }
 }
 
-void *StringIO::seek(__ss_int i, __ss_int w) {
+list<str *> *StringIO::readlines(__ss_int hint) {
+    str *rest = s->__slice__(1, pos, 0, 0);
+    pos = len(s);
+    return rest->splitlines(True);
+}
+
+__ss_int StringIO::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(w==0) pos = i;
     else if(w==1) pos += i;
     else pos = len(s)+i;
-    return NULL;
+    return pos;
 }
 
-void *StringIO::write(str *data) {
+__ss_int StringIO::write(str *data) {
     __check_closed();
     if(data) {
         const size_t size = data->unit.size();
@@ -108,7 +120,7 @@ void *StringIO::write(str *data) {
         pos += (int)size;
         s->unit.erase((size_t)pos, size);
     }
-    return 0;
+    return (__ss_int)data->unit.size();
 }
 
 str *StringIO::getvalue() {

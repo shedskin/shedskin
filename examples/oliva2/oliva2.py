@@ -61,8 +61,8 @@ class SavePGMlines:
 
 
 
-def oliva(nx = 600,   # Length of the computed screen matrix (number of cells)
-          ny = 500,   # Height of the computed screen matrix
+def oliva(nx = 3000,   # Length of the computed screen matrix (number of cells)
+          ny = 2000,   # Height of the computed screen matrix
           kp = 12,    # number of iterations between the displays ( = lines on the screen)
           da = 0.015, # Diffusion of the activator
           ra = 0.1,   # Decay rate of the inhibitor

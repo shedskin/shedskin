@@ -7,6 +7,7 @@ public:
     uint8_t value;
     inline __ss_int operator+(__ss_bool b);
     inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator!=(__ss_bool b);
     inline __ss_bool operator&(__ss_bool b);
     inline __ss_bool operator|(__ss_bool b);
     inline __ss_bool operator^(__ss_bool b);
@@ -21,6 +22,7 @@ public:
 
 inline __ss_int __ss_bool::operator+(__ss_bool b) { return value+b.value; }
 inline __ss_bool __ss_bool::operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
+inline __ss_bool __ss_bool::operator!=(__ss_bool b) { __ss_bool c; c.value=value!=b.value; return c; }
 inline __ss_bool __ss_bool::operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
 inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
 inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
@@ -29,7 +31,7 @@ inline __ss_bool::operator bool() { return bool(value); }
 
 inline __ss_bool ___bool() { return __mbool(false); }
 
-template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonzero__()); }
+template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__bool__()); }
 template<> inline __ss_bool ___bool(str *s) { return __mbool(s && s->unit.size() > 0); }
 template<> inline __ss_bool ___bool(int32_t x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(int64_t x) { return __mbool(x!=0); }

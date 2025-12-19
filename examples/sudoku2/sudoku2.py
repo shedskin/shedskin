@@ -224,10 +224,11 @@ class board(object):
 
 
 def main():
-    puzzle = board()
-    puzzle.fread("testdata/b6.pz")
-    print(puzzle)
-    puzzle.solve()
+    for n in range(1000):
+        puzzle = board()
+        puzzle.fread("testdata/b6.pz")
+        print(puzzle)
+        puzzle.solve()
 
 
 if __name__ == "__main__":

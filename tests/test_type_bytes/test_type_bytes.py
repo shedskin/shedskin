@@ -337,6 +337,8 @@ def test_iadd_imul():
 def test_hex():
     assert b'ABCD'.hex() == '41424344'
     assert b'ABCD'.hex(sep='-', bytes_per_sep=3) == '41-424344'
+    assert b'ABCD'.hex(sep='-', bytes_per_sep=30) == '41424344'
+    assert b''.hex(':', 2) == ''
 
 
 def test_fromhex():

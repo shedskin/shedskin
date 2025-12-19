@@ -42,6 +42,7 @@ public:
     set<T> *copy();
 
     void *update(int, set<T> *s);
+    void *update(int, list<T> *l);
     template <class U> void *update(int, U *other);
     template <class U, class V> void *update(int, U *other, V *other2);
     template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
@@ -92,10 +93,16 @@ public:
     __ss_bool isdisjoint(set<T> *s);
     __ss_bool isdisjoint(pyiter<T> *s);
 
+    __ss_bool __gt__(pyobj *);
+    __ss_bool __lt__(pyobj *);
+    __ss_bool __ge__(pyobj *);
+    __ss_bool __le__(pyobj *);
+
     __ss_bool __gt__(set<T> *s);
     __ss_bool __lt__(set<T> *s);
     __ss_bool __ge__(set<T> *s);
     __ss_bool __le__(set<T> *s);
+
     __ss_bool __eq__(pyobj *p);
 
     __setiter<T> *__iter__() {
@@ -234,6 +241,12 @@ template<class T> T set<T>::pop() {
     return t;
 }
 
+/* suppress -Wvirtual-overloaded warnings TODO better to always use pyobj *? */
+template<class T> __ss_bool set<T>::__lt__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__gt__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__ge__(pyobj *) { return False; }
+template<class T> __ss_bool set<T>::__le__(pyobj *) { return False; }
+
 template<class T> __ss_bool set<T>::__ge__(set<T> *s) {
     return issuperset(s);
 }
@@ -327,8 +340,14 @@ template <class T> void *set<T>::clear()
 }
 
 template<class T> void *set<T>::update(int, set<T> *s) {
-   for (const auto& key : s->gcs)
-       gcs.insert(key);
+    gcs.reserve(4);
+    gcs.insert(s->gcs.begin(),s->gcs.end());
+    return NULL;
+}
+
+template<class T> void *set<T>::update(int, list<T> *l) {
+    gcs.reserve(4);
+    gcs.insert(l->units.begin(),l->units.end());
     return NULL;
 }
 

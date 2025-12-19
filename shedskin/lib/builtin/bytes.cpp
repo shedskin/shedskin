@@ -616,6 +616,8 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
 str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
     // output will be twice as long
     size_t len = unit.size();
+    if(len == 0)
+        return new str();
     __GC_STRING hexstr = __GC_STRING(unit);
     size_t result_len = (len<<1);
     if(sep) {
@@ -633,7 +635,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     char c;
     // from python's implementation (2.7.1, if it matters)
     size_t remaining = len;
-    while(curdata <= end)
+    while(curdata < end)
     {
         if(sep and !(remaining % bytes_per_sep) and remaining != len) {
             for(size_t j=0; j<sep->unit.size(); j++)
@@ -733,6 +735,11 @@ void *bytes::clear() {
     return NULL;
 }
 
+void *bytes::resize(__ss_int size) {
+    unit.resize(size, '\x00');
+    return NULL;
+}
+
 void *bytes::append(__ss_int i) {
     unit += (char)i;
     return NULL;
@@ -798,6 +805,14 @@ void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter
     for(size_t i=0; i<len; i++)
         r += (char)ll->units[i];
     unit = r;
+    return NULL;
+}
+
+void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b) {
+    if(x == 0)
+        unit = b->unit;
+    else
+        __setslice__(x, l, u, s, (pyiter<__ss_int> *)b);
     return NULL;
 }
 

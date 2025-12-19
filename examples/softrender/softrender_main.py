@@ -26,28 +26,28 @@ Becomes ~13 times faster after compilation with Shedskin.
 '''
 
 import math
+import sys
 import time
 
 from PIL import Image
 import pygame
 
-from render import *
+from softrender import *
 
-WIDTH, HEIGHT = 1600, 1200
+WIDTH, HEIGHT = 800, 600
 
 
 def load_texture(filename):
     image = Image.open(filename)
-    return Bitmap(image.width, image.height, image.convert('RGBA').tobytes())
+    return Bitmap(image.width, image.height, image.convert('RGBX').tobytes())
 
 
-def main():
+def main(test):
     screen = (WIDTH, HEIGHT)
     pygame.init()
 
     surface = pygame.display.set_mode(screen)
     drawsurf = pygame.Surface(screen).convert()
-    drawsurf.set_colorkey((0, 0, 0))
 
     clock = pygame.time.Clock()
     frame_count = 0
@@ -79,20 +79,22 @@ def main():
         target.clear_zbuffer()
         mesh.draw(target, camera.get_view_projection(), transform.get_transformation(), texture, lightDir)
 
-        img = pygame.image.frombuffer(target.bitmap.components, screen, 'RGBA')
-        surface.fill((0,0,0)) # TODO should not be needed
+        img = pygame.image.frombuffer(target.bitmap.components, screen, 'RGBX')
         surface.blit(img, (0, 0))
         pygame.display.flip()
 
-        clock.tick(60)
+        if not test:
+            clock.tick(60)
 
         delta = (time.time()-t0)
 
         transform = transform.rotate(quaternion_from_axis_angle(Vector4(0, 1, 0), delta/2))
 
-        if frame_count % 10 == 0:
+        if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
+        if test and frame_count == 50:
+            break
 
 if __name__ == '__main__':
-    main()
+    main(len(sys.argv) > 1 and sys.argv[1] == 'test')

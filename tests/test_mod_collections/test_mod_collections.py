@@ -2,7 +2,6 @@ from collections import defaultdict
 from collections import deque
 
 
-
 def test_collections_defaultdict1():
     s1 = "mississippi"
     d1 = defaultdict(int)
@@ -23,9 +22,8 @@ def test_collections_defaultdict2():
     for k3, v3 in s3:
         d3[k3].add(v3)
 
-    # assert list(sorted(d3.items())) == [('blue', {2, 4}), ('red', {1, 3})]
+    assert list(sorted(d3.items())) == [('blue', {2, 4}), ('red', {1, 3})]
     assert list(sorted(d3.keys())) == ['blue', 'red']
-
 
 
 def test_collections_deque1():
@@ -65,8 +63,8 @@ def test_collections_deque2():
 
     d[2] = d[-2] = 4
     assert list(d) == [7, 6, 4, 2, 1, 4, 5]
-    
-    # assert [0, 1][4 in d], [0, 1][9 in d] == (1, 0) ## FIXME
+
+    assert ([0, 1][4 in d], [0, 1][9 in d]) == (1, 0)
 
     d.rotate(3)
     assert list(d) == [1, 4, 5, 7, 6, 4, 2]
@@ -78,7 +76,34 @@ def test_collections_deque2():
     assert not list(d)
 
 
+def test_collections_deque3():
+    d = deque([1,2,2,2,3,4])  # TODO maxlen arg
+    assert d.count(2) == 3
+    assert d.count(5) == 0
 
+    assert d.index(3) == 4  # TODO start, stop args
+    #d.index(17)  # TODO better valueerror msg
+
+    d.reverse()
+    assert list(d) == [4,3,2,2,2,1]
+
+
+def test_collections_deque4():
+    d = deque([1,2,3,4])
+    assert list(d) == [1,2,3,4]
+
+    d.insert(1, 7)
+    assert list(d) == [1,7,2,3,4]
+
+    e = d.copy()
+    assert list(e) == [1,7,2,3,4]
+
+    d.append(3)
+    assert list(d) == [1,7,2,3,4,3]
+
+    assert d.index(3) == 3
+    assert d.index(3, 4) == 5
+    assert d.index(2, 1, -2) == 2
 
 
 def test_all():
@@ -86,6 +111,9 @@ def test_all():
     test_collections_defaultdict2()
     test_collections_deque1()
     test_collections_deque2()
+    test_collections_deque3()
+    test_collections_deque4()
+
 
 if __name__ == '__main__':
     test_all()

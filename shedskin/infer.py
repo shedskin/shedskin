@@ -358,6 +358,11 @@ def analyze_args(
     if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
         args.insert(0, None)
 
+    kwextra = []
+    for kw in kwdict:
+        if kw not in formal_args and f'__kw_{kw}' not in formal_args:
+            kwextra.append(kw)
+
     argnr = 0
     actuals: List[Optional[ast.AST]] = []
     formals = []
@@ -375,8 +380,8 @@ def analyze_args(
             argnr += 1
             formals.append(formal)
         elif i >= default_start:
+            default = func.defaults[i - default_start]
             if not skip_defaults:
-                default = func.defaults[i - default_start]
                 if formal.startswith("__kw_"):
                     actuals.insert(0, default)
                     formals.insert(0, formal)
@@ -384,13 +389,17 @@ def analyze_args(
                     actuals.append(default)
                     formals.append(formal)
                 defaults.append(default)
+            elif func.mv.module.ident == 'bisect':  # TODO generalize
+                if formal.startswith("__kw_"):
+                    actuals.insert(0, default)
+                    formals.insert(0, formal)
         else:
             missing = True
 
     extra = args[argnr:]
 
     _error = bool(
-        (missing or extra)
+        (missing or extra or kwextra)
         and not func.node.args.vararg
         and not func.node.args.kwarg
         and not get_starargs(expr)
@@ -448,10 +457,11 @@ def connect_actual_formal(
         or (func.mv.module.ident == "random" and func.ident == "randrange")
         or (
             func.mv.module.ident == "builtin"
-            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit")
+            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit", "map")
         )
     ):
-        skip_defaults = True
+        if not (func.mv.module.ident == "math" and func.ident == "isclose"):
+            skip_defaults = True
 
     actuals, formals, _, extra, _error = analyze_args(
         gx, expr, func, skip_defaults=skip_defaults, merge=merge
@@ -557,7 +567,7 @@ def analyze_callfunc(
 
         if cl:
             # staticmethod call
-            if ident in cl.staticmethods:
+            if ident in cl.staticmethods or ident in cl.classmethods:
                 direct_call = cl.funcs[ident]
                 return (
                     objexpr,
@@ -940,7 +950,7 @@ def possible_functions(
             (t[0].funcs[ident], t[1], t)
             for t in objtypes
             if ident in t[0].funcs
-            and not (isinstance(t[0], python.Class) and ident in t[0].staticmethods)
+            and not (isinstance(t[0], python.Class) and (ident in t[0].staticmethods or ident in t[0].classmethods))
         ]
 
     return funcs
@@ -1060,7 +1070,7 @@ def redirect(
     # staticmethod
     if (
         isinstance(func.parent, python.Class)
-        and func.ident in func.parent.staticmethods
+        and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
     ):
         dcpa = 1
 

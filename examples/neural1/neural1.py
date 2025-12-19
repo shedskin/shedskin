@@ -102,7 +102,7 @@ def touch(itemstr, weight=1.0):
     for name in itemstr.split():
         unitbyname[name].setext(weight)
 
-def run(times=100):
+def run(times=200000):
     """Run n-cycles and display result"""
     for i in range(times):
         for pool in pools:
@@ -122,7 +122,7 @@ if __name__ == '__main__':
         print('\t%s --help|--test| datafile.tab nueron1 [neuron2 ...]' % sys.argv[0])
         print()
         sys.exit()
-    elif '--test' in sys.argv:
+    elif True: #'--test' in sys.argv:
         SampleFile = b"""
 Art         Jets        40      jh      sing    pusher
 Al          Jets        30      jh      mar     burglar

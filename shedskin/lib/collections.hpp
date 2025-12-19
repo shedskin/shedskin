@@ -19,7 +19,7 @@ public:
     std::deque<A, gc_allocator<A> > units;
     typename std::deque<A, gc_allocator<A> >::iterator iter;
 
-    /* XXX modulo rotate, specialized reversed, copy, deepcopy */
+    /* XXX modulo rotate, maxlen */
 
     deque(pyiter<A> *iterable=0) {
         this->__class__ = cl_deque;
@@ -27,8 +27,19 @@ public:
             extend(iterable);
     }
 
+    deque<A> *copy() {
+        deque<A> *result = new deque<A>();
+        result->units = units;
+        return result;
+    }
+
     void *append(A a) {
         units.push_back(a);
+        return NULL;
+    }
+
+    void *insert(__ss_int index, A a) {
+        units.insert(units.begin() + index, a);
         return NULL;
     }
 
@@ -152,14 +163,46 @@ public:
        return NULL;
    }
 
+   void *reverse() {
+       std::reverse(units.begin(), units.end());
+       return NULL;
+   }
+
+   __ss_int count(A value) {
+       __ss_int result = 0;
+       iter = units.begin();
+       while(iter != units.end()) {
+            if(__eq(*iter, value))
+                result++;
+            iter++;
+       }
+       return result;
+   }
+
+   __ss_int index(A value, __ss_int start, __ss_int stop) {
+       __ss_int one = 1;
+       slicenr(7, start, stop, one, this->__len__());
+       for(__ss_int i=start; i < stop; i++) {
+           if(__eq(units[i], value))
+               return i;
+       }
+       throw new ValueError(new str("value is not in deque"));
+   }
+
+   __ss_int index(A value) {
+       return index(value, 0, this->__len__());
+   }
+
+   __ss_int index(A value, __ss_int start) {
+       return index(value, start, this->__len__());
+   }
+
    __ss_int truth() {
        return !units.empty();
    }
 
    deque<A> *__copy__() {
-       deque<A> *c = new deque<A>();
-       c->units = this->units;
-       return c;
+       return copy();
    }
 
    deque<A> *__deepcopy__(dict<void *, pyobj *> *memo) {
@@ -197,7 +240,7 @@ public:
 
     __dequereviter(deque<T> *p_) {
         p = p_;
-        i = p_->units.size()-1;
+        i = (__ss_int)(p_->units.size())-1;
     }
 
     T __next__() {

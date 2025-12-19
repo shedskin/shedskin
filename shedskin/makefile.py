@@ -655,7 +655,7 @@ class ShedskinBuilder(Builder):
         self.add_cxxflags(
             "-O2",
             "-DWIN32",
-            "-std=c++17",
+            "-std=c++20",
             "-march=native",
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
@@ -678,7 +678,7 @@ class ShedskinBuilder(Builder):
             self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
 
         if PLATFORM == "Darwin":
-            self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated")
+            self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated")
             if prefix := self.homebrew_prefix():
                 self.add_include_dirs(f"{prefix}/include")
                 self.add_link_dirs(f"{prefix}/lib")
@@ -710,7 +710,7 @@ class ShedskinBuilder(Builder):
                 )
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
-            self.add_cxxflags("-O2", "-std=c++17", "-march=native")
+            self.add_cxxflags("-O2", "-std=c++20", "-march=native")
             self.add_ldlibs("-lgc", "-lgctba", "-lutil")
 
     def _add_feature_flags(self) -> None:
@@ -1115,9 +1115,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def generate(self) -> None:
         """Generate the Makefile"""
-        if self.gx.nomakefile:
-            return
-
         self._setup_defaults()
         self._setup_variables()
         self._setup_platform()
@@ -1165,7 +1162,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags(
                 "-O2",
                 "-DWIN32",
-                "-std=c++17",
+                "-std=c++20",
                 "-march=native",
                 "-Wno-deprecated",
                 "-Wl,--enable-auto-import",
@@ -1210,7 +1207,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 )
 
             if self.no_flag_file:
-                self.add_cxxflags("-O2", "-std=c++17", "-Wno-deprecated", "$(CPPFLAGS)")
+                self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-8")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
@@ -1227,7 +1224,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
             if self.no_flag_file:
-                self.add_cxxflags("-O2", "-std=c++17", "-march=native", "$(CPPFLAGS)")
+                self.add_cxxflags("-O2", "-std=c++20", "-march=native", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lgctba", "-lutil")
 
         self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")
@@ -1412,6 +1409,9 @@ def generate_makefile(gx: "config.GlobalInfo") -> None:
         builder.build(gx.options.dry_run)
         builder.run_executable()
     else:
+        if gx.nomakefile:
+            return
+
         generator = ShedskinMakefileGenerator(gx)
         generator.generate()
 

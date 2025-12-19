@@ -10,8 +10,14 @@ def test_int():
     assert int(7) == 7
 
 
+def test_multiplication():
+    assert 9 * 2 == 18
+    assert -9 * 2 == -18
+
+
 def test_division():
     assert 9 /  2 == 4.5
+    assert 8 /  2 == 4.0
     assert 9 // 2 == 4
 
 
@@ -21,23 +27,30 @@ def test_is_integer():
     assert (18).is_integer()
 
 
-def test_bit_length():  # TODO should work also via int-expr.bit_length..? same for the others
-    assert int.bit_length(-123456) == 17
-    assert int.bit_length(-8) == 4
-    assert int.bit_length(-1) == 1
+def test_bit_length():
+    assert (-123456).bit_length() == 17
+    assert (-8).bit_length() == 4
+    assert (-1).bit_length() == 1
 
-    assert int.bit_length(0) == 0
+    assert (0).bit_length() == 0
 
-    assert int.bit_length(1) == 1
-    assert int.bit_length(8) == 4
-    assert int.bit_length(123456) == 17
+    assert (1).bit_length() == 1
+    assert (8).bit_length() == 4
+    assert (123456).bit_length() == 17
+
+
+def test_bit_count():
+    assert (15).bit_count() == 4
+#    assert (-15).bit_count() == 4  # in shedskin, we assume unsigned, otherwise hard to use for bitmasking..? (othelloN example) # TODO add warning
 
 
 def test_all():
     test_int()
     test_division()
+    test_multiplication()
     test_is_integer()
     test_bit_length()
+    test_bit_count()
 
 
 if __name__ == "__main__":

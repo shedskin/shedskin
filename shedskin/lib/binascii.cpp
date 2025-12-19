@@ -14,8 +14,9 @@ __ss_bool  default_3;
 __ss_bool  default_2;
 void * default_5;
 
-// XXX
+#ifndef PY_SSIZE_T_MAX
 #define PY_SSIZE_T_MAX INT_MAX 
+#endif
 
 /**
 class Error
@@ -58,7 +59,7 @@ for i in xrange(0,256,16):
 
 */
 
-static char table_a2b_hex[] = {
+static signed char table_a2b_hex[] = {
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -93,7 +94,7 @@ bytes *unhexlify(bytes *hex) {
     {
         top = table_a2b_hex[(int)*(curhex++)];
         bot = table_a2b_hex[(int)*(curhex++)];
-        if (top==-1 || bot==-1)
+        if (top==(char)-1 || bot==(char)-1)
             throw new Error(new str("Invalid hex"));
         *(curdata++) = (char)((top<<4) + bot);
     }
@@ -210,28 +211,16 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
     return ascii;
 }
 
-static char table_a2b_base64[] = {
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
-    52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1, /* Note PAD->0 */
-    -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
-    15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
-    -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-    41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
-};
 
 #define BASE64_PAD '='
 
 /* Max binary chunk size; limited only by available memory */
 #define BASE64_MAXBIN (PY_SSIZE_T_MAX/2 - sizeof(PyStringObject) - 3)
 
-static unsigned char table_b2a_base64[] =
-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 
-int find_valid(char *s, size_t slen, int num)
+int find_valid(char *s, size_t slen, int num, signed char *table_a2b_base64)
 {
     /* Finds & returns the (num+1)th
     ** valid character for base64, or -1 if none.
@@ -256,7 +245,27 @@ int find_valid(char *s, size_t slen, int num)
 }
 
 // from python 2.7.1
-bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode) {
+bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
+    signed char table_a2b_base64[] = {
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1, /* Note PAD->0 */
+        -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
+        15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
+        -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
+        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
+    };
+
+    if(altchars) { // TODO check len
+        table_a2b_base64[(unsigned char)altchars->unit[0]] = 62;
+        table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
+    }
+    else {
+        table_a2b_base64['+'] = 62;
+        table_a2b_base64['/'] = 63;
+    }
+
     if(strict_mode && pascii->unit[0] == BASE64_PAD)
         throw new Error(new str("Leading padding not allowed"));  // TODO check new strict_mode behaviour in python source
 
@@ -289,7 +298,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode) {
         if (this_ch == BASE64_PAD) {
             if ( (quad_pos < 2) ||
                  ((quad_pos == 2) &&
-                  (find_valid(ascii_data, ascii_len, 2)
+                  (find_valid(ascii_data, ascii_len, 2, table_a2b_base64)
                    != BASE64_PAD)) )
             {
                 continue;
@@ -341,7 +350,14 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode) {
     return binary;
 }
 
-bytes *b2a_base64(bytes *binary, __ss_bool newline) {
+bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
+    unsigned char table_b2a_base64[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    if(altchars) { // TODO check len
+        table_b2a_base64[62] = altchars->unit[0];
+        table_b2a_base64[63] = altchars->unit[1];
+    }
 
     __ss_int bin_len = binary->__len__();
 /*    if (bin_len > BASE64_MAXBIN) {
@@ -420,7 +436,7 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
             else {
                 top = table_a2b_hex[(unsigned char)data[in]];
                 bot = table_a2b_hex[(unsigned char)data[in+1]];
-                if (top==-1 || bot==-1)
+                if (top==(char)-1 || bot==(char)-1)
                     odata[out++] = '=';
                 else
                 {

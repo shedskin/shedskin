@@ -124,6 +124,7 @@ public:
     /* bytearray */
 
     void *clear();
+    void *resize(__ss_int size);
     void *append(__ss_int i);
     __ss_int pop(__ss_int i=-1);
     bytes *copy();
@@ -140,6 +141,8 @@ public:
     bytes *__imul__(__ss_int n);
 
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b);
+    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b);
+
     void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
 #ifdef __SS_BIND

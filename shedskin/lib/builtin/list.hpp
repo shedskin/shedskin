@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifdef SS_DECL
 
@@ -14,6 +14,8 @@ public:
     list(str *s);
 
     void clear();
+    list<T> *copy();
+
     void *__setitem__(__ss_int i, T e);
     void *__delitem__(__ss_int i);
     int empty();
@@ -144,7 +146,11 @@ template<class T> PyObject *list<T>::__to_py__() {
 #endif
 
 template<class T> void list<T>::clear() {
-    units.resize(0);
+    units.clear();
+}
+
+template<class T> list<T> *list<T>::copy() {
+    return new list<T>(this);
 }
 
 template<class T> void list<T>::resize(__ss_int i) {

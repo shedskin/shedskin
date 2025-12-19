@@ -385,27 +385,28 @@ def new(arg=None):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) <= 1:
-        print("")
-        print("No string found. Add commandline argument. ")
-        sys.exit(0)
+#    if len(sys.argv) <= 1:
+#        print("")
+#        print("No string found. Add commandline argument. ")
+#        sys.exit(0)
 
-    text = sys.argv[1]
-    textbin = bytes([ord(c) for c in text])
-    shah = new(textbin)
+#    text = sys.argv[1]
+    text = 'testdata/n.txt'
+#    textbin = bytes([ord(c) for c in text])
+    textbin = open('testdata/n.txt', 'rb').read()
 
-    print("")
-    print(text, shah.hexdigest())
-    print("")
+    for n in range(50):
+        shah = new(textbin)
+        print(text, shah.hexdigest())
 
-    if 0:
-        # allows shedskin type inference, don't remove
-        shah.copy()
-        B = 0x67452301
-        C = 0x67452301
-        D = 0x67452301
-
-        f0_19(B, C, D)
-        f20_39(B, C, D)
-        f40_59(B, C, D)
-        f60_79(B, C, D)
+#    if 0:
+#        # allows shedskin type inference, don't remove
+#        shah.copy()
+#        B = 0x67452301
+#        C = 0x67452301
+#        D = 0x67452301
+#
+#        f0_19(B, C, D)
+#        f20_39(B, C, D)
+#        f40_59(B, C, D)
+#        f60_79(B, C, D)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   coulomb.py - compute the electrostatic interation energy (e-e, e-n, n-n)

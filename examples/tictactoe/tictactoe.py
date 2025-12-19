@@ -142,7 +142,7 @@ class rectBoard(object):
                 return (scorelist[0][1][0], scorelist[0][1][1])
 
 
-def aigame(size=10, turn=1, players=2):
+def aigame(n, size=10, turn=1, players=2):
         b = rectBoard(size)
 
         while((not b.isfull()) and (b.isvictory() == 0)):
@@ -159,13 +159,15 @@ def aigame(size=10, turn=1, players=2):
                         b.assign(r,c,turn)
                         if(turn == players): turn = 1
                         else: turn += 1
-        print()
-        print(b.__str__())
-        print()
-        if(b.isvictory() == 0):
-                print("Board is full! Draw!")
-        else:
-                print("Victory for player "+str(b.isvictory())+"!")
+        if n == 999:
+            print()
+            print(b.__str__())
+            print()
+            if(b.isvictory() == 0):
+                    print("Board is full! Draw!")
+            else:
+                    print("Victory for player "+str(b.isvictory())+"!")
 
 if __name__ == '__main__':
-    aigame()
+    for n in range(5000):
+        aigame(n)

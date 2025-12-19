@@ -132,7 +132,7 @@ def print_board(state):
             print('.', end='')
         if move % 8 == 7:
             print()
-    print(f'black: {int.bit_count(state[0])}, white: {int.bit_count(state[1])}')
+    print(f'black: {state[0].bit_count()}, white: {state[1].bit_count()}')
 
 
 def parse_state(board):
@@ -163,7 +163,7 @@ def evaluate(state, color, is_max_player, my_moves, opp_moves):
 
     # no moves left: greedy
     if my_moves | opp_moves == 0:
-        value = int.bit_count(state[color]) - int.bit_count(state[color^1])
+        value = state[color].bit_count() - state[color^1].bit_count()
         value *= WIN_BONUS
 
     # else: value mobility and corners (wzebra)
@@ -174,8 +174,8 @@ def evaluate(state, color, is_max_player, my_moves, opp_moves):
         my_corners = my_disks & CORNER_MASK
         opp_corners = opp_disks & CORNER_MASK
 
-        value += (int.bit_count(my_corners) - int.bit_count(opp_corners)) * 16
-        value += (int.bit_count(my_moves) - int.bit_count(opp_moves)) * 2
+        value += (my_corners.bit_count() - opp_corners.bit_count()) * 16
+        value += (my_moves.bit_count() - opp_moves.bit_count()) * 2
 
     if is_max_player:
         return value
@@ -380,8 +380,8 @@ def vs_cpu_ugi(max_depth):
                 sys.stdout.write('response false\n')
 
         elif line == 'query result':
-            blacks = int.bit_count(state[0])
-            whites = int.bit_count(state[1])
+            blacks = state[0].bit_count()
+            whites = state[1].bit_count()
             if blacks > whites:
                 sys.stdout.write('response p1win\n')
             elif whites > blacks:
@@ -456,7 +456,7 @@ def speed_test(max_depth):
 
 
 if __name__ == '__main__':
-    max_depth = 10
+    max_depth = 11
     mode = None
 
     for i, arg in enumerate(sys.argv[1:]):

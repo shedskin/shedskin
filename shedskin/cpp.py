@@ -1159,7 +1159,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts.startswith("pyseq") or ts.startswith("pyiter"):  # XXX
             argtypes = self.gx.merged_inh[node]
         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
-        self.append("(new " + ts[:-2] + "(")
+        if ts == 'tuple<__ss_int> *' and len(node.elts) == 2:
+            self.append("(__ss_tuple_int(")
+        else:
+            self.append("(new " + ts[:-2] + "(")
         return argtypes
 
     def visit_Dict(
@@ -1487,6 +1490,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node.iter.func.attr == "items"
         )
 
+    def fastfileiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
+        """Check if a node is a fast line-in-file iterator loop"""
+        return (
+            isinstance(node.target, ast.Name)
+            and self.only_classes(node.iter, ("file",))
+        )
+
     def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1511,6 +1521,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assname = self.mv.tempcount[node.target]
         assname = self.cpp_name(assname)
         self.print()
+
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, 'orelse'])
         if ast_utils.is_fastfor(node):
@@ -1523,6 +1534,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, True, False)
         elif self.fastdictiter(node):
             self.do_fastdictiter(node, func, False)
+            self.forbody(node, None, assname, func, True, False)
+        elif self.fastfileiter(node):
+            self.do_fastfileiter(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
@@ -1598,6 +1612,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
+
+    def do_fastfileiter(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
+        """Generate a fast for-line-in-file loop"""
+        self.start("FOR_IN_FILE(")
+        self.visitm(node.target, ',', node.iter, ',', self.mv.tempcount[node][2:], ')', func)
+        self.print(self.line)
+        self.indent()
 
     def do_fastdictiter(
         self,
@@ -1790,7 +1816,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if (
             declare
             and isinstance(func.parent, python.Class)
-            and func.ident in func.parent.staticmethods
+            and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
         ):
             header = "static " + header
         if is_init and not formaldecs:
@@ -2505,6 +2531,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
 
+        # int in range(..)
+        if (
+            middle == "__contains__"
+            and self.one_class(right, ("int_",))
+            and isinstance(left, ast.Call)
+            and isinstance(left.func, ast.Name)
+            and left.func.id == 'range'
+        ):
+            if prefix == '!':
+                self.append(prefix)
+            self.append('__ss_in_range(')
+            self.visit(right, func)
+            self.append(', ')
+            for arg in left.args:
+                self.visit(arg, func)
+                if arg is not left.args[-1]:
+                    self.append(', ')
+            self.append(')')
+            return
+
         # expr (not) in [const, ..]/(const, ..)
         if (
             middle == "__contains__"
@@ -2914,9 +2960,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=self.mv,
                     )
-                if isinstance(cl, python.Class) and ident in cl.staticmethods:
+                if isinstance(cl, python.Class) and (ident in cl.staticmethods or ident in cl.classmethods):
                     error.error(
-                        "staticmethod '%s' called without using class name" % ident,
+                        "staticmethod/classmethod '%s' called without using class name" % ident,
                         self.gx,
                         node,
                         warning=True,
@@ -2942,13 +2988,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
-                ident == "is_integer"
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio")
                 and isinstance(node.func, ast.Attribute)
                 and ((python.def_class(self.gx, "float_"), 0) in self.mergeinh[node.func.value]
                      or (python.def_class(self.gx, "int_"), 0) in self.mergeinh[node.func.value])
             ):
                 assert isinstance(node.func, ast.Attribute)
-                self.visitm("__ss_is_integer(", node.func.value, ")", func)
+                self.visitm(f"__ss_{ident}(", node.func.value, ")", func)
                 return
             else:
                 self.visitm(node.func, "(", func)
@@ -3076,6 +3122,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             err
             and not self.library_func(funcs, "builtin", None, "sum")
             and not self.library_func(funcs, "builtin", None, "next")
+            and not self.library_func(funcs, "functools", None, "reduce")
         ):
             error.error(
                 "call with incorrect number of arguments",
@@ -3301,7 +3348,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         rvalue_node, ("list", "str_", "bytes_", "tuple", "tuple2")
                     ):
                         self.output(
-                            "__unpack_check(%s, %d);" % (temp, len(lvalue.elts))
+                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
                         )
                     else:
                         rtypes = self.mergeinh[rvalue_node]
@@ -3314,7 +3361,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                         temp = temp + "_list"
                         self.output(
-                            "__unpack_check(%s, %d);" % (temp, len(lvalue.elts))
+                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
                         )
 
                 self.start()
@@ -3767,17 +3814,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             elif (
                 len(node.generators) == 1
-                and not ast_utils.is_fastfor(node.generators[0])
                 and not self.fastenumerate(node.generators[0])
                 and not self.fastzip2(node.generators[0])
                 and not node.generators[0].ifs
-                and self.one_class(
-                    node.generators[0].iter, ("tuple", "list", "str_", "dict", "set")
-                )
+                and ((ast_utils.is_fastfor(node.generators[0])
+                      and len(node.generators[0].iter.args) == 1
+                      and isinstance(node.generators[0].iter.args[0], ast.Constant))
+                     or self.one_class(node.generators[0].iter,
+                                       ("list", "tuple", "str_", "dict", "set", "bytes_")))
             ):
+                if ast_utils.is_fastfor(node.generators[0]):
+                    tv = self.mv.tempcount[node.generators[0].target]
+                else:
+                    tv = self.mv.tempcount[node.generators[0].iter]
                 self.start(
                     "__ss_result->units["
-                    + self.mv.tempcount[node.generators[0].iter]
+                    + tv
                     + "] = "
                 )
                 self.visit(node.elt, lcfunc)
@@ -3797,9 +3849,25 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, self.mv)
         iter = self.cpp_name(var)
 
+        # attempt to resize/reserve list (vector) space
+        # to avoid heap allocations (for 1 elem, 2 elems, 4 elems.. :S)
+        try_reserve = (not genexpr and
+                       not node in self.gx.setcomp_to_lc.values() and
+                       not node in self.gx.dictcomp_to_lc.values())
+
         if ast_utils.is_fastfor(qual):
+            if try_reserve:
+                if (len(node.generators) == 1 and
+                    not qual.ifs and
+                    len(qual.iter.args) == 1 and  # TODO more than one arguments to range()
+                    isinstance(qual.iter.args[0], ast.Constant)
+                ):
+                    self.output(f"__ss_result->resize({qual.iter.args[0].value});")
+                elif qual is node.generators[0]:
+                    self.output(f"__ss_result->units.reserve({4*len(node.generators)});")
+
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
-        elif self.fastenumerate(qual):
+        elif self.fastenumerate(qual):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         elif self.fastzip2(qual):
@@ -3819,13 +3887,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             pref, tail = self.forin_preftail(qual)
 
-            if (len(node.generators) == 1 and
-                not qual.ifs and
-                not genexpr and
-                not node in self.gx.setcomp_to_lc.values() and
-                not node in self.gx.dictcomp_to_lc.values()):
-                if self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set")):
+            if try_reserve:
+                if (len(node.generators) == 1 and
+                    not qual.ifs and
+                    self.one_class(qual.iter, ("list", "tuple", "str_", "dict", "set", "bytes_"))
+                ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
+                else:
+                    self.output(f"__ss_result->units.reserve({4*len(node.generators)});")
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
@@ -4004,7 +4073,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(module.full_path() + "::")
 
             # class.attr: staticmethod
-            elif cl and node.attr in cl.staticmethods:
+            elif cl and (node.attr in cl.staticmethods or node.attr in cl.classmethods):
                 ident = cl.ident
                 if cl.ident in [
                     "dict",

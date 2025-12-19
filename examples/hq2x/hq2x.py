@@ -1575,9 +1575,9 @@ def init_LUTs():
 
 def main():
     init_LUTs()
-    print('scaling randam.ppm to randam2.ppm (100 times)..')
+    print('scaling randam.ppm to randam2.ppm (1000 times)..')
     ppm = PPM.load('randam.ppm')
-    for i in range(100):
+    for i in range(1000):
         rgb = hq2x(ppm.w, ppm.h, ppm.rgb)
     PPM(2*ppm.w, 2*ppm.h, rgb).save('randam2.ppm')
 

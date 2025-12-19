@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # ant.py
 # Eric Rollins 2008
@@ -127,7 +127,7 @@ def bestPath(cities, seed, maxIter, boost):
 def main():
     seed = 1
     boost = 5
-    iter = 1000
+    iter = 3000
     numCities = 200
     maxDistance = 100
     cityDistanceSeed = 1

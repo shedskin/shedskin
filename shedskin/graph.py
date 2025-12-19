@@ -655,6 +655,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for cl in self.classes.values():
             for ancestor in cl.ancestors_upto(None)[1:]:
                 cl.staticmethods.extend(ancestor.staticmethods)
+                cl.classmethods.extend(ancestor.classmethods)
                 cl.properties.update(ancestor.properties)
 
                 for func in ancestor.funcs.values():
@@ -994,6 +995,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
+                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
+                    parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
                 elif parent and is_property_setter(dec):
@@ -1009,6 +1012,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if (
                 not inherited_from
                 and func.ident not in parent.staticmethods
+                and func.ident not in parent.classmethods
                 and (not func.formals or func.formals[0] != "self")
             ):
                 error.error(
@@ -1086,7 +1090,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- register function
         if isinstance(parent, python.Class):
-            if func.ident not in parent.staticmethods:  # XXX use flag
+            if func.ident not in parent.staticmethods and func.ident not in parent.classmethods:  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
 
@@ -2183,6 +2187,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # XXX import math; math.e
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.ctx, ast.Load):
+            # classmethod: insert 'cls' arg (None for now)
+            if not fake_attr and isinstance(node.func.value, ast.Name):
+                if node.func.value.id in ('dict', 'float', 'bytes', 'complex', 'bytearray'):
+                    node.args.insert(0, ast.Name("None", ast.Load()))
+
             # rewrite super(..) call
             base = self.super_call(node, func)
             if base:
@@ -2405,7 +2414,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     isinstance(lvalue, ast.Name)
                     and isinstance(rvalue, ast.Call)
                     and isinstance(rvalue.func, ast.Name)
-                    and rvalue.func.id in ["staticmethod", "property"]
+                    and rvalue.func.id in ["staticmethod", "classmethod", "property"]
                 ):
                     if rvalue.func.id == "property":
                         if len(rvalue.args) == 1 and isinstance(
@@ -2428,8 +2437,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                                 rvalue,
                                 mv=getmv(),
                             )
-                    else:
+                    elif rvalue.func.id == "staticmethod":
                         newclass.staticmethods.append(lvalue.id)
+                    else:
+                        newclass.classmethods.append(lvalue.id)
                     skip.append(child)
 
         # --- children

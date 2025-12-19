@@ -9,10 +9,10 @@ class Bitmap:
     def __init__(self, width, height, components=None):
         self.width, self.height = width, height
         self.components = components or bytearray(width * height * 4)
+        self.reset = bytearray(width * height * 4)
 
     def clear(self):
-        for i in range(self.width * self.height * 4):
-            self.components[i] = 0
+        self.components[:] = self.reset
 
 
 class Vector4:
@@ -409,6 +409,7 @@ class RenderContext:
         self.bitmap = Bitmap(width, height)
         self.width, self.height = width, height
         self.zbuffer = [0.0] * width * height
+        self.zbuffer_reset = [float('inf')] * width * height
 
         self.screenSpaceTransform = Matrix4().init_screenspace_transform(self.width/2, self.height/2)
 
@@ -416,9 +417,7 @@ class RenderContext:
         self.bitmap.clear()
 
     def clear_zbuffer(self):
-        inf = float('inf')
-        for i in range(self.width * self.height):
-            self.zbuffer[i] = inf
+        self.zbuffer[:] = self.zbuffer_reset
 
     def draw_triangle(self, v1, v2, v3, texture, lightDir):
         if v1.inside_view_frustum() and v2.inside_view_frustum() and v3.inside_view_frustum():

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   jastrow/const_jastrow.py - constant Jastrow factors (useful mostly for testing)

@@ -137,7 +137,7 @@ public:
     virtual __ss_int __len__();
     virtual __ss_int __int__();
 
-    virtual __ss_bool __nonzero__();
+    virtual __ss_bool __bool__();
     virtual __ss_int __index__();
 
     static const bool is_pyseq = false;
@@ -438,12 +438,17 @@ template<class T> T __seqiter<T>::__next__() {
 
 /* tuple unpacking */
 
-template<class T> void __unpack_check(T t, int expected) {
-    if(len(t) > (__ss_int)expected)
-	 throw new ValueError(new str("too many values to unpack"));
-    else if(len(t) < (__ss_int)expected)
-	 throw new ValueError(new str("not enough values to unpack"));
-}
+#ifdef __SS_NOBOUNDS
+    #define __SS_UNPACK_CHECK(t, expected)
+#else
+#define __SS_UNPACK_CHECK(t, expected) \
+    if(len(t) > (__ss_int)expected) \
+        throw new ValueError(new str("too many values to unpack")); \
+    else if(len(t) < (__ss_int)expected) \
+        throw new ValueError(new str("not enough values to unpack"));
+#endif
+
+tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 /* init/exit */
 

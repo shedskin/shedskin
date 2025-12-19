@@ -5,16 +5,13 @@ class class_:
         return self.__name__
 
 class int_:
-    @staticmethod
-    def bit_count(i):
+    def bit_count(self, i):
         return 1
 
-    @staticmethod
-    def bit_length(i):
+    def bit_length(self, i):
         return 1
 
-#    @staticmethod
-#    def as_integer_ratio(i):
+#    def as_integer_ratio(self, i):
 #        return (1,)
 
     def is_integer(self):
@@ -136,8 +133,8 @@ class bool_:
         return ''
 
 class float_:
-    @staticmethod
-    def from_number(i):
+    @classmethod
+    def from_number(cls, i):
         return 1.0
 
     def __add__(self, b):
@@ -224,6 +221,12 @@ class list(pyseq):
         return 1
     def remove(self, u):
         u == self.unit
+
+    def clear(self):
+        pass
+
+    def copy(self):
+        return [self.unit]
 
     def __getitem__(self, i):
         return self.unit
@@ -447,6 +450,10 @@ class str_(pyseq):
         return 1
 
 class bytes_(pyseq):
+    @classmethod
+    def fromhex(cls, s):
+        return b''
+
     def strip(self, chars=''):
         return b''
     def lstrip(self, chars=''):
@@ -551,10 +558,6 @@ class bytes_(pyseq):
     def swapcase(self):
         return b''
 
-    @staticmethod
-    def fromhex(s):
-        return b''
-
     def hex(self, sep='', bytes_per_sep=1):
         return ''
 
@@ -567,6 +570,9 @@ class bytes_(pyseq):
     # bytearray
 
     def clear(self):
+        pass
+
+    def resize(self, size):
         pass
 
     def append(self, x):
@@ -606,6 +612,10 @@ class bytes_(pyseq):
         pass
 
 class dict(pyiter):
+    @classmethod
+    def fromkeys(cls, l, b=None):
+        return {l.unit: b}
+
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)
 
@@ -670,10 +680,6 @@ class dict(pyiter):
 
     def __delete__(self, k):
         self.__key__(k)
-
-    @staticmethod
-    def fromkeys(l, b=None):
-        return {l.unit: b}
 
     def keys(self):
         yield self.unit
@@ -777,8 +783,8 @@ class set(pyset):
         self.__setunit__(iter(b).__next__())
 
 class complex:
-    @staticmethod
-    def from_number(i):
+    @classmethod
+    def from_number(cls, i):
         return complex(i)
 
     def __init__(self, real=None, imag=None):
@@ -937,12 +943,12 @@ class file(pyiter):
         return iter(self)
 
     def write(self, s):
-        pass
+        return 1
     def writelines(self, it):
         pass
 
     def seek(self, i, w=0):
-        pass
+        return 1
     def tell(self):
         return 1
 
@@ -990,12 +996,12 @@ class file_binary(pyiter):
         return iter(self)
 
     def write(self, s):
-        pass
+        return 1
     def writelines(self, it):
         pass
 
     def seek(self, i, w=0):
-        pass
+        return 1
     def tell(self):
         return 1
 
@@ -1041,9 +1047,8 @@ def divmod(a, b):
     return a.__divmod__(b)
 
 def bool(x):
-    x.__nonzero__()
+    x.__bool__()
     x.__len__()
-    x.__index__()
     return True
 
 def repr(x):
@@ -1094,14 +1099,6 @@ class __xrange(pyseq):
 
 def range(a, b=1, s=1):  # TODO use class directly
     return __xrange()
-
-def zip(__kw_strict=False, *args):
-    elem = iter(args).__next__()
-    yield (elem,)
-def __zip2(arg1, arg2, __kw_strict=False):
-    elem1 = iter(arg1).__next__()
-    elem2 = iter(arg2).__next__()
-    yield (elem1, elem2)
 
 def max(__kw_key=0, *arg): # XXX 0
     __cmp(arg, arg)
@@ -1180,11 +1177,19 @@ def exit(code=0):
 def quit(code=0):
     pass
 
-def map(func, *iter1):
+def zip(__kw_strict=False, *args):
+    elem = iter(args).__next__()
+    yield (elem,)
+def __zip2(arg1, arg2, __kw_strict=False):
+    elem1 = iter(arg1).__next__()
+    elem2 = iter(arg2).__next__()
+    yield (elem1, elem2)
+
+def map(func, __kw_strict=False, *iter1):
     yield func(*iter(iter1).__next__())
-def __map3(func, iter1, iter2):
+def __map3(func, iter1, iter2, __kw_strict=False):
     yield func(iter(iter1).__next__(), iter(iter2).__next__())
-def __map4(func, iter1, iter2, iter3): # XXX
+def __map4(func, iter1, iter2, iter3, __kw_strict=False):
     yield func(iter(iter1).__next__(), iter(iter2).__next__(), iter(iter3).__next__())
 
 def filter(func, iter1):

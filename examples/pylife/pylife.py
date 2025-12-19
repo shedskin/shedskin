@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 conway's game of life, using bill gosper's hashlife algorithm

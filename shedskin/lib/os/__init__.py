@@ -128,7 +128,7 @@ def fstatvfs(fd):
 class popen_pipe(file):
     pass
 
-def listdir(path):
+def listdir(path=None):
     return ['']
 
 def getenv(name, alternative=''):

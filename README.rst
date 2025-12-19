@@ -11,7 +11,7 @@ Shed Skin is a transpiler, that can translate pure, but implicitly statically ty
 
 Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the `documentation <https://shedskin.github.io/shedskin/>`_ for details).
 
-For a set of `80 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython.
+For a set of over `80 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython (median 12 times, average 20 times).
 
 
 Usage
@@ -28,8 +28,8 @@ Under Windows:
 
 ::
 
-    shedskin build --conan test
-    build/Debug/test.exe
+    shedskin build test
+    build\Release\test.exe
 
 
 Restrictions
@@ -61,7 +61,7 @@ Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python 
     shedskin 0.9.9:     1.9
     shedskin 0.9.9:     1.8  (using --nowrap --nobounds)
 
-Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --long.
+Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --int64.
 
 Screenhots
 ----------
@@ -121,6 +121,7 @@ The following people have contributed to Shed Skin development:
   Salvatore Ferro
   FFAO
   Victor Garcia
+  Davide Gessa
   Luis M. Gonzales
   Fahrzin Hemmati
   Folkert van Heusden

@@ -1,29 +1,33 @@
-class Dict:
+# TODO  assert bytearray(b'').__class__.__name__ == 'bytearray'
+# TODO  assert Dict('x').__class__.__name__ == 'Dict'
+# TODO  __ifloordiv__ fallback to __floordiv__.. others?
 
+
+class Dict:
     def __init__(self, name):
         self.name = name
         self.kwds = {}
-    
+
     def __str__(self):
         return "<Dict '%s'>" % self.name
-    
+
     def __setitem__(self, name, value):
         self.kwds[name] = value
-    
+
     def __getitem__(self, name):
         if name in self.kwds:
             return self.kwds[name]
-    
+
     def __delitem__(self, name):
         if name in self.kwds:
             del self.kwds[name]
-    
+
     def __len__(self):
         return len(self.kwds)
-    
+
     def __contains__(self, name):
         return name in self.kwds
-    
+
 
 def test_dictlike():
     obj = Dict('foo')
@@ -45,8 +49,6 @@ def test_dictlike():
     assert len(obj) == 2
 
 
-
-
 class C:
     def __abs__(self):
         return self
@@ -57,12 +59,14 @@ class C:
     def __repr__(self):
         return "C"
 
-def test_numlike1():
 
-    abs(C()) == C
-    abs(23) == 23
-    abs(-1.3) == 1.3
-    -abs(C()) == C
+def test_numlike1():
+    assert abs(23) == 23
+    assert abs(-1.3) == 1.3
+
+    c = C()
+    assert abs(c) == c
+    assert -abs(c) == c
 
 
 class D:
@@ -78,7 +82,7 @@ class D:
     def __repr__(self):
         return "__repr__"
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     def __len__(self):
@@ -86,7 +90,6 @@ class D:
 
 
 def test_numlike2():
-
     d = D()
     assert bool(d)
     assert str(d) == '__str__'
@@ -112,8 +115,8 @@ class E:
     def __str__(self):
         return str(self.value)
 
-def test_numlike3():
 
+def test_numlike3():
     x = E(4)
     x += x
     x.__iadd__(x)
@@ -156,6 +159,11 @@ class Num:
     def __floordiv__(self, other):
         return Num(self.value // other.value)
 
+    def __ifloordiv__(self, other):  # TODO should work without this overload
+        self.value //= other.value
+        return self
+
+
 def test_numlike4():
     a = Num(10)
     b = Num(2)
@@ -163,20 +171,16 @@ def test_numlike4():
     assert str(a) == '10'
     assert bytes(a) == b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
-    # assert str(a / b) == '5.0'
-    # assert str(a // b) == '5'
-    
-    # a /= b
-    # assert str(a) == '5.0'
+    assert str(a // b) == '5'
 
-    # a //= b
-    # assert str(a) == '2.0'
-
+    a //= b
+    assert str(a) == '5'
 
 
 class Function:
     def __call__(self, x, y):
         return x+y
+
 
 def test_funclike():
     f = Function()
@@ -246,7 +250,6 @@ def test_stringlike():
     assert (s1 + String(" Folks")) == String("Hello Folks")
 
 
-
 class Set:
     def __init__(self, value):
         self.value = value
@@ -257,6 +260,7 @@ class Set:
     def __isub__(self, b):
         return Set(self.value - b.value)
 
+
 def test_setlike():
     wa = Set(4)
     wa &= Set(9)
@@ -264,15 +268,13 @@ def test_setlike():
     assert wa.value == 11
 
 
-
 def test_class_name():
     assert [].__class__.__name__ == 'list'
+    assert ().__class__.__name__ == 'tuple'
+    assert {}.__class__.__name__ == 'dict'
     assert set().__class__.__name__ == 'set'
-    # etc..
-
-
-
-
+    assert ''.__class__.__name__ == 'str'
+    assert b''.__class__.__name__ == 'bytes'
 
 
 def test_all():
@@ -287,7 +289,6 @@ def test_all():
     test_setlike()
     test_class_name()
 
+
 if __name__ == '__main__':
     test_all()
-
-

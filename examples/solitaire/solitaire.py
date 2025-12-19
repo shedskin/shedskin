@@ -161,17 +161,17 @@ def usage():
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 2:
+    if False: #len(args) < 2:
         usage()
-    elif args[1] == "-test":
+    elif True: #args[1] == "-test":
         s = Solitaire()
-        for txt, key, cipher in testCases:
-            coded = s.encrypt(txt, key)
-            assert cipher == coded
-            decoded = s.decrypt(coded, key)
-            # assert decoded[:len(txt)] == string.upper(txt)
-            print(decoded[: len(txt)], txt.upper())
-            # assert decoded[:len(txt)] == txt.upper()
+        for n in range(12000):
+            for txt, key, cipher in testCases:
+                coded = s.encrypt(txt, key)
+                assert cipher == coded
+                decoded = s.decrypt(coded, key)
+                assert decoded[:len(txt)] == txt.upper()
+#                print(decoded[: len(txt)], txt.upper())
         print("All tests passed.")
     elif len(args) < 3:
         usage()

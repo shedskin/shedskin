@@ -164,14 +164,7 @@ __ss_int __xrange::__getitem__(__ss_int i) {
 }
 
 __ss_bool __xrange::__contains__(__ss_int i) {
-    if(s > 0 and (i < a or i >= b))
-        return False;
-    else if(s < 0 and (i > a or i <= b))
-        return False;
-    else if((i-a)%s != 0)
-        return False;
-
-    return True;
+    return __ss_in_range(i, a, b, s);
 }
 
 str *__xrange::__repr__() {

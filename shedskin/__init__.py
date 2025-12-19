@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.__init__: main entrypoint
 
 Contains the `Shedskin` class, the main entrypoint to shedskin, a Restricted-Python-to-C++
@@ -78,11 +78,11 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo(args)
 
-        if args.subcmd in ['build', 'run', 'test']:
+        if args.subcmd in ['build', 'run', 'runtests']:
             # ensure cmake is available and installed.
             cmake.check_cmake_availability()
 
-        if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'test'
+        if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'runtests'
 
             if args.nobounds:
                 gx.bounds_checking = False
@@ -211,8 +211,9 @@ class Shedskin:
                 builder.run_executable()
                 run_secs = time.time() - t0 - build_secs
         else:
-            generator = makefile.ShedskinMakefileGenerator(self.gx)
-            generator.generate()
+            if not self.gx.nomakefile:
+                generator = makefile.ShedskinMakefileGenerator(self.gx)
+                generator.generate()
         if self.gx.options.collect_stats:
             stats_mgr = stats.ShedskinStatsManager(self.gx)
             stats_mgr.insert_pymodule(prebuild_secs, build_secs, run_secs)
@@ -228,7 +229,7 @@ class Shedskin:
         builder = cmake.CMakeBuilder(self.gx)
         builder.build()
 
-    def test(self) -> None:
+    def runtests(self) -> None:
         """Run tests"""
         if self.gx.options.run_errs:
             testrunner = cmake.TestRunner(self.gx)
@@ -261,7 +262,8 @@ class Shedskin:
 
         subparsers = parser.add_subparsers(
             title='subcommands',
-            dest='subcmd')
+            dest='subcmd',
+        )
 
         # common options
         arg = opt = parser.add_argument
@@ -412,7 +414,7 @@ class Shedskin:
         # ---------------------------------------------------------------------
         # test subcommand
 
-        parser_test = subparsers.add_parser('test', help="run tests")
+        parser_test = subparsers.add_parser('runtests', help='run tests')
         arg = opt = parser_test.add_argument
 
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
@@ -455,15 +457,19 @@ class Shedskin:
             if _arg in ('-h', '--help'):
                 break
         else:
-            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
+            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'runtests'):
                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args(args=bypassargs)
-        # print(args)
+
+        if platform.system() == 'Windows' and args.subcmd in ('build', 'run'):
+            args.build_type = 'Release'  # Debug doesn't work in CI, possibly because of missing debug symbols
+            if not args.spm and not args.extproject:  # make --conan default under windows..
+                args.conan = True
 
         ss = cls(args)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.11 ***')
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.12 ***')
         ss.log.info('Copyright 2005-2025 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         ss.log.info('')
 
@@ -476,8 +482,8 @@ class Shedskin:
         if args.subcmd == 'build':
             ss.build()
 
-        if args.subcmd == 'test':
-            ss.test()
+        if args.subcmd == 'runtests':
+            ss.runtests()
 
         if args.subcmd == 'run':
             ss.build()

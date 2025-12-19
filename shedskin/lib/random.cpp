@@ -1,48 +1,63 @@
-/* Copyright 1997-2002 Makoto Matsumoto, Takuji Nishimura, License BSD-3 (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors */
 
 #include "random.hpp"
 
-/**
-Random variable generators.
+#include <stdint.h>
 
-    integers
-    --------
-           uniform within range
+/* xoshiro engine */
 
-    sequences
-    ---------
-           pick random element
-           pick random sample
-           generate random permutation
+/*  Written in 2019 by David Blackman and Sebastiano Vigna (vigna@acm.org)
 
-    distributions on the real line:
-    ------------------------------
-           uniform
-           normal (Gaussian)
-           lognormal
-           negative exponential
-           gamma
-           beta
-           pareto
-           Weibull
+To the extent possible under law, the author has dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide.
 
-    distributions on the circle (angles 0 to 2pi)
-    ---------------------------------------------
-           circular uniform
-           von Mises
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
 
-General notes on the underlying Mersenne Twister core generator:
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-* The period is 2**19937-1.
-* It is one of the most extensively tested generators in existence
-* Without a direct way to compute N steps forward, the
-  semantics of jumpahead(n) are weakened to simply jump
-  to another distant state and rely on the large period
-  to avoid overlapping sequences.
+/* This is xoshiro256++ 1.0, one of our all-purpose, rock-solid generators.
+   It has excellent (sub-ns) speed, a state (256 bits) that is large
+   enough for any parallel application, and it passes all tests we are
+   aware of.
 
-Note: The jumpahead method is implemented for WichmannHill, but not yet for
-Random (Mersenne Twister).
-*/
+   For generating just floating-point numbers, xoshiro256+ is even faster.
+
+   The state must be seeded so that it is not everywhere zero. If you have
+   a 64-bit seed, we suggest to seed a splitmix64 generator and use its
+   output to fill s. */
+
+static inline uint64_t rotl(const uint64_t x, int k) {
+    return (x << k) | (x >> (64 - k));
+}
+
+static uint64_t s[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
+
+uint64_t inline next(void) {
+    const uint64_t result = rotl(s[0] + s[3], 23) + s[0];
+
+    const uint64_t t = s[1] << 17;
+
+    s[2] ^= s[0];
+    s[3] ^= s[1];
+    s[1] ^= s[2];
+    s[0] ^= s[3];
+
+    s[2] ^= t;
+
+    s[3] = rotl(s[3], 45);
+
+    return result;
+}
+
+/* random module implementation */
 
 namespace __random__ {
 
@@ -173,7 +188,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return distr(gen);
+    return (next() >> 11) * 0x1.0p-53;
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
@@ -211,11 +226,19 @@ __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
     return (alpha*__power(-__math__::log(u), (1.0/beta)));
 }
 
-Random::Random() : gen(7.0), distr(0.0, 1.0) {
+__ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
+    __ss_int success = 0;
+    for(__ss_int i=0; i<n; i++)
+        if(random() < p)
+            success++;
+    return success;
+}
+
+Random::Random() { // : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
-    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-    this->mti = (N+1);
+//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
+//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL);
@@ -232,18 +255,16 @@ Random::Random(int a) {
     */
     this->__class__ = cl_Random;
 
-    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-    this->mti = (N+1);
+//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
+//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed(a);
     this->VERSION = 2;
 }
 
+/*
 int Random::_init_by_array(list<int> *init_key) {
-    /**
-    Seed the random number generator with a list of numbers.
-    */
     list<int> *__14, *__15, *__16, *__19, *__20, *__21, *__22;
     int __12, __13, __17, __18, i, j, k, key_length;
 
@@ -288,6 +309,7 @@ int Random::_init_by_array(list<int> *init_key) {
     __22->__setitem__(0, -2147483648);
     return 0;
 }
+*/
 
 __ss_int Random::randint(__ss_int a, __ss_int b) {
     /**
@@ -484,12 +506,17 @@ __ss_int Random::getrandbits(__ss_int k) {
     return randrange((__ss_int)1<<k);
 }
 
+bytes *Random::randbytes(__ss_int n) {
+    return __random__::randbytes(n);
+}
+
 void *Random::setstate(list<__ss_float> *state) {
     /**
     Restore internal state from object returned by getstate().
     */
     int version;
 
+    /*
     version = __int(state->__getfast__(0));
     if ((version!=2)) {
         throw ((new ValueError(__mod6(const_10, 2, version, this->VERSION))));
@@ -499,6 +526,7 @@ void *Random::setstate(list<__ss_float> *state) {
     this->mt = list_comp_1(state->__slice__(3, 3, -1, 0));
     this->gauss_next = state->__getfast__(-1);
 
+    */
     return NULL;
 }
 
@@ -519,7 +547,7 @@ int Random::_init_genrand(int s) {
     /**
     Seed the random number generator.
     */
-    list<int> *__10, *__11, *__7;
+/*    list<int> *__10, *__11, *__7;
     int __8, __9;
 
     __7 = this->mt;
@@ -532,7 +560,7 @@ int Random::_init_genrand(int s) {
         __11->__setitem__(this->mti, __11->__getfast__(this->mti) & -1);
     END_FOR
 
-    this->mti += 1;
+    this->mti += 1; */
     return 0;
 }
 
@@ -566,267 +594,17 @@ list<__ss_float> *Random::getstate() {
     /**
     Return internal state; can be passed to setstate() later.
     */
-    list<__ss_float> *x;
+//    list<__ss_float> *x;
 
-    x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
-    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
+//    x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
+//    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
+
+    return new list<__ss_float>();
 }
 
 __ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {
 
     return __math__::fmod((mean+(arc*(this->random()-0.5))), __math__::pi);
-}
-
-/**
-class WichmannHill
-*/
-
-class_ *cl_WichmannHill;
-
-void *WichmannHill::__whseed(int x, int y, int z) {
-    /**
-    Set the Wichmann-Hill seed from (x, y, z).
-
-            These must be integers in the range [0, 256).
-    */
-    tuple2<int, int> *__59, *__60, *__61;
-    int __62, __63, __64, secs, t, usec;
-    __ss_float hophop;
-
-    if ((!(((0<=x)&&(x<256)) && ((0<=y)&&(y<256)) && ((0<=z)&&(z<256))))) {
-        throw ((new ValueError(const_11)));
-    }
-    if ((0==x) && (x==y) && (y==z)) {
-        hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        t = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
-        __59 = divmod(t, 256);
-        t = __59->__getfirst__();
-        x = __59->__getsecond__();
-        __60 = divmod(t, 256);
-        t = __60->__getfirst__();
-        y = __60->__getsecond__();
-        __61 = divmod(t, 256);
-        t = __61->__getfirst__();
-        z = __61->__getsecond__();
-    }
-    if (x==0) {
-        x = 1;
-    }
-    if (y==0) {
-        y = 1;
-    }
-    if (z==0) {
-        z = 1;
-    }
-    __62 = x;
-    __63 = y;
-    __64 = z;
-    this->_seed = (new tuple2<int, int>(3, __62, __63, __64));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    return NULL;
-}
-
-__ss_float WichmannHill::random() {
-    /**
-    Get the next random number in the range [0.0, 1.0).
-    */
-    tuple2<int, int> *__46;
-    int __47, __48, __49, x, y, z;
-
-    __46 = this->_seed;
-    x = __46->__getfast__(0);
-    y = __46->__getfast__(1);
-    z = __46->__getfast__(2);
-    x = __mods((171*x), 30269);
-    y = __mods((172*y), 30307);
-    z = __mods((170*z), 30323);
-    __47 = x;
-    __48 = y;
-    __49 = z;
-    this->_seed = (new tuple2<int, int>(3, __47, __48, __49));
-    return __math__::fmod((((__float(x)/30269.0)+(__float(y)/30307.0))+(__float(z)/30323.0)), 1.0);
-}
-
-void *WichmannHill::seed() {
-    return this->seed(-1);
-}
-void *WichmannHill::seed(int a) {
-    /**
-    Initialize internal state from hashable object.
-
-            If provided, the seed, a, should be a non-negative integer.
-            If no argument is provided, current time is used for seeding.
-
-            Distinct values between 0 and 27814431486575L inclusive are guaranteed
-            to yield distinct internal states (this guarantee is specific to the
-            default Wichmann-Hill generator).
-    */
-    tuple2<int, int> *__40, *__41, *__42;
-    int __43, __44, __45, secs, usec, x, y, z;
-    __ss_float hophop;
-
-    if (a==-1) {
-        hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        a = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
-    }
-    __40 = divmod(a, 30268);
-    a = __40->__getfirst__();
-    x = __40->__getsecond__();
-    __41 = divmod(a, 30306);
-    a = __41->__getfirst__();
-    y = __41->__getsecond__();
-    __42 = divmod(a, 30322);
-    a = __42->__getfirst__();
-    z = __42->__getsecond__();
-    __43 = (__int(x)+1);
-    __44 = (__int(y)+1);
-    __45 = (__int(z)+1);
-    this->_seed = (new tuple2<int, int>(3, __43, __44, __45));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    return NULL;
-}
-
-WichmannHill::WichmannHill() {
-    this->__class__ = cl_WichmannHill;
-
-    this->seed(-1);
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->VERSION = 1;
-}
-
-WichmannHill::WichmannHill(int a) {
-    this->__class__ = cl_WichmannHill;
-
-    this->seed(a);
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->VERSION = 1;
-}
-
-void *WichmannHill::whseed() {
-    return this->whseed(-1);
-}
-void *WichmannHill::whseed(int a) {
-    /**
-    Seed from current time or non-negative integer argument.
-
-            If no argument is provided, current time is used for seeding.
-
-            This is obsolete, provided for compatibility with the seed routine
-            used prior to Python 2.1.  Use the .seed() method instead.
-    */
-    tuple2<int, int> *__65, *__66, *__67;
-    int x, y, z;
-
-    if (a==-1) {
-        this->__whseed(((int )(0)), ((int )(0)), ((int )(0)));
-        return NULL;
-    }
-    __65 = divmod(a, 256);
-    a = __65->__getfirst__();
-    x = __65->__getsecond__();
-    __66 = divmod(a, 256);
-    a = __66->__getfirst__();
-    y = __66->__getsecond__();
-    __67 = divmod(a, 256);
-    a = __67->__getfirst__();
-    z = __67->__getsecond__();
-    x = __mods((x+a), 256);
-    y = __mods((y+a), 256);
-    z = __mods((z+a), 256);
-    if (x==0) {
-        x = 1;
-    }
-    if (y==0) {
-        y = 1;
-    }
-    if (z==0) {
-        z = 1;
-    }
-    this->__whseed(x, y, z);
-    return NULL;
-}
-
-void *WichmannHill::setstate(list<__ss_float> *state) {
-    /**
-    Restore internal state from object returned by getstate().
-    */
-    __ss_float xf, yf, zf;
-    list<__ss_float> *__51;
-    int __52, __53, __54, version;
-
-    version = __int(state->__getfast__(0));
-    if (version==1) {
-        __51 = state->__slice__(3, 1, 4, 0);
-        xf = __51->__getfast__(0);
-        yf = __51->__getfast__(1);
-        zf = __51->__getfast__(2);
-        __52 = __int(xf);
-        __53 = __int(yf);
-        __54 = __int(zf);
-        this->_seed = (new tuple2<int, int>(3, __52, __53, __54));
-        this->gauss_switch = __int(state->__getfast__(4));
-        this->gauss_next = state->__getfast__(5);
-    }
-    else {
-        throw ((new ValueError(__mod6(const_10, 2, version, this->VERSION))));
-    }
-    return NULL;
-}
-
-int WichmannHill::jumpahead(int n) {
-    /**
-    Act as if n calls to random() were made, but quickly.
-
-            n is an int, greater than or equal to 0.
-
-            Example use:  If you have 2 threads and know that each will
-            consume no more than a million random numbers, create two Random
-            objects r1 and r2, then do
-                r2.setstate(r1.getstate())
-                r2.jumpahead(1000000)
-            Then r1 and r2 will use guaranteed-disjoint segments of the full
-            period.
-    */
-    tuple2<int, int> *__55;
-    int __56, __57, __58, x, y, z;
-
-    if (!(n>=0)) {
-        throw ((new ValueError(const_12)));
-    }
-    __55 = this->_seed;
-    x = __55->__getfast__(0);
-    y = __55->__getfast__(1);
-    z = __55->__getfast__(2);
-    x = __mods(__int((x*__power(171, n, 30269))), (__ss_int)30269);
-    y = __mods(__int((y*__power(172, n, 30307))), (__ss_int)30307);
-    z = __mods(__int((z*__power(170, n, 30323))), (__ss_int)30323);
-    __56 = x;
-    __57 = y;
-    __58 = z;
-    this->_seed = (new tuple2<int, int>(3, __56, __57, __58));
-    return 0;
-}
-
-list<__ss_float> *WichmannHill::getstate() {
-    /**
-    Return internal state; can be passed to setstate() later.
-    */
-    tuple2<int, int> *__50;
-    int x, y, z;
-
-    __50 = this->_seed;
-    x = __50->__getfast__(0);
-    y = __50->__getfast__(1);
-    z = __50->__getfast__(2);
-    return (new list<__ss_float>(6, __float(this->VERSION), __float(x), __float(y), __float(z), __float(this->gauss_switch), this->gauss_next));
 }
 
 void __init() {
@@ -864,11 +642,9 @@ void __init() {
     const_33 = new str("getstate");
     const_34 = new str("setstate");
     const_35 = new str("jumpahead");
-    const_36 = new str("WichmannHill");
 
     __name__ = new str("random");
 
-    cl_WichmannHill = new class_("WichmannHill");
     cl_Random = new class_("Random");
 
     /**
@@ -1038,6 +814,11 @@ __ss_float weibullvariate(__ss_float alpha, __ss_float beta) {
     return _inst->weibullvariate(alpha, beta);
 }
 
+__ss_int binomialvariate(__ss_int n, __ss_float p) {
+
+    return _inst->binomialvariate(n, p);
+}
+
 __ss_int getrandbits(__ss_int k) {
 
     return _inst->getrandbits(k);
@@ -1051,6 +832,14 @@ __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode) {
 }
 __ss_float triangular(__ss_float low, __ss_float high, void *mode) {
     return _inst->triangular(low, high, mode);
+}
+
+bytes *randbytes(__ss_int n) {
+    bytes *result = new bytes();
+    result->unit.resize(n);
+    for(__ss_int i=0; i < n; i++)
+        result->__setitem__(i, (__ss_int)(255*random()));
+    return result;
 }
 
 } // module namespace

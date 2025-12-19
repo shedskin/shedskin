@@ -10,8 +10,6 @@ def test_list():
     assert list(i for i in range(2)) == [0,1]
 
 
-'''
-TODO failing on windows?
 def test_set_comprehensions():  # TODO seperate 'syntax_comprehension' tests
     sc = {2*a for a in range(5)}
     assert sc == {0, 2, 4, 6, 8}
@@ -25,6 +23,7 @@ def test_set_comprehensions():  # TODO seperate 'syntax_comprehension' tests
     uh = ((c, c**2) for c in range(10))
     sp = {u+v for u,v in uh}
     assert sp == {0, 2, 6, 72, 42, 12, 20, 56, 90, 30}
+
 
 def test_set_comprehensions2():  # TODO causes max iterations whene merging with above func!?
     # primes to 100
@@ -41,15 +40,14 @@ def test_dict_comprehensions():  # TODO to seperate 'syntax_comprehension' tests
     x = 'banbana'
     anapali = (len([v % 2 == 1 for t, v in {k:x.count(k) for k in list(set(x))}.items() if v % 2 == 1]) <= 1)
     assert anapali
-'''
 
 
 def test_all():
     test_sum()
     test_list()
-#    test_set_comprehensions()
-#    test_set_comprehensions2()
-#    test_dict_comprehensions()
+    test_set_comprehensions()
+    test_set_comprehensions2()
+    test_dict_comprehensions()
 
 
 if __name__ == "__main__":

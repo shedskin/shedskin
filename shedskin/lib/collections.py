@@ -1,8 +1,8 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class deque(pyiter):
-    def __init__(self, iterable=None):
-        self.unit = iterable.unit
+    def __init__(self, iterable=None):  # TODO maxlen
+        self.unit = iter(iterable).__next__()
 
     def append(self, x):
         self.unit = x
@@ -24,6 +24,23 @@ class deque(pyiter):
     def remove(self, e):
         pass
     def clear(self):
+        pass
+
+    def count(self, value):
+        return 1
+
+    def index(self, value, start=None, stop=None):
+        return 1
+
+    def reverse(self):
+        pass
+
+    def copy(self):
+        d = deque()
+        d.unit = self.unit
+        return d
+
+    def insert(self, index, value):
         pass
 
     def __getitem__(self, i):

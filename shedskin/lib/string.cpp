@@ -39,15 +39,16 @@ str *__ctype_str(int (*cfunc)(int)) {
 void __init() {
     const_0 = new str(" ");
 
-    ascii_lowercase = __ctype_str(islower);
-    ascii_uppercase = __ctype_str(isupper);
-    ascii_letters = ascii_lowercase->__add__(ascii_uppercase);
+    ascii_lowercase = new str("abcdefghijklmnopqrstuvwxyz");
+    ascii_uppercase = new str("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    ascii_letters = new str("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
     digits = new str("0123456789");
     octdigits = new str("01234567");
     hexdigits = new str("0123456789abcdefABCDEF");
 
     punctuation = __ctype_str(ispunct);
+
     whitespace = new str(" \t\n\r\x0b\x0c");
 
     printable = __add_strs(5, digits, ascii_lowercase, ascii_uppercase, punctuation, whitespace);

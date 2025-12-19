@@ -265,6 +265,9 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
     c_subj = s->c_str();
     for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
+        if(i > s->size())
+            break;
+
         //get a match
         if(pcre2_match(
             compiled_pattern,
@@ -279,18 +282,25 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         captured = pcre2_get_ovector_pointer(match_data);
 
         //append stuff we skipped
-        out += s->substr((size_t)i, (size_t)(captured[0] - i));
+        if(i < s->size())
+            out += s->substr((size_t)i, (size_t)(captured[0] - i));
 
         //replace section
         out += __expand(s, captured, repl->unit);
 
         //move our index
-        if(i == captured[1]) i++;
-        else i = captured[1];
+        if(i == captured[1]) {
+            if(i < s->size())
+                out += s->at(i);
+            i++;
+        } else {
+            i = captured[1];
+        }
     }
 
     //extra
-    out += s->substr((size_t)i);
+    if(i < s->size())
+        out += s->substr((size_t)i);
     if(howmany) *howmany = (int) cur;
 
     pcre2_match_data_free(match_data);
@@ -449,12 +459,12 @@ match_object *match_iter::__next__(void)
     return mobj;
 }
 
-__iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
+__iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
     if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
-    return new match_iter(this, subj, pos, endpos, flags_);
+    return new match_iter(this, subj, pos, endpos, flags);
 }
 
 match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
@@ -669,38 +679,38 @@ __iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos, __ss_int end
     __iter<match_object *> *r;
 
     ro = compile(pat, flags);
-    r = ro->finditer(subj, pos, endpos, 0);
+    r = ro->finditer(subj, pos, endpos);
 
     return r;
 }
 
-str *sub(str *pat, str *repl, str *subj, __ss_int maxn)
+str *sub(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags_)
 {
     re_object *ro;
     str *r;
 
-    ro = compile(pat, 0);
+    ro = compile(pat, flags_);
     r = ro->sub(repl, subj, maxn);
 
     return r;
 }
 
-str *sub(str *pat, replfunc func, str *subj, __ss_int maxn) {
+str *sub(str *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags_) {
     re_object *ro;
     str *r;
 
-    ro = compile(pat, 0);
+    ro = compile(pat, flags_);
     r = ro->sub(func, subj, maxn);
 
     return r;
 }
 
-tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn)
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags_)
 {
     re_object *ro;
     tuple2<str *, __ss_int> *r;
 
-    ro = compile(pat, 0);
+    ro = compile(pat, flags_);
     r = ro->subn(repl, subj, maxn);
 
     return r;
@@ -712,15 +722,15 @@ list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind,
     list<str *> *r;
 
     ro = compile(pat, flags);
-    r = ro->__splitfind(subj, maxn, onlyfind, 0);
+    r = ro->__splitfind(subj, maxn, onlyfind, flags);
 
     //return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
     return r;
 }
 
-list<str *> *split(str *pat, str *subj, __ss_int maxn)
+list<str *> *split(str *pat, str *subj, __ss_int maxn, __ss_int flags)
 {
-    return __splitfind_once(pat, subj, maxn, 0, 0);
+    return __splitfind_once(pat, subj, maxn, 0, flags);
 }
 
 list<str *> *findall(str *pat, str *subj, __ss_int flags)

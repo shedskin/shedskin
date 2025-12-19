@@ -56,14 +56,16 @@ file *open(bytes *name, str *flags) {
     return new file(new str(name->unit), flags);
 }
 
-void *file::write(str *s) {
+__ss_int file::write(str *s) {
+    __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
-        if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
+        size_t s_size = s->unit.size();
+        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
             throw new OSError();
+        size = (__ss_int)s_size;
     }
-    return NULL;
+    return size;
 }
 
 void *file::writelines(pyiter<str *> *iter) {
@@ -78,13 +80,14 @@ void *file::writelines(pyiter<str *> *iter) {
     return NULL;
 }
 
-void *file::seek(__ss_int i, __ss_int w) {
+__ss_int file::seek(__ss_int i, __ss_int w) {
+    int pos=-1;
     __check_closed();
     if(f) {
-        if(fseek(f, i, w) == -1)
+        if((pos = fseek(f, i, w)) == -1)
             throw new OSError();
     }
-    return NULL;
+    return pos;
 }
 
 __ss_int file::tell() {
@@ -98,7 +101,7 @@ __ss_int file::tell() {
     return -1;
 }
 
-str *file::readline(int n) {
+str *file::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
     if (options.universal_mode) {
@@ -142,7 +145,7 @@ static void __throw_io_error() {
     throw new OSError();
 }
 
-str *file::read(int n) {
+str *file::read(__ss_int n) {
     __check_closed();
     if(n == 1) {
         const int c = GETC(f);
@@ -215,7 +218,7 @@ __ss_bool file::isatty()
 #endif // WIN32
 }
 
-void *file::truncate(int size) {
+void *file::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
@@ -286,14 +289,16 @@ file_binary *open_binary(bytes *name, str *flags) {
     return new file_binary(new str(name->unit), flags);
 }
 
-void *file_binary::write(bytes *s) {
+__ss_int file_binary::write(bytes *s) {
+    __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
-        if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
+        size_t s_size = s->unit.size();
+        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
             throw new OSError();
+        size = (__ss_int)s_size;
     }
-    return NULL;
+    return size;
 }
 
 void *file_binary::writelines(pyiter<bytes *> *iter) {
@@ -308,13 +313,14 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
     return NULL;
 }
 
-void *file_binary::seek(__ss_int i, __ss_int w) {
+__ss_int file_binary::seek(__ss_int i, __ss_int w) {
+    int pos = -1;
     __check_closed();
     if(f) {
-        if(fseek(f, i, w) == -1)
+        if((pos = fseek(f, i, w)) == -1)
             throw new OSError();
     }
-    return NULL;
+    return pos;
 }
 
 __ss_int file_binary::tell() {
@@ -328,7 +334,7 @@ __ss_int file_binary::tell() {
     return -1;
 }
 
-bytes *file_binary::readline(int n) {
+bytes *file_binary::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
     if (options.universal_mode) {
@@ -370,7 +376,7 @@ bytes *file_binary::readline(int n) {
     return b;
 }
 
-bytes *file_binary::read(int n) {
+bytes *file_binary::read(__ss_int n) {
     __check_closed();
     if(n == 1) {
         const int c = GETC(f);
@@ -445,7 +451,7 @@ __ss_bool file_binary::isatty()
 #endif // WIN32
 }
 
-void *file_binary::truncate(int size) {
+void *file_binary::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """\
   single_atom - Compute the ground state energy for a single atom
@@ -94,7 +94,7 @@ def run_qmc():
    qmcl.nstep = 20
 
    #  Increase this number to make the run longer
-   qmcl.nblock = 1000
+   qmcl.nblock = 50000
 
    qmcl.add_observable(en_d)
    qmcl.compute_energy()

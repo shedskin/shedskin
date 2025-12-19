@@ -423,10 +423,9 @@ def hardertest():
     inputfile.close()
     #    print "DONE uncompressing"
 
-    print("Checking for differences...")
-    os.system("diff testdata/BentCoinFile tmp2")
-    os.system("wc tmp.zip testdata/BentCoinFile tmp2")
-    pass
+#    print("Checking for differences...")
+#    os.system("diff testdata/BentCoinFile tmp2")
+#    os.system("wc tmp.zip testdata/BentCoinFile tmp2")
 
 
 f = 0.01
@@ -475,5 +474,5 @@ def uncompress_it(inputfile, outputfile):
 
 if __name__ == "__main__":
     sys.setrecursionlimit(10000)
-    test()
-    pass
+    for n in range(100):
+        test()

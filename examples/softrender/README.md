@@ -1,5 +1,5 @@
 ```bash
-shedskin build -e render.py
-cp build/render.so .
-python main.py
+shedskin build -e softrender.py
+cp build/softrender.so .
+python softrender_main.py
 ```

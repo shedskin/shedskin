@@ -44,7 +44,10 @@ def test_math():
     assert '%.8f' % math.cosh(2)  == '3.76219569'
     assert '%.8f' % math.erf(2)   == '0.99532227'
     assert '%.8f' % math.erfc(2)  == '0.00467773'
+
     assert '%.8f' % math.expm1(2) == '6.38905610'
+    assert int(100 * math.fma(2.7, 3.3, 1.1)) == 1001
+
     assert math.frexp(2) == (0.5, 2)
     assert math.gamma(2) == 1.0
     assert math.lgamma(2) == 0.0
@@ -100,11 +103,100 @@ def test_math():
     assert math.floor(1.5) == 1
     assert math.ceil(1.5) == 2
 
+    assert math.e == 2.7182818284590451
+    assert math.pi == 3.1415926535897931
+    assert math.tau == 6.283185307179586
+
+    assert math.inf == float('inf')
+    math.nan # also in python this is not equal to float('nan')..
+
+    assert '%.1f' % math.cbrt(27) == '3.0'
+    assert '%.1f' % math.log2(256) == '8.0'
+    assert '%.1f' % math.exp2(8.7) == '415.9'
+
+    assert math.isfinite(0.0)
+    assert math.isfinite(1.0)
+    assert not math.isfinite(math.inf)
+    assert not math.isfinite(math.nan)
+    assert not math.isfinite(float('inf'))
+    assert not math.isfinite(float('nan'))
+
+    assert math.isqrt(18) == 4
+    assert math.comb(17, 14) == 680
+
+    assert math.gcd(2*2*3, 2*2*3*4, 2*3*5*7) == 2*3
+    assert math.lcm(2*2*3, 2*2*3*4, 2*3*5*7, 2*2*3*4*5, 1681) == 1680*1681
+
+    assert math.gcd(0, 0, 0) == 0
+    assert math.lcm(0, 0, 0) == 0
+
+    assert math.gcd(1, 0) == 1
+    assert math.lcm(0, 1) == 0
+
+    assert math.gcd(15) == 15
+    assert math.lcm(14) == 14
+
+    assert math.gcd() == 0
+    assert math.lcm() == 1
+
+    assert math.perm(0) == 1
+    assert math.perm(0, 0) == 1
+
+    assert math.perm(7) == 5040
+
+    assert math.perm(7, 7) == 5040
+    assert math.perm(7, 6) == 5040
+    assert math.perm(7, 3) == 210
+
+
+class Bert:
+    def __init__(self, x):
+        self.x = x
+
+    def __mul__(self, b):
+        return Bert(self.x * b.x)
+
+
+def test_prod():
+    assert math.prod([2,3,4]) == 24
+    assert math.prod([2,3,4], start=2) == 48
+
+    assert '%.2f' % (math.prod([2.1,3.1,4.1])) == '26.69'
+
+    assert '%.2f' % (math.prod([2.2,3.1,4.4], start=2.2)) == '66.02'
+
+    assert math.prod((Bert(3), Bert(4)), start=Bert(2)).x == 24
+
+    assert math.prod([2,3,4], start=2.0) == 48.0
+    assert '%.2f' %  (math.prod([2.1,3,4], start=2)) == '50.40'
+
+
+def test_isclose():
+    assert math.isclose(math.inf, math.inf)
+    assert not math.isclose(math.nan, math.nan)
+    assert math.isclose(7.0, 7.0)
+    assert not math.isclose(7.0, 7.00000001)
+    assert math.isclose(7.0, 7.000000001)
+
+
+def test_dist():
+    assert math.dist(iter([1.0, 3.0]), (4.0, 7.0)) == 5.0
+    assert math.dist(iter([1, 3]), (4, 7)) == 5.0
+
+
+def test_sumprod():
+    assert math.sumprod([1,2],[3,4]) == 11
+    assert math.sumprod([1,2.1],[3.3,4]) == 11.7
+
 
 def test_all():
     test_fsum()
     test_pow()
     test_math()
+    test_prod()
+    test_isclose()
+    test_dist()
+    test_sumprod()
 
 
 if __name__ == '__main__':

@@ -13,7 +13,6 @@ using namespace __shedskin__;
 namespace __random__ {
 
 class Random;
-class WichmannHill;
 
 extern class_ *cl_Random;
 class Random : public pyobj {
@@ -34,11 +33,8 @@ public:
     int gauss_switch;
     int VERSION;
     __ss_float gauss_next;
-    list<int> *mt;
-    int mti;
-
-    std::mt19937 gen; // seed the generator
-    std::uniform_real_distribution<> distr;
+//    list<int> *mt;
+//    int mti;
 
     Random();
     Random(int a);
@@ -51,6 +47,7 @@ public:
     __ss_float normalvariate(__ss_float mu, __ss_float sigma);
     template <class A> void *seed(A a);
     __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
+    __ss_int binomialvariate(__ss_int n=1, __ss_float p=0.5);
     int _init_by_array(list<int> *init_key);
     __ss_int randint(__ss_int a, __ss_int b);
     __ss_float vonmisesvariate(__ss_float mu, __ss_float kappa);
@@ -62,36 +59,19 @@ public:
     __ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
     __ss_float expovariate(__ss_float lambd);
     __ss_int getrandbits(__ss_int k);
+    bytes *randbytes(__ss_int n);
     virtual void *setstate(list<__ss_float> *state);
     __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
     __ss_float gauss(__ss_float mu, __ss_float sigma);
     template <class A> A choice(pyseq<A> *seq);
+    template <class A> list<A> *choices(pyseq<A> *seq, __ss_int k=1);
     template <class A> void *shuffle(list<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
     template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
     virtual list<__ss_float> *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
-
-extern class_ *cl_WichmannHill;
-class WichmannHill : public Random {
-public:
-    tuple2<int, int> *_seed;
-
-    void *__whseed(int x, int y, int z);
-    __ss_float random();
-    void *seed();
-    void *seed(int a);
-    WichmannHill();
-    WichmannHill(int a);
-    void *whseed();
-    void *whseed(int a);
-    void *setstate(list<__ss_float> *state);
-    int jumpahead(int n);
-    list<__ss_float> *getstate();
-};
-
 
 extern int  UPPER;
 extern __ss_float  LOG4;
@@ -116,10 +96,6 @@ __ss_int randrange(__ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
 __ss_int randint(__ss_int a, __ss_int b);
-template <class A> A choice(pyseq<A> *seq);
-template <class A> void *shuffle(list<A> *x);
-template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
-template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
 __ss_float uniform(__ss_float a, __ss_float b);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_float mode);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode);
@@ -135,11 +111,18 @@ __ss_float gauss(__ss_float mu, __ss_float sigma);
 __ss_float betavariate(__ss_float alpha, __ss_float beta);
 __ss_float paretovariate(__ss_float alpha);
 __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
+__ss_int binomialvariate(__ss_int n=1, __ss_float p=0.5);
 __ss_int getrandbits(__ss_int k);
+bytes * randbytes(__ss_int n);
 
 template <class A> A choice(pyseq<A> *seq) {
 
     return _inst->choice(seq);
+}
+
+template <class A> list<A> *choices(pyseq<A> *seq, __ss_int k) {
+
+    return _inst->choices(seq, k);
 }
 
 template <class A> void *shuffle(list<A> *x) {
@@ -257,6 +240,13 @@ template <class A> A Random::choice(pyseq<A> *seq) {
     return seq->__getitem__(__int((this->random()*len(seq))));
 }
 
+template <class A> list<A> *Random::choices(pyseq<A> *seq, __ss_int k) {
+    list<A> *result = new list<A>();
+    for(__ss_int i=0; i<k; i++)
+        result->append(choice(seq));
+    return result;
+}
+
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
@@ -270,9 +260,9 @@ template <class A> void *Random::seed(A a) {
 
     if(__is_none(a)) {
         std::random_device rd;
-        gen.seed(rd());
+//        gen.seed(rd());
     } else {
-        gen.seed(hasher(a));
+//        gen.seed(hasher(a));
     }
 
     return NULL;

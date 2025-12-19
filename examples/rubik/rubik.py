@@ -13,14 +13,13 @@ class face(object):
             self.struc.append([])
             for y in range(3):
                 self.struc[x].append(value)
-        
+
     def num2coord(self, num):
-        return (num / 3, num % 3)
+        return (num // 3, num % 3)
 
     def coord2num(self, coord):
         row, col = coord
-        # return row*3 + col
-        return int(row)*3 + int(col)
+        return row*3 + col
 
     def getUpFacePos(self, frontFace, row, col):
         if frontFace == self.FRONT or frontFace == self.UP or frontFace == self.DOWN:
@@ -81,8 +80,7 @@ class face(object):
         elif self == self.DOWN:
             x,y = self.getDownFacePos(key[0], x, y)
 
-        # return (x,y)
-        return (int(x), int(y))
+        return (x, y)
 
     def __getitem__(self, key):
         x,y = self.getCoords(key)
@@ -227,7 +225,6 @@ class cube(object):
             UP[FRONT, 6] = rRep[0]
             UP[FRONT, 7] = rRep[3]
             UP[FRONT, 8] = rRep[6]
-            
 
     def turnMiddle(self, face):
         if self.recording:
@@ -442,7 +439,7 @@ class cube(object):
                     self.turn(RIGHT, False)
                     self.turn(DOWN, False)
                     self.turn(RIGHT)
-                    
+
                     if self.stepOneCompleteFace(FRONT, upCol): # XXX
                         completedFaces.append(FRONT)
                     else:
@@ -491,7 +488,6 @@ class cube(object):
             return self.stepOne(frontFace, False) # XXX
         else:
             return None
-
 
     def stepOneComplete(self, frontFace):
         FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(frontFace)
@@ -583,7 +579,7 @@ class cube(object):
             if not self.firstTwoLayers(cFace):
                 return False
         return True
-                
+
     def stepThree(self, frontFace, check=True):
         if not self.allFirstLayer(frontFace):
             raise RuntimeError("Step 3 conditions not met.")
@@ -749,8 +745,7 @@ class cube(object):
             self.switch1and3(FRONT)
             self.switch1and2(FRONT)
             self.switch1and3(FRONT)
-            
-        
+
         c = [self.colorPos1(FRONT),self.colorPos2(FRONT),self.colorPos3(FRONT),self.colorPos4(FRONT)]
 
         for o in range(len(order)):
@@ -791,7 +786,7 @@ class cube(object):
         return UP[(FRONT, 0)] == UP[(FRONT, 2)] == \
                UP[(FRONT, 4)] == UP[(FRONT, 6)] == \
                UP[(FRONT, 8)]
-        
+
     def stepFive(self, frontFace):
         FRONT, BACK, LEFT, RIGHT, UP, DOWN = self.getFaces(frontFace)
         f = True
@@ -963,7 +958,7 @@ if __name__ == "__main__":
     print("Type s to solve the cube")
     print("Type q to quit")
     c = cube()
-    for x in range(100):
+    for x in range(1000):
         c.randomize()
         print(c.strCube())
         c.solveCube()

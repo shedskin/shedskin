@@ -38,7 +38,7 @@ def add(board, pos):
 def snext(board):
     """ Calculates the next stage """
     new = defaultdict(int, board)
-    for pos in list(board.keys()):
+    for pos in list(board):
         near = add(board, pos)
         item = board[pos]
         if near not in (2, 3) and item:
@@ -78,9 +78,10 @@ def bruteforce(rows, columns):
             #print board
 
 if __name__ == "__main__":
-    rows, columns = 4, 3
-    bruteforce(rows, columns)
-    print(count)
+    for n in range(150):
+        rows, columns = 4, 3
+        bruteforce(rows, columns)
+        print(count)
 #    try:
 #        rows, columns = int(argv[1]), int(argv[2])
 #    except IndexError:

@@ -10,7 +10,6 @@ NetworkX is free software; you can redistribute it and/or modify it under the te
 import heapq, time, sys, random
 
 random.seed(1)
-print(sys.version)
 
 class Graph:
     def __init__(self):
@@ -33,8 +32,8 @@ class Vertex:
 #    def __repr__(self):
 #        return repr(self.id_)
 
-#    def __lt__(self, other):
-#        return self.id_ < other.id_
+    def __lt__(self, other):
+        return self.id_ < other.id_
 
 
 def bidirectional_dijkstra(G, source_id, target_id):
@@ -99,13 +98,9 @@ def make_graph(n):
     return G
 
 if __name__ == '__main__':
-    n = 300
+    n = 800
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
-    t0 = time.time()
     G = make_graph(n)
-    print('t0 %.2f' % (time.time()-t0))
-    t1 = time.time()
     wt, nodes = bidirectional_dijkstra(G, (0,0), (n-1,n-1))
     print('wt', wt)
-    print('t1 %.2f' % (time.time()-t1))
