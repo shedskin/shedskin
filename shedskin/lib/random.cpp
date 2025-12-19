@@ -1,46 +1,63 @@
-/* Copyright 1997-2002 Makoto Matsumoto, Takuji Nishimura, License BSD-3 (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors */
 
 #include "random.hpp"
 
-/**
-Random variable generators.
+#include <stdint.h>
 
-    integers
-    --------
-           uniform within range
+/* xoshiro engine */
 
-    sequences
-    ---------
-           pick random element
-           pick random sample
-           generate random permutation
+/*  Written in 2019 by David Blackman and Sebastiano Vigna (vigna@acm.org)
 
-    distributions on the real line:
-    ------------------------------
-           uniform
-           normal (Gaussian)
-           lognormal
-           negative exponential
-           gamma
-           beta
-           pareto
-           Weibull
+To the extent possible under law, the author has dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide.
 
-    distributions on the circle (angles 0 to 2pi)
-    ---------------------------------------------
-           circular uniform
-           von Mises
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
 
-General notes on the underlying Mersenne Twister core generator:
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-* The period is 2**19937-1.
-* It is one of the most extensively tested generators in existence
-* Without a direct way to compute N steps forward, the
-  semantics of jumpahead(n) are weakened to simply jump
-  to another distant state and rely on the large period
-  to avoid overlapping sequences.
+/* This is xoshiro256++ 1.0, one of our all-purpose, rock-solid generators.
+   It has excellent (sub-ns) speed, a state (256 bits) that is large
+   enough for any parallel application, and it passes all tests we are
+   aware of.
 
-*/
+   For generating just floating-point numbers, xoshiro256+ is even faster.
+
+   The state must be seeded so that it is not everywhere zero. If you have
+   a 64-bit seed, we suggest to seed a splitmix64 generator and use its
+   output to fill s. */
+
+static inline uint64_t rotl(const uint64_t x, int k) {
+    return (x << k) | (x >> (64 - k));
+}
+
+static uint64_t s[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
+
+uint64_t inline next(void) {
+    const uint64_t result = rotl(s[0] + s[3], 23) + s[0];
+
+    const uint64_t t = s[1] << 17;
+
+    s[2] ^= s[0];
+    s[3] ^= s[1];
+    s[1] ^= s[2];
+    s[0] ^= s[3];
+
+    s[2] ^= t;
+
+    s[3] = rotl(s[3], 45);
+
+    return result;
+}
+
+/* random module implementation */
 
 namespace __random__ {
 
@@ -171,7 +188,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return distr(gen);
+    return (next() >> 11) * 0x1.0p-53;
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
@@ -217,11 +234,11 @@ __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
     return success;
 }
 
-Random::Random() : gen(7.0), distr(0.0, 1.0) {
+Random::Random() { // : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
-    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-    this->mti = (N+1);
+//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
+//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL);
@@ -238,18 +255,16 @@ Random::Random(int a) {
     */
     this->__class__ = cl_Random;
 
-    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-    this->mti = (N+1);
+//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
+//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed(a);
     this->VERSION = 2;
 }
 
+/*
 int Random::_init_by_array(list<int> *init_key) {
-    /**
-    Seed the random number generator with a list of numbers.
-    */
     list<int> *__14, *__15, *__16, *__19, *__20, *__21, *__22;
     int __12, __13, __17, __18, i, j, k, key_length;
 
@@ -294,6 +309,7 @@ int Random::_init_by_array(list<int> *init_key) {
     __22->__setitem__(0, -2147483648);
     return 0;
 }
+*/
 
 __ss_int Random::randint(__ss_int a, __ss_int b) {
     /**
@@ -500,6 +516,7 @@ void *Random::setstate(list<__ss_float> *state) {
     */
     int version;
 
+    /*
     version = __int(state->__getfast__(0));
     if ((version!=2)) {
         throw ((new ValueError(__mod6(const_10, 2, version, this->VERSION))));
@@ -509,6 +526,7 @@ void *Random::setstate(list<__ss_float> *state) {
     this->mt = list_comp_1(state->__slice__(3, 3, -1, 0));
     this->gauss_next = state->__getfast__(-1);
 
+    */
     return NULL;
 }
 
@@ -529,7 +547,7 @@ int Random::_init_genrand(int s) {
     /**
     Seed the random number generator.
     */
-    list<int> *__10, *__11, *__7;
+/*    list<int> *__10, *__11, *__7;
     int __8, __9;
 
     __7 = this->mt;
@@ -542,7 +560,7 @@ int Random::_init_genrand(int s) {
         __11->__setitem__(this->mti, __11->__getfast__(this->mti) & -1);
     END_FOR
 
-    this->mti += 1;
+    this->mti += 1; */
     return 0;
 }
 
@@ -576,10 +594,12 @@ list<__ss_float> *Random::getstate() {
     /**
     Return internal state; can be passed to setstate() later.
     */
-    list<__ss_float> *x;
+//    list<__ss_float> *x;
 
-    x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
-    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
+//    x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
+//    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
+
+    return new list<__ss_float>();
 }
 
 __ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {

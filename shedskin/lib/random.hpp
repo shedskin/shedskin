@@ -33,11 +33,8 @@ public:
     int gauss_switch;
     int VERSION;
     __ss_float gauss_next;
-    list<int> *mt;
-    int mti;
-
-    std::mt19937 gen; // seed the generator
-    std::uniform_real_distribution<> distr;
+//    list<int> *mt;
+//    int mti;
 
     Random();
     Random(int a);
@@ -263,9 +260,9 @@ template <class A> void *Random::seed(A a) {
 
     if(__is_none(a)) {
         std::random_device rd;
-        gen.seed(rd());
+//        gen.seed(rd());
     } else {
-        gen.seed(hasher(a));
+//        gen.seed(hasher(a));
     }
 
     return NULL;
