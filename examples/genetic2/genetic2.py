@@ -5,7 +5,6 @@
 import time
 import copy
 from random import randrange, randint, seed, random, triangular
-seed(42)
 
 # The size of the data bus of the multiplexer.
 DATA_SIZE = 4
@@ -215,13 +214,15 @@ class Pool:
 
 
 def main():
-    pool = Pool()
-    start_time = time.time()
-    for epoch in range(100):
-        pool.advance_epoch()
-        best_individual = pool.get_best_individual()
-        if not epoch % 10:
-            print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
+    for p in range(20):
+        seed(p)
+        pool = Pool()
+        start_time = time.time()
+        for epoch in range(10):
+            pool.advance_epoch()
+            best_individual = pool.get_best_individual()
+            if epoch == 9:
+                print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
 
     print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
     print("Finished in %0.3f sec, best individual: %s" % (time.time() - start_time, best_individual))
