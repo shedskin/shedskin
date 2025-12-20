@@ -12,6 +12,7 @@ public:
     list(list<T> *p);
     list(tuple2<T, T> *p);
     list(str *s);
+    list(bytes *b);
 
     void clear();
     list<T> *copy();
@@ -95,15 +96,41 @@ template<class T> template <class ... Args> list<T>::list(int, Args ... args) {
     this->units = {(T)args...};
 }
 
+// and now for a bit of c++ poetry
+
+#include <type_traits>
+
+// 1. Define the helper trait using a template template parameter
+template <template <typename...> class BaseTemplate>
+struct is_base_of_template {
+    // Overload for cases that match the base template
+    template <typename... Args>
+    static std::true_type test(const BaseTemplate<Args...>*);
+
+    // Fallback overload for cases that do not match
+    static std::false_type test(...);
+
+    // The result for a specific type T
+    template <typename T>
+    static constexpr bool value = decltype(test(std::declval<T*>()))::value;
+};
+
 template<class T> template<class U> list<T>::list(U *iter) {
     this->__class__ = cl_list;
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    FOR_IN(e,iter,1,2,3)
-        this->units.push_back(e);
-    END_FOR
+    if constexpr (is_base_of_template<dict>::value<U>) { // include defaultdict..
+        this->units.reserve(iter->gcd.size());
+        for(auto kv : iter->gcd) {
+            this->units.push_back(kv.first);
+        }
+    } else {
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        FOR_IN(e,iter,1,2,3)
+            this->units.push_back(e);
+        END_FOR
+    }
 }
 
 template<class T> list<T>::list(list<T> *p) {
@@ -122,6 +149,14 @@ template<class T> list<T>::list(str *s) {
     size_t sz = s->unit.size();
     for(size_t i=0; i<sz; i++)
         this->units[i] = __char_cache[(unsigned char)s->unit[i]];
+}
+
+template<class T> list<T>::list(bytes *b) {
+    this->__class__ = cl_list;
+    this->units.resize(b->unit.size());
+    size_t sz = b->unit.size();
+    for(size_t i=0; i<sz; i++)
+        this->units[i] = (unsigned char)(b->unit[i]);
 }
 
 #ifdef __SS_BIND
