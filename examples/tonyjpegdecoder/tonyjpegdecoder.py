@@ -1206,29 +1206,14 @@ class BMPFile:
     # blank for 24bit color
     return b""
 
-def bgr2rgb(bmpstr):
-  return b"".join([b'%c%c%c'%(bmpstr[i*3+2],bmpstr[i*3+1],bmpstr[i*3]) for i in range(len(bmpstr)//3)])
-
-#def padrgb(bmpstr):
-#  return b"".join([b'%c\0'%bmpstr[i*3:i*3+3] for i in range(len(bmpstr)//3)])
-
-#def avg(chrs):
-#  if chrs:
-#    return chr(int(sum([ord(c) for c in chrs])//len(chrs)))
-#  else:
-#    return ""
-
 def main():
-#    inputfile = open(sys.argv[1], 'rb')
     inputfile = open('tiger1.jpg', 'rb')
     jpgsrc = inputfile.read()
     inputfile.close()
     decoder = TonyJpegDecoder()
     bmpout = decoder.DecompressImage(jpgsrc)
-    bmpstr = b"".join([b'%c' % x for x in bmpout])
-    bmpstr2 = bgr2rgb(bmpstr)
+    bmpstr = bytes(bmpout)
     bmp = BMPFile(decoder.Width, decoder.Height, bmpstr)
-#    bmpfile = sys.argv[2]
     bmpfile = 'tiger1.bmp'
     open(bmpfile, "wb").write(bytes(bmp))
     print('converted %s to %s' % (inputfile, bmpfile))
