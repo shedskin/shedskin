@@ -910,7 +910,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     varname = self.cpp_name(var)
                     if name == "__deepcopy__":
-                        self.output("c->%s = __deepcopy(%s);" % (varname, varname))
+                        self.output("c->%s = __deepcopy(%s, memo);" % (varname, varname))
                     else:
                         self.output("c->%s = %s;" % (varname, varname))
             self.output("return c;")
