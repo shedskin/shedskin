@@ -3376,7 +3376,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         sel = "__getitem__(%d)" % i
         if i < 2 and self.only_classes(rvalue_node, ("tuple2",)):
             sel = ["__getfirst__()", "__getsecond__()"][i]
-        elif self.one_class(rvalue_node, ("list", "str_", "tuple")):
+        elif self.one_class(rvalue_node, ("list", "str_", "tuple", "bytes_")):
             sel = "__getfast__(%d)" % i
         return "%s->%s" % (temp, sel)
 
@@ -4187,7 +4187,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             # getfast
             if ident == "__getitem__" and self.one_class(
-                node.value, ("list", "str_", "tuple")
+                node.value, ("list", "str_", "tuple", "bytes_")
             ):
                 ident = "__getfast__"
             elif (
