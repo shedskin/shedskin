@@ -11,6 +11,7 @@ public:
     template <class U> list(U *iter);
     list(list<T> *p);
     list(tuple2<T, T> *p);
+    list(pyseq<T> *);
     list(str *s);
     list(bytes *b);
 
@@ -141,6 +142,41 @@ template<class T> list<T>::list(list<T> *p) {
 template<class T> list<T>::list(tuple2<T, T> *p) {
     this->__class__ = cl_list;
     this->units = p->units;
+}
+
+template<class T> list<T>::list(pyseq<T> *p) {
+    this->__class__ = cl_list;
+
+    if constexpr (std::is_same_v<T, __ss_int>) {
+        bytes *b = dynamic_cast<bytes *>(p); // avoid slow protocol for builtins.. (virtuals, exception handling..)
+        if(b) {
+            this->units.resize(b->unit.size());
+            size_t sz = b->unit.size();
+            for(size_t i=0; i<sz; i++)
+                this->units[i] = (unsigned char)(b->unit[i]);
+            return;
+        }
+    }
+
+    list<T> *l = dynamic_cast<list<T> *>(p);
+    if(l) {
+        this->units = l->units;
+        return;
+    }
+
+    tuple<T> *t = dynamic_cast<tuple<T> *>(p);
+    if(t) {
+        this->units = t->units;
+        return;
+    }
+
+    /* TODO str, more..? */
+
+    __ss_int sz = p->__len__();
+    this->units.reserve((size_t)sz);
+    for(__ss_int i=0; i<sz; i++) {
+        this->units.push_back(p->__getitem__(i));
+    }
 }
 
 template<class T> list<T>::list(str *s) {
