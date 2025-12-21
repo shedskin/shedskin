@@ -125,17 +125,18 @@ def bestPath(cities, seed, maxIter, boost):
     return bestPath
 
 def main():
-    seed = 1
     boost = 5
     iter = 3000
-    numCities = 200
-    maxDistance = 100
+    numCities = 20
+    maxDistance = 10
     cityDistanceSeed = 1
     print("starting")
-    cities = randomMatrix(numCities, maxDistance, cityDistanceSeed)
-    path = bestPath(cities, seed, iter, boost)
-    print(path)
-    print("len = ", pathLength(cities, path))
+    for n in range(20):
+        seed = n
+        cities = randomMatrix(numCities, maxDistance, cityDistanceSeed)
+        path = bestPath(cities, seed, iter, boost)
+        print(path)
+        print("len = ", pathLength(cities, path))
 
 if __name__ == "__main__":
     main()

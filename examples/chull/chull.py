@@ -4,7 +4,7 @@
 
 # http://michelanders.blogspot.nl/2012/02/3d-convex-hull-in-python.html
 
-from random import random
+from random import random, seed
 
 Z=2
 Y=1
@@ -458,6 +458,7 @@ class Hull:
 
 if __name__ == "__main__":
     for n in range(50):
+        seed(n)
         # simple cube, integer coordinates
         cube=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
         # irregular tetrahedron

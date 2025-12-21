@@ -137,11 +137,11 @@ def eval_strategy(name, strategy):
     print('Time elapsed %.2f' % (clock() - start,))
 
 def main():
-    random.seed(1)
     print('-' * 60)
 
 #    names = "s_bestinfo s_samplebest s_worstinfo s_allrand s_trynodup s_bestinfo".split()
     for n in range(100):
+        random.seed(n)
         eval_strategy('s_bestinfo', s_bestinfo)
         eval_strategy('s_samplebest', s_samplebest)
         eval_strategy('s_worstinfo', s_worstinfo)

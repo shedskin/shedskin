@@ -9,8 +9,6 @@ NetworkX is free software; you can redistribute it and/or modify it under the te
 
 import heapq, time, sys, random
 
-random.seed(1)
-
 class Graph:
     def __init__(self):
         self.vertices = {}
@@ -98,9 +96,11 @@ def make_graph(n):
     return G
 
 if __name__ == '__main__':
-    n = 800
+    n = 200
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
-    G = make_graph(n)
-    wt, nodes = bidirectional_dijkstra(G, (0,0), (n-1,n-1))
-    print('wt', wt)
+    for d in range(10):
+        random.seed(d)
+        G = make_graph(n)
+        wt, nodes = bidirectional_dijkstra(G, (0,0), (n-1,n-1))
+        print('wt', wt)

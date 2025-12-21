@@ -3,7 +3,7 @@
 # Textual Voronoi code modified from: <abhishek@ocf.berkeley.edu>
 # http://www.ocf.berkeley.edu/~Eabhishek/
 
-from random import random # for generateRandomPoints
+from random import random, seed # for generateRandomPoints
 from math import sqrt
 
 def generateRandomPoints(npoints=6):
@@ -50,6 +50,7 @@ if __name__ == '__main__':
     t1 = time()
     print()
     for n in range(500):
+        seed(n)
         points = generateRandomPoints(10)
         screen = generateScreen(points, 40, 80)
     print(screen)

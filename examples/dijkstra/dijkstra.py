@@ -4,8 +4,6 @@
 
 import random
 
-random.seed()
-
 class Vertex(object):
     __slots__ = ('name',)
     def __init__(self, name):
@@ -114,6 +112,8 @@ def dijkstra(G, t, s):
 
 if __name__ == '__main__':
     for n in range(5000):
+        if n % 100 == 0:
+            random.seed(n)
         G = Graph()
         s = G.V[random.randint(0, len(G.V) - 1)]
         while True:

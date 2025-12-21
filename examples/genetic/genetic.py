@@ -2,9 +2,9 @@
 #
 # genetic algorithm
 
-from random import random, randint, choice
+from random import random, randint, choice, seed
 from math import sin, pi
-from copy import copy 
+from copy import copy
 
 infiniteNeg = -1e302
 
@@ -110,9 +110,11 @@ class SGA:
             self.crossingOverPop()
 
 if __name__ == '__main__':
-    sga = SGA()
-    sga.generationsMax = 12000
-    sga.genomeSize = 160
-    sga.popSize = 120
-    sga.geneMutationProb = 0.01
-    sga.run()
+    for n in range(10):
+        seed(n)
+        sga = SGA()
+        sga.generationsMax = 1200
+        sga.genomeSize = 160
+        sga.popSize = 120
+        sga.geneMutationProb = 0.01
+        sga.run()
