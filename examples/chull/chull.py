@@ -457,7 +457,7 @@ class Hull:
         return evi,vi
 
 if __name__ == "__main__":
-    for n in range(50):
+    for n in range(100):
         seed(n)
         # simple cube, integer coordinates
         cube=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
@@ -475,7 +475,7 @@ if __name__ == "__main__":
             cubef.append(Vector(random(),random(),random()))
 
         sphere=[]
-        for i in range(2000):
+        for i in range(1000):
             x,y,z = 2*random()-1,2*random()-1,2*random()-1
             if x*x+y*y+z*z < 1.0:
                 sphere.append(Vector(x,y,z))
