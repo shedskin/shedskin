@@ -37,16 +37,17 @@ __ss_int bytes::__fixstart(size_t a, __ss_int b) {
 }
 
 __ss_int bytes::find(bytes *s, __ss_int a) {
-    __ss_int step = 1;
-    __ss_int b = this->__len__();
-    slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).find(s->unit), a);
+    return this->find(s, a, this->__len__());
 }
 
 __ss_int bytes::find(bytes *s, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).find(s->unit), a);
+    std::string_view view(this->unit.data() + a, b - a);
+    size_t pos = view.find(s->unit);
+    if(pos == std::string::npos)
+        return -1;
+    return pos + a;
 }
 
 __ss_int bytes::find(__ss_int i, __ss_int a) {
