@@ -450,6 +450,12 @@ template<class T> T __seqiter<T>::__next__() {
 
 tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
+template<class T> list<T> *__ss_list() {
+    list<T> *l =  new list<T>();
+    l->units.reserve(4);
+    return l;
+}
+
 /* init/exit */
 
 void __init();
