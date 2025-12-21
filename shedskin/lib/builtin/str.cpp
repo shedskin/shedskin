@@ -341,6 +341,7 @@ str *str::rstrip(str *chars) {
 
 list<str *> *str::split(str *sep_, __ss_int maxsplit) {
     size_t pos_start = 0, pos_end;
+    size_t count;
     list<str *> *result = new list<str *>();
     __ss_int splits = 0;
 
@@ -357,11 +358,19 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
             pos_end = unit.find(sep_->unit, pos_start);
 
         if(pos_end == std::string::npos || ((maxsplit != -1) && splits >= maxsplit)) {
-            result->append(new str(unit.substr(pos_start, unit.size()-pos_start)));
+            count = unit.size()-pos_start;
+            if(count == 1)
+                result->append(__char_cache[(unsigned char)unit[pos_start]]);
+            else
+                result->append(new str(unit.substr(pos_start, count)));
             break;
         }
 
-        result->append(new str(unit.substr(pos_start, pos_end-pos_start)));
+        count = pos_end-pos_start;
+        if(count == 1)
+            result->append(__char_cache[(unsigned char)unit[pos_start]]);
+        else
+            result->append(new str(unit.substr(pos_start, count)));
         splits += 1;
 
         if(sep_ == NULL) {
@@ -371,7 +380,11 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         } else {
             pos_start = pos_end + sep_->unit.size();
             if(pos_start == unit.size()) {
-                result->append(new str(unit.substr(pos_start, unit.size()-pos_start)));
+                count = unit.size()-pos_start;
+                if(count == 1)
+                    result->append(__char_cache[(unsigned char)unit[pos_start]]);
+                else
+                    result->append(new str(unit.substr(pos_start, count)));
                 break;
             }
         }
