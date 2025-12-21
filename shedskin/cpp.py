@@ -1160,6 +1160,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
         if ts == 'tuple<__ss_int> *' and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
+        elif isinstance(node, ast.List) and not node.elts:
+            self.append("(__ss_list<" + ts[5:-3] + ">(")
         else:
             self.append("(new " + ts[:-2] + "(")
         return argtypes
