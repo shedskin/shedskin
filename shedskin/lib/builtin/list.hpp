@@ -417,14 +417,22 @@ template<class T> list<T> *list<T>::__imul__(__ss_int n) {
     return this;
 }
 
-template<class T> __ss_int list<T>::index(T a) { return index(a, 0, this->__len__()); }
+template<class T> __ss_int list<T>::index(T a) {
+    auto it = std::find(this->units.begin(), this->units.end(), a);
+    if (it != this->units.end()) {
+        return (__ss_int)std::distance(this->units.begin(), it);
+    }
+    throw new ValueError(new str("list.index(x): x not in list"));
+}
+
 template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, this->__len__()); }
 template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    for(__ss_int i = s; i<e;i++)
-        if(__eq(a,units[i]))
-            return i;
+    auto it = std::find(this->units.begin()+s, this->units.end()+e, a);
+    if (it != this->units.end()) {
+        return (__ss_int)std::distance(this->units.begin(), it);
+    }
     throw new ValueError(new str("list.index(x): x not in list"));
 }
 
