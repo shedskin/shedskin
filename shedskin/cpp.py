@@ -2850,6 +2850,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(node.func, "(", func)
 
         elif constructor:
+            # list(range(..))
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id == 'list'
+                and len(node.args) == 1
+                and isinstance(node.args[0], ast.Call)
+                and isinstance(node.args[0].func, ast.Name)
+                and node.args[0].func.id == 'range'
+            ):
+                self.append('__ss_list_range(')
+                for arg in node.args[0].args:
+                    self.visit(arg, func)
+                    if arg is not node.args[0].args[-1]:
+                        self.append(',')
+                self.append(')')
+                return
+
             ts = self.namer.nokeywords(
                 typestr.nodetypestr(self.gx, node, func, mv=self.mv)
             )
