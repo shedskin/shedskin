@@ -40,11 +40,6 @@
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->unit.size(); __ ## n ++) { \
         i = (__ ## temp)->__getfast__(__ ## n); \
 
-#define FOR_IN_LIST(e, m, temp) \
-    __ ## temp = m; \
-    for (auto __ ## iter = (__ ## temp)->units.begin(); __ ## iter != (__ ## temp)->units.end(); ) { \
-        e = *(__ ## iter)++;
-
 #define FOR_IN_DICT(m, temp, iter, pos) \
     __ ## temp = m; \
     __ ## iter = (__ ## temp)->gcd.begin(); \
