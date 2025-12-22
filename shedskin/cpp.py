@@ -1498,13 +1498,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and self.only_classes(node.iter, ("file",))
         )
 
-    def fastlistiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
-        """Check if a node is a fast list iterator loop"""
-        return (
-            isinstance(node.target, ast.Name)
-            and self.only_classes(node.iter, ("list",))
-        )
-
     def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1545,9 +1538,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, True, False)
         elif self.fastfileiter(node):
             self.do_fastfileiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
-        elif self.fastlistiter(node) and not (func and func.isGenerator):  # investigate generators
-            self.do_fastlistiter(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
@@ -1632,18 +1622,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Generate a fast for-line-in-file loop"""
         self.start("FOR_IN_FILE(")
-        self.visitm(node.target, ',', node.iter, ',', self.mv.tempcount[node][2:], ')', func)
-        self.print(self.line)
-        self.indent()
-
-    def do_fastlistiter(
-        self,
-        node: Union[ast.For, ast.comprehension],
-        func: Optional["python.Function"],
-        genexpr: bool,
-    ) -> None:
-        """Generate a fast for-elem-in-list loop"""
-        self.start("FOR_IN_LIST(")
         self.visitm(node.target, ',', node.iter, ',', self.mv.tempcount[node][2:], ')', func)
         self.print(self.line)
         self.indent()
