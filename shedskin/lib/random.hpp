@@ -1,4 +1,4 @@
-/* Copyright 1997-2002 Makoto Matsumoto, Takuji Nishimura, License BSD-3 (See LICENSE) */
+/* Copyright 2005-2025 Jeff Miller, Mark Dufour and other contributors */
 
 #ifndef __RANDOM_HPP
 #define __RANDOM_HPP
@@ -11,6 +11,8 @@
 
 using namespace __shedskin__;
 namespace __random__ {
+
+void seed_xoshiro256(uint64_t initial_seed);
 
 class Random;
 
@@ -33,8 +35,6 @@ public:
     int gauss_switch;
     int VERSION;
     __ss_float gauss_next;
-//    list<int> *mt;
-//    int mti;
 
     Random();
     Random(int a);
@@ -260,9 +260,9 @@ template <class A> void *Random::seed(A a) {
 
     if(__is_none(a)) {
         std::random_device rd;
-//        gen.seed(rd());
+        seed_xoshiro256(rd());
     } else {
-//        gen.seed(hasher(a));
+        seed_xoshiro256(hasher(a));
     }
 
     return NULL;
