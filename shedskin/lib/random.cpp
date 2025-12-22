@@ -4,9 +4,11 @@
 
 #include <stdint.h>
 
-/* xoshiro engine */
+/*
+    Random module implementation for Shed Skin copyright Jeff Miller.
+*/
 
-/*  Written in 2019 by David Blackman and Sebastiano Vigna (vigna@acm.org)
+/*  Xoshiro generator copyright 2019 David Blackman and Sebastiano Vigna (vigna@acm.org)
 
 To the extent possible under law, the author has dedicated all copyright
 and related and neighboring rights to this software to the public domain
@@ -34,6 +36,8 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
    a 64-bit seed, we suggest to seed a splitmix64 generator and use its
    output to fill s. */
 
+namespace __random__ {
+
 static inline uint64_t rotl(const uint64_t x, int k) {
     return (x << k) | (x >> (64 - k));
 }
@@ -57,9 +61,22 @@ uint64_t inline next(void) {
     return result;
 }
 
-/* random module implementation */
+// Standard SplitMix64 implementation for seeding
+uint64_t next_splitmix64(uint64_t *sm_state) {
+    uint64_t z = (*sm_state += 0x9E3779B97F4A7C15);
+    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9;
+    z = (z ^ (z >> 27)) * 0x94D049BB133111EB;
+    return z ^ (z >> 31);
+}
 
-namespace __random__ {
+// Seeding function for xoshiro256
+void seed_xoshiro256(uint64_t initial_seed) {
+    uint64_t sm_state = initial_seed;
+    s[0] = next_splitmix64(&sm_state);
+    s[1] = next_splitmix64(&sm_state);
+    s[2] = next_splitmix64(&sm_state);
+    s[3] = next_splitmix64(&sm_state);
+}
 
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_4, *const_7, *const_8, *const_9;
 
@@ -237,8 +254,6 @@ __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
 Random::Random() { // : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
-//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL);
@@ -255,61 +270,11 @@ Random::Random(int a) {
     */
     this->__class__ = cl_Random;
 
-//    this->mt = ((new list<int>(1, 0)))->__mul__(N);
-//    this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed(a);
     this->VERSION = 2;
 }
-
-/*
-int Random::_init_by_array(list<int> *init_key) {
-    list<int> *__14, *__15, *__16, *__19, *__20, *__21, *__22;
-    int __12, __13, __17, __18, i, j, k, key_length;
-
-    key_length = len(init_key);
-    this->_init_genrand(19650218);
-    i = 1;
-    j = 0;
-    k = ___max(2, 0, N, key_length);
-
-    FAST_FOR(k,k,0,-1,12,13)
-        __14 = this->mt;
-        __14->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1664525))+init_key->__getfast__(j))+j);
-        __15 = this->mt;
-        __15->__setitem__(i, __15->__getfast__(i) & -1);
-        i += 1;
-        j += 1;
-        if (i >= N) {
-            __16 = this->mt;
-            __16->__setitem__(0, (this->mt)->__getfast__((N-1)));
-            i = 1;
-        }
-        if (j >= key_length) {
-            j = 0;
-        }
-    END_FOR
-
-
-    FAST_FOR(k,(N-1),0,-1,17,18)
-        __19 = this->mt;
-        __19->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1566083941))-i));
-        __20 = this->mt;
-        __20->__setitem__(i, __20->__getfast__(i) & -1);
-        i += 1;
-        if (i >= N) {
-            __21 = this->mt;
-            __21->__setitem__(0, (this->mt)->__getfast__((N-1)));
-            i = 1;
-        }
-    END_FOR
-
-    __22 = this->mt;
-    __22->__setitem__(0, -2147483648);
-    return 0;
-}
-*/
 
 __ss_int Random::randint(__ss_int a, __ss_int b) {
     /**
@@ -647,62 +612,6 @@ void __init() {
 
     cl_Random = new class_("Random");
 
-    /**
-    =========================== Source Notes ==============================
-    Translated by Guido van Rossum from C source provided by Adrian Baddeley.
-    Adapted by Raymond Hettinger for use with the Mersenne Twister core generator.
-    Adapted by Jeff Miller for compatibility with the Shed Skin Python-to-C++
-    compiler.
-
-    Mersenne Twister was converted to Python by Jeff Miller
-    2007-02-03
-    jwmillerusa (at) gmail (dot) com
-    http://millerideas.com
-
-    Below are the original comments from the authors' C source file.
-    =======================================================================
-
-       A C-program for MT19937, with initialization improved 2002/1/26.
-       Coded by Takuji Nishimura and Makoto Matsumoto.
-
-       Before using, initialize the state by using init_genrand(seed)
-       or init_by_array(init_key, key_length).
-
-       Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
-       All rights reserved.
-
-       Redistribution and use in source and binary forms, with or without
-       modification, are permitted provided that the following conditions
-       are met:
-
-         1. Redistributions of source code must retain the above copyright
-            notice, this list of conditions and the following disclaimer.
-
-         2. Redistributions in binary form must reproduce the above copyright
-            notice, this list of conditions and the following disclaimer in the
-            documentation and/or other materials provided with the distribution.
-
-         3. The names of its contributors may not be used to endorse or promote
-            products derived from this software without specific prior written
-            permission.
-
-       THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-       AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-       IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-       ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-       LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-       CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-       SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-       INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-       CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-       ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-       POSSIBILITY OF SUCH DAMAGE.
-
-
-       Any feedback is very welcome.
-       http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
-       email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
-    */
     __all__ = (new list<str *>(24, const_13, const_14, const_15, const_16, const_17, const_18, const_19, const_20, const_21, const_22, const_23, const_24, const_25, const_26, const_27, const_28, const_29, const_30, const_31, const_32, const_33, const_34, const_35, const_36));
     NV_MAGICCONST = ((4*__math__::exp(-0.5))/__math__::sqrt(2.0));
     LOG4 = __math__::log(4.0);
