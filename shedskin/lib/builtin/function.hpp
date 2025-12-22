@@ -1017,5 +1017,9 @@ inline __ss_bool __ss_in_range(__ss_int i, __ss_int a) {
     return __ss_in_range(i, 0, a);
 }
 
+/* range_len */
+
+int range_len(int lo, int hi, int step);
+
 #endif
 #endif

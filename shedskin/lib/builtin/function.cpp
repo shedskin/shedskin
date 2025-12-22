@@ -76,7 +76,7 @@ template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called wit
 
 /* range */
 
-static int range_len(int lo, int hi, int step) {
+int range_len(int lo, int hi, int step) {
     /* modified from CPython */
     int n = 0;
     if ((lo < hi) && (step>0)) {

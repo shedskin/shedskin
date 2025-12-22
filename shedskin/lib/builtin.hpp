@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef SS_BUILTIN_HPP
 #define SS_BUILTIN_HPP
@@ -454,6 +454,29 @@ template<class T> list<T> *__ss_list() {
     list<T> *l =  new list<T>();
     l->units.reserve(4);
     return l;
+}
+
+inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
+    list<__ss_int> *l = new list<__ss_int>();
+    __ss_int len = range_len(a, b, c);
+    l->units.resize(len);
+    __ss_int pos = 0;
+    if(a <= b) {
+        for(__ss_int i=a; i<b; i+=c)
+            l->units[pos++] = i;
+    } else {
+        for(__ss_int i=a; i>b; i+=c)
+            l->units[pos++] = i;
+    }
+    return l;
+}
+
+inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b) {
+    return __ss_list_range(a, b, 1);
+}
+
+inline list<__ss_int> *__ss_list_range(__ss_int a) {
+    return __ss_list_range(0, a, 1);
 }
 
 /* init/exit */
