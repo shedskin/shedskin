@@ -202,17 +202,43 @@ str *str::expandtabs(__ss_int tabsize) {
 }
 
 str *str::strip(str *chars) {
-    return lstrip(chars)->rstrip(chars);
+    size_t first, last;
+    if(chars) {
+        first = unit.find_first_not_of(chars->unit);
+        if(first == std::string::npos)
+            return __ss_empty_str;
+        last = unit.find_last_not_of(chars->unit);
+    } else {
+        first = unit.find_first_not_of(ws);
+        if(first == std::string::npos)
+            return __ss_empty_str;
+        last = unit.find_last_not_of(ws);
+    }
+    return new str(this->unit.data()+first, last-first+1);
 }
 
 str *str::lstrip(str *chars) {
-    __GC_STRING remove;
-    if(chars) remove = chars->unit;
-    else remove = ws;
-    size_t first = unit.find_first_not_of(remove);
-    if( first == std::string::npos )
-        return new str("");
-    return new str(unit.substr(first, this->unit.size()-first));
+    size_t first;
+    if(chars) {
+        first = unit.find_first_not_of(chars->unit);
+    } else {
+        first = unit.find_first_not_of(ws);
+    }
+    if(first == std::string::npos)
+        return __ss_empty_str;
+    return new str(this->unit.data()+first, this->unit.size()-first);
+}
+
+str *str::rstrip(str *chars) {
+    size_t first, last;
+    if(chars) {
+        last = unit.find_last_not_of(chars->unit);
+    } else {
+        last = unit.find_last_not_of(ws);
+    }
+    if(last == std::string::npos)
+        return __ss_empty_str;
+    return new str(this->unit.data(), last+1);
 }
 
 tuple2<str *, str *> *str::partition(str *separator)
@@ -327,16 +353,6 @@ list<str *> *str::splitlines(__ss_int keepends)
     if(j != this->unit.size()) r->append(new str(unit.substr(j)));
 
     return r;
-}
-
-str *str::rstrip(str *chars) {
-    __GC_STRING remove;
-    if(chars) remove = chars->unit;
-    else remove = ws;
-    size_t last = unit.find_last_not_of(remove);
-    if( last == std::string::npos )
-        return new str("");
-    return new str(unit.substr(0,last+1));
 }
 
 list<str *> *str::split(str *sep_, __ss_int maxsplit) {
