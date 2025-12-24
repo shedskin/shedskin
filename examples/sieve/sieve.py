@@ -92,7 +92,7 @@ def sieveOfEratostenes(n):
 if __name__ == "__main__":
     # The Sieve of Atkin is supposed to be faster for big n.
 
-    n = 100000000 #int(argv[1])
+    n = 200000000 #int(argv[1])
     print("n:", n)
 
     #if argv[2] == "1":

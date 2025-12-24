@@ -96,7 +96,7 @@ def printboard(values):
     return values
 
 if __name__ == '__main__':
-    for n in range(20):
+    for n in range(25):
         solve_file("testdata/top95.txt", '\n', printboard)
 
 ## References used:

@@ -9,8 +9,6 @@ from math import sqrt, sin, cos, fabs
 import random
 from array import array
 
-random.seed(1)
-
 WIDTH = 300
 HEIGHT = 300
 NSUBSAMPLES = 2
@@ -248,6 +246,8 @@ def save_ppm(img, w, h, fname):
     fout.close()
 
 if __name__ == '__main__':
-    init_scene()
-    img = render(WIDTH, HEIGHT, NSUBSAMPLES)
-    save_ppm(img, WIDTH, HEIGHT, "mao.ppm")
+    for x in range(10):
+        random.seed(x)
+        init_scene()
+        img = render(WIDTH, HEIGHT, NSUBSAMPLES)
+        save_ppm(img, WIDTH, HEIGHT, "mao.ppm")

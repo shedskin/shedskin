@@ -158,7 +158,7 @@ def print_eps(points, cluster_centers, W=400, H=400):
 
 
 def main():
-    for i in range(25):
+    for i in range(320):
         seed(i)
 
         npoints = 6000
@@ -166,7 +166,8 @@ def main():
 
         points = generate_points(npoints, 10)
         cluster_centers = lloyd(points, k)
-        print_eps(points, cluster_centers)
+        if i == 319:
+            print_eps(points, cluster_centers)
 
 
 main()

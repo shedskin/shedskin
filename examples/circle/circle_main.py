@@ -104,7 +104,7 @@ def run(test):
         if not test and iterations % 10 == 0:
             print(time.time()-t0)
             t0 = time.time()
-        if test and iterations == 200:
+        if test and iterations == 4000:
             break
         get_input()
 

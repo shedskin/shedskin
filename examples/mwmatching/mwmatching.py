@@ -15,172 +15,10 @@ Copyright 2009 Joris van Rantwijk, license GPL2 or later
 
 """
 
-# If assigned, DEBUG(str) is called with lots of debug messages.
 from sys import stderr
+
 def debug(s):
     print('DEBUG:', s, file=stderr)
-DEBUG = debug
-DEBUG = None
-
-# Check delta2/delta3 computation after every substage;
-# only works on integer weights, slows down the algorithm to O(n^4).
-CHECK_DELTA = False
-
-# Check optimality of solution before returning; only works on integer weights.
-CHECK_OPTIMUM = True
-
-# read input
-input = open('testdata/bench_mwmatching_2039_250_a.gr')
-s = next(input).split()
-#s = raw_input().split()
-assert s[0] == 'p' and s[1] == 'edge'
-edges = []
-for i in range(int(s[3])):
-    #s = raw_input().split()
-    s = next(input).split()
-    assert len(s) == 4 and s[0] == 'e'
-    edges.append((int(s[1]), int(s[2]), int(s[3])))
-maxcardinality = True
-
-"""Compute a maximum-weighted matching in the general undirected
-weighted graph given by "edges".  If "maxcardinality" is true,
-only maximum-cardinality matchings are considered as solutions.
-
-Edges is a sequence of tuples (i, j, wt) describing an undirected
-edge between vertex i and vertex j with weight wt.  There is at most
-one edge between any two vertices; no vertex has an edge to itself.
-Vertices are identified by consecutive, non-negative integers.
-
-Return a list "mate", such that mate[i] == j if vertex i is
-matched to vertex j, and mate[i] == -1 if vertex i is not matched.
-
-This function takes time O(n ** 3)."""
-
-#
-# Vertices are numbered 0 .. (nvertex-1).
-# Non-trivial blossoms are numbered nvertex .. (2*nvertex-1)
-#
-# Edges are numbered 0 .. (nedge-1).
-# Edge endpoints are numbered 0 .. (2*nedge-1), such that endpoints
-# (2*k) and (2*k+1) both belong to edge k.
-#
-# Many terms used in the comments (sub-blossom, T-vertex) come from
-# the paper by Galil; read the paper before reading this code.
-#
-
-# Count vertices.
-nedge = len(edges)
-nvertex = 0
-for (i, j, w) in edges:
-    assert i >= 0 and j >= 0 and i != j
-    if i >= nvertex:
-        nvertex = i + 1
-    if j >= nvertex:
-        nvertex = j + 1
-
-# Find the maximum edge weight.
-maxweight = max(0, max([ wt for (i, j, wt) in edges ]))
-
-# If p is an edge endpoint,
-# endpoint[p] is the vertex to which endpoint p is attached.
-# Not modified by the algorithm.
-endpoint = [ edges[p//2][p%2] for p in range(2*nedge) ]
-
-# If v is a vertex,
-# neighbend[v] is the list of remote endpoints of the edges attached to v.
-# Not modified by the algorithm.
-neighbend = [ [ ] for i in range(nvertex) ]
-for k in range(len(edges)):
-    (i, j, w) = edges[k]
-    neighbend[i].append(2*k+1)
-    neighbend[j].append(2*k)
-
-# If v is a vertex,
-# mate[v] is the remote endpoint of its matched edge, or -1 if it is single
-# (i.e. endpoint[mate[v]] is v's partner vertex).
-# Initially all vertices are single; updated during augmentation.
-mate = nvertex * [ -1 ]
-
-# If b is a top-level blossom,
-# label[b] is 0 if b is unlabeled (free);
-#             1 if b is an S-vertex/blossom;
-#             2 if b is a T-vertex/blossom.
-# The label of a vertex is found by looking at the label of its
-# top-level containing blossom.
-# If v is a vertex inside a T-blossom,
-# label[v] is 2 iff v is reachable from an S-vertex outside the blossom.
-# Labels are assigned during a stage and reset after each augmentation.
-label = (2 * nvertex) * [ 0 ]
-
-# If b is a labeled top-level blossom,
-# labelend[b] is the remote endpoint of the edge through which b obtained
-# its label, or -1 if b's base vertex is single.
-# If v is a vertex inside a T-blossom and label[v] == 2,
-# labelend[v] is the remote endpoint of the edge through which v is
-# reachable from outside the blossom.
-labelend = (2 * nvertex) * [ -1 ]
-
-# If v is a vertex,
-# inblossom[v] is the top-level blossom to which v belongs.
-# If v is a top-level vertex, v is itself a blossom (a trivial blossom)
-# and inblossom[v] == v.
-# Initially all vertices are top-level trivial blossoms.
-inblossom = list(range(nvertex))
-
-# If b is a sub-blossom,
-# blossomparent[b] is its immediate parent (sub-)blossom.
-# If b is a top-level blossom, blossomparent[b] is -1.
-blossomparent = (2 * nvertex) * [ -1 ]
-
-# If b is a non-trivial (sub-)blossom,
-# blossomchilds[b] is an ordered list of its sub-blossoms, starting with
-# the base and going round the blossom.
-blossomchilds = (2 * nvertex) * [ None ]
-
-# If b is a (sub-)blossom,
-# blossombase[b] is its base VERTEX (i.e. recursive sub-blossom).
-blossombase = list(range(nvertex)) + nvertex * [ -1 ]
-
-# If b is a non-trivial (sub-)blossom,
-# blossomendps[b] is a list of endpoints on its connecting edges,
-# such that blossomendps[b][i] is the local endpoint of blossomchilds[b][i]
-# on the edge that connects it to blossomchilds[b][wrap(i+1)].
-blossomendps = (2 * nvertex) * [ None ]
-
-# If v is a free vertex (or an unreached vertex inside a T-blossom),
-# bestedge[v] is the edge to an S-vertex with least slack,
-# or -1 if there is no such edge.
-# If b is a (possibly trivial) top-level S-blossom,
-# bestedge[b] is the least-slack edge to a different S-blossom,
-# or -1 if there is no such edge.
-# This is used for efficient computation of delta2 and delta3.
-bestedge = (2 * nvertex) * [ -1 ]
-
-# If b is a non-trivial top-level S-blossom,
-# blossombestedges[b] is a list of least-slack edges to neighbouring
-# S-blossoms, or None if no such list has been computed yet.
-# This is used for efficient computation of delta3.
-blossombestedges = (2 * nvertex) * [ None ]
-
-# List of currently unused blossom numbers.
-unusedblossoms = list(range(nvertex, 2*nvertex))
-
-# If v is a vertex,
-# dualvar[v] = 2 * u(v) where u(v) is the v's variable in the dual
-# optimization problem (multiplication by two ensures integer values
-# throughout the algorithm if all edge weights are integers).
-# If b is a non-trivial blossom,
-# dualvar[b] = z(b) where z(b) is b's variable in the dual optimization
-# problem.
-dualvar = nvertex * [ maxweight ] + nvertex * [ 0 ]
-
-# If allowedge[k] is true, edge k has zero slack in the optimization
-# problem; if allowedge[k] is false, the edge's slack may or may not
-# be zero.
-allowedge = nedge * [ False ]
-
-# Queue of newly discovered S-vertices.
-queue = [ ]
 
 # Return 2 * slack of edge k (does not work inside blossoms).
 def slack(k):
@@ -615,232 +453,397 @@ def checkDelta3():
         DEBUG('bk=%d tbk=%d bd=%s tbd=%s' % (bk, tbk, repr(bd), repr(tbd)))
     assert bd == tbd
 
+for n in range(40):
+# If assigned, DEBUG(str) is called with lots of debug messages.
+    DEBUG = debug
+    DEBUG = None
+
+# Check delta2/delta3 computation after every substage;
+# only works on integer weights, slows down the algorithm to O(n^4).
+    CHECK_DELTA = False
+
+# Check optimality of solution before returning; only works on integer weights.
+    CHECK_OPTIMUM = True
+
+# read input
+    input = open('testdata/bench_mwmatching_2039_250_a.gr')
+    s = next(input).split()
+#s = raw_input().split()
+    assert s[0] == 'p' and s[1] == 'edge'
+    edges = []
+    for i in range(int(s[3])):
+        #s = raw_input().split()
+        s = next(input).split()
+        assert len(s) == 4 and s[0] == 'e'
+        edges.append((int(s[1]), int(s[2]), int(s[3])))
+    maxcardinality = True
+
+    """Compute a maximum-weighted matching in the general undirected
+    weighted graph given by "edges".  If "maxcardinality" is true,
+    only maximum-cardinality matchings are considered as solutions.
+
+    Edges is a sequence of tuples (i, j, wt) describing an undirected
+    edge between vertex i and vertex j with weight wt.  There is at most
+    one edge between any two vertices; no vertex has an edge to itself.
+    Vertices are identified by consecutive, non-negative integers.
+
+    Return a list "mate", such that mate[i] == j if vertex i is
+    matched to vertex j, and mate[i] == -1 if vertex i is not matched.
+
+    This function takes time O(n ** 3)."""
+
+#
+# Vertices are numbered 0 .. (nvertex-1).
+# Non-trivial blossoms are numbered nvertex .. (2*nvertex-1)
+#
+# Edges are numbered 0 .. (nedge-1).
+# Edge endpoints are numbered 0 .. (2*nedge-1), such that endpoints
+# (2*k) and (2*k+1) both belong to edge k.
+#
+# Many terms used in the comments (sub-blossom, T-vertex) come from
+# the paper by Galil; read the paper before reading this code.
+#
+
+# Count vertices.
+    nedge = len(edges)
+    nvertex = 0
+    for (i, j, w) in edges:
+        assert i >= 0 and j >= 0 and i != j
+        if i >= nvertex:
+            nvertex = i + 1
+        if j >= nvertex:
+            nvertex = j + 1
+
+# Find the maximum edge weight.
+    maxweight = max(0, max([ wt for (i, j, wt) in edges ]))
+
+# If p is an edge endpoint,
+# endpoint[p] is the vertex to which endpoint p is attached.
+# Not modified by the algorithm.
+    endpoint = [ edges[p//2][p%2] for p in range(2*nedge) ]
+
+# If v is a vertex,
+# neighbend[v] is the list of remote endpoints of the edges attached to v.
+# Not modified by the algorithm.
+    neighbend = [ [ ] for i in range(nvertex) ]
+    for k in range(len(edges)):
+        (i, j, w) = edges[k]
+        neighbend[i].append(2*k+1)
+        neighbend[j].append(2*k)
+
+# If v is a vertex,
+# mate[v] is the remote endpoint of its matched edge, or -1 if it is single
+# (i.e. endpoint[mate[v]] is v's partner vertex).
+# Initially all vertices are single; updated during augmentation.
+    mate = nvertex * [ -1 ]
+
+# If b is a top-level blossom,
+# label[b] is 0 if b is unlabeled (free);
+#             1 if b is an S-vertex/blossom;
+#             2 if b is a T-vertex/blossom.
+# The label of a vertex is found by looking at the label of its
+# top-level containing blossom.
+# If v is a vertex inside a T-blossom,
+# label[v] is 2 iff v is reachable from an S-vertex outside the blossom.
+# Labels are assigned during a stage and reset after each augmentation.
+    label = (2 * nvertex) * [ 0 ]
+
+# If b is a labeled top-level blossom,
+# labelend[b] is the remote endpoint of the edge through which b obtained
+# its label, or -1 if b's base vertex is single.
+# If v is a vertex inside a T-blossom and label[v] == 2,
+# labelend[v] is the remote endpoint of the edge through which v is
+# reachable from outside the blossom.
+    labelend = (2 * nvertex) * [ -1 ]
+
+# If v is a vertex,
+# inblossom[v] is the top-level blossom to which v belongs.
+# If v is a top-level vertex, v is itself a blossom (a trivial blossom)
+# and inblossom[v] == v.
+# Initially all vertices are top-level trivial blossoms.
+    inblossom = list(range(nvertex))
+
+# If b is a sub-blossom,
+# blossomparent[b] is its immediate parent (sub-)blossom.
+# If b is a top-level blossom, blossomparent[b] is -1.
+    blossomparent = (2 * nvertex) * [ -1 ]
+
+# If b is a non-trivial (sub-)blossom,
+# blossomchilds[b] is an ordered list of its sub-blossoms, starting with
+# the base and going round the blossom.
+    blossomchilds = (2 * nvertex) * [ None ]
+
+# If b is a (sub-)blossom,
+# blossombase[b] is its base VERTEX (i.e. recursive sub-blossom).
+    blossombase = list(range(nvertex)) + nvertex * [ -1 ]
+
+# If b is a non-trivial (sub-)blossom,
+# blossomendps[b] is a list of endpoints on its connecting edges,
+# such that blossomendps[b][i] is the local endpoint of blossomchilds[b][i]
+# on the edge that connects it to blossomchilds[b][wrap(i+1)].
+    blossomendps = (2 * nvertex) * [ None ]
+
+# If v is a free vertex (or an unreached vertex inside a T-blossom),
+# bestedge[v] is the edge to an S-vertex with least slack,
+# or -1 if there is no such edge.
+# If b is a (possibly trivial) top-level S-blossom,
+# bestedge[b] is the least-slack edge to a different S-blossom,
+# or -1 if there is no such edge.
+# This is used for efficient computation of delta2 and delta3.
+    bestedge = (2 * nvertex) * [ -1 ]
+
+# If b is a non-trivial top-level S-blossom,
+# blossombestedges[b] is a list of least-slack edges to neighbouring
+# S-blossoms, or None if no such list has been computed yet.
+# This is used for efficient computation of delta3.
+    blossombestedges = (2 * nvertex) * [ None ]
+
+# List of currently unused blossom numbers.
+    unusedblossoms = list(range(nvertex, 2*nvertex))
+
+# If v is a vertex,
+# dualvar[v] = 2 * u(v) where u(v) is the v's variable in the dual
+# optimization problem (multiplication by two ensures integer values
+# throughout the algorithm if all edge weights are integers).
+# If b is a non-trivial blossom,
+# dualvar[b] = z(b) where z(b) is b's variable in the dual optimization
+# problem.
+    dualvar = nvertex * [ maxweight ] + nvertex * [ 0 ]
+
+# If allowedge[k] is true, edge k has zero slack in the optimization
+# problem; if allowedge[k] is false, the edge's slack may or may not
+# be zero.
+    allowedge = nedge * [ False ]
+
+# Queue of newly discovered S-vertices.
+    queue = [ ]
+
 # Main loop: continue until no further improvement is possible.
-for t in range(nvertex):
+    for t in range(nvertex):
 
-    # Each iteration of this loop is a "stage".
-    # A stage finds an augmenting path and uses that to improve
-    # the matching.
-    if DEBUG: DEBUG('STAGE %d' % t)
+        # Each iteration of this loop is a "stage".
+        # A stage finds an augmenting path and uses that to improve
+        # the matching.
+        if DEBUG: DEBUG('STAGE %d' % t)
 
-    # Remove labels from top-level blossoms/vertices.
-    label[:] = (2 * nvertex) * [ 0 ]
+        # Remove labels from top-level blossoms/vertices.
+        label[:] = (2 * nvertex) * [ 0 ]
 
-    # Forget all about least-slack edges.
-    bestedge[:] = (2 * nvertex) * [ -1 ]
-    blossombestedges[nvertex:] = nvertex * [ None ]
+        # Forget all about least-slack edges.
+        bestedge[:] = (2 * nvertex) * [ -1 ]
+        blossombestedges[nvertex:] = nvertex * [ None ]
 
-    # Loss of labeling means that we can not be sure that currently
-    # allowable edges remain allowable througout this stage.
-    allowedge[:] = nedge * [ False ]
+        # Loss of labeling means that we can not be sure that currently
+        # allowable edges remain allowable througout this stage.
+        allowedge[:] = nedge * [ False ]
 
-    # Make queue empty.
-    queue[:] = [ ]
+        # Make queue empty.
+        queue[:] = [ ]
 
-    # Label single blossoms/vertices with S and put them in the queue.
-    for v in range(nvertex):
-        if mate[v] == -1 and label[inblossom[v]] == 0:
-            assignLabel(v, 1, -1)
+        # Label single blossoms/vertices with S and put them in the queue.
+        for v in range(nvertex):
+            if mate[v] == -1 and label[inblossom[v]] == 0:
+                assignLabel(v, 1, -1)
 
-    # Loop until we succeed in augmenting the matching.
-    augmented = 0
-    while 1:
+        # Loop until we succeed in augmenting the matching.
+        augmented = 0
+        while 1:
 
-        # Each iteration of this loop is a "substage".
-        # A substage tries to find an augmenting path;
-        # if found, the path is used to improve the matching and
-        # the stage ends. If there is no augmenting path, the
-        # primal-dual method is used to pump some slack out of
-        # the dual variables.
-        if DEBUG: DEBUG('SUBSTAGE')
+            # Each iteration of this loop is a "substage".
+            # A substage tries to find an augmenting path;
+            # if found, the path is used to improve the matching and
+            # the stage ends. If there is no augmenting path, the
+            # primal-dual method is used to pump some slack out of
+            # the dual variables.
+            if DEBUG: DEBUG('SUBSTAGE')
 
-        # Continue labeling until all vertices which are reachable
-        # through an alternating path have got a label.
-        while queue and not augmented:
+            # Continue labeling until all vertices which are reachable
+            # through an alternating path have got a label.
+            while queue and not augmented:
 
-            # Take an S vertex from the queue.
-            v = queue.pop()
-            if DEBUG: DEBUG('POP v=%d' % v)
-            assert label[inblossom[v]] == 1
+                # Take an S vertex from the queue.
+                v = queue.pop()
+                if DEBUG: DEBUG('POP v=%d' % v)
+                assert label[inblossom[v]] == 1
 
-            # Scan its neighbours:
-            for p in neighbend[v]:
-                k = p // 2
-                w = endpoint[p]
-                # w is a neighbour to v
-                if inblossom[v] == inblossom[w]:
-                    # this edge is internal to a blossom; ignore it
-                    continue
-                if not allowedge[k]:
-                    kslack = slack(k)
-                    if kslack <= 0:
-                        # edge k has zero slack => it is allowable
-                        allowedge[k] = True
-                if allowedge[k]:
-                    if label[inblossom[w]] == 0:
-                        # (C1) w is a free vertex;
-                        # label w with T and label its mate with S (R12).
-                        assignLabel(w, 2, p ^ 1)
+                # Scan its neighbours:
+                for p in neighbend[v]:
+                    k = p // 2
+                    w = endpoint[p]
+                    # w is a neighbour to v
+                    if inblossom[v] == inblossom[w]:
+                        # this edge is internal to a blossom; ignore it
+                        continue
+                    if not allowedge[k]:
+                        kslack = slack(k)
+                        if kslack <= 0:
+                            # edge k has zero slack => it is allowable
+                            allowedge[k] = True
+                    if allowedge[k]:
+                        if label[inblossom[w]] == 0:
+                            # (C1) w is a free vertex;
+                            # label w with T and label its mate with S (R12).
+                            assignLabel(w, 2, p ^ 1)
+                        elif label[inblossom[w]] == 1:
+                            # (C2) w is an S-vertex (not in the same blossom);
+                            # follow back-links to discover either an
+                            # augmenting path or a new blossom.
+                            base = scanBlossom(v, w)
+                            if base >= 0:
+                                # Found a new blossom; add it to the blossom
+                                # bookkeeping and turn it into an S-blossom.
+                                addBlossom(base, k)
+                            else:
+                                # Found an augmenting path; augment the
+                                # matching and end this stage.
+                                augmentMatching(k)
+                                augmented = 1
+                                break
+                        elif label[w] == 0:
+                            # w is inside a T-blossom, but w itself has not
+                            # yet been reached from outside the blossom;
+                            # mark it as reached (we need this to relabel
+                            # during T-blossom expansion).
+                            assert label[inblossom[w]] == 2
+                            label[w] = 2
+                            labelend[w] = p ^ 1
                     elif label[inblossom[w]] == 1:
-                        # (C2) w is an S-vertex (not in the same blossom);
-                        # follow back-links to discover either an
-                        # augmenting path or a new blossom.
-                        base = scanBlossom(v, w)
-                        if base >= 0:
-                            # Found a new blossom; add it to the blossom
-                            # bookkeeping and turn it into an S-blossom.
-                            addBlossom(base, k)
-                        else:
-                            # Found an augmenting path; augment the
-                            # matching and end this stage.
-                            augmentMatching(k)
-                            augmented = 1
-                            break
+                        # keep track of the least-slack non-allowable edge to
+                        # a different S-blossom.
+                        b = inblossom[v]
+                        if bestedge[b] == -1 or kslack < slack(bestedge[b]):
+                            bestedge[b] = k
                     elif label[w] == 0:
-                        # w is inside a T-blossom, but w itself has not
-                        # yet been reached from outside the blossom;
-                        # mark it as reached (we need this to relabel
-                        # during T-blossom expansion).
-                        assert label[inblossom[w]] == 2
-                        label[w] = 2
-                        labelend[w] = p ^ 1
-                elif label[inblossom[w]] == 1:
-                    # keep track of the least-slack non-allowable edge to
-                    # a different S-blossom.
-                    b = inblossom[v]
-                    if bestedge[b] == -1 or kslack < slack(bestedge[b]):
-                        bestedge[b] = k
-                elif label[w] == 0:
-                    # w is a free vertex (or an unreached vertex inside
-                    # a T-blossom) but we can not reach it yet;
-                    # keep track of the least-slack edge that reaches w.
-                    if bestedge[w] == -1 or kslack < slack(bestedge[w]):
-                        bestedge[w] = k
+                        # w is a free vertex (or an unreached vertex inside
+                        # a T-blossom) but we can not reach it yet;
+                        # keep track of the least-slack edge that reaches w.
+                        if bestedge[w] == -1 or kslack < slack(bestedge[w]):
+                            bestedge[w] = k
 
-        if augmented:
+            if augmented:
+                break
+
+            # There is no augmenting path under these constraints;
+            # compute delta and reduce slack in the optimization problem.
+            # (Note that our vertex dual variables, edge slacks and delta's
+            # are pre-multiplied by two.)
+            deltatype = -1
+            # delta = deltaedge = deltablossom = None # XXX shedskin: int/None mixing
+
+            # Verify data structures for delta2/delta3 computation.
+            if CHECK_DELTA:
+                checkDelta2()
+                checkDelta3()
+
+            # Compute delta1: the minumum value of any vertex dual.
+            if not maxcardinality:
+                deltatype = 1
+                delta = min(dualvar[:nvertex])
+
+            # Compute delta2: the minimum slack on any edge between
+            # an S-vertex and a free vertex.
+            for v in range(nvertex):
+                if label[inblossom[v]] == 0 and bestedge[v] != -1:
+                    d = slack(bestedge[v])
+                    if deltatype == -1 or d < delta:
+                        delta = d
+                        deltatype = 2
+                        deltaedge = bestedge[v]
+
+            # Compute delta3: half the minimum slack on any edge between
+            # a pair of S-blossoms.
+            for b in range(2 * nvertex):
+                if ( blossomparent[b] == -1 and label[b] == 1 and
+                     bestedge[b] != -1 ):
+                    kslack = slack(bestedge[b])
+                    #if type(kslack) in (int, long):
+                    assert (kslack % 2) == 0 # XXX shedskin
+                    d = kslack // 2
+                    #else:
+                    #    d = kslack / 2
+                    if deltatype == -1 or d < delta:
+                        delta = d
+                        deltatype = 3
+                        deltaedge = bestedge[b]
+
+            # Compute delta4: minimum z variable of any T-blossom.
+            for b in range(nvertex, 2*nvertex):
+                if ( blossombase[b] >= 0 and blossomparent[b] == -1 and
+                     label[b] == 2 and
+                     (deltatype == -1 or dualvar[b] < delta) ):
+                    delta = dualvar[b]
+                    deltatype = 4
+                    deltablossom = b
+
+            if deltatype == -1:
+                # No further improvement possible; max-cardinality optimum
+                # reached. Do a final delta update to make the optimum
+                # verifyable.
+                assert maxcardinality
+                deltatype = 1
+                delta = max(0, min(dualvar[:nvertex]))
+
+            # Update dual variables according to delta.
+            for v in range(nvertex):
+                if label[inblossom[v]] == 1:
+                    # S-vertex: 2*u = 2*u - 2*delta
+                    dualvar[v] -= delta
+                elif label[inblossom[v]] == 2:
+                    # T-vertex: 2*u = 2*u + 2*delta
+                    dualvar[v] += delta
+            for b in range(nvertex, 2*nvertex):
+                if blossombase[b] >= 0 and blossomparent[b] == -1:
+                    if label[b] == 1:
+                        # top-level S-blossom: z = z + 2*delta
+                        dualvar[b] += delta
+                    elif label[b] == 2:
+                        # top-level T-blossom: z = z - 2*delta
+                        dualvar[b] -= delta
+
+            # Take action at the point where minimum delta occurred.
+            if DEBUG: DEBUG('delta%d=%f' % (deltatype, delta))
+            if deltatype == 1: 
+                # No further improvement possible; optimum reached.
+                break
+            elif deltatype == 2:
+                # Use the least-slack edge to continue the search.
+                allowedge[deltaedge] = True
+                (i, j, wt) = edges[deltaedge]
+                if label[inblossom[i]] == 0:
+                    i, j = j, i
+                assert label[inblossom[i]] == 1
+                queue.append(i)
+            elif deltatype == 3:
+                # Use the least-slack edge to continue the search.
+                allowedge[deltaedge] = True
+                (i, j, wt) = edges[deltaedge]
+                assert label[inblossom[i]] == 1
+                queue.append(i)
+            elif deltatype == 4:
+                # Expand the least-z blossom.
+                expandBlossom(deltablossom, False)
+
+            # End of a this substage.
+
+        # Stop when no more augmenting path can be found.
+        if not augmented:
             break
 
-        # There is no augmenting path under these constraints;
-        # compute delta and reduce slack in the optimization problem.
-        # (Note that our vertex dual variables, edge slacks and delta's
-        # are pre-multiplied by two.)
-        deltatype = -1
-        # delta = deltaedge = deltablossom = None # XXX shedskin: int/None mixing
-
-        # Verify data structures for delta2/delta3 computation.
-        if CHECK_DELTA:
-            checkDelta2()
-            checkDelta3()
-
-        # Compute delta1: the minumum value of any vertex dual.
-        if not maxcardinality:
-            deltatype = 1
-            delta = min(dualvar[:nvertex])
-
-        # Compute delta2: the minimum slack on any edge between
-        # an S-vertex and a free vertex.
-        for v in range(nvertex):
-            if label[inblossom[v]] == 0 and bestedge[v] != -1:
-                d = slack(bestedge[v])
-                if deltatype == -1 or d < delta:
-                    delta = d
-                    deltatype = 2
-                    deltaedge = bestedge[v]
-
-        # Compute delta3: half the minimum slack on any edge between
-        # a pair of S-blossoms.
-        for b in range(2 * nvertex):
-            if ( blossomparent[b] == -1 and label[b] == 1 and
-                 bestedge[b] != -1 ):
-                kslack = slack(bestedge[b])
-                #if type(kslack) in (int, long):
-                assert (kslack % 2) == 0 # XXX shedskin
-                d = kslack // 2
-                #else:
-                #    d = kslack / 2
-                if deltatype == -1 or d < delta:
-                    delta = d
-                    deltatype = 3
-                    deltaedge = bestedge[b]
-
-        # Compute delta4: minimum z variable of any T-blossom.
+        # End of a stage; expand all S-blossoms which have dualvar = 0.
         for b in range(nvertex, 2*nvertex):
-            if ( blossombase[b] >= 0 and blossomparent[b] == -1 and
-                 label[b] == 2 and
-                 (deltatype == -1 or dualvar[b] < delta) ):
-                delta = dualvar[b]
-                deltatype = 4
-                deltablossom = b
-
-        if deltatype == -1:
-            # No further improvement possible; max-cardinality optimum
-            # reached. Do a final delta update to make the optimum
-            # verifyable.
-            assert maxcardinality
-            deltatype = 1
-            delta = max(0, min(dualvar[:nvertex]))
-
-        # Update dual variables according to delta.
-        for v in range(nvertex):
-            if label[inblossom[v]] == 1:
-                # S-vertex: 2*u = 2*u - 2*delta
-                dualvar[v] -= delta
-            elif label[inblossom[v]] == 2:
-                # T-vertex: 2*u = 2*u + 2*delta
-                dualvar[v] += delta
-        for b in range(nvertex, 2*nvertex):
-            if blossombase[b] >= 0 and blossomparent[b] == -1:
-                if label[b] == 1:
-                    # top-level S-blossom: z = z + 2*delta
-                    dualvar[b] += delta
-                elif label[b] == 2:
-                    # top-level T-blossom: z = z - 2*delta
-                    dualvar[b] -= delta
-
-        # Take action at the point where minimum delta occurred.
-        if DEBUG: DEBUG('delta%d=%f' % (deltatype, delta))
-        if deltatype == 1: 
-            # No further improvement possible; optimum reached.
-            break
-        elif deltatype == 2:
-            # Use the least-slack edge to continue the search.
-            allowedge[deltaedge] = True
-            (i, j, wt) = edges[deltaedge]
-            if label[inblossom[i]] == 0:
-                i, j = j, i
-            assert label[inblossom[i]] == 1
-            queue.append(i)
-        elif deltatype == 3:
-            # Use the least-slack edge to continue the search.
-            allowedge[deltaedge] = True
-            (i, j, wt) = edges[deltaedge]
-            assert label[inblossom[i]] == 1
-            queue.append(i)
-        elif deltatype == 4:
-            # Expand the least-z blossom.
-            expandBlossom(deltablossom, False)
-
-        # End of a this substage.
-
-    # Stop when no more augmenting path can be found.
-    if not augmented:
-        break
-
-    # End of a stage; expand all S-blossoms which have dualvar = 0.
-    for b in range(nvertex, 2*nvertex):
-        if ( blossomparent[b] == -1 and blossombase[b] >= 0 and
-             label[b] == 1 and dualvar[b] == 0 ):
-            expandBlossom(b, True)
+            if ( blossomparent[b] == -1 and blossombase[b] >= 0 and
+                 label[b] == 1 and dualvar[b] == 0 ):
+                expandBlossom(b, True)
 
 # Verify that we reached the optimum solution.
-if CHECK_OPTIMUM:
-    verifyOptimum()
+    if CHECK_OPTIMUM:
+        verifyOptimum()
 
 # Transform mate[] such that mate[v] is the vertex to which v is paired.
-for v in range(nvertex):
-    if mate[v] >= 0:
-        mate[v] = endpoint[mate[v]]
-for v in range(nvertex):
-    assert mate[v] == -1 or mate[mate[v]] == v
+    for v in range(nvertex):
+        if mate[v] >= 0:
+            mate[v] = endpoint[mate[v]]
+    for v in range(nvertex):
+        assert mate[v] == -1 or mate[mate[v]] == v
 
-print(mate)
+    print(mate)

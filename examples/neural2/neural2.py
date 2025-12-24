@@ -8,8 +8,6 @@
 import math
 import random
 
-random.seed() #(0)
-
 # calculate a random number where:  a <= rand < b
 def rand(a, b):
     return (b-a)*random.random() + a
@@ -150,21 +148,22 @@ class NN:
 
 
 def demo():
-    # Teach network XOR function
-    pat = [
-        [[0,0], [0]],
-        [[0,1], [1]],
-        [[1,0], [1]],
-        [[1,1], [0]]
-    ]
+    for i in range(500):
+        random.seed(i)
+        # Teach network XOR function
+        pat = [
+            [[0,0], [0]],
+            [[0,1], [1]],
+            [[1,0], [1]],
+            [[1,1], [0]]
+        ]
 
-    # create a network with two input, two hidden, and one output nodes
-    n = NN(2, 400, 1)
-    # train it with some patterns
-    n.train(pat)
-    # test it
-    n.test(pat)
-
+        # create a network with two input, two hidden, and one output nodes
+        n = NN(2, 10, 1)
+        # train it with some patterns
+        n.train(pat)
+        # test it
+        n.test(pat)
 
 
 if __name__ == '__main__':

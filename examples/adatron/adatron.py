@@ -150,6 +150,8 @@ def calculate_error(alphas, bias, kernel_table, label_table):
 
 
 def main():
+    global PROTEINS
+    PROTEINS = []
     for filename, type in [("testdata/c.txt", CYTOSOLIC), ("testdata/e.txt", EXTRACELLULAR), ("testdata/n.txt", NUCLEAR), ("testdata/m.txt", MITOCHONDRIAL)]:#, ("b.txt", BLIND)]:
         load_file(filename, type)
     print("Creating feature tables...")
@@ -167,5 +169,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    for n in range(30):
+        main()
 

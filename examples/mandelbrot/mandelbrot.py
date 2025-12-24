@@ -28,6 +28,6 @@ def mandelbrot(max_iterations=1000):
                     break
         print(''.join(line))
 
-for x in range(250):
+for x in range(2500):
     mandelbrot()
 

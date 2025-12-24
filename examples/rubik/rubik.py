@@ -957,7 +957,7 @@ if __name__ == "__main__":
     print("Type r to randomize the cube")
     print("Type s to solve the cube")
     print("Type q to quit")
-    for x in range(1000):
+    for x in range(10000):
         random.seed(x)
         c = cube()
         c.randomize()

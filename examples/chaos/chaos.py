@@ -8,7 +8,6 @@
 import random
 import math
 from functools import reduce
-random.seed(1234)
 import time
 
 class GVector(object):
@@ -256,4 +255,6 @@ def main(n):
 
 
 if __name__ == "__main__":
-    main(300)
+    for n in range(12):
+        random.seed(n)
+        main(300)

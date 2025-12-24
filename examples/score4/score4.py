@@ -159,4 +159,5 @@ def main(args):
             return -1
 
 
-exit(main(argv))
+for n in range(12):
+    main(argv)

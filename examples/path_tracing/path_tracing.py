@@ -6,7 +6,7 @@ import sys
 # http://29a.ch/2010/5/17/path-tracing-a-cornell-box-in-javascript
 # converted to Python by <anonymous>
 
-ITERATIONS = 10  # should be much higher for good quality
+ITERATIONS = 110  # should be much higher for good quality
 
 
 class V3(object):

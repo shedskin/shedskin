@@ -214,7 +214,7 @@ class Pool:
 
 
 def main():
-    for p in range(20):
+    for p in range(80):
         seed(p)
         pool = Pool()
         start_time = time.time()

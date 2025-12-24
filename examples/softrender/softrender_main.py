@@ -93,7 +93,7 @@ def main(test):
         if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
-        if test and frame_count == 50:
+        if test and frame_count == 300:
             break
 
 if __name__ == '__main__':

@@ -111,7 +111,7 @@ def dijkstra(G, t, s):
     return S
 
 if __name__ == '__main__':
-    for n in range(5000):
+    for n in range(40000):
         if n % 100 == 0:
             random.seed(n)
         G = Graph()

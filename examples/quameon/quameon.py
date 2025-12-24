@@ -46,10 +46,6 @@ def find_atom(name):
   return None
 
 def run_qmc():
-   #import psyco
-   #psyco.full()
-   random.seed(130)
-
    qmcl = qmc_loop.qmc_loop()
    atom_name = 'He'
    print('Atom = ',atom_name)
@@ -113,5 +109,6 @@ def run_qmc():
 
 
 if __name__ == '__main__':
-  run_qmc()
-
+  for n in range(5):
+      random.seed(n)
+      run_qmc()

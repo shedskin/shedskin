@@ -1,17 +1,7 @@
-from functools import reduce
 # pisang - a simple sat solver in Python
 # (c) mark.dufour@gmail.com
 
-argv = ['','testdata/uuf250-010.cnf']
-
-cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in 'c%0\n']
-clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != 'p']
-nrofvars = [int(n[2]) for n in cnf if n[0] == 'p'][0]
-vars = list(range(nrofvars+1))
-occurrence = [[] for l in vars+list(range(-nrofvars,0))]
-for clause in clauses:
-    for lit in clause: occurrence[lit].append(clause)
-fixedt = [-1 for var in vars]
+from functools import reduce
 
 def solve_rec():
     global nodecount
@@ -104,6 +94,18 @@ def unfixed(clause):
 def unfixed_vars():
     return [var for var in vars[1:] if fixedt[var] == -1]
 
-nodecount = 0
-if not solve_rec():
-    print('unsatisfiable', nodecount)
+for x in range(3):
+    argv = ['','testdata/uuf250-010.cnf']
+
+    cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in 'c%0\n']
+    clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != 'p']
+    nrofvars = [int(n[2]) for n in cnf if n[0] == 'p'][0]
+    vars = list(range(nrofvars+1))
+    occurrence = [[] for l in vars+list(range(-nrofvars,0))]
+    for clause in clauses:
+        for lit in clause: occurrence[lit].append(clause)
+    fixedt = [-1 for var in vars]
+
+    nodecount = 0
+    if not solve_rec():
+        print('unsatisfiable', nodecount)
