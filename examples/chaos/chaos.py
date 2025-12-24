@@ -252,7 +252,7 @@ def main(n):
             3, [0, 0, 0, 1, 1, 1])
         ]
     c = Chaosgame(splines, 0.25)
-    return c.create_image_chaos(1000, 1200, "py.ppm", n)
+    return c.create_image_chaos(2000, 2000, "py.ppm", n)
 
 
 if __name__ == "__main__":
