@@ -6,7 +6,7 @@
 
 from time import time
 
-LOOPS = 10000000
+LOOPS = 20000000
 Ident1, Ident2, Ident3, Ident4, Ident5 = list(range(1,6))
 
 class Record:

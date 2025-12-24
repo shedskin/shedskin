@@ -137,3 +137,5 @@ def oliva(nx = 3000,   # Length of the computed screen matrix (number of cells)
 
 if __name__ == '__main__':
     oliva()
+    oliva()
+    oliva()

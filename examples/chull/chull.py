@@ -475,7 +475,7 @@ if __name__ == "__main__":
             cubef.append(Vector(random(),random(),random()))
 
         sphere=[]
-        for i in range(1000):
+        for i in range(2000):
             x,y,z = 2*random()-1,2*random()-1,2*random()-1
             if x*x+y*y+z*z < 1.0:
                 sphere.append(Vector(x,y,z))

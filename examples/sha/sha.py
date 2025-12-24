@@ -395,7 +395,7 @@ if __name__ == "__main__":
 #    textbin = bytes([ord(c) for c in text])
     textbin = open('testdata/n.txt', 'rb').read()
 
-    for n in range(50):
+    for n in range(200):
         shah = new(textbin)
         print(text, shah.hexdigest())
 
