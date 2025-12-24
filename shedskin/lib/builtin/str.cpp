@@ -535,7 +535,7 @@ __ss_int str::find(str *s, __ss_int a, __ss_int b) {
     size_t pos = view.find(s->unit);
     if(pos == std::string::npos)
         return -1;
-    return pos + a;
+    return (__ss_int)(pos + a);
 }
 
 __ss_int str::rfind(str *s, __ss_int a) {
