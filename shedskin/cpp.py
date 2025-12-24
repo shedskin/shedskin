@@ -3358,7 +3358,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             for i, item in enumerate(lvalue.elts):
                 rvalue_node = self.gx.item_rvalue[item]
                 if i == 0:
-                    if self.one_class(
+                    if self.only_classes(
                         rvalue_node, ("list", "str_", "bytes_", "tuple", "tuple2")
                     ):
                         self.output(
@@ -3370,7 +3370,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             self.gx, self.subtypes(rtypes, "unit"), mv=self.mv
                         )
                         self.output(
-                            "list<%s> *%s_list = new list<%s>(%s);"
+                            "list<%s> *%s_list = new list<%s>(%s);"  # TODO ugh.. iterable? can't we iterate then?
                             % (ts, temp, ts, temp)
                         )
                         temp = temp + "_list"
