@@ -131,7 +131,7 @@ def main():
     maxDistance = 10
     cityDistanceSeed = 1
     print("starting")
-    for n in range(40):
+    for n in range(400):
         seed = n
         cities = randomMatrix(numCities, maxDistance, cityDistanceSeed)
         path = bestPath(cities, seed, iter, boost)

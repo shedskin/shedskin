@@ -94,7 +94,7 @@ class Board(object):
         return "No solution"
 
 
-for n in range(30):
+for n in range(80):
     level = """\
 #######
 #     #

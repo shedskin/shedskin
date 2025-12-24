@@ -7,7 +7,6 @@ modified by mark.dufour@gmail.com to work with shedskin
 
 '''
 import random
-random.seed(1)
 
 def cmp(a, b):
     return (a > b) - (a < b)
@@ -17,7 +16,7 @@ def timsort(list_, comparefn=cmp):
     timsort_object = Timsort(list_, comparefn=comparefn)
     timsort_object.sort(low = 0, high = len(list_))
     assert timsort_object.list_ == sorted(timsort_object.list_)
-    
+
 def array_copy(list1, base1, list2, base2, length):
     '''
     Copy from list1 to list2 at offsets base1 and base2, for length elements.
@@ -1022,7 +1021,7 @@ def range_check(array_len, from_index, to_index):
     '''
     Checks that from_index and to_index are in range, and throws an
     appropriate exception if they aren't.
-    
+
     @param array_len the length of the array
     @param from_index the index of the first element of the range
     @param to_index the index after the last element of the range
@@ -1043,4 +1042,6 @@ def main():
     timsort(l)
 
 if __name__ == '__main__':
-    main()
+    for n in range(15):
+        random.seed(n)
+        main()

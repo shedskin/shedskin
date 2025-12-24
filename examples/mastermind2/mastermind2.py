@@ -140,7 +140,7 @@ def main():
     print('-' * 60)
 
 #    names = "s_bestinfo s_samplebest s_worstinfo s_allrand s_trynodup s_bestinfo".split()
-    for n in range(100):
+    for n in range(800):
         random.seed(n)
         eval_strategy('s_bestinfo', s_bestinfo)
         eval_strategy('s_samplebest', s_samplebest)

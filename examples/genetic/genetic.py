@@ -110,7 +110,7 @@ class SGA:
             self.crossingOverPop()
 
 if __name__ == '__main__':
-    for n in range(10):
+    for n in range(40):
         seed(n)
         sga = SGA()
         sga.generationsMax = 1200

@@ -10,10 +10,6 @@ copyright David Austin, license GPL2
 
 import sys
 
-updates = 0
-udates = [0] * 324
-nodes = 0
-
 #filename = None
 #def setfilename(s):
 #    global filename
@@ -150,16 +146,6 @@ def setroot(r):
     global root
     root = r
 
-solutions = 0
-o = []
-
-#def setprintsolution(f):
-#    global printsolution
-#    printsolution = f
-
-Lcol = 5
-Lrow = 2
-
 ## some basic matrix operations
 
 def matrixmultiply(m, n):
@@ -180,21 +166,6 @@ def matrixact(m, v):
             sum += m[i][j]*v[j]
         u[i] = sum
     return u
-
-## linear isometries to apply to kanoodle pieces
-identity = [ [1,0], [0,1] ]
-r90 = [ [0,-1], [1,0] ]
-r180 = [ [-1, 0], [0, -1]]
-r270 = [ [0,1], [-1,0] ]
-r1 = [ [1,0], [0, -1]]
-r2 = matrixmultiply(r1, r90)
-r3 = matrixmultiply(r1, r180)
-r4 = matrixmultiply(r1, r270)
-
-## sets of isometries
-
-symmetries = [identity, r90, r180, r270, r1, r2, r3, r4]
-rotations = [identity, r90, r180, r270]
 
 ## classes for each of the pieces
 
@@ -314,41 +285,6 @@ def set5x11():
     rows = 5
     columns = 11
 
-## set up the 5x11 board
-set5x11()
-
-## start building the matrix for the exact cover problem
-
-root = Column('root')
-root.left = root
-root.right = root
-
-last = root
-
-## build the columns
-
-pcolumns = {}
-for col2 in c1:
-    c = Column(col2)
-    last.right = c
-    c.left = last
-    c.right = root
-    root.left = c
-    last = c
-    pcolumns[col2] = c
-
-last = root
-for row in range(rows):
-    for col in range(columns):
-        c = Column('['+str(col) + ',' + str(row)+'] ')
-        c.extra = [col, row]
-
-        last.right.left = c
-        c.right = last.right
-        last.right = c
-        c.left = last
-        last = c
-
 ## check to see if a pieces fits on the board
 
 def validatecell(c):
@@ -361,57 +297,123 @@ def validate(orientation):
         if validatecell(cell) == False: return False
     return True
 
+for _ in range(60):
+    updates = 0
+    udates = [0] * 324
+    nodes = 0
+
+    solutions = 0
+    o = []
+
+#def setprintsolution(f):
+#    global printsolution
+#    printsolution = f
+
+    Lcol = 5
+    Lrow = 2
+
+## linear isometries to apply to kanoodle pieces
+    identity = [ [1,0], [0,1] ]
+    r90 = [ [0,-1], [1,0] ]
+    r180 = [ [-1, 0], [0, -1]]
+    r270 = [ [0,1], [-1,0] ]
+    r1 = [ [1,0], [0, -1]]
+    r2 = matrixmultiply(r1, r90)
+    r3 = matrixmultiply(r1, r180)
+    r4 = matrixmultiply(r1, r270)
+
+## sets of isometries
+
+    symmetries = [identity, r90, r180, r270, r1, r2, r3, r4]
+    rotations = [identity, r90, r180, r270]
+
+## set up the 5x11 board
+    set5x11()
+
+## start building the matrix for the exact cover problem
+
+    root = Column('root')
+    root.left = root
+    root.right = root
+
+    last = root
+
+## build the columns
+
+    pcolumns = {}
+    for col2 in c1:
+        c = Column(col2)
+        last.right = c
+        c.left = last
+        c.right = root
+        root.left = c
+        last = c
+        pcolumns[col2] = c
+
+    last = root
+    for row in range(rows):
+        for col in range(columns):
+            c = Column('['+str(col) + ',' + str(row)+'] ')
+            c.extra = [col, row]
+
+            last.right.left = c
+            c.right = last.right
+            last.right = c
+            c.left = last
+            last = c
+
+
 ## construct the rows of the matrix
 
-rownums = 0
-for tile in ominos:
-    for col in range(columns):
-        if tile.name == 'L' and col != Lcol: continue
-        for row in range(rows):
-            if tile.name == 'L' and row != Lrow: continue
-            orientations = tile.translate([col, row])
-            for orientation in orientations:
-                if validate(orientation) == False: continue
-                rownums += 1
-                element = Column()
-                element.right = element
-                element.left = element
+    rownums = 0
+    for tile in ominos:
+        for col in range(columns):
+            if tile.name == 'L' and col != Lcol: continue
+            for row in range(rows):
+                if tile.name == 'L' and row != Lrow: continue
+                orientations = tile.translate([col, row])
+                for orientation in orientations:
+                    if validate(orientation) == False: continue
+                    rownums += 1
+                    element = Column()
+                    element.right = element
+                    element.left = element
 
-                column = pcolumns[tile.name]
-                element.column = column
-                element.up = column.up
-                element.down = column
-                column.up.down = element
-                column.up = element
-                column.size += 1
-                rowelement = element
+                    column = pcolumns[tile.name]
+                    element.column = column
+                    element.up = column.up
+                    element.down = column
+                    column.up.down = element
+                    column.up = element
+                    column.size += 1
+                    rowelement = element
 
-                column = root.right
-                while column.extra != None:
-                    entry = column.extra
-                    for cell in orientation:
-                        if entry[0] == cell[0] and entry[1] == cell[1]:
-                            element = Column()
-                            rowelement.right.left = element
-                            element.right = rowelement.right
-                            rowelement.right = element
-                            element.left = rowelement
+                    column = root.right
+                    while column.extra != None:
+                        entry = column.extra
+                        for cell in orientation:
+                            if entry[0] == cell[0] and entry[1] == cell[1]:
+                                element = Column()
+                                rowelement.right.left = element
+                                element.right = rowelement.right
+                                rowelement.right = element
+                                element.left = rowelement
 
-                            element.column = column
-                            element.up = column.up
-                            element.down = column
-                            column.up.down = element
-                            column.up = element
-                            rowelement = element
-                            column.size += 1
-                    column = column.right
+                                element.column = column
+                                element.up = column.up
+                                element.down = column
+                                column.up.down = element
+                                column.up = element
+                                rowelement = element
+                                column.size += 1
+                        column = column.right
 
 ## apply the Dancing Links algorithm to the matrix
 
-try:
-    setroot(root)
-    print('begin search')
-    search(0)
-    print('finished search')
-except SystemExit:
-    pass
+    try:
+        setroot(root)
+        print('begin search')
+        search(0)
+        print('finished search')
+    except SystemExit:
+        pass

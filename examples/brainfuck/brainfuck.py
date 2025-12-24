@@ -62,5 +62,5 @@ def BF_interpreter(prog):
 
 if __name__ == '__main__':
     program = open('testdata/99bottles.bf', 'r').read()
-    for n in range(50):
+    for n in range(500):
         BF_interpreter(program)

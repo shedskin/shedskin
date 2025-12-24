@@ -165,7 +165,7 @@ class soduko:
                             assert False, "bugger7"
 
 def main():
-    for x in range(2000):
+    for x in range(8000):
         t = soduko(["800000600",
                        "040500100",
                        "070090000",

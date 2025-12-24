@@ -136,6 +136,5 @@ def oliva(nx = 3000,   # Length of the computed screen matrix (number of cells)
         outPGM.saverow( [255 * a[ix] for ix in range(nx)] )
 
 if __name__ == '__main__':
-    oliva()
-    oliva()
-    oliva()
+    for n in range(30):
+        oliva()

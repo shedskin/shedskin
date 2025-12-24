@@ -700,8 +700,8 @@ class BH(object):
             elif arg == "-h":
                 BH.usage()
 
-        BH.nbody = 10000  # shedskin test
-        BH.steps = 500
+        BH.nbody = 65000  # shedskin test
+        BH.steps = 2500
 
         if BH.nbody == 0:
             BH.usage()

@@ -5,7 +5,7 @@ board = [[empty for x in range(8)] for y in range(8)]
 board[3][3] = board[4][4] = white
 board[3][4] = board[4][3] = black
 player = {white: 'human', black: 'lalaoth'}
-depth = 4
+depth = 5
 directions = [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]
 corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
 flips = 0

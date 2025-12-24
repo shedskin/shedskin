@@ -1582,4 +1582,5 @@ def main():
     PPM(2*ppm.w, 2*ppm.h, rgb).save('randam2.ppm')
 
 if __name__ == '__main__':
-    main()
+    for n in range(18):
+        main()

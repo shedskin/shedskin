@@ -8,11 +8,11 @@ from math import sqrt
 
 def generateRandomPoints(npoints=6):
     """Generate a few random points v1...vn"""
-    print(npoints, "points x,y:")
+#    print(npoints, "points x,y:")
     points = []
     for i in range(npoints):
         xrand, yrand = random(), random()
-        print(xrand, yrand)
+#        print(xrand, yrand)
         for xoff in range(-1, 2):
             for yoff in range(-1, 2):
                 points.append( (xrand + xoff, yrand + yoff) )
@@ -48,8 +48,7 @@ from time import time
 
 if __name__ == '__main__':
     t1 = time()
-    print()
-    for n in range(2000):
+    for n in range(20000):
         seed(n)
         points = generateRandomPoints(10)
         screen = generateScreen(points, 40, 80)

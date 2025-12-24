@@ -457,7 +457,7 @@ class Hull:
         return evi,vi
 
 if __name__ == "__main__":
-    for n in range(100):
+    for n in range(1000):
         seed(n)
         # simple cube, integer coordinates
         cube=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]

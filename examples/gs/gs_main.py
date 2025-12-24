@@ -146,7 +146,7 @@ def main(test):
         if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
-        if test and frame_count == 200:
+        if test and frame_count == 1000:
             ingame = False
 
 

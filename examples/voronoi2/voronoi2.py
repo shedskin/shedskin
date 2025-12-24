@@ -758,7 +758,7 @@ if __name__=="__main__":
         usage()
         sys.exit(2)
 
-    for n in range(200000):
+    for n in range(1100000):
         doHelp = 0
         c = Context()
         c.doPrint = 0

@@ -169,5 +169,5 @@ def aigame(n, size=10, turn=1, players=2):
                     print("Victory for player "+str(b.isvictory())+"!")
 
 if __name__ == '__main__':
-    for n in range(5000):
+    for n in range(6500):
         aigame(n)

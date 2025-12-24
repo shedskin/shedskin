@@ -1219,5 +1219,5 @@ def main():
     print('converted %s to %s' % (inputfile, bmpfile))
 
 if __name__ == '__main__':
-    for n in range(50):
+    for n in range(110):
         main()
