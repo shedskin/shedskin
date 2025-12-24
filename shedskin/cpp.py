@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.cpp: C++ Code Generator
 
 This module is responsible for translating Python code into equivalent C++ code,
@@ -1498,6 +1498,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and self.only_classes(node.iter, ("file",))
         )
 
+    def fastchoiceiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
+        """Check if a node is a fast for-in-choice iterator loop"""
+        return (
+            isinstance(node.target, ast.Name)
+            and isinstance(node.iter, (ast.List, ast.Tuple))
+        )
+
     def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1538,6 +1545,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, True, False)
         elif self.fastfileiter(node):
             self.do_fastfileiter(node, func, False)
+            self.forbody(node, None, assname, func, True, False)
+        elif self.fastchoiceiter(node) and not (func and func.isGenerator):
+            self.do_fastchoiceiter(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
@@ -1625,6 +1635,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.visitm(node.target, ',', node.iter, ',', self.mv.tempcount[node][2:], ')', func)
         self.print(self.line)
         self.indent()
+
+    def do_fastchoiceiter(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
+        """Generate a fast for-in-choice loop"""
+        tempvar = self.mv.tempcount[node]
+        self.start()
+        self.visitm("for(auto ", tempvar, " : {", func)
+        for elem in node.iter.elts:
+            self.visit(elem, func)
+            if elem is not node.iter.elts[-1]:
+                self.append(',')
+        self.append('}) {')
+        self.print(self.line)
+        self.indent()
+        self.start()
+        self.visitm(node.target, ' = ', tempvar, func)
+        self.eol()
 
     def do_fastdictiter(
         self,
