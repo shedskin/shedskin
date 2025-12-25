@@ -494,14 +494,42 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
         throw new StopIteration();
     }
 
-    tuple2<T, T> *tuple = new tuple2<T, T>;
+    tuple2<T, T> *tuple;
     size_t n_exhausted = 0;
 
-    for (unsigned int i = 0; i < this->iters.size(); ++i) {
+    if(this->iters.size() == 2) {
+        T first, second;
+
         try  {
-            tuple->units.push_back(this->iters[i]->__next__());
+            first = this->iters[0]->__next__();
         } catch (StopIteration *) {
             n_exhausted += 1;
+        }
+
+        try  {
+            second = this->iters[1]->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+
+        if(!n_exhausted) {
+            if constexpr (std::is_same_v<T, __ss_int>) { // TODO make __ss_tuple_int do this check
+                tuple = __ss_tuple_int(2, first, second);
+            } else {
+                tuple = new tuple2<T, T>(2, first, second);
+            }
+        }
+
+    } else {
+        tuple = new tuple2<T, T>();
+        tuple->units.reserve(this->iters.size());
+
+        for (unsigned int i = 0; i < this->iters.size(); ++i) {
+            try  {
+                tuple->units.push_back(this->iters[i]->__next__());
+            } catch (StopIteration *) {
+                n_exhausted += 1;
+            }
         }
     }
 

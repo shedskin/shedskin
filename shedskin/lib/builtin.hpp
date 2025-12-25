@@ -271,6 +271,8 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
+tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
+
 /* slicing */
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
@@ -447,8 +449,6 @@ template<class T> T __seqiter<T>::__next__() {
     else if(len(t) < (__ss_int)expected) \
         throw new ValueError(new str("not enough values to unpack"));
 #endif
-
-tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 template<class T> list<T> *__ss_list() {
     list<T> *l =  new list<T>();
