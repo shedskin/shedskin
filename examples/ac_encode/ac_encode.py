@@ -4,6 +4,7 @@
 ## (c) David MacKay - Free software. License: GPL
 
 import os
+import time
 
 BETA0=1;BETA1=1 ## default prior distribution
 M = 30 ; ONE = (1<<M) ; HALF = (1<<(M-1))
@@ -207,5 +208,8 @@ def test():
 
 if __name__ == '__main__':
     for n in range(25000):
+        if n == 20000: # pypy stabilized
+            t0 = time.time()
         test()
         hardertest()
+    print('TIME %.2f' % (time.time()-t0))
