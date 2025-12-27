@@ -6,7 +6,7 @@
 
 from time import time
 
-LOOPS = 170000000
+LOOPS = 1000000
 Ident1, Ident2, Ident3, Ident4, Ident5 = list(range(1,6))
 
 class Record:
@@ -214,4 +214,9 @@ def Func3(EnumParIn):
     if EnumLoc == Ident3: return True
     return False
 
-main(LOOPS)
+for n in range(10):
+    if n == 5:
+        t0 = time()  # pypy has stabilized
+    main(LOOPS)
+print('TIME %.2f' % (time()-t0))
+

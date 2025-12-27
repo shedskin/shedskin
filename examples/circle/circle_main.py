@@ -104,8 +104,14 @@ def run(test):
         if not test and iterations % 10 == 0:
             print(time.time()-t0)
             t0 = time.time()
-        if test and iterations == 4000:
-            break
+
+        if test:
+            if iterations == 1000:  # pypy has stabilized
+                prev = time.time()
+            if iterations == 2000:
+                print('TIME %.2f' % (time.time()-prev))
+                break
+
         get_input()
 
         surface.fill((0, 0, 0))

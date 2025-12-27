@@ -12,6 +12,7 @@
 
 import math
 import random
+import time
 #import scipy.optimize
 
 import wave_func
@@ -90,7 +91,7 @@ def run_qmc():
    qmcl.nstep = 20
 
    #  Increase this number to make the run longer
-   qmcl.nblock = 50000
+   qmcl.nblock = 10000
 
    qmcl.add_observable(en_d)
    qmcl.compute_energy()
@@ -109,6 +110,9 @@ def run_qmc():
 
 
 if __name__ == '__main__':
-  for n in range(5):
-      random.seed(n)
-      run_qmc()
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        random.seed(n)
+        run_qmc()
+    print('TIME %.2f' % (time.time()-t0))

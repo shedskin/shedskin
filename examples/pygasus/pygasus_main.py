@@ -43,8 +43,12 @@ def main(test):
         if not test and counter % 60 == 0:
             print('FPS:', 60/total)
             total = 0
-        if test and counter == 2000:
-            break
+        if test:
+            if counter == 1000:
+                prev = time.time()
+            if counter == 2000:
+                print('TIME %.2f' % (time.time()-prev))
+                break
 
 if __name__ == '__main__':
    main(len(sys.argv) > 1 and sys.argv[1] == 'test')
