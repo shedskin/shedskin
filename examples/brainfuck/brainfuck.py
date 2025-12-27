@@ -2,6 +2,7 @@
 # Modified for ShedSkin, but can be used with Python/Psyco too
 
 from sys import stdin, stdout
+import time
 
 def BF_interpreter(prog):
     CELL = 255 # Or 65535  default 255
@@ -62,5 +63,8 @@ def BF_interpreter(prog):
 
 if __name__ == '__main__':
     program = open('testdata/99bottles.bf', 'r').read()
-    for n in range(500):
+    for n in range(200):
+        if n == 100:  # pypy has stabilized
+            t0 = time.time()
         BF_interpreter(program)
+    print('TIME %.2f' % (time.time()-t0))

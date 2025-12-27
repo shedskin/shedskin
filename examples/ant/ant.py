@@ -28,6 +28,7 @@
 #     cities       number of cities.
 
 import random
+import time
 
 # type Matrix = Array[Array[double]]
 # type Path = List[int]
@@ -131,12 +132,15 @@ def main():
     maxDistance = 10
     cityDistanceSeed = 1
     print("starting")
-    for n in range(400):
+    for n in range(200):
+        if n == 100:
+            t0 = time.time()  # pypy has stabilized
         seed = n
         cities = randomMatrix(numCities, maxDistance, cityDistanceSeed)
         path = bestPath(cities, seed, iter, boost)
         print(path)
         print("len = ", pathLength(cities, path))
+    print('TIME %.2f' % (time.time()-t0))
 
 if __name__ == "__main__":
     main()
