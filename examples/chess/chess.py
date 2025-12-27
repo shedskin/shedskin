@@ -15,6 +15,7 @@
 # turn, enpassant [26, 27]
 
 from copy import copy
+import time
 
 iNone = -999
 iTrue = 1
@@ -368,5 +369,9 @@ def speedTest():
   print(res)
 
 if __name__ == '__main__':
-    for n in range(170):
-        speedTest()
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(20):
+            speedTest()
+    print('TIME %.2f' % (time.time()-t0))

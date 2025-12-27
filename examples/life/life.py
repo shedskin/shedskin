@@ -21,6 +21,7 @@
 
 from collections import defaultdict
 from itertools import product
+import time
 
 def add(board, pos):
     """ Adds eight cells near current cell """
@@ -78,10 +79,14 @@ def bruteforce(rows, columns):
             #print board
 
 if __name__ == "__main__":
-    for n in range(220):
-        rows, columns = 4, 3
-        bruteforce(rows, columns)
-        print(count)
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()
+        for n in range(20):
+            rows, columns = 4, 3
+            bruteforce(rows, columns)
+            print(count)
+    print('TIME %.2f' % (time.time()-t0))
 #    try:
 #        rows, columns = int(argv[1]), int(argv[2])
 #    except IndexError:

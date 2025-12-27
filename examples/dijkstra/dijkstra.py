@@ -3,6 +3,7 @@
 # (C) 2006 Gustavo J.A.M. Carneiro, licensed under the GPL version 2
 
 import random
+import time
 
 class Vertex(object):
     __slots__ = ('name',)
@@ -111,23 +112,26 @@ def dijkstra(G, t, s):
     return S
 
 if __name__ == '__main__':
-    for n in range(40000):
-        if n % 100 == 0:
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(500):
             random.seed(n)
-        G = Graph()
-        s = G.V[random.randint(0, len(G.V) - 1)]
-        while True:
-            t = G.V[random.randint(0, len(G.V) - 1)]
-            if t is not s:
-                break
-        S = dijkstra(G, t, s)
-        if S:
-            if n == 4999:
-                print("dijkstra %s ---> %s: " % (s, t), S, G.distance(s, S))
-            for inter in S[:-1]:
-                S1 = dijkstra(G, t, inter)
+            G = Graph()
+            s = G.V[random.randint(0, len(G.V) - 1)]
+            while True:
+                t = G.V[random.randint(0, len(G.V) - 1)]
+                if t is not s:
+                    break
+            S = dijkstra(G, t, s)
+            if S:
                 if n == 4999:
-                    print("\t => dijkstra %s ---> %s: " % (inter, t), S1, G.distance(inter, S1))
-                if S1 != S[ (len(S) - len(S1)) : ]:
+                    print("dijkstra %s ---> %s: " % (s, t), S, G.distance(s, S))
+                for inter in S[:-1]:
+                    S1 = dijkstra(G, t, inter)
                     if n == 4999:
-                        print("************ ALARM! **************")
+                        print("\t => dijkstra %s ---> %s: " % (inter, t), S1, G.distance(inter, S1))
+                    if S1 != S[ (len(S) - len(S1)) : ]:
+                        if n == 4999:
+                            print("************ ALARM! **************")
+    print('TIME %.2f' % (time.time()-t0))

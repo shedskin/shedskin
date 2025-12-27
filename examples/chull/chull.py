@@ -5,6 +5,7 @@
 # http://michelanders.blogspot.nl/2012/02/3d-convex-hull-in-python.html
 
 from random import random, seed
+import time
 
 Z=2
 Y=1
@@ -457,29 +458,33 @@ class Hull:
         return evi,vi
 
 if __name__ == "__main__":
-    for n in range(1000):
-        seed(n)
-        # simple cube, integer coordinates
-        cube=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
-        # irregular tetrahedron
-        tetrahedron=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,1)]
-        # hexahedron
-        hexahedron=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,1),Vector(1,1,-1)]
-        # cube with an internalpoint, integer coordinates
-        cube_internal=[Vector(0,0,0),Vector(2,0,0),Vector(0,2,0),Vector(2,2,0),Vector(0,0,2),Vector(2,0,2),Vector(0,2,2),Vector(2,2,2),Vector(1,1,1)]
-        # pyramid, fractional coordinates
-        pyramid=[Vector(0,0,0),Vector(0,1,0),Vector(1,0,0),Vector(1,1,0),Vector(0.5,0.5,0.3)]
-        # simple cube with many internal points with random fractional coordinates
-        cubef=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
-        for i in range(20):
-            cubef.append(Vector(random(),random(),random()))
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(50):
+            seed(n)
+            # simple cube, integer coordinates
+            cube=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
+            # irregular tetrahedron
+            tetrahedron=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,1)]
+            # hexahedron
+            hexahedron=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,1),Vector(1,1,-1)]
+            # cube with an internalpoint, integer coordinates
+            cube_internal=[Vector(0,0,0),Vector(2,0,0),Vector(0,2,0),Vector(2,2,0),Vector(0,0,2),Vector(2,0,2),Vector(0,2,2),Vector(2,2,2),Vector(1,1,1)]
+            # pyramid, fractional coordinates
+            pyramid=[Vector(0,0,0),Vector(0,1,0),Vector(1,0,0),Vector(1,1,0),Vector(0.5,0.5,0.3)]
+            # simple cube with many internal points with random fractional coordinates
+            cubef=[Vector(0,0,0),Vector(1,0,0),Vector(0,1,0),Vector(1,1,0),Vector(0,0,1),Vector(1,0,1),Vector(0,1,1),Vector(1,1,1)]
+            for i in range(20):
+                cubef.append(Vector(random(),random(),random()))
 
-        sphere=[]
-        for i in range(2000):
-            x,y,z = 2*random()-1,2*random()-1,2*random()-1
-            if x*x+y*y+z*z < 1.0:
-                sphere.append(Vector(x,y,z))
-        h=Hull(sphere)
-        #print(h.debug("endresult"))
-        if n == 49:
-            h.Print()
+            sphere=[]
+            for i in range(2000):
+                x,y,z = 2*random()-1,2*random()-1,2*random()-1
+                if x*x+y*y+z*z < 1.0:
+                    sphere.append(Vector(x,y,z))
+            h=Hull(sphere)
+            #print(h.debug("endresult"))
+            if n == 49:
+                h.Print()
+    print('TIME %.2f' % (time.time()-t0))

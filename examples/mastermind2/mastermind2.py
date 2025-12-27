@@ -6,6 +6,7 @@ import random
 from math import log
 from collections import defaultdict
 from time import time as clock
+import time
 
 
 DIGITS = 4
@@ -140,13 +141,17 @@ def main():
     print('-' * 60)
 
 #    names = "s_bestinfo s_samplebest s_worstinfo s_allrand s_trynodup s_bestinfo".split()
-    for n in range(800):
-        random.seed(n)
-        eval_strategy('s_bestinfo', s_bestinfo)
-        eval_strategy('s_samplebest', s_samplebest)
-        eval_strategy('s_worstinfo', s_worstinfo)
-        eval_strategy('s_trynodup', s_trynodup)
-        eval_strategy('s_allrand', s_allrand)
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(20):
+            random.seed(n)
+            eval_strategy('s_bestinfo', s_bestinfo)
+            eval_strategy('s_samplebest', s_samplebest)
+            eval_strategy('s_worstinfo', s_worstinfo)
+            eval_strategy('s_trynodup', s_trynodup)
+            eval_strategy('s_allrand', s_allrand)
+    print('TIME %.2f' % (time.time()-t0))
 
 if __name__ == '__main__':
     main()

@@ -145,9 +145,15 @@ def main(test):
 
         if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
+
         frame_count += 1
-        if test and frame_count == 1000:
-            ingame = False
+        if test:
+            if frame_count == 500:  # pypy has stabilized (bit unstable?)
+                prev = time.time()
+
+            if frame_count == 1000:
+                ingame = False
+                print('TIME %.2f' % (time.time()-prev))
 
 
 if __name__ == '__main__':

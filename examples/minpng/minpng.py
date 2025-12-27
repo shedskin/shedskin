@@ -4,6 +4,7 @@
 # http://mainisusuallyafunction.blogspot.com/search/label/png
 
 import struct
+import time
 
 def be32(n):
     return struct.pack('>I', n)
@@ -56,11 +57,13 @@ def adler32(data):
         s2 = (s2 + s1) % 65521
     return (s2 << 16) + s1
 
-for n in range(30):
+for n in range(10):
+    if n == 5:
+        t0 = time.time()  # pypy has stabilized
     w, h = 1600, 1200
     img = []
     for y in range(h):
         for x in range(w):
             img.append(bytes([x % 256, y % 256, 0]))  # TODO int.to_bytes should be even faster, as no intermediate bytes object
-
     open('minpng.png', 'wb').write(to_png(w, h, b''.join(img)))
+print('TIME %.2f' % (time.time()-t0))

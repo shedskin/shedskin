@@ -9,6 +9,7 @@ copyright David Austin, license GPL2
 '''
 
 import sys
+import time
 
 #filename = None
 #def setfilename(s):
@@ -297,7 +298,9 @@ def validate(orientation):
         if validatecell(cell) == False: return False
     return True
 
-for _ in range(60):
+for loop in range(10):
+    if loop == 5:  # pypy has stabilized
+        t0 = time.time()
     updates = 0
     udates = [0] * 324
     nodes = 0
@@ -417,3 +420,5 @@ for _ in range(60):
         print('finished search')
     except SystemExit:
         pass
+
+print('TIME %.2f' % (time.time()-t0))

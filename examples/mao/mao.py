@@ -8,6 +8,7 @@ Original version of AO bench was written by Syoyo Fujita. The original code(Proc
 from math import sqrt, sin, cos, fabs
 import random
 from array import array
+import time
 
 WIDTH = 300
 HEIGHT = 300
@@ -247,7 +248,10 @@ def save_ppm(img, w, h, fname):
 
 if __name__ == '__main__':
     for x in range(10):
+        if x == 5:
+            t0 = time.time()
         random.seed(x)
         init_scene()
         img = render(WIDTH, HEIGHT, NSUBSAMPLES)
         save_ppm(img, WIDTH, HEIGHT, "mao.ppm")
+    print('TIME %.2f' % (time.time()-t0))

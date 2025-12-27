@@ -99,8 +99,12 @@ if __name__ == '__main__':
     n = 200
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
-    for d in range(70):
-        random.seed(d)
-        G = make_graph(n)
-        wt, nodes = bidirectional_dijkstra(G, (0,0), (n-1,n-1))
-        print('wt', wt)
+    for d in range(10):
+        if d == 5:
+            t0 = time.time()  # pypy has stabilized
+        for e in range(5):
+            random.seed(d)
+            G = make_graph(n)
+            wt, nodes = bidirectional_dijkstra(G, (0,0), (n-1,n-1))
+            print('wt', wt)
+    print('TIME %.2f' % (time.time()-t0))

@@ -3,6 +3,7 @@
 from math import pi, sin, cos
 from random import random, choice, seed
 from copy import copy
+import time
 
 FLOAT_MAX = 1e100
 
@@ -158,16 +159,20 @@ def print_eps(points, cluster_centers, W=400, H=400):
 
 
 def main():
-    for i in range(320):
-        seed(i)
+    for j in range(10):
+        if j == 5:  # pypy has stabilized
+            t0 = time.time()
+        for i in range(20):
+            seed(i)
 
-        npoints = 6000
-        k = 20 # # clusters
+            npoints = 6000
+            k = 20 # # clusters
 
-        points = generate_points(npoints, 10)
-        cluster_centers = lloyd(points, k)
-        if i == 319:
-            print_eps(points, cluster_centers)
+            points = generate_points(npoints, 10)
+            cluster_centers = lloyd(points, k)
+            if i == 319:
+                print_eps(points, cluster_centers)
+    print('TIME %.2f' % (time.time()-t0))
 
 
 main()

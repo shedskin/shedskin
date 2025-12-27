@@ -214,15 +214,19 @@ class Pool:
 
 
 def main():
-    for p in range(80):
-        seed(p)
-        pool = Pool()
-        start_time = time.time()
-        for epoch in range(10):
-            pool.advance_epoch()
-            best_individual = pool.get_best_individual()
-            if epoch == 9:
-                print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for p in range(10):
+            seed(p)
+            pool = Pool()
+            start_time = time.time()
+            for epoch in range(10):
+                pool.advance_epoch()
+                best_individual = pool.get_best_individual()
+                if epoch == 9:
+                    print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
+    print('TIME %.2f' % (time.time()-t0))
 
     print("Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness))
     print("Finished in %0.3f sec, best individual: %s" % (time.time() - start_time, best_individual))

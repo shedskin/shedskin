@@ -3,6 +3,7 @@
 # linear algebra..
 
 import copy
+import time
 
 def inner_prod(v1, v2):
      'inner production of two vectors.'
@@ -230,5 +231,9 @@ def main2():
             break
             #print(' %03i   %012i   %i  ' %(t,binary(t),types[t]))
 
-for x in range(400):
-    main2()
+for x in range(10):
+    if x == 5:
+        t0 = time.time()  # pypy has stabilized
+    for y in range(20):
+        main2()
+print('TIME %.2f' % (time.time()-t0))
