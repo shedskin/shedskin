@@ -255,6 +255,9 @@ def main(n):
 
 
 if __name__ == "__main__":
-    for n in range(12):
+    for n in range(10):
+        if n == 5:  # pypy has stabilized
+            t0 = time.time()
         random.seed(n)
         main(300)
+    print('TIME %.2f' % (time.time()-t0))

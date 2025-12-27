@@ -49,6 +49,7 @@ The package contains the following functions:
 ## This supplies the huffman algorithm, complete with encoders and decoders:
 
 import sys, os
+import time
 
 
 class node:
@@ -475,4 +476,7 @@ def uncompress_it(inputfile, outputfile):
 if __name__ == "__main__":
     sys.setrecursionlimit(10000)
     for n in range(100):
+        if n == 50:
+            t0 = time.time()  # pypy has stabilized
         test()
+    print('TIME %.2f' % (time.time()-t0))

@@ -4,6 +4,7 @@
 # placed in the public domain by Stavros Korokithakis
 
 from math import exp
+import time
 
 CYTOSOLIC = 0
 EXTRACELLULAR = 1
@@ -169,6 +170,8 @@ def main():
 
 
 if __name__ == "__main__":
-    for n in range(30):
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
         main()
-
+    print('TIME %.2f' % (time.time()-t0))

@@ -16,6 +16,7 @@ Have fun :-)
 http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/496884
 """
 import random
+import time
 
 class MazeReaderException(Exception):
     pass
@@ -478,8 +479,11 @@ class FilebasedMazeGame(MazeGame):
 
 if __name__ == '__main__':
     game = FilebasedMazeGame()
-    for x in range(25):
+    for x in range(10):
+        if x == 5:
+            t0 = time.time()  # pypy has stabilized
         random.seed(x)
         for y in range(30000):
             solver = game.runGame()
     solver.printResult()
+    print('TIME %.2f' % (time.time()-t0))
