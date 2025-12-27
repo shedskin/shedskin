@@ -16,7 +16,7 @@ GTP code by Folkert van Heusden <mail@vanheusden.com>
 import random, math, sys, time
 
 SIZE = 9
-GAMES = 100000
+GAMES = 10000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -625,6 +625,11 @@ if __name__ == '__main__':
         if len(sys.argv) == 2 and sys.argv[1] == '--gtp':
             gtp()
         else:
-            versus_cpu()
+            for n in range(10):
+                random.seed(n)
+                if n == 5:  # pypy has stabilized
+                    t0 = time.time()
+                versus_cpu()
+            print('TIME %.2f' % (time.time()-t0))
     except EOFError:
         pass

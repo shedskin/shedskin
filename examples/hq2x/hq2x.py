@@ -16,6 +16,7 @@
 #License along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
+import time
 
 LUT16to32 = 65536*[0]
 RGBtoYUV = 65536*[0]
@@ -1582,5 +1583,8 @@ def main():
     PPM(2*ppm.w, 2*ppm.h, rgb).save('randam2.ppm')
 
 if __name__ == '__main__':
-    for n in range(18):
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
         main()
+    print('TIME %.2f' % (time.time()-t0))

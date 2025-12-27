@@ -15,6 +15,7 @@ http://www.aims.ac.za/~mackay/itila/
 ## For license statement see  http://www.gnu.org/copyleft/gpl.html
 
 import sys, os
+import time
 
 def dec_to_bin( n , digits ):
     """ n is the number to convert to binary;  digits is the number of bits you want
@@ -292,6 +293,10 @@ def hardertest():
 #    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
 if __name__ == '__main__':
-    for n in range(1000):
-        test()
-        hardertest()
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(20):
+            test()
+            hardertest()
+    print('TIME %.2f' % (time.time()-t0))

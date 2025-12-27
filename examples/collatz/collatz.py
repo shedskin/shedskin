@@ -17,10 +17,6 @@
 
 import time
 
-N = 500000000
-K = 17
-bmask = 2**K-1
-
 def step(n, extra=False):
     if n % 2 == 0:
         return n // 2
@@ -30,63 +26,75 @@ def step(n, extra=False):
         else:
             return (3*n + 1)
 
-# lookups to perform K steps in one
-lookup_multistep = list(range(0, 2**K))
-lookup_c = [0] * len(lookup_multistep)
+def main():
+    N = 10000000
+    K = 17
+    bmask = 2**K-1
 
-for k in range(K):
-    lookup_c = [c + (i%2) for (i, c) in zip(lookup_multistep, lookup_c)]
-    lookup_multistep = [step(i, True) for i in lookup_multistep]
+    # lookups to perform K steps in one
+    lookup_multistep = list(range(0, 2**K))
+    lookup_c = [0] * len(lookup_multistep)
 
-lookup_pow = [3**c for c in range(K+1)]
+    for k in range(K):
+        lookup_c = [c + (i%2) for (i, c) in zip(lookup_multistep, lookup_c)]
+        lookup_multistep = [step(i, True) for i in lookup_multistep]
 
-# lookup for final steps (< 2**K)
-lookup_tail = [0]
-for n in range(1, 2**K):
-    steps = 0
-    while n != 1:
-        n = step(n)
-        steps += 1
-    lookup_tail.append(steps)
+    lookup_pow = [3**c for c in range(K+1)]
 
-print('1 2') # skipped record
+    # lookup for final steps (< 2**K)
+    lookup_tail = [0]
+    for n in range(1, 2**K):
+        steps = 0
+        while n != 1:
+            n = step(n)
+            steps += 1
+        lookup_tail.append(steps)
 
-t0 = time.time()
+    print('1 2') # skipped record
 
-delay_record = 0
-rest9 = 1
-for n in range(2, N):
-    # skip 2, 4, 5, 8 mod 9 and 5 mod 8
-    # as these cannot be records (see link in top)
-    rest9 += 1
-    if rest9 == 9:
-        rest9 = 0
-    if rest9 in (2, 4, 5, 8):
-        continue
-    if n & 7 == 5: # 5 mod 8
-       continue
+    t0 = time.time()
 
-    # use multistep lookups (see link in top)
-    orign = n
-    steps = 0
+    delay_record = 0
+    rest9 = 1
+    for n in range(2, N):
+        # skip 2, 4, 5, 8 mod 9 and 5 mod 8
+        # as these cannot be records (see link in top)
+        rest9 += 1
+        if rest9 == 9:
+            rest9 = 0
+        if rest9 in (2, 4, 5, 8):
+            continue
+        if n & 7 == 5: # 5 mod 8
+           continue
 
-    while n > bmask:
-        a = n >> K
-        b = n & bmask
+        # use multistep lookups (see link in top)
+        orign = n
+        steps = 0
 
-        c = lookup_c[b]
-        d = lookup_multistep[b]
+        while n > bmask:
+            a = n >> K
+            b = n & bmask
 
-        steps += 2*c + (K-c)
+            c = lookup_c[b]
+            d = lookup_multistep[b]
 
-        n = a*lookup_pow[c]+d
+            steps += 2*c + (K-c)
 
-    # add final steps
-    steps += lookup_tail[n]
+            n = a*lookup_pow[c]+d
 
-    # check record
-    if steps > delay_record:
-        delay_record = steps
-        print(delay_record, orign)
+        # add final steps
+        steps += lookup_tail[n]
 
-print('%.2f numbers/second' % (N/((time.time()-t0))))
+        # check record
+        if steps > delay_record:
+            delay_record = steps
+            print(delay_record, orign)
+
+    print('%.2f numbers/second' % (N/((time.time()-t0))))
+
+if __name__ == '__main__':
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        main()
+    print('TIME %.2f' % (time.time()-t0))

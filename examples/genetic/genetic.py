@@ -5,6 +5,7 @@
 from random import random, randint, choice, seed
 from math import sin, pi
 from copy import copy
+import time
 
 infiniteNeg = -1e302
 
@@ -110,11 +111,15 @@ class SGA:
             self.crossingOverPop()
 
 if __name__ == '__main__':
-    for n in range(40):
-        seed(n)
-        sga = SGA()
-        sga.generationsMax = 1200
-        sga.genomeSize = 160
-        sga.popSize = 120
-        sga.geneMutationProb = 0.01
-        sga.run()
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(5):
+            seed(n)
+            sga = SGA()
+            sga.generationsMax = 1200
+            sga.genomeSize = 160
+            sga.popSize = 120
+            sga.geneMutationProb = 0.01
+            sga.run()
+    print('TIME %.2f' % (time.time()-t0))

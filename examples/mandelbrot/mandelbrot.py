@@ -3,6 +3,8 @@
 # See also vectorized Python+Numeric+Pygame version:
 #   http://www.pygame.org/pcr/mandelbrot/index.php
 
+import time
+
 def mandelbrot(max_iterations=1000):
     bailout = 16
     for y in range(-39, 39):
@@ -28,6 +30,10 @@ def mandelbrot(max_iterations=1000):
                     break
         print(''.join(line))
 
-for x in range(2500):
-    mandelbrot()
+for x in range(10):
+    if x == 5:
+        t0 = time.time()  # pypy has stabilized
+    for y in range(20):
+        mandelbrot()
+print('TIME %.2f' % (time.time()-t0))
 
