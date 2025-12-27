@@ -111,7 +111,7 @@ def main(q_in, q_out, test):
             pygame.display.flip()
 
             if count == 0:
-                print("That took %.3f seconds." % (time.time() - startTime))
+                print("TIME %.2f" % (time.time() - startTime))
                 if test:
                     ingame = False
                 break
