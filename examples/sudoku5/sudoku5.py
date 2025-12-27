@@ -5,6 +5,7 @@ License: GNU General Public License <http://www.gnu.org/licenses/>
 """
 
 from itertools import product
+import time
 
 def solve_sudoku(size, grid):
     """An efficient Sudoku solver using Algorithm X."""
@@ -83,7 +84,11 @@ if __name__ == "__main__":
         [0, 0, 0, 4, 1, 9, 0, 0, 5],
         [0, 0, 0, 0, 8, 0, 0, 7, 9],
     ]
-    for n in range(14000):
-        for solution in solve_sudoku((3, 3), grid):
-            if n == 9999:
-                print("\n".join(str(s) for s in solution))
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(100):
+            for solution in solve_sudoku((3, 3), grid):
+                if n == 9999:
+                    print("\n".join(str(s) for s in solution))
+    print('TIME %.2f' % (time.time()-t0))

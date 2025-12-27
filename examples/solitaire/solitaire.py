@@ -9,6 +9,7 @@ John Dell'Aquila <jbd@alum.mit.edu>
 
 import string
 import sys
+import time
 
 
 def toNumber(c):
@@ -165,13 +166,17 @@ if __name__ == "__main__":
         usage()
     elif True: #args[1] == "-test":
         s = Solitaire()
-        for n in range(120000):
-            for txt, key, cipher in testCases:
-                coded = s.encrypt(txt, key)
-                assert cipher == coded
-                decoded = s.decrypt(coded, key)
-                assert decoded[:len(txt)] == txt.upper()
-#                print(decoded[: len(txt)], txt.upper())
+        for m in range(10):
+            if m == 5:
+                t0 = time.time()  # pypy has stabilized
+            for n in range(5000):
+                for txt, key, cipher in testCases:
+                    coded = s.encrypt(txt, key)
+                    assert cipher == coded
+                    decoded = s.decrypt(coded, key)
+                    assert decoded[:len(txt)] == txt.upper()
+                    #print(decoded[: len(txt)], txt.upper())
+        print('TIME %.2f' % (time.time()-t0))
         print("All tests passed.")
     elif len(args) < 3:
         usage()

@@ -2,6 +2,7 @@
 # --- jack.ha@gmail.com
 #
 # sudoku solver
+import time
 
 
 def validMove(puzzle, x, y, number):
@@ -190,5 +191,9 @@ def main():
 
 
 iterations = 0
-for x in range(2500):
-    main()
+for x in range(10):
+    if x == 5:
+        t0 = time.time()
+    for y in range(20):
+        main()
+print('TIME %.2f' % (time.time()-t0))

@@ -11,6 +11,8 @@
 ##   g is a grid,   e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'123489', 'A2':'8', ...}
 
+import time
+
 def cross(A, B):
     return [a+b for a in A for b in B]
 
@@ -96,8 +98,11 @@ def printboard(values):
     return values
 
 if __name__ == '__main__':
-    for n in range(25):
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()
         solve_file("testdata/top95.txt", '\n', printboard)
+    print('TIME %.2f' % (time.time()-t0))
 
 ## References used:
 ## http://www.scanraid.com/BasicStrategies.htm

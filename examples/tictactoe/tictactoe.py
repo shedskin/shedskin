@@ -2,6 +2,7 @@
 # --- coriolinus@gmail.com
 
 from math import exp
+import time
 
 #functions
 def sigmoid(x):
@@ -169,5 +170,9 @@ def aigame(n, size=10, turn=1, players=2):
                     print("Victory for player "+str(b.isvictory())+"!")
 
 if __name__ == '__main__':
-    for n in range(6500):
-        aigame(n)
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(40):
+            aigame(n)
+    print('TIME %.2f' % (time.time()-t0))

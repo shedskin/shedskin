@@ -138,10 +138,10 @@ def main(test):
         frame_count += 1
 
         if test:
-            if frame_count == 500:  # pypy has stabilized
+            if frame_count == 200:  # pypy has stabilized
                 prev = time.time()
 
-            if frame_count == 1000:
+            if frame_count == 400:
                 print('TIME %.2f' % (time.time()-prev))
                 break
 

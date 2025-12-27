@@ -5,6 +5,7 @@
 
 from random import random, seed # for generateRandomPoints
 from math import sqrt
+import time
 
 def generateRandomPoints(npoints=6):
     """Generate a few random points v1...vn"""
@@ -44,14 +45,13 @@ def generateScreen(points, rows=40, cols=80):
     return "".join(screen)
 
 
-from time import time
-
 if __name__ == '__main__':
-    t1 = time()
-    for n in range(20000):
-        seed(n)
-        points = generateRandomPoints(10)
-        screen = generateScreen(points, 40, 80)
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()
+        for n in range(500):
+            seed(n)
+            points = generateRandomPoints(10)
+            screen = generateScreen(points, 40, 80)
+    print('TIME %.2f' % (time.time()-t0))
     print(screen)
-    t2 = time()
-    print(round(t2-t1, 3))

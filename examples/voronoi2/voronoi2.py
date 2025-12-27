@@ -27,6 +27,7 @@
 # Steve Fortune's homepage: http://netlib.bell-labs.com/cm/cs/who/sjf/index.html
 #
 #############################################################################
+import time
 
 def usage():
     print("""
@@ -758,34 +759,37 @@ if __name__=="__main__":
         usage()
         sys.exit(2)
 
-    for n in range(1100000):
-        doHelp = 0
-        c = Context()
-        c.doPrint = 0
-        for opt in optlist:
-            if opt[0] == "-d":  c.debug = 1
-            if opt[0] == "-p":  c.plot  = 1
-            if opt[0] == "-t":  c.triangulate = True
-            if opt[0] == "-h":  doHelp = 1
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(10000):
+            doHelp = 0
+            c = Context()
+            c.doPrint = 0
+            for opt in optlist:
+                if opt[0] == "-d":  c.debug = 1
+                if opt[0] == "-p":  c.plot  = 1
+                if opt[0] == "-t":  c.triangulate = True
+                if opt[0] == "-h":  doHelp = 1
 
-        if not doHelp:
-            pts = []
+            if not doHelp:
+                pts = []
 #            fp = sys.stdin
 #            if len(args) > 0:
 #                fp = open(args[0],'r')
-            fp = open('voronoi2.txt', 'r')
-            for line in fp:
-                fld = line.split()
-                x = float(fld[0])
-                y = float(fld[1])
-                pts.append(Site(x,y))
-            fp.close()
+                fp = open('voronoi2.txt', 'r')
+                for line in fp:
+                    fld = line.split()
+                    x = float(fld[0])
+                    y = float(fld[1])
+                    pts.append(Site(x,y))
+                fp.close()
 #            if len(args) > 0: fp.close()
 
-        if doHelp or len(pts) == 0:
-            usage()
-            sys.exit(2)
+            if doHelp or len(pts) == 0:
+                usage()
+                sys.exit(2)
 
-        sl = SiteList(pts)
-        voronoi(sl,c)
-
+            sl = SiteList(pts)
+            voronoi(sl,c)
+    print('TIME %.2f' % (time.time()-t0))

@@ -1,5 +1,5 @@
 import random
-random.seed(1)
+import time
 
 # found here: http://pastebin.com/KwGMujyB
 # adapted to compile with shedskin by mark dufour
@@ -957,12 +957,16 @@ if __name__ == "__main__":
     print("Type r to randomize the cube")
     print("Type s to solve the cube")
     print("Type q to quit")
-    for x in range(10000):
-        random.seed(x)
-        c = cube()
-        c.randomize()
-        print(c.strCube())
-        c.solveCube()
+    for x in range(20):
+        if x == 10:
+            t0 = time.time()  # pypy has stabilized
+        for y in range(40):
+            random.seed(y)
+            c = cube()
+            c.randomize()
+            print(c.strCube())
+            c.solveCube()
+    print('TIME %.2f' % (time.time()-t0))
 #    command = ""
 #    while command != "q":
 #        command = raw_input(">>> ")[0].lower()

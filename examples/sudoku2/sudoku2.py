@@ -224,11 +224,15 @@ class board(object):
 
 
 def main():
-    for n in range(5000):
-        puzzle = board()
-        puzzle.fread("testdata/b6.pz")
-        print(puzzle)
-        puzzle.solve()
+    for m in range(10):
+        if m == 5:
+            t0 = time()  # pypy has stabilized
+        for n in range(20):
+            puzzle = board()
+            puzzle.fread("testdata/b6.pz")
+            print(puzzle)
+            puzzle.solve()
+    print('TIME %.2f' % (time()-t0))
 
 
 if __name__ == "__main__":

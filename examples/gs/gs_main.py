@@ -148,10 +148,10 @@ def main(test):
 
         frame_count += 1
         if test:
-            if frame_count == 500:  # pypy has stabilized (bit unstable?)
+            if frame_count == 200:  # pypy has stabilized (bit unstable?)
                 prev = time.time()
 
-            if frame_count == 1000:
+            if frame_count == 400:
                 ingame = False
                 print('TIME %.2f' % (time.time()-prev))
 

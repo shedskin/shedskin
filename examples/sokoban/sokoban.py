@@ -1,4 +1,5 @@
 from collections import deque
+import time
 
 class Direction:
     def __init__(self, dx, dy, letter):
@@ -94,7 +95,9 @@ class Board(object):
         return "No solution"
 
 
-for n in range(80):
+for n in range(10):
+    if n == 5:
+        t0 = time.time()  # pypy has stabilized
     level = """\
 #######
 #     #
@@ -109,3 +112,4 @@ for n in range(80):
     print()
     b = Board(level)
     print(b.solve())
+print('TIME %.2f' % (time.time()-t0))

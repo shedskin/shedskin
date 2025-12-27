@@ -24,6 +24,7 @@ Based on C++ code by Dr. Tony Lin:
 *****************************************************************************
 """
 
+import time
 
 M_SOF0  = 0xc0
 M_SOF1  = 0xc1
@@ -1219,5 +1220,8 @@ def main():
     print('converted %s to %s' % (inputfile, bmpfile))
 
 if __name__ == '__main__':
-    for n in range(110):
+    for n in range(20):
+        if n == 10:
+            t0 = time.time()  # pypy has stabilized
         main()
+    print('TIME %.2f' % (time.time()-t0))
