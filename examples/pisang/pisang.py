@@ -2,6 +2,7 @@
 # (c) mark.dufour@gmail.com
 
 from functools import reduce
+import time
 
 def solve_rec():
     global nodecount
@@ -94,7 +95,9 @@ def unfixed(clause):
 def unfixed_vars():
     return [var for var in vars[1:] if fixedt[var] == -1]
 
-for x in range(3):
+for x in range(5):
+    if x == 4:
+        t0 = time.time()  # pypy has stabilized
     argv = ['','testdata/uuf250-010.cnf']
 
     cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in 'c%0\n']
@@ -109,3 +112,4 @@ for x in range(3):
     nodecount = 0
     if not solve_rec():
         print('unsatisfiable', nodecount)
+print('TIME %.2f' % (time.time()-t0))

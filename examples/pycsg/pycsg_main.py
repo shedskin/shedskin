@@ -1,8 +1,11 @@
 import sys
+import time
 
 from csg.core import CSG
 
-for n in range(15):
+for n in range(10):
+    if n == 5:
+        t0 = time.time()  # pypy has stabilized
     d = CSG.sphere(radius=1.3, stacks=32, slices=32)
     a = CSG.cube()
     b = CSG.cylinder(radius=0.5, start=[0., -2., 0.], end=[0., 2., 0.], slices=32)
@@ -12,3 +15,4 @@ for n in range(15):
     #sys.setrecursionlimit(10000)
 
     d.intersect(a).subtract(b).subtract(c).subtract(e).saveVTK('output.vtk')
+print('TIME %.2f' % (time.time()-t0))
