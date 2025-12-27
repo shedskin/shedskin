@@ -16,6 +16,7 @@ Copyright 2009 Joris van Rantwijk, license GPL2 or later
 """
 
 from sys import stderr
+import time
 
 def debug(s):
     print('DEBUG:', s, file=stderr)
@@ -453,22 +454,25 @@ def checkDelta3():
         DEBUG('bk=%d tbk=%d bd=%s tbd=%s' % (bk, tbk, repr(bd), repr(tbd)))
     assert bd == tbd
 
-for n in range(40):
-# If assigned, DEBUG(str) is called with lots of debug messages.
+for n in range(10):
+    if n == 5:
+        t0 = time.time()  # pypy has stabilized
+
+    # If assigned, DEBUG(str) is called with lots of debug messages.
     DEBUG = debug
     DEBUG = None
 
-# Check delta2/delta3 computation after every substage;
-# only works on integer weights, slows down the algorithm to O(n^4).
+    # Check delta2/delta3 computation after every substage;
+    # only works on integer weights, slows down the algorithm to O(n^4).
     CHECK_DELTA = False
 
-# Check optimality of solution before returning; only works on integer weights.
+    # Check optimality of solution before returning; only works on integer weights.
     CHECK_OPTIMUM = True
 
-# read input
+    # read input
     input = open('testdata/bench_mwmatching_2039_250_a.gr')
     s = next(input).split()
-#s = raw_input().split()
+    #s = raw_input().split()
     assert s[0] == 'p' and s[1] == 'edge'
     edges = []
     for i in range(int(s[3])):
@@ -492,19 +496,19 @@ for n in range(40):
 
     This function takes time O(n ** 3)."""
 
-#
-# Vertices are numbered 0 .. (nvertex-1).
-# Non-trivial blossoms are numbered nvertex .. (2*nvertex-1)
-#
-# Edges are numbered 0 .. (nedge-1).
-# Edge endpoints are numbered 0 .. (2*nedge-1), such that endpoints
-# (2*k) and (2*k+1) both belong to edge k.
-#
-# Many terms used in the comments (sub-blossom, T-vertex) come from
-# the paper by Galil; read the paper before reading this code.
-#
+    #
+    # Vertices are numbered 0 .. (nvertex-1).
+    # Non-trivial blossoms are numbered nvertex .. (2*nvertex-1)
+    #
+    # Edges are numbered 0 .. (nedge-1).
+    # Edge endpoints are numbered 0 .. (2*nedge-1), such that endpoints
+    # (2*k) and (2*k+1) both belong to edge k.
+    #
+    # Many terms used in the comments (sub-blossom, T-vertex) come from
+    # the paper by Galil; read the paper before reading this code.
+    #
 
-# Count vertices.
+    # Count vertices.
     nedge = len(edges)
     nvertex = 0
     for (i, j, w) in edges:
@@ -514,111 +518,111 @@ for n in range(40):
         if j >= nvertex:
             nvertex = j + 1
 
-# Find the maximum edge weight.
+    # Find the maximum edge weight.
     maxweight = max(0, max([ wt for (i, j, wt) in edges ]))
 
-# If p is an edge endpoint,
-# endpoint[p] is the vertex to which endpoint p is attached.
-# Not modified by the algorithm.
+    # If p is an edge endpoint,
+    # endpoint[p] is the vertex to which endpoint p is attached.
+    # Not modified by the algorithm.
     endpoint = [ edges[p//2][p%2] for p in range(2*nedge) ]
 
-# If v is a vertex,
-# neighbend[v] is the list of remote endpoints of the edges attached to v.
-# Not modified by the algorithm.
+    # If v is a vertex,
+    # neighbend[v] is the list of remote endpoints of the edges attached to v.
+    # Not modified by the algorithm.
     neighbend = [ [ ] for i in range(nvertex) ]
     for k in range(len(edges)):
         (i, j, w) = edges[k]
         neighbend[i].append(2*k+1)
         neighbend[j].append(2*k)
 
-# If v is a vertex,
-# mate[v] is the remote endpoint of its matched edge, or -1 if it is single
-# (i.e. endpoint[mate[v]] is v's partner vertex).
-# Initially all vertices are single; updated during augmentation.
+    # If v is a vertex,
+    # mate[v] is the remote endpoint of its matched edge, or -1 if it is single
+    # (i.e. endpoint[mate[v]] is v's partner vertex).
+    # Initially all vertices are single; updated during augmentation.
     mate = nvertex * [ -1 ]
 
-# If b is a top-level blossom,
-# label[b] is 0 if b is unlabeled (free);
-#             1 if b is an S-vertex/blossom;
-#             2 if b is a T-vertex/blossom.
-# The label of a vertex is found by looking at the label of its
-# top-level containing blossom.
-# If v is a vertex inside a T-blossom,
-# label[v] is 2 iff v is reachable from an S-vertex outside the blossom.
-# Labels are assigned during a stage and reset after each augmentation.
+    # If b is a top-level blossom,
+    # label[b] is 0 if b is unlabeled (free);
+    #             1 if b is an S-vertex/blossom;
+    #             2 if b is a T-vertex/blossom.
+    # The label of a vertex is found by looking at the label of its
+    # top-level containing blossom.
+    # If v is a vertex inside a T-blossom,
+    # label[v] is 2 iff v is reachable from an S-vertex outside the blossom.
+    # Labels are assigned during a stage and reset after each augmentation.
     label = (2 * nvertex) * [ 0 ]
 
-# If b is a labeled top-level blossom,
-# labelend[b] is the remote endpoint of the edge through which b obtained
-# its label, or -1 if b's base vertex is single.
-# If v is a vertex inside a T-blossom and label[v] == 2,
-# labelend[v] is the remote endpoint of the edge through which v is
-# reachable from outside the blossom.
+    # If b is a labeled top-level blossom,
+    # labelend[b] is the remote endpoint of the edge through which b obtained
+    # its label, or -1 if b's base vertex is single.
+    # If v is a vertex inside a T-blossom and label[v] == 2,
+    # labelend[v] is the remote endpoint of the edge through which v is
+    # reachable from outside the blossom.
     labelend = (2 * nvertex) * [ -1 ]
 
-# If v is a vertex,
-# inblossom[v] is the top-level blossom to which v belongs.
-# If v is a top-level vertex, v is itself a blossom (a trivial blossom)
-# and inblossom[v] == v.
-# Initially all vertices are top-level trivial blossoms.
+    # If v is a vertex,
+    # inblossom[v] is the top-level blossom to which v belongs.
+    # If v is a top-level vertex, v is itself a blossom (a trivial blossom)
+    # and inblossom[v] == v.
+    # Initially all vertices are top-level trivial blossoms.
     inblossom = list(range(nvertex))
 
-# If b is a sub-blossom,
-# blossomparent[b] is its immediate parent (sub-)blossom.
-# If b is a top-level blossom, blossomparent[b] is -1.
+    # If b is a sub-blossom,
+    # blossomparent[b] is its immediate parent (sub-)blossom.
+    # If b is a top-level blossom, blossomparent[b] is -1.
     blossomparent = (2 * nvertex) * [ -1 ]
 
-# If b is a non-trivial (sub-)blossom,
-# blossomchilds[b] is an ordered list of its sub-blossoms, starting with
-# the base and going round the blossom.
+    # If b is a non-trivial (sub-)blossom,
+    # blossomchilds[b] is an ordered list of its sub-blossoms, starting with
+    # the base and going round the blossom.
     blossomchilds = (2 * nvertex) * [ None ]
 
-# If b is a (sub-)blossom,
-# blossombase[b] is its base VERTEX (i.e. recursive sub-blossom).
+    # If b is a (sub-)blossom,
+    # blossombase[b] is its base VERTEX (i.e. recursive sub-blossom).
     blossombase = list(range(nvertex)) + nvertex * [ -1 ]
 
-# If b is a non-trivial (sub-)blossom,
-# blossomendps[b] is a list of endpoints on its connecting edges,
-# such that blossomendps[b][i] is the local endpoint of blossomchilds[b][i]
-# on the edge that connects it to blossomchilds[b][wrap(i+1)].
+    # If b is a non-trivial (sub-)blossom,
+    # blossomendps[b] is a list of endpoints on its connecting edges,
+    # such that blossomendps[b][i] is the local endpoint of blossomchilds[b][i]
+    # on the edge that connects it to blossomchilds[b][wrap(i+1)].
     blossomendps = (2 * nvertex) * [ None ]
 
-# If v is a free vertex (or an unreached vertex inside a T-blossom),
-# bestedge[v] is the edge to an S-vertex with least slack,
-# or -1 if there is no such edge.
-# If b is a (possibly trivial) top-level S-blossom,
-# bestedge[b] is the least-slack edge to a different S-blossom,
-# or -1 if there is no such edge.
-# This is used for efficient computation of delta2 and delta3.
+    # If v is a free vertex (or an unreached vertex inside a T-blossom),
+    # bestedge[v] is the edge to an S-vertex with least slack,
+    # or -1 if there is no such edge.
+    # If b is a (possibly trivial) top-level S-blossom,
+    # bestedge[b] is the least-slack edge to a different S-blossom,
+    # or -1 if there is no such edge.
+    # This is used for efficient computation of delta2 and delta3.
     bestedge = (2 * nvertex) * [ -1 ]
 
-# If b is a non-trivial top-level S-blossom,
-# blossombestedges[b] is a list of least-slack edges to neighbouring
-# S-blossoms, or None if no such list has been computed yet.
-# This is used for efficient computation of delta3.
+    # If b is a non-trivial top-level S-blossom,
+    # blossombestedges[b] is a list of least-slack edges to neighbouring
+    # S-blossoms, or None if no such list has been computed yet.
+    # This is used for efficient computation of delta3.
     blossombestedges = (2 * nvertex) * [ None ]
 
-# List of currently unused blossom numbers.
+    # List of currently unused blossom numbers.
     unusedblossoms = list(range(nvertex, 2*nvertex))
 
-# If v is a vertex,
-# dualvar[v] = 2 * u(v) where u(v) is the v's variable in the dual
-# optimization problem (multiplication by two ensures integer values
-# throughout the algorithm if all edge weights are integers).
-# If b is a non-trivial blossom,
-# dualvar[b] = z(b) where z(b) is b's variable in the dual optimization
-# problem.
+    # If v is a vertex,
+    # dualvar[v] = 2 * u(v) where u(v) is the v's variable in the dual
+    # optimization problem (multiplication by two ensures integer values
+    # throughout the algorithm if all edge weights are integers).
+    # If b is a non-trivial blossom,
+    # dualvar[b] = z(b) where z(b) is b's variable in the dual optimization
+    # problem.
     dualvar = nvertex * [ maxweight ] + nvertex * [ 0 ]
 
-# If allowedge[k] is true, edge k has zero slack in the optimization
-# problem; if allowedge[k] is false, the edge's slack may or may not
-# be zero.
+    # If allowedge[k] is true, edge k has zero slack in the optimization
+    # problem; if allowedge[k] is false, the edge's slack may or may not
+    # be zero.
     allowedge = nedge * [ False ]
 
-# Queue of newly discovered S-vertices.
+    # Queue of newly discovered S-vertices.
     queue = [ ]
 
-# Main loop: continue until no further improvement is possible.
+    # Main loop: continue until no further improvement is possible.
     for t in range(nvertex):
 
         # Each iteration of this loop is a "stage".
@@ -835,11 +839,11 @@ for n in range(40):
                  label[b] == 1 and dualvar[b] == 0 ):
                 expandBlossom(b, True)
 
-# Verify that we reached the optimum solution.
+    # Verify that we reached the optimum solution.
     if CHECK_OPTIMUM:
         verifyOptimum()
 
-# Transform mate[] such that mate[v] is the vertex to which v is paired.
+    # Transform mate[] such that mate[v] is the vertex to which v is paired.
     for v in range(nvertex):
         if mate[v] >= 0:
             mate[v] = endpoint[mate[v]]
@@ -847,3 +851,5 @@ for n in range(40):
         assert mate[v] == -1 or mate[mate[v]] == v
 
     print(mate)
+
+print('TIME %.2f' % (time.time()-t0))

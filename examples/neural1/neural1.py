@@ -4,13 +4,11 @@
 
 # Constants defining the neuron's response curve
 import sys
+import time
 
 minact, rest, thresh, decay, maxact = -0.2, -0.1, 0.0, 0.1, 1.0
 alpha, gamma, estr = 0.1, 0.1, 0.4
 
-units = []
-pools = []
-unitbyname = {}
 
 class Unit(object):
     __slots__ = ['name', 'pool', 'extinp', 'activation', 'output', 'exciters', 'newact']
@@ -102,7 +100,7 @@ def touch(itemstr, weight=1.0):
     for name in itemstr.split():
         unitbyname[name].setext(weight)
 
-def run(times=1200000):
+def run(times=100000):
     """Run n-cycles and display result"""
     for i in range(times):
         for pool in pools:
@@ -115,7 +113,7 @@ def run(times=1200000):
     for pool in pools:
         pool.display()
 
-if __name__ == '__main__':
+def main():
     if '--help' in sys.argv:
         print(sys.argv[0])
         print()
@@ -182,3 +180,14 @@ Dave        Sharks      30      hs      div     pusher
             print("Touching neuron: %s" % neuron)
             touch(neuron)
         run()
+
+for n in range(10):
+    if n == 5:  # pypy has stabilized
+        t0 = time.time()
+
+    units = []
+    pools = []
+    unitbyname = {}
+
+    main()
+print('TIME %.2f' % (time.time()-t0))

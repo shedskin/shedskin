@@ -1,12 +1,13 @@
-from random import random
+from random import random, seed
 from math import sqrt
 import sys
+import time
 
 # path tracer, (c) jonas wagner (http://29a.ch/)
 # http://29a.ch/2010/5/17/path-tracing-a-cornell-box-in-javascript
 # converted to Python by <anonymous>
 
-ITERATIONS = 110  # should be much higher for good quality
+ITERATIONS = 10  # should be much higher for good quality
 
 
 class V3(object):
@@ -325,4 +326,10 @@ def main():
     renderer.saveFrame("pt.ppm", nframe)
 
 
-main()
+for n in range(10):
+    if n == 5:
+        t0 = time.time()  # pypy has stabilized
+    seed(n)
+    main()
+    print()
+print('TIME %.2f' % (time.time()-t0))

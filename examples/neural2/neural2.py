@@ -7,6 +7,7 @@
 
 import math
 import random
+import time
 
 # calculate a random number where:  a <= rand < b
 def rand(a, b):
@@ -148,22 +149,26 @@ class NN:
 
 
 def demo():
-    for i in range(500):
-        random.seed(i)
-        # Teach network XOR function
-        pat = [
-            [[0,0], [0]],
-            [[0,1], [1]],
-            [[1,0], [1]],
-            [[1,1], [0]]
-        ]
+    for i in range(10):
+        if i == 5:
+            t0 = time.time()  # pypy has stabilized
+        for j in range(20):
+            random.seed(i)
+            # Teach network XOR function
+            pat = [
+                [[0,0], [0]],
+                [[0,1], [1]],
+                [[1,0], [1]],
+                [[1,1], [0]]
+            ]
 
-        # create a network with two input, two hidden, and one output nodes
-        n = NN(2, 10, 1)
-        # train it with some patterns
-        n.train(pat)
-        # test it
-        n.test(pat)
+            # create a network with two input, two hidden, and one output nodes
+            n = NN(2, 10, 1)
+            # train it with some patterns
+            n.train(pat)
+            # test it
+            n.test(pat)
+    print('TIME %.2f' % (time.time()-t0))
 
 
 if __name__ == '__main__':

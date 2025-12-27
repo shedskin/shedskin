@@ -1,14 +1,11 @@
 ''' min-max othello player in 100 lines; copyleft Mark Dufour (GPL3 or later) '''
+import time
 
 empty, black, white = 0, 1, -1
-board = [[empty for x in range(8)] for y in range(8)]
-board[3][3] = board[4][4] = white
-board[3][4] = board[4][3] = black
 player = {white: 'human', black: 'lalaoth'}
-depth = 5
+depth = 3
 directions = [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]
 corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
-flips = 0
 
 def possible_move(board, x, y, color):
     if board[x][y] != empty:
@@ -77,7 +74,7 @@ def best_move(board, color, first, step=1):
             max_move, max_mobility, max_score = move, mobility, score
     return max_move, max_mobility
 
-if __name__ == '__main__':
+def main():
     turn = black
     while possible_moves(board, black) or possible_moves(board, white):
         if possible_moves(board, turn):
@@ -104,3 +101,16 @@ if __name__ == '__main__':
         if stone_count(board, black) > stone_count(board, white): print(player[black], 'wins!')
         else: print(player[white], 'wins!')
     print('flips', flips)
+
+if __name__ == '__main__':
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+
+        board = [[empty for x in range(8)] for y in range(8)]
+        board[3][3] = board[4][4] = white
+        board[3][4] = board[4][3] = black
+        flips = 0
+
+        main()
+    print('TIME %.2f' % (time.time()-t0))

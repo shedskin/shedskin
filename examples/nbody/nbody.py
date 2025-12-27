@@ -8,6 +8,7 @@
 
 
 import sys
+import time
 
 pi = 3.14159265358979323
 solar_mass = 4 * pi * pi
@@ -122,7 +123,7 @@ neptune.mass = 5.15138902046611451e-05 * solar_mass
 def main() :
     try :
         #n = int(sys.argv[1])
-        n = 20000000
+        n = 1000000
     except :
         print("Usage: %s <N>" % sys.argv[0])
 
@@ -138,4 +139,8 @@ def main() :
     print("%.9f" % energy(bodies))
 
 if __name__ == '__main__':
-    main()
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()
+        main()
+    print('TIME %.2f' % (time.time()-t0))
