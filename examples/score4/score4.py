@@ -2,6 +2,7 @@
 # http://users.softlab.ece.ntua.gr/~ttsiod/score4.html
 
 from sys import argv
+import time
 
 WIDTH = 7
 HEIGHT = 6
@@ -159,5 +160,8 @@ def main(args):
             return -1
 
 
-for n in range(12):
+for n in range(10):
+    if n == 5:
+        t0 = time.time()
     main(argv)
+print('TIME %.2f' % (time.time()-t0))

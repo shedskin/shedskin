@@ -106,9 +106,9 @@ def run(test):
             t0 = time.time()
 
         if test:
-            if iterations == 1000:  # pypy has stabilized
+            if iterations == 200:  # pypy has stabilized
                 prev = time.time()
-            if iterations == 2000:
+            if iterations == 400:
                 print('TIME %.2f' % (time.time()-prev))
                 break
 

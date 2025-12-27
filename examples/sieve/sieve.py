@@ -89,10 +89,10 @@ def sieveOfEratostenes(n):
             sieve[bottom::si] = [0] * -((bottom - top) // si)
     return [2] + [el for el in sieve if el]
 
-if __name__ == "__main__":
+def main():
     # The Sieve of Atkin is supposed to be faster for big n.
 
-    n = 200000000 #int(argv[1])
+    n = 10000000 #int(argv[1])
     print("n:", n)
 
     #if argv[2] == "1":
@@ -112,3 +112,9 @@ if __name__ == "__main__":
     #    print r
 
 
+if __name__ == "__main__":
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        main()
+    print('TIME %.2f' % (time.time()-t0))

@@ -483,5 +483,7 @@ def main():
 
 if __name__ == '__main__':
     for n in range(5):
+        t0 = time.time()
         main()
-
+        t = ('TIME %.2f' % (time.time()-t0))  # stabilize pypy
+    print(t)

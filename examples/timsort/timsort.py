@@ -7,6 +7,7 @@ modified by mark.dufour@gmail.com to work with shedskin
 
 '''
 import random
+import time
 
 def cmp(a, b):
     return (a > b) - (a < b)
@@ -1042,6 +1043,9 @@ def main():
     timsort(l)
 
 if __name__ == '__main__':
-    for n in range(15):
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
         random.seed(n)
         main()
+    print('TIME %.2f' % (time.time()-t0))

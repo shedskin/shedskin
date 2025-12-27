@@ -2,6 +2,7 @@
 # --- http://www2.warwick.ac.uk/fac/sci/moac/currentstudents/peter_cock/python/sudoku/
 #
 # sudoku solver
+import time
 
 TRIPLETS = [[0,1,2],[3,4,5],[6,7,8]]
 
@@ -165,22 +166,26 @@ class soduko:
                             assert False, "bugger7"
 
 def main():
-    for x in range(8000):
-        t = soduko(["800000600",
-                       "040500100",
-                       "070090000",
-                       "030020007",
-                       "600008004",
-                       "500000090",
-                       "000030020",
-                       "001006050",
-                       "004000003"])
+    for x in range(10):
+        if x == 5:
+            t0 = time.time()  # pypy has stabilized
+        for y in range(50):
+            t = soduko(["800000600",
+                           "040500100",
+                           "070090000",
+                           "030020007",
+                           "600008004",
+                           "500000090",
+                           "000030020",
+                           "001006050",
+                           "004000003"])
 
-        t.check()
-        t.one_level_supposition()
-        t.check()
-        if(x==1999):
-            print(t)
+            t.check()
+            t.one_level_supposition()
+            t.check()
+            if(x==1999):
+                print(t)
+    print('TIME %.2f' % (time.time()-t0))
 
 if __name__ == '__main__':
     main()

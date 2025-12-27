@@ -21,6 +21,7 @@
 # http://www.boxel.info/morcy/static.php?page=yopyra
 
 from math import *
+import time
 
 MAX_DIST = 1999999999 # 9999999999
 PI_SOBRE_180 = 0.017453292
@@ -385,8 +386,13 @@ def main():
             print(renderPixel(x, y), end=' ', file=fileout)
         print(file=fileout)
         print(y, end=' ')
+    print()
 
     fileout.close()
 
 if __name__ == '__main__':
-    main()
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        main()
+    print('TIME %.2f' % (time.time()-t0))

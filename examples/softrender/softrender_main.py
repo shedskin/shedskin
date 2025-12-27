@@ -93,8 +93,12 @@ def main(test):
         if not test and frame_count % 10 == 0:
             print('FPS %.2f' % (1/delta))
         frame_count += 1
-        if test and frame_count == 300:
-            break
+        if test:
+            if frame_count == 200:  # pypy has stabilized
+                prev = time.time()
+            if frame_count == 400:
+                print('TIME %.2f' % (time.time()-prev))
+                break
 
 if __name__ == '__main__':
     main(len(sys.argv) > 1 and sys.argv[1] == 'test')

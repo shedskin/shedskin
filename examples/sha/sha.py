@@ -13,6 +13,7 @@
 
    ## IMPORTANT NOTE: compile with shedskin -l option (for long integers) 
 """
+import time
 
 
 __date__ = "2004-11-17"
@@ -395,9 +396,13 @@ if __name__ == "__main__":
 #    textbin = bytes([ord(c) for c in text])
     textbin = open('testdata/n.txt', 'rb').read()
 
-    for n in range(2200):
-        shah = new(textbin)
-        print(text, shah.hexdigest())
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        for m in range(20):
+            shah = new(textbin)
+            print(text, shah.hexdigest())
+    print('TIME %.2f' % (time.time()-t0))
 
 #    if 0:
 #        # allows shedskin type inference, don't remove

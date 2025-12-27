@@ -3,7 +3,7 @@ Internal implementation of a SAT solver, used by L{solver.SATSolver}.
 This is not part of the public API.
 """
 
-
+import time
 
 # Copyright (C) 2010, Thomas Leonard
 # See the README file for details, or visit http://0install.net.
@@ -517,5 +517,9 @@ def main():
     print(p.solve())
 
 if __name__ == '__main__':
-    for n in range(150):
-        main()
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        for m in range(10):
+            main()
+    print('TIME %.2f' % (time.time()-t0))
