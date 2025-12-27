@@ -455,8 +455,8 @@ def speed_test(max_depth):
     print('%d nodes in %.2f seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
 
-if __name__ == '__main__':
-    max_depth = 12
+def main():
+    max_depth = 10
     mode = None
 
     for i, arg in enumerate(sys.argv[1:]):
@@ -477,3 +477,11 @@ if __name__ == '__main__':
         vs_cpu_cli(max_depth)
     else:
         speed_test(max_depth)
+
+
+if __name__ == '__main__':
+    for n in range(10):
+        if n == 5:
+            t0 = time.time()  # pypy has stabilized
+        main()
+    print('TIME %.2f' % (time.time()-t0))

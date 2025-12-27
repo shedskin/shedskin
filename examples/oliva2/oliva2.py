@@ -20,7 +20,8 @@ Translated by Bearophile from QBASIC to SSPython (for ShedSkin), V. 1.1, Feb 17 
 This program requires Python and ShedSkin (http://shedskin.sourceforge.net).
 """
 
-from random import random, randint
+from random import random, randint, seed
+import time
 
 
 class SavePGMlines:
@@ -61,8 +62,8 @@ class SavePGMlines:
 
 
 
-def oliva(nx = 3000,   # Length of the computed screen matrix (number of cells)
-          ny = 2000,   # Height of the computed screen matrix
+def oliva(nx = 640,   # Length of the computed screen matrix (number of cells)
+          ny = 480,   # Height of the computed screen matrix
           kp = 12,    # number of iterations between the displays ( = lines on the screen)
           da = 0.015, # Diffusion of the activator
           ra = 0.1,   # Decay rate of the inhibitor
@@ -136,5 +137,10 @@ def oliva(nx = 3000,   # Length of the computed screen matrix (number of cells)
         outPGM.saverow( [255 * a[ix] for ix in range(nx)] )
 
 if __name__ == '__main__':
-    for n in range(30):
-        oliva()
+    for m in range(10):
+        if m == 5:
+            t0 = time.time()  # pypy has stabilized
+        for n in range(20):
+            seed(n)
+            oliva()
+    print('TIME %.2f' % (time.time()-t0))
