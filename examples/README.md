@@ -94,14 +94,6 @@ lines  name                 description
 
 If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
 
-## Performance Comparison 
-
-The following shows speedups for many of the examples, relative to CPython 3.10. On average, they run about 29 times faster using Shed Skin, compared to 16 times for PyPy (see tag 'performance_comparison').
-
-![perf_comp.png](https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png)
-
-Where PyPy is faster, this appears to usually be because it optimizes away short-lived objects, especially in vector3 calculations; also, the dict implementation in Shed Skin needs a faster backend than STL unordered_map.
-
 ## Building and Running Individual Examples
 
 Each example has its own directory which should contain the python code to be translated as well as related data files. Also a README.md if there are any special notes. In some cases, you may need to make a link to '../testdata'.
