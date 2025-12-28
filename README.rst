@@ -9,13 +9,14 @@ Shed Skin
 
 Shed Skin is a transpiler, that can translate pure, but implicitly statically typed Python 3 programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.
 
-Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the `documentation <https://shedskin.github.io/shedskin/>`_ for details).
+Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported) or any other external library. Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the `documentation <https://shedskin.github.io/shedskin/>`_ for details).
 
 For a set of over `80 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython 3.14 (average 20 times, median 12 times).
 
 Use Shed Skin when:
 
 - You have a few hundred lines of code (up to a few thousand), that you want to run at the highest possible speed
+- This code is, or can be made, independent of external libraries
 - You don't want to switch to a faster language (for reasons), or add type annotations (e.g. use Cython)
 - You would prefer to stick with CPython as your (main) interpreter (e.g. no PyPy)
 - You don't mind refactoring your code (potentially a lot!) to make it compatible with Shed Skin
