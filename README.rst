@@ -18,7 +18,7 @@ Use Shed Skin when:
 - You have a few hundred lines of code (up to a few thousand), that you want to run at the highest possible speed
 - You don't want to switch to a faster language (for reasons), or add type annotations (e.g. use Cython)
 - You would prefer to stick with CPython as your (main) interpreter (e.g. no PyPy)
-- You don't mind refactoring your code (a lot) to make it compatible with Shed Skin
+- You don't mind refactoring your code (potentially a lot!) to make it compatible with Shed Skin
 
 Usage
 -----
