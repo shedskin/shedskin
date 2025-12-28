@@ -26,6 +26,7 @@ add_shedskin_product(
         copy
         struct
         sys
+        time
 
     APP_MODULES
         lib/hashlib

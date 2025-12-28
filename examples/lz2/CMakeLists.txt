@@ -4,4 +4,5 @@ add_shedskin_product(
         os.path
         stat
         sys
+        time
 )

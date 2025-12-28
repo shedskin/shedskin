@@ -5,6 +5,7 @@ add_shedskin_product(
         math
         sys
         functools
+        time
     APP_MODULES
     DATA
         pycsg_main.py

@@ -3,4 +3,5 @@ add_shedskin_product(
         collections
         itertools
         sys
+        time
 )
