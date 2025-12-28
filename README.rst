@@ -74,6 +74,8 @@ The following shows a comparison of speedups version CPython 3.10 for Shed Skin 
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png
   :width: 800
 
+These measurements were performed for the git tag 'performance_comparison'. As can be seen, we allowed PyPy to stabilize before measuring.
+
 Screenhots
 ----------
 
