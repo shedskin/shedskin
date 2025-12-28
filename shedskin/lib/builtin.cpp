@@ -34,7 +34,7 @@ str *__ss_empty_str;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
-tuple<__ss_int> *__ss_tuple_cache[1024];
+tuple<__ss_int> *__ss_tuple_cache[1600];
 
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
@@ -111,9 +111,9 @@ void __init() {
             __case_swap_cache->unit += (char)::tolower(c);
     }
 
-    for(__ss_int i=0; i<32; i++)
-        for(__ss_int j=0; j<32; j++)
-            __ss_tuple_cache[i*32+j] = new tuple<__ss_int>(2, i-16, j-16);
+    for(__ss_int i=0; i<40; i++)
+        for(__ss_int j=0; j<40; j++)
+            __ss_tuple_cache[i*40+j] = new tuple<__ss_int>(2, i-20, j-20);
 
     __ss_stdin = new file(stdin);
     __ss_stdin->name = new str("<stdin>");
@@ -394,8 +394,8 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
 /* tuple caching */
 
 tuple<__ss_int >*__ss_tuple_int(__ss_int, __ss_int a, __ss_int b) {
-    if(-16 <= a && a < 16 && -16 <= b && b < 16)
-        return __ss_tuple_cache[(a+16)*32+(b+16)];
+    if(-20 <= a && a < 20 && -20 <= b && b < 20)
+        return __ss_tuple_cache[(a+20)*40+(b+20)];
     else
         return new tuple<__ss_int>(2, a, b);
 }
