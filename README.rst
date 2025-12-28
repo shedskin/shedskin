@@ -69,7 +69,7 @@ Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python 
 
 Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --int64.
 
-The following shows a comparison of speedups version CPython 3.10 for Shed Skin and Pypy, for most of the Shed Skin examples.
+The following shows a comparison of speedups versus CPython 3.10 for Shed Skin and Pypy, for most of the Shed Skin examples.
 
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png
   :width: 800
