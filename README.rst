@@ -41,7 +41,7 @@ Under Windows:
 Restrictions
 ------------
 
-Shed Skin only supports a restricted subset of Python, so one should not expect a given program to compile without any changes, if possible at all. See the `documentation <https://shedskin.github.io/shedskin/>`_ for an overview of the limitations.
+Shed Skin only supports a restricted subset of Python, so one should not expect a given program to compile without any changes, if possible at all. You may have to work a lot, or even start from scratch, to make your code compatible. See the `documentation <https://shedskin.github.io/shedskin/>`_ for an overview of the limitations.
 
 
 
