@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-80+ programs that work with Shed Skin 0.9.11
+80+ programs that work with Shed Skin 0.9.12
 
 ## Example Overview
 
@@ -94,6 +94,12 @@ lines  name                 description
 
 If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
 
+## Performance Comparison 
+
+The following shows speedups for many of the examples, relative to CPython 3.10. On average, they run about 29 times faster using Shed Skin, compared to 16 times for PyPy.
+
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png
+  :width: 1200
 
 ## Building and Running Individual Examples
 
