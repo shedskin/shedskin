@@ -98,8 +98,7 @@ If you know of any other interesting examples, please do suggest them in the she
 
 The following shows speedups for many of the examples, relative to CPython 3.10. On average, they run about 29 times faster using Shed Skin, compared to 16 times for PyPy.
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png
-  :width: 1200
+![perf_comp.png](https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png)
 
 ## Building and Running Individual Examples
 
