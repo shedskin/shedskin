@@ -596,6 +596,7 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     return count;
 }
 
+__ss_bool str::startswith(str *s) { return __mbool(this->unit.starts_with(s->unit)); }
 __ss_bool str::startswith(str *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
     __ss_int one = 1;
@@ -609,6 +610,7 @@ __ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
     return __mbool(j == s->unit.size());
 }
 
+__ss_bool str::endswith(str *s) { return __mbool(this->unit.ends_with(s->unit)); }
 __ss_bool str::endswith(str *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
     __ss_int one = 1;
