@@ -93,9 +93,11 @@ public:
     __ss_bool isdecimal();
     __ss_bool isidentifier();
 
-    __ss_bool startswith(str *s, __ss_int start=0);
+    __ss_bool startswith(str *s);
+    __ss_bool startswith(str *s, __ss_int start);
     __ss_bool startswith(str *s, __ss_int start, __ss_int end);
-    __ss_bool endswith(str *s, __ss_int start=0);
+    __ss_bool endswith(str *s);
+    __ss_bool endswith(str *s, __ss_int start);
     __ss_bool endswith(str *s, __ss_int start, __ss_int end);
 
     str *zfill(__ss_int width);
