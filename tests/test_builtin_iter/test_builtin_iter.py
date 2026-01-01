@@ -96,11 +96,51 @@ def test_class_iter():
     assert y == 2
 
 
+class BertIter:
+    def __init__(self):
+        self.x = 4
+
+#    def __iter__(self):
+#        return self
+
+    def __next__(self):
+        self.x -= 1
+        if self.x == 0:
+            raise StopIteration
+        return self.x
+
+class Bert:
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        return BertIter()
+
+class BertBoth:
+    def __init__(self):
+        self.x = 5
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.x -= 1
+        if self.x == 0:
+            raise StopIteration
+        return self.x
+
+
+def test_iter_correct():
+    assert list(Bert()) == [3, 2, 1]  # separate iterator
+    assert list(BertBoth()) == [4, 3, 2, 1]  # iterable is iterator
+
+
 def test_all():
     test_iter1()
     test_iter2()
     test_file_iter()
     test_stop_iter()
+    test_iter_correct()
 
 
 if __name__ == '__main__':
