@@ -482,21 +482,6 @@ class ExtensionModule:
         )
 
         # module init function
-        # write("PyMODINIT_FUNC init%s(void) {" % "_".join(self.gv.module.name_list))
-
-        # # initialize modules
-        # __ss_mod = "__ss_mod_%s" % "_".join(self.gv.module.name_list)
-        # if self.gv.module == self.gx.main_module:
-        #     self.gv.do_init_modules()
-        #     write("    __" + self.gv.module.ident + "__::__init();")
-        # write(
-        #     '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);'
-        #     % (__ss_mod, self.gv.module.ident, "_".join(self.gv.module.name_list))
-        # )
-        # write("    if(!%s)" % __ss_mod)
-        # write("        return;\n")
-
-        # module init function
         write(
             "static struct PyModuleDef Module_%s = {"
             % "_".join(self.gv.module.name_list)
@@ -509,26 +494,6 @@ class ExtensionModule:
         )
         write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
         write("};")
-
-        # # add types to module
-        # for cl in classes:
-        #     write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
-        #     write("        return;\n")
-        #     write(
-        #         '    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);'
-        #         % (__ss_mod, cl.ident, clname(cl))
-        #     )
-        # write("")
-
-        # if self.gv.module == self.gx.main_module:
-        #     self.do_init_mods("init")
-        #     self.do_init_mods("add")
-        #     write("    add%s();" % self.gv.module.ident)
-        # write("\n}\n")
-
-        # write("PyMODINIT_FUNC add%s(void) {" % "_".join(self.gv.module.name_list))
-        # self.do_add_globals(classes, __ss_mod)
-        # write("\n}")
 
         write("")
         write("PyMODINIT_FUNC PyInit_%s(void) {\n" % "_".join(self.gv.module.name_list))
@@ -701,7 +666,7 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         if self.has_method(cl, "__repr__"):
-            write("    (PyObject *(*)(PyObject *))%s___repr__, " % clname(cl))
+            write("    (PyObject *(*)(PyObject *))%s___repr__," % clname(cl))
         else:
             write("    0,")
         write("    &%s_as_number," % clname(cl))
@@ -710,7 +675,7 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         if self.has_method(cl, "__str__"):
-            write("    (PyObject *(*)(PyObject *))%s___str__, " % clname(cl))
+            write("    (PyObject *(*)(PyObject *))%s___str__," % clname(cl))
         else:
             write("    0,")
         write("    0,")
@@ -722,8 +687,14 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         write("    0,")
-        write("    0,")
-        write("    0,")
+        if self.has_method(cl, "__iter__") and not cl.funcs['__iter__'].isGenerator:  # TODO what if not called? also for other slots
+            write("    (PyObject *(*)(PyObject *))%s___iter__," % clname(cl))
+        else:
+            write("    0,")
+        if self.has_method(cl, "__next__"):
+            write("    (PyObject *(*)(PyObject *))%s___next__," % clname(cl))
+        else:
+            write("    0,")
         write("    %sMethods," % clname(cl))
         write("    %sMembers," % clname(cl))
         write("    %sGetSet," % clname(cl))
@@ -753,10 +724,6 @@ class ExtensionModule:
         self.write(
             "PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list)
         )
-        # for what in ("init", "add"):
-        #     self.write(
-        #         "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))
-        #     )
 
     def exported_classes(self, warns: bool = False) -> List["python.Class"]:
         """Get exported classes"""
