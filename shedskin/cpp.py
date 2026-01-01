@@ -934,14 +934,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- header
         clnames = [self.namer.namespace_class(b) for b in cl.bases]
         if not clnames:
-            clnames = ["pyobj"]
-            if "__iter__" in cl.funcs:  # XXX get return type of 'next'
+            clnames = ['pyobj']
+            if "__next__" in cl.funcs:  # iterator
+                next_retnode = cl.funcs["__next__"].retnode
+                ts = typestr.nodetypestr(self.gx, next_retnode.thing, mv=self.mv)
+                clnames = ['__iter<%s>' % ts]
+            elif "__iter__" in cl.funcs:  # iterable
                 retnode = cl.funcs["__iter__"].retnode
-                assert retnode
-                ts = typestr.nodetypestr(self.gx, retnode.thing, mv=self.mv)
-                if ts.startswith("__iter<"):
-                    ts = ts[ts.find("<") + 1 : ts.find(">")]
-                    clnames = ["pyiter<%s>" % ts]  # XXX use iterable interface
+                for (cl2, _) in self.mergeinh[retnode.thing]:
+                    if '__next__' in cl2.funcs:
+                        next_retnode = cl2.funcs['__next__'].retnode
+                        ts = typestr.nodetypestr(self.gx, next_retnode.thing, mv=self.mv)
+                        clnames = ['pyiter<%s>' % ts]
             if "__call__" in cl.funcs:
                 callfunc = cl.funcs["__call__"]
                 retnode = callfunc.retnode
