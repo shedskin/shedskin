@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 /* exceptions */
 
@@ -120,6 +120,9 @@ public:
 class StopIteration : public Exception {
 public:
     StopIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopiteration; }
+#ifdef __SS_BIND
+   virtual PyObject *__to_py__() { return PyExc_StopIteration; }
+#endif
 };
 
 class AssertionError : public Exception {
