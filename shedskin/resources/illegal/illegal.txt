@@ -94,6 +94,7 @@ MAXINT
 minor
 mutable
 namespace
+near
 new
 NGROUPS_MAX
 NONE
