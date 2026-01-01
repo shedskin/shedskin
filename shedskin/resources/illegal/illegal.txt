@@ -65,6 +65,7 @@ extern
 EX_UNAVAILABLE
 EX_USAGE
 false
+FALSE
 FAST_FOR
 fileno
 float
@@ -95,6 +96,7 @@ mutable
 namespace
 new
 NGROUPS_MAX
+NONE
 ntohl
 ntohs
 O_APPEND
@@ -257,6 +259,7 @@ this
 throw
 TMP_MAX
 true
+TRUE
 typedef
 typeid
 typename
