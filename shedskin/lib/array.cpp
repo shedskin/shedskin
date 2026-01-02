@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "array.hpp"
 
@@ -25,6 +25,8 @@ size_t get_itemsize(char typechar) {
         case 'I': return sizeof(unsigned int);
         case 'l': return sizeof(signed long);
         case 'L': return sizeof(unsigned long);
+        case 'q': return sizeof(signed long long);
+        case 'Q': return sizeof(unsigned long long);
         case 'f': return sizeof(float);
         case 'd': return sizeof(double);
     }
@@ -44,6 +46,8 @@ template<> template<> void *array<int>::extend(list<__ss_int> *l) {
         case 'I': for(size_t i=0; i<len; i++) *((unsigned int *)(&this->units[pos+i*itemsize])) = (unsigned int)l->units[i]; break;
         case 'l': for(size_t i=0; i<len; i++) *((signed long *)(&this->units[pos+i*itemsize])) = (signed long)l->units[i]; break;
         case 'L': for(size_t i=0; i<len; i++) *((unsigned long *)(&this->units[pos+i*itemsize])) = (unsigned long)l->units[i]; break;
+        case 'q': for(size_t i=0; i<len; i++) *((signed long *)(&this->units[pos+i*itemsize])) = (signed long long)l->units[i]; break;
+        case 'Q': for(size_t i=0; i<len; i++) *((unsigned long *)(&this->units[pos+i*itemsize])) = (unsigned long long)l->units[i]; break;
         case 'f': for(size_t i=0; i<len; i++) *((float *)(&this->units[pos+i*itemsize])) = (float)l->units[i]; break;
         case 'd': for(size_t i=0; i<len; i++) *((double *)(&this->units[pos+i*itemsize])) = (double)l->units[i]; break;
     }
