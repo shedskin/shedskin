@@ -277,6 +277,16 @@ def test_class_name():
     assert b''.__class__.__name__ == 'bytes'
 
 
+class Bert:
+    def __index__(self):
+        return 11
+
+
+def test_int_fallback():
+    b = Bert()
+    assert int(b) == 11
+
+
 def test_all():
     test_dictlike()
     test_numlike1()
@@ -288,6 +298,7 @@ def test_all():
     test_stringlike()
     test_setlike()
     test_class_name()
+    test_int_fallback()
 
 
 if __name__ == '__main__':
