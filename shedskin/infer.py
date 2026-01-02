@@ -1107,10 +1107,8 @@ def redirect(
     if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
         typecode = callfunc.args[0].value
         array_type = None
-        if typecode in "bBhHiIlL":
+        if typecode in "bBhHiIlLqQ":
             array_type = "int"
-        elif typecode == "c":
-            array_type = "str"
         elif typecode in "fd":
             array_type = "float"
         if array_type is not None:
