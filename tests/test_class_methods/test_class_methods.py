@@ -282,9 +282,11 @@ class Bert:
         return 11
 
 
-def test_int_fallback():
+def test_index():
     b = Bert()
+
     assert int(b) == 11
+    assert float(b) == 11.0
 
 
 def test_all():
@@ -298,7 +300,7 @@ def test_all():
     test_stringlike()
     test_setlike()
     test_class_name()
-    test_int_fallback()
+    test_index()
 
 
 if __name__ == '__main__':
