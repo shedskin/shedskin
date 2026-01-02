@@ -118,6 +118,14 @@ def test_sequence_mutable():
     assert len(arr) == 0
 
 
+def test_codes():  # TODO check these type codes: bBuwhHiIlLfd
+    arr = array.array('q', [1,2,3])
+    assert list(arr) == [1,2,3]
+
+    arr = array.array('Q', [3,2,1])
+    assert list(arr) == [3,2,1]
+
+
 def test_all():
     test_typecodes()
     test_list()
@@ -125,6 +133,7 @@ def test_all():
     test_file()
     test_sequence_immutable()
     test_sequence_mutable()
+    test_codes()
 
 
 if __name__ == '__main__':

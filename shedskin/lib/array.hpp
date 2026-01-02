@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __ARRAY_HPP
 #define __ARRAY_HPP
@@ -275,6 +275,8 @@ template<class T> void array<T>::fillbuf(T t) {
         case 'I': *((unsigned int *)buffy) = (unsigned int)t; break;
         case 'l': *((signed long *)buffy) = (signed long)t; break;
         case 'L': *((unsigned long *)buffy) = (unsigned long)t; break;
+        case 'q': *((signed long long *)buffy) = (signed long long)t; break;
+        case 'Q': *((unsigned long long *)buffy) = (unsigned long long)t; break;
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = (double)t; break;
     }
@@ -296,6 +298,8 @@ template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
         case 'I': return (__ss_int)(*((unsigned int *)(&units[j*itemsize])));
         case 'l': return (__ss_int)(*((signed long *)(&units[j*itemsize])));
         case 'L': return (__ss_int)(*((unsigned long *)(&units[j*itemsize])));
+        case 'q': return (__ss_int)(*((signed long long *)(&units[j*itemsize])));
+        case 'Q': return (__ss_int)(*((unsigned long long *)(&units[j*itemsize])));
     }
     return 0;
 }
