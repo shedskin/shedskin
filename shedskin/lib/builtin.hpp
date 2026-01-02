@@ -135,9 +135,11 @@ public:
     virtual pyobj *__deepcopy__(dict<void *, pyobj *> *);
 
     virtual __ss_int __len__();
-    virtual __ss_int __int__();
 
+    virtual __ss_int __int__();
+    virtual __ss_float __float__();
     virtual __ss_bool __bool__();
+
     virtual __ss_int __index__();
 
     static const bool is_pyseq = false;
