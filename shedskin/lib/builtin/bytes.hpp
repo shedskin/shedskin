@@ -54,10 +54,12 @@ public:
     __ss_bool isalnum();
     __ss_bool __ss_isascii();
 
-    __ss_bool startswith(bytes *s, __ss_int start=0);
+    __ss_bool startswith(bytes *s);
+    __ss_bool startswith(bytes *s, __ss_int start);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
 
-    __ss_bool endswith(bytes *s, __ss_int start=0);
+    __ss_bool endswith(bytes *s);
+    __ss_bool endswith(bytes *s, __ss_int start);
     __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
 
     bytes *removeprefix(bytes *prefix);
