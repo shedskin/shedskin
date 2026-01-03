@@ -414,6 +414,7 @@ list<bytes *> *bytes::splitlines(__ss_int keepends)
     return r;
 }
 
+__ss_bool bytes::startswith(bytes *s) { return __mbool(this->unit.starts_with(s->unit)); }
 __ss_bool bytes::startswith(bytes *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool bytes::startswith(bytes *s, __ss_int start, __ss_int end) {
     __ss_int one = 1;
@@ -428,6 +429,7 @@ __ss_bool bytes::startswith(bytes *s, __ss_int start, __ss_int end) {
     return __mbool(j == s->unit.size());
 }
 
+__ss_bool bytes::endswith(bytes *s) { return __mbool(this->unit.ends_with(s->unit)); }
 __ss_bool bytes::endswith(bytes *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
     __ss_int one = 1;
