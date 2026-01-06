@@ -175,7 +175,7 @@ def upgrade_cl(
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
 
     # --- register virtual method
-    if not ident.startswith("__"):
+    if ident not in ["__getattr__", "__setattr__"] and not abstract_cl.module.builtin:
         redefined = False
         for concrete_cl in classes:
             if [

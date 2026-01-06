@@ -142,11 +142,32 @@ def test_inheritance4():
     assert xx.flop() == 2
 
 
+class MyBase:
+    pass
+
+class MyChild(MyBase):
+    def __call__(self, x, y):
+        return x * y
+
+class MyOtherChild(MyBase):
+    def __call__(self, x, y):
+        return x * y
+
+
+def test_virtual_dunder():
+    a = MyChild()
+    a = MyOtherChild()
+    assert a(2, 'hop') == 'hophop'
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
     test_inheritance3()
     test_inheritance4()
+
+    test_virtual_dunder()
+
 
 if __name__ == '__main__':
     test_all() 
