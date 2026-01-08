@@ -1,5 +1,4 @@
 # TODO  assert bytearray(b'').__class__.__name__ == 'bytearray'
-# TODO  assert Dict('x').__class__.__name__ == 'Dict'
 # TODO  __ifloordiv__ fallback to __floordiv__.. others?
 
 
@@ -47,6 +46,8 @@ def test_dictlike():
     del obj['a3']
     assert 'a3' not in obj
     assert len(obj) == 2
+
+    assert obj.__class__.__name__ == 'Dict'
 
 
 class C:
