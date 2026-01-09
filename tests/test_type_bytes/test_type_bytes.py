@@ -25,7 +25,7 @@ def test_count():
 def test_encode():
     pass
 
-def test_endswith():
+def test_endswith():  # TODO start, stop
     assert b'bla'.endswith(b'la')
     assert not b'bla'.endswith(b'xx')
 
@@ -212,7 +212,7 @@ def test_splitlines():
     assert b"ab\ncd\r\nef\rghi\n".splitlines() == [b'ab', b'cd', b'ef', b'ghi']
     assert b"ab\ncd\r\nef\rghi\n".splitlines(1) == [b'ab\n', b'cd\r\n', b'ef\r', b'ghi\n']
 
-def test_startswith():
+def test_startswith():  # TODO start, stop
     assert b'bla'.startswith(b'bla')
     assert not b'bla'.startswith(b'xx')
 
