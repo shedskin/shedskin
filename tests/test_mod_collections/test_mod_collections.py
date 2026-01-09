@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections import deque
 
 
-def test_collections_defaultdict1():
+def test_defaultdict1():
     s1 = "mississippi"
     d1 = defaultdict(int)
     for k1 in s1:
@@ -16,7 +16,7 @@ def test_collections_defaultdict1():
     assert list(sorted(d2.items())) == [('blue', [2, 4]), ('red', [1]), ('yellow', [1, 3])]
 
 
-def test_collections_defaultdict2():
+def test_defaultdict2():
     s3 = [("red", 1), ("blue", 2), ("red", 3), ("blue", 4), ("red", 1), ("blue", 4)]
     d3 = defaultdict(set)
     for k3, v3 in s3:
@@ -26,7 +26,22 @@ def test_collections_defaultdict2():
     assert list(sorted(d3.keys())) == ['blue', 'red']
 
 
-def test_collections_deque1():
+def test_defaultdict3():
+    d = defaultdict(list)
+    d[1].append('4')
+    d[1].append('5')
+    d[2] = ['6', '7']
+
+    assert d[1] == ['4', '5']
+    assert d[2] == ['6', '7']
+
+    keys = set()
+    for key, value in d.items():
+        keys.add(key)
+    assert keys == set([1,2])
+
+
+def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
     d.appendleft(0)
@@ -46,7 +61,7 @@ def test_collections_deque1():
     assert list(d) == []
 
 
-def test_collections_deque2():
+def test_deque2():
 
     d = deque([3, 2, 1])
     e = iter(d)
@@ -76,7 +91,7 @@ def test_collections_deque2():
     assert not list(d)
 
 
-def test_collections_deque3():
+def test_deque3():
     d = deque([1,2,2,2,3,4])  # TODO maxlen arg
     assert d.count(2) == 3
     assert d.count(5) == 0
@@ -88,7 +103,7 @@ def test_collections_deque3():
     assert list(d) == [4,3,2,2,2,1]
 
 
-def test_collections_deque4():
+def test_deque4():
     d = deque([1,2,3,4])
     assert list(d) == [1,2,3,4]
 
@@ -107,12 +122,13 @@ def test_collections_deque4():
 
 
 def test_all():
-    test_collections_defaultdict1()
-    test_collections_defaultdict2()
-    test_collections_deque1()
-    test_collections_deque2()
-    test_collections_deque3()
-    test_collections_deque4()
+    test_defaultdict1()
+    test_defaultdict2()
+    test_defaultdict3()
+    test_deque1()
+    test_deque2()
+    test_deque3()
+    test_deque4()
 
 
 if __name__ == '__main__':
