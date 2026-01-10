@@ -1,5 +1,4 @@
 # TODO  assert bytearray(b'').__class__.__name__ == 'bytearray'
-# TODO  __ifloordiv__ fallback to __floordiv__.. others?
 
 
 class Dict:
@@ -159,10 +158,6 @@ class Num:
 
     def __floordiv__(self, other):
         return Num(self.value // other.value)
-
-    def __ifloordiv__(self, other):  # TODO should work without this overload
-        self.value //= other.value
-        return self
 
 
 def test_numlike4():
