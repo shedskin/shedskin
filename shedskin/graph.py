@@ -2461,10 +2461,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             "tuple",
             "complex",
         ]:
-            msgs = ["add", "mul"]  # XXX mod, pow
-            if newclass.ident in ["int_", "float_"]:
-                msgs += ["sub", "truediv", "floordiv"]
-            if newclass.ident in ["int_"]:
+            msgs = ["add", "sub", "mul", "floordiv", "truediv"]
+            if newclass.ident == "int_":
                 msgs += ["lshift", "rshift", "and", "xor", "or"]
             for msg in msgs:
                 if "__i" + msg + "__" not in newclass.funcs:
