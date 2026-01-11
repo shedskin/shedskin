@@ -264,6 +264,7 @@ template<class T> bytes *__bytearray(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
         bytes *b = new bytes();
         b->frozen = 0;
+        b->__class__ = cl_bytearray;
         __ss_int e;
         typename pyiter<__ss_int>::for_in_loop __3;
         int __2;

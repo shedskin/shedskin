@@ -1,4 +1,4 @@
-/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef SS_BUILTIN_HPP
 #define SS_BUILTIN_HPP
@@ -104,7 +104,7 @@ extern __ss_bool False;
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes, *cl_bytearray;
 
 extern __GC_VECTOR(str *) __char_cache;
 extern __GC_VECTOR(bytes *) __byte_cache;
