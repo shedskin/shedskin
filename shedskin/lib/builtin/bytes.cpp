@@ -3,7 +3,10 @@
 /* bytes methods TODO share code with str */
 
 bytes::bytes(int frozen_) : hash(-1), frozen(frozen_) {
-    __class__ = cl_bytes;
+    if(frozen)
+        __class__ = cl_bytes;
+    else
+        __class__ = cl_bytearray;
 }
 
 bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
@@ -11,16 +14,25 @@ bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
 }
 
 bytes::bytes(__GC_STRING s, int frozen_) : unit(s), hash(-1), frozen(frozen_) {
-    __class__ = cl_bytes;
+    if(frozen)
+        __class__ = cl_bytes;
+    else
+        __class__ = cl_bytearray;
 }
 
 bytes::bytes(bytes *b, int frozen_) : hash(-1), frozen(frozen_) {
-    __class__ = cl_bytes;
+    if(frozen)
+        __class__ = cl_bytes;
+    else
+        __class__ = cl_bytearray;
     unit = b->unit;
 }
 
 bytes::bytes(const char *s, size_t size, int frozen_) : unit(s, size), hash(-1), frozen(frozen_) { /* '\0' delimiter in C */
-    __class__ = cl_bytes;
+    if(frozen)
+        __class__ = cl_bytes;
+    else
+        __class__ = cl_bytearray;
 }
 
 char *bytes::c_str() const {
@@ -268,12 +280,14 @@ bytes *__bytearray() {
 bytes *__bytearray(bytes * b) {
     bytes *c = __bytes(b);
     c->frozen = 0;
+    c->__class__ = cl_bytearray;
     return c;
 }
 
 bytes *__bytearray(__ss_int t) {
     bytes *c = __bytes(t);
     c->frozen = 0;
+    c->__class__ = cl_bytearray;
     return c;
 }
 

@@ -1,6 +1,3 @@
-# TODO  assert bytearray(b'').__class__.__name__ == 'bytearray'
-
-
 class Dict:
     def __init__(self, name):
         self.name = name
@@ -271,6 +268,10 @@ def test_class_name():
     assert set().__class__.__name__ == 'set'
     assert ''.__class__.__name__ == 'str'
     assert b''.__class__.__name__ == 'bytes'
+    assert bytearray().__class__.__name__ == 'bytearray'
+    assert bytearray(b'').__class__.__name__ == 'bytearray'
+    assert bytearray(6).__class__.__name__ == 'bytearray'
+    assert bytearray([1,2]).__class__.__name__ == 'bytearray'
 
 
 class Bert:
