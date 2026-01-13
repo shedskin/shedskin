@@ -105,7 +105,7 @@ class ExtensionModule:
         """Supported functions"""
         supported = []
         for func in funcs:
-            if func.isGenerator or not infer.called(func):
+            if func.isGenerator or not self.gv.inhcpa(func):
                 continue
             if func.ident in [
                 "__setattr__",
