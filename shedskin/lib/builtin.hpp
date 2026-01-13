@@ -180,15 +180,6 @@ public:
     static const bool is_pyseq = true;
 };
 
-template <class R, class A> class pycall1 : public pyobj {
-public:
-    virtual R __call__(A a) = 0;
-};
-template <class R, class A, class B> class pycall2 : public pyobj {
-public:
-    virtual R __call__(A a, B b) = 0;
-};
-
 // TODO better approach to split declarations/template definitions?
 #define SS_DECL
 #include "builtin/bool.hpp"

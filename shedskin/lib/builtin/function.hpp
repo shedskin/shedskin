@@ -158,31 +158,6 @@ template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename
     return max;
 }
 
-/* XXX copy-pasto */
-template<class A, class B> typename A::for_in_unit ___max(int, pycall1<B, typename A::for_in_unit> *key, A *iter) {
-    typename A::for_in_unit max;
-    B maxkey, maxkey2;
-    int first = 1;
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3;
-    int __2;
-    A *__1;
-    FOR_IN(e,iter,1,2,3)
-        if(key) {
-            maxkey2 = key->__call__(e);
-            if(first || __cmp(maxkey2, maxkey) == 1) {
-                max = e;
-                maxkey = maxkey2;
-            }
-        } else if(first || __cmp(e, max) == 1)
-            max = e;
-        if(first)
-            first = 0;
-    END_FOR
-    if(first)
-        throw new ValueError(new str("max() arg is an empty sequence"));
-    return max;
-}
 template<class A> typename A::for_in_unit ___max(int nn, int, A *iter) { return ___max(nn, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
