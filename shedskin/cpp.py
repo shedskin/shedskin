@@ -946,21 +946,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         next_retnode = cl2.funcs['__next__'].retnode
                         ts = typestr.nodetypestr(self.gx, next_retnode.thing, mv=self.mv)
                         clnames = ['pyiter<%s>' % ts]
-            if "__call__" in cl.funcs:
-                callfunc = cl.funcs["__call__"]
-                retnode = callfunc.retnode
-                assert retnode
-                r_typestr = typestr.nodetypestr(
-                    self.gx, retnode.thing, mv=self.mv
-                ).strip()
-                nargs = len(callfunc.formals) - 1
-                argtypes = [
-                    typestr.nodetypestr(
-                        self.gx, callfunc.vars[callfunc.formals[i + 1]], mv=self.mv
-                    ).strip()
-                    for i in range(nargs)
-                ]
-                clnames = ["pycall%d<%s,%s>" % (nargs, r_typestr, ",".join(argtypes))]
         self.output(
             "class "
             + self.cpp_name(cl)
