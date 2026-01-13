@@ -1896,7 +1896,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # check whether function is called at all (possibly via inheritance)
         if not self.inhcpa(func):
-            if func.ident in ["__iadd__", "__isub__", "__imul__"]:
+            if func.ident in ["__iadd__", "__isub__", "__imul__", "__ifloordiv__", "__itruediv__"]:
                 return
             if func.lambdanr is None and not ast.dump(node.body[0]).startswith(
                 "Raise(type=Call(func=Name(id='NotImplementedError'"
