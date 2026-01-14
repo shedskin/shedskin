@@ -38,8 +38,6 @@ class wof(wafwaf):
 wof().hap()
 
 #*WARNING* 6.py:6: '__del__' is not supported
-#*WARNING* 6.py:8: '__iter__' is not supported
-#*WARNING* 6.py:10: '__call__' is not supported
 #*WARNING* 6.py:14: 'del' has no effect without refcounting
 #*WARNING* 6.py:20: class attribute 'attr' accessed without using class name
 #*WARNING* 6.py:23: class attribute 'attr' accessed without using class name
