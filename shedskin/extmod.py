@@ -673,7 +673,10 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         write("    0,")
-        write("    0,")
+        if self.has_method(cl, "__call__"):
+            write("    %s___call__," % clname(cl))
+        else:
+            write("    0,")
         if self.has_method(cl, "__str__"):
             write("    (PyObject *(*)(PyObject *))%s___str__," % clname(cl))
         else:
