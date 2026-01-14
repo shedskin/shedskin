@@ -1039,8 +1039,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 "__rand__",
                 "__rxor__",
                 "__ror__",
-                "__iter__",
-                "__call__",
                 "__enter__",
                 "__exit__",
                 "__del__",
