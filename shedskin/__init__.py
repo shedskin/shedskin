@@ -250,17 +250,79 @@ class Shedskin:
         subprocess.run([str(executable)], check=True)
 
     @classmethod
-    def commandline(cls, bypassargs:Optional[List[str]]=None) -> None:
-        """command line api"""
+    def _create_shared_parsers(cls) -> dict:
+        """Create shared argument parsers for reuse across subcommands."""
+        parsers = {}
+
+        # Stats options (used by all subcommands)
+        parsers['stats'] = argparse.ArgumentParser(add_help=False)
+        parsers['stats'].add_argument(
+            "--collect-stats", help="Collect and report shedskin stats", action="store_true"
+        )
+
+        # Type options (int32/64/128, float32/64)
+        parsers['types'] = argparse.ArgumentParser(add_help=False)
+        grp = parsers['types'].add_argument
+        grp("--int32", help="Use 32-bit integers", action="store_true")
+        grp("--int64", help="Use 64-bit integers", action="store_true")
+        grp("--int128", help="Use 128-bit integers", action="store_true")
+        grp("--float32", help="Use 32-bit floats", action="store_true")
+        grp("--float64", help="Use 64-bit floats", action="store_true")
+
+        # Disable options (noassert, nobounds, nogc, nowrap)
+        parsers['disable'] = argparse.ArgumentParser(add_help=False)
+        grp = parsers['disable'].add_argument
+        grp("--noassert", help="Disable assert statements", action="store_true")
+        grp("-b", "--nobounds", help="Disable bounds checking", action="store_true")
+        grp("--nogc", help="Disable garbage collection", action="store_true")
+        grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
+
+        # Compiler options (debug, extmod, dirs, output, etc.)
+        parsers['compiler'] = argparse.ArgumentParser(add_help=False)
+        grp = parsers['compiler'].add_argument
+        grp("-d", "--debug", help="Set debug level", type=int)
+        grp("-e", "--extmod", help="Generate extension module", action="store_true")
+        grp("-I", "--include-dirs", help="Add an include directory", action="append")
+        grp("-L", "--link-dirs", help="Add a link library directory", action="append")
+        grp("-l", "--link-libs", help="Add a link library", action="append")
+        grp("-X", "--extra-lib", help="Add an extra builtins library directory")
+        grp("-o", "--outputdir", help="Specify output directory for generated files")
+        grp("-s", "--silent", help="Silent mode, only show warnings", action="store_true")
+        grp("-t", "--traceback", help="Print traceback for uncaught exceptions", action="store_true")
+        grp("-x", "--executable", help="Generate executable", action="store_true")
+
+        # CMake options (generator, jobs, build-type, etc.)
+        parsers['cmake'] = argparse.ArgumentParser(add_help=False)
+        grp = parsers['cmake'].add_argument
+        grp("--generator", help="Specify a cmake build system generator", metavar="G")
+        grp("--jobs", help="Build and run in parallel using N jobs", metavar="N", type=int)
+        grp("--build-type", help="Set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
+        grp("--test", help="Run ctest", action="store_true")
+        grp("--reset", help="Reset cmake build", action="store_true")
+        grp("--conan", help="Install cmake dependencies with conan", action="store_true")
+        grp("--spm", help="Install cmake dependencies with spm", action="store_true")
+        grp("--extproject", help="Install cmake dependencies with externalproject", action="store_true")
+        grp("--ccache", help="Enable ccache with cmake", action="store_true")
+        grp("--target", help="Build only specified cmake targets", nargs="+", metavar="TARGET")
+        grp("--nowarnings", help="Disable '-Wall' compilation warnings", action="store_true")
+
+        return parsers
+
+    @classmethod
+    def commandline(cls, bypassargs: Optional[List[str]] = None) -> None:
+        """Command line API."""
         sys.setrecursionlimit(100000)
         # Enable ANSI color output on Windows by invoking cmd
         if platform.system() == "Windows":
             subprocess.run(["cmd", "/c", ""], shell=False, check=False)
 
+        # Create shared argument parsers
+        shared = cls._create_shared_parsers()
+
         # --- command-line options
         parser = argparse.ArgumentParser(
-            prog = 'shedskin',
-            description = 'Restricted-Python-to-C++ Compiler',
+            prog='shedskin',
+            description='Restricted-Python-to-C++ Compiler',
         )
 
         subparsers = parser.add_subparsers(
@@ -268,189 +330,75 @@ class Shedskin:
             dest='subcmd',
         )
 
-        # common options
-        arg = opt = parser.add_argument
-
         # ---------------------------------------------------------------------
         # analyze subcommand
-
-        parser_analyze = subparsers.add_parser('analyze', help="analyze and validate python module")
-        arg = opt = parser_analyze.add_argument
-
-        arg("name", help="Python file or module to analyze")
-
-        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+        parser_analyze = subparsers.add_parser(
+            'analyze',
+            help="Analyze and validate python module",
+            parents=[shared['stats']],
+        )
+        parser_analyze.add_argument("name", help="Python file or module to analyze")
 
         # ---------------------------------------------------------------------
-        # translate
-
-        parser_translate = subparsers.add_parser('translate', help="translate python module to cpp (Makefile)")
-        arg = opt = parser_translate.add_argument
-
-        arg("name", help="Python file or module to compile")
-
-        opt("-c", "--compile",      help="Directly compile translated code", action="store_true")
-        opt("-d", "--debug",        help="Set debug level", type=int)
-        opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-F", "--flags",        help="Provide alternate Makefile flags")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")
-        opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
-        opt("-l", "--link-libs",    help="Add a link library", action="append")
-        opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
-        opt("-S", "--static-libs",  help="Use static compilation if possible", action="store_true")
-        opt("-m", "--makefile",     help="Specify alternate Makefile name")
-        opt("-o", "--outputdir",    help="Specify output directory for generated files")
-#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
-        opt("-r", "--run",          help="Build and run executable", action="store_true")
-        opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
-        opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
-        opt("-x", "--executable",   help="Generate executable", action="store_true")
-        opt("-D", "--dry-run",      help="Only print compilation command", action="store_true")
-
-        opt("--int32",              help="Use 32-bit integers", action="store_true")
-        opt("--int64",              help="Use 64-bit integers", action="store_true")
-        opt("--int128",             help="Use 128-bit integers", action="store_true")
-        opt("--float32",            help="Use 32-bit floats", action="store_true")
-        opt("--float64",            help="Use 64-bit floats", action="store_true")
-
-        opt("--noassert",           help="Disable assert statements", action="store_true")
-        opt("-b", "--nobounds",     help="Disable bounds checking", action="store_true")
-        opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nomakefile",         help="Disable makefile generation", action="store_true")
-        opt("-w", "--nowrap",       help="Disable wrap-around checking", action="store_true")
-        opt("--nocleanup",          help="Disable cleanup of generated files", action="store_true")
-
-        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+        # translate subcommand
+        parser_translate = subparsers.add_parser(
+            'translate',
+            help="Translate python module to cpp (Makefile)",
+            parents=[shared['stats'], shared['types'], shared['disable'], shared['compiler']],
+        )
+        opt = parser_translate.add_argument
+        opt("name", help="Python file or module to compile")
+        opt("-c", "--compile", help="Directly compile translated code", action="store_true")
+        opt("-F", "--flags", help="Provide alternate Makefile flags")
+        opt("-S", "--static-libs", help="Use static compilation if possible", action="store_true")
+        opt("-m", "--makefile", help="Specify alternate Makefile name")
+        opt("-r", "--run", help="Build and run executable", action="store_true")
+        opt("-D", "--dry-run", help="Only print compilation command", action="store_true")
+        opt("--nomakefile", help="Disable makefile generation", action="store_true")
+        opt("--nocleanup", help="Disable cleanup of generated files", action="store_true")
 
         # ---------------------------------------------------------------------
         # build subcommand
-
-        parser_build = subparsers.add_parser('build', help="translate and build python module (CMake)")
-        arg = opt = parser_build.add_argument
-
-        arg("name", help="Python file or module to compile")
-
-        # opt("--debug",            help="set cmake debug on", action="store_true")
-        opt("--generator",          help="specify a cmake build system generator", metavar="G")
-        opt("--jobs",               help="build and run in parallel using N jobs", metavar="N", type=int)
-        opt("--build-type",         help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
-        opt("--test",               help="run ctest", action="store_true")
-        opt("--reset",              help="reset cmake build", action="store_true")
-        opt("--conan",              help="install cmake dependencies with conan", action="store_true")
-        opt("--spm",                help="install cmake dependencies with spm", action="store_true")
-        opt("--extproject",         help="install cmake dependencies with externalproject", action="store_true")
-        opt('--ccache',             help='enable ccache with cmake', action='store_true')
-        opt('--target',             help='build only specified cmake targets', nargs="+", metavar="TARGET")
-
-        opt("-d", "--debug",        help="Set debug level", type=int)
-        opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")
-        opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
-        opt("-l", "--link-libs",    help="Add a link library", action="append")
-        opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
-        opt("-o", "--outputdir",    help="Specify output directory for generated files")
-#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
-        opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
-        opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
-        opt("-x", "--executable",   help="Generate executable", action="store_true")
-
-        opt("--int32",              help="Use 32-bit integers", action="store_true")
-        opt("--int64",              help="Use 64-bit integers", action="store_true")
-        opt("--int128",             help="Use 128-bit integers", action="store_true")
-        opt("--float32",            help="Use 32-bit floats", action="store_true")
-        opt("--float64",            help="Use 64-bit floats", action="store_true")
-
-        opt("--noassert",           help="Disable assert statements", action="store_true")
-        opt("--nobounds",           help="Disable bounds checking", action="store_true")
-        opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
-        opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
-
-        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+        parser_build = subparsers.add_parser(
+            'build',
+            help="Translate and build python module (CMake)",
+            parents=[shared['stats'], shared['types'], shared['disable'], shared['compiler'], shared['cmake']],
+        )
+        parser_build.add_argument("name", help="Python file or module to compile")
 
         # ---------------------------------------------------------------------
         # run subcommand
-
-        parser_run = subparsers.add_parser('run', help="translate, build and run module (CMake)")
-        arg = opt = parser_run.add_argument
-
-        arg("name", help="Python file or module to run")
-
-        # opt("--debug",            help="set cmake debug on", action="store_true")
-        opt("--generator",          help="specify a cmake build system generator", metavar="G")
-        opt("--jobs",               help="build and run in parallel using N jobs", metavar="N", type=int)
-        opt("--build-type",         help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
-        opt("--test",               help="run ctest", action="store_true")
-        opt("--reset",              help="reset cmake build", action="store_true")
-        opt("--conan",              help="install cmake dependencies with conan", action="store_true")
-        opt("--spm",                help="install cmake dependencies with spm", action="store_true")
-        opt("--extproject",         help="install cmake dependencies with externalproject", action="store_true")
-        opt('--ccache',             help='enable ccache with cmake', action='store_true')
-        opt('--target',             help='build only specified cmake targets', nargs="+", metavar="TARGET")
-
-        opt("-d", "--debug",        help="Set debug level", type=int)
-        opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")
-        opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
-        opt("-l", "--link-libs",    help="Add a link library", action="append")
-        opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
-        opt("-o", "--outputdir",    help="Specify output directory for generated files")
-#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
-        opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
-        opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
-        opt("-x", "--executable",   help="Generate executable", action="store_true")
-
-        opt("--int32",              help="Use 32-bit integers", action="store_true")
-        opt("--int64",              help="Use 64-bit integers", action="store_true")
-        opt("--int128",             help="Use 128-bit integers", action="store_true")
-        opt("--float32",            help="Use 32-bit floats", action="store_true")
-        opt("--float64",            help="Use 64-bit floats", action="store_true")
-
-        opt("--noassert",           help="Disable assert statements", action="store_true")
-        opt("--nobounds",           help="Disable bounds checking", action="store_true")
-        opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
-        opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
-
-        opt("--collect-stats",      help="Collect and report shedskin stats", action="store_true")
+        parser_run = subparsers.add_parser(
+            'run',
+            help="Translate, build and run module (CMake)",
+            parents=[shared['stats'], shared['types'], shared['disable'], shared['compiler'], shared['cmake']],
+        )
+        parser_run.add_argument("name", help="Python file or module to run")
 
         # ---------------------------------------------------------------------
-        # test subcommand
-
-        parser_test = subparsers.add_parser('runtests', help='run tests')
-        arg = opt = parser_test.add_argument
-
-        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
+        # runtests subcommand
+        parser_test = subparsers.add_parser(
+            'runtests',
+            help='Run tests',
+            parents=[shared['stats'], shared['cmake']],
+        )
+        opt = parser_test.add_argument
+        opt("-e", "--extmod", help="Generate extension module", action="store_true")
         opt("-x", "--executable", help="Generate executable", action="store_true")
-
-        opt("--disable-exts",     help="Disable building extensions", action="store_true")
-        opt("--disable-exes",     help="Disable building executables", action="store_true")
-
-        opt('--dryrun',           help='dryrun without any changes ', action='store_true')
-        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")
-        opt('--check',            help='check testfile py syntax before running', action='store_true')
-        opt('--modified',         help='run only recently modified test', action='store_true')
-        opt('--nocleanup',        help='do not cleanup built test', action='store_true')
-        opt('--pytest',           help='run pytest before each test run', action='store_true')
-        opt('--run',              help='run single test', metavar="TEST")
-        opt('--stoponfail',       help='stop when first failure happens in ctest', action='store_true')
-        opt('--run-errs',         help='run error/warning message tests', action='store_true')
-        opt('--progress',         help='enable short progress output from ctest', action='store_true')
-
-        opt("--debug",            help="set cmake debug on", action="store_true")
-        opt("--generator",        help="specify a cmake build system generator", metavar="G")
-        opt("--jobs",             help="build and run in parallel using N jobs", metavar="N", type=int)
-        opt("--build-type",       help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
-        opt("--reset",            help="reset cmake build", action="store_true")
-        opt("--conan",            help="install cmake dependencies with conan", action="store_true")
-        opt("--spm",              help="install cmake dependencies with spm", action="store_true")
-        opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
-        opt('--ccache',           help='enable ccache with cmake', action='store_true')
-        opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
-        opt("--collect-stats",    help="Collect and report shedskin stats", action="store_true")
-
-        opt("-c", "--cfg",        help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
-        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")
+        opt("--disable-exts", help="Disable building extensions", action="store_true")
+        opt("--disable-exes", help="Disable building executables", action="store_true")
+        opt("--dryrun", help="Dryrun without any changes", action="store_true")
+        opt("--include", help="Provide regex of tests to include with cmake", metavar="PATTERN")
+        opt("--check", help="Check testfile py syntax before running", action="store_true")
+        opt("--modified", help="Run only recently modified test", action="store_true")
+        opt("--nocleanup", help="Do not cleanup built test", action="store_true")
+        opt("--pytest", help="Run pytest before each test run", action="store_true")
+        opt("--run", help="Run single test", metavar="TEST")
+        opt("--stoponfail", help="Stop when first failure happens in ctest", action="store_true")
+        opt("--run-errs", help="Run error/warning message tests", action="store_true")
+        opt("--progress", help="Enable short progress output from ctest", action="store_true")
+        opt("--debug", help="Set cmake debug on", action="store_true")
+        opt("-c", "--cfg", help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
 
         # ---------------------------------------------------------------------
         # parse command line

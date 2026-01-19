@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `TypeInferenceState`: Core type inference data (cnode, types, constraints, etc.)
 - Created new `shedskin/state/` package containing the focused state dataclasses
 - Maintained 100% backwards compatibility via property delegation in `GlobalInfo`
+- Consolidated CLI argument definitions using argparse parent parsers:
+  - Created `_create_shared_parsers()` method with reusable argument groups
+  - Shared parsers: `stats`, `types`, `disable`, `compiler`, `cmake`
+  - Reduced code duplication across `translate`, `build`, `run`, `runtests` subcommands
 
 ### Security
 
@@ -33,6 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cmake.py`: Conan install, shellcmd, cmake config/build/test, pytest
   - `makefile.py`: Command execution in `_execute()`
   - `__init__.py`: Executable running and Windows color output hack
+
+### Documentation
+
+- Documented type inference tuning constants in `infer.py`:
+  - `INCREMENTAL`: Enable incremental analysis mode
+  - `INCREMENTAL_FUNCS`: Functions to add per round (default: 5)
+  - `INCREMENTAL_DATA`: Enable incremental allocation tracking
+  - `INCREMENTAL_ALLOCS`: Allocations before restart (default: 1)
+  - `MAXITERS`: Maximum iterations per round (default: 30)
+  - `CPA_LIMIT`: Initial cartesian product limit (default: 10)
+- Added `MAX_TYPE_DEPTH` constant in `typestr.py` for recursion limit (default: 10)
 
 ### Fixed
 
