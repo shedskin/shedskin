@@ -13,6 +13,7 @@ import os
 import os.path
 import pathlib
 import platform
+import subprocess
 import sys
 import time
 from typing import List, Optional
@@ -246,13 +247,15 @@ class Shedskin:
             executable = cwd / 'build' / p.stem
         else:
             executable = cwd.parent / 'build' / p.parent.name / p.parent.name
-        os.system(executable)
+        subprocess.run([str(executable)], check=True)
 
     @classmethod
     def commandline(cls, bypassargs:Optional[List[str]]=None) -> None:
         """command line api"""
         sys.setrecursionlimit(100000)
-        os.system("") # hack tht enables color output for Microsoft Windows cmd
+        # Enable ANSI color output on Windows by invoking cmd
+        if platform.system() == "Windows":
+            subprocess.run(["cmd", "/c", ""], shell=False, check=False)
 
         # --- command-line options
         parser = argparse.ArgumentParser(

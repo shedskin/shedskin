@@ -74,10 +74,19 @@ def check_output(cmd: str) -> Optional[str]:
 
 
 class MakefileWriter:
-    """Handles writing Makefile contents"""
+    """Handles writing Makefile contents.
+
+    Can be used as a context manager for automatic cleanup.
+    """
 
     def __init__(self, path: PathLike):
         self.makefile = open(path, "w", encoding="utf8")
+
+    def __enter__(self) -> "MakefileWriter":
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()
 
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
@@ -447,7 +456,7 @@ class Builder:
     def _execute(self, cmd: str) -> None:
         """Execute a command"""
         print(cmd)
-        os.system(cmd)
+        subprocess.run(cmd, shell=True, check=True)
 
     def _remove(self, path: PathLike) -> None:
         """Remove a target"""

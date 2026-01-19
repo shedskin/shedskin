@@ -144,7 +144,12 @@ class ConanDependencyManager:
 
     def install(self, build_type) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && conan profile detect -e && conan install .. --build=missing -s:a build_type={build_type}")
+        subprocess.run(
+            f"conan profile detect -e && conan install .. --build=missing -s:a build_type={build_type}",
+            shell=True,
+            cwd=self.build_dir,
+            check=True,
+        )
 
 
 class ShedskinDependencyManager:
@@ -172,7 +177,7 @@ class ShedskinDependencyManager:
         """Run a shell command"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
-        os.system(cmd)  # .format(*args, **kwds))
+        subprocess.run(cmd, shell=True, check=True)
 
     def git_clone(
         self, repo: str, to_dir: Pathlike, branch: Optional[str] = None
@@ -706,7 +711,7 @@ class CMakeBuilder:
                 cfg_cmd += ' -G "{generator}"'
 
         self.log.info(cfg_cmd)
-        assert os.system(cfg_cmd) == 0
+        subprocess.run(cfg_cmd, shell=True, check=True)
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
@@ -719,7 +724,7 @@ class CMakeBuilder:
             bld_cmd = f"cmake --build {self.build_dir} {opts}"
 
         self.log.info(bld_cmd)
-        assert os.system(bld_cmd) == 0
+        subprocess.run(bld_cmd, shell=True, check=True)
 
     def cmake_test(self, options: list[str]) -> None:
         """Activate ctest"""
@@ -736,7 +741,7 @@ class CMakeBuilder:
             tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
 
         self.log.info(tst_cmd)
-        assert os.system(tst_cmd) == 0
+        subprocess.run(tst_cmd, shell=True, check=True)
 
     def run_tests(self) -> None:
         """Run tests as a test runner"""
@@ -852,7 +857,7 @@ class CMakeBuilder:
             # nocleanup
 
             if self.options.pytest:
-                os.system("pytest")
+                subprocess.run(["pytest"], check=True)
 
             if self.options.run:
                 target_suffix = "-exe"

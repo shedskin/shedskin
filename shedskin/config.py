@@ -49,9 +49,8 @@ class GlobalInfo:
         self._paths = self._init_directories()
 
         # Load C++ keywords from illegal.txt
-        illegal_file = open(self._paths.shedskin_illegal / "illegal.txt")
-        cpp_keywords = set(line.strip() for line in illegal_file)
-        illegal_file.close()
+        with open(self._paths.shedskin_illegal / "illegal.txt") as illegal_file:
+            cpp_keywords = set(line.strip() for line in illegal_file)
 
         # Initialize focused state objects
         self._naming = NamingContext(cpp_keywords=cpp_keywords)
