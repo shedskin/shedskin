@@ -302,6 +302,7 @@ class Shedskin:
         grp("--conan", help="Install cmake dependencies with conan", action="store_true")
         grp("--spm", help="Install cmake dependencies with spm", action="store_true")
         grp("--extproject", help="Install cmake dependencies with externalproject", action="store_true")
+        grp("--local-deps", help="Build dependencies from bundled ext/ sources", action="store_true")
         grp("--ccache", help="Enable ccache with cmake", action="store_true")
         grp("--target", help="Build only specified cmake targets", nargs="+", metavar="TARGET")
         grp("--nowarnings", help="Disable '-Wall' compilation warnings", action="store_true")
@@ -356,6 +357,7 @@ class Shedskin:
         opt("-D", "--dry-run", help="Only print compilation command", action="store_true")
         opt("--nomakefile", help="Disable makefile generation", action="store_true")
         opt("--nocleanup", help="Disable cleanup of generated files", action="store_true")
+        opt("--local-deps", help="Use dependencies from bundled ext/ sources", action="store_true")
 
         # ---------------------------------------------------------------------
         # build subcommand
