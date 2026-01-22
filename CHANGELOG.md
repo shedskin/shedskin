@@ -7,8 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.13]
+
 ### Added
 
+- Local dependency management (`--local-deps` flag) with bundled zip archives:
+  - Builds bdwgc and pcre2 from compressed sources in `shedskin/ext/`
+  - Extracts to platform-specific cache on first use:
+    - macOS: `~/Library/Caches/shedskin/`
+    - Linux: `~/.cache/shedskin/`
+    - Windows: `%LOCALAPPDATA%/shedskin/Cache/`
+  - Caches built static libraries for subsequent compilations
+  - Works completely offline (no network required)
+  - Cross-platform support (Linux, macOS, Windows)
+- `LocalDependencyManager` class in `cmake.py` for zip-based dependency building
+- CLI option `--local-deps` for both `translate` (Makefile) and `build` (CMake) commands
 - Unit tests for core modules (`tests/unit/`, 74 tests total):
   - `test_config.py`: Tests for GlobalInfo and state objects
   - `test_graph.py`: Tests for constraint graph building
@@ -17,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Bundled bdwgc (v8.2.10) and pcre2 (pcre2-10.47) sources as compressed zip archives in `ext/`:
+  - Reduced from 25MB (full sources) to 1.2MB (trimmed and compressed)
+  - Removed documentation, tests, CI/CD files, autotools, legacy platform support
+  - Removed SLJIT (JIT compiler) from pcre2 as shedskin doesn't use JIT features
 - Refactored `GlobalInfo` class into focused state objects for better code organization:
   - `FileSystemPaths`: Immutable paths for shedskin installation, resources, and libraries
   - `BuildConfiguration`: Build flags (bounds_checking, int32/64, nogc, etc.)
