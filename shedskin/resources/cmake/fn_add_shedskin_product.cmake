@@ -23,6 +23,7 @@ function(add_shedskin_product)
         ENABLE_CONAN
         ENABLE_SPM
         ENABLE_EXTERNAL_PROJECT
+        ENABLE_LOCAL_DEPS
         DEBUG
     )
     set(oneValueArgs
@@ -147,6 +148,7 @@ function(add_shedskin_product)
             SHEDSKIN_ENABLE_CONAN
             SHEDSKIN_ENABLE_SPM
             SHEDSKIN_ENABLE_EXTERNAL_PROJECT
+            SHEDSKIN_ENABLE_LOCAL_DEPS
             SHEDSKIN_DEBUG
 
             # one value args
@@ -213,12 +215,16 @@ function(add_shedskin_product)
         set(LIBGCCPP libgccpp.a)
         set(LIBPCRE2 libpcre2-8.a)
     else() # i.e windows
-        set(LIBGCa gc.lib)
+        set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
         set(LIBPCRE2 pcre2-8.lib)
     endif ()
 
+    # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
+    set(USING_STATIC_GC OFF)
+
     if(ENABLE_EXTERNAL_PROJECT)
+        set(USING_STATIC_GC ON)
         set(LIB_DEPS
             ${install_dir}/lib/${LIBGC}
             ${install_dir}/lib/${LIBGCCPP}
@@ -227,6 +233,7 @@ function(add_shedskin_product)
         set(LIB_DIRS ${install_dir}/lib)
         set(LIB_INCLUDES ${install_dir}/include)
     elseif(ENABLE_SPM)
+        set(USING_STATIC_GC ON)
         set(LIB_DEPS
             ${SPM_LIB_DIRS}/${LIBGC}
             ${SPM_LIB_DIRS}/${LIBGCCPP}
@@ -236,6 +243,15 @@ function(add_shedskin_product)
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+    elseif(ENABLE_LOCAL_DEPS)
+        set(USING_STATIC_GC ON)
+        set(LIB_DEPS
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
+        )
+        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
+        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
     elseif(ENABLE_CONAN)
         set(LIB_DEPS
             BDWgc::BDWgc -lgc -lgccpp
@@ -388,6 +404,11 @@ function(add_shedskin_product)
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
         )
 
+        # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        target_compile_definitions(${EXE} PRIVATE
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+        )
+
         target_include_directories(${EXE} PRIVATE
             ${SHEDSKIN_LIB}
             ${CMAKE_SOURCE_DIR}
@@ -520,6 +541,11 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
             # $<$<BOOL:${WIN32}>:/LD>
+        )
+
+        # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        target_compile_definitions(${EXT} PRIVATE
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
         )
 
         target_link_options(${EXT} PRIVATE

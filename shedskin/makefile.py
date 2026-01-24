@@ -74,10 +74,19 @@ def check_output(cmd: str) -> Optional[str]:
 
 
 class MakefileWriter:
-    """Handles writing Makefile contents"""
+    """Handles writing Makefile contents.
+
+    Can be used as a context manager for automatic cleanup.
+    """
 
     def __init__(self, path: PathLike):
         self.makefile = open(path, "w", encoding="utf8")
+
+    def __enter__(self) -> "MakefileWriter":
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()
 
     def write(self, line: str = "") -> None:
         """Write a line to the Makefile"""
@@ -447,7 +456,7 @@ class Builder:
     def _execute(self, cmd: str) -> None:
         """Execute a command"""
         print(cmd)
-        os.system(cmd)
+        subprocess.run(cmd, shell=True, check=True)
 
     def _remove(self, path: PathLike) -> None:
         """Remove a target"""
@@ -1178,6 +1187,25 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def _setup_unix(self) -> None:
         """Configure Unix-like platform settings"""
+        # Check if using local dependencies from shedskin cache
+        use_local_deps = getattr(self.gx.options, 'local_deps', False)
+
+        if use_local_deps:
+            from . import config as cfg
+            cache_dir = cfg.get_user_cache_dir()
+            cache_include = cache_dir / "include"
+            cache_lib = cache_dir / "lib"
+            if cache_include.exists():
+                self.add_variable("LOCAL_DEPS_DIR", str(cache_dir))
+                self.add_include_dirs(LOCAL_DEPS_INCLUDE="$(LOCAL_DEPS_DIR)/include")
+                self.add_link_dirs(LOCAL_DEPS_LIB="$(LOCAL_DEPS_DIR)/lib")
+                self.add_variable("STATIC_GC", "$(LOCAL_DEPS_LIB)/libgc.a")
+                self.add_variable("STATIC_GCCPP", "$(LOCAL_DEPS_LIB)/libgccpp.a")
+                self.add_variable("STATIC_PCRE2", "$(LOCAL_DEPS_LIB)/libpcre2-8.a")
+                self.add_variable(
+                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
+                )
+
         prefixes = [
             "/usr",
             "/usr/local",
@@ -1195,7 +1223,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
 
         if PLATFORM == "Darwin":
-            if prefix := self.homebrew_prefix():
+            # Only use Homebrew for static libs if not using local deps
+            if not use_local_deps and (prefix := self.homebrew_prefix()):
                 self.add_variable("HOMEBREW_PREFIX", str(prefix))
                 self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")

@@ -111,11 +111,43 @@ logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
 
 
+# Type inference tuning parameters
+# ---------------------------------
+# These constants control the iterative type analysis algorithm.
+# The algorithm uses Cartesian Product Analysis (CPA) with Iterative Flow
+# Analysis (IFA) to infer types. Processing happens incrementally to show
+# progress and avoid memory issues on large programs.
+
+# INCREMENTAL: Enable incremental analysis mode. When True, functions are
+# added to analysis gradually rather than all at once. This provides
+# progress feedback and better memory behavior for large programs.
 INCREMENTAL = True
+
+# INCREMENTAL_FUNCS: Number of new functions to add per incremental round.
+# After adding this many new functions to analysis, the propagation loop
+# restarts to incorporate their type information before adding more.
 INCREMENTAL_FUNCS = 5
+
+# INCREMENTAL_DATA: Enable incremental allocation tracking. When True,
+# new object allocations trigger analysis restarts to track type flow
+# through newly discovered allocation sites.
 INCREMENTAL_DATA = True
+
+# INCREMENTAL_ALLOCS: Number of new allocations before restarting analysis.
+# Lower values give more frequent restarts (finer granularity) but may
+# increase total iterations.
 INCREMENTAL_ALLOCS = 1
+
+# MAXITERS: Maximum iterations per incremental round before forced restart.
+# If type propagation hasn't converged after this many iterations, the
+# algorithm restarts with more functions/allocations included. After 3
+# consecutive max-iteration hits, analysis terminates.
 MAXITERS = 30
+
+# CPA_LIMIT: Initial limit on cartesian product combinations per call site.
+# Limits combinatorial explosion when a function can be called with many
+# type combinations. If exceeded, the limit doubles and analysis restarts.
+# Higher values give more precise types but increase analysis time.
 CPA_LIMIT = 10
 
 

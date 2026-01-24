@@ -36,6 +36,10 @@ Types: TypeAlias = set[Tuple["python.Class", int]]  # TODO merge with cpp.py ver
 
 logger = logging.getLogger("typestr")
 
+# MAX_TYPE_DEPTH: Maximum recursion depth for type string generation.
+# Prevents infinite recursion when types have cyclic references.
+MAX_TYPE_DEPTH = 10
+
 
 class ExtmodError(Exception):
     pass
@@ -282,7 +286,7 @@ def typestrnew(
     mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
-    if depth == 10:
+    if depth == MAX_TYPE_DEPTH:
         raise RuntimeError()
 
     # --- annotation or c++ code
@@ -488,7 +492,7 @@ def incompatible_assignment_rec(
     gx: "config.GlobalInfo", argtypes: Types, formaltypes: Types, depth: int = 0
 ) -> bool:
     """Check if an assignment is incompatible"""
-    if depth == 10:
+    if depth == MAX_TYPE_DEPTH:
         return False
     argclasses = types_classes(argtypes)
     formalclasses = types_classes(formaltypes)
