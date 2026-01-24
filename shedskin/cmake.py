@@ -1002,7 +1002,9 @@ class CMakeBuilder:
             preset = get_cmake_preset("build", self.options.build_type)
             bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
         else:
-            bld_cmd = f"cmake --build {self.build_dir} {opts}"
+            # --config is needed for multi-config generators (Visual Studio on Windows)
+            build_type = self.options.build_type or "Debug"
+            bld_cmd = f"cmake --build {self.build_dir} --config {build_type} {opts}"
 
         self.log.info(bld_cmd)
         subprocess.run(bld_cmd, shell=True, check=True)
