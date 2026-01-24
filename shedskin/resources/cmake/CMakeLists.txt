@@ -93,9 +93,9 @@ elseif(ENABLE_EXTERNAL_PROJECT)
         bdwgc
         INSTALL_DIR    ${install_dir}
         GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
-        GIT_TAG        d0ba209660ea8c663e06d9a68332ba5f42da54ba
-        GIT_SUBMODULES "libatomic_ops"
-        GIT_SUBMODULES_RECURSE ON
+        GIT_TAG        v8.2.8
+        GIT_SUBMODULES_RECURSE true
+        GIT_SHALLOW true
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
                        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
                        -DBUILD_SHARED_LIBS=OFF
@@ -105,7 +105,8 @@ elseif(ENABLE_EXTERNAL_PROJECT)
         pcre2
         INSTALL_DIR    ${install_dir}
         GIT_REPOSITORY https://github.com/PCRE2Project/pcre2.git
-        GIT_TAG        6ae58beca071f13ccfed31d03b3f479ab520639b
+        GIT_TAG        pcre2-10.44
+        GIT_SHALLOW true
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
     )
 
