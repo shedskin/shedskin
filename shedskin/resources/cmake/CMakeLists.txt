@@ -20,6 +20,7 @@ option(COLLECT_STATS "Collect stats" OFF)
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
+option(ENABLE_LOCAL_DEPS "Enable local dependency management" OFF)
 
 option(ENABLE_WARNINGS "Enable -Wall type of warnings" ON)
 
@@ -104,6 +105,14 @@ elseif(ENABLE_EXTERNAL_PROJECT)
         GIT_TAG        6ae58beca071f13ccfed31d03b3f479ab520639b
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
     )
+
+elseif(ENABLE_LOCAL_DEPS)
+    if(NOT DEFINED LOCAL_DEPS_DIR)
+        message(FATAL_ERROR "LOCAL_DEPS_DIR must be defined when ENABLE_LOCAL_DEPS is ON")
+    endif()
+    message(STATUS "LOCAL_DEPS_DIR: ${LOCAL_DEPS_DIR}")
+    set(LOCAL_DEPS_LIB_DIRS ${LOCAL_DEPS_DIR}/lib)
+    set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
 endif()
 
 
