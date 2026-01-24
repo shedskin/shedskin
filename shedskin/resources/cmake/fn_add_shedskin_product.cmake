@@ -23,6 +23,7 @@ function(add_shedskin_product)
         ENABLE_CONAN
         ENABLE_SPM
         ENABLE_EXTERNAL_PROJECT
+        ENABLE_LOCAL_DEPS
         DEBUG
     )
     set(oneValueArgs
@@ -147,6 +148,7 @@ function(add_shedskin_product)
             SHEDSKIN_ENABLE_CONAN
             SHEDSKIN_ENABLE_SPM
             SHEDSKIN_ENABLE_EXTERNAL_PROJECT
+            SHEDSKIN_ENABLE_LOCAL_DEPS
             SHEDSKIN_DEBUG
 
             # one value args
@@ -236,6 +238,14 @@ function(add_shedskin_product)
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+    elseif(ENABLE_LOCAL_DEPS)
+        set(LIB_DEPS
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
+        )
+        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
+        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
     elseif(ENABLE_CONAN)
         set(LIB_DEPS
             BDWgc::BDWgc -lgc -lgccpp
