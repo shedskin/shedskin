@@ -5,13 +5,11 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
 
 concurrency:
   group: dep-managers-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  BUILD_TYPE: Release
 
 jobs:
   build:
@@ -22,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ["3.13"]
-        dep-manager: [local-deps, spm, conan, extproject]
+        dep_manager: [local-deps, spm, conan, extproject]
 
     steps:
     - uses: actions/checkout@v4
@@ -41,15 +39,17 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
 
-    - name: Install conan
-      if: matrix.dep-manager == 'conan'
-      run: pip install conan
+    - name: Install and configure conan
+      if: matrix.dep_manager == 'conan'
+      run: |
+        pip install conan
+        conan profile detect --force
 
     - name: Install shedskin
       run: pip install .
 
-    - name: Build test.py with --${{ matrix.dep-manager }}
-      run: shedskin build --${{ matrix.dep-manager }} test.py
+    - name: Build test.py with --${{ matrix.dep_manager }}
+      run: shedskin build --${{ matrix.dep_manager }} --build-type Release test.py
 
     - name: Run built executable
       shell: bash
