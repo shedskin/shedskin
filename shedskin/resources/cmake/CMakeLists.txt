@@ -94,6 +94,7 @@ elseif(ENABLE_EXTERNAL_PROJECT)
         INSTALL_DIR    ${install_dir}
         GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
         GIT_TAG        d0ba209660ea8c663e06d9a68332ba5f42da54ba
+        GIT_SUBMODULES_RECURSE ON
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
                        -DBUILD_SHARED_LIBS=OFF
                        -Denable_cplusplus=ON
