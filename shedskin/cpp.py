@@ -3573,7 +3573,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     elif lcp and isinstance(lcp[0], python.Class):
                         var = python.lookup_var(lvalue.attr, lcp[0], self.mv)
                         vartypes = set()
-                        if var:
+                        if var and var in self.mergeinh:
                             vartypes = self.mergeinh[var]
                         self.visit(lvalue, func)
                         self.append(" = ")
