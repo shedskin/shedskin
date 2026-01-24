@@ -33,6 +33,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import zipfile
 from typing import Callable, List, Optional, Union
 
 from . import config
@@ -50,6 +51,43 @@ def pkg_path() -> None:
 def user_cache_dir() -> None:
     """Used by CMakeLists.txt execute process"""
     sys.stdout.write(str(config.get_user_cache_dir()))
+
+
+def build_local_deps() -> None:
+    """CLI entry point for building local dependencies from ext/ sources.
+
+    Usage: python -m shedskin.cmake build-local-deps [--force] [--status]
+    """
+    import argparse as ap
+
+    parser = ap.ArgumentParser(
+        description="Build shedskin dependencies from bundled ext/ sources"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force rebuild even if targets exist"
+    )
+    parser.add_argument(
+        "--status", action="store_true", help="Show status only, don't build"
+    )
+    parser.add_argument(
+        "--reset", action="store_true", help="Reset cache before building"
+    )
+    args = parser.parse_args()
+
+    # Import here to avoid circular imports at module load
+    ldm = LocalDependencyManager(reset_on_run=args.reset)
+
+    if args.status:
+        status = ldm.status()
+        print("\nLocal Dependencies Status:")
+        print("-" * 40)
+        for key, value in status.items():
+            print(f"  {key}: {value}")
+        print()
+        return
+
+    ldm.install_all(force=args.force)
+    print(f"\nDependencies installed to: {ldm.deps_dir}")
 
 
 class ConanBDWGC:
@@ -144,7 +182,12 @@ class ConanDependencyManager:
 
     def install(self, build_type) -> None:
         """Install conan dependencies"""
-        os.system(f"cd {self.build_dir} && conan profile detect -e && conan install .. --build=missing -s:a build_type={build_type}")
+        subprocess.run(
+            f"conan profile detect -e && conan install .. --build=missing -s:a build_type={build_type}",
+            shell=True,
+            cwd=self.build_dir,
+            check=True,
+        )
 
 
 class ShedskinDependencyManager:
@@ -172,7 +215,7 @@ class ShedskinDependencyManager:
         """Run a shell command"""
         print("-" * 80)
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
-        os.system(cmd)  # .format(*args, **kwds))
+        subprocess.run(cmd, shell=True, check=True)
 
     def git_clone(
         self, repo: str, to_dir: Pathlike, branch: Optional[str] = None
@@ -333,6 +376,249 @@ class ShedskinDependencyManager:
         )
         self.cmake_build(pcre2_build)
         self.cmake_install(pcre2_build)
+
+
+class LocalDependencyManager:
+    """Dependency manager that builds from embedded ext/ zip archives.
+
+    This manager uses compressed zip archives bundled in shedskin/ext/
+    (bdwgc.zip, pcre2.zip). On first use, archives are extracted to the
+    platform-specific cache directory and built as static libraries.
+
+    Supported platforms: Linux, macOS, Windows
+
+    Cache structure:
+        ~/Library/Caches/shedskin/  (macOS)
+        ~/.cache/shedskin/          (Linux)
+        %LOCALAPPDATA%/shedskin/    (Windows)
+            src/
+                bdwgc/              (extracted sources)
+                pcre2/
+            build/
+                bdwgc/              (cmake build dir)
+                pcre2/
+            include/                (installed headers)
+            lib/                    (installed static libs)
+    """
+
+    def __init__(self, reset_on_run: bool = False):
+        self.reset_on_run = reset_on_run
+
+        # ext/ directory contains zip archives
+        self.ext_dir = config.get_pkg_path() / "ext"
+        self.bdwgc_zip = self.ext_dir / "bdwgc.zip"
+        self.pcre2_zip = self.ext_dir / "pcre2.zip"
+
+        # Cache directories (platform-specific)
+        self.deps_dir = config.get_user_cache_dir()
+        self.src_dir = self.deps_dir / "src"
+        self.include_dir = self.deps_dir / "include"
+        self.lib_dir = self.deps_dir / "lib"
+        self.build_cache_dir = self.deps_dir / "build"
+
+        # Extracted source directories (in cache)
+        self.bdwgc_src = self.src_dir / "bdwgc"
+        self.pcre2_src = self.src_dir / "pcre2"
+
+        # Platform-specific library suffix
+        self.lib_suffix = ".lib" if sys.platform == "win32" else ".a"
+
+        if self.reset_on_run and self.deps_dir.exists():
+            shutil.rmtree(self.deps_dir)
+
+        # Create directories
+        self.deps_dir.mkdir(parents=True, exist_ok=True)
+        self.src_dir.mkdir(parents=True, exist_ok=True)
+        self.build_cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def _log(self, msg: str) -> None:
+        """Log a message with formatting."""
+        print(f"{WHITE}[LocalDeps]{RESET} {msg}")
+
+    def _run_cmd(self, cmd: list[str], cwd: Optional[Pathlike] = None) -> None:
+        """Run a command with logging."""
+        cmd_str = " ".join(str(c) for c in cmd)
+        print("-" * 80)
+        print(f"{WHITE}cmd{RESET}: {CYAN}{cmd_str}{RESET}")
+        subprocess.run(cmd, cwd=cwd, check=True)
+
+    def _extract_zip(self, zip_path: pathlib.Path, dest_dir: pathlib.Path) -> None:
+        """Extract a zip archive to the destination directory."""
+        if dest_dir.exists():
+            self._log(f"Source already extracted: {dest_dir}")
+            return
+
+        if not zip_path.exists():
+            raise FileNotFoundError(f"Zip archive not found: {zip_path}")
+
+        self._log(f"Extracting {zip_path.name} to {dest_dir.parent}")
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extractall(dest_dir.parent)
+
+    def _cmake_generate(
+        self, src_dir: Pathlike, build_dir: Pathlike, **options: bool
+    ) -> None:
+        """Run cmake configuration stage."""
+        cmd = [
+            "cmake",
+            "-S", str(src_dir),
+            "-B", str(build_dir),
+            f"--install-prefix={self.deps_dir}",
+        ]
+        for key, value in options.items():
+            cmd.append(f"-D{key}={value}")
+        self._run_cmd(cmd)
+
+    def _cmake_build(self, build_dir: Pathlike, cfg: str = "Release") -> None:
+        """Run cmake build stage."""
+        cmd = ["cmake", "--build", str(build_dir), "--config", cfg]
+        # Use parallel build if available
+        if platform.system() != "Windows":
+            cmd.extend(["--", "-j"])
+        self._run_cmd(cmd)
+
+    def _cmake_install(self, build_dir: Pathlike) -> None:
+        """Run cmake install stage."""
+        cmd = ["cmake", "--install", str(build_dir)]
+        self._run_cmd(cmd)
+
+    def bdwgc_targets_exist(self) -> bool:
+        """Check if bdwgc targets are already built."""
+        libgc = self.lib_dir / f"libgc{self.lib_suffix}"
+        libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
+        gc_h = self.include_dir / "gc.h"
+        return all(t.exists() for t in [libgc, libgccpp, gc_h])
+
+    def pcre2_targets_exist(self) -> bool:
+        """Check if pcre2 targets are already built."""
+        libpcre2 = self.lib_dir / f"libpcre2-8{self.lib_suffix}"
+        pcre2_h = self.include_dir / "pcre2.h"
+        return all(t.exists() for t in [libpcre2, pcre2_h])
+
+    def targets_exist(self) -> bool:
+        """Check if all required targets exist."""
+        return self.bdwgc_targets_exist() and self.pcre2_targets_exist()
+
+    def install_bdwgc(self, force: bool = False) -> bool:
+        """Build and install bdwgc from ext/bdwgc.zip.
+
+        Returns True if build was performed, False if skipped (already exists).
+        """
+        if not force and self.bdwgc_targets_exist():
+            self._log(f"bdwgc already installed in {self.lib_dir}")
+            return False
+
+        # Extract zip if needed
+        self._extract_zip(self.bdwgc_zip, self.bdwgc_src)
+
+        if not self.bdwgc_src.exists():
+            raise FileNotFoundError(f"bdwgc source not found at {self.bdwgc_src}")
+
+        self._log(f"Building bdwgc from {self.bdwgc_src}")
+
+        # Use a separate build directory in cache (out-of-source build)
+        build_dir = self.build_cache_dir / "bdwgc"
+        if build_dir.exists():
+            shutil.rmtree(build_dir)
+        build_dir.mkdir(parents=True, exist_ok=True)
+
+        # Configure with options appropriate for shedskin
+        self._cmake_generate(
+            self.bdwgc_src,
+            build_dir,
+            BUILD_SHARED_LIBS="OFF",
+            enable_cplusplus="ON",
+            build_cord="OFF",
+            enable_docs="OFF",
+            enable_gcj_support="OFF",
+            enable_java_finalization="OFF",
+            CMAKE_POSITION_INDEPENDENT_CODE="ON",
+        )
+
+        self._cmake_build(build_dir)
+        self._cmake_install(build_dir)
+
+        self._log(f"{GREEN}bdwgc installed successfully{RESET}")
+        return True
+
+    def install_pcre2(self, force: bool = False) -> bool:
+        """Build and install pcre2 from ext/pcre2.zip.
+
+        Returns True if build was performed, False if skipped (already exists).
+        """
+        if not force and self.pcre2_targets_exist():
+            self._log(f"pcre2 already installed in {self.lib_dir}")
+            return False
+
+        # Extract zip if needed
+        self._extract_zip(self.pcre2_zip, self.pcre2_src)
+
+        if not self.pcre2_src.exists():
+            raise FileNotFoundError(
+                f"pcre2 source not found at {self.pcre2_src}. "
+                f"Zip archive: {self.pcre2_zip}"
+            )
+
+        self._log(f"Building pcre2 from {self.pcre2_src}")
+
+        # Use a separate build directory in cache (out-of-source build)
+        build_dir = self.build_cache_dir / "pcre2"
+        if build_dir.exists():
+            shutil.rmtree(build_dir)
+        build_dir.mkdir(parents=True, exist_ok=True)
+
+        # Configure with minimal options for shedskin
+        self._cmake_generate(
+            self.pcre2_src,
+            build_dir,
+            BUILD_SHARED_LIBS="OFF",
+            PCRE2_BUILD_PCRE2GREP="OFF",
+            PCRE2_SUPPORT_LIBREADLINE="OFF",
+            PCRE2_SUPPORT_LIBEDIT="OFF",
+            PCRE2_SUPPORT_LIBZ="OFF",
+            PCRE2_SUPPORT_LIBBZ2="OFF",
+            PCRE2_BUILD_TESTS="OFF",
+            PCRE2_SHOW_REPORT="OFF",
+            CMAKE_POSITION_INDEPENDENT_CODE="ON",
+        )
+
+        self._cmake_build(build_dir)
+        self._cmake_install(build_dir)
+
+        self._log(f"{GREEN}pcre2 installed successfully{RESET}")
+        return True
+
+    def install_all(self, force: bool = False) -> None:
+        """Install all dependencies from ext/ zip archives."""
+        if not force and self.targets_exist():
+            self._log("All targets exist, no build needed")
+            return
+
+        self.install_bdwgc(force=force)
+        self.install_pcre2(force=force)
+
+    def get_include_dir(self) -> pathlib.Path:
+        """Return the include directory for compiled headers."""
+        return self.include_dir
+
+    def get_lib_dir(self) -> pathlib.Path:
+        """Return the library directory for compiled static libs."""
+        return self.lib_dir
+
+    def status(self) -> dict:
+        """Return status information about the local dependencies."""
+        return {
+            "ext_dir": str(self.ext_dir),
+            "cache_dir": str(self.deps_dir),
+            "bdwgc_zip_exists": self.bdwgc_zip.exists(),
+            "pcre2_zip_exists": self.pcre2_zip.exists(),
+            "bdwgc_extracted": self.bdwgc_src.exists(),
+            "pcre2_extracted": self.pcre2_src.exists(),
+            "bdwgc_built": self.bdwgc_targets_exist(),
+            "pcre2_built": self.pcre2_targets_exist(),
+            "platform": platform.system(),
+            "lib_suffix": self.lib_suffix,
+        }
 
 
 def add_shedskin_product(
@@ -706,7 +992,7 @@ class CMakeBuilder:
                 cfg_cmd += ' -G "{generator}"'
 
         self.log.info(cfg_cmd)
-        assert os.system(cfg_cmd) == 0
+        subprocess.run(cfg_cmd, shell=True, check=True)
 
     def cmake_build(self, options: list[str]) -> None:
         """Activate cmake build"""
@@ -716,10 +1002,12 @@ class CMakeBuilder:
             preset = get_cmake_preset("build", self.options.build_type)
             bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
         else:
-            bld_cmd = f"cmake --build {self.build_dir} {opts}"
+            # --config is needed for multi-config generators (Visual Studio on Windows)
+            build_type = self.options.build_type or "Debug"
+            bld_cmd = f"cmake --build {self.build_dir} --config {build_type} {opts}"
 
         self.log.info(bld_cmd)
-        assert os.system(bld_cmd) == 0
+        subprocess.run(bld_cmd, shell=True, check=True)
 
     def cmake_test(self, options: list[str]) -> None:
         """Activate ctest"""
@@ -736,7 +1024,7 @@ class CMakeBuilder:
             tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
 
         self.log.info(tst_cmd)
-        assert os.system(tst_cmd) == 0
+        subprocess.run(tst_cmd, shell=True, check=True)
 
     def run_tests(self) -> None:
         """Run tests as a test runner"""
@@ -804,6 +1092,11 @@ class CMakeBuilder:
         elif self.options.extproject:
             cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
 
+        elif getattr(self.options, 'local_deps', False):
+            cfg_options.append("-DENABLE_LOCAL_DEPS=ON")
+            cache_dir = config.get_user_cache_dir()
+            cfg_options.append(f"-DLOCAL_DEPS_DIR={cache_dir}")
+
         if not self.options.nowarnings:
             cfg_options.append("-DENABLE_WARNINGS=ON")
 
@@ -825,6 +1118,10 @@ class CMakeBuilder:
         elif self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
             spm.install_all()
+
+        elif getattr(self.options, 'local_deps', False):
+            ldm = LocalDependencyManager()
+            ldm.install_all()
 
         if self.options.target:
             target_suffix = "-exe"
@@ -852,7 +1149,7 @@ class CMakeBuilder:
             # nocleanup
 
             if self.options.pytest:
-                os.system("pytest")
+                subprocess.run(["pytest"], check=True)
 
             if self.options.run:
                 target_suffix = "-exe"
