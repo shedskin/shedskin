@@ -96,6 +96,7 @@ elseif(ENABLE_EXTERNAL_PROJECT)
         GIT_TAG        d0ba209660ea8c663e06d9a68332ba5f42da54ba
         GIT_SUBMODULES_RECURSE ON
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
+                       -DCMAKE_POLICY_VERSION_MINIMUM=3.5
                        -DBUILD_SHARED_LIBS=OFF
                        -Denable_cplusplus=ON
     )
