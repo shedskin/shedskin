@@ -4,6 +4,7 @@
 #define SS_MATH_HPP
 
 #include "function.hpp"
+#include <bit>
 
 /* pow */
 
@@ -197,8 +198,13 @@ namespace __int___ {
     inline __ss_int bit_length(__ss_int i) {
         if(i == 0)
             return 0;
-        return (__ss_int)(std::floor(std::log2(std::abs(i)))) + 1;
-        //return (__ss_int)std::bit_width(i); // TODO available from C++20
+        if(i < 0)
+            i = -i;
+#ifdef __SS_LONG
+        return (__ss_int)std::bit_width((unsigned long long)i);
+#else
+        return (__ss_int)std::bit_width((unsigned int)i);
+#endif
     }
 
 /*    inline tuple<__ss_int> *as_integer_ratio(__ss_int i) {
