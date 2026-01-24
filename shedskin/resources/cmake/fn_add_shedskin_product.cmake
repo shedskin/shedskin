@@ -215,7 +215,7 @@ function(add_shedskin_product)
         set(LIBGCCPP libgccpp.a)
         set(LIBPCRE2 libpcre2-8.a)
     else() # i.e windows
-        set(LIBGCa gc.lib)
+        set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
         set(LIBPCRE2 pcre2-8.lib)
     endif ()
