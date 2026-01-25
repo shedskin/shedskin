@@ -7,11 +7,13 @@
 #include <Python.h>
 #endif
 
+#ifndef __SS_NOGC
 #ifdef WIN32
 #define GC_NO_INLINE_STD_NEW
 #endif
 #include <gc/gc_allocator.h>
 #include <gc/gc_cpp.h>
+#endif
 
 #include <vector>
 #include <deque>
@@ -95,9 +97,15 @@ using tuple = tuple2<T, T>;
 /* STL types */
 
 // TODO switch to template aliases
+#ifdef __SS_NOGC
+#define __GC_VECTOR(T) std::vector< T >
+#define __GC_DEQUE(T) std::deque< T >
+#define __GC_STRING std::basic_string<char,std::char_traits<char> >
+#else
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
+#endif
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -114,7 +122,11 @@ extern str *sp;
 
 /* root object class */
 
+#ifdef __SS_NOGC
+class pyobj {
+#else
 class pyobj : public gc {
+#endif
 public:
     class_ *__class__;
 
@@ -217,11 +229,20 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 #include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
+#ifdef __SS_NOGC
+template <class K, class V>
+using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K> >;
+
+template <class T>
+using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T> >;
+
+#else
 template <class K, class V>
 using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
 
 template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+#endif
 
 class class_: public pyobj {
 public:

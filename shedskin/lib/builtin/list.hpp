@@ -265,16 +265,22 @@ template<class T> template<class U> void *list<T>::extend(U *iter) {
 
 template<class T> void *list<T>::extend(list<T> *p) {
     size_t l1, l2;
-    l1 = this->units.size(); l2 = p->units.size();
-    this->units.resize(l1+l2);
-    memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+    l2 = p->units.size();
+    if(l2 > 0) {
+        l1 = this->units.size();
+        this->units.resize(l1+l2);
+        memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+    }
     return NULL;
 }
 template<class T> void *list<T>::extend(tuple2<T,T> *p) {
     size_t l1, l2;
-    l1 = this->units.size(); l2 = p->units.size();
-    this->units.resize(l1+l2);
-    memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+    l2 = p->units.size();
+    if(l2 > 0) {
+        l1 = this->units.size();
+        this->units.resize(l1+l2);
+        memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+    }
     return NULL;
 }
 
@@ -312,8 +318,10 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
     list<T> *c = new list<T>();
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        c->units.resize((size_t)(u-l));
-        memcpy(&(c->units[0]), &(this->units[(size_t)l]), sizeof(T)*((size_t)(u-l)));
+        if(u != l) {
+            c->units.resize((size_t)(u-l));
+            memcpy(&(c->units[0]), &(this->units[(size_t)l]), sizeof(T)*((size_t)(u-l)));
+        }
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
             c->units.push_back(units[(size_t)i]);
@@ -418,10 +426,19 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     list<T> *c = new list<T>();
     c->units.resize(l1+l2);
 
-    if(l1==1) c->units[0] = this->units[0];
-    else memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
-    if(l2==1) c->units[l1] = b->units[0];
-    else memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
+    if(l1==0)
+        ;
+    else if(l1==1)
+        c->units[0] = this->units[0];
+    else
+        memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
+
+    if(l2==0)
+        ;
+    else if(l2==1)
+        c->units[l1] = b->units[0];
+    else
+        memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
 
     return c;
 }
