@@ -40,13 +40,14 @@ tuple<__ss_int> *__ss_tuple_cache[1600];
 dict<void *, void *> *__ss_proxy;
 #endif
 
+#ifndef __SS_NOGC
 void gc_warning_handler(char *, GC_word) {}
+#endif
 
 void __init() {
+#ifndef __SS_NOGC
     GC_INIT();
     GC_set_warn_proc(gc_warning_handler);
-#ifdef __SS_NOGC
-    GC_disable();
 #endif
 
 #ifdef __SS_BIND
