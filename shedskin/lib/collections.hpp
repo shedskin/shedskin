@@ -16,8 +16,13 @@ template <class T> class __dequeiter;
 extern class_ *cl_deque;
 template <class A> class deque : public pyiter<A> {
 public:
+#ifdef __SS_NOGC
+    std::deque<A> units;
+    typename std::deque<A>::iterator iter;
+#else
     std::deque<A, gc_allocator<A> > units;
     typename std::deque<A, gc_allocator<A> >::iterator iter;
+#endif
 
     /* XXX modulo rotate, maxlen */
 
