@@ -6,7 +6,7 @@ This module provides functionality for generating CMake build files and managing
 the build process for Shedskin-compiled projects. Key components include:
 
 - CMake file generation
-- Dependency management (`Conan`, `SPM`, `ExternalProject`)
+- Dependency management (`Conan`, `SPM`, `FetchContent`)
 - Build configuration and execution
 - Test running utilities
 
@@ -1089,8 +1089,8 @@ class CMakeBuilder:
         elif self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
 
-        elif self.options.extproject:
-            cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
+        elif self.options.fetchcontent:
+            cfg_options.append("-DENABLE_FETCH_CONTENT=ON")
 
         elif getattr(self.options, 'local_deps', False):
             cfg_options.append("-DENABLE_LOCAL_DEPS=ON")

@@ -22,7 +22,7 @@ function(add_shedskin_product)
         BUILD_TEST
         ENABLE_CONAN
         ENABLE_SPM
-        ENABLE_EXTERNAL_PROJECT
+        ENABLE_FETCH_CONTENT
         ENABLE_LOCAL_DEPS
         DEBUG
     )
@@ -147,7 +147,7 @@ function(add_shedskin_product)
 
             SHEDSKIN_ENABLE_CONAN
             SHEDSKIN_ENABLE_SPM
-            SHEDSKIN_ENABLE_EXTERNAL_PROJECT
+            SHEDSKIN_ENABLE_FETCH_CONTENT
             SHEDSKIN_ENABLE_LOCAL_DEPS
             SHEDSKIN_DEBUG
 
@@ -206,7 +206,7 @@ function(add_shedskin_product)
     endforeach()
 
     # special case win32: if none of the dep mgrs is enabled then default to conan
-    # if(WIN32 AND NOT ENABLE_EXTERNAL_PROJECT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
+    # if(WIN32 AND NOT ENABLE_FETCH_CONTENT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
     #     set(ENABLE_CONAN ON)
     # endif()
 
@@ -223,15 +223,17 @@ function(add_shedskin_product)
     # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
     set(USING_STATIC_GC OFF)
 
-    if(ENABLE_EXTERNAL_PROJECT)
+    if(ENABLE_FETCH_CONTENT)
         set(USING_STATIC_GC ON)
+        # FetchContent targets - link to targets directly
         set(LIB_DEPS
-            ${install_dir}/lib/${LIBGC}
-            ${install_dir}/lib/${LIBGCCPP}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE2}>
+            gc
+            gccpp
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
         )
-        set(LIB_DIRS ${install_dir}/lib)
-        set(LIB_INCLUDES ${install_dir}/include)
+        set(LIB_DIRS)
+        # Use the wrapper include dirs for gc/ structure and pcre2
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
         set(LIB_DEPS

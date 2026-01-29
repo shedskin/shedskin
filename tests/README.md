@@ -26,7 +26,7 @@ usage: shedskin test [-h] [-e] [-x] [--dryrun] [--include PATTERN] [--check]
                      [--modified] [--nocleanup] [--pytest] [--run TEST]
                      [--stoponfail] [--run-errs] [--progress] [--debug]
                      [--generator G] [--jobs N] [--build-type T] [--reset]
-                     [--conan] [--spm] [--extproject] [--ccache]
+                     [--conan] [--spm] [--fetchcontent] [--ccache]
                      [--target TARGET [TARGET ...]] [-c [CMAKE_OPT ...]]
                      [--nowarnings]
 
@@ -51,7 +51,7 @@ options:
   --reset               reset cmake build
   --conan               install cmake dependencies with conan
   --spm                 install cmake dependencies with spm
-  --extproject          install cmake dependencies with externalproject
+  --fetchcontent          install cmake dependencies with fetchcontent
   --ccache              enable ccache with cmake
   --target TARGET [TARGET ...]
                         build only specified cmake targets

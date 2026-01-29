@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ["3.13"]
-        dep_manager: [local-deps, spm, conan, extproject]
+        dep_manager: [local-deps, spm, conan, fetchcontent]
 
     steps:
     - uses: actions/checkout@v4
