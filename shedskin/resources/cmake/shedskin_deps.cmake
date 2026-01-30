@@ -41,18 +41,11 @@ set(enable_cplusplus ON CACHE BOOL "" FORCE)
 set(build_cord OFF CACHE BOOL "" FORCE)
 set(install_headers OFF CACHE BOOL "" FORCE)
 
-# On MSVC, bdwgc expects libatomic_ops submodule which isn't fetched reliably.
-# Force use of compiler intrinsics instead via GC_BUILTIN_ATOMIC.
-if(MSVC)
-    add_compile_definitions(GC_BUILTIN_ATOMIC)
-endif()
-
 FetchContent_Declare(
     bdwgc
     GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
     GIT_TAG        v8.2.8
-    GIT_SUBMODULES_RECURSE true
-    GIT_SHALLOW    true
+    GIT_SUBMODULES_RECURSE TRUE
 )
 
 # Configure pcre2 options before fetching
