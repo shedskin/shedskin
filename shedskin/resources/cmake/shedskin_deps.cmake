@@ -46,7 +46,8 @@ FetchContent_Declare(
     bdwgc
     GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
     GIT_TAG        v8.2.8
-    GIT_SHALLOW    TRUE
+    GIT_SUBMODULES_RECURSE true
+    GIT_SHALLOW    true
 )
 
 # Configure pcre2 options before fetching
