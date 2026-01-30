@@ -40,13 +40,13 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(enable_cplusplus ON CACHE BOOL "" FORCE)
 set(build_cord OFF CACHE BOOL "" FORCE)
 set(install_headers OFF CACHE BOOL "" FORCE)
+set(without_libatomic_ops ON CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     bdwgc
     GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
     GIT_TAG        v8.2.8
-    GIT_SUBMODULES_RECURSE true
-    GIT_SHALLOW    true
+    GIT_SHALLOW    TRUE
 )
 
 # Configure pcre2 options before fetching
