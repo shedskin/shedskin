@@ -41,6 +41,18 @@ set(enable_cplusplus ON CACHE BOOL "" FORCE)
 set(build_cord OFF CACHE BOOL "" FORCE)
 set(install_headers OFF CACHE BOOL "" FORCE)
 
+# On Windows, FetchContent doesn't reliably fetch git submodules.
+# Fetch libatomic_ops separately and make headers available globally.
+if(WIN32)
+    FetchContent_Declare(
+        libatomic_ops
+        GIT_REPOSITORY https://github.com/ivmai/libatomic_ops.git
+        GIT_TAG        v7.8.2
+    )
+    FetchContent_MakeAvailable(libatomic_ops)
+    include_directories(${libatomic_ops_SOURCE_DIR}/src)
+endif()
+
 FetchContent_Declare(
     bdwgc
     GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
