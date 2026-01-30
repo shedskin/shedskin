@@ -40,7 +40,12 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(enable_cplusplus ON CACHE BOOL "" FORCE)
 set(build_cord OFF CACHE BOOL "" FORCE)
 set(install_headers OFF CACHE BOOL "" FORCE)
-set(without_libatomic_ops ON CACHE BOOL "" FORCE)
+
+# On MSVC, bdwgc expects libatomic_ops submodule which isn't fetched reliably.
+# Force use of compiler intrinsics instead via GC_BUILTIN_ATOMIC.
+if(MSVC)
+    add_compile_definitions(GC_BUILTIN_ATOMIC)
+endif()
 
 FetchContent_Declare(
     bdwgc
