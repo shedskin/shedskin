@@ -2497,6 +2497,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append(")")
             return
 
+        # -- optimize: [elem] * n
+        if (
+            middle == "__mul__"
+            and isinstance(left, ast.List)
+            and len(left.elts) == 1
+        ):
+            self.visitm("__ss_listmul(", left.elts[0], ", ", right, ")", func)
+            return
+        if (
+            middle == "__mul__"
+            and isinstance(right, ast.List)
+            and len(right.elts) == 1
+        ):
+            self.visitm("__ss_listmul2(", left, ", ", right.elts[0], ")", func)
+            return
+
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ["+", "*", "-", "/"] and ul and not ur:
             self.append(
