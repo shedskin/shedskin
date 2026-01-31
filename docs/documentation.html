@@ -524,7 +524,7 @@ options:
 and then builds it, placing build artefacts in a <cite>build</cite> directory.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ shedskin build --help
 usage: shedskin build [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
-                      [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a]
+                      [--spm] [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]] [-a]
                       [-d DEBUG] [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE]
                       [-o OUTPUTDIR] [-r] [-s] [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns]
                       [--nomakefile] [--nowrap]
@@ -542,7 +542,7 @@ options:
   --reset               reset cmake build
   --conan               install cmake dependencies with conan
   --spm                 install cmake dependencies with spm
-  --extproject          install cmake dependencies with externalproject
+  --fetchcontent          install cmake dependencies with fetchcontent
   --ccache              enable ccache with cmake
   --target TARGET [TARGET ...]
                         build only specified cmake targets
@@ -577,7 +577,7 @@ options:
 <p>The <cite>run</cite> command does everything the <cite>build</cite> command does and then runs the resultant executable.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ shedskin run --help
 usage: shedskin run [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
-                    [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a] [-d DEBUG]
+                    [--spm] [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]] [-a] [-d DEBUG]
                     [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR] [-r] [-s]
                     [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns] [--nomakefile] [--nowrap]
                     name
@@ -594,7 +594,7 @@ options:
   --reset               reset cmake build
   --conan               install cmake dependencies with conan
   --spm                 install cmake dependencies with spm
-  --extproject          install cmake dependencies with externalproject
+  --fetchcontent          install cmake dependencies with fetchcontent
   --ccache              enable ccache with cmake
   --target TARGET [TARGET ...]
                         build only specified cmake targets
@@ -636,7 +636,7 @@ options:
 usage: shedskin test [-h] [-e] [--dryrun] [--include PATTERN] [--check] [--modified] [--nocleanup]
                     [--pytest] [--run TEST] [--stoponfail] [--run-errs] [--progress] [--debug]
                     [--generator G] [--jobs N] [--build-type T] [--reset] [--conan] [--spm]
-                    [--extproject] [--ccache] [--target TARGET [TARGET ...]]
+                    [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]]
 
 options:
   -h, --help            show this help message and exit
@@ -658,7 +658,7 @@ options:
   --reset               reset cmake build
   --conan               install cmake dependencies with conan
   --spm                 install cmake dependencies with spm
-  --extproject          install cmake dependencies with externalproject
+  --fetchcontent          install cmake dependencies with fetchcontent
   --ccache              enable ccache with cmake
   --target TARGET [TARGET ...]
                         build only specified cmake targets

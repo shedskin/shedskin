@@ -301,7 +301,7 @@ class Shedskin:
         grp("--reset", help="Reset cmake build", action="store_true")
         grp("--conan", help="Install cmake dependencies with conan", action="store_true")
         grp("--spm", help="Install cmake dependencies with spm", action="store_true")
-        grp("--extproject", help="Install cmake dependencies with externalproject", action="store_true")
+        grp("--fetchcontent", help="Install cmake dependencies with fetchcontent", action="store_true")
         grp("--local-deps", help="Build dependencies from bundled ext/ sources", action="store_true")
         grp("--ccache", help="Enable ccache with cmake", action="store_true")
         grp("--target", help="Build only specified cmake targets", nargs="+", metavar="TARGET")
@@ -417,7 +417,7 @@ class Shedskin:
 
         if platform.system() == 'Windows' and args.subcmd in ('build', 'run'):
             args.build_type = 'Release'  # Debug doesn't work in CI, possibly because of missing debug symbols
-            if not args.spm and not args.extproject:  # make --conan default under windows..
+            if not args.spm and not args.fetchcontent:  # make --conan default under windows..
                 args.conan = True
 
         ss = cls(args)

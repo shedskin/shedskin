@@ -20,14 +20,15 @@ function(common)
         endif()
     endforeach()
 
-    if(ENABLE_EXTERNAL_PROJECT)
+    if(ENABLE_FETCH_CONTENT)
+        # FetchContent targets - link to targets directly
         set(LIB_DEPS
-            ${install_dir}/lib/libgc.a
-            ${install_dir}/lib/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre2-8.a>
+            gc
+            gccpp
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
         )
-        set(LIB_DIRS ${install_dir}/lib)
-        set(LIB_INCLUDES ${install_dir}/include)
+        set(LIB_DIRS)
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
     elseif(ENABLE_SPM)
         set(LIB_DEPS
             ${SPM_LIB_DIRS}/libgc.a

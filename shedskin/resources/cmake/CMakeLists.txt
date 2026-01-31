@@ -19,7 +19,7 @@ option(DISABLE_EXTENSIONS "Disable building extensions" OFF)
 option(COLLECT_STATS "Collect stats" OFF)
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
-option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
+option(ENABLE_FETCH_CONTENT "Enable FetchContent for dependency mgmt" OFF)
 option(ENABLE_LOCAL_DEPS "Enable local dependency management" OFF)
 
 option(ENABLE_WARNINGS "Enable -Wall type of warnings" ON)
@@ -66,6 +66,12 @@ include_directories(
 )
 
 # -----------------------------------------------------------------------------
+# includes (must be before dependency mgmt to find shedskin_deps module)
+list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
+include(utils)
+include(fn_add_shedskin_product)    # can build both executable and extension
+
+# -----------------------------------------------------------------------------
 # dependency mgmt solutions
 
 if(ENABLE_SPM)
@@ -86,29 +92,10 @@ elseif(ENABLE_CONAN)
     find_package(BDWgc)
     find_package(PCRE2)
 
-elseif(ENABLE_EXTERNAL_PROJECT)
-    set(install_dir ${CMAKE_CURRENT_BINARY_DIR}/install)
-    include(ExternalProject)
-    ExternalProject_Add(
-        bdwgc
-        INSTALL_DIR    ${install_dir}
-        GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
-        GIT_TAG        v8.2.8
-        GIT_SUBMODULES_RECURSE true
-        GIT_SHALLOW true
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
-                       -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-                       -DBUILD_SHARED_LIBS=OFF
-                       -Denable_cplusplus=ON
-    )
-    ExternalProject_Add(
-        pcre2
-        INSTALL_DIR    ${install_dir}
-        GIT_REPOSITORY https://github.com/PCRE2Project/pcre2.git
-        GIT_TAG        pcre2-10.44
-        GIT_SHALLOW true
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
-    )
+elseif(ENABLE_FETCH_CONTENT)
+    include(shedskin_deps)
+    set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
+    set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
 
 elseif(ENABLE_LOCAL_DEPS)
     if(NOT DEFINED LOCAL_DEPS_DIR)
@@ -119,12 +106,6 @@ elseif(ENABLE_LOCAL_DEPS)
     set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
 endif()
 
-
-# -----------------------------------------------------------------------------
-# includes
-list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
-include(utils)
-include(fn_add_shedskin_product)    # can build both executable and extension
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
