@@ -15,7 +15,7 @@ option(BUILD_TEST "Build test" ON)
 
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
-option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
+option(ENABLE_FETCH_CONTENT "Enable FetchContent for dependency mgmt" OFF)
 
 # -----------------------------------------------------------------------------
 # find python executable and shedskin package path
@@ -45,6 +45,12 @@ include_directories(
 )
 
 # -----------------------------------------------------------------------------
+# includes (must be before dependency mgmt to find shedskin_deps module)
+list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
+include(utils)
+include(fn_add_shedskin_product)
+
+# -----------------------------------------------------------------------------
 # dependency mgmt solutions
 
 if(ENABLE_SPM)
@@ -60,33 +66,11 @@ elseif(ENABLE_CONAN)
     find_package(BDWgc)
     find_package(PCRE2)
 
-elseif(ENABLE_EXTERNAL_PROJECT)
-    set(install_dir ${CMAKE_CURRENT_BINARY_DIR}/install)
-    include(ExternalProject)
-    ExternalProject_Add(
-        bdwgc
-        INSTALL_DIR    ${install_dir}
-        GIT_REPOSITORY https://github.com/ivmai/bdwgc.git
-        GIT_TAG        d0ba209660ea8c663e06d9a68332ba5f42da54ba
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
-                       -DBUILD_SHARED_LIBS=OFF
-                       -Denable_cplusplus=ON
-    )
-    ExternalProject_Add(
-        pcre2
-        INSTALL_DIR    ${install_dir}
-        GIT_REPOSITORY https://github.com/PCRE2Project/pcre2.git
-        GIT_TAG        6ae58beca071f13ccfed31d03b3f479ab520639b
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX:PATH=${install_dir}
-    )
+elseif(ENABLE_FETCH_CONTENT)
+    include(shedskin_deps)
+    set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
+    set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
 endif()
-
-
-# -----------------------------------------------------------------------------
-# includes
-list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
-include(utils)
-include(fn_add_shedskin_product)
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
