@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shedskin"
-version = "0.9.12"
+version = "0.9.13"
 description = "Shed Skin is a restricted-Python-to-C++ compiler."
 authors = [
 	"Mark Dufour and contributors",
@@ -34,8 +34,6 @@ include = [
     { path = "shedskin/resources/illegal/illegal.txt", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/cmake/*.cmake", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/conan/*.txt", format = ["sdist", "wheel"] },
-
 
 	{ path = "LICENSE", format = ["sdist"] },
     { path = "pyproject.toml", format = ["sdist"] },
@@ -50,7 +48,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-# conan = "2.21.0"
 
 
 [tool.poetry.group.dev.dependencies]

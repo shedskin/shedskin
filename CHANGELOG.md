@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Made `--local-deps` the default dependency manager for `build`, `run`, and `runtests` subcommands
+  - Dependencies are now automatically built from bundled `ext/` sources
+  - No external package manager required out of the box
+- Simplified CMake output directories to `${CMAKE_BINARY_DIR}` (executables in `build/`)
 - Bundled bdwgc (v8.2.10) and pcre2 (pcre2-10.47) sources as compressed zip archives in `ext/`:
   - Reduced from 25MB (full sources) to 1.2MB (trimmed and compressed)
   - Removed documentation, tests, CI/CD files, autotools, legacy platform support
@@ -51,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Replaced `os.system()` with `subprocess.run()` across all modules:
-  - `cmake.py`: Conan install, shellcmd, cmake config/build/test, pytest
+  - `cmake.py`: shellcmd, cmake config/build/test, pytest
   - `makefile.py`: Command execution in `_execute()`
   - `__init__.py`: Executable running and Windows color output hack
 
@@ -70,6 +74,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resource leaks: Added context manager support to `MakefileWriter` class
 - File handling: Use context managers for file operations in `config.py`
+
+### Removed
+
+- Removed Conan dependency manager support:
+  - Removed `--conan` CLI option
+  - Removed `ConanBDWGC`, `ConanPCRE`, and `ConanDependencyManager` classes
+  - Removed `ENABLE_CONAN` CMake option
+  - Removed `shedskin/resources/conan/` directory
+  - Removed conan from `requirements.txt`
 
 ## [0.9.12]
 

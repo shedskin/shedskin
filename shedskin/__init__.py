@@ -309,7 +309,6 @@ class Shedskin:
         grp("--build-type", help="Set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
         grp("--test", help="Run ctest", action="store_true")
         grp("--reset", help="Reset cmake build", action="store_true")
-        grp("--conan", help="Install cmake dependencies with conan", action="store_true")
         grp("--spm", help="Install cmake dependencies with spm", action="store_true")
         grp("--fetchcontent", help="Install cmake dependencies with fetchcontent", action="store_true")
         grp("--local-deps", help="Build dependencies from bundled ext/ sources", action="store_true")
@@ -427,8 +426,11 @@ class Shedskin:
 
         if platform.system() == 'Windows' and args.subcmd in ('build', 'run'):
             args.build_type = 'Release'  # Debug doesn't work in CI, possibly because of missing debug symbols
-            if not args.spm and not args.fetchcontent:  # make --conan default under windows..
-                args.conan = True
+
+        # Make --local-deps the default unless another dep manager is specified
+        if args.subcmd in ('build', 'run', 'runtests'):
+            if not args.spm and not args.fetchcontent and not args.local_deps:
+                args.local_deps = True
 
         ss = cls(args)
 

@@ -20,7 +20,6 @@ function(add_shedskin_product)
         BUILD_EXECUTABLE
         BUILD_EXTENSION
         BUILD_TEST
-        ENABLE_CONAN
         ENABLE_SPM
         ENABLE_FETCH_CONTENT
         ENABLE_LOCAL_DEPS
@@ -145,7 +144,6 @@ function(add_shedskin_product)
             BUILD_EXTENSION
             SHEDSKIN_BUILD_TEST
 
-            SHEDSKIN_ENABLE_CONAN
             SHEDSKIN_ENABLE_SPM
             SHEDSKIN_ENABLE_FETCH_CONTENT
             SHEDSKIN_ENABLE_LOCAL_DEPS
@@ -205,11 +203,6 @@ function(add_shedskin_product)
         endif()
     endforeach()
 
-    # special case win32: if none of the dep mgrs is enabled then default to conan
-    # if(WIN32 AND NOT ENABLE_FETCH_CONTENT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
-    #     set(ENABLE_CONAN ON)
-    # endif()
-
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
@@ -254,20 +247,6 @@ function(add_shedskin_product)
         )
         set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
         set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
-    elseif(ENABLE_CONAN)
-        set(LIB_DEPS
-            BDWgc::BDWgc -lgc -lgccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
-        )
-        set(LIB_DIRS
-            ${bdwgc_LIB_DIRS_RELEASE}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${pcre2_LIB_DIRS_RELEASE}>
-        )
-        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
-        set(LIB_INCLUDES
-            ${BDWgc_INCLUDE_DIRS}
-            ${PCRE2_INCLUDE_DIRS}
-        )
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used

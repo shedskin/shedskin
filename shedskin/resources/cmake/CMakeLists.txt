@@ -7,9 +7,11 @@ set(CMAKE_CXX_STANDARD 20)
 # -----------------------------------------------------------------------------
 # output directories
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}")
 
 # -----------------------------------------------------------------------------
 # options
@@ -25,7 +27,6 @@ option(DISABLE_EXECUTABLES "Disable building executables" OFF)
 option(DISABLE_EXTENSIONS "Disable building extensions" OFF)
 option(COLLECT_STATS "Collect stats" OFF)
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
-option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_FETCH_CONTENT "Enable FetchContent for dependency mgmt" OFF)
 option(ENABLE_LOCAL_DEPS "Enable local dependency management" OFF)
 
@@ -90,14 +91,6 @@ if(ENABLE_SPM)
     message(STATUS "SPM_DEPS: ${SPM_DEPS}")
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
-
-elseif(ENABLE_CONAN)
-    find_program(CONAN conan)
-    if(NOT CONAN)
-        message(FATAL_ERROR "conan not found, install with `pip install conan`")
-    endif()
-    find_package(BDWgc)
-    find_package(PCRE2)
 
 elseif(ENABLE_FETCH_CONTENT)
     include(shedskin_deps)

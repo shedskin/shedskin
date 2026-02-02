@@ -110,7 +110,6 @@ class GlobalInfo:
             libdirs=libdirs,
             shedskin_resources=shedskin_resources,
             shedskin_cmake=shedskin_resources / "cmake" / "modular",
-            shedskin_conan=shedskin_resources / "conan",
             shedskin_flags=shedskin_resources / "flags",
             shedskin_illegal=shedskin_resources / "illegal",
         )
@@ -151,10 +150,6 @@ class GlobalInfo:
     @property
     def shedskin_cmake(self) -> Path:
         return self._paths.shedskin_cmake
-
-    @property
-    def shedskin_conan(self) -> Path:
-        return self._paths.shedskin_conan
 
     @property
     def shedskin_flags(self) -> Path:

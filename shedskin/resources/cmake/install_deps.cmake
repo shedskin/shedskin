@@ -37,20 +37,6 @@ function(common)
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
-    elseif(ENABLE_CONAN)
-        set(LIB_DEPS
-            BDWgc::BDWgc -lgc -lgccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
-        )
-        set(LIB_DIRS
-            ${BDWgc_LIB_DIRS_RELEASE}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE2_LIB_DIRS_RELEASE}>
-        )
-        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
-        set(LIB_INCLUDES
-            ${BDWgc_INCLUDE_DIRS}
-            ${PCRE2_INCLUDE_DIRS}
-        )
     else() 
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used

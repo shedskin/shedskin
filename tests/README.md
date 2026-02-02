@@ -18,15 +18,15 @@ It uses `cmake` for building and running tests.
 
 ## Usage
 
-This folder uses the shedskin `test` subcommand, which has extensive options to help setup, build and run its tests:
+This folder uses the shedskin `runtests` subcommand, which has extensive options to help setup, build and run its tests:
 
 ```bash
-$ shedskin test --help
-usage: shedskin test [-h] [-e] [-x] [--dryrun] [--include PATTERN] [--check]
+$ shedskin runtests --help
+usage: shedskin runtests [-h] [-e] [-x] [--dryrun] [--include PATTERN] [--check]
                      [--modified] [--nocleanup] [--pytest] [--run TEST]
                      [--stoponfail] [--run-errs] [--progress] [--debug]
                      [--generator G] [--jobs N] [--build-type T] [--reset]
-                     [--conan] [--spm] [--fetchcontent] [--ccache]
+                     [--spm] [--fetchcontent] [--local-deps] [--ccache]
                      [--target TARGET [TARGET ...]] [-c [CMAKE_OPT ...]]
                      [--nowarnings]
 
@@ -49,9 +49,9 @@ options:
   --jobs N              build and run in parallel using N jobs
   --build-type T        set cmake build type (default: 'Debug')
   --reset               reset cmake build
-  --conan               install cmake dependencies with conan
   --spm                 install cmake dependencies with spm
-  --fetchcontent          install cmake dependencies with fetchcontent
+  --fetchcontent        install cmake dependencies with fetchcontent
+  --local-deps          build dependencies from bundled ext/ sources (default)
   --ccache              enable ccache with cmake
   --target TARGET [TARGET ...]
                         build only specified cmake targets
@@ -66,20 +66,22 @@ Shedskin uses CMake for testing: `shedskin` is only responsible for translation 
 To build / run a **single** test using cmake:
 
 ```bash
-shedksin test -r test_builtin_iter
+shedskin runtests -r test_builtin_iter
 ```
 
 To build and run **all** tests as executables using cmake on Linux and macOS:
 
 ```bash
-shedksin test -x
+shedskin runtests -x
 ```
 
-To build and run **all** tests as executables using cmake on Windows requires the conan dependency manager to download dpendencies:
+To build and run **all** tests as executables using cmake on Windows:
 
 ```bash
-shedksin test --conan
+shedskin runtests
 ```
+
+Dependencies are automatically built from bundled sources using the default `--local-deps` method.
 
 If the above command is run for the first time, it will run the equivalent of the following:
 
@@ -98,7 +100,7 @@ This is useful during test development and has the benefit of only picking up ch
 To build and run **all** cmake tests as executables **and** python extensions using cmake:
 
 ```bash
-shedksin test -xe
+shedskin runtests -xe
 ```
 
 This will build/run an executable and python extension test for each test in the directory, basically the equivalent of the following (if it is run the first time):
@@ -116,26 +118,26 @@ cd build && cmake .. -DBUILD_EXECUTABLE=ON -DBUILD_EXTENSION=ON && cmake --build
 To stop on the first failure:
 
 ```bash
-shedksin test --stoponfail
+shedskin runtests --stoponfail
 ```
 
 To build / run the most recently modified test (here as exec only):
 
 ```bash
-shedksin test -x --modified
+shedskin runtests -x --modified
 ```
 
 To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
-shedksin test --reset -x
+shedskin runtests --reset -x
 ```
 
 
 To build and run tests for error/warning messages:
 
 ```bash
-shedskin test --run-errs
+shedskin runtests --run-errs
 ```
 
 ### Optimizing Building and Running Tests with Cmake
@@ -145,7 +147,7 @@ The cmake method has an option to build and run tests as parallel jobs. This can
 You can specify the number of jobs to build and run tests in parallel:
 
 ```bash
-shedksin test -xe -j 4
+shedskin runtests -xe -j 4
 ```
 
 Another option is to use a different build system designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
@@ -153,7 +155,7 @@ Another option is to use a different build system designed for speed like [Ninja
 If you have `Ninja` installed, you can have cmake use it as your underlying build system and automatically get improved performance vs the default Make-based system:
 
 ```bash
-shedksin test -xe -gNinja
+shedskin runtests -xe -gNinja
 ```
 
 
