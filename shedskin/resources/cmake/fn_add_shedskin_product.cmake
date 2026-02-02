@@ -519,6 +519,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
+            $<$<BOOL:${WIN32}>:/std:c++20>
             # $<$<BOOL:${WIN32}>:/LD>
         )
 
