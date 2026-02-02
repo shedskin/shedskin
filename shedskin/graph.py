@@ -1722,6 +1722,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
+            if isinstance(node.iter, ast.Subscript):
+                self.temp_var_int((node, 8), func)
+                self.temp_var_int((node, 9), func)
+
             if ast_utils.is_enumerate(node) or ast_utils.is_zip2(node):
                 assert isinstance(node.iter, ast.Call)
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
