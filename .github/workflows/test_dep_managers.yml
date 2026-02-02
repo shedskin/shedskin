@@ -55,7 +55,7 @@ jobs:
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          ./build/Release/test.exe
+          ./build/bin/test.exe
         else
-          ./build/test
+          ./build/bin/test
         fi
