@@ -84,10 +84,21 @@ function(add_shedskin_product)
         cmake_path(GET SHEDSKIN_MAIN_MODULE STEM main)
         cmake_path(GET SHEDSKIN_MAIN_MODULE FILENAME main_py)
         cmake_path(GET SHEDSKIN_MAIN_MODULE PARENT_PATH parentpath)
-        set(IS_NESTED ON)
+        # Check if the parent path is absolute (external source with absolute path)
+        # If so, don't use nested structure as it would create invalid paths like
+        # "build/exe/C:/Users/.../file.cpp"
+        cmake_path(IS_ABSOLUTE parentpath _is_absolute_path)
+        if(_is_absolute_path)
+            set(IS_NESTED OFF)
+            set(IS_ABSOLUTE_SOURCE ON)
+        else()
+            set(IS_NESTED ON)
+            set(IS_ABSOLUTE_SOURCE OFF)
+        endif()
     else()
         set(main "${name}")
         set(main_py "${main}.py")
+        set(IS_ABSOLUTE_SOURCE OFF)
     endif()
 
     if(SHEDSKIN_SYS_MODULES)
@@ -329,6 +340,15 @@ function(add_shedskin_product)
                 COMMENT "translating ${main_py} to exe"
                 VERBATIM
             )
+        elseif(IS_ABSOLUTE_SOURCE)
+            # External source with absolute path - use full path but flat output
+            add_custom_command(OUTPUT ${translated_files}
+                COMMAND shedskin translate --nomakefile -o ${PROJECT_EXE_DIR} ${opts} "${SHEDSKIN_MAIN_MODULE}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS "${SHEDSKIN_MAIN_MODULE}"
+                COMMENT "translating ${main_py} to exe"
+                VERBATIM
+            )
         else()
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXE_DIR} ${opts} "${main_py}"
@@ -450,6 +470,15 @@ function(add_shedskin_product)
         if(IS_NESTED)
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR}/${parentpath} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS "${SHEDSKIN_MAIN_MODULE}"
+                COMMENT "translating ${main_py} to ext"
+                VERBATIM
+            )
+        elseif(IS_ABSOLUTE_SOURCE)
+            # External source with absolute path - use full path but flat output
+            add_custom_command(OUTPUT ${translated_files}
+                COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS "${SHEDSKIN_MAIN_MODULE}"
                 COMMENT "translating ${main_py} to ext"

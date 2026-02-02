@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed CMake build failure when source file path is absolute (e.g., building from a different directory with `../examples/foo.py`). The issue occurred because absolute parent paths were being concatenated with build directories, creating invalid paths like `build/exe/C:/Users/.../file.cpp`.
+
 ## [0.9.13]
 
 ### Added
