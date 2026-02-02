@@ -210,7 +210,7 @@ function(add_shedskin_product)
     else() # i.e windows
         set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE2 pcre2-8.lib)
+        set(LIBPCRE2 pcre2-8-static.lib)
     endif ()
 
     # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
@@ -531,8 +531,6 @@ function(add_shedskin_product)
 
         target_link_options(${EXT} PRIVATE
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
-            # "-fno-common" # can be excluded because it is already the default
-            "-dynamic" # can be excluded because it is already the default
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
         )

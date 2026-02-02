@@ -320,8 +320,19 @@ class LocalDependencyManager:
         self.bdwgc_src = self.src_dir / "bdwgc"
         self.pcre2_src = self.src_dir / "pcre2"
 
-        # Platform-specific library suffix
-        self.lib_suffix = ".lib" if sys.platform == "win32" else ".a"
+        # Platform-specific library names
+        # On Windows, MSVC produces libs without 'lib' prefix
+        # On Unix, libraries have 'lib' prefix
+        if sys.platform == "win32":
+            self.lib_suffix = ".lib"
+            self.libgc_name = "gc.lib"
+            self.libgccpp_name = "gccpp.lib"
+            self.libpcre2_name = "pcre2-8-static.lib"
+        else:
+            self.lib_suffix = ".a"
+            self.libgc_name = "libgc.a"
+            self.libgccpp_name = "libgccpp.a"
+            self.libpcre2_name = "libpcre2-8.a"
 
         if self.reset_on_run and self.deps_dir.exists():
             shutil.rmtree(self.deps_dir)
@@ -384,14 +395,14 @@ class LocalDependencyManager:
 
     def bdwgc_targets_exist(self) -> bool:
         """Check if bdwgc targets are already built."""
-        libgc = self.lib_dir / f"libgc{self.lib_suffix}"
-        libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
+        libgc = self.lib_dir / self.libgc_name
+        libgccpp = self.lib_dir / self.libgccpp_name
         gc_h = self.include_dir / "gc.h"
         return all(t.exists() for t in [libgc, libgccpp, gc_h])
 
     def pcre2_targets_exist(self) -> bool:
         """Check if pcre2 targets are already built."""
-        libpcre2 = self.lib_dir / f"libpcre2-8{self.lib_suffix}"
+        libpcre2 = self.lib_dir / self.libpcre2_name
         pcre2_h = self.include_dir / "pcre2.h"
         return all(t.exists() for t in [libpcre2, pcre2_h])
 
