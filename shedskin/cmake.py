@@ -891,7 +891,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         master_clfile.write_text(master_clfile_content)
 
     elif build_type == "subdirectory":
-        # Source file in subdirectory of cwd (e.g., ./tests/test_foo/test_foo.py)
+        # Source file in subdirectory of cwd (e.g., ./subdir/test.py or ./nested/subdir/test.py)
         src_clfile = path.parent / "CMakeLists.txt"
 
         src_clfile.write_text(
@@ -910,11 +910,14 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
             )
         )
 
-        master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
+        # Master CMakeLists.txt always in cwd, with full relative path to source subdir
+        master_clfile = gx.cwd / "CMakeLists.txt"
+        # Get relative path from cwd to source directory (e.g., "nested/tmp" for nested/tmp/test.py)
+        rel_subdir = path.parent.relative_to(gx.cwd)
         master_clfile_content = get_cmakefile_template(
             project_name=f"{gx.main_module.ident}_project",
             is_simple_project="OFF",
-            entry=f"add_subdirectory({path.parent.name})",
+            entry=f"add_subdirectory({rel_subdir.as_posix()})",
         )
         master_clfile.write_text(master_clfile_content)
 
@@ -922,13 +925,16 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         # External source file outside cwd (e.g., ../tests/test_foo/test_foo.py)
         # Generate CMakeLists.txt in cwd, reference source with absolute path
         master_clfile = gx.cwd / "CMakeLists.txt"
+        # Convert app_mods to absolute paths (they're relative to main module's parent)
+        main_parent = gx.main_module.filename.parent
+        abs_app_mods = [(main_parent / mod).as_posix() for mod in app_mods]
         master_clfile_content = get_cmakefile_template(
             project_name=f"{gx.main_module.ident}_project",
             is_simple_project="ON",
             entry=add_shedskin_product(
                 path.as_posix(),  # absolute path to source (used as MAIN_MODULE)
                 list(sys_mods),
-                list(app_mods),
+                abs_app_mods,  # absolute paths for external sources
                 name=path.stem,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
