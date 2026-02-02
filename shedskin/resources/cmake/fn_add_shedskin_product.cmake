@@ -294,9 +294,9 @@ function(add_shedskin_product)
 
     if(WIN32)
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(WIN32_FLAGS /MDd)
+            set(WIN32_FLAGS /MDd /std:c++20)
         else()
-            set(WIN32_FLAGS /MD)
+            set(WIN32_FLAGS /MD /std:c++20)
         endif()
     endif()
 
@@ -519,7 +519,6 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
-            $<$<BOOL:${WIN32}>:/std:c++20>
             # $<$<BOOL:${WIN32}>:/LD>
         )
 
