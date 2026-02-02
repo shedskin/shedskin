@@ -47,8 +47,7 @@ class Shedskin:
     def get_name(self, module_path: str) -> str:
         """Returns name of module to be translated.
 
-        Also sets current working dir for nested targets
-        and sets module_path configuration.
+        Sets source_root (for module resolution) and module_path configuration.
 
         :param      module_path:     The module path
         :type       module_name:     str
@@ -62,16 +61,19 @@ class Shedskin:
             self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
 
-        if path.parent != pathlib.Path('.'): # path is in current dir
-            os.chdir(path.parent)
-            path = pathlib.Path(path.name)
+        # Resolve to absolute path
+        path = path.resolve()
 
         if not path.name.endswith('.py'):
             path = path.with_suffix('.py')
         if not path.is_file():
             self.log.error("no such file: '%s'", path)
             sys.exit(1)
-        self.gx.module_path = path.absolute()
+
+        # Set source_root for module resolution (replaces os.chdir approach)
+        self.gx.source_root = path.parent
+        self.gx.module_path = path
+
         return path.stem
 
     def configure(self, args: argparse.Namespace) -> 'config.GlobalInfo':
@@ -241,12 +243,20 @@ class Shedskin:
 
     def run(self) -> None:
         """Run the main module"""
-        cwd = pathlib.Path.cwd()
-        p = pathlib.Path(self.gx.options.name)
-        if len(p.parts) == 1:
-            executable = cwd / 'build' / p.stem
+        p = pathlib.Path(self.gx.options.name).resolve()
+
+        # Executable is always in gx.cwd/build/ for all cases
+        if p.is_relative_to(self.gx.cwd):
+            rel_path = p.relative_to(self.gx.cwd)
+            if len(rel_path.parts) == 1:
+                # Source in cwd
+                executable = self.gx.cwd / 'build' / p.stem
+            else:
+                # Source in subdirectory
+                executable = self.gx.cwd / 'build' / rel_path.parent.name / rel_path.parent.name
         else:
-            executable = cwd.parent / 'build' / p.parent.name / p.parent.name
+            # External source - executable is in cwd/build/
+            executable = self.gx.cwd / 'build' / p.stem
         subprocess.run([str(executable)], check=True)
 
     @classmethod

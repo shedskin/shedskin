@@ -74,6 +74,10 @@ class GlobalInfo:
         self.terminal = None
         self.progressbar: Optional["ProgressBar"] = None
 
+        # Source root directory (parent of main source file)
+        # Used for module resolution instead of os.getcwd()
+        self.source_root: Optional[Path] = None
+
     def _init_directories(self) -> FileSystemPaths:
         """Initialize and return filesystem paths."""
         abspath = os.path.abspath(__file__)  # sanitize mixed fwd/bwd slashes (mingw)

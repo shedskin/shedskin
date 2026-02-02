@@ -803,7 +803,15 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """Improved generator using built-in machinery"""
     path = gx.main_module.filename
 
-    in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)
+    # Determine build type based on source location relative to cwd
+    if path.is_relative_to(gx.cwd):
+        rel_path = path.relative_to(gx.cwd)
+        if len(rel_path.parts) == 1:
+            build_type = "in_source"  # source file directly in cwd
+        else:
+            build_type = "subdirectory"  # source file in subdirectory of cwd
+    else:
+        build_type = "external"  # source file outside cwd
 
     modules = gx.modules.values()
     # filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
@@ -859,7 +867,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
             app_mods.add(entry.as_posix())
 
     assert gx.options, "gx.options must be populated"
-    if in_source_build:
+    if build_type == "in_source":
+        # Source file directly in cwd (e.g., ./test.py)
         master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
             project_name=f"{gx.main_module.ident}_project",
@@ -881,7 +890,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         )
         master_clfile.write_text(master_clfile_content)
 
-    else:
+    elif build_type == "subdirectory":
+        # Source file in subdirectory of cwd (e.g., ./tests/test_foo/test_foo.py)
         src_clfile = path.parent / "CMakeLists.txt"
 
         src_clfile.write_text(
@@ -908,6 +918,30 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         )
         master_clfile.write_text(master_clfile_content)
 
+    else:
+        # External source file outside cwd (e.g., ../tests/test_foo/test_foo.py)
+        # Generate CMakeLists.txt in cwd, reference source with absolute path
+        master_clfile = gx.cwd / "CMakeLists.txt"
+        master_clfile_content = get_cmakefile_template(
+            project_name=f"{gx.main_module.ident}_project",
+            is_simple_project="ON",
+            entry=add_shedskin_product(
+                path.as_posix(),  # absolute path to source (used as MAIN_MODULE)
+                list(sys_mods),
+                list(app_mods),
+                name=path.stem,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+                include_dirs=gx.options.include_dirs,
+                link_dirs=gx.options.link_dirs,
+                link_libs=gx.options.link_libs,
+                extra_lib_dir=gx.options.extra_lib,
+                compile_options=compile_opts,
+                cmdline_options=cmdline_opts,
+            )
+        )
+        master_clfile.write_text(master_clfile_content)
+
 
 class CMakeBuilder:
     """Shedskin cmake builder"""
@@ -915,12 +949,24 @@ class CMakeBuilder:
     def __init__(self, gx: config.GlobalInfo):
         self.gx = gx
         self.options = gx.options
-        if len(pathlib.Path(self.options.name).parts) == 1:
-            self.source_dir = pathlib.Path.cwd()
-            self.build_dir = self.source_dir / "build"
+        source_path = pathlib.Path(self.options.name).resolve()
+
+        # Determine source_dir based on where CMakeLists.txt was generated
+        # Since we no longer chdir, gx.cwd is always where the user ran the command
+        if source_path.is_relative_to(gx.cwd):
+            rel_path = source_path.relative_to(gx.cwd)
+            if len(rel_path.parts) == 1:
+                # Source in cwd (e.g., ./test.py)
+                self.source_dir = gx.cwd
+            else:
+                # Source in subdirectory (e.g., ./tests/test_foo/test_foo.py)
+                self.source_dir = gx.cwd
         else:
-            self.source_dir = pathlib.Path.cwd().parent
-            self.build_dir = self.source_dir / "build"
+            # External source (e.g., ../tests/test_foo/test_foo.py)
+            # CMakeLists.txt is in cwd
+            self.source_dir = gx.cwd
+
+        self.build_dir = self.source_dir / "build"
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
         self.log = logging.getLogger(self.__class__.__name__)
 

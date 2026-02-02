@@ -612,7 +612,8 @@ class ShedskinBuilder(Builder):
 
     def _setup_defaults(self) -> None:
         """Setup default model configuration"""
-        self.add_include_dirs(os.getcwd())
+        source_root = self.gx.source_root or os.getcwd()
+        self.add_include_dirs(str(source_root))
 
     def _setup_sourcefiles(self) -> None:
         """Setup initial cppfiles and hppfiles"""

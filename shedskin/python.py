@@ -399,7 +399,8 @@ def find_module(
     if filename is None:
         raise ModuleNotFoundError("No module named '%s'" % module_name)
 
-    absolute_import_paths = gx.libdirs + [os.getcwd()]
+    source_root = str(gx.source_root) if gx.source_root else os.getcwd()
+    absolute_import_paths = gx.libdirs + [source_root]
     absolute_import_path = next(
         path for path in absolute_import_paths if filename.startswith(path)
     )
