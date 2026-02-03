@@ -406,8 +406,10 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXE} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -554,8 +556,10 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXT} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_link_options(${EXT} PRIVATE
