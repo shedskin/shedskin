@@ -1,0 +1,150 @@
+[![Build Status](https://img.shields.io/travis/shedskin/shedskin.svg)](https://travis-ci.org/shedskin/shedskin)
+[![benchmarked by asv](http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](http://shedskin.github.io/benchmarks)
+
+# Shed Skin
+
+Shed Skin is a transpiler, that can translate pure, but implicitly statically typed Python 3 programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.
+
+Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported) or any other external library. Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the [documentation](https://shedskin.github.io/shedskin/) for details).
+
+For a set of over [80 non-trivial programs](https://github.com/shedskin/shedskin/tree/master/examples) (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython 3.14 (average 20 times, median 12 times).
+
+Use Shed Skin when:
+
+- You have a few hundred lines of code (up to a few thousand), that you want to run at the highest possible speed
+- This code is, or can be made, independent of external libraries
+- You don't want to switch to a faster language (for reasons), or add type annotations (e.g. use Cython)
+- You would prefer to stick with CPython as your (main) interpreter (e.g. no PyPy)
+- You don't mind refactoring your code (potentially a lot!) to make it compatible with Shed Skin
+
+## Usage
+
+Compile and run the 'hello, world!' (test.py) example under Linux/OSX:
+
+```bash
+shedskin build test
+build/test
+```
+
+Under Windows:
+
+```bash
+shedskin build test
+build\test.exe
+```
+
+## Restrictions
+
+Shed Skin only supports a restricted subset of Python, so one should not expect a given program to compile without any changes, if possible at all. You may have to work a lot, or even start from scratch, to make your code compatible. See the [documentation](https://shedskin.github.io/shedskin/) for an overview of the limitations.
+
+## Installation
+
+Shed Skin depends on some other projects, such as the [Boehm garbage collector](https://www.hboehm.info/gc/). Please see the [documentation](https://shedskin.github.io/shedskin/) on how to install these.
+
+## Comparison
+
+Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python implementations/optimizers:
+
+```
+cpython 3.10.6:     13.4 seconds
+cpython 3.11.0:     11.4
+nuitka 0.6.16:      11.4
+pypy 3.9.12:        5.8
+numba 0.56.4:       2.5
+shedskin 0.9.9:     1.9
+shedskin 0.9.9:     1.8  (using --nowrap --nobounds)
+```
+
+Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --int64.
+
+The following shows a comparison of speedups versus CPython 3.10 for Shed Skin and Pypy, for most of the Shed Skin examples.
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp.png" width="800">
+
+These measurements were performed for the git tag 'performance_comparison'. As can be seen, we allowed PyPy to stabilize before measuring.
+
+## Screenshots
+
+Some screenshots of the [example programs](https://github.com/shedskin/shedskin/tree/master/examples) in action:
+
+(pylot)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm3.png" width="400">
+
+(c64)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm1.png" width="400">
+
+(pycsg)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm7.png" width="400">
+
+(othello2)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm6.png" width="400">
+
+(doom)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm5.png" width="400">
+
+[This video](https://www.youtube.com/watch?v=171AQx7l43s) shows the dramatic difference in performance for the DOOM example before and after compilation
+
+## Contributors
+
+The following people have contributed to Shed Skin development:
+
+- Shakeeb Alireza
+- Hakan Ardo
+- Brian Blais
+- Paul Boddie
+- Francois Boutines
+- Wyatt S. Carpenter
+- Djamel Cherif
+- James Coughlan
+- Mark Dewing
+- Mark Dufour
+- Artem Egorkine
+- Michael Elkins
+- Moataz Elmasry
+- Enzo Erbano
+- Ernesto Ferro
+- Salvatore Ferro
+- FFAO
+- Victor Garcia
+- Davide Gessa
+- Luis M. Gonzales
+- Fahrzin Hemmati
+- Folkert van Heusden
+- Karel Heyse
+- Humhue
+- Johan Kristensen
+- Kousuke
+- Denis de Leeuw Duarte
+- Van Lindberg
+- David Marek
+- Douglas McNeil
+- Andy Miller
+- Jeff Miller
+- Danny Milosavljevic
+- Joaquin Abian Monux
+- John Nagle
+- Harri Pasanen
+- Brent Pedersen
+- Joris van Rantwijk
+- Retsyo
+- Pierre-Marie de Rodat
+- Jeremie Roquet
+- Mike Schrick
+- SirNotAppearingInThisTutorial
+- Paul Sokolevsky
+- Thomas Spura
+- Joerg Stippa
+- Dan Stromberg
+- Dave Tweed
+- Jaroslaw Tworek
+- Tony Veijalainen
+- Yuri Victorovich
+- Pavel Vinogradov
+- Jason Ye
+- Liu Zhenhai
+- Joris van Zwieten

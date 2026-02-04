@@ -45,4 +45,4 @@ shedskin/lib/hashlib.py
 shedskin/lib/serial.py
 
 # editor or ide
-.vscode
+.vscodesite/

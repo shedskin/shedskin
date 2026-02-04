@@ -6,7 +6,7 @@ authors = [
     { name = "Mark Dufour and contributors" },
 ]
 license = "GPL-3.0-only"
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Topic :: Software Development :: Compilers",
@@ -25,6 +25,7 @@ shedskin = "shedskin.__main__:run"
 
 [dependency-groups]
 dev = [
+    "mkdocs-material>=9.0.0",
     "mypy>=1.14.1",
     "pytest>=7.2.0",
 ]

@@ -1,7 +1,7 @@
 
 .PHONY: all sync build rebuild test lint format typecheck qa clean \
         distclean wheel sdist dist check publish-test publish upgrade \
-        coverage coverage-html docs release help
+        coverage coverage-html docs docs-serve docs-clean release help
 
 # Default target
 all: build
@@ -73,9 +73,17 @@ coverage-html:
 	@uv run pytest tests/ -v --cov=shedskin --cov-report=html
 	@echo "Coverage report: htmlcov/index.html"
 
-# Build documentation (requires sphinx in dev dependencies)
+# Build documentation (requires mkdocs-material in dev dependencies)
 docs:
-	@uv run sphinx-build -b html docs/ docs/_build/html
+	@uv run mkdocs build
+
+# Serve documentation locally with live reload
+docs-serve:
+	@uv run mkdocs serve
+
+# Clean documentation build
+docs-clean:
+	@rm -rf site/
 
 # Create a release (bump version, tag, push)
 release:
@@ -118,7 +126,9 @@ help:
 	@echo "  upgrade      - Upgrade all dependencies"
 	@echo "  coverage     - Run tests with coverage"
 	@echo "  coverage-html- Generate HTML coverage report"
-	@echo "  docs         - Build documentation with Sphinx"
+	@echo "  docs         - Build documentation with MkDocs"
+	@echo "  docs-serve   - Serve documentation locally with live reload"
+	@echo "  docs-clean   - Clean documentation build"
 	@echo "  release      - Bump version, tag, and prepare release"
 	@echo "  clean        - Remove build artifacts"
 	@echo "  distclean    - Remove all generated files"
