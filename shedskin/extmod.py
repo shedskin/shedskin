@@ -690,7 +690,9 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         write("    0,")
-        if self.has_method(cl, "__iter__") and not cl.funcs['__iter__'].isGenerator:  # TODO what if not called? also for other slots
+        if (
+            self.has_method(cl, "__iter__") and not cl.funcs["__iter__"].isGenerator
+        ):  # TODO what if not called? also for other slots
             write("    (PyObject *(*)(PyObject *))%s___iter__," % clname(cl))
         else:
             write("    0,")

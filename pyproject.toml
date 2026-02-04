@@ -1,64 +1,50 @@
-[tool.poetry]
+[project]
 name = "shedskin"
 version = "0.9.12"
 description = "Shed Skin is a restricted-Python-to-C++ compiler."
 authors = [
-	"Mark Dufour and contributors",
+    { name = "Mark Dufour and contributors" },
 ]
-license = "GNU GPL version 3"
+license = "GPL-3.0-only"
 readme = "README.rst"
-
-homepage = "https://shedskin.github.io"
-repository = "https://github.com/shedskin/shedskin"
-documentation = "https://shedskin.readthedocs.io"
-
+requires-python = ">=3.8"
 classifiers = [
     "Topic :: Software Development :: Compilers",
-    "Topic :: Software Development :: Libraries :: Python Modules"
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dependencies = []
 
-packages = [
-    { include = "shedskin" },
+[project.urls]
+Homepage = "https://shedskin.github.io"
+Repository = "https://github.com/shedskin/shedskin"
+Documentation = "https://shedskin.readthedocs.io"
+"Bug Tracker" = "https://github.com/shedskin/shedskin/issues"
+
+[project.scripts]
+shedskin = "shedskin.__main__:run"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.1",
+    "pytest>=7.2.0",
 ]
-
-include = [
-    { path = "shedskin/lib/*.cpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/*.hpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/builtin/*.cpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/builtin/*.hpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/*.py", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/os/*.cpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/os/*.hpp", format = ["sdist", "wheel"] },
-    { path = "shedskin/lib/os/*.py", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/flags/FLAGS*", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/illegal/illegal.txt", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/cmake/*.cmake", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },
-
-	{ path = "LICENSE", format = ["sdist"] },
-    { path = "pyproject.toml", format = ["sdist"] },
-    { path = "requirements.txt", format = ["sdist"] },
-    { path = "setup.py", format = ["sdist"] },
-    { path = "tox.ini", format = ["sdist"] },
-
-    { path = "doc", format = ["sdist"] },
-    { path = "examples", format = ["sdist"] },
-    { path = "tests", format = ["sdist"] },
-]
-
-[tool.poetry.dependencies]
-python = "^3.8"
-
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.2.0"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-shedskin = 'shedskin.__main__:run'
+[tool.hatch.build.targets.sdist]
+include = [
+    "shedskin/",
+    "LICENSE",
+    "pyproject.toml",
+    "requirements.txt",
+    "setup.py",
+    "tox.ini",
+    "doc/",
+    "examples/",
+    "tests/",
+]
 
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/shedskin/shedskin/issues"
+[tool.hatch.build.targets.wheel]
+packages = ["shedskin"]

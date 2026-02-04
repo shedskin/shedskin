@@ -36,7 +36,7 @@ def test_zip_strict():
     error = False
     try:
         list(zip(a, b, strict=True))
-    except ValueError as e:
+    except ValueError:
         error = True
     assert error
 
@@ -50,7 +50,7 @@ def test_zip_strict():
     error = False
     try:
         list(zip(a, b2, strict=True))
-    except ValueError as e:
+    except ValueError:
         error = True
     assert error
 
