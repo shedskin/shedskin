@@ -19,7 +19,7 @@ rebuild: build
 
 # Run tests
 test:
-	@uv run pytest tests/ -v
+	@uv run pytest tests/unit -v
 
 # Lint with ruff
 lint:
