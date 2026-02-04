@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed CMake build failure when source file path is absolute (e.g., building from a different directory with `../examples/foo.py`). The issue occurred because absolute parent paths were being concatenated with build directories, creating invalid paths like `build/exe/C:/Users/.../file.cpp`.
 - Resource leaks: Added context manager support to `MakefileWriter` class
 - File handling: Use context managers for file operations in `config.py`
 
