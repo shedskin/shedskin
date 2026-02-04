@@ -21,7 +21,6 @@ class FileSystemPaths:
         libdirs: Tuple of library directories to search.
         shedskin_resources: Path to resources directory.
         shedskin_cmake: Path to cmake resources.
-        shedskin_conan: Path to conan resources.
         shedskin_flags: Path to compiler flags resources.
         shedskin_illegal: Path to illegal keywords file directory.
     """
@@ -32,6 +31,5 @@ class FileSystemPaths:
     libdirs: Tuple[str, ...]
     shedskin_resources: Path
     shedskin_cmake: Path
-    shedskin_conan: Path
     shedskin_flags: Path
     shedskin_illegal: Path

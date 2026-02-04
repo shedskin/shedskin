@@ -20,7 +20,6 @@ function(add_shedskin_product)
         BUILD_EXECUTABLE
         BUILD_EXTENSION
         BUILD_TEST
-        ENABLE_CONAN
         ENABLE_SPM
         ENABLE_FETCH_CONTENT
         ENABLE_LOCAL_DEPS
@@ -85,10 +84,21 @@ function(add_shedskin_product)
         cmake_path(GET SHEDSKIN_MAIN_MODULE STEM main)
         cmake_path(GET SHEDSKIN_MAIN_MODULE FILENAME main_py)
         cmake_path(GET SHEDSKIN_MAIN_MODULE PARENT_PATH parentpath)
-        set(IS_NESTED ON)
+        # Check if the parent path is absolute (external source with absolute path)
+        # If so, don't use nested structure as it would create invalid paths like
+        # "build/exe/C:/Users/.../file.cpp"
+        cmake_path(IS_ABSOLUTE parentpath _is_absolute_path)
+        if(_is_absolute_path)
+            set(IS_NESTED OFF)
+            set(IS_ABSOLUTE_SOURCE ON)
+        else()
+            set(IS_NESTED ON)
+            set(IS_ABSOLUTE_SOURCE OFF)
+        endif()
     else()
         set(main "${name}")
         set(main_py "${main}.py")
+        set(IS_ABSOLUTE_SOURCE OFF)
     endif()
 
     if(SHEDSKIN_SYS_MODULES)
@@ -145,7 +155,6 @@ function(add_shedskin_product)
             BUILD_EXTENSION
             SHEDSKIN_BUILD_TEST
 
-            SHEDSKIN_ENABLE_CONAN
             SHEDSKIN_ENABLE_SPM
             SHEDSKIN_ENABLE_FETCH_CONTENT
             SHEDSKIN_ENABLE_LOCAL_DEPS
@@ -205,11 +214,6 @@ function(add_shedskin_product)
         endif()
     endforeach()
 
-    # special case win32: if none of the dep mgrs is enabled then default to conan
-    # if(WIN32 AND NOT ENABLE_FETCH_CONTENT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
-    #     set(ENABLE_CONAN ON)
-    # endif()
-
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
@@ -217,7 +221,7 @@ function(add_shedskin_product)
     else() # i.e windows
         set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE2 pcre2-8.lib)
+        set(LIBPCRE2 pcre2-8-static.lib)
     endif ()
 
     # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
@@ -254,20 +258,6 @@ function(add_shedskin_product)
         )
         set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
         set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
-    elseif(ENABLE_CONAN)
-        set(LIB_DEPS
-            BDWgc::BDWgc -lgc -lgccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
-        )
-        set(LIB_DIRS
-            ${bdwgc_LIB_DIRS_RELEASE}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${pcre2_LIB_DIRS_RELEASE}>
-        )
-        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
-        set(LIB_INCLUDES
-            ${BDWgc_INCLUDE_DIRS}
-            ${PCRE2_INCLUDE_DIRS}
-        )
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used
@@ -350,6 +340,15 @@ function(add_shedskin_product)
                 COMMENT "translating ${main_py} to exe"
                 VERBATIM
             )
+        elseif(IS_ABSOLUTE_SOURCE)
+            # External source with absolute path - use full path but flat output
+            add_custom_command(OUTPUT ${translated_files}
+                COMMAND shedskin translate --nomakefile -o ${PROJECT_EXE_DIR} ${opts} "${SHEDSKIN_MAIN_MODULE}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS "${SHEDSKIN_MAIN_MODULE}"
+                COMMENT "translating ${main_py} to exe"
+                VERBATIM
+            )
         else()
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXE_DIR} ${opts} "${main_py}"
@@ -407,8 +406,10 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXE} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -471,6 +472,15 @@ function(add_shedskin_product)
         if(IS_NESTED)
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR}/${parentpath} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS "${SHEDSKIN_MAIN_MODULE}"
+                COMMENT "translating ${main_py} to ext"
+                VERBATIM
+            )
+        elseif(IS_ABSOLUTE_SOURCE)
+            # External source with absolute path - use full path but flat output
+            add_custom_command(OUTPUT ${translated_files}
+                COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS "${SHEDSKIN_MAIN_MODULE}"
                 COMMENT "translating ${main_py} to ext"
@@ -546,14 +556,14 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
+        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXT} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_link_options(${EXT} PRIVATE
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
-            # "-fno-common" # can be excluded because it is already the default
-            "-dynamic" # can be excluded because it is already the default
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
         )

@@ -2684,11 +2684,11 @@ def parse_module(
 
     # --- create module
     try:
-        cwd = pathlib.Path(os.getcwd())
-        if parent and parent.path != cwd:
-            basepaths = [parent.path, cwd]
+        source_root = gx.source_root or pathlib.Path.cwd()
+        if parent and parent.path != source_root:
+            basepaths = [parent.path, source_root]
         else:
-            basepaths = [cwd]
+            basepaths = [source_root]
         module_paths = [str(p) for p in basepaths] + gx.libdirs
         absolute_name, filename, relative_filename, builtin = python.find_module(
             gx, name, module_paths

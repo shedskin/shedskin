@@ -74,6 +74,10 @@ class GlobalInfo:
         self.terminal = None
         self.progressbar: Optional["ProgressBar"] = None
 
+        # Source root directory (parent of main source file)
+        # Used for module resolution instead of os.getcwd()
+        self.source_root: Optional[Path] = None
+
     def _init_directories(self) -> FileSystemPaths:
         """Initialize and return filesystem paths."""
         abspath = os.path.abspath(__file__)  # sanitize mixed fwd/bwd slashes (mingw)
@@ -106,7 +110,6 @@ class GlobalInfo:
             libdirs=libdirs,
             shedskin_resources=shedskin_resources,
             shedskin_cmake=shedskin_resources / "cmake" / "modular",
-            shedskin_conan=shedskin_resources / "conan",
             shedskin_flags=shedskin_resources / "flags",
             shedskin_illegal=shedskin_resources / "illegal",
         )
@@ -147,10 +150,6 @@ class GlobalInfo:
     @property
     def shedskin_cmake(self) -> Path:
         return self._paths.shedskin_cmake
-
-    @property
-    def shedskin_conan(self) -> Path:
-        return self._paths.shedskin_conan
 
     @property
     def shedskin_flags(self) -> Path:

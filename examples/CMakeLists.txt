@@ -14,8 +14,8 @@ option(BUILD_EXTENSION "Build python extension" OFF)
 option(BUILD_TEST "Build test" ON)
 
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
-option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_FETCH_CONTENT "Enable FetchContent for dependency mgmt" OFF)
+option(ENABLE_LOCAL_DEPS "Enable local dependency management" OFF)
 
 # -----------------------------------------------------------------------------
 # find python executable and shedskin package path
@@ -58,18 +58,18 @@ if(ENABLE_SPM)
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
 
-elseif(ENABLE_CONAN)
-    find_program(CONAN conan)
-    if(NOT CONAN)
-        message(FATAL_ERROR "conan not found, install with `pip install conan`")
-    endif()
-    find_package(BDWgc)
-    find_package(PCRE2)
-
 elseif(ENABLE_FETCH_CONTENT)
     include(shedskin_deps)
     set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
     set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
+
+elseif(ENABLE_LOCAL_DEPS)
+    if(NOT DEFINED LOCAL_DEPS_DIR)
+        message(FATAL_ERROR "LOCAL_DEPS_DIR must be defined when ENABLE_LOCAL_DEPS is ON")
+    endif()
+    message(STATUS "LOCAL_DEPS_DIR: ${LOCAL_DEPS_DIR}")
+    set(LOCAL_DEPS_LIB_DIRS ${LOCAL_DEPS_DIR}/lib)
+    set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
 endif()
 
 # -----------------------------------------------------------------------

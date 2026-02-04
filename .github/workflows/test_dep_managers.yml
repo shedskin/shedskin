@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ["3.13"]
-        dep_manager: [local-deps, spm, conan, fetchcontent]
+        dep_manager: [local-deps, spm, fetchcontent]
 
     steps:
     - uses: actions/checkout@v4
@@ -39,12 +39,6 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
 
-    - name: Install and configure conan
-      if: matrix.dep_manager == 'conan'
-      run: |
-        pip install conan
-        conan profile detect --force
-
     - name: Install shedskin
       run: pip install .
 
@@ -55,7 +49,7 @@ jobs:
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          ./build/Release/test.exe
+          ./build/test.exe
         else
           ./build/test
         fi
