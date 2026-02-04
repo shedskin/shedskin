@@ -7,7 +7,7 @@ trees (ASTs) in Python. It includes functions to:
 
 - Check node types and contexts:
   - `is_assign_list_or_tuple()`: Check if node is list/tuple assignment
-  - `is_assign_tuple()`: Check if node is tuple assignment 
+  - `is_assign_tuple()`: Check if node is tuple assignment
   - `is_assign_attribute()`: Check if node is attribute assignment
   -` is_constant()`: Check if node is a constant value
   - `is_none()`: Check if node represents None

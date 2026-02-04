@@ -13,7 +13,7 @@ Key concepts:
 
 - Constraint Graph Structure:
   - Nodes are stored in `gx.cnode`
-  - Type sets for each node are stored in `gx.types` 
+  - Type sets for each node are stored in `gx.types`
   - Each node is identified by (AST Node, int, int), where the integers are used
     by `infer.py` to duplicate graph sections (class duplicate, function duplicate).
     Initially both are 0.
@@ -27,7 +27,6 @@ Key components:
 - `parse_module()`: Entry point that locates and processes Python modules, using
   `ModuleVisitor` for uncached modules.
 """
-
 
 import ast
 import copy
@@ -744,7 +743,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def remove_poskw_only_args(self, node: ast.FunctionDef) -> None:
         """Ignore /, * (pos-only, keyword-only) arguments"""
         if node.args.posonlyargs or node.args.kwonlyargs:
-            node.args.args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            node.args.args = (
+                node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            )
             node.args.posonlyargs = []
             node.args.kwonlyargs = []
 
@@ -995,7 +996,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
+                elif (
+                    parent
+                    and isinstance(dec, ast.Name)
+                    and dec.id == "classmethod"
+                    and getmv().module.builtin
+                ):
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
@@ -1075,8 +1081,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         for i, default in enumerate(func.defaults):
             if (
-                not ast_utils.is_literal(default) and not
-                (isinstance(default, ast.Constant) and isinstance(default.value, bool))  # TODO fix is_literal
+                not ast_utils.is_literal(default)
+                and not (
+                    isinstance(default, ast.Constant)
+                    and isinstance(default.value, bool)
+                )  # TODO fix is_literal
             ):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
@@ -1088,7 +1097,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- register function
         if isinstance(parent, python.Class):
-            if func.ident not in parent.staticmethods and func.ident not in parent.classmethods:  # XXX use flag
+            if (
+                func.ident not in parent.staticmethods
+                and func.ident not in parent.classmethods
+            ):  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
 
@@ -1620,7 +1632,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.orelse:
             for child in node.orelse:
                 self.visit(child, func)
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
 
     def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
         """Visit a yield statement"""
@@ -1680,7 +1692,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- for-else
         if node.orelse:
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1760,7 +1772,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.loopstack.pop()
 
         if node.orelse:
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -2008,9 +2020,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
                 # expr[a:b] = expr # XXX bla()[1:3] = [1]
                 elif isinstance(lvalue, ast.Slice):
-                    assert (
-                        False
-                    ), "ast.Slice shouldn't appear outside ast.Subscript node"
+                    assert False, (
+                        "ast.Slice shouldn't appear outside ast.Subscript node"
+                    )
                     self.slice(
                         lvalue,
                         lvalue.expr,
@@ -2138,7 +2150,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig: ast.Call, func: Optional["python.Function"]) -> Optional[ast.AST]:
+    def super_call(
+        self, orig: ast.Call, func: Optional["python.Function"]
+    ) -> Optional[ast.AST]:
         """Handle a super call"""
         node = orig.func
         assert isinstance(node, ast.Attribute)
@@ -2187,7 +2201,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.ctx, ast.Load):
             # classmethod: insert 'cls' arg (None for now)
             if not fake_attr and isinstance(node.func.value, ast.Name):
-                if node.func.value.id in ('dict', 'float', 'bytes', 'complex', 'bytearray'):
+                if node.func.value.id in (
+                    "dict",
+                    "float",
+                    "bytes",
+                    "complex",
+                    "bytearray",
+                ):
                     node.args.insert(0, ast.Name("None", ast.Load()))
 
             # rewrite super(..) call

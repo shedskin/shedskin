@@ -40,9 +40,9 @@ import os
 import pathlib
 import re
 import sys
+
 # type-checking
-from typing import (TYPE_CHECKING, List, NamedTuple, Optional, Tuple,
-                    TypeAlias, Union)
+from typing import TYPE_CHECKING, List, NamedTuple, Optional, Tuple, TypeAlias, Union
 
 if TYPE_CHECKING:
     from . import config, graph, infer
@@ -465,7 +465,7 @@ def lookup_class(
 ) -> Optional["Class"]:  # XXX lookup_var first?
     """Find a class by name"""
     if isinstance(node, ast.Name):
-        if node.id == 'bytearray':
+        if node.id == "bytearray":
             return mv.ext_classes["bytes_"]
         elif node.id in ("int", "float", "bytes"):
             return mv.ext_classes[node.id + "_"]

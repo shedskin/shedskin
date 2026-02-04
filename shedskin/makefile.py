@@ -832,9 +832,9 @@ class MakefileGenerator:
             if key in defaults:
                 return True
             assert key in self.vars, f"Invalid variable: {key}"
-            assert os.path.isdir(
-                self.vars[key]
-            ), f"Value of variable {key} is not a directory: {self.vars[key]}"
+            assert os.path.isdir(self.vars[key]), (
+                f"Value of variable {key} is not a directory: {self.vars[key]}"
+            )
             return True
         return os.path.isdir(str_path)
 
@@ -1189,13 +1189,14 @@ class ShedskinMakefileGenerator(MakefileGenerator):
     def _setup_unix(self) -> None:
         """Configure Unix-like platform settings"""
         # Check if using local dependencies from shedskin cache
-        use_local_deps = getattr(self.gx.options, 'local_deps', False)
+        use_local_deps = getattr(self.gx.options, "local_deps", False)
 
         if use_local_deps:
             from . import config as cfg
+
             cache_dir = cfg.get_user_cache_dir()
             cache_include = cache_dir / "include"
-            cache_lib = cache_dir / "lib"
+            # cache_lib = cache_dir / "lib"
             if cache_include.exists():
                 self.add_variable("LOCAL_DEPS_DIR", str(cache_dir))
                 self.add_include_dirs(LOCAL_DEPS_INCLUDE="$(LOCAL_DEPS_DIR)/include")
