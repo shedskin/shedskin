@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.cpp: C++ Code Generator

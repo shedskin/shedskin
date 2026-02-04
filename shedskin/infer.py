@@ -120,6 +120,20 @@ logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
 
 
+def _const_str(node: ast.AST) -> str:
+    """Return string value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, str)
+    return node.value
+
+
+def _const_num(node: ast.AST) -> Union[int, float]:
+    """Return numeric value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, (int, float))
+    return node.value
+
+
 # Type inference tuning parameters
 # ---------------------------------
 # These constants control the iterative type analysis algorithm.
@@ -1160,7 +1174,7 @@ def redirect(
 
     # array
     if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
-        typecode = callfunc.args[0].value
+        typecode = _const_str(callfunc.args[0])
         array_type = None
         if typecode in "bBhHiIlLqQ":
             array_type = "int"
@@ -1174,12 +1188,12 @@ def redirect(
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ("__getitem__", "__getunit__")
         and ast_utils.is_num(callfunc.args[0])
-        and callfunc.args[0].value in (0, 1)
+        and _const_num(callfunc.args[0]) in (0, 1)
         and func.parent
         and func.parent.mv.module.builtin
         and func.parent.ident == "tuple2"
     ):
-        if callfunc.args[0].value == 0:
+        if _const_num(callfunc.args[0]) == 0:
             assert isinstance(func.parent, python.Class)
             func = func.parent.funcs["__getfirst__"]
         else:
@@ -1195,9 +1209,9 @@ def redirect(
             isinstance(func.parent, python.Class)
             and callfunc.args
             and ast_utils.is_str(callfunc.args[0])
-            and callfunc.args[0].value in func.parent.properties
+            and _const_str(callfunc.args[0]) in func.parent.properties
         ):
-            arg = callfunc.args[0].value
+            arg = _const_str(callfunc.args[0])
             if callfunc.func.attr == "__setattr__":
                 assert isinstance(func.parent, python.Class)
                 func = func.parent.funcs[func.parent.properties[arg][1]]
@@ -1332,11 +1346,11 @@ def connect_getsetattr(
             isinstance(func.parent, python.Class)
             and callfunc.args
             and ast_utils.is_str(callfunc.args[0])
-            and callfunc.args[0].value in func.parent.properties
+            and _const_str(callfunc.args[0]) in func.parent.properties
         )
     ):
         assert ast_utils.is_str(callfunc.args[0])
-        varname = callfunc.args[0].value
+        varname = _const_str(callfunc.args[0])
         parent = func.parent
         assert isinstance(parent, (python.Class, python.StaticClass))
 
@@ -1709,7 +1723,7 @@ def ifa_flow_graph(
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
-    fout_dict = collections.defaultdict(set)  # unreal outgoing edges
+    fout_dict: dict[CNode, set[CNode]] = collections.defaultdict(set)  # unreal outgoing edges
     for assign_set, targets in assignsets.items():
         path = backflow_path(gx, set(targets), (cl, dcpa), fout_dict)
         paths[assign_set] = path
