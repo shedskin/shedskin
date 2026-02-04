@@ -7,7 +7,7 @@ function(common)
         if(mod STREQUAL "os")
             set(IMPORTS_OS_MODULE TRUE)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
-            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")
         elseif(mod STREQUAL "os.path")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
@@ -20,6 +20,17 @@ function(common)
         endif()
     endforeach()
 
+    # Platform-specific library names
+    if (UNIX)
+        set(LIBGC libgc.a)
+        set(LIBGCCPP libgccpp.a)
+        set(LIBPCRE2 libpcre2-8.a)
+    else() # i.e windows
+        set(LIBGC gc.lib)
+        set(LIBGCCPP gccpp.lib)
+        set(LIBPCRE2 pcre2-8-static.lib)
+    endif ()
+
     if(ENABLE_FETCH_CONTENT)
         # FetchContent targets - link to targets directly
         set(LIB_DEPS
@@ -31,26 +42,12 @@ function(common)
         set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
     elseif(ENABLE_SPM)
         set(LIB_DEPS
-            ${SPM_LIB_DIRS}/libgc.a
-            ${SPM_LIB_DIRS}/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre2-8.a>            
+            ${SPM_LIB_DIRS}/${LIBGC}
+            ${SPM_LIB_DIRS}/${LIBGCCPP}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
-    elseif(ENABLE_CONAN)
-        set(LIB_DEPS
-            BDWgc::BDWgc -lgc -lgccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2::pcre2 -lpcre2-8>
-        )
-        set(LIB_DIRS
-            ${BDWgc_LIB_DIRS_RELEASE}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE2_LIB_DIRS_RELEASE}>
-        )
-        # include PCRE2 headers irrespective (even if not used) to prevent header not found error
-        set(LIB_INCLUDES
-            ${BDWgc_INCLUDE_DIRS}
-            ${PCRE2_INCLUDE_DIRS}
-        )
     else() 
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used

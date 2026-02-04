@@ -131,7 +131,6 @@ class TestStateObjects:
             libdirs=("/test/lib",),
             shedskin_resources=Path("/test/resources"),
             shedskin_cmake=Path("/test/cmake"),
-            shedskin_conan=Path("/test/conan"),
             shedskin_flags=Path("/test/flags"),
             shedskin_illegal=Path("/test/illegal"),
         )

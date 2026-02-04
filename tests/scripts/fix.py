@@ -63,7 +63,6 @@ def add_shedskin_product(
     disable_extension=False,
     disable_test=False,
     enable_externalproject=False,
-    enable_conan=False,
     enable_spm=False,
     debug=False,
 ):
@@ -77,7 +76,7 @@ def add_shedskin_product(
         DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
 
     radio options (mutually exclusive):
-        ENABLE_CONAN ENABLE_SPM ENABLE_EXTERNALPROJECT
+        ENABLE_SPM ENABLE_EXTERNALPROJECT
 
     single_value options:
         NAME INCLUDE LIBDIR
@@ -113,8 +112,6 @@ def add_shedskin_product(
 
     if enable_externalproject:
         add(1, "ENABLE_EXTERNALPROJECT")
-    elif enable_conan:
-        add(1, "ENABLE_CONAN")
     elif enable_spm:
         add(1, "ENABLE_SPM")
 

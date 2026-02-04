@@ -47,8 +47,7 @@ class Shedskin:
     def get_name(self, module_path: str) -> str:
         """Returns name of module to be translated.
 
-        Also sets current working dir for nested targets
-        and sets module_path configuration.
+        Sets source_root (for module resolution) and module_path configuration.
 
         :param      module_path:     The module path
         :type       module_name:     str
@@ -62,16 +61,19 @@ class Shedskin:
             self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
 
-        if path.parent != pathlib.Path('.'): # path is in current dir
-            os.chdir(path.parent)
-            path = pathlib.Path(path.name)
+        # Resolve to absolute path
+        path = path.resolve()
 
         if not path.name.endswith('.py'):
             path = path.with_suffix('.py')
         if not path.is_file():
             self.log.error("no such file: '%s'", path)
             sys.exit(1)
-        self.gx.module_path = path.absolute()
+
+        # Set source_root for module resolution (replaces os.chdir approach)
+        self.gx.source_root = path.parent
+        self.gx.module_path = path
+
         return path.stem
 
     def configure(self, args: argparse.Namespace) -> 'config.GlobalInfo':
@@ -241,12 +243,20 @@ class Shedskin:
 
     def run(self) -> None:
         """Run the main module"""
-        cwd = pathlib.Path.cwd()
-        p = pathlib.Path(self.gx.options.name)
-        if len(p.parts) == 1:
-            executable = cwd / 'build' / p.stem
+        p = pathlib.Path(self.gx.options.name).resolve()
+
+        # Executable is always in gx.cwd/build/ for all cases
+        if p.is_relative_to(self.gx.cwd):
+            rel_path = p.relative_to(self.gx.cwd)
+            if len(rel_path.parts) == 1:
+                # Source in cwd
+                executable = self.gx.cwd / 'build' / p.stem
+            else:
+                # Source in subdirectory
+                executable = self.gx.cwd / 'build' / rel_path.parent.name / rel_path.parent.name
         else:
-            executable = cwd.parent / 'build' / p.parent.name / p.parent.name
+            # External source - executable is in cwd/build/
+            executable = self.gx.cwd / 'build' / p.stem
         subprocess.run([str(executable)], check=True)
 
     @classmethod
@@ -299,7 +309,6 @@ class Shedskin:
         grp("--build-type", help="Set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
         grp("--test", help="Run ctest", action="store_true")
         grp("--reset", help="Reset cmake build", action="store_true")
-        grp("--conan", help="Install cmake dependencies with conan", action="store_true")
         grp("--spm", help="Install cmake dependencies with spm", action="store_true")
         grp("--fetchcontent", help="Install cmake dependencies with fetchcontent", action="store_true")
         grp("--local-deps", help="Build dependencies from bundled ext/ sources", action="store_true")
@@ -417,8 +426,11 @@ class Shedskin:
 
         if platform.system() == 'Windows' and args.subcmd in ('build', 'run'):
             args.build_type = 'Release'  # Debug doesn't work in CI, possibly because of missing debug symbols
-            if not args.spm and not args.fetchcontent:  # make --conan default under windows..
-                args.conan = True
+
+        # Make --local-deps the default unless another dep manager is specified
+        if args.subcmd in ('build', 'run', 'runtests'):
+            if not args.spm and not args.fetchcontent and not args.local_deps:
+                args.local_deps = True
 
         ss = cls(args)
 

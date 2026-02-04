@@ -6,19 +6,19 @@ This module provides functionality for generating CMake build files and managing
 the build process for Shedskin-compiled projects. Key components include:
 
 - CMake file generation
-- Dependency management (`Conan`, `SPM`, `FetchContent`)
+- Dependency management (`LocalDeps`, `SPM`, `FetchContent`)
 - Build configuration and execution
 - Test running utilities
 
 Main classes:
-- `ConanDependencyManager`: Manages Conan dependencies
-- `ShedskinDependencyManager`: Local dependency manager (SPM)
+- `LocalDependencyManager`: Local dependency manager using bundled ext/ sources (default)
+- `ShedskinDependencyManager`: Legacy dependency manager (SPM)
 - `CMakeBuilder`: Handles CMake configuration, building, and testing
 - `TestRunner`: Specialized CMakeBuilder for running tests
 
 Key functions:
 - `generate_cmakefile`: Creates CMakeLists.txt for Shedskin projects
--` add_shedskin_product`: Generates CMake function call for Shedskin targets
+- `add_shedskin_product`: Generates CMake function call for Shedskin targets
 
 The module also includes utilities for path handling, caching, and system-specific operations.
 """
@@ -88,106 +88,6 @@ def build_local_deps() -> None:
 
     ldm.install_all(force=args.force)
     print(f"\nDependencies installed to: {ldm.deps_dir}")
-
-
-class ConanBDWGC:
-    """Conan bdwgc garbage collection dependency"""
-
-    def __init__(
-        self,
-        name: str = "bdwgc",
-        version: str = "8.2.8",
-        cplusplus: bool = True,
-        cord: bool = False,
-        gcj_support: bool = False,
-        java_finalization: bool = False,
-        shared: bool = False,
-    ):
-        self.name = name
-        self.version = version
-        self.cplusplus = cplusplus
-        self.cord = cord
-        self.gcj_support = gcj_support
-        self.java_finalization = java_finalization
-        self.shared = shared
-
-    def __str__(self) -> str:
-        return f"{self.name}/{self.version}"
-
-
-class ConanPCRE:
-    """Conan pcre2 dependency"""
-
-    def __init__(
-        self,
-        name: str = "pcre2",
-        version: str = "10.44",
-        build_pcre2grep: bool = False,
-        shared: bool = False,
-        with_bzip2: bool = False,
-        with_zlib: bool = False,
-    ):
-        self.name = name
-        self.version = version
-        self.build_pcre2grep = build_pcre2grep
-        self.shared = shared
-        self.with_bzip2 = with_bzip2
-        self.with_zlib = with_zlib
-
-    def __str__(self) -> str:
-        return f"{self.name}/{self.version}"
-
-
-class ConanDependencyManager:
-    """Dependency manager which manages and installs all conan dependencies"""
-
-    def __init__(self, source_dir: Pathlike):
-        self.source_dir = pathlib.Path(source_dir)
-        self.build_dir = self.source_dir / "build"
-        self.bdwgc = ConanBDWGC()
-        self.pcre2 = ConanPCRE()
-
-    def generate_conanfile(self) -> None:
-        """Generate conanfile.txt"""
-        bdwgc = self.bdwgc
-        pcre2 = self.pcre2
-        content = textwrap.dedent(
-            f"""
-        [requires]
-        {bdwgc}
-        {pcre2}
-
-        [generators]
-        CMakeDeps
-        CMakeToolchain
-
-        [options]
-        bdwgc/*:cplusplus={bdwgc.cplusplus}
-        bdwgc/*:cord={bdwgc.cord}
-        bdwgc/*:gcj_support={bdwgc.gcj_support}
-        bdwgc/*:java_finalization={bdwgc.java_finalization}
-        bdwgc/*:shared={bdwgc.shared}
-        pcre2/*:build_pcre2grep={pcre2.build_pcre2grep}
-        pcre2/*:shared={pcre2.shared}
-        pcre2/*:with_bzip2={pcre2.with_bzip2}
-        pcre2/*:with_zlib={pcre2.with_zlib}
-
-        [layout]
-        cmake_layout
-        """
-        )
-        conanfile = self.source_dir / "conanfile.txt"
-        if not conanfile.exists():
-            conanfile.write_text(content)
-
-    def install(self, build_type) -> None:
-        """Install conan dependencies"""
-        subprocess.run(
-            f"conan profile detect -e && conan install .. --build=missing -s:a build_type={build_type}",
-            shell=True,
-            cwd=self.build_dir,
-            check=True,
-        )
 
 
 class ShedskinDependencyManager:
@@ -420,8 +320,19 @@ class LocalDependencyManager:
         self.bdwgc_src = self.src_dir / "bdwgc"
         self.pcre2_src = self.src_dir / "pcre2"
 
-        # Platform-specific library suffix
-        self.lib_suffix = ".lib" if sys.platform == "win32" else ".a"
+        # Platform-specific library names
+        # On Windows, MSVC produces libs without 'lib' prefix
+        # On Unix, libraries have 'lib' prefix
+        if sys.platform == "win32":
+            self.lib_suffix = ".lib"
+            self.libgc_name = "gc.lib"
+            self.libgccpp_name = "gccpp.lib"
+            self.libpcre2_name = "pcre2-8-static.lib"
+        else:
+            self.lib_suffix = ".a"
+            self.libgc_name = "libgc.a"
+            self.libgccpp_name = "libgccpp.a"
+            self.libpcre2_name = "libpcre2-8.a"
 
         if self.reset_on_run and self.deps_dir.exists():
             shutil.rmtree(self.deps_dir)
@@ -484,14 +395,14 @@ class LocalDependencyManager:
 
     def bdwgc_targets_exist(self) -> bool:
         """Check if bdwgc targets are already built."""
-        libgc = self.lib_dir / f"libgc{self.lib_suffix}"
-        libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
+        libgc = self.lib_dir / self.libgc_name
+        libgccpp = self.lib_dir / self.libgccpp_name
         gc_h = self.include_dir / "gc.h"
         return all(t.exists() for t in [libgc, libgccpp, gc_h])
 
     def pcre2_targets_exist(self) -> bool:
         """Check if pcre2 targets are already built."""
-        libpcre2 = self.lib_dir / f"libpcre2-8{self.lib_suffix}"
+        libpcre2 = self.lib_dir / self.libpcre2_name
         pcre2_h = self.include_dir / "pcre2.h"
         return all(t.exists() for t in [libpcre2, pcre2_h])
 
@@ -639,7 +550,6 @@ def add_shedskin_product(
     # disable_extension: bool = False,
     # disable_test: bool = False,
     # has_lib: bool = False,
-    enable_conan: bool = False,
     enable_externalproject: bool = False,
     enable_spm: bool = False,
     debug: bool = False,
@@ -657,7 +567,7 @@ def add_shedskin_product(
         # not-implemented: DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
 
     radio options (mutually exclusive):
-        ENABLE_CONAN ENABLE_SPM ENABLE_EXTERNALPROJECT
+        ENABLE_SPM ENABLE_EXTERNALPROJECT
 
     single_value options:
         NAME MAIN_MODULE
@@ -700,8 +610,6 @@ def add_shedskin_product(
 
     if enable_externalproject:
         add(1, "ENABLE_EXTERNALPROJECT")
-    elif enable_conan:
-        add(1, "ENABLE_CONAN")
     elif enable_spm:
         add(1, "ENABLE_SPM")
 
@@ -803,7 +711,15 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     """Improved generator using built-in machinery"""
     path = gx.main_module.filename
 
-    in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)
+    # Determine build type based on source location relative to cwd
+    if path.is_relative_to(gx.cwd):
+        rel_path = path.relative_to(gx.cwd)
+        if len(rel_path.parts) == 1:
+            build_type = "in_source"  # source file directly in cwd
+        else:
+            build_type = "subdirectory"  # source file in subdirectory of cwd
+    else:
+        build_type = "external"  # source file outside cwd
 
     modules = gx.modules.values()
     # filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
@@ -859,7 +775,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
             app_mods.add(entry.as_posix())
 
     assert gx.options, "gx.options must be populated"
-    if in_source_build:
+    if build_type == "in_source":
+        # Source file directly in cwd (e.g., ./test.py)
         master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
             project_name=f"{gx.main_module.ident}_project",
@@ -881,7 +798,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         )
         master_clfile.write_text(master_clfile_content)
 
-    else:
+    elif build_type == "subdirectory":
+        # Source file in subdirectory of cwd (e.g., ./subdir/test.py or ./nested/subdir/test.py)
         src_clfile = path.parent / "CMakeLists.txt"
 
         src_clfile.write_text(
@@ -900,11 +818,41 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
             )
         )
 
-        master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
+        # Master CMakeLists.txt always in cwd, with full relative path to source subdir
+        master_clfile = gx.cwd / "CMakeLists.txt"
+        # Get relative path from cwd to source directory (e.g., "nested/tmp" for nested/tmp/test.py)
+        rel_subdir = path.parent.relative_to(gx.cwd)
         master_clfile_content = get_cmakefile_template(
             project_name=f"{gx.main_module.ident}_project",
             is_simple_project="OFF",
-            entry=f"add_subdirectory({path.parent.name})",
+            entry=f"add_subdirectory({rel_subdir.as_posix()})",
+        )
+        master_clfile.write_text(master_clfile_content)
+
+    else:
+        # External source file outside cwd (e.g., ../tests/test_foo/test_foo.py)
+        # Generate CMakeLists.txt in cwd, reference source with absolute path
+        master_clfile = gx.cwd / "CMakeLists.txt"
+        # Convert app_mods to absolute paths (they're relative to main module's parent)
+        main_parent = gx.main_module.filename.parent
+        abs_app_mods = [(main_parent / mod).as_posix() for mod in app_mods]
+        master_clfile_content = get_cmakefile_template(
+            project_name=f"{gx.main_module.ident}_project",
+            is_simple_project="ON",
+            entry=add_shedskin_product(
+                path.as_posix(),  # absolute path to source (used as MAIN_MODULE)
+                list(sys_mods),
+                abs_app_mods,  # absolute paths for external sources
+                name=path.stem,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+                include_dirs=gx.options.include_dirs,
+                link_dirs=gx.options.link_dirs,
+                link_libs=gx.options.link_libs,
+                extra_lib_dir=gx.options.extra_lib,
+                compile_options=compile_opts,
+                cmdline_options=cmdline_opts,
+            )
         )
         master_clfile.write_text(master_clfile_content)
 
@@ -915,12 +863,24 @@ class CMakeBuilder:
     def __init__(self, gx: config.GlobalInfo):
         self.gx = gx
         self.options = gx.options
-        if len(pathlib.Path(self.options.name).parts) == 1:
-            self.source_dir = pathlib.Path.cwd()
-            self.build_dir = self.source_dir / "build"
+        source_path = pathlib.Path(self.options.name).resolve()
+
+        # Determine source_dir based on where CMakeLists.txt was generated
+        # Since we no longer chdir, gx.cwd is always where the user ran the command
+        if source_path.is_relative_to(gx.cwd):
+            rel_path = source_path.relative_to(gx.cwd)
+            if len(rel_path.parts) == 1:
+                # Source in cwd (e.g., ./test.py)
+                self.source_dir = gx.cwd
+            else:
+                # Source in subdirectory (e.g., ./tests/test_foo/test_foo.py)
+                self.source_dir = gx.cwd
         else:
-            self.source_dir = pathlib.Path.cwd().parent
-            self.build_dir = self.source_dir / "build"
+            # External source (e.g., ../tests/test_foo/test_foo.py)
+            # CMakeLists.txt is in cwd
+            self.source_dir = gx.cwd
+
+        self.build_dir = self.source_dir / "build"
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
         self.log = logging.getLogger(self.__class__.__name__)
 
@@ -983,13 +943,9 @@ class CMakeBuilder:
         """CMake configuration phase"""
         opts = " ".join(options)
 
-        if self.options.conan:
-            preset = get_cmake_preset("configure", self.options.build_type)
-            cfg_cmd = f"cmake --preset {preset} {opts}"
-        else:
-            cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
-            if generator:
-                cfg_cmd += ' -G "{generator}"'
+        cfg_cmd = f"cmake {opts} -S {self.source_dir} -B {self.build_dir}"
+        if generator:
+            cfg_cmd += ' -G "{generator}"'
 
         self.log.info(cfg_cmd)
         subprocess.run(cfg_cmd, shell=True, check=True)
@@ -998,13 +954,9 @@ class CMakeBuilder:
         """Activate cmake build"""
         opts = " ".join(options)
 
-        if self.options.conan:
-            preset = get_cmake_preset("build", self.options.build_type)
-            bld_cmd = f"cmake --build {self.build_dir} --preset {preset} {opts} --verbose"
-        else:
-            # --config is needed for multi-config generators (Visual Studio on Windows)
-            build_type = self.options.build_type or "Debug"
-            bld_cmd = f"cmake --build {self.build_dir} --config {build_type} {opts}"
+        # --config is needed for multi-config generators (Visual Studio on Windows)
+        build_type = self.options.build_type or "Debug"
+        bld_cmd = f"cmake --build {self.build_dir} --config {build_type} {opts}"
 
         self.log.info(bld_cmd)
         subprocess.run(bld_cmd, shell=True, check=True)
@@ -1013,15 +965,11 @@ class CMakeBuilder:
         """Activate ctest"""
         opts = " ".join(options)
 
-        if self.options.conan:
-            preset = get_cmake_preset("test", self.options.build_type)
-            tst_cmd = f"ctest --output-on-failure --preset {preset} {opts}"
+        if platform.system() == "Windows":
+            cfg = f"-C {self.options.build_type}"
         else:
-            if platform.system() == "Windows":
-                cfg = f"-C {self.options.build_type}"
-            else:
-                cfg = ""
-            tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
+            cfg = ""
+        tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
 
         self.log.info(tst_cmd)
         subprocess.run(tst_cmd, shell=True, check=True)
@@ -1083,10 +1031,7 @@ class CMakeBuilder:
             else:
                 self.log.warning("'ccache' not found")
 
-        if self.options.conan:
-            cfg_options.append("-DENABLE_CONAN=ON")
-
-        elif self.options.spm:
+        if self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
 
         elif self.options.fetchcontent:
@@ -1110,12 +1055,7 @@ class CMakeBuilder:
         if not self.build_dir.exists():
             self.mkdir_build()
 
-        if self.options.conan:
-            dpm = ConanDependencyManager(self.source_dir)
-            dpm.generate_conanfile()
-            dpm.install(self.options.build_type or "Debug")
-
-        elif self.options.spm:
+        if self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
             spm.install_all()
 

@@ -34,8 +34,6 @@ include = [
     { path = "shedskin/resources/illegal/illegal.txt", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/cmake/*.cmake", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/conan/*.txt", format = ["sdist", "wheel"] },
-
 
 	{ path = "LICENSE", format = ["sdist"] },
     { path = "pyproject.toml", format = ["sdist"] },
@@ -50,7 +48,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-# conan = "2.21.0"
 
 
 [tool.poetry.group.dev.dependencies]
