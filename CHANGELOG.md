@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.9.13]
+## [0.9.12]
 
 ### Added
 
@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `test_graph.py`: Tests for constraint graph building
   - `test_infer.py`: Tests for type inference
   - `test_cpp.py`: Tests for C++ code generation config
+
+- Initial tracked release
 
 ### Changed
 
@@ -83,9 +85,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `ENABLE_CONAN` CMake option
   - Removed `shedskin/resources/conan/` directory
   - Removed conan from `requirements.txt`
-
-## [0.9.12]
-
-### Added
-
-- Initial tracked release
