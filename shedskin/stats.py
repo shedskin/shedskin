@@ -174,7 +174,9 @@ class ShedskinStatsManager:
             cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
             return bool(cur.fetchone()[0])
 
-    def insert_from_dict(self, table: str, entry: dict[str, Any]) -> tuple[str, tuple[Any, ...]]:
+    def insert_from_dict(
+        self, table: str, entry: dict[str, Any]
+    ) -> tuple[str, tuple[Any, ...]]:
         """Insert a dictionary into a table row"""
         fields = entry.keys()
         n_fields = len(fields)

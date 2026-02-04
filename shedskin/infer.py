@@ -1723,7 +1723,9 @@ def ifa_flow_graph(
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
-    fout_dict: dict[CNode, set[CNode]] = collections.defaultdict(set)  # unreal outgoing edges
+    fout_dict: dict[CNode, set[CNode]] = collections.defaultdict(
+        set
+    )  # unreal outgoing edges
     for assign_set, targets in assignsets.items():
         path = backflow_path(gx, set(targets), (cl, dcpa), fout_dict)
         paths[assign_set] = path
