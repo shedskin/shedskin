@@ -275,9 +275,9 @@ class Shedskin:
         subprocess.run([str(executable)], check=True)
 
     @classmethod
-    def _create_shared_parsers(cls) -> dict:
+    def _create_shared_parsers(cls) -> dict[str, argparse.ArgumentParser]:
         """Create shared argument parsers for reuse across subcommands."""
-        parsers = {}
+        parsers: dict[str, argparse.ArgumentParser] = {}
 
         # Stats options (used by all subcommands)
         parsers["stats"] = argparse.ArgumentParser(add_help=False)

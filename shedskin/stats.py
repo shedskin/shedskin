@@ -172,9 +172,9 @@ class ShedskinStatsManager:
         with sqlite3.connect(self.db_path) as con:
             cur = con.cursor()
             cur.execute("SELECT EXISTS(SELECT 1 FROM pymodule WHERE name = ?)", (name,))
-            return cur.fetchone()[0]
+            return bool(cur.fetchone()[0])
 
-    def insert_from_dict(self, table: str, entry: dict[str, Any]):
+    def insert_from_dict(self, table: str, entry: dict[str, Any]) -> tuple[str, tuple[Any, ...]]:
         """Insert a dictionary into a table row"""
         fields = entry.keys()
         n_fields = len(fields)

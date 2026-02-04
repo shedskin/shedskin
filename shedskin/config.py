@@ -590,6 +590,7 @@ class GlobalInfo:
         self._type_inference.maxhits = value
 
     def get_stats(self) -> dict[str, Any]:
+        assert self.module_path is not None
         pyfile = Path(self.module_path)
         return {
             "name": pyfile.stem,

@@ -378,7 +378,11 @@ class LocalDependencyManager:
             f"--install-prefix={self.deps_dir}",
         ]
         for key, value in options.items():
-            cmd.append(f"-D{key}={value}")
+            if isinstance(value, bool):
+                cmake_value = "ON" if value else "OFF"
+            else:
+                cmake_value = value
+            cmd.append(f"-D{key}={cmake_value}")
         self._run_cmd(cmd)
 
     def _cmake_build(self, build_dir: Pathlike, cfg: str = "Release") -> None:
@@ -438,13 +442,13 @@ class LocalDependencyManager:
         self._cmake_generate(
             self.bdwgc_src,
             build_dir,
-            BUILD_SHARED_LIBS="OFF",
-            enable_cplusplus="ON",
-            build_cord="OFF",
-            enable_docs="OFF",
-            enable_gcj_support="OFF",
-            enable_java_finalization="OFF",
-            CMAKE_POSITION_INDEPENDENT_CODE="ON",
+            BUILD_SHARED_LIBS=False,
+            enable_cplusplus=True,
+            build_cord=False,
+            enable_docs=False,
+            enable_gcj_support=False,
+            enable_java_finalization=False,
+            CMAKE_POSITION_INDEPENDENT_CODE=True,
         )
 
         self._cmake_build(build_dir)
@@ -483,15 +487,15 @@ class LocalDependencyManager:
         self._cmake_generate(
             self.pcre2_src,
             build_dir,
-            BUILD_SHARED_LIBS="OFF",
-            PCRE2_BUILD_PCRE2GREP="OFF",
-            PCRE2_SUPPORT_LIBREADLINE="OFF",
-            PCRE2_SUPPORT_LIBEDIT="OFF",
-            PCRE2_SUPPORT_LIBZ="OFF",
-            PCRE2_SUPPORT_LIBBZ2="OFF",
-            PCRE2_BUILD_TESTS="OFF",
-            PCRE2_SHOW_REPORT="OFF",
-            CMAKE_POSITION_INDEPENDENT_CODE="ON",
+            BUILD_SHARED_LIBS=False,
+            PCRE2_BUILD_PCRE2GREP=False,
+            PCRE2_SUPPORT_LIBREADLINE=False,
+            PCRE2_SUPPORT_LIBEDIT=False,
+            PCRE2_SUPPORT_LIBZ=False,
+            PCRE2_SUPPORT_LIBBZ2=False,
+            PCRE2_BUILD_TESTS=False,
+            PCRE2_SHOW_REPORT=False,
+            CMAKE_POSITION_INDEPENDENT_CODE=True,
         )
 
         self._cmake_build(build_dir)
@@ -517,7 +521,7 @@ class LocalDependencyManager:
         """Return the library directory for compiled static libs."""
         return self.lib_dir
 
-    def status(self) -> dict:
+    def status(self) -> dict[str, object]:
         """Return status information about the local dependencies."""
         return {
             "ext_dir": str(self.ext_dir),
@@ -682,7 +686,7 @@ def check_cmake_availability() -> None:
         raise RuntimeError("cmake not available in path")
 
 
-def get_cmake_preset(mode, build_type) -> str:
+def get_cmake_preset(mode: str, build_type: str) -> Optional[str]:
     """Return a usable cmake preset"""
     output = subprocess.run(
         ["cmake", f"--list-presets={mode}"],
@@ -693,7 +697,7 @@ def get_cmake_preset(mode, build_type) -> str:
 
     # look for a quoted string and return it
     # cmake does not provide a nicer way
-    presets = []
+    presets: list[str] = []
 
     for line in output.splitlines():
         parts = line.split('"')
@@ -709,7 +713,7 @@ def get_cmake_preset(mode, build_type) -> str:
             return preset
 
     # if nothing looks appropriate, just choose the first preset
-    return presets and presets[0] or None
+    return presets[0] if presets else None
 
 
 def generate_cmakefile(gx: config.GlobalInfo) -> None:
