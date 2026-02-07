@@ -1494,6 +1494,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and isinstance(node.iter, (ast.List, ast.Tuple))
         )
 
+    def fastsliceiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
+        """Check if a node is a fast for-in-slice iterator loop"""
+        return (
+            isinstance(node.target, ast.Name)
+            and isinstance(node.iter, ast.Subscript)
+            and self.only_classes(node.iter.value, ("list", "tuple"))
+            and node.iter.slice.lower is not None  # TODO
+            and node.iter.slice.upper is not None  # TODO
+            and node.iter.slice.step is None
+        )
+
     def only_classes(self, node: ast.AST, names: Tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1534,6 +1545,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.forbody(node, None, assname, func, True, False)
         elif self.fastfileiter(node):
             self.do_fastfileiter(node, func, False)
+            self.forbody(node, None, assname, func, True, False)
+        elif self.fastsliceiter(node):
+            self.do_fastsliceiter(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         elif self.fastchoiceiter(node) and not (func and func.isGenerator):
             self.do_fastchoiceiter(node, func, False)
@@ -1612,6 +1626,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ast_utils.is_assign_list_or_tuple(right):
             assert isinstance(right, (ast.Tuple, ast.List))
             self.tuple_assign(right, self.mv.tempcount[right], func)
+
+    def do_fastsliceiter(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"],
+        genexpr: bool,
+    ) -> None:
+        """Generate a fast slice iter loop"""
+        self.start("FOR_IN_SLICE(")
+        self.visitm(
+            node.target, ',',
+            node.iter.value, ',',
+            node.iter.slice.lower, ',',
+            node.iter.slice.upper, ',',
+            self.mv.tempcount[node][2:], ',',
+            self.mv.tempcount[node, 8][2:], ',',
+            self.mv.tempcount[node, 9][2:], ',',
+            self.mv.tempcount[node.iter][2:],
+            ')',
+            func
+        )
+        self.print(self.line)
+        self.indent()
 
     def do_fastfileiter(
         self,
