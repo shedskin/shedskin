@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.cpp: C++ Code Generator
 
 This module is responsible for translating Python code into equivalent C++ code,
@@ -1874,14 +1874,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             func = self.mv.funcs[node.name]
         else:
             func = self.mv.lambdas[node.name]
-        if func.invisible or (func.inherited and not func.ident == "__init__"):
+        if func.inherited and not func.ident == "__init__":
+            return
+        if func.invisible and func.ident in ("__str__", "__hash__"):
             return
         if declare and func.declared:  # XXX
             return
 
         # check whether function is called at all (possibly via inheritance)
         if not self.inhcpa(func):
-            if func.ident in ["__iadd__", "__isub__", "__imul__", "__ifloordiv__", "__itruediv__"]:
+            if func.invisible:
                 return
             if func.lambdanr is None and not ast.dump(node.body[0]).startswith(
                 "Raise(type=Call(func=Name(id='NotImplementedError'"
@@ -4480,6 +4482,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
 def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
     """Generate code for a module"""
+    print('>> generating C++')
     for module in gx.modules.values():
         if not module.builtin:
             gv = GenerateVisitor(gx, module, analyze)
@@ -4491,5 +4494,3 @@ def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
             gv.insert_consts(declare=True)
             gv.insert_extras(".hpp")
             gv.insert_extras(".cpp")
-    # if not analyze:
-    #     makefile.generate_makefile(gx)
