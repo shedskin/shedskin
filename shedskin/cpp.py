@@ -4480,6 +4480,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
 def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
     """Generate code for a module"""
+    print('>> generating C++')
     for module in gx.modules.values():
         if not module.builtin:
             gv = GenerateVisitor(gx, module, analyze)
@@ -4491,5 +4492,3 @@ def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
             gv.insert_consts(declare=True)
             gv.insert_extras(".hpp")
             gv.insert_extras(".cpp")
-    # if not analyze:
-    #     makefile.generate_makefile(gx)
