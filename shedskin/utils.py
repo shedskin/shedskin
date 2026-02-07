@@ -33,7 +33,7 @@ class ProgressBar:
     def __init__(
         self,
         total: int = 100,
-        prefix: str = "processing",
+        prefix: str = "analyzing types",
         bar_length: int = 33,
         done_sym: str = "#",
         left_sym: str = "-",
