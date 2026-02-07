@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.utils: miscellaneous utilities"""
 
 # terminal codes
@@ -33,7 +33,7 @@ class ProgressBar:
     def __init__(
         self,
         total: int = 100,
-        prefix: str = "processing",
+        prefix: str = "analyzing types",
         bar_length: int = 33,
         done_sym: str = "#",
         left_sym: str = "-",
