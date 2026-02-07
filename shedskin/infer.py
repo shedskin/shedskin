@@ -1806,7 +1806,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
                 ]
                 perc = 1.0
                 if allfuncs:
-                    perc = min(len(added_funcs) / len(allfuncs), 1.0)
+                    perc = min((len(added_funcs) / len(allfuncs))**2, 0.99)
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
