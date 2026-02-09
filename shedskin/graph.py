@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.graph: Builds and manages the constraint graph for type inference
 
 This module implements a constraint-based type inference system using a graph structure
@@ -681,6 +681,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     )
                     cl.funcs[ident].inherited = func.node
                     cl.funcs[ident].inherited_from = func
+                    cl.funcs[ident].invisible = func.invisible
                     func_copy.name = ident
 
                     if ident == func.ident:
@@ -2463,14 +2464,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if newclass.ident == "int_":
                 msgs += ["lshift", "rshift", "and", "xor", "or"]
             for msg in msgs:
-                if "__i" + msg + "__" not in newclass.funcs:
+                method_name = "__i" + msg + "__"
+                if method_name not in newclass.funcs:
                     self.visit(
                         ast.parse(
-                            "def __i%s__(self, other): return self.__%s__(other)"
-                            % (msg, msg)
+                            "def %s(self, other): return self.__%s__(other)"
+                            % (method_name, msg)
                         ).body[0],
                         newclass,
                     )
+                    newclass.funcs[method_name].invisible = True
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and "__str__" not in newclass.funcs:

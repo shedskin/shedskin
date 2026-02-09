@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.makefile: makefile generator
 
 This module generates Makefiles for building Shedskin-compiled C++ code and
@@ -1125,6 +1125,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def generate(self) -> None:
         """Generate the Makefile"""
+        print('>> generating Makefile')
+
         self._setup_defaults()
         self._setup_variables()
         self._setup_platform()
@@ -1427,24 +1429,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
 # -----------------------------------------------------------------------------
 # launching functions
-
-
-def generate_makefile(gx: "config.GlobalInfo") -> None:
-    """Generate a makefile for the Shedskin-compiled code"""
-    if gx.options.compile:
-        builder = ShedskinBuilder(gx)
-        builder.build(gx.options.dry_run)
-    elif gx.options.run:
-        builder = ShedskinBuilder(gx)
-        builder.build(gx.options.dry_run)
-        builder.run_executable()
-    else:
-        if gx.nomakefile:
-            return
-
-        generator = ShedskinMakefileGenerator(gx)
-        generator.generate()
-
 
 if __name__ == "__main__":
 
