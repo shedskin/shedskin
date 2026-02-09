@@ -6,8 +6,11 @@ OSError::OSError(str *fname) {
     this->filename = fname;
     this->__class__ = cl_oserror;
     __ss_errno = errno;
-    message = new str("");
     strerror = new str(::strerror(__ss_errno));
+    if(fname)
+        message = this->__str__();
+    else
+        message = new str("");
 }
 str *OSError::__str__() {
     return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
@@ -20,8 +23,11 @@ FileNotFoundError::FileNotFoundError(str *fname) {
     this->filename = fname;
     this->__class__ = cl_filenotfounderror;
     __ss_errno = errno;
-    message = new str("");
     strerror = new str(::strerror(__ss_errno));
+    if(fname)
+        message = this->__str__();
+    else
+        message = new str("");
 }
 str *FileNotFoundError::__str__() {
     return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
@@ -53,6 +59,7 @@ BaseException::BaseException(str *msg) {
     __init__(msg);
 
     this->__class__ = cl_baseexception;
+    this->message = msg;
     this->args = new tuple<str *>(1, msg);
 }
 
