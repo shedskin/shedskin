@@ -170,6 +170,7 @@ class Shedskin:
 
     def pre_analyze(self) -> None:
         """Parse the main module"""
+        print('>> reading Python')
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
     def analyze(self) -> None:
