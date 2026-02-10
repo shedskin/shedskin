@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.__init__: main entrypoint
 
 Contains the `Shedskin` class, the main entrypoint to shedskin, a Restricted-Python-to-C++
@@ -170,6 +170,8 @@ class Shedskin:
 
     def pre_analyze(self) -> None:
         """Parse the main module"""
+        if not self.gx.silent:
+            print('>> reading Python')
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
     def analyze(self) -> None:

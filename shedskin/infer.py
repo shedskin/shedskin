@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.infer: infer types
 
 Type inference in Shed Skin works by propagating types along a constraint graph.
@@ -1791,21 +1791,22 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
             if not maxiter:
                 logger.debug("no splits")
             if INCREMENTAL:
-                allfuncs = len(
-                    [
-                        f
-                        for f in gx.allfuncs
-                        if not f.mv.module.builtin
-                        and not [
-                            start
-                            for start in ("__iadd__", "__imul__", "__str__", "__hash__")
-                            if f.ident.startswith(start)
-                        ]
-                    ]
-                )
+                allfuncs = [
+                    f
+                    for f in gx.allfuncs
+                    if not f.mv.module.builtin
+                    and not f.invisible
+                    and not f.inherited
+                    and f.lambdanr is None
+                ]
+                added_funcs = [
+                    f
+                    for f in gx.added_funcs_set
+                    if f in gx.allfuncs
+                ]
                 perc = 1.0
                 if allfuncs:
-                    perc = min(len(gx.added_funcs_set) / float(allfuncs), 1.0)
+                    perc = min((len(added_funcs) / len(allfuncs))**2, 0.99)
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
