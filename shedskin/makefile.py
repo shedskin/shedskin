@@ -1125,7 +1125,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
     def generate(self) -> None:
         """Generate the Makefile"""
-        print('>> generating Makefile')
+        if not self.gx.silent:
+            print('>> generating Makefile')
 
         self._setup_defaults()
         self._setup_variables()

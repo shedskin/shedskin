@@ -4482,7 +4482,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
 def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
     """Generate code for a module"""
-    print('>> generating C++')
+    if not gx.silent:
+        print('>> generating C++')
     for module in gx.modules.values():
         if not module.builtin:
             gv = GenerateVisitor(gx, module, analyze)
