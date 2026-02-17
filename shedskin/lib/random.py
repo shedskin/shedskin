@@ -20,7 +20,7 @@ class Random:
     def seed(self, a=None):
         a.__hash__()
     def random(self): return 1.0
-    def getstate(self): return [1.0,1.0,1.0]
+    def getstate(self): return b''
     def setstate(self, state): pass
     def randrange(self, start, stop=1, step=1): return 1
     def randint(self, a, b): return 1
@@ -50,7 +50,7 @@ _inst = Random()
 def seed(a=None):
     _inst.seed(a)
 def random(): return 1.0
-def getstate(): return [1.0,1.0,1.0]
+def getstate(): return b''
 def setstate(state): pass
 def randrange(start, stop=1, step=1): return 1
 def randint(a, b): return 1
