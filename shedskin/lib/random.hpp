@@ -60,7 +60,7 @@ public:
     __ss_float expovariate(__ss_float lambd);
     __ss_int getrandbits(__ss_int k);
     bytes *randbytes(__ss_int n);
-    virtual void *setstate(list<__ss_float> *state);
+    virtual void *setstate(bytes *state);
     __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
     __ss_float gauss(__ss_float mu, __ss_float sigma);
@@ -69,7 +69,7 @@ public:
     template <class A> void *shuffle(list<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
     template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
-    virtual list<__ss_float> *getstate();
+    virtual bytes *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
 
@@ -90,8 +90,8 @@ extern __ss_float  NV_MAGICCONST;
 extern int  MAXBITS;
 void __init();
 __ss_float random();
-list<__ss_float> *getstate();
-void *setstate(list<__ss_float> *state);
+bytes *getstate();
+void *setstate(bytes *state);
 __ss_int randrange(__ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop);
 __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
