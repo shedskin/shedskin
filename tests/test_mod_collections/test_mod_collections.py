@@ -121,6 +121,33 @@ def test_deque4():
     assert d.index(2, 1, -2) == 2
 
 
+def test_deque_maxlen():
+    d = deque([1,2,3], maxlen=4)
+    assert d.maxlen == 4
+
+    assert str(d) == 'deque([1, 2, 3], maxlen=4)'
+
+    d.append(4)
+    assert list(d) == [1,2,3,4]
+
+    d.append(5)
+    assert list(d) == [2,3,4,5]
+
+    d.appendleft(6)
+    assert list(d) == [6,2,3,4]
+
+    #d.insert(2, 7) TODO works, add test?
+
+    d.extend([7,8])
+    assert list(d) == [3,4,7,8]
+
+    d.extendleft([9,10])
+    assert list(d) == [10,9,3,4]
+
+    e = d.copy()
+    assert e.maxlen == 4
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -129,6 +156,7 @@ def test_all():
     test_deque2()
     test_deque3()
     test_deque4()
+    test_deque_maxlen()
 
 
 if __name__ == '__main__':
