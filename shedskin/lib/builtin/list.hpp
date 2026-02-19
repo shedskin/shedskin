@@ -269,7 +269,7 @@ template<class T> void *list<T>::extend(list<T> *p) {
     if(l2 > 0) {
         l1 = this->units.size();
         this->units.resize(l1+l2);
-        memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+        std::copy(p->units.begin(), p->units.end(), this->units.begin()+l1);
     }
     return NULL;
 }
@@ -279,7 +279,7 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
     if(l2 > 0) {
         l1 = this->units.size();
         this->units.resize(l1+l2);
-        memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+        std::copy(p->units.begin(), p->units.end(), this->units.begin()+l1);
     }
     return NULL;
 }
@@ -320,7 +320,7 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
     if(s == 1) {
         if(u != l) {
             c->units.resize((size_t)(u-l));
-            memcpy(&(c->units[0]), &(this->units[(size_t)l]), sizeof(T)*((size_t)(u-l)));
+            std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
         }
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
@@ -431,14 +431,14 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     else if(l1==1)
         c->units[0] = this->units[0];
     else
-        memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
+        std::copy(this->units.begin(), this->units.end(), c->units.begin());
 
     if(l2==0)
         ;
     else if(l2==1)
         c->units[l1] = b->units[0];
     else
-        memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
+        std::copy(b->units.begin(), b->units.end(), c->units.begin()+l1);
 
     return c;
 }
@@ -452,7 +452,7 @@ template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     else {
         c->units.resize((size_t)b*len);
         for(size_t i=0; i<(size_t)b; i++)
-            memcpy(&(c->units[i*len]), &(this->units[0]), sizeof(T)*len);
+            std::copy(this->units.begin(), this->units.end(), c->units.begin()+i*len);
     }
     return c;
 }
@@ -466,7 +466,7 @@ template<class T> list<T> *list<T>::__imul__(__ss_int n) {
     __ss_int l1 = this->__len__();
     this->units.resize(l1*n);
     for(__ss_int i = 1; i <= n-1; i++)
-        memcpy(&(this->units[l1*i]), &(this->units[0]), sizeof(T)*l1);
+        std::copy(this->units.begin(), this->units.begin()+l1, this>units.begin()+l1*i);
     return this;
 }
 
@@ -605,7 +605,7 @@ template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
     list<T> *c = new list<T>();
     size_t ll = l->units.size();
     c->units.resize(ll+1);
-    memcpy(&(c->units[0]), &(l->units[0]), sizeof(T)*ll);
+    std::copy(l->units.begin(), l->units.end(), c->units.begin());
     c->units[ll] = (T)u;
     return c;
 }
