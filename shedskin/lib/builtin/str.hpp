@@ -188,13 +188,13 @@ template <class U> str *str::join(U *iter) {
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
             else
-                memcpy((void *)(s->unit.data()+k), t->unit.data(), tsz);
+                std::copy(t->unit.begin(), t->unit.end(), s->unit.begin()+k);
             k += tsz;
             if (unitsize && m < elems-1) {
                 if (unitsize==1)
                     s->unit[k] = unit[0];
                 else
-                    memcpy((void *)(s->unit.data()+k), unit.data(), this->unit.size());
+                    std::copy(this->unit.begin(), this->unit.end(), s->unit.begin()+k);
                 k += unitsize;
             }
         }

@@ -182,7 +182,7 @@ __ss_bool bytes::__eq__(pyobj *p) {
     size_t len = this->unit.size();
     if(len != q->unit.size() or (hash != -1 and q->hash != -1 and hash != q->hash))
         return False;
-    return __mbool(memcmp(unit.data(), q->unit.data(), len) == 0);
+    return __mbool(unit == q->unit);
 }
 
 bytes *bytes::__add__(bytes *b) {
