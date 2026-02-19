@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Converted build system to uv, replacing pip/setuptools workflow with `uv` commands in Makefile (`f97db27a`)
+- Applied mypy strict mode fixes across core modules (`__init__`, `cmake`, `config`, `cpp`, `graph`, `infer`, `makefile`, `stats`) (`635c2938`)
+- Converted documentation from Sphinx/RST to MkDocs with Markdown (`23c5c338`)
+  - Replaced `README.rst` with `README.md`
+  - Removed generated Sphinx HTML/JS/CSS assets from `docs/`
+  - Added `mkdocs.yml` configuration
+- Updated `Makefile` test target to fix test invocation (`7cebb2ff`)
+  - Refactored `graph.py` and `infer.py` to resolve type issues
+
+### Removed
+
+- Removed `requirements.txt` (dependencies now managed via `pyproject.toml` and uv) (`9602bf6b`)
+
 ## [0.9.12]
 
 ### Added
