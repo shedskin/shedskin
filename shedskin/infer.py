@@ -49,8 +49,8 @@ The analysis runs incrementally, analyzing a limited set of functions and
 allocation sites before re-running. This helps prevent CPA explosion early
 in the process.
 
-In each node of `shedskin.graph`, two integers are used by `shedskin.infer` 
-to represent duplicate parts of the constraint graph along two dimensions 
+In each node of `shedskin.graph`, two integers are used by `shedskin.infer`
+to represent duplicate parts of the constraint graph along two dimensions
 (class duplicate, function duplicate).
 
 For more details, see:
@@ -65,8 +65,17 @@ import itertools
 import logging
 import random
 import sys
-from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple,
-                    TypeAlias, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeAlias,
+    Union,
+)
 
 from . import ast_utils, error, python, utils
 
@@ -109,6 +118,20 @@ PossibleFuncs: TypeAlias = List[
 
 logger = logging.getLogger("infer")
 ifa_logger = logging.getLogger("infer.ifa")
+
+
+def _const_str(node: ast.AST) -> str:
+    """Return string value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, str)
+    return node.value
+
+
+def _const_num(node: ast.AST) -> Union[int, float]:
+    """Return numeric value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, (int, float))
+    return node.value
 
 
 # Type inference tuning parameters
@@ -392,7 +415,7 @@ def analyze_args(
 
     kwextra = []
     for kw in kwdict:
-        if kw not in formal_args and f'__kw_{kw}' not in formal_args:
+        if kw not in formal_args and f"__kw_{kw}" not in formal_args:
             kwextra.append(kw)
 
     argnr = 0
@@ -421,7 +444,7 @@ def analyze_args(
                     actuals.append(default)
                     formals.append(formal)
                 defaults.append(default)
-            elif func.mv.module.ident == 'bisect':  # TODO generalize
+            elif func.mv.module.ident == "bisect":  # TODO generalize
                 if formal.startswith("__kw_"):
                     actuals.insert(0, default)
                     formals.insert(0, formal)
@@ -489,7 +512,18 @@ def connect_actual_formal(
         or (func.mv.module.ident == "random" and func.ident == "randrange")
         or (
             func.mv.module.ident == "builtin"
-            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip", "split", "rsplit", "map")
+            and func.ident
+            not in (
+                "sort",
+                "sorted",
+                "min",
+                "max",
+                "__print",
+                "zip",
+                "split",
+                "rsplit",
+                "map",
+            )
         )
     ):
         if not (func.mv.module.ident == "math" and func.ident == "isclose"):
@@ -982,7 +1016,10 @@ def possible_functions(
             (t[0].funcs[ident], t[1], t)
             for t in objtypes
             if ident in t[0].funcs
-            and not (isinstance(t[0], python.Class) and (ident in t[0].staticmethods or ident in t[0].classmethods))
+            and not (
+                isinstance(t[0], python.Class)
+                and (ident in t[0].staticmethods or ident in t[0].classmethods)
+            )
         ]
 
     return funcs
@@ -1100,9 +1137,9 @@ def redirect(
         func = funcs.get(redir, func)
 
     # staticmethod
-    if (
-        isinstance(func.parent, python.Class)
-        and (func.ident in func.parent.staticmethods or func.ident in func.parent.classmethods)
+    if isinstance(func.parent, python.Class) and (
+        func.ident in func.parent.staticmethods
+        or func.ident in func.parent.classmethods
     ):
         dcpa = 1
 
@@ -1137,7 +1174,7 @@ def redirect(
 
     # array
     if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
-        typecode = callfunc.args[0].value
+        typecode = _const_str(callfunc.args[0])
         array_type = None
         if typecode in "bBhHiIlLqQ":
             array_type = "int"
@@ -1151,12 +1188,12 @@ def redirect(
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ("__getitem__", "__getunit__")
         and ast_utils.is_num(callfunc.args[0])
-        and callfunc.args[0].value in (0, 1)
+        and _const_num(callfunc.args[0]) in (0, 1)
         and func.parent
         and func.parent.mv.module.builtin
         and func.parent.ident == "tuple2"
     ):
-        if callfunc.args[0].value == 0:
+        if _const_num(callfunc.args[0]) == 0:
             assert isinstance(func.parent, python.Class)
             func = func.parent.funcs["__getfirst__"]
         else:
@@ -1172,9 +1209,9 @@ def redirect(
             isinstance(func.parent, python.Class)
             and callfunc.args
             and ast_utils.is_str(callfunc.args[0])
-            and callfunc.args[0].value in func.parent.properties
+            and _const_str(callfunc.args[0]) in func.parent.properties
         ):
-            arg = callfunc.args[0].value
+            arg = _const_str(callfunc.args[0])
             if callfunc.func.attr == "__setattr__":
                 assert isinstance(func.parent, python.Class)
                 func = func.parent.funcs[func.parent.properties[arg][1]]
@@ -1309,11 +1346,11 @@ def connect_getsetattr(
             isinstance(func.parent, python.Class)
             and callfunc.args
             and ast_utils.is_str(callfunc.args[0])
-            and callfunc.args[0].value in func.parent.properties
+            and _const_str(callfunc.args[0]) in func.parent.properties
         )
     ):
         assert ast_utils.is_str(callfunc.args[0])
-        varname = callfunc.args[0].value
+        varname = _const_str(callfunc.args[0])
         parent = func.parent
         assert isinstance(parent, (python.Class, python.StaticClass))
 
@@ -1686,7 +1723,9 @@ def ifa_flow_graph(
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
-    fout_dict = collections.defaultdict(set) # unreal outgoing edges
+    fout_dict: dict[CNode, set[CNode]] = collections.defaultdict(
+        set
+    )  # unreal outgoing edges
     for assign_set, targets in assignsets.items():
         path = backflow_path(gx, set(targets), (cl, dcpa), fout_dict)
         paths[assign_set] = path

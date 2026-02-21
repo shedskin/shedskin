@@ -38,9 +38,9 @@ class EntityRegistry:
         Union["python.Function", ast.AST],
         List[Union["python.Function", ast.AST]],
     ] = field(default_factory=dict)
-    inheritance_temp_vars: Dict[
-        "python.Variable", List["python.Variable"]
-    ] = field(default_factory=dict)
+    inheritance_temp_vars: Dict["python.Variable", List["python.Variable"]] = field(
+        default_factory=dict
+    )
     inherited: Set[ast.AST] = field(default_factory=set)
     lambdawrapper: Dict[Any, str] = field(default_factory=dict)
     class_def_order: int = 0

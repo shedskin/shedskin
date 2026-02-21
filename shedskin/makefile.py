@@ -79,7 +79,7 @@ class MakefileWriter:
     Can be used as a context manager for automatic cleanup.
     """
 
-    def __init__(self, path: PathLike):
+    def __init__(self, path: PathLike) -> None:
         self.makefile = open(path, "w", encoding="utf8")
 
     def __enter__(self) -> "MakefileWriter":
@@ -100,12 +100,18 @@ class MakefileWriter:
 class PythonSystem:
     """Python system information"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = "Python"
         self.version_info = sys.version_info
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.version
+
+    def _get_sysconfig_str(self, key: str) -> str:
+        value = sysconfig.get_config_var(key)
+        if value is None:
+            return ""
+        return str(value)
 
     @property
     def version(self) -> str:
@@ -192,12 +198,12 @@ class PythonSystem:
     @property
     def prefix(self) -> str:
         """python system prefix"""
-        return sysconfig.get_config_var("prefix")
+        return self._get_sysconfig_str("prefix")
 
     @property
     def include_dir(self) -> str:
         """python include directory"""
-        return sysconfig.get_config_var("INCLUDEPY")
+        return self._get_sysconfig_str("INCLUDEPY")
 
     @property
     def config_h_dir(self) -> str:
@@ -207,17 +213,17 @@ class PythonSystem:
     @property
     def base_cflags(self) -> str:
         """python base cflags"""
-        return sysconfig.get_config_var("BASECFLAGS")
+        return self._get_sysconfig_str("BASECFLAGS")
 
     @property
     def libs(self) -> str:
         """python libs to link to"""
-        return sysconfig.get_config_var("LIBS")
+        return self._get_sysconfig_str("LIBS")
 
     @property
     def syslibs(self) -> str:
         """python system libs to link to"""
-        return sysconfig.get_config_var("SYSLIBS")
+        return self._get_sysconfig_str("SYSLIBS")
 
     @property
     def is_shared(self) -> bool:
@@ -227,7 +233,7 @@ class PythonSystem:
     @property
     def libpl(self) -> str:
         """directory of python dependencies"""
-        return sysconfig.get_config_var("LIBPL")
+        return self._get_sysconfig_str("LIBPL")
 
     @property
     def extension_suffix(self) -> str:
@@ -240,7 +246,7 @@ class PythonSystem:
 class Builder:
     """Configure and execute compiler instructions."""
 
-    def __init__(self, target: PathLike, strict: bool = False):
+    def __init__(self, target: PathLike, strict: bool = False) -> None:
         self.target = target
         self.strict = strict  # raise error if entry already exists
         self._cc = "gcc"
@@ -438,7 +444,7 @@ class Builder:
         attr: str,
         prefix: str = "",
         test_func: Optional[TestFunc] = None,
-        *entries,
+        *entries: str,
     ) -> None:
         """Add an entry to the configuration"""
         assert hasattr(self, attr), f"Invalid attribute: {attr}"
@@ -505,39 +511,39 @@ class Builder:
         """Add hpp files to the configuration"""
         self._add_config_entries("_hppfiles", "", None, *entries)
 
-    def add_include_dirs(self, *entries):
+    def add_include_dirs(self, *entries: str) -> None:
         """Add include directories to the configuration"""
         self._add_config_entries("_include_dirs", "-I", os.path.isdir, *entries)
 
-    def add_cflags(self, *entries):
+    def add_cflags(self, *entries: str) -> None:
         """Add compiler flags to the configuration"""
         self._add_config_entries("_cflags", "", None, *entries)
 
-    def add_cxxflags(self, *entries):
+    def add_cxxflags(self, *entries: str) -> None:
         """Add c++ compiler flags to the configuration"""
         self._add_config_entries("_cxxflags", "", None, *entries)
 
-    def add_link_dirs(self, *entries):
+    def add_link_dirs(self, *entries: str) -> None:
         """Add link directories to the configuration"""
         self._add_config_entries("_link_dirs", "-L", os.path.isdir, *entries)
 
-    def add_ldlibs(self, *entries):
+    def add_ldlibs(self, *entries: str) -> None:
         """Add link libraries to the configuration"""
         self._add_config_entries("_ldlibs", "", None, *entries)
 
-    def add_ldflags(self, *entries):
+    def add_ldflags(self, *entries: str) -> None:
         """Add linker flags to the configuration"""
         self._add_config_entries("_ldflags", "", None, *entries)
 
-    def add_cleanup_patterns(self, *entries):
+    def add_cleanup_patterns(self, *entries: str) -> None:
         """Add cleanup patterns to the configuration"""
         self._add_config_entries("_cleanup_patterns", "", None, *entries)
 
-    def add_cleanup_targets(self, *entries):
+    def add_cleanup_targets(self, *entries: str) -> None:
         """Add cleanup targets to the configuration"""
         self._add_config_entries("_cleanup_targets", "", None, *entries)
 
-    def _setup_defaults(self):
+    def _setup_defaults(self) -> None:
         """Setup default model configuration"""
         self.add_include_dirs(os.getcwd())
 
@@ -545,7 +551,7 @@ class Builder:
 class ShedskinBuilder(Builder):
     """Configure and execute compiler instructions for Shedskin-compiled code."""
 
-    def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
+    def __init__(self, gx: "config.GlobalInfo", strict: bool = False) -> None:
         self.gx = gx
         self.esc_space = r"\ "
         self.py = PythonSystem()
@@ -789,11 +795,11 @@ class ShedskinBuilder(Builder):
 class MakefileGenerator:
     """Generates Makefile for C/C++ code"""
 
-    def __init__(self, path: PathLike, strict: bool = False):
+    def __init__(self, path: PathLike, strict: bool = False) -> None:
         self.path = path
         self.strict = strict  # raise error if variable or entry already exists
         self.cxx = "g++"
-        self.vars: dict[str, PathLike] = {}  # variables
+        self.vars: dict[str, str] = {}  # variables
         self.var_order: list[str] = []  # write order of variables
         self.include_dirs: list[str] = []  # include directories
         self.cflags: list[str] = []  # c compiler flags
@@ -832,9 +838,9 @@ class MakefileGenerator:
             if key in defaults:
                 return True
             assert key in self.vars, f"Invalid variable: {key}"
-            assert os.path.isdir(
-                self.vars[key]
-            ), f"Value of variable {key} is not a directory: {self.vars[key]}"
+            assert os.path.isdir(self.vars[key]), (
+                f"Value of variable {key} is not a directory: {self.vars[key]}"
+            )
             return True
         return os.path.isdir(str_path)
 
@@ -855,8 +861,8 @@ class MakefileGenerator:
         attr: str,
         prefix: str = "",
         test_func: Optional[TestFunc] = None,
-        *entries,
-        **kwargs,
+        *entries: PathLike,
+        **kwargs: PathLike,
     ) -> None:
         """Add an entry or variable to the Makefile"""
         assert hasattr(self, attr), f"Invalid attribute: {attr}"
@@ -864,19 +870,23 @@ class MakefileGenerator:
         if not test_func:
             test_func = always_true
         for entry in entries:
-            assert test_func(entry), f"Invalid entry: {entry}"
-            if entry in _list:
+            entry_str = str(entry)
+            assert test_func(entry_str), f"Invalid entry: {entry_str}"
+            if entry_str in _list:
                 if self.strict:
-                    raise ValueError(f"entry: {entry} already exists in {attr} list")
+                    raise ValueError(
+                        f"entry: {entry_str} already exists in {attr} list"
+                    )
                 continue
-            _list.append(f"{prefix}{entry}")
+            _list.append(f"{prefix}{entry_str}")
         for key, value in kwargs.items():
-            assert test_func(value), f"Invalid value: {value}"
+            value_str = str(value)
+            assert test_func(value_str), f"Invalid value: {value_str}"
             if key in self.vars:
                 if self.strict:
                     raise ValueError(f"variable: {key} already exists in vars dict")
                 continue
-            self.vars[key] = value
+            self.vars[key] = value_str
             _list.append(f"{prefix}$({key})")
             self.var_order.append(key)
 
@@ -885,37 +895,37 @@ class MakefileGenerator:
         self.vars[key] = value
         self.var_order.append(key)
 
-    def add_include_dirs(self, *entries, **kwargs):
+    def add_include_dirs(self, *entries: PathLike, **kwargs: PathLike) -> None:
         """Add include directories to the Makefile"""
         self._add_entry_or_variable(
             "include_dirs", "-I", self.check_dir, *entries, **kwargs
         )
 
-    def add_cflags(self, *entries, **kwargs):
+    def add_cflags(self, *entries: str, **kwargs: str) -> None:
         """Add compiler flags to the Makefile"""
         self._add_entry_or_variable("cflags", "", None, *entries, **kwargs)
 
-    def add_cxxflags(self, *entries, **kwargs):
+    def add_cxxflags(self, *entries: str, **kwargs: str) -> None:
         """Add c++ compiler flags to the Makefile"""
         self._add_entry_or_variable("cxxflags", "", None, *entries, **kwargs)
 
-    def add_link_dirs(self, *entries, **kwargs):
+    def add_link_dirs(self, *entries: PathLike, **kwargs: PathLike) -> None:
         """Add link directories to the Makefile"""
         self._add_entry_or_variable(
             "link_dirs", "-L", self.check_dir, *entries, **kwargs
         )
 
-    def add_ldlibs(self, *entries, **kwargs):
+    def add_ldlibs(self, *entries: str, **kwargs: str) -> None:
         """Add link libraries to the Makefile"""
         self._add_entry_or_variable("ldlibs", "", None, *entries, **kwargs)
 
-    def add_ldflags(self, *entries, **kwargs):
+    def add_ldflags(self, *entries: str, **kwargs: str) -> None:
         """Add linker flags to the Makefile"""
         self._add_entry_or_variable("ldflags", "", None, *entries, **kwargs)
 
     def add_target(
         self, name: str, body: Optional[str] = None, deps: Optional[list[str]] = None
-    ):
+    ) -> None:
         """Add targets to the Makefile"""
         if body and deps:
             _deps = " ".join(deps)
@@ -928,19 +938,19 @@ class MakefileGenerator:
         else:  # no body or dependencies
             raise ValueError("Either body or dependencies must be provided")
 
-    def add_phony(self, *entries):
+    def add_phony(self, *entries: str) -> None:
         """Add phony targets to the Makefile"""
         for entry in entries:
             if entry and entry not in self.phony:
                 self.phony.append(entry)
 
-    def add_clean(self, *entries):
+    def add_clean(self, *entries: str) -> None:
         """Add clean target to the Makefile"""
         for entry in entries:
             if entry and entry not in self.clean:
                 self.clean.append(entry)
 
-    def _setup_defaults(self):
+    def _setup_defaults(self) -> None:
         """Setup default model configuration"""
         self.add_include_dirs(
             "$(CURDIR)"
@@ -1028,7 +1038,7 @@ class MakefileGenerator:
 class ShedskinMakefileGenerator(MakefileGenerator):
     """Generates Makefile for Shedskin-compiled code"""
 
-    def __init__(self, gx: "config.GlobalInfo", strict: bool = False):
+    def __init__(self, gx: "config.GlobalInfo", strict: bool = False) -> None:
         self.gx = gx
         self.no_flag_file = False
         super().__init__(path=self.gx.makefile_name, strict=strict)
@@ -1189,13 +1199,14 @@ class ShedskinMakefileGenerator(MakefileGenerator):
     def _setup_unix(self) -> None:
         """Configure Unix-like platform settings"""
         # Check if using local dependencies from shedskin cache
-        use_local_deps = getattr(self.gx.options, 'local_deps', False)
+        use_local_deps = getattr(self.gx.options, "local_deps", False)
 
         if use_local_deps:
             from . import config as cfg
+
             cache_dir = cfg.get_user_cache_dir()
             cache_include = cache_dir / "include"
-            cache_lib = cache_dir / "lib"
+            # cache_lib = cache_dir / "lib"
             if cache_include.exists():
                 self.add_variable("LOCAL_DEPS_DIR", str(cache_dir))
                 self.add_include_dirs(LOCAL_DEPS_INCLUDE="$(LOCAL_DEPS_DIR)/include")
@@ -1225,8 +1236,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
 
         if PLATFORM == "Darwin":
             # Only use Homebrew for static libs if not using local deps
-            if not use_local_deps and (prefix := self.homebrew_prefix()):
-                self.add_variable("HOMEBREW_PREFIX", str(prefix))
+            if not use_local_deps and (brew_prefix := self.homebrew_prefix()):
+                self.add_variable("HOMEBREW_PREFIX", str(brew_prefix))
                 self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")

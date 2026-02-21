@@ -335,16 +335,16 @@ class GlobalInfo:
         return self._registry.modules
 
     @property
-    def inheritance_relations(self) -> dict[
+    def inheritance_relations(
+        self,
+    ) -> dict[
         Union["python.Function", "ast.AST"],
         List[Union["python.Function", "ast.AST"]],
     ]:
         return self._registry.inheritance_relations
 
     @property
-    def inheritance_temp_vars(self) -> dict[
-        "python.Variable", List["python.Variable"]
-    ]:
+    def inheritance_temp_vars(self) -> dict["python.Variable", List["python.Variable"]]:
         return self._registry.inheritance_temp_vars
 
     @property
@@ -409,9 +409,9 @@ class GlobalInfo:
         return self._graph_context.assign_target
 
     @property
-    def struct_unpack(self) -> dict[
-        "ast.Assign", Tuple[List[Tuple[str, str, str, int]], str, str]
-    ]:
+    def struct_unpack(
+        self,
+    ) -> dict["ast.Assign", Tuple[List[Tuple[str, str, str, int]], str, str]]:
         return self._graph_context.struct_unpack
 
     @property
@@ -464,27 +464,33 @@ class GlobalInfo:
         self._type_inference.orig_types = value
 
     @property
-    def alloc_info(self) -> dict[
-        Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
-    ]:
+    def alloc_info(
+        self,
+    ) -> dict[Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]]:
         return self._type_inference.alloc_info
 
     @alloc_info.setter
-    def alloc_info(self, value: dict[
-        Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
-    ]) -> None:
+    def alloc_info(
+        self,
+        value: dict[
+            Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
+        ],
+    ) -> None:
         self._type_inference.alloc_info = value
 
     @property
-    def new_alloc_info(self) -> dict[
-        Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
-    ]:
+    def new_alloc_info(
+        self,
+    ) -> dict[Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]]:
         return self._type_inference.new_alloc_info
 
     @new_alloc_info.setter
-    def new_alloc_info(self, value: dict[
-        Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
-    ]) -> None:
+    def new_alloc_info(
+        self,
+        value: dict[
+            Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
+        ],
+    ) -> None:
         self._type_inference.new_alloc_info = value
 
     @property
@@ -584,6 +590,7 @@ class GlobalInfo:
         self._type_inference.maxhits = value
 
     def get_stats(self) -> dict[str, Any]:
+        assert self.module_path is not None
         pyfile = Path(self.module_path)
         return {
             "name": pyfile.stem,

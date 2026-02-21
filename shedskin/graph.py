@@ -13,7 +13,7 @@ Key concepts:
 
 - Constraint Graph Structure:
   - Nodes are stored in `gx.cnode`
-  - Type sets for each node are stored in `gx.types` 
+  - Type sets for each node are stored in `gx.types`
   - Each node is identified by (AST Node, int, int), where the integers are used
     by `infer.py` to duplicate graph sections (class duplicate, function duplicate).
     Initially both are 0.
@@ -27,7 +27,6 @@ Key components:
 - `parse_module()`: Entry point that locates and processes Python modules, using
   `ModuleVisitor` for uncached modules.
 """
-
 
 import ast
 import copy
@@ -45,6 +44,20 @@ if TYPE_CHECKING:
 
 Parent: TypeAlias = Union["python.Class", "python.Function"]
 AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
+
+
+def _as_expr(node: ast.AST) -> ast.expr:
+    """Narrow AST nodes to expression nodes."""
+    assert isinstance(node, ast.expr)
+    return node
+
+
+def _const_str(node: ast.AST) -> str:
+    """Return string value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, str)
+    return node.value
+
 
 # --- global variable mv
 _mv: "ModuleVisitor"
@@ -211,8 +224,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             newnode = infer.CNode(self.gx, getmv(), node, parent=func)
             self.gx.types[newnode] = set()
 
-        fakefunc = ast.Call(ast.Attribute(objexpr, attrname, ast.Load()), args, [])
-        fakefunc.lineno = objexpr.lineno
+        objexpr = _as_expr(objexpr)
+        args_expr = [_as_expr(arg) for arg in args]
+        fakefunc = ast.Call(ast.Attribute(objexpr, attrname, ast.Load()), args_expr, [])
+        if hasattr(objexpr, "lineno"):
+            fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
         self.add_constraint((infer.inode(self.gx, fakefunc), newnode), func)
 
@@ -401,7 +417,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         cu = ast.Constant(varname)
         self.visit(cu, func)
         fakefunc = ast.Call(
-            ast.Attribute(parent, "__setattr__", ast.Load()), [cu, child], []
+            ast.Attribute(_as_expr(parent), "__setattr__", ast.Load()),
+            [cu, _as_expr(child)],
+            [],
         )
         self.visit_Call(fakefunc, func, fake_attr=True)
 
@@ -471,6 +489,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             fmt = node.value
         else:
             error.error("non-constant format string", self.gx, node, mv=self)
+            return []
+        if isinstance(fmt, bytes):
+            fmt = fmt.decode()
+        if not isinstance(fmt, str):
+            error.error("non-string format string", self.gx, node, mv=self)
+            return []
         char_type = {
             "x": "x",
             "c": "s",
@@ -527,7 +551,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def struct_faketuple(self, info: List[Tuple[str, str, str, int]]) -> ast.Tuple:
         """Generate a fake tuple for struct unpack"""
-        result: List[ast.AST] = []
+        result: List[ast.expr] = []
         for o, c, t, d in info:
             if d != 0 or c == "s":
                 if t == "int":
@@ -537,7 +561,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 elif t == "float":
                     result.append(ast.Constant(1.0))
                 elif t == "bool":
-                    result.append(ast.Name("True", ast.Load()))
+                    result.append(ast.Constant(True))
         return ast.Tuple(result, ast.Load())
 
     def visit_GeneratorExp(
@@ -548,7 +572,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lc = ast.ListComp(
             node.elt,
             [
-                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                ast.comprehension(qual.target, qual.iter, qual.ifs, qual.is_async)
                 for qual in node.generators
             ],
             lineno=node.lineno,
@@ -616,7 +640,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(ast.ClassDef(dummy, [], [], [ast.Pass()]))
 
         if self.module.ident != "builtin":
-            n = ast.ImportFrom("builtin", [ast.alias("*", None)], None)  # Python2.5+
+            n = ast.ImportFrom("builtin", [ast.alias("*", None)], 0)  # Python2.5+
             getmv().importnodes.append(n)
             self.visit(n)
 
@@ -744,7 +768,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def remove_poskw_only_args(self, node: ast.FunctionDef) -> None:
         """Ignore /, * (pos-only, keyword-only) arguments"""
         if node.args.posonlyargs or node.args.kwonlyargs:
-            node.args.args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            node.args.args = (
+                node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            )
             node.args.posonlyargs = []
             node.args.kwonlyargs = []
 
@@ -995,7 +1021,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for dec in node.decorator_list:
                 if parent and isinstance(dec, ast.Name) and dec.id == "staticmethod":
                     parent.staticmethods.append(node.name)
-                elif parent and isinstance(dec, ast.Name) and dec.id == "classmethod" and getmv().module.builtin:
+                elif (
+                    parent
+                    and isinstance(dec, ast.Name)
+                    and dec.id == "classmethod"
+                    and getmv().module.builtin
+                ):
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
@@ -1075,8 +1106,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         for i, default in enumerate(func.defaults):
             if (
-                not ast_utils.is_literal(default) and not
-                (isinstance(default, ast.Constant) and isinstance(default.value, bool))  # TODO fix is_literal
+                not ast_utils.is_literal(default)
+                and not (
+                    isinstance(default, ast.Constant)
+                    and isinstance(default.value, bool)
+                )  # TODO fix is_literal
             ):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
@@ -1088,7 +1122,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- register function
         if isinstance(parent, python.Class):
-            if func.ident not in parent.staticmethods and func.ident not in parent.classmethods:  # XXX use flag
+            if (
+                func.ident not in parent.staticmethods
+                and func.ident not in parent.classmethods
+            ):  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
 
@@ -1438,7 +1475,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         clone = copy.deepcopy(node)
         assert isinstance(clone, ast.AugAssign)
-        lnode: ast.AST
+        lnode: ast.expr
 
         if isinstance(clone.target, ast.Name):
             blah = node.target
@@ -1480,18 +1517,19 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             blah = ast.Subscript(
                 ast.Name(t1.name, ast.Load(), lineno=node.lineno),
-                ast.Index(ast.Name(t2.name, ast.Load())),
+                ast.Name(t2.name, ast.Load()),
                 ast.Store(),
                 lineno=node.lineno,
             )
             lnode = ast.Subscript(
                 ast.Name(t1.name, ast.Load(), lineno=node.lineno),
-                ast.Index(ast.Name(t2.name, ast.Load())),
+                ast.Name(t2.name, ast.Load()),
                 ast.Load(),
                 lineno=node.lineno,
             )
         else:
             error.error("unsupported type of assignment", self.gx, node, mv=getmv())
+            return
 
         blah2 = ast.BinOp(lnode, node.op, node.value)
         self.gx.augment.add(blah2)
@@ -1620,7 +1658,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.orelse:
             for child in node.orelse:
                 self.visit(child, func)
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
 
     def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
         """Visit a yield statement"""
@@ -1680,7 +1718,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- for-else
         if node.orelse:
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1760,7 +1798,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.loopstack.pop()
 
         if node.orelse:
-            self.temp_var_int((node, 'orelse'), func)
+            self.temp_var_int((node, "orelse"), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1880,9 +1918,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
-            (node.key, node.value),
+            ast.Tuple([node.key, node.value], ast.Load()),
             [
-                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                ast.comprehension(qual.target, qual.iter, qual.ifs, qual.is_async)
                 for qual in node.generators
             ],
             lineno=node.lineno,
@@ -1901,7 +1939,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lc = ast.ListComp(
             node.elt,
             [
-                ast.comprehension(qual.target, qual.iter, qual.ifs)
+                ast.comprehension(qual.target, qual.iter, qual.ifs, qual.is_async)
                 for qual in node.generators
             ],
             lineno=node.lineno,
@@ -1935,6 +1973,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AnnAssign, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an annotated assignment"""
+        if node.value is None:
+            return
         assign = ast.Assign([node.target], node.value)
         self.visit(assign, func)
 
@@ -2008,9 +2048,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
                 # expr[a:b] = expr # XXX bla()[1:3] = [1]
                 elif isinstance(lvalue, ast.Slice):
-                    assert (
-                        False
-                    ), "ast.Slice shouldn't appear outside ast.Subscript node"
+                    assert False, (
+                        "ast.Slice shouldn't appear outside ast.Subscript node"
+                    )
                     self.slice(
                         lvalue,
                         lvalue.expr,
@@ -2065,6 +2105,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             #                subscript = lvalue.slice.value
             else:
                 subscript = lvalue.slice
+            assert isinstance(subscript, ast.expr)
+            assert isinstance(rvalue, ast.expr)
+            assert isinstance(lvalue.value, ast.expr)
 
             fakefunc = ast.Call(
                 ast.Attribute(lvalue.value, "__setitem__", ast.Load()),
@@ -2080,6 +2123,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # expr.attr = expr
         elif ast_utils.is_assign_attribute(lvalue):
             assert isinstance(lvalue, ast.Attribute)
+            assert isinstance(lvalue.value, ast.expr)
+            assert isinstance(rvalue, ast.expr)
             infer.CNode(self.gx, getmv(), lvalue, parent=func)
             self.gx.assign_target[rvalue] = lvalue.value
             fakefunc = ast.Call(
@@ -2119,7 +2164,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
             fakefunc = ast.Call(
-                ast.Attribute(rvalue, "__getunit__", ast.Load()), [ast.Constant(i)], []
+                ast.Attribute(_as_expr(rvalue), "__getunit__", ast.Load()),
+                [ast.Constant(i)],
+                [],
             )
 
             fakenode.callfuncs.append(fakefunc)
@@ -2138,7 +2185,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
-    def super_call(self, orig: ast.Call, func: Optional["python.Function"]) -> Optional[ast.AST]:
+    def super_call(
+        self, orig: ast.Call, func: Optional["python.Function"]
+    ) -> Optional[ast.expr]:
         """Handle a super call"""
         node = orig.func
         assert isinstance(node, ast.Attribute)
@@ -2154,7 +2203,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and len(node.value.args) == 0
             ):
                 if func.parent.node.bases:
-                    return func.parent.node.bases[0]
+                    base = func.parent.node.bases[0]
+                    assert isinstance(base, ast.expr)
+                    return base
             elif (
                 len(node.value.args) >= 2
                 and isinstance(node.value.args[1], ast.Name)
@@ -2163,8 +2214,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 cl = python.lookup_class(node.value.args[0], getmv())
                 assert cl
                 if cl.node.bases:
-                    return cl.node.bases[0]
+                    base = cl.node.bases[0]
+                    assert isinstance(base, ast.expr)
+                    return base
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
+        return None
 
     def visit_Pass(
         self, node: ast.Pass, func: Optional["python.Function"] = None
@@ -2187,7 +2241,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.ctx, ast.Load):
             # classmethod: insert 'cls' arg (None for now)
             if not fake_attr and isinstance(node.func.value, ast.Name):
-                if node.func.value.id in ('dict', 'float', 'bytes', 'complex', 'bytearray'):
+                if node.func.value.id in (
+                    "dict",
+                    "float",
+                    "bytes",
+                    "complex",
+                    "bytearray",
+                ):
                     node.args.insert(0, ast.Name("None", ast.Load()))
 
             # rewrite super(..) call
@@ -2217,7 +2277,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX analyze_callfunc
                 assert ast_utils.is_str(node.args[0])
                 if (
-                    node.args[0].value in getmv().imports[node.func.value.id].mv.globals
+                    _const_str(node.args[0])
+                    in getmv().imports[node.func.value.id].mv.globals
                 ):  # XXX bleh
                     self.add_constraint(
                         (
@@ -2225,7 +2286,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                                 self.gx,
                                 getmv()
                                 .imports[node.func.value.id]
-                                .mv.globals[node.args[0].value],
+                                .mv.globals[_const_str(node.args[0])],
                             ),
                             newnode,
                         ),
@@ -2240,7 +2301,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             if ident == "open" and len(node.args) > 1:
                 if ast_utils.is_str(node.args[1]):
-                    if "b" in node.args[1].value:
+                    if "b" in _const_str(node.args[1]):
                         ident = node.func.id = "open_binary"
 
                 else:
@@ -2654,6 +2715,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AST, func: Optional["python.Function"]
     ) -> "python.Function":
         """Create a wrapper for a builtin function"""
+        assert isinstance(node, ast.expr)
         node2 = ast.Call(
             copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in "abcde"], []
         )
