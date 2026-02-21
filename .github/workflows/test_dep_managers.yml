@@ -25,25 +25,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-
-    - name: Display Python version
-      run: python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt
+    - uses: astral-sh/setup-uv@v5
 
     - name: Install shedskin
-      run: pip install .
+      run: uv sync --python ${{ matrix.python-version }}
 
     - name: Build test.py with --${{ matrix.dep_manager }}
-      run: shedskin build --${{ matrix.dep_manager }} --build-type Release test.py
+      run: uv run shedskin build --${{ matrix.dep_manager }} --build-type Release test.py
 
     - name: Run built executable
       shell: bash

@@ -39,8 +39,6 @@ include = [
     "shedskin/",
     "LICENSE",
     "pyproject.toml",
-    "requirements.txt",
-    "setup.py",
     "tox.ini",
     "doc/",
     "examples/",
