@@ -13,9 +13,9 @@ def test_is():
 
     bla = "hoei"
     assert bla == "hoei"
-    assert bla == "hoei"
+    assert bla is "hoei"
     assert bla != "meuk"
-    assert bla != "meuk"
+    assert bla is not "meuk"
 
 def test_all():
     test_is()
