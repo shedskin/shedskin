@@ -2,7 +2,31 @@
 demo module doctrings
 
 """
+import array
+import binascii
+import bisect
+import collections
+import colorsys
+import configparser
+import copy
+import csv
+import datetime
+import fnmatch
+import getopt
+import glob
+import heapq
+import itertools
+import math
+import mmap
+import os
+import os.path
+import random
+import re
 #import socket
+import string
+import struct
+import sys
+import time
 
 
 
