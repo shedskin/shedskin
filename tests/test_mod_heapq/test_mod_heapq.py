@@ -1,7 +1,5 @@
 import heapq
 
-# merge(key, reverse)
-
 
 def test_heapify():
     l = []
@@ -147,6 +145,18 @@ def test_merge():
     assert list(heapq.merge([3, 7, 18], [5, 21, 44])) == [3, 5, 7, 18, 21, 44]
     assert list(heapq.merge([3, 7, 18], [5, 21, 44], [2, 33])) == [2, 3, 5, 7, 18, 21, 33, 44]
 
+    # reverse
+    assert list(heapq.merge()) == []
+    assert list(heapq.merge([18, 7, 3], reverse=True)) == [18, 7, 3]
+    assert list(heapq.merge([18, 7, 3], [44, 21, 5], reverse=True)) == [44, 21, 18, 7, 5, 3]
+    assert list(heapq.merge([18, 7, 3], [44, 21, 5], [33, 2], reverse=True)) == [44, 33, 21, 18, 7, 5, 3, 2]
+
+    # key
+    assert list(heapq.merge(['aap', 'ans', 'Arie'], ['alaaf', 'ALAAF', 'ANSJOVIS'], key=lambda x:x.lower())) == ['aap', 'alaaf', 'ALAAF', 'ans', 'ANSJOVIS', 'Arie']
+
+    # key & reverse
+    assert list(heapq.merge(['Arie', 'ans', 'aap'], ['ANSJOVIS', 'ALAAF', 'alaaf'], key=lambda x:x.lower(), reverse=True)) == ['Arie', 'ANSJOVIS', 'ans', 'ALAAF', 'alaaf', 'aap']
+
 
 def test_nlargest():
     assert list(heapq.nlargest(5, [3, 15, 56, 38, 49, 12, 41])) == [56, 49, 41, 38, 15]
@@ -207,6 +217,7 @@ def test_all():
     test_heapreplace_max()
 
     test_merge()
+
     test_nlargest()
     test_nsmallest()
 

@@ -35,9 +35,10 @@ def heapreplace(heap, item):
 def heapreplace_max(heap, item):
     return heapreplace(heap, item)
 
-def merge(*iterables):
+def merge(__kw_reverse=False, __kw_key=0, *iterables):
     item = iter(iterables).__next__()
     __cmp(item, item)
+    __cmp(__kw_key(item), __kw_key(item))
     yield item
 
 def nlargest(n, iterable, __kw_key=None):
