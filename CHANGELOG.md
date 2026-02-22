@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed dict comprehension code generation crash (`TypeError: 'Tuple' object is not subscriptable`) in `cpp.py` by accessing `node.elt.elts[0]`/`node.elt.elts[1]` instead of `node.elt[0]`/`node.elt[1]`
+- Fixed dict comprehension type inference in `graph.py`: `isinstance(node.elt, tuple)` was always `False` for `ast.Tuple` nodes, so key/value type constraints were never set up. Changed to `node in self.gx.dictcomp_to_lc.values()`
+- Fixed `runtests --run` executing unbuilt ext tests by aligning ctest regex with the build target suffix in `cmake.py`
+- Added missing `WORKING_DIRECTORY` for non-Windows ext tests in CMake configuration
+
 ### Changed
 
 - Converted build system to uv, replacing pip/setuptools workflow with `uv` commands in Makefile (`f97db27a`)
