@@ -1,7 +1,6 @@
 import heapq
 
 # merge(key, reverse)
-# TODO custom class (only overriding __lt__/__gt__)
 
 
 def test_heapify():
@@ -163,6 +162,37 @@ def test_nsmallest():
     assert list(heapq.nsmallest(5, [3, 15])) == [3, 15]
 
 
+class Bert:
+    def __init__(self, val):
+        self.val = val
+
+    def __lt__(self, other):
+        return self.val < other.val
+
+
+def get_list(berten):
+    return [bert.val for bert in berten]
+
+
+def test_custom_class():
+    l = [Bert(42), Bert(45), Bert(35), Bert(3)]
+
+    heapq.heapify(l)
+    assert get_list(l) == [3, 42, 35, 45]
+
+    assert heapq.heapreplace(l, Bert(36)).val == 3
+    assert get_list(l) == [35, 42, 36, 45]
+
+    assert heapq.heappop(l).val == 35
+    assert get_list(l) == [36, 42, 45]
+    assert heapq.heappop(l).val == 36
+    assert get_list(l) == [42, 45]
+    assert heapq.heappop(l).val == 42
+    assert get_list(l) == [45]
+    assert heapq.heappop(l).val == 45
+    assert get_list(l) == []
+
+
 def test_all():
     test_heapify()
     test_heapify_max()
@@ -182,6 +212,8 @@ def test_all():
 
     test_heapq_1()  # TODO split up/remove
     test_heapq_2()
+
+    test_custom_class()
 
 
 if __name__ == '__main__':
