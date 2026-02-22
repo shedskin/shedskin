@@ -48,6 +48,18 @@ template<class T, class Key> struct CmpSecond {
     }
 };
 
+template<class T, class Key> struct InvCmpSecond {
+    Key key;
+    InvCmpSecond(Key key) : key(key) {}
+
+    inline __ss_int operator()(T& first, T& second) const {
+        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+            return -__cmp(first.second, second.second);
+        else
+            return -__cmp(key(first.second), key(second.second));
+    }
+};
+
 template<template <class Y, class Z> class Cmp, class T, class Key> inline void _siftdown(T &heap, size_t startpos, size_t pos, Key key) {
     assert(startpos < heap.size());
     assert(pos < heap.size());
@@ -196,18 +208,18 @@ template<class T> inline T heapreplace_max(list<T> *l, T item) {
 
 /* merge */
 
-template<class T> class mergeiter;
-
-template<class T> class mergeiter : public __iter<T> {
+template<class T, class Key> class mergeiter : public __iter<T> {
 public:
     typedef std::pair<size_t, T> iter_heap;
+    Key key;
+    bool reverse;
 
     bool exhausted;
     __GC_VECTOR(__iter<T> *) iters;
     std::vector<iter_heap> heap;
 
     mergeiter();
-    mergeiter(pyiter<T> *iterable);
+    mergeiter(pyiter<T> *iterable, Key key, bool reverse);
 
     void push_iter(pyiter<T> *iterable);
 
@@ -215,19 +227,22 @@ public:
 
 };
 
-template<class T> inline mergeiter<T>::mergeiter() {
+template<class T, class Key> inline mergeiter<T, Key>::mergeiter() {
     this->exhausted = true;
+    this->reverse = false;
 }
-template<class T> inline mergeiter<T>::mergeiter(pyiter<T> *iterable) {
+template<class T, class Key> inline mergeiter<T, Key>::mergeiter(pyiter<T> *iterable, Key key, bool reverse) {
     this->exhausted = false;
+    this->key = key;
+    this->reverse = reverse;
     this->push_iter(iterable);
 }
 
-template<class T> void mergeiter<T>::push_iter(pyiter<T> *iterable) {
+template<class T, class Key> void mergeiter<T, Key>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
 }
 
-template<class T> T mergeiter<T>::__next__() {
+template<class T, class Key> T mergeiter<T, Key>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -235,7 +250,10 @@ template<class T> T mergeiter<T>::__next__() {
     if (!this->heap.size()) {
         for (size_t i = 0; i < this->iters.size(); ++i) {
             try  {
-                heappush<CmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()), 0);
+                if(reverse)
+                    heappush<InvCmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()), this->key);
+                else
+                    heappush<CmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()), this->key);
             } catch (StopIteration *) {
             }
         }
@@ -246,10 +264,17 @@ template<class T> T mergeiter<T>::__next__() {
         }
     }
 
-    iter_heap it = heappop<CmpSecond>(this->heap, 0);
+    iter_heap it;
+    if(reverse)
+        it = heappop<InvCmpSecond>(this->heap, this->key);
+    else
+        it = heappop<CmpSecond>(this->heap, this->key);
 
     try  {
-        heappush<CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()), 0);
+        if(reverse)
+            heappush<InvCmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()), this->key);
+        else
+            heappush<CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()), this->key);
     } catch (StopIteration *) {
         if (!this->heap.size()) {
             this->exhausted = true;
@@ -259,11 +284,11 @@ template<class T> T mergeiter<T>::__next__() {
     return it.second;
 }
 
-inline mergeiter<void *> *merge(__ss_int /* iterable_count */) {
-    return new mergeiter<void *>();
+inline mergeiter<void *, long int> *merge(__ss_int /* iterable_count */, __ss_int, __ss_bool) {
+    return new mergeiter<void *, long int>();
 }
-template<class T, class ... Args> mergeiter<T> *merge(__ss_int, pyiter<T> *iterable, Args ... args) {
-    mergeiter<T> *iter = new mergeiter<T>(iterable);
+template<class T, class Key, class ... Args> mergeiter<T, Key> *merge(__ss_int, Key key, __ss_bool reverse, pyiter<T> *iterable, Args ... args) {
+    mergeiter<T, Key> *iter = new mergeiter<T, Key>(iterable, key, reverse.value);
     (iter->push_iter((pyiter<T> *)args), ...);
     return iter;
 }
