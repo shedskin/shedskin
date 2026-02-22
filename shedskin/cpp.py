@@ -3870,9 +3870,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             elif node in self.gx.dictcomp_to_lc.values():
                 self.start("__ss_result->__setitem__(")
-                self.visit(node.elt[0], lcfunc)
+                self.visit(node.elt.elts[0], lcfunc)
                 self.append(",")
-                self.visit(node.elt[1], lcfunc)
+                self.visit(node.elt.elts[1], lcfunc)
                 self.append(")")
             elif (
                 len(node.generators) == 1
