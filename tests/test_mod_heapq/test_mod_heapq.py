@@ -1,7 +1,6 @@
 import heapq
 
 # merge(key, reverse)
-# nlargest/nsmallest(key)
 # TODO custom class (only overriding __lt__/__gt__)
 
 
@@ -156,7 +155,7 @@ def test_nlargest():
 
     assert list(heapq.nlargest(3, ['aap', 'Arie', 'ans', 'ANSJOVIS', 'alaaf', 'ALAAF'])) == ['ans', 'alaaf', 'aap']
     assert list(heapq.nlargest(3, [s.lower() for s in ['aap', 'Arie', 'ans', 'ANSJOVIS', 'alaaf', 'ALAAF']])) == ['arie', 'ansjovis', 'ans']
-#    assert list(heapq.nlargest(3, ['aap', 'Arie', 'ans', 'ANSJOVIS', 'alaaf', 'ALAAF'], key=lambda x:x.lower())) == ['Arie', 'ANSJOVIS', 'ans']
+    assert list(heapq.nlargest(3, ['aap', 'Arie', 'ans', 'ANSJOVIS', 'alaaf', 'ALAAF'], key=lambda x:x.lower())) == ['Arie', 'ANSJOVIS', 'ans']
 
 
 def test_nsmallest():
