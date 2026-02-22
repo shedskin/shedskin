@@ -1,4 +1,4 @@
-/* Copyright (c) 2009 Jérémie Roquet <arkanosis@gmail.com>; License Expat (See LICENSE) */
+/* Copyright (c) 2009-2026 Jérémie Roquet <arkanosis@gmail.com>; License Expat (See LICENSE) */
 
 #ifndef HEAPQ_HPP
 #define HEAPQ_HPP
@@ -28,17 +28,19 @@ template<class T> struct CmpSecond {
     }
 };
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftdown(X<T, U>& heap, size_t startpos, size_t pos) {
+template<template <class Y> class Cmp, class T> inline void _siftdown(T &heap, size_t startpos, size_t pos) {
     assert(startpos < heap.size());
     assert(pos < heap.size());
 
-    Cmp<T> cmp;
+    using E = typename T::value_type;
 
-    T item = heap[pos];
+    Cmp<E> cmp;
+
+    E item = heap[pos];
 
     while (pos > startpos) {
         size_t parentpos = (pos - 1) / 2;
-        T parent = heap[parentpos];
+        E parent = heap[parentpos];
 
         if (cmp(item, parent) >= 0) {
             break;
@@ -51,23 +53,17 @@ template<class T, class U, template <class V, class W> class X, template <class 
     heap[pos] = item;
 }
 
-template<class T, class U, template <class V, class W> class X> inline void _siftdown(X<T, U>& heap, size_t startpos, size_t pos) {
-    _siftdown<T, U, X, Cmp>(heap, startpos, pos);
-}
-
-template<class T> inline void _siftdown(list<T> *heap, size_t startpos, size_t pos) {
-    _siftdown(heap->units, startpos, pos);
-}
-
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftup(X<T, U>& heap, size_t pos) {
+template<template <class Y> class Cmp, class T> inline void _siftup(T &heap, size_t pos) {
     assert(pos < heap.size());
 
-    Cmp<T> cmp;
+    using E = typename T::value_type;
+
+    Cmp<E> cmp;
 
     size_t startpos = pos;
     size_t endpos = heap.size();
 
-    T item = heap[pos];
+    E item = heap[pos];
 
     for (;;) {
         size_t leftsonpos = 2 * pos + 1;
@@ -87,97 +83,95 @@ template<class T, class U, template <class V, class W> class X, template <class 
 
     heap[pos] = item;
 
-    _siftdown<T, U, X, Cmp>(heap, startpos, pos);
-}
-
-template<class T, class U, template <class V, class W> class X> inline void _siftup(X<T, U>& heap, size_t pos) {
-    _siftup<T, U, X, Cmp>(heap, pos);
-}
-
-template<class T> inline void _siftup(list<T> *heap, size_t pos) {
-    _siftup(heap->units, pos);
+    _siftdown<Cmp>(heap, startpos, pos);
 }
 
 /* Basic operations */
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heappush(X<T, U>& heap, T item) {
+template<class T> inline void heapify(list<T> *l) {
+    __GC_VECTOR(T) &heap = l->units;
+    for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
+        _siftup<Cmp>(heap, i);
+    }
+}
+
+template<class T> inline void heapify_max(list<T> *l) {
+    __GC_VECTOR(T) &heap = l->units;
+    for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
+        _siftup<InvCmp>(heap, i);
+    }
+}
+
+template<template <class Y> class Cmp, class T, class E> inline void heappush(T &heap, E item) {
     heap.push_back(item);
-    _siftdown<T, U, X, Cmp>(heap, 0, heap.size() - 1);
+    _siftdown<Cmp>(heap, 0, heap.size() - 1);
 }
 
-template<class T, class U, template <class V, class W> class X> inline void heappush(X<T, U>& heap, T item) {
-    heappush<T, U, X, Cmp>(heap, item);
+template<class T> inline void heappush(list<T> *l, T item) {
+    heappush<Cmp>(l->units, item);
 }
 
-template<class T> inline void heappush(list<T> *heap, T item) {
-    heappush(heap->units, item);
+template<class T> inline void heappush_max(list<T> *l, T item) {
+    heappush<InvCmp>(l->units, item);
 }
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> T heappop(X<T, U>& heap) {
-    T item = heap.front();
+template<template <class Y> class Cmp, class T> auto heappop(T &heap) {
+    if(!heap.size())
+        throw new IndexError(new str("index out of range"));
+    auto item = heap.front();
     heap[0] = heap.back();
-    _siftup<T, U, X, Cmp>(heap, 0);
+    _siftup<Cmp>(heap, 0);
     heap.pop_back();
     return item;
 }
 
-template<class T, class U, template <class V, class W> class X> T heappop(X<T, U>& heap) {
-    return heappop<T, U, X, Cmp>(heap);
+template<class T> inline T heappop(list<T> *l) {
+    return heappop<Cmp>(l->units);
 }
 
-template<class T> inline T heappop(list<T> *heap) {
-    return heappop(heap->units);
+template<class T> inline T heappop_max(list<T> *l) {
+    return heappop<InvCmp>(l->units);
 }
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> T heappushpop(X<T, U>& heap, T item) {
-    Cmp<T> cmp;
+template<template <class Y> class Cmp, class E, class T> E heappushpop(T &heap, E item) {
+    Cmp<E> cmp;
 
-    if (!heap.size() ||
-    cmp(item, heap.front()) < 0) {
+    if (!heap.size() || cmp(item, heap.front()) < 0) {
         return item;
     }
 
-    T item2 = heap[0];
+    E item2 = heap[0];
     heap[0] = item;
-    _siftup<T, U, X, Cmp>(heap, 0);
+    _siftup<Cmp>(heap, 0);
     return item2;
 }
 
-template<class T, class U, template <class V, class W> class X> T heappushpop(X<T, U>& heap, T item) {
-    return heappushpop<T, U, X, Cmp>(heap, item);
+template<class T> inline T heappushpop(list<T> *l, T item) {
+    return heappushpop<Cmp>(l->units, item);
 }
 
-template<class T> inline T heappushpop(list<T> *heap, T item) {
-    return heappushpop(heap->units, item);
+template<class T> inline T heappushpop_max(list<T> *l, T item) {
+    return heappushpop<InvCmp>(l->units, item);
 }
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heapify(X<T, U>& heap) {
-    for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
-        _siftup<T, U, X, Cmp>(heap, i);
-    }
-}
-
-template<class T, class U, template <class V, class W> class X> inline void heapify(X<T, U>& heap) {
-    heapify<T, U, X, Cmp>(heap);
-}
-
-template<class T> inline void heapify(list<T> *heap) {
-    heapify(heap->units);
-}
-
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> T heapreplace(X<T, U>& heap, T item) {
+template<class T> inline T heapreplace(list<T> *l, T item) {
+    __GC_VECTOR(T) &heap = l->units;
+    if(!heap.size())
+        throw new IndexError(new str("index out of range"));
     T item2 = heap[0];
     heap[0] = item;
-    _siftup<T, U, X, Cmp>(heap, 0);
+    _siftup<Cmp>(heap, 0);
     return item2;
 }
 
-template<class T, class U, template <class V, class W> class X> T heapreplace(X<T, U>& heap, T item) {
-    return heapreplace<T, U, X, Cmp>(heap, item);
-}
-
-template<class T> inline T heapreplace(list<T> *heap, T item) {
-    return heapreplace(heap->units, item);
+template<class T> inline T heapreplace_max(list<T> *l, T item) {
+    __GC_VECTOR(T) &heap = l->units;
+    if(!heap.size())
+        throw new IndexError(new str("index out of range"));
+    T item2 = heap[0];
+    heap[0] = item;
+    _siftup<InvCmp>(heap, 0);
+    return item2;
 }
 
 /* Advanced operations */
@@ -187,11 +181,10 @@ template<class T> class mergeiter;
 template<class T> class mergeiter : public __iter<T> {
 public:
     typedef std::pair<size_t, T> iter_heap;
-    typedef std::allocator<iter_heap> iter_heapallocator;
 
     bool exhausted;
     __GC_VECTOR(__iter<T> *) iters;
-    std::vector<iter_heap, iter_heapallocator> heap;
+    std::vector<iter_heap> heap;
 
     mergeiter();
     mergeiter(pyiter<T> *iterable);
@@ -221,25 +214,26 @@ template<class T> T mergeiter<T>::__next__() {
 
     if (!this->heap.size()) {
         for (size_t i = 0; i < this->iters.size(); ++i) {
-	  try  {
-	      heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()));
-	  } catch (StopIteration *) {
-	  }
-	}
-	if (!this->heap.size()) {
-	    this->exhausted = true;
-	    throw new StopIteration();
-	}
+            try  {
+                heappush<CmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()));
+            } catch (StopIteration *) {
+            }
+        }
+
+        if (!this->heap.size()) {
+            this->exhausted = true;
+            throw new StopIteration();
+        }
     }
 
-    iter_heap it = heappop<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap);
+    iter_heap it = heappop<CmpSecond>(this->heap);
 
     try  {
-        heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()));
+        heappush<CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()));
     } catch (StopIteration *) {
         if (!this->heap.size()) {
-	    this->exhausted = true;
-	}
+            this->exhausted = true;
+        }
     }
 
     return it.second;
@@ -274,13 +268,13 @@ template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapi
 
     try {
       for (__ss_int i = 0; i < n; ++i)
-        heappush<T, std::allocator<T>, std::vector, Cmp>(heap, iter->__next__());
+        heappush<Cmp>(heap, iter->__next__());
       for (; ; ) {
-        heappushpop<T, std::allocator<T>, std::vector, Cmp>(heap, iter->__next__());
+        heappushpop<Cmp>(heap, iter->__next__());
       }
     } catch (StopIteration *) {
         while (!heap.empty())
-            this->values.push_back(heappop<T, std::allocator<T>, std::vector, Cmp>(heap));
+            this->values.push_back(heappop<Cmp>(heap));
     }
 
     this->index = values.size();
