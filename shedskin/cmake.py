@@ -1105,7 +1105,7 @@ class CMakeBuilder:
                 if self.options.extmod:
                     target_suffix = "-ext"
                 bld_options.append(f"--target {self.options.run}{target_suffix}")
-                tst_options.append(f"--tests-regex {self.options.run}")
+                tst_options.append(f"--tests-regex {self.options.run}{target_suffix}")
 
             if self.options.stoponfail:
                 tst_options.append("--stop-on-failure")

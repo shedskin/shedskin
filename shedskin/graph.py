@@ -1899,11 +1899,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.instance(node, python.def_class(self.gx, "list"), func)
 
         # expr->instance.unit
-        if isinstance(node.elt, tuple):
-            self.visit(node.elt[0], lcfunc)
-            self.add_dynamic_constraint(node, node.elt[0], "unit", lcfunc)
-            self.visit(node.elt[1], lcfunc)
-            self.add_dynamic_constraint(node, node.elt[1], "value", lcfunc)
+        if node in self.gx.dictcomp_to_lc.values():
+            self.visit(node.elt.elts[0], lcfunc)
+            self.add_dynamic_constraint(node, node.elt.elts[0], "unit", lcfunc)
+            self.visit(node.elt.elts[1], lcfunc)
+            self.add_dynamic_constraint(node, node.elt.elts[1], "value", lcfunc)
         else:
             self.visit(node.elt, lcfunc)
             self.add_dynamic_constraint(node, node.elt, "unit", lcfunc)
