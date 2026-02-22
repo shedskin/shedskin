@@ -46,8 +46,8 @@ def nlargest(n, iterable, __kw_key=None):
     __cmp(__kw_key(item), __kw_key(item))
     yield item
 
-def nsmallest(n, iterable): # TODO , key = None
+def nsmallest(n, iterable, __kw_key=None):
     item = iter(iterable).__next__()
     __cmp(item, item)
-    #key(elem)
+    __cmp(__kw_key(item), __kw_key(item))
     yield item
