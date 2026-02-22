@@ -1,5 +1,1 @@
-import heapq
-
-l = []
-
-heapq.heappop(l)
+print('hello, world!')
