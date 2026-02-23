@@ -1900,6 +1900,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # expr->instance.unit
         if node in self.gx.dictcomp_to_lc.values():
+            assert isinstance(node.elt, ast.Tuple)
             self.visit(node.elt.elts[0], lcfunc)
             self.add_dynamic_constraint(node, node.elt.elts[0], "unit", lcfunc)
             self.visit(node.elt.elts[1], lcfunc)

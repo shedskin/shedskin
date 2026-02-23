@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2025 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.cpp: C++ Code Generator
@@ -228,29 +227,32 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             newlines2.append(line)
 
             if i == j:
-                todo = {}
+                todo: dict[int, ast.AST] = {}
                 for node, name in self.consts.items():
-                    if name not in todo:
+                    if int(name[6:]) not in todo:
                         todo[int(name[6:])] = node
                 todolist = list(todo)
                 todolist.sort()
                 for number in todolist:
-                    if self.mergeinh[todo[number]]:  # XXX
+                    const_node = todo[number]
+                    if self.mergeinh[const_node]:  # XXX
                         name = "const_" + str(number)
                         self.start("    " + name + " = ")
                         if (
-                            ast_utils.is_str(todo[number])
-                            and len(todo[number].value.encode("utf-8")) == 1
+                            isinstance(const_node, ast.Constant)
+                            and isinstance(const_node.value, str)
+                            and len(const_node.value.encode("utf-8")) == 1
                         ):
-                            self.append("__char_cache[%d]" % ord(todo[number].value))
+                            self.append("__char_cache[%d]" % ord(const_node.value))
                         elif (
-                            ast_utils.is_bytes(todo[number])
-                            and len(todo[number].value) == 1
+                            isinstance(const_node, ast.Constant)
+                            and isinstance(const_node.value, bytes)
+                            and len(const_node.value) == 1
                         ):
-                            self.append("__byte_cache[%d]" % ord(todo[number].value))
+                            self.append("__byte_cache[%d]" % ord(const_node.value))
                         else:
                             self.visit(
-                                todo[number], infer.inode(self.gx, todo[number]).parent
+                                const_node, infer.inode(self.gx, const_node).parent
                             )
                         newlines2.append(self.line + ";\n")
 
@@ -949,10 +951,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             clnames = ["pyobj"]
             if "__next__" in cl.funcs:  # iterator
                 next_retnode = cl.funcs["__next__"].retnode
+                assert next_retnode is not None
                 ts = typestr.nodetypestr(self.gx, next_retnode.thing, mv=self.mv)
                 clnames = ["__iter<%s>" % ts]
             elif "__iter__" in cl.funcs:  # iterable
                 retnode = cl.funcs["__iter__"].retnode
+                assert retnode is not None
                 for cl2, _ in self.mergeinh[retnode.thing]:
                     if "__next__" in cl2.funcs:
                         next_retnode = cl2.funcs["__next__"].retnode
@@ -1161,7 +1165,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts.startswith("pyseq") or ts.startswith("pyiter"):  # XXX
             argtypes = self.gx.merged_inh[node]
         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
-        if ts == "tuple<__ss_int> *" and len(node.elts) == 2:
+        if ts == "tuple<__ss_int> *" and isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
         elif isinstance(node, ast.List) and not node.elts:
             self.append("(__ss_list<" + ts[5:-3] + ">(")
@@ -1649,6 +1653,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         tempvar = self.mv.tempcount[node]
         self.start()
         self.visitm("for(auto ", tempvar, " : {", func)
+        assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
         for elem in node.iter.elts:
             self.visit(elem, func)
             if elem is not node.iter.elts[-1]:
@@ -2433,7 +2438,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         inttype = set([(python.def_class(self.gx, "int_"), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not ast_utils.is_num(right) or (
-                isinstance(right.value, (int, float)) and right.value < 0
+                isinstance(right, ast.Constant) and isinstance(right.value, (int, float)) and right.value < 0
             ):
                 error.error(
                     "pow(int, int) returns int after compilation",
@@ -2496,6 +2501,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if (
             inline in ["+", "-"]
             and ast_utils.is_num(right)
+            and isinstance(right, ast.Constant)
             and isinstance(right.value, complex)
         ):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
@@ -2856,6 +2862,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if (
                 not node.args
                 or not ast_utils.is_str(node.args[0])
+                or not isinstance(node.args[0], ast.Constant)
+                or not isinstance(node.args[0].value, str)
                 or node.args[0].value not in "bBhHiIlLqQfd"
             ):
                 error.error(
@@ -3037,6 +3045,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if (
                 ident == "__getitem__"
                 and ast_utils.is_num(node.args[0])
+                and isinstance(node.args[0], ast.Constant)
                 and isinstance(node.args[0].value, int)
                 and node.args[0].value in (0, 1)
                 and self.only_classes(objexpr, ("tuple2",))
@@ -3526,6 +3535,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AnnAssign, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an annotated assignment"""
+        if node.value is None:
+            return
         self.visit(ast.Assign([node.target], node.value), func)
 
     def visit_Assign(
@@ -3869,6 +3880,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(node.elt, lcfunc)
                 self.append(")")
             elif node in self.gx.dictcomp_to_lc.values():
+                assert isinstance(node.elt, ast.Tuple)
                 self.start("__ss_result->__setitem__(")
                 self.visit(node.elt.elts[0], lcfunc)
                 self.append(",")
@@ -3882,6 +3894,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and (
                     (
                         ast_utils.is_fastfor(node.generators[0])
+                        and isinstance(node.generators[0].iter, ast.Call)
                         and len(node.generators[0].iter.args) == 1
                         and isinstance(node.generators[0].iter.args[0], ast.Constant)
                     )
@@ -3926,11 +3939,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if (
                     len(node.generators) == 1
                     and not qual.ifs
+                    and isinstance(qual.iter, ast.Call)
                     and len(qual.iter.args)
                     == 1  # TODO more than one arguments to range()
                     and isinstance(qual.iter.args[0], ast.Constant)
                 ):
-                    self.output(f"__ss_result->resize({qual.iter.args[0].value});")
+                    self.output(f"__ss_result->resize({qual.iter.args[0].value!r});")
                 elif qual is node.generators[0]:
                     self.output(
                         f"__ss_result->units.reserve({4 * len(node.generators)});"
