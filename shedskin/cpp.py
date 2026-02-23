@@ -3943,8 +3943,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     and len(qual.iter.args)
                     == 1  # TODO more than one arguments to range()
                     and isinstance(qual.iter.args[0], ast.Constant)
+                    and isinstance(qual.iter.args[0].value, int)
                 ):
-                    self.output(f"__ss_result->resize({qual.iter.args[0].value!r});")
+                    self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
                     self.output(
                         f"__ss_result->units.reserve({4 * len(node.generators)});"
