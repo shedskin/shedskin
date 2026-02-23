@@ -587,6 +587,7 @@ function(add_shedskin_product)
 	    else()
 		    add_test(NAME ${EXT}
                 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		    )
 	    endif()
         endif()

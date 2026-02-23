@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed dict comprehension code generation crash (`TypeError: 'Tuple' object is not subscriptable`) in `cpp.py` by accessing `node.elt.elts[0]`/`node.elt.elts[1]` instead of `node.elt[0]`/`node.elt[1]`
+- Fixed dict comprehension type inference in `graph.py`: `isinstance(node.elt, tuple)` was always `False` for `ast.Tuple` nodes, so key/value type constraints were never set up. Changed to `node in self.gx.dictcomp_to_lc.values()`
+- Fixed `runtests --run` executing unbuilt ext tests by aligning ctest regex with the build target suffix in `cmake.py`
+- Added missing `WORKING_DIRECTORY` for non-Windows ext tests in CMake configuration
+
+### Changed
+
+- Converted build system to uv, replacing pip/setuptools workflow with `uv` commands in Makefile (`f97db27a`)
+- Applied mypy strict mode fixes across core modules (`__init__`, `cmake`, `config`, `cpp`, `graph`, `infer`, `makefile`, `stats`) (`635c2938`)
+- Converted documentation from Sphinx/RST to MkDocs with Markdown (`23c5c338`)
+  - Replaced `README.rst` with `README.md`
+  - Removed generated Sphinx HTML/JS/CSS assets from `docs/`
+  - Added `mkdocs.yml` configuration
+- Updated `Makefile` test target to fix test invocation (`7cebb2ff`)
+  - Refactored `graph.py` and `infer.py` to resolve type issues
+
+### Removed
+
+- Removed `requirements.txt` (dependencies now managed via `pyproject.toml` and uv) (`9602bf6b`)
+
 ## [0.9.12]
 
 ### Added

@@ -9,7 +9,7 @@ def test_none():
 
     assert a != c
     assert not a == c
-    assert not a is c
+    assert a is not c
 
     d = [3]
     d = None
@@ -27,7 +27,7 @@ def test_none():
     assert d is None
 
     assert not a == None
-    assert not a is None
+    assert a is not None
 
     assert c[0] == None
     assert c[0] is None
@@ -35,7 +35,7 @@ def test_none():
 
     assert c[1] != None
     assert not c[1] == None
-    assert not c[1] is None
+    assert c[1] is not None
 
 
 def test_all():
