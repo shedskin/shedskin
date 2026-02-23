@@ -1,5 +1,3 @@
-import os
-import os.path
 import fnmatch
 
 fs = ['a.txt', 'b.txt', 'c.txt', 'd.mod']

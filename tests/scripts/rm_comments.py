@@ -3,7 +3,8 @@
 # from: https://stackoverflow.com/questions/1769332/script-to-remove-python-comments-docstrings
 with some tweaks for rstripping
 """
-import io, tokenize
+import io
+import tokenize
 import argparse
 
 

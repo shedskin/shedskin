@@ -22,9 +22,19 @@ from the Python type information gathered during type inference.
 
 import ast
 import logging
+
 # type-checking
-from typing import (TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Type,
-                    TypeAlias, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    Type,
+    TypeAlias,
+    Union,
+)
 
 from . import error, infer, python
 
@@ -179,8 +189,8 @@ def nodetypestr(
         cplusplus and isinstance(node, python.Variable) and node.wopper
     ):  # XXX to declaredefs?
         ts = nodetypestr(gx, node.wopper, None, cplusplus, mv=mv)
-        if ts.startswith("dict<") or ts.startswith('__collections__::defaultdict<'):
-            return "__GC_DICT<" + ts[ts.find('<')+1:-3] + ">::iterator "
+        if ts.startswith("dict<") or ts.startswith("__collections__::defaultdict<"):
+            return "__GC_DICT<" + ts[ts.find("<") + 1 : -3] + ">::iterator "
     types = gx.merged_inh[node]
     return typestr(gx, types, None, cplusplus, node, check_extmod, 0, check_ret, mv=mv)
 

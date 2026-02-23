@@ -1,0 +1,39 @@
+site_name: Shed Skin
+site_description: An experimental (restricted-Python)-to-C++ compiler
+site_author: Mark Dufour & the Shed Skin contributors
+repo_url: https://github.com/shedskin/shedskin
+repo_name: shedskin/shedskin
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - admonition
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Documentation: documentation.md

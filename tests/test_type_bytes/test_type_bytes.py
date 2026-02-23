@@ -60,7 +60,7 @@ def test_index():
     exc = False
     try:
         assert b'bla'.index(b'ba') == -1
-    except ValueError as e:
+    except ValueError:
         exc = True
     assert exc
 
@@ -181,7 +181,7 @@ def test_rindex():
     exc = False
     try:
         assert b'bla'.rindex(b'ba') == -1
-    except ValueError as e:
+    except ValueError:
         exc = True
     assert exc
 
@@ -303,8 +303,8 @@ def test_contains():
     assert list(bs) == [98, 108, 97, 97]
 
     assert b'l' in bs
-    assert not b'x' in bs
-    assert not 28 in bs
+    assert b'x' not in bs
+    assert 28 not in bs
     assert 108 in bs
 
 
