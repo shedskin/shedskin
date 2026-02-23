@@ -1,6 +1,7 @@
 site_name: Shed Skin
 site_description: An experimental (restricted-Python)-to-C++ compiler
 site_author: Mark Dufour & the Shed Skin contributors
+site_url: https://shedskin.github.io/shedskin/
 repo_url: https://github.com/shedskin/shedskin
 repo_name: shedskin/shedskin
 
