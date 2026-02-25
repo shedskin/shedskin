@@ -59,9 +59,9 @@ In the current version of Shed Skin, mixed types are also permitted in tuples of
 a = (1, [1]) # good
 ```
 
-In the future, mixed tuples up to a certain length will probably be allowed.
+In the future, mixed tuples up to a certain length may be allowed.
 
-None may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):
+`None` may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):
 
 ```python
 l = [1]
@@ -75,7 +75,11 @@ def fun(x = None): # bad: use a special value for x here, e.g. x = -1
 fun(1)
 ```
 
-Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain in cases where they can't.
+As `None` becomes a NULL-pointer on the C++ side, this means you may run into segfaults for
+untested code (but only where the original code would crash too.)
+
+Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain
+in cases where they can't.
 
 ## Python Subset Restrictions
 
@@ -122,7 +126,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * `colorsys`
 * `configparser` (no SafeConfigParser)
 * `copy`
-* `csv` (no Dialect, Sniffer)
+* `csv` (no Dialect, Sniffer, ASCII-only)
 * `datetime`
 * `fnmatch`
 * `functools` (reduce)
@@ -176,7 +180,7 @@ sudo python setup.py install
 
 To compile and run programs produced by shedskin the following libraries are needed:
 
-* g++, the C++ compiler (version 4.2 or higher).
+* g++, the C++ compiler
 * pcre2 development files
 * Python development files
 * Boehm garbage collection
@@ -221,7 +225,7 @@ sudo python setup.py install
 
 To compile and run programs produced by shedskin the following libraries are needed:
 
-* g++, the C++ compiler (version 4.2 or higher; comes with the Apple XCode development environment?)
+* g++, the C++ compiler
 * pcre2 development files
 * Python development files
 * Boehm garbage collection
@@ -735,6 +739,7 @@ python main_program_that_imports_extmod
 sudo opcontrol --shutdown
 opreport -l extmod.so
 ```
+* A memory profiler, for example Massif (a Valgrind tool) can also be very useful. To use Massif, use the Shedskin --nogc option, then use Massif normally (valgrind --tool=massif binary).
 
 ### Tricks
 
