@@ -206,6 +206,9 @@ template<class T> template<class ... Args> set<T>::set(int, Args ... args)  {
 template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
     set<T> *b = (set<T> *)p;
 
+    if(b->__len__() != this->__len__())
+        return False;
+
     // TODO why can't we just use unordered_map operator==
     typename __GC_SET<T>::iterator it;
 
