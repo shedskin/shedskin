@@ -1070,8 +1070,8 @@
 <p>In the current version of Shed Skin, mixed types are also permitted in tuples of length two:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># good</span>
 </code></pre></div>
-<p>In the future, mixed tuples up to a certain length will probably be allowed.</p>
-<p>None may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):</p>
+<p>In the future, mixed tuples up to a certain length may be allowed.</p>
+<p><code>None</code> may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">l</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># good</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
@@ -1082,7 +1082,10 @@
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="k">pass</span>
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">fun</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
-<p>Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain in cases where they can't.</p>
+<p>As <code>None</code> becomes a NULL-pointer on the C++ side, this means you may run into segfaults for
+untested code (but only where the original code would crash too.)</p>
+<p>Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain
+in cases where they can't.</p>
 <h2 id="python-subset-restrictions">Python Subset Restrictions<a class="headerlink" href="#python-subset-restrictions" title="Permanent link">&para;</a></h2>
 <p>Shed Skin will only ever support a subset of all Python features. The following common features are currently not supported:</p>
 <ul>
@@ -1123,7 +1126,7 @@
 <li><code>colorsys</code></li>
 <li><code>configparser</code> (no SafeConfigParser)</li>
 <li><code>copy</code></li>
-<li><code>csv</code> (no Dialect, Sniffer)</li>
+<li><code>csv</code> (no Dialect, Sniffer, ASCII-only)</li>
 <li><code>datetime</code></li>
 <li><code>fnmatch</code></li>
 <li><code>functools</code> (reduce)</li>
@@ -1165,7 +1168,7 @@
 <h4 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h4>
 <p>To compile and run programs produced by shedskin the following libraries are needed:</p>
 <ul>
-<li>g++, the C++ compiler (version 4.2 or higher).</li>
+<li>g++, the C++ compiler</li>
 <li>pcre2 development files</li>
 <li>Python development files</li>
 <li>Boehm garbage collection</li>
@@ -1196,7 +1199,7 @@
 <h4 id="dependencies_1">Dependencies<a class="headerlink" href="#dependencies_1" title="Permanent link">&para;</a></h4>
 <p>To compile and run programs produced by shedskin the following libraries are needed:</p>
 <ul>
-<li>g++, the C++ compiler (version 4.2 or higher; comes with the Apple XCode development environment?)</li>
+<li>g++, the C++ compiler</li>
 <li>pcre2 development files</li>
 <li>Python development files</li>
 <li>Boehm garbage collection</li>
@@ -1595,13 +1598,14 @@
 <a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>gprof<span class="w"> </span>program_prof<span class="w"> </span><span class="p">|</span><span class="w"> </span>gprof2dot.py<span class="w"> </span><span class="p">|</span><span class="w"> </span>dot<span class="w"> </span>-Tpng<span class="w"> </span>-ooutput.png
 </code></pre></div>
 <p>To use OProfile, install it and use it as follows.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>-e<span class="w"> </span>extmod
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>-e<span class="w"> </span>extmod
 <a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>make
 <a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--start
 <a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>python<span class="w"> </span>main_program_that_imports_extmod
 <a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--shutdown
 <a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>opreport<span class="w"> </span>-l<span class="w"> </span>extmod.so
 </code></pre></div>
+* A memory profiler, for example Massif (a Valgrind tool) can also be very useful. To use Massif, use the Shedskin --nogc option, then use Massif normally (valgrind --tool=massif binary).</p>
 <h3 id="tricks">Tricks<a class="headerlink" href="#tricks" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The following two code fragments work the same, but only the second one is supported:</li>
