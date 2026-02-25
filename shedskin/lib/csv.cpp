@@ -4,6 +4,8 @@
 
 namespace __csv__ {
 
+dict<str *, Dialect *> *_dialects;
+
 tuple2<str *, str *> *const_3;
 str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
@@ -103,10 +105,9 @@ class_ *cl_Error;
 class Excel
 */
 
-class_ *cl_Excel;
+class_ *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
 
 void *Excel::__init__() {
-    
     this->delimiter = const_4;
     this->quotechar = const_5;
     this->doublequote = 1;
@@ -612,9 +613,17 @@ void __init() {
 
     __name__ = new str("csv");
 
+    _dialects = new dict<str *, Dialect *>();
+    _dialects->__setitem__(new str("unix"), new unix_dialect());
+    _dialects->__setitem__(new str("excel"), new excel());
+    _dialects->__setitem__(new str("excel-tab"), new excel_tab());
+
     cl_writer = new class_("writer");
     cl_DictReader = new class_("DictReader");
-    cl_Excel = new class_("Excel");
+    cl_Dialect = new class_("Dialect");
+    cl_Excel = new class_("excel");
+    cl_ExcelTab = new class_("excel_tab");
+    cl_UnixDialect = new class_("unix_dialect");
     cl_reader = new class_("reader");
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
@@ -665,8 +674,7 @@ void __init() {
 }
 
 list<str *> *list_dialects() {
-    
-    return (new list<str *>(2, const_24, const_25));
+    return new list<str *>(_dialects);
 }
 
 Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
@@ -708,6 +716,10 @@ Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequ
         dialect->strict = strict;
     }
     return dialect;
+}
+
+Dialect *get_dialect(str *name) {
+    return _dialects->__getitem__(name);
 }
 
 __ss_int field_size_limit(__ss_int new_limit) {

@@ -1,4 +1,8 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
+
+# TODO
+# register_dialect
+# unregister_dialect
 
 START_RECORD = START_FIELD = ESCAPED_CHAR = IN_FIELD = IN_QUOTED_FIELD = ESCAPE_IN_QUOTED_FIELD = QUOTE_IN_QUOTED_FIELD = EAT_CRNL = 0
 QUOTE_MINIMAL = QUOTE_ALL = QUOTE_NONNUMERIC = QUOTE_NONE = 0
@@ -6,8 +10,22 @@ QUOTE_MINIMAL = QUOTE_ALL = QUOTE_NONNUMERIC = QUOTE_NONE = 0
 class Error(Exception):
     pass
 
+class Dialect:
+    def __init__(self):
+        self.delimiter = ''
+        self.doublequote = True
+        self.escapechar = ''
+        self.lineterminator = ''
+        self.quotechar = ''
+        self.quoting = 0
+        self.skipinitialspace = False
+        self.strict = False
+
 def list_dialects():
-    return ['excel', 'excel-tab']
+    return ['']
+
+def get_dialect(name):
+    return Dialect()
 
 def field_size_limit(new_limit=-1):
     return new_limit

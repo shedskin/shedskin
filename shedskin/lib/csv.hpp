@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __CSV_HPP
 #define __CSV_HPP
@@ -13,6 +13,12 @@ extern list<void *> *const_0;
 extern str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 class Error;
+
+class Dialect;
+class unix_dialect;
+class excel;
+class excel_tab;
+
 class Excel;
 class reader;
 class writer;
@@ -34,8 +40,80 @@ public:
     }
 };
 
+extern class_ *cl_Dialect;
+class Dialect : public pyobj {
+public:
+    str *lineterminator;
+    __ss_int skipinitialspace;
+    __ss_int quoting;
+    __ss_int strict;
+    str *delimiter;
+    str *escapechar;
+    str *quotechar;
+    __ss_int doublequote;
+
+    Dialect() {
+        this->__class__ = cl_Dialect;
+    }
+    void *__init__();
+};
+
+extern class_ *cl_UnixDialect;
+class unix_dialect : public Dialect {
+public:
+    unix_dialect() {
+        this->__class__ = cl_UnixDialect;
+
+        delimiter = new str(",");
+        doublequote = True;
+        escapechar = NULL;
+        lineterminator = new str("\n");
+        quotechar = new str("\"");
+        quoting = 1;
+        skipinitialspace = False;
+        strict = False;
+    }
+    void *__init__();
+};
+
 extern class_ *cl_Excel;
-class Excel : public pyobj {
+class excel : public Dialect {
+public:
+    excel() {
+        this->__class__ = cl_Excel;
+
+        delimiter = new str(",");
+        doublequote = True;
+        escapechar = NULL;
+        lineterminator = new str("\r\n");
+        quotechar = new str("\"");
+        quoting = 0;
+        skipinitialspace = False;
+        strict = False;
+    }
+    void *__init__();
+};
+
+extern class_ *cl_ExcelTab;
+class excel_tab : public Dialect {
+public:
+    excel_tab() {
+        this->__class__ = cl_ExcelTab;
+
+        delimiter = new str("\t");
+        doublequote = True;
+        escapechar = NULL;
+        lineterminator = new str("\r\n");
+        quotechar = new str("\"");
+        quoting = 0;
+        skipinitialspace = False;
+        strict = False;
+    }
+    void *__init__();
+};
+
+extern class_ *cl_Excel;
+class Excel : public pyobj { // TODO remove
 public:
     str *lineterminator;
     __ss_int skipinitialspace;
@@ -182,10 +260,13 @@ extern void * default_1;
 extern void * default_5;
 extern void * default_4;
 
-void __init();
 list<str *> *list_dialects();
+Dialect *get_dialect(str *name);
+
 Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 __ss_int field_size_limit(__ss_int new_limit);
+
+void __init();
 
 } // module namespace
 #endif
