@@ -502,7 +502,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     //extra info
     mobj->match_data = match_data;
     mobj->pos = pos;
-    mobj->endpos = endpos;
+    mobj->endpos = (endpos == -1? subj->unit.size(): endpos);
     mobj->string = subj;
     mobj->lastindex = r - 1;
 

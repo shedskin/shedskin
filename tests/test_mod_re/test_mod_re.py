@@ -42,8 +42,8 @@ def test_re_sub_fn():
     assert p.sub("****", txt, 1) == 'Call **** for printing, 49152 for user code.'
     assert p.sub(hexrepl, txt, 1) == 'Call 0xffd2 for printing, 49152 for user code.'
     assert p.sub(hexrepl, txt) == 'Call 0xffd2 for printing, 0xc000 for user code.'
-    assert re.sub(r"\d+", "****", txt, 2) == 'Call **** for printing, **** for user code.'
-    assert re.sub(r"\d+", hexrepl, txt, 2) == 'Call 0xffd2 for printing, 0xc000 for user code.'
+    assert re.sub(r"\d+", "****", txt, count=2) == 'Call **** for printing, **** for user code.'
+    assert re.sub(r"\d+", hexrepl, txt, count=2) == 'Call 0xffd2 for printing, 0xc000 for user code.'
 
 
 def test_re_subn():
@@ -55,7 +55,7 @@ def test_re_subn():
     assert re.compile('a').subn('ama', 'amadeus') == ('amamamadeus', 2)
 
     assert re.subn("b*", "x", "xyz") == ('xxxyxzx', 4) ## causes crash!
-    assert re.subn("b*", "x", "xyz", 2) == ('xxxyz', 2) ## case not equal
+    assert re.subn("b*", "x", "xyz", count=2) == ('xxxyz', 2) ## case not equal
     assert re.subn("b*", "x", "xyz", count=2) == ('xxxyz', 2) ## case not equal
 
 
@@ -107,6 +107,35 @@ def test_re_example3():
     assert hop == ('a', 'b', 'a')
 
 
+def test_match_pos_endpos():
+    m = re.match(r'abc', 'abcde')
+    assert (m.pos, m.endpos) == (0, 5)
+    m = re.search(r'abc', 'ioabcde')
+    assert (m.pos, m.endpos) == (0, 7)
+
+    #m = re.fullmatch(r'abc', 'abc')  # TODO
+    #print(m.pos, m.endpos)
+
+    pat = re.compile(r'abc')
+
+    m = pat.match('abcde')
+    assert (m.pos, m.endpos) == (0, 5)
+    m = pat.match('iabcde', 1)
+    assert (m.pos, m.endpos) == (1, 6)
+    m = pat.match('abcde', 0, 4)
+    assert (m.pos, m.endpos) == (0, 4)
+
+    m = pat.search('iiabcde')
+    assert (m.pos, m.endpos) == (0, 7)
+    m = pat.search('iiabcde', 1, 5)
+    assert (m.pos, m.endpos) == (1, 5)
+
+    #m = pat.fullmatch('abc')  # TODO
+    #print(m.pos, m.endpos)
+    #m = pat.fullmatch('iiabcde', 2, 5)
+    #print(m.pos, m.endpos)
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -118,6 +147,7 @@ def test_all():
     test_re_example1()
     test_re_example2()
     test_re_example3()
+    test_match_pos_endpos()
 
 
 if __name__ == "__main__":
