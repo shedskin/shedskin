@@ -151,9 +151,20 @@ public:
     file *input_iter;
 
     reader() {}
-    reader(file *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    template<class D> reader(file *input_iter_, D dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
         this->__class__ = cl_reader;
-        __init__(input_iter_, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+        str *dialectstr;
+
+        if constexpr (std::is_same_v<D, str *>) {
+            dialectstr = dialect_;
+        }
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO lookup and pass dialect object
+            dialectstr = new str("excel");
+        }
+        else
+            dialectstr = new str("excel");
+
+        __init__(input_iter_, dialectstr, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
     void *parse_process_char(str *c);
     void *parse_reset();

@@ -6,9 +6,9 @@ import os.path
 # TODO Dialect subclassing..?
 # TODO register_dialect, unregister_dialect
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
+# next(reader)..?
 
-
-def test_program():
+def _csv_in_out():
     if os.path.exists('testdata'):
         csvfile_in = os.path.join('testdata', 'woef.csv')
         csvfile_out = os.path.join('testdata', 'bla.csv')
@@ -18,6 +18,11 @@ def test_program():
     else:
         csvfile_in = os.path.join('../../testdata', 'woef.csv')
         csvfile_out = os.path.join('../../testdata', 'bla.csv')
+    return csvfile_in, csvfile_out
+
+
+def test_program():
+    csvfile_in, csvfile_out = _csv_in_out()
 
     d = collections.defaultdict(list)
     for (a, b, n, l) in csv.reader(open(csvfile_in), delimiter="|"):
@@ -88,6 +93,8 @@ def test_program():
 
 
 def test_dialects():
+    csvfile_in, csvfile_out = _csv_in_out()
+
     dialects = csv.list_dialects()
     assert set(dialects) == set(['excel', 'excel-tab', 'unix'])
 
@@ -120,6 +127,10 @@ def test_dialects():
     assert dialect.quoting == 1
     assert dialect.skipinitialspace is False
     assert dialect.strict is False
+
+    reader = csv.reader(open(csvfile_in), dialect=csv.get_dialect('excel'), delimiter='|')
+    row = list(reader)[0]
+    assert row == ['aap', ' noot', ' 18', ' ole']
 
 
 def test_all():
