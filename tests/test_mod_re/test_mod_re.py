@@ -72,6 +72,8 @@ def test_re_compile():
     assert pat.match('bc').groups() ==('b', None, 'b', 'c')
     assert pat.match('bc').groups("") == ('b', "", 'b', 'c')
 
+    assert pat.groups == 4
+
 
 def test_re_example1():
     a = re.compile(
@@ -159,6 +161,10 @@ def test_flags():
     assert re.ASCII == 256
 
 
+def test_purge():
+    re.purge()
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -172,6 +178,7 @@ def test_all():
     test_re_example3()
     test_match_pos_endpos()
     test_flags()
+    test_purge()
 
 
 if __name__ == "__main__":

@@ -131,6 +131,9 @@ public:
     //the flags used
     __ss_int flags;
 
+    //number of captured groups
+    __ss_int groups;
+
     //internal functions
     __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int m);
     __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, str *m);
@@ -182,6 +185,8 @@ str *escape(str *s);
 
 list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
 match_object *__exec_once(str *subj, __ss_int flags);
+
+inline void *purge() { return NULL; };
 
 //internal functions
 void __init(void);
