@@ -1,7 +1,7 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
-# TODO purge, re_object.groups attr,
+# TODO fix re_object.groups, rename re_object to Pattern
 
 NOFLAGS = 0
 I = IGNORECASE = 2
@@ -61,6 +61,7 @@ class match_object:
 class re_object:
     def __init__(self):  # TODO .groups
         self.flags = 0
+        self.groups = 0
         self.groupindex = {'' : ''}
         self.pattern = ''
 
@@ -124,3 +125,6 @@ def findall(pattern, string, flags=0):
 
 def escape(pattern):
     return ''
+
+def purge():
+    pass

@@ -631,6 +631,7 @@ re_object *compile(str *pat, __ss_int flags)
     //extra info
     reobj->pattern = new str(pat->unit);
     reobj->flags = flags;
+    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &reobj->groups);
     pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &reobj->capture_count);
 
     return reobj;
