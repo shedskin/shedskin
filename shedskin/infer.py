@@ -505,6 +505,7 @@ def connect_actual_formal(
                 "bisect",
                 "array",
                 "math",
+                "integer",
                 "cStringIO",
                 "getopt",
             ]
