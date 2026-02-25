@@ -140,7 +140,7 @@ public:
 };
 
 extern class_ *cl_reader;
-class reader : public pyiter<list<str *> *> {
+class reader : public __iter<list<str *> *> {
 public:
     Excel *dialect;
     __ss_int line_num;
@@ -204,7 +204,7 @@ public:
 };
 
 extern class_ *cl_DictReader;
-class DictReader : public pyiter<dict<str *, str *> *> {
+class DictReader : public __iter<dict<str *, str *> *> {
 public:
     str *restval;
     str *dialect;
