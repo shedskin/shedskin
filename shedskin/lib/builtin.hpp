@@ -470,6 +470,20 @@ template<class T> list<T> *__ss_list() {
     return l;
 }
 
+template<class T> inline list<T> *__ss_listmul(T t, __ss_int n) {
+    list<T> *l =  new list<T>();
+    if(n > 0)
+        l->units.assign(n, t);
+    return l;
+}
+
+template<class T> inline list<T> *__ss_listmul2(__ss_int n, T t) {
+    list<T> *l =  new list<T>();
+    if(n > 0)
+        l->units.assign(n, t);
+    return l;
+}
+
 inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
     list<__ss_int> *l = new list<__ss_int>();
     __ss_int len = range_len(a, b, c);
