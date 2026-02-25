@@ -61,6 +61,9 @@ class re_object:  # TODO fullmatch
     def match(self, string, pos=0, endpos=-1):
         return match_object()
 
+    def fullmatch(self, string, pos=0, endpos=-1):
+        return match_object()
+
     def search(self, string, pos=0, endpos=-1):
         return match_object()
 
@@ -87,7 +90,10 @@ class re_object:  # TODO fullmatch
 def compile(pattern, flags=0):
     return re_object()
 
-def match(pattern, string, flags=0):  # TODO fullmatch
+def match(pattern, string, flags=0):
+    return match_object()
+
+def fullmatch(pattern, string, flags=0):
     return match_object()
 
 def search(pattern, string, flags=0):

@@ -534,6 +534,18 @@ match_object *re_object::match(str *subj, __ss_int pos, __ss_int endpos)
     return __exec(subj, pos, endpos, PCRE2_ANCHORED);
 }
 
+match_object *re_object::fullmatch(str *subj, __ss_int pos, __ss_int endpos)
+{
+    match_object *m = __exec(subj, pos, endpos, PCRE2_ANCHORED);
+    if (m) {
+        if(endpos == -1)
+            endpos = len(subj);
+        if(m->start() == pos && m->end() == endpos)
+            return m;
+    }
+    return NULL;
+}
+
 match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
 {
     return __exec(subj, pos, endpos, 0);
@@ -671,6 +683,14 @@ match_object *search(str *pat, str *subj, __ss_int flags)
 match_object *match(str *pat, str *subj, __ss_int flags)
 {
     return __exec_once(pat, subj, flags | PCRE2_ANCHORED);
+}
+
+match_object *fullmatch(str *pat, str *subj, __ss_int flags)
+{
+    match_object *m = __exec_once(pat, subj, flags | PCRE2_ANCHORED);
+    if(m->end() == len(subj))
+        return m;
+    return NULL;
 }
 
 __iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
