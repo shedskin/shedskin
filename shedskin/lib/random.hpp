@@ -4,7 +4,7 @@
 #define __RANDOM_HPP
 
 #include "builtin.hpp"
-#include "math.hpp"
+#include "math/__init__.hpp"
 #include "time.hpp"
 
 #include <random>
