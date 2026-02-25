@@ -1,21 +1,24 @@
-# Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
-# TODO purge, match_object.__getitem__, fullmatch, re_object.groups attr,
+# TODO purge, re_object.groups attr,
 
+NOFLAGS = 0
 I = IGNORECASE = 2
 L = LOCALE = 4
 M = MULTILINE = 8
 S = DOTALL = 16
 U = UNICODE = 32
 X = VERBOSE = 64
+DEBUG = 128
+A = ASCII = 256
 
 class PatternError(Exception): pass
 
 class error(Exception): pass  # deprecated alias for PatternError
 
 
-class match_object:  # TODO __getitem__(g)
+class match_object:
     def __init__(self):
         self.pos = 0
         self.endpos = 0
@@ -32,6 +35,9 @@ class match_object:  # TODO __getitem__(g)
     def __group0(self, arg):
         return ''
     def __group1(self, arg):
+        return ''
+
+    def __getitem__(self, g):
         return ''
 
     def start(self, group=0):
@@ -52,7 +58,7 @@ class match_object:  # TODO __getitem__(g)
     def __repr__(self):
         return ''
 
-class re_object:  # TODO fullmatch
+class re_object:
     def __init__(self):  # TODO .groups
         self.flags = 0
         self.groupindex = {'' : ''}
