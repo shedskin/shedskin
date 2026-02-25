@@ -143,6 +143,7 @@ public:
     list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_);
 
     match_object *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    match_object *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     match_object *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     __iter<match_object *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     list<str *> *split(str *subj, __ss_int maxn = -1);
@@ -168,6 +169,7 @@ public:
 re_object *compile(str *pat, __ss_int flags = 0);
 
 match_object *match(str *pat, str *subj, __ss_int flags = 0);
+match_object *fullmatch(str *pat, str *subj, __ss_int flags = 0);
 match_object *search(str *pat, str *subj, __ss_int flags = 0);
 __iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
 list<str *> *split(str *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);

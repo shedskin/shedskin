@@ -113,8 +113,10 @@ def test_match_pos_endpos():
     m = re.search(r'abc', 'ioabcde')
     assert (m.pos, m.endpos) == (0, 7)
 
-    #m = re.fullmatch(r'abc', 'abc')  # TODO
-    #print(m.pos, m.endpos)
+    m = re.fullmatch(r'abc', 'abc')
+    assert (m.pos, m.endpos) == (0, 3)
+    m = re.fullmatch(r'abc', 'abcd')
+    assert m is None
 
     pat = re.compile(r'abc')
 
@@ -130,10 +132,10 @@ def test_match_pos_endpos():
     m = pat.search('iiabcde', 1, 5)
     assert (m.pos, m.endpos) == (1, 5)
 
-    #m = pat.fullmatch('abc')  # TODO
-    #print(m.pos, m.endpos)
-    #m = pat.fullmatch('iiabcde', 2, 5)
-    #print(m.pos, m.endpos)
+    m = pat.fullmatch('abc')
+    assert (m.pos, m.endpos) == (0, 3)
+    m = pat.fullmatch('iiabcde', 2, 5)
+    assert (m.pos, m.endpos) == (2, 5)
 
 
 def test_all():
