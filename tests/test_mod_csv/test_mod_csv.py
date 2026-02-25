@@ -3,6 +3,11 @@ import collections
 import os
 import os.path
 
+# TODO Dialect subclassing..?
+# TODO register_dialect, unregister_dialect
+# TODO QUOTE_NOTNULL, QUOTE_STRINGS
+
+
 def test_program():
     if os.path.exists('testdata'):
         csvfile_in = os.path.join('testdata', 'woef.csv')
@@ -13,10 +18,6 @@ def test_program():
     else:
         csvfile_in = os.path.join('../../testdata', 'woef.csv')
         csvfile_out = os.path.join('../../testdata', 'bla.csv')
-
-    dialects = csv.list_dialects()
-    assert 'excel' in dialects
-    assert 'excel-tab' in dialects
 
     d = collections.defaultdict(list)
     for (a, b, n, l) in csv.reader(open(csvfile_in), delimiter="|"):
@@ -86,10 +87,45 @@ def test_program():
     )
 
 
+def test_dialects():
+    dialects = csv.list_dialects()
+    assert set(dialects) == set(['excel', 'excel-tab', 'unix'])
+
+    dialect = csv.get_dialect('excel')
+    assert dialect.delimiter == ','
+    assert dialect.doublequote is True
+    assert dialect.escapechar is None
+    assert dialect.lineterminator == '\r\n'
+    assert dialect.quotechar == '"'
+    assert dialect.quoting == 0
+    assert dialect.skipinitialspace is False
+    assert dialect.strict is False
+
+    dialect = csv.get_dialect('excel-tab')
+    assert dialect.delimiter == '\t'
+    assert dialect.doublequote is True
+    assert dialect.escapechar is None
+    assert dialect.lineterminator == '\r\n'
+    assert dialect.quotechar == '"'
+    assert dialect.quoting == 0
+    assert dialect.skipinitialspace is False
+    assert dialect.strict is False
+
+    dialect = csv.get_dialect('unix')
+    assert dialect.delimiter == ','
+    assert dialect.doublequote is True
+    assert dialect.escapechar is None
+    assert dialect.lineterminator == '\n'
+    assert dialect.quotechar == '"'
+    assert dialect.quoting == 1
+    assert dialect.skipinitialspace is False
+    assert dialect.strict is False
+
+
 def test_all():
     test_program()
+    test_dialects()
 
 
 if __name__ == "__main__":
     test_all()
-
