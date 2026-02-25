@@ -6,7 +6,6 @@ import os.path
 # TODO Dialect subclassing..?
 # TODO register_dialect, unregister_dialect
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
-# next(reader)..?
 
 def _csv_in_out():
     if os.path.exists('testdata'):
@@ -129,8 +128,8 @@ def test_dialects():
     assert dialect.strict is False
 
     reader = csv.reader(open(csvfile_in), dialect=csv.get_dialect('excel'), delimiter='|')
-    row = list(reader)[0]
-    assert row == ['aap', ' noot', ' 18', ' ole']
+    assert next(reader) == ['aap', ' noot', ' 18', ' ole']
+    assert next(reader) == ['aap', ' noot', ' 19', ' ole2']
 
 
 def test_all():
