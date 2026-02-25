@@ -91,6 +91,15 @@ def test_re_example2():
     assert m.group(0, 2) == ('ab', 'b')
     assert m.group(2, 1, 1, 2) == ('b', 'a', 'a', 'b')
 
+    # m.__getitem__
+    assert m[1] == 'a'
+    error = ''
+    try:
+        m.group(17) # [17]
+    except IndexError as e:
+        error = str(e)
+    assert error == 'no such group'
+
 
 def test_re_example3():
     imag = re.compile("(?P<one>a)(?P<two>b)")
@@ -138,6 +147,18 @@ def test_match_pos_endpos():
     assert (m.pos, m.endpos) == (2, 5)
 
 
+def test_flags():
+    assert re.NOFLAG == 0
+    assert re.IGNORECASE == 2
+    assert re.LOCALE == 4
+    assert re.MULTILINE == 8
+    assert re.DOTALL == 16
+    assert re.UNICODE == 32
+    assert re.VERBOSE == 64
+    assert re.DEBUG == 128
+    assert re.ASCII == 256
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -150,6 +171,7 @@ def test_all():
     test_re_example2()
     test_re_example3()
     test_match_pos_endpos()
+    test_flags()
 
 
 if __name__ == "__main__":

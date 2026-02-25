@@ -7,12 +7,15 @@ namespace __re__ {
 
 //flags
 const __ss_int
+    NOFLAG = 0,
     I = 0x02, IGNORECASE    = 0x02,
     L = 0x04, LOCALE        = 0x04,
     M = 0x08, MULTILINE     = 0x08,
     S = 0x10, DOTALL        = 0x10,
     U = 0x20, __ss_UNICODE  = 0x20,
-    X = 0x40, VERBOSE       = 0x40;
+    X = 0x40, VERBOSE       = 0x40,
+    DEBUG = 0x80,
+    A = 0x100, ASCII         = 0x100;
 
 //PCRE structures
 pcre2_general_context *general_context;
@@ -34,6 +37,10 @@ str *match_object::group(__ss_int /* n */, str *mname)
     return new str(re->__group(&string->unit, captured, mname));
 }
 
+str *match_object::__getitem__(__ss_int g) {
+    return group(0, g);
+}
+
 //index functions
 __ss_int match_object::__index(__ss_int matchid, char isend)
 {
@@ -46,7 +53,7 @@ __ss_int match_object::__index(__ss_int matchid, char isend)
 
 __ss_int match_object::__index(str *mname, char isend)
 {
-    if(!re->groupindex->has_key(mname)) throw new error(new str("no such group exists"));
+    if(!re->groupindex->has_key(mname)) throw new IndexError(new str("no such group"));
 
     return __index(re->groupindex->__getitem__(mname), isend);
 }
@@ -140,7 +147,7 @@ str *re_object::__repr__() {
 //these are for internal use
 __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int matchid)
 {
-    if(matchid > capture_count || matchid < 0) throw new error(new str("group does not exist"));
+    if(matchid > capture_count || matchid < 0) throw new IndexError(new str("no such group"));
     if(captured[matchid * 2] == PCRE2_UNSET) throw new error(new str("group is unmatched"));
 
     return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
@@ -148,7 +155,7 @@ __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int
 
 __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, str *mname)
 {
-    if(!groupindex->has_key(mname)) throw new error(new str("no such group exists"));
+    if(!groupindex->has_key(mname)) throw new IndexError(new str("no such group exists"));
 
     return __group(subj, captured, groupindex->__getitem__(mname));
 }

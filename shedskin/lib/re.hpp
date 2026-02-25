@@ -21,8 +21,8 @@ using namespace __shedskin__;
 
 namespace __re__ {
 
-extern const __ss_int I, L, M, S, U, X,
-    IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE;
+extern const __ss_int I, L, M, S, U, X, A,
+    IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE, ASCII, DEBUG, NOFLAG;
 
 class match_object;
 typedef str *(*replfunc)(match_object *);
@@ -74,6 +74,7 @@ public:
 
     str *group(__ss_int n, __ss_int m = 0);
     str *group(__ss_int n, str *m);
+    str *__getitem__(__ss_int n);
 
     template <class ... Args> tuple<str *> *group(__ss_int, __ss_int m, __ss_int o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
