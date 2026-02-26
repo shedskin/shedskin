@@ -7,40 +7,21 @@ namespace __csv__ {
 dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
 str *const_88;
 
 str *__name__;
 __ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
-OSError *__exception;
 
-void * default_9;
-void * default_14;
-void * default_16;
-void * default_21;
-void * default_23;
+class_ *cl_Error;
+
+class_ *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
+
+
 str * default_18;
-void * default_25;
-void * default_0;
-void * default_2;
-void * default_6;
-void * default_3;
-void * default_8;
-void * default_10;
-void * default_11;
-void * default_13;
-void * default_15;
-void * default_12;
-void * default_17;
-void * default_24;
 str * default_19;
 str * default_20;
-void * default_22;
-void * default_7;
-void * default_1;
-void * default_5;
-void * default_4;
 
 __csviter::__csviter(reader *r_) {
     r = r_;
@@ -93,30 +74,6 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
     END_FOR
 
     return __ss_result;
-}
-
-/**
-class Error
-*/
-
-class_ *cl_Error;
-
-/**
-class Excel
-*/
-
-class_ *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
-
-void *Excel::__init__() {
-    this->delimiter = const_4;
-    this->quotechar = const_5;
-    this->doublequote = 1;
-    this->skipinitialspace = 0;
-    this->lineterminator = const_6;
-    this->quoting = QUOTE_MINIMAL;
-    this->escapechar = ((str *)(NULL));
-    this->strict = 0;
-    return NULL;
 }
 
 /**
@@ -605,9 +562,7 @@ void __init() {
     const_21 = new str("dict contains fields not in fieldnames: ");
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
-    const_24 = new str("excel");
     const_25 = new str("excel-tab");
-    const_26 = new str("\t");
     const_27 = new str("unknown dialect");
     const_88 = new str("shedskin: QUOTE_NONNUMERIC is not supported");
 
@@ -646,51 +601,33 @@ void __init() {
 
     _field_limit = (128*1024);
 
-    default_0 = NULL;
-    default_1 = NULL;
-    default_2 = NULL;
-    default_3 = NULL;
-    default_4 = NULL;
-    default_5 = NULL;
-    default_6 = NULL;
-    default_7 = NULL;
-    default_8 = NULL;
-    default_9 = NULL;
-    default_10 = NULL;
-    default_11 = NULL;
-    default_12 = NULL;
-    default_13 = NULL;
-    default_14 = NULL;
-    default_15 = NULL;
-    default_16 = NULL;
-    default_17 = NULL;
     default_18 = const_16;
     default_19 = const_1;
-    default_20 = const_24;
-    default_21 = NULL;
-    default_22 = NULL;
-    default_23 = NULL;
-    default_24 = NULL;
 }
 
 list<str *> *list_dialects() {
     return new list<str *>(_dialects);
 }
 
-Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    Excel *dialect;
-    __ss_int __2;
+Dialect *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(name == NULL)
+        name = new str("excel");
 
-    if (__OR((name==NULL), __eq(name, const_24), 2)) {
-        dialect = (new Excel(1));
-    }
-    else if (__eq(name, const_25)) {
-        dialect = (new Excel(1));
-        dialect->delimiter = const_26;
-    }
-    else {
-        throw ((new Error(const_27)));
-    }
+    Dialect *from = _dialects->__getitem__(name);
+//        throw ((new Error(const_27))); // TODO unknown dialect
+
+    Dialect *dialect = new Dialect();
+
+    // TODO virtual dialect.copy() to maintain type eg as reader.dialect..?
+    dialect->delimiter = from->delimiter;
+    dialect->quotechar = from->quotechar;
+    dialect->doublequote = from->doublequote;
+    dialect->skipinitialspace = from->skipinitialspace;
+    dialect->lineterminator = from->lineterminator;
+    dialect->quoting = from->quoting;
+    dialect->escapechar = from->escapechar;
+    dialect->strict = from->strict;
+
     if ((delimiter!=NULL)) {
         dialect->delimiter = delimiter;
     }
