@@ -38,6 +38,19 @@ str * default_18; // TODO remove
 str * default_19;
 str * default_20;
 
+void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) {
+    if(!c)
+        return;
+
+    if(c->unit[0] == '\n' || c->unit[0] == '\r') // TODO space, allowspace
+        throw new ValueError(__add_strs(3, new str("bad "), name, new str(" value")));
+
+    if(dialect->lineterminator != NULL) {
+        if(dialect->lineterminator->__contains__(c))
+            throw new ValueError(__add_strs(3, new str("bad "), name, new str(" or lineterminator value")));
+    }
+}
+
 Dialect *_make_dialect(
     str *name,
     str *delimiter,
@@ -104,15 +117,7 @@ Dialect *_make_dialect(
         dialect->strict = __mbool(strict);
     }
 
-    if(dialect->delimiter != NULL) {
-        if(dialect->delimiter->unit[0] == '\n') // TODO '\r', ' '
-            throw new ValueError(new str("bad delimiter value")); // TODO use dialect_check_char, dialect_check_chars
-
-        if(dialect->lineterminator != NULL) {
-            if(dialect->lineterminator->__contains__(dialect->delimiter))
-                throw new ValueError(new str("bad delimiter or lineterminator value"));
-        }
-    }
+    _dialect_check_char(new str("delimiter"), dialect->delimiter, dialect, true);
 
     return dialect;
 }
