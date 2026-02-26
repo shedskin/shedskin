@@ -14,11 +14,27 @@ str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, 
 list<void *> *const_0;
 str *const_88;
 
-__ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
+__ss_int QUOTE_MINIMAL;
+__ss_int QUOTE_ALL;
+__ss_int QUOTE_NONNUMERIC;
+__ss_int QUOTE_NONE;
+__ss_int QUOTE_STRINGS;
+__ss_int QUOTE_NOTNULL;
+
+__ss_int START_FIELD;
+__ss_int START_RECORD;
+__ss_int QUOTE_IN_QUOTED_FIELD;
+__ss_int EAT_CRNL;
+__ss_int ESCAPED_CHAR;
+__ss_int ESCAPE_IN_QUOTED_FIELD;
+__ss_int IN_FIELD;
+__ss_int IN_QUOTED_FIELD;
+
+__ss_int _field_limit;
 
 class_ *cl_Error, *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
 
-str * default_18;
+str * default_18; // TODO remove
 str * default_19;
 str * default_20;
 
@@ -55,7 +71,7 @@ Dialect *_make_dialect(
     dialect->escapechar = from->escapechar;
     dialect->strict = from->strict;
 
-    if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None
+    if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None etc.
         if(len(delimiter) > 1)
             throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
         dialect->delimiter = delimiter;
@@ -75,6 +91,8 @@ Dialect *_make_dialect(
         dialect->lineterminator = lineterminator;
     }
     if ((quoting!=(-1))) {
+        if(quoting > 5)
+            throw new TypeError(new str("bad \"quoting\" value"));
         dialect->quoting = quoting;
     }
     if ((escapechar!=NULL)) {
@@ -639,23 +657,23 @@ void __init() {
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
 
-    list<__ss_int> *__0 = new list<__ss_int>(range(8));
-    START_RECORD = __0->__getfast__(0);
-    START_FIELD = __0->__getfast__(1);
-    ESCAPED_CHAR = __0->__getfast__(2);
-    IN_FIELD = __0->__getfast__(3);
-    IN_QUOTED_FIELD = __0->__getfast__(4);
-    ESCAPE_IN_QUOTED_FIELD = __0->__getfast__(5);
-    QUOTE_IN_QUOTED_FIELD = __0->__getfast__(6);
-    EAT_CRNL = __0->__getfast__(7);
+    START_RECORD = 0;
+    START_FIELD = 1;
+    ESCAPED_CHAR = 2;
+    IN_FIELD = 3;
+    IN_QUOTED_FIELD = 4;
+    ESCAPE_IN_QUOTED_FIELD = 5;
+    QUOTE_IN_QUOTED_FIELD = 6;
+    EAT_CRNL = 7;
 
-    list<__ss_int> *__1 = new list<__ss_int>(range(4));
-    QUOTE_MINIMAL = __1->__getfast__(0);
-    QUOTE_ALL = __1->__getfast__(1);
-    QUOTE_NONNUMERIC = __1->__getfast__(2);
-    QUOTE_NONE = __1->__getfast__(3);
+    QUOTE_MINIMAL = 0;
+    QUOTE_ALL = 1;
+    QUOTE_NONNUMERIC = 2;
+    QUOTE_NONE = 3;
+    QUOTE_STRINGS = 4;
+    QUOTE_NOTNULL = 5;
 
-    _field_limit = (128*1024);
+    _field_limit = 128*1024;
 
     default_18 = const_16;
     default_19 = const_1;
