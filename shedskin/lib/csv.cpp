@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "csv.hpp"
 
@@ -10,7 +10,7 @@ dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
 
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
 str *const_88;
 
@@ -22,12 +22,26 @@ str * default_18;
 str * default_19;
 str * default_20;
 
-Dialect *_make_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+Dialect *_make_dialect(
+    str *name,
+    str *delimiter,
+    str *quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    str *lineterminator,
+    __ss_int quoting,
+    str *escapechar,
+    __ss_int strict
+) {
     if(name == NULL)
         name = new str("excel");
 
-    Dialect *from = _dialects->__getitem__(name);
-//        throw ((new Error(const_27))); // TODO unknown dialect
+    Dialect *from;
+    try {
+        from = _dialects->__getitem__(name);
+    } catch (KeyError *) {
+        throw new Error(new str("unknown dialect"));
+    }
 
     Dialect *dialect = new Dialect();
 
@@ -41,10 +55,14 @@ Dialect *_make_dialect(str *name, str *delimiter, str *quotechar, __ss_int doubl
     dialect->escapechar = from->escapechar;
     dialect->strict = from->strict;
 
-    if ((delimiter!=NULL)) {
+    if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None
+        if(len(delimiter) > 1)
+            throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
         dialect->delimiter = delimiter;
     }
     if ((quotechar!=NULL)) {
+        if(len(quotechar) != 1)
+            throw new TypeError(new str("\"quotechar\" must be a 1-character string"));
         dialect->quotechar = quotechar;
     }
     if ((doublequote!=(-1))) {
@@ -60,6 +78,8 @@ Dialect *_make_dialect(str *name, str *delimiter, str *quotechar, __ss_int doubl
         dialect->quoting = quoting;
     }
     if ((escapechar!=NULL)) {
+        if(len(escapechar) != 1)
+            throw new TypeError(new str("\"escapechar\" must be a 1-character string"));
         dialect->escapechar = escapechar;
     }
     if ((strict!=(-1))) {
@@ -600,7 +620,6 @@ void __init() {
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
     const_25 = new str("excel-tab");
-    const_27 = new str("unknown dialect");
     const_88 = new str("shedskin: QUOTE_NONNUMERIC is not supported");
 
     __name__ = new str("csv");

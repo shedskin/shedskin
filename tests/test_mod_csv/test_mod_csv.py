@@ -148,10 +148,47 @@ def test_register_dialect():
     assert set(dialects) == set(['excel', 'excel-tab', 'unix'])
 
 
+def test_errors():
+    csvfile_in, csvfile_out = _csv_in_out()
+
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), dialect="pindasaus")
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'unknown dialect'
+
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), delimiter='xyz')
+    except TypeError as e:
+        error = str(e)
+    assert error == '"delimiter" must be a 1-character string'
+
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), quotechar='"""')
+    except TypeError as e:
+        error = str(e)
+    assert error == '"quotechar" must be a 1-character string'
+
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), escapechar='hoei')
+    except TypeError as e:
+        error = str(e)
+    assert error == '"escapechar" must be a 1-character string'
+
+    # TODO more cases
+
+    #csv.reader(open(csvfile_out, "w"), delimiter=None) TODO problematic.. more templating? :S
+
+
 def test_all():
     test_program()
     test_dialects()
     test_register_dialect()
+    test_errors()
 
 
 if __name__ == "__main__":

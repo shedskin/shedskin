@@ -8,6 +8,20 @@
 using namespace __shedskin__;
 namespace __csv__ {
 
+extern str *__name__;
+
+extern __ss_int QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC;
+
+extern class_ *cl_Error;
+extern class_ *cl_Dialect;
+extern class_ *cl_Excel;
+extern class_ *cl_UnixDialect;
+extern class_ *cl_ExcelTab;
+extern class_ *cl_reader;
+extern class_ *cl_writer;
+extern class_ *cl_DictReader;
+extern class_ *cl_DictWriter;
+
 class Error;
 
 class Dialect;
@@ -20,24 +34,19 @@ class writer;
 class DictReader;
 class DictWriter;
 
-extern __ss_int QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC;
-
 extern str *default_18, *default_19, *default_20; // TODO for DictWriter(); remove and scan other headers
 
-extern str *__name__;
+extern dict<str *, Dialect *> *_dialects;
 
-extern class_ *cl_Error;
 class Error : public Exception {
 public:
 
     Error() {}
-    Error(str *msg) {
+    Error(str *msg) : Exception(msg) {
         this->__class__ = cl_Error;
-        __init__(msg);
     }
 };
 
-extern class_ *cl_Dialect;
 class Dialect : public pyobj {
 public:
     str *lineterminator;
@@ -55,7 +64,6 @@ public:
     void *__init__();
 };
 
-extern class_ *cl_UnixDialect;
 class unix_dialect : public Dialect {
 public:
     unix_dialect() {
@@ -73,7 +81,6 @@ public:
     void *__init__();
 };
 
-extern class_ *cl_Excel;
 class excel : public Dialect {
 public:
     excel() {
@@ -91,7 +98,6 @@ public:
     void *__init__();
 };
 
-extern class_ *cl_ExcelTab;
 class excel_tab : public Dialect {
 public:
     excel_tab() {
@@ -116,7 +122,6 @@ public:
     list<str *> *__next__();
 };
 
-extern class_ *cl_reader;
 class reader : public __iter<list<str *> *> {
 public:
     Dialect *dialect;
@@ -128,7 +133,18 @@ public:
     file *input_iter;
 
     reader() {}
-    template<class D> reader(file *input_iter_, D dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    template<class D> reader(
+        file *input_iter_,
+        D dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    ) {
         this->__class__ = cl_reader;
         str *dialectstr;
 
@@ -141,18 +157,42 @@ public:
         else
             dialectstr = new str("excel");
 
-        __init__(input_iter_, dialectstr, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+        __init__(
+            input_iter_,
+            dialectstr,
+            delimiter,
+            quotechar,
+            doublequote,
+            skipinitialspace,
+            lineterminator,
+            quoting,
+            escapechar,
+            strict
+        );
     }
-    void *parse_process_char(str *c);
-    void *parse_reset();
+
     list<str *> *__next__();
     __csviter *__iter__();
-    void *__init__(file *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
+
+    void *__init__(
+        file *input_iter_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    );
+
+    void *parse_process_char(str *c);
+    void *parse_reset();
     void *parse_save_field();
     void *parse_add_char(str *c);
 };
 
-extern class_ *cl_writer;
 class writer : public pyobj {
 public:
     Dialect *dialect;
@@ -180,7 +220,6 @@ public:
     dict<str *, str *> *__next__();
 };
 
-extern class_ *cl_DictReader;
 class DictReader : public __iter<dict<str *, str *> *> {
 public:
     str *restval;
@@ -202,7 +241,6 @@ public:
     void *__init__(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
-extern class_ *cl_DictWriter;
 class DictWriter : public pyobj {
 public:
     str *restval;
