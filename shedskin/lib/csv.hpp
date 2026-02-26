@@ -176,9 +176,6 @@ public:
         );
     }
 
-    list<str *> *__next__();
-    __csviter *__iter__();
-
     void *__init__(
         file *input_iter_,
         str *dialect_,
@@ -192,6 +189,10 @@ public:
         __ss_int strict
     );
 
+    list<str *> *__next__();
+    __csviter *__iter__();
+
+    // internal
     void *parse_process_char(str *c);
     void *parse_reset();
     void *parse_save_field();
@@ -206,16 +207,53 @@ public:
     list<str *> *rec;
 
     writer() {}
-    writer(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    writer(
+        file *output_file_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    ) {
         this->__class__ = cl_writer;
-        __init__(output_file_, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+        __init__(
+            output_file_,
+            dialect_,
+            delimiter,
+            quotechar,
+            doublequote,
+            skipinitialspace,
+            lineterminator,
+            quoting,
+            escapechar,
+            strict
+        );
     }
-    __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
+
+    void *__init__(
+        file *output_file_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    );
+
     void *writerow(list<str *> *seq);
-    void *join_reset();
     void *writerows(list<list<str *> *> *seqs);
+
+    // internal
+    __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
+    void *join_reset();
     __ss_int join_append(str *field, __ss_int quoted, __ss_int quote_empty);
-    void *__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
 class __driter : public __iter<dict<str *, str *> *> {
@@ -235,15 +273,60 @@ public:
     reader *_reader;
 
     DictReader() {}
-    DictReader(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    DictReader(
+        file *f,
+        list<str *> *fieldnames_,
+        str *restkey_,
+        str *restval_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    ) {
         this->__class__ = cl_DictReader;
-        __init__(f, fieldnames_, restkey_, restval_, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+        __init__(
+            f,
+            fieldnames_,
+            restkey_,
+            restval_,
+            dialect_,
+            delimiter,
+            quotechar,
+            doublequote,
+            skipinitialspace,
+            lineterminator,
+            quoting,
+            escapechar,
+            strict
+        );
     }
+
+    void *__init__(
+        file *f,
+        list<str *> *fieldnames_,
+        str *restkey_,
+        str *restval_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    );
+
     void *setfieldnames(list<str *> *value);
+    list<str *> *getfieldnames();
+
     dict<str *, str *> *__next__();
     __driter *__iter__();
-    list<str *> *getfieldnames();
-    void *__init__(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
 class DictWriter : public pyobj {
@@ -254,14 +337,60 @@ public:
     str *extrasaction;
 
     DictWriter() {}
-    DictWriter(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    DictWriter(
+        file *f,
+        list<str *> *fieldnames_,
+        str *restval_,
+        str *extrasaction_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    ) {
         this->__class__ = cl_DictWriter;
-        __init__(f, fieldnames_, restval_, extrasaction_, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+        __init__(
+            f,
+            fieldnames_,
+            restval_,
+            extrasaction_,
+            dialect_,
+            delimiter,
+            quotechar,
+            doublequote,
+            skipinitialspace,
+            lineterminator,
+            quoting,
+            escapechar,
+            strict
+        );
     }
-    list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
+
+    void *__init__(
+        file *f,
+        list<str *> *fieldnames_,
+        str *restval_,
+        str *extrasaction_,
+        str *dialect_,
+        str *delimiter,
+        str *quotechar,
+        __ss_int doublequote,
+        __ss_int skipinitialspace,
+        str *lineterminator,
+        __ss_int quoting,
+        str *escapechar,
+        __ss_int strict
+    );
+
     void *writerow(dict<str *, str *> *rowdict);
     void *writerows(list<dict<str *, str *> *> *rowdicts);
-    void *__init__(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
+
+    // internal
+    list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
 };
 
 list<str *> *list_dialects();

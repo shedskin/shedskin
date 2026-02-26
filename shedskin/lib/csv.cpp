@@ -38,7 +38,7 @@ str * default_18; // TODO remove
 str * default_19;
 str * default_20;
 
-void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) {
+void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) { // TODO NOT_SET/None difference?
     if(!c)
         return;
 
@@ -50,6 +50,15 @@ void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) {
             throw new ValueError(__add_strs(3, new str("bad "), name, new str(" or lineterminator value")));
     }
 }
+
+void _dialect_check_chars(str *name1, str *name2, str *val1, str *val2) { // TODO NOT_SET/None difference?
+    if(!val1 || !val2)
+        return;
+
+    if(val1->unit[0] == val2->unit[0])
+        throw new ValueError(__add_strs(5, new str("bad "), name1, new str(" or "), name2, new str(" value")));
+}
+
 
 Dialect *_make_dialect(
     str *name,
@@ -121,6 +130,9 @@ Dialect *_make_dialect(
     _dialect_check_char(new str("escapechar"), dialect->escapechar, dialect, !dialect->skipinitialspace);
     _dialect_check_char(new str("quotechar"), dialect->quotechar, dialect, !dialect->skipinitialspace);
 
+    _dialect_check_chars(new str("delimiter"), new str("escapechar"), dialect->delimiter, dialect->escapechar);
+    _dialect_check_chars(new str("delimiter"), new str("quotechar"), dialect->delimiter, dialect->quotechar);
+    _dialect_check_chars(new str("escapechar"), new str("quotechar"), dialect->escapechar, dialect->quotechar);
 
     return dialect;
 }
