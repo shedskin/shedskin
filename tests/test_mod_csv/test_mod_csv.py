@@ -192,6 +192,21 @@ def test_errors():
         error = str(e)
     assert error == 'bad "quoting" value'
 
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), delimiter="\n")
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bad delimiter value'
+
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), delimiter=":", lineterminator="::")
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bad delimiter or lineterminator value'
+
+
     # TODO more cases
 
     #csv.reader(open(csvfile_out, "w"), delimiter=None) TODO problematic.. more templating? :S

@@ -103,6 +103,17 @@ Dialect *_make_dialect(
     if ((strict!=(-1))) {
         dialect->strict = __mbool(strict);
     }
+
+    if(dialect->delimiter != NULL) {
+        if(dialect->delimiter->unit[0] == '\n') // TODO '\r', ' '
+            throw new ValueError(new str("bad delimiter value")); // TODO use dialect_check_char, dialect_check_chars
+
+        if(dialect->lineterminator != NULL) {
+            if(dialect->lineterminator->__contains__(dialect->delimiter))
+                throw new ValueError(new str("bad delimiter or lineterminator value"));
+        }
+    }
+
     return dialect;
 }
 
