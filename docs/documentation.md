@@ -90,7 +90,7 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * argument (un)packing (`*args` and `**kwargs`)
 * multiple inheritance
 * nested functions and classes
-* full unicode support (currently restricted to 1-byte characters)
+* full unicode/builtin utf-8 support (currently restricted to 1-byte characters)
 * inheritance from builtins (excluding `Exception` and `object`)
 * closures
 
@@ -116,7 +116,7 @@ var = SomeClass # bad
 
 ## Library Limitations
 
-At the moment, the following 30 modules are (fully or partially) supported. Several of these, such as `os.path`, were compiled to C++ using Shed Skin.
+At the moment, the following 30 modules are (partially) supported.
 
 * `array`
 * `base64`
@@ -124,9 +124,9 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * `bisect`
 * `collections` (defaultdict, deque)
 * `colorsys`
-* `configparser` (no SafeConfigParser)
+* `configparser` (no SafeConfigParser, support may be removed as of 0.9.12)
 * `copy`
-* `csv` (no Dialect, Sniffer, ASCII-only)
+* `csv` (no Sniffer, ASCII-only)
 * `datetime`
 * `fnmatch`
 * `functools` (reduce)
@@ -137,17 +137,17 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)
 * `math`
-* `mmap`
-* `os`
+* `mmap` (not well tested)
+* `os` (partial)
 * `os.path`
 * `random`
 * `re`
-* `select` (select)
-* `socket`
+* `select` (not well tested)
+* `socket` (not well tested)
 * `string`
 * `struct` (no Struct, iter_unpack)
-* `sys`
-* `time`
+* `sys` (partial)
+* `time` (partial)
 
 Note that any other module, such as `pygame`, `pyqt` or `pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the [Shed Skin examples](https://github.com/shedskin/shedskin/tree/master/examples).
 
