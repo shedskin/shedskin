@@ -3,9 +3,15 @@ import collections
 import os
 import os.path
 
-# TODO Dialect subclassing..?
-# TODO register_dialect, unregister_dialect
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
+# TODO DictReader, DictWriter: iterable fieldnames arg
+# TODO test restkey, restval, line_num, extrasaction
+# TODO DictReader: skip empty rows/blanks? see __next__
+# TODO *.writerows: iterable arg?
+# TODO rewrite parser
+
+# TODO Dialect subclassing..?
+
 
 def _csv_in_out():
     if os.path.exists('testdata'):
