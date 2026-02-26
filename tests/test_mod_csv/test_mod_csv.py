@@ -185,6 +185,13 @@ def test_errors():
         error = str(e)
     assert error == '"escapechar" must be a 1-character string'
 
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), quoting=100)
+    except TypeError as e:
+        error = str(e)
+    assert error == 'bad "quoting" value'
+
     # TODO more cases
 
     #csv.reader(open(csvfile_out, "w"), delimiter=None) TODO problematic.. more templating? :S

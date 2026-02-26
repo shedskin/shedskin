@@ -10,7 +10,12 @@ namespace __csv__ {
 
 extern str *__name__;
 
-extern __ss_int QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC;
+extern __ss_int QUOTE_ALL;
+extern __ss_int QUOTE_MINIMAL;
+extern __ss_int QUOTE_NONNUMERIC;
+extern __ss_int QUOTE_NONE;
+extern __ss_int QUOTE_STRINGS;
+extern __ss_int QUOTE_NOTNULL;
 
 extern class_ *cl_Error;
 extern class_ *cl_Dialect;
