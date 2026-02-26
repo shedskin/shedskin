@@ -222,9 +222,24 @@ public:
 };
 
 list<str *> *list_dialects();
+
 Dialect *get_dialect(str *name);
 
-Dialect *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
+void *register_dialect(
+    str *name,
+    str *dialect,
+    str *delimiter,
+    str *quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    str *lineterminator,
+    __ss_int quoting,
+    str *escapechar,
+    __ss_int strict
+); // TODO template dialect
+
+void *unregister_dialect(str *name);
+
 __ss_int field_size_limit(__ss_int new_limit);
 
 void __init();
