@@ -52,7 +52,7 @@ public:
     str *lineterminator;
     __ss_int skipinitialspace;
     __ss_int quoting;
-    __ss_int strict;
+    __ss_bool strict; //TODO generalize __ss_bool
     str *delimiter;
     str *escapechar;
     str *quotechar;
