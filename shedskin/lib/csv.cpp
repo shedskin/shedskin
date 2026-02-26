@@ -83,7 +83,7 @@ Dialect *_make_dialect(
         dialect->escapechar = escapechar;
     }
     if ((strict!=(-1))) {
-        dialect->strict = strict;
+        dialect->strict = __mbool(strict);
     }
     return dialect;
 }
