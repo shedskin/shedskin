@@ -15,8 +15,6 @@ class unix_dialect;
 class excel;
 class excel_tab;
 
-class Excel; // TODO remove
-
 class reader;
 class writer;
 class DictReader;
@@ -111,26 +109,6 @@ public:
     void *__init__();
 };
 
-extern class_ *cl_Excel;
-class Excel : public pyobj { // TODO remove
-public:
-    str *lineterminator;
-    __ss_int skipinitialspace;
-    __ss_int quoting;
-    __ss_int strict;
-    str *delimiter;
-    str *escapechar;
-    str *quotechar;
-    __ss_int doublequote;
-
-    Excel() {}
-    Excel(__ss_int) {
-        this->__class__ = cl_Excel;
-        __init__();
-    }
-    void *__init__();
-};
-
 class __csviter : public __iter<list<str *> *> {
 public:
     reader *r;
@@ -141,7 +119,7 @@ public:
 extern class_ *cl_reader;
 class reader : public __iter<list<str *> *> {
 public:
-    Excel *dialect;
+    Dialect *dialect;
     __ss_int line_num;
     list<str *> *fields;
     list<str *> *field;
@@ -177,7 +155,7 @@ public:
 extern class_ *cl_writer;
 class writer : public pyobj {
 public:
-    Excel *dialect;
+    Dialect *dialect;
     __ss_int num_fields;
     file *output_file;
     list<str *> *rec;
@@ -246,7 +224,7 @@ public:
 list<str *> *list_dialects();
 Dialect *get_dialect(str *name);
 
-Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
+Dialect *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 __ss_int field_size_limit(__ss_int new_limit);
 
 void __init();
