@@ -132,9 +132,26 @@ def test_dialects():
     assert next(reader) == ['aap', ' noot', ' 19', ' ole2']
 
 
+def test_register_dialect():
+    csvfile_in, csvfile_out = _csv_in_out()
+
+    csv.register_dialect('strict_unix', 'unix', strict=True)
+    dialects = csv.list_dialects()
+    assert set(dialects) == set(['excel', 'excel-tab', 'unix', 'strict_unix'])
+
+    dialect = csv.get_dialect('strict_unix')
+    assert dialect.lineterminator == '\n'
+    assert dialect.strict
+
+    csv.unregister_dialect('strict_unix')
+    dialects = csv.list_dialects()
+    assert set(dialects) == set(['excel', 'excel-tab', 'unix'])
+
+
 def test_all():
     test_program()
     test_dialects()
+    test_register_dialect()
 
 
 if __name__ == "__main__":
