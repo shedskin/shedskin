@@ -17,21 +17,19 @@ import os.path
 # TODO Dialect subclassing..?
 
 
-def _csv_in_out():
+def _csv_path(name):
     if os.path.exists('testdata'):
-        csvfile_in = os.path.join('testdata', 'woef.csv')
-        csvfile_out = os.path.join('testdata', 'bla.csv')
+        name = os.path.join('testdata', name)
     elif os.path.exists('../testdata'):
-        csvfile_in = os.path.join('../testdata', 'woef.csv')
-        csvfile_out = os.path.join('../testdata', 'bla.csv')
+        name = os.path.join('../testdata', name)
     else:
-        csvfile_in = os.path.join('../../testdata', 'woef.csv')
-        csvfile_out = os.path.join('../../testdata', 'bla.csv')
-    return csvfile_in, csvfile_out
+        name = os.path.join('../../testdata', name)
+    return name
 
 
 def test_program():
-    csvfile_in, csvfile_out = _csv_in_out()
+    csvfile_in = _csv_path('woef.csv')
+    csvfile_out = _csv_path('bla.csv')
 
     d = collections.defaultdict(list)
     for (a, b, n, l) in csv.reader(open(csvfile_in), delimiter="|"):
@@ -102,7 +100,8 @@ def test_program():
 
 
 def test_dialects():
-    csvfile_in, csvfile_out = _csv_in_out()
+    csvfile_in = _csv_path('woef.csv')
+    csvfile_out = _csv_path('bla.csv')
 
     dialects = csv.list_dialects()
     assert set(dialects) == set(['excel', 'excel-tab', 'unix'])
@@ -143,7 +142,8 @@ def test_dialects():
 
 
 def test_register_dialect():
-    csvfile_in, csvfile_out = _csv_in_out()
+    csvfile_in = _csv_path('woef.csv')
+    csvfile_out = _csv_path('bla.csv')
 
     csv.register_dialect('strict_unix', 'unix', strict=True)
     dialects = csv.list_dialects()
@@ -159,7 +159,7 @@ def test_register_dialect():
 
 
 def test_errors():
-    csvfile_in, csvfile_out = _csv_in_out()
+    csvfile_out = _csv_path('bla.csv')
 
     error = ''
     try:
@@ -222,11 +222,31 @@ def test_errors():
     #csv.reader(open(csvfile_out, "w"), delimiter=None) TODO problematic.. more templating? :S
 
 
+def test_excel():
+    path = _csv_path('excel.csv')
+
+    reader = csv.reader(open(path))
+    data = list(reader)
+
+    assert data == [
+        ['aap', 'bert', 'frits'],
+        ['hoi', '  hop', '18.8'],
+        ['hoi2', 'a, b, c', '17'],
+    ]
+
+    with open('excel_out.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+
+#    assert open(path).read() == open('excel_out.csv').read()  # TODO we should ignore lineterminator?
+
+
 def test_all():
     test_program()
     test_dialects()
     test_register_dialect()
     test_errors()
+    test_excel()
 
 
 if __name__ == "__main__":
