@@ -4,11 +4,15 @@ import os
 import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
+
 # TODO DictReader, DictWriter: iterable fieldnames arg
 # TODO test restkey, restval, line_num, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO *.writerows: iterable arg?
 # TODO rewrite parser
+# TODO test (in/out) csv in most common excel format
+# TODO check QUOTE_NONNUMERIC restriction
+# TODO NOTSET/None differences
 
 # TODO Dialect subclassing..?
 
@@ -194,18 +198,24 @@ def test_errors():
 
     error = ''
     try:
-        csv.reader(open(csvfile_out, "w"), delimiter="\n")
+        csv.reader(open(csvfile_out, "w"), delimiter="\n") # illegal char
     except ValueError as e:
         error = str(e)
     assert error == 'bad delimiter value'
 
     error = ''
     try:
-        csv.reader(open(csvfile_out, "w"), delimiter=":", lineterminator="::")
+        csv.reader(open(csvfile_out, "w"), delimiter=":", lineterminator="::") # delimiter in lineterminator
     except ValueError as e:
         error = str(e)
     assert error == 'bad delimiter or lineterminator value'
 
+    error = ''
+    try:
+        csv.reader(open(csvfile_out, "w"), delimiter="?", quotechar="?")  # same chars
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bad delimiter or quotechar value'
 
     # TODO more cases
 
