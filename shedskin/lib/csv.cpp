@@ -42,7 +42,7 @@ void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) {
     if(!c)
         return;
 
-    if(c->unit[0] == '\n' || c->unit[0] == '\r') // TODO space, allowspace
+    if(c->unit[0] == '\n' || c->unit[0] == '\r' || (c->unit[0] == ' ' && !allowspace))
         throw new ValueError(__add_strs(3, new str("bad "), name, new str(" value")));
 
     if(dialect->lineterminator != NULL) {
@@ -118,6 +118,9 @@ Dialect *_make_dialect(
     }
 
     _dialect_check_char(new str("delimiter"), dialect->delimiter, dialect, true);
+    _dialect_check_char(new str("escapechar"), dialect->escapechar, dialect, !dialect->skipinitialspace);
+    _dialect_check_char(new str("quotechar"), dialect->quotechar, dialect, !dialect->skipinitialspace);
+
 
     return dialect;
 }
