@@ -8,10 +8,6 @@
 using namespace __shedskin__;
 namespace __csv__ {
 
-extern tuple2<str *, str *> *const_3;
-extern list<void *> *const_0;
-extern str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
-
 class Error;
 
 class Dialect;
@@ -19,15 +15,18 @@ class unix_dialect;
 class excel;
 class excel_tab;
 
-class Excel;
+class Excel; // TODO remove
+
 class reader;
 class writer;
 class DictReader;
 class DictWriter;
 
+extern __ss_int QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC;
+
+extern str *default_18, *default_19, *default_20; // TODO for DictWriter(); remove and scan other headers
+
 extern str *__name__;
-extern __ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
-extern OSError *__exception;
 
 extern class_ *cl_Error;
 class Error : public Exception {
@@ -243,33 +242,6 @@ public:
     void *writerows(list<dict<str *, str *> *> *rowdicts);
     void *__init__(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
-
-extern void * default_9;
-extern void * default_14;
-extern void * default_16;
-extern void * default_21;
-extern void * default_23;
-extern str * default_18;
-extern void * default_25;
-extern void * default_0;
-extern void * default_2;
-extern void * default_6;
-extern void * default_3;
-extern void * default_8;
-extern void * default_10;
-extern void * default_11;
-extern void * default_13;
-extern void * default_15;
-extern void * default_12;
-extern void * default_17;
-extern void * default_24;
-extern str * default_19;
-extern str * default_20;
-extern void * default_22;
-extern void * default_7;
-extern void * default_1;
-extern void * default_5;
-extern void * default_4;
 
 list<str *> *list_dialects();
 Dialect *get_dialect(str *name);
