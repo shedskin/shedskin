@@ -98,19 +98,26 @@ extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingp
 class BaseException : public pyobj {
 public:
     tuple<str *> *args;
-    str *message; // TODO remove
+    str *message; // TODO remove? now used by extmod code
 
     BaseException(str *msg=0);
 
-    void __init__(str *msg) {}
-    void __init__(void *) {}
+    void __init__(str *msg) {
+        this->message = msg;
+    }
+    void __init__(void *) {
+        this->message = 0;
+    }
+
     str *__repr__();
     str *__str__();
 };
 
 class Exception: public BaseException {
 public:
-    Exception(str *msg=0) : BaseException(msg) { this->__class__ = cl_exception; }
+    Exception(str *msg=0) : BaseException(msg) {
+        this->__class__ = cl_exception;
+    }
 
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_Exception; }
@@ -245,7 +252,6 @@ class OSError : public Exception {
 public:
     int __ss_errno;
     str *filename;
-    str *message;
     str *strerror;
 
     OSError(str *msg=0);
@@ -261,7 +267,6 @@ class FileNotFoundError : public OSError {
 public:
     int __ss_errno;
     str *filename;
-    str *message;
     str *strerror;
 
     FileNotFoundError(str *msg=0);
@@ -301,7 +306,6 @@ class SystemExit : public BaseException {
 public:
     int code;
     int show_message;
-    str *message;
     SystemExit(__ss_int c) {
         this->__class__ = cl_systemexit;
         this->code = c;
