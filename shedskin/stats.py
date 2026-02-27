@@ -1,3 +1,5 @@
+# SHED SKIN Python-to-C++ Compiler
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.stats: project statistics.
 
 This module provides statistics and metrics about Python code compiled with Shedskin.

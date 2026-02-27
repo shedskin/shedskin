@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.typestr: generate type declarations
 
 Contains functions and classes for generating C++ type declarations from Python types.

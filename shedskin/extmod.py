@@ -1,5 +1,5 @@
 # SHED SKIN Python-to-C++ Compiler
-# Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """shedskin.extmod: python extension module support
 
 Generates extension module glue for the transpiled program.
@@ -107,13 +107,10 @@ class ExtensionModule:
         for func in funcs:
             if func.isGenerator or not self.gv.inhcpa(func):
                 continue
-            if func.ident in [
+            if func.ident in [  # TODO set func.invisible?
                 "__setattr__",
                 "__getattr__",
-                "__iadd__",
-                "__isub__",
-                "__imul__",
-            ]:  # XXX
+            ]:
                 continue
             if isinstance(func.parent, python.Class):
                 if func.invisible or func.inherited or not self.gv.inhcpa(func):
