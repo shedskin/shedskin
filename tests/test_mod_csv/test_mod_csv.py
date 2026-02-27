@@ -7,12 +7,11 @@ import os.path
 
 # TODO test restkey, restval, line_num, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
-# TODO *.writerows: iterable arg?
 # TODO rewrite parser
-# TODO test (in/out) csv in most common excel format
 # TODO check QUOTE_NONNUMERIC restriction
 # TODO NOTSET/None differences
 
+# TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
 
 
