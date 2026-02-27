@@ -65,6 +65,9 @@ class DictWriter:
         self.extrasaction = ''
         self.writer = writer(f)
 
+    def writeheader(self):
+        pass
+
     def writerow(self, rowdict):
         pass
 

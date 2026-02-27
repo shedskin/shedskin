@@ -5,7 +5,6 @@ import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 
-# TODO DictReader, DictWriter: iterable fieldnames arg
 # TODO test restkey, restval, line_num, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO *.writerows: iterable arg?
@@ -225,6 +224,7 @@ def test_errors():
 def test_excel():
     path = _csv_path('excel.csv')
 
+    # normal variant
     reader = csv.reader(open(path))
     data = list(reader)
 
@@ -239,6 +239,29 @@ def test_excel():
         writer.writerows(data)
 
 #    assert open(path).read() == open('excel_out.csv').read()  # TODO we should ignore lineterminator?
+
+    # dict variant
+    dict_reader = csv.DictReader(open(path), fieldnames=['a', 'b', 'c'])  # override header
+    next(dict_reader)
+    rows = list(dict_reader)
+    assert rows == [
+        {'a': 'hoi', 'b': '  hop', 'c': '18.8'},
+        {'a': 'hoi2', 'b': 'a, b, c', 'c': '17'}
+    ]
+
+    dict_reader = csv.DictReader(open(path))
+    rows = list(dict_reader)
+    assert rows == [
+        {'aap': 'hoi', 'bert': '  hop', 'frits': '18.8'},
+        {'aap': 'hoi2', 'bert': 'a, b, c', 'frits': '17'}
+    ]
+
+    with open('excel_out2.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=iter(['aap', 'bert', 'frits']))  # iterable fieldnames
+        dict_writer.writeheader()
+        dict_writer.writerows(rows)
+
+#    assert open(path).read() == open('excel_out2.csv').read()  # TODO we should ignore lineterminator?
 
 
 def test_all():

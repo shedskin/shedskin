@@ -275,7 +275,7 @@ public:
     DictReader() {}
     DictReader(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
         str *dialect_,
@@ -308,7 +308,7 @@ public:
 
     void *__init__(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
         str *dialect_,
@@ -339,7 +339,7 @@ public:
     DictWriter() {}
     DictWriter(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
         str *dialect_,
@@ -372,7 +372,7 @@ public:
 
     void *__init__(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
         str *dialect_,
@@ -386,6 +386,7 @@ public:
         __ss_int strict
     );
 
+    void *writeheader();
     void *writerow(dict<str *, str *> *rowdict);
     void *writerows(list<dict<str *, str *> *> *rowdicts);
 

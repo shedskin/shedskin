@@ -584,8 +584,11 @@ list<str *> *DictReader::getfieldnames() {
     return this->_fieldnames;
 }
 
-void *DictReader::__init__(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    this->_fieldnames = fieldnames_;
+void *DictReader::__init__(file *f, pyiter<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(fieldnames_)
+        this->_fieldnames = new list<str *>(fieldnames_);
+    else
+        this->_fieldnames = NULL;
     this->restkey = restkey_;
     this->restval = restval_;
     this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
@@ -612,6 +615,10 @@ list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
     return list_comp_1(this, rowdict);
 }
 
+void *DictWriter::writeheader() {
+    return NULL;
+}
+
 void *DictWriter::writerow(dict<str *, str *> *rowdict) {
     return (this->_writer)->writerow(this->_dict_to_list(rowdict));
 }
@@ -632,8 +639,11 @@ void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
     return (this->_writer)->writerows(rows);
 }
 
-void *DictWriter::__init__(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    this->fieldnames = fieldnames_;
+void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(fieldnames_)
+        this->fieldnames = new list<str *>(fieldnames_);
+    else
+        this->fieldnames = NULL;
     this->restval = restval_;
     if ((!(const_3)->__contains__(extrasaction_->lower()))) {
         throw ((new ValueError(__mod6(const_23, 1, extrasaction_))));
