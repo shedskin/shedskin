@@ -21,8 +21,8 @@ using namespace __shedskin__;
 
 namespace __re__ {
 
-extern const __ss_int I, L, M, S, U, X,
-    IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE;
+extern const __ss_int I, L, M, S, U, X, A,
+    IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE, ASCII, DEBUG, NOFLAG;
 
 class match_object;
 typedef str *(*replfunc)(match_object *);
@@ -74,6 +74,7 @@ public:
 
     str *group(__ss_int n, __ss_int m = 0);
     str *group(__ss_int n, str *m);
+    str *__getitem__(__ss_int n);
 
     template <class ... Args> tuple<str *> *group(__ss_int, __ss_int m, __ss_int o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
@@ -130,6 +131,9 @@ public:
     //the flags used
     __ss_int flags;
 
+    //number of captured groups
+    __ss_int groups;
+
     //internal functions
     __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int m);
     __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, str *m);
@@ -143,6 +147,7 @@ public:
     list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_);
 
     match_object *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    match_object *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     match_object *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     __iter<match_object *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     list<str *> *split(str *subj, __ss_int maxn = -1);
@@ -168,6 +173,7 @@ public:
 re_object *compile(str *pat, __ss_int flags = 0);
 
 match_object *match(str *pat, str *subj, __ss_int flags = 0);
+match_object *fullmatch(str *pat, str *subj, __ss_int flags = 0);
 match_object *search(str *pat, str *subj, __ss_int flags = 0);
 __iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
 list<str *> *split(str *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);
@@ -179,6 +185,8 @@ str *escape(str *s);
 
 list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
 match_object *__exec_once(str *subj, __ss_int flags);
+
+inline void *purge() { return NULL; };
 
 //internal functions
 void __init(void);
