@@ -48,25 +48,16 @@ def fsum(x): return 1.0
 
 def sqrt(x): return 1.0
 def cbrt(x): return 1.0
-def isqrt(x): return 1
 
 def fabs(x): return 1.0
 def fmod(x, y): return 1.0
 def modf(x): return (1.0, 1.0)
-
-def factorial(x): return 1
 
 def floor(x): return 1
 def ceil(x): return 1
 
 def pow(x, y): return 1.0
 def hypot(x, y): return 1.0
-
-def comb(n, k): return 1
-def perm(n, k=None): return 1
-
-def gcd(*args): return 1
-def lcm(*args): return 1
 
 def prod(iterable, start=1):
     elem = iter(iterable).__next__()
@@ -81,3 +72,11 @@ def sumprod(p, q):
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return True
+
+# soft deprecated (moved to math.integer)
+def comb(n, k): return 1
+def factorial(x): return 1
+def gcd(*args): return 1
+def lcm(*args): return 1
+def isqrt(x): return 1
+def perm(n, k=None): return 1
