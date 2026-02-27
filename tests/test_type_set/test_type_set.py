@@ -183,6 +183,14 @@ def test_set_syntax():
     assert s == set([1,2])
 
 
+def test_eq():
+    assert {1, 2} == {2, 1}
+    assert not {1, 2} == {1, 2, 3}
+    assert not {1, 2, 3} == {1, 2}
+    assert {1, 2} != {1, 2, 3}
+    assert {1, 2, 3} != {1, 2}
+
+
 def test_all():
     test_set1()
     test_set2()
@@ -195,7 +203,7 @@ def test_all():
     test_set_binary_elem()
     test_set_augmented_assign()
     test_set_syntax()
+    test_eq()
 
 if __name__ == "__main__":
     test_all()
-

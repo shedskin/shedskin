@@ -1,44 +1,141 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "csv.hpp"
 
 namespace __csv__ {
 
+str *__name__;
+
+dict<str *, Dialect *> *_dialects;
+
 tuple2<str *, str *> *const_3;
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
 str *const_88;
 
-str *__name__;
-__ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
-OSError *__exception;
+__ss_int QUOTE_MINIMAL;
+__ss_int QUOTE_ALL;
+__ss_int QUOTE_NONNUMERIC;
+__ss_int QUOTE_NONE;
+__ss_int QUOTE_STRINGS;
+__ss_int QUOTE_NOTNULL;
 
-void * default_9;
-void * default_14;
-void * default_16;
-void * default_21;
-void * default_23;
-str * default_18;
-void * default_25;
-void * default_0;
-void * default_2;
-void * default_6;
-void * default_3;
-void * default_8;
-void * default_10;
-void * default_11;
-void * default_13;
-void * default_15;
-void * default_12;
-void * default_17;
-void * default_24;
+__ss_int START_FIELD;
+__ss_int START_RECORD;
+__ss_int QUOTE_IN_QUOTED_FIELD;
+__ss_int EAT_CRNL;
+__ss_int ESCAPED_CHAR;
+__ss_int ESCAPE_IN_QUOTED_FIELD;
+__ss_int IN_FIELD;
+__ss_int IN_QUOTED_FIELD;
+
+__ss_int _field_limit;
+
+class_ *cl_Error, *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
+
+str * default_18; // TODO remove
 str * default_19;
 str * default_20;
-void * default_22;
-void * default_7;
-void * default_1;
-void * default_5;
-void * default_4;
+
+void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) { // TODO NOT_SET/None difference?
+    if(!c)
+        return;
+
+    if(c->unit[0] == '\n' || c->unit[0] == '\r' || (c->unit[0] == ' ' && !allowspace))
+        throw new ValueError(__add_strs(3, new str("bad "), name, new str(" value")));
+
+    if(dialect->lineterminator != NULL) {
+        if(dialect->lineterminator->__contains__(c))
+            throw new ValueError(__add_strs(3, new str("bad "), name, new str(" or lineterminator value")));
+    }
+}
+
+void _dialect_check_chars(str *name1, str *name2, str *val1, str *val2) { // TODO NOT_SET/None difference?
+    if(!val1 || !val2)
+        return;
+
+    if(val1->unit[0] == val2->unit[0])
+        throw new ValueError(__add_strs(5, new str("bad "), name1, new str(" or "), name2, new str(" value")));
+}
+
+
+Dialect *_make_dialect(
+    str *name,
+    str *delimiter,
+    str *quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    str *lineterminator,
+    __ss_int quoting,
+    str *escapechar,
+    __ss_int strict
+) {
+    if(name == NULL)
+        name = new str("excel");
+
+    Dialect *from;
+    try {
+        from = _dialects->__getitem__(name);
+    } catch (KeyError *) {
+        throw new Error(new str("unknown dialect"));
+    }
+
+    Dialect *dialect = new Dialect();
+
+    // TODO virtual dialect.copy() to maintain type eg as reader.dialect..?
+    dialect->delimiter = from->delimiter;
+    dialect->quotechar = from->quotechar;
+    dialect->doublequote = from->doublequote;
+    dialect->skipinitialspace = from->skipinitialspace;
+    dialect->lineterminator = from->lineterminator;
+    dialect->quoting = from->quoting;
+    dialect->escapechar = from->escapechar;
+    dialect->strict = from->strict;
+
+    if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None etc.
+        if(len(delimiter) > 1)
+            throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
+        dialect->delimiter = delimiter;
+    }
+    if ((quotechar!=NULL)) {
+        if(len(quotechar) != 1)
+            throw new TypeError(new str("\"quotechar\" must be a 1-character string"));
+        dialect->quotechar = quotechar;
+    }
+    if ((doublequote!=(-1))) {
+        dialect->doublequote = doublequote;
+    }
+    if ((skipinitialspace!=(-1))) {
+        dialect->skipinitialspace = skipinitialspace;
+    }
+    if ((lineterminator!=NULL)) {
+        dialect->lineterminator = lineterminator;
+    }
+    if ((quoting!=(-1))) {
+        if(quoting > 5)
+            throw new TypeError(new str("bad \"quoting\" value"));
+        dialect->quoting = quoting;
+    }
+    if ((escapechar!=NULL)) {
+        if(len(escapechar) != 1)
+            throw new TypeError(new str("\"escapechar\" must be a 1-character string"));
+        dialect->escapechar = escapechar;
+    }
+    if ((strict!=(-1))) {
+        dialect->strict = __mbool(strict);
+    }
+
+    _dialect_check_char(new str("delimiter"), dialect->delimiter, dialect, true);
+    _dialect_check_char(new str("escapechar"), dialect->escapechar, dialect, !dialect->skipinitialspace);
+    _dialect_check_char(new str("quotechar"), dialect->quotechar, dialect, !dialect->skipinitialspace);
+
+    _dialect_check_chars(new str("delimiter"), new str("escapechar"), dialect->delimiter, dialect->escapechar);
+    _dialect_check_chars(new str("delimiter"), new str("quotechar"), dialect->delimiter, dialect->quotechar);
+    _dialect_check_chars(new str("escapechar"), new str("quotechar"), dialect->escapechar, dialect->quotechar);
+
+    return dialect;
+}
 
 __csviter::__csviter(reader *r_) {
     r = r_;
@@ -91,31 +188,6 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
     END_FOR
 
     return __ss_result;
-}
-
-/**
-class Error
-*/
-
-class_ *cl_Error;
-
-/**
-class Excel
-*/
-
-class_ *cl_Excel;
-
-void *Excel::__init__() {
-    
-    this->delimiter = const_4;
-    this->quotechar = const_5;
-    this->doublequote = 1;
-    this->skipinitialspace = 0;
-    this->lineterminator = const_6;
-    this->quoting = QUOTE_MINIMAL;
-    this->escapechar = ((str *)(NULL));
-    this->strict = 0;
-    return NULL;
 }
 
 /**
@@ -259,7 +331,6 @@ void *reader::parse_process_char(str *c) {
 }
 
 void *reader::parse_reset() {
-    
     this->fields = (new list<str *>());
     this->field = (new list<str *>());
     this->state = START_RECORD;
@@ -303,7 +374,7 @@ void *reader::__init__(file *input_iter_, str *dialect_, str *delimiter, str *qu
     }
     this->input_iter = input_iter_;
     this->line_num = 0;
-    this->dialect = _get_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
@@ -426,7 +497,6 @@ void *writer::writerow(list<str *> *seq) {
 }
 
 void *writer::join_reset() {
-    
     this->rec = (new list<str *>());
     this->num_fields = 0;
     return NULL;
@@ -446,7 +516,6 @@ void *writer::writerows(list<list<str *> *> *seqs) {
 }
 
 __ss_int writer::join_append(str *field, __ss_int quoted, __ss_int quote_empty) {
-    
     quoted = this->join_append_data(field, quote_empty, quoted);
     this->num_fields = (this->num_fields+1);
     return quoted;
@@ -457,7 +526,7 @@ void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *q
         throw ((new ValueError(const_88)));
     }
     this->output_file = output_file_;
-    this->dialect = _get_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
@@ -468,7 +537,6 @@ class DictReader
 class_ *cl_DictReader;
 
 void *DictReader::setfieldnames(list<str *> *value) {
-    
     this->_fieldnames = value;
     return NULL;
 }
@@ -506,7 +574,6 @@ dict<str *, str *> *DictReader::__next__() {
 }
 
 list<str *> *DictReader::getfieldnames() {
-    
     if (this->_fieldnames == NULL) {
         try {
             this->_fieldnames = (this->_reader)->__next__();
@@ -518,7 +585,6 @@ list<str *> *DictReader::getfieldnames() {
 }
 
 void *DictReader::__init__(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    
     this->_fieldnames = fieldnames_;
     this->restkey = restkey_;
     this->restval = restval_;
@@ -547,7 +613,6 @@ list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
 }
 
 void *DictWriter::writerow(dict<str *, str *> *rowdict) {
-    
     return (this->_writer)->writerow(this->_dict_to_list(rowdict));
 }
 
@@ -568,7 +633,6 @@ void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
 }
 
 void *DictWriter::__init__(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    
     this->fieldnames = fieldnames_;
     this->restval = restval_;
     if ((!(const_3)->__contains__(extrasaction_->lower()))) {
@@ -604,110 +668,77 @@ void __init() {
     const_21 = new str("dict contains fields not in fieldnames: ");
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
-    const_24 = new str("excel");
     const_25 = new str("excel-tab");
-    const_26 = new str("\t");
-    const_27 = new str("unknown dialect");
     const_88 = new str("shedskin: QUOTE_NONNUMERIC is not supported");
 
     __name__ = new str("csv");
 
+    _dialects = new dict<str *, Dialect *>();
+    _dialects->__setitem__(new str("unix"), new unix_dialect());
+    _dialects->__setitem__(new str("excel"), new excel());
+    _dialects->__setitem__(new str("excel-tab"), new excel_tab());
+
     cl_writer = new class_("writer");
     cl_DictReader = new class_("DictReader");
-    cl_Excel = new class_("Excel");
+    cl_Dialect = new class_("Dialect");
+    cl_Excel = new class_("excel");
+    cl_ExcelTab = new class_("excel_tab");
+    cl_UnixDialect = new class_("unix_dialect");
     cl_reader = new class_("reader");
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
 
-    list<__ss_int> *__0 = new list<__ss_int>(range(8));
-    START_RECORD = __0->__getfast__(0);
-    START_FIELD = __0->__getfast__(1);
-    ESCAPED_CHAR = __0->__getfast__(2);
-    IN_FIELD = __0->__getfast__(3);
-    IN_QUOTED_FIELD = __0->__getfast__(4);
-    ESCAPE_IN_QUOTED_FIELD = __0->__getfast__(5);
-    QUOTE_IN_QUOTED_FIELD = __0->__getfast__(6);
-    EAT_CRNL = __0->__getfast__(7);
+    START_RECORD = 0;
+    START_FIELD = 1;
+    ESCAPED_CHAR = 2;
+    IN_FIELD = 3;
+    IN_QUOTED_FIELD = 4;
+    ESCAPE_IN_QUOTED_FIELD = 5;
+    QUOTE_IN_QUOTED_FIELD = 6;
+    EAT_CRNL = 7;
 
-    list<__ss_int> *__1 = new list<__ss_int>(range(4));
-    QUOTE_MINIMAL = __1->__getfast__(0);
-    QUOTE_ALL = __1->__getfast__(1);
-    QUOTE_NONNUMERIC = __1->__getfast__(2);
-    QUOTE_NONE = __1->__getfast__(3);
+    QUOTE_MINIMAL = 0;
+    QUOTE_ALL = 1;
+    QUOTE_NONNUMERIC = 2;
+    QUOTE_NONE = 3;
+    QUOTE_STRINGS = 4;
+    QUOTE_NOTNULL = 5;
 
-    _field_limit = (128*1024);
+    _field_limit = 128*1024;
 
-    default_0 = NULL;
-    default_1 = NULL;
-    default_2 = NULL;
-    default_3 = NULL;
-    default_4 = NULL;
-    default_5 = NULL;
-    default_6 = NULL;
-    default_7 = NULL;
-    default_8 = NULL;
-    default_9 = NULL;
-    default_10 = NULL;
-    default_11 = NULL;
-    default_12 = NULL;
-    default_13 = NULL;
-    default_14 = NULL;
-    default_15 = NULL;
-    default_16 = NULL;
-    default_17 = NULL;
     default_18 = const_16;
     default_19 = const_1;
-    default_20 = const_24;
-    default_21 = NULL;
-    default_22 = NULL;
-    default_23 = NULL;
-    default_24 = NULL;
 }
 
 list<str *> *list_dialects() {
-    
-    return (new list<str *>(2, const_24, const_25));
+    return new list<str *>(_dialects);
 }
 
-Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    Excel *dialect;
-    __ss_int __2;
 
-    if (__OR((name==NULL), __eq(name, const_24), 2)) {
-        dialect = (new Excel(1));
-    }
-    else if (__eq(name, const_25)) {
-        dialect = (new Excel(1));
-        dialect->delimiter = const_26;
-    }
-    else {
-        throw ((new Error(const_27)));
-    }
-    if ((delimiter!=NULL)) {
-        dialect->delimiter = delimiter;
-    }
-    if ((quotechar!=NULL)) {
-        dialect->quotechar = quotechar;
-    }
-    if ((doublequote!=(-1))) {
-        dialect->doublequote = doublequote;
-    }
-    if ((skipinitialspace!=(-1))) {
-        dialect->skipinitialspace = skipinitialspace;
-    }
-    if ((lineterminator!=NULL)) {
-        dialect->lineterminator = lineterminator;
-    }
-    if ((quoting!=(-1))) {
-        dialect->quoting = quoting;
-    }
-    if ((escapechar!=NULL)) {
-        dialect->escapechar = escapechar;
-    }
-    if ((strict!=(-1))) {
-        dialect->strict = strict;
-    }
-    return dialect;
+Dialect *get_dialect(str *name) {
+    return _dialects->__getitem__(name);
+}
+
+void *register_dialect(
+    str *name,
+    str *dialect,
+    str *delimiter,
+    str *quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    str *lineterminator,
+    __ss_int quoting,
+    str *escapechar,
+    __ss_int strict
+) {
+    Dialect *new_dialect = _make_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    _dialects->__setitem__(name, new_dialect);
+    return NULL;
+}
+
+void *unregister_dialect(str *name) {
+    _dialects->__delitem__(name);
+    return NULL;
 }
 
 __ss_int field_size_limit(__ss_int new_limit) {
