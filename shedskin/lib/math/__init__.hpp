@@ -7,6 +7,8 @@
 #include <math.h>
 #include <numeric>
 
+#include "integer.hpp"
+
 using namespace __shedskin__;
 namespace __math__ {
 
@@ -27,15 +29,7 @@ inline __ss_float fabs(__ss_float x) {
 }
 
 inline __ss_int factorial(__ss_int x) {
-    if (x < 0) 
-        throw new ValueError(new str("factorial() not defined for negative values"));
-
-    __ss_int result = 1;
-    for (__ss_int i = 1; i <= x; ++i) {
-        result *= i;
-    }
-
-    return result;
+    return __math__::__integer__::factorial(x);
 }
 
 inline __ss_float floor(__ss_float x) {
@@ -212,16 +206,8 @@ inline __ss_int trunc(__ss_float x) {
     return (__ss_int)::trunc(x);
 }
 
-inline __ss_int comb(__ss_int n, __ss_int k) { // TODO faster/std version?
-    if(n < 0)
-        throw new ValueError(new str("n must be a non-negative number"));
-    if(k < 0)
-        throw new ValueError(new str("k must be a non-negative number"));
-    __ss_int b=1;
-    for(int p=1; p<=k; p++) {
-        b = b*(n+1-p)/p;
-    }
-    return b;
+inline __ss_int comb(__ss_int n, __ss_int k) {
+    return __math__::__integer__::comb(n, k);
 }
 
 inline __ss_float fsum(pyiter<__ss_float> *iterable) {
@@ -280,13 +266,10 @@ inline __ss_int lcm(int) {
 }
 
 inline __ss_int perm(__ss_int n, __ss_int k) {
-    __ss_int result = 1;
-    for(__ss_int i = n-k+1; i <= n; i++)
-        result *= i;
-    return result;
+    return __math__::__integer__::perm(n, k);
 }
 inline __ss_int perm(__ss_int n) {
-    return factorial(n);
+    return __math__::__integer__::perm(n);
 }
 
 template<class T> inline T __mul(T a, T b) { return a->__mul__(b); }

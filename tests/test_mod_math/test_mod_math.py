@@ -2,6 +2,7 @@
 #from the pypy project
 
 import math
+import math.integer
 
 
 def test_fsum():
@@ -189,6 +190,26 @@ def test_sumprod():
     assert math.sumprod([1,2.1],[3.3,4]) == 11.7
 
 
+def test_math_integer():
+    assert math.integer.perm(7) == 5040
+    assert math.integer.perm(7, 7) == 5040
+    assert math.integer.perm(7, 6) == 5040
+    assert math.integer.perm(7, 3) == 210
+
+    assert math.integer.comb(17, 14) == 680
+
+    assert math.integer.gcd(1, 0) == 1
+    assert math.integer.lcm(0, 1) == 0
+
+    assert math.integer.gcd(15) == 15
+    assert math.integer.lcm(14) == 14
+
+    assert math.integer.factorial(2) == 2
+    assert math.integer.factorial(5) == 120
+
+    assert math.integer.isqrt(18) == 4
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -197,6 +218,7 @@ def test_all():
     test_isclose()
     test_dist()
     test_sumprod()
+    test_math_integer()
 
 
 if __name__ == '__main__':
