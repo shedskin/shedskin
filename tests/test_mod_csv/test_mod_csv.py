@@ -258,8 +258,8 @@ def test_excel():
 
     with open('excel_out2.csv', 'w') as f:
         dict_writer = csv.DictWriter(f, fieldnames=iter(['aap', 'bert', 'frits']))  # iterable fieldnames
-        dict_writer.writeheader()
-        dict_writer.writerows(rows)
+        dict_writer.writeheader()  # TODO implement
+        dict_writer.writerows(iter(rows))  # iterable rows
 
 #    assert open(path).read() == open('excel_out2.csv').read()  # TODO we should ignore lineterminator?
 

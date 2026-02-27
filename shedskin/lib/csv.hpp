@@ -248,7 +248,7 @@ public:
     );
 
     void *writerow(list<str *> *seq);
-    void *writerows(list<list<str *> *> *seqs);
+    void *writerows(pyiter<list<str *> *> *seqs);
 
     // internal
     __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
@@ -388,7 +388,7 @@ public:
 
     void *writeheader();
     void *writerow(dict<str *, str *> *rowdict);
-    void *writerows(list<dict<str *, str *> *> *rowdicts);
+    void *writerows(pyiter<dict<str *, str *> *> *rowdicts);
 
     // internal
     list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
