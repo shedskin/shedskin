@@ -502,13 +502,14 @@ void *writer::join_reset() {
     return NULL;
 }
 
-void *writer::writerows(list<list<str *> *> *seqs) {
+void *writer::writerows(pyiter<list<str *> *> *seqs) {
     list<str *> *seq;
-    list<list<str *> *> *__27;
-    list<list<str *> *>::for_in_loop __123;
-    __ss_int __29;
 
-    FOR_IN(seq,seqs,27,29,123)
+    pyiter<list<str *> *> *__0;
+    __ss_int __2;
+    pyiter<list<str *> *>::for_in_loop __3;
+
+    FOR_IN(seq,seqs,0,2,3)
         this->writerow(seq);
     END_FOR
 
@@ -623,20 +624,19 @@ void *DictWriter::writerow(dict<str *, str *> *rowdict) {
     return (this->_writer)->writerow(this->_dict_to_list(rowdict));
 }
 
-void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
+void *DictWriter::writerows(pyiter<dict<str *, str *> *> *rowdicts) {
     list<list<str *> *> *rows;
-    list<dict<str *, str *> *> *__40;
-    list<dict<str *, str *> *>::for_in_loop __123;
+
+    pyiter<dict<str *, str *> *> *__40;
+    pyiter<dict<str *, str *> *>::for_in_loop __123;
     __ss_int __42;
+
     dict<str *, str *> *rowdict;
-
-    rows = (new list<list<str *> *>());
-
     FOR_IN(rowdict,rowdicts,40,42,123)
-        rows->append(this->_dict_to_list(rowdict));
+        (this->_writer)->writerow(this->_dict_to_list(rowdict));
     END_FOR
 
-    return (this->_writer)->writerows(rows);
+    return NULL;
 }
 
 void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
