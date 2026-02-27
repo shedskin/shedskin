@@ -1,40 +1,54 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
-# http://docs.python.org/dev/_sources/library/heapq.txt
+def heapify(x):
+    __cmp(x[0], x[0])
+
+def heapify_max(x):
+    heapify(x)
 
 def heappush(heap, item):
     heap[0] = item
     __cmp(item, item)
 
+def heappush_max(heap, item):
+    heappush(heap, item)
+
 def heappop(heap):
     return heap[0]
+
+def heappop_max(heap):
+    return heappop(heap)
 
 def heappushpop(heap, item):
     heap[0] = item
     __cmp(item, item)
     return heap[0]
 
-def heapify(x):
-    __cmp(x[0], x[0])
+def heappushpop_max(heap, item):
+    return heappushpop(heap, item)
 
 def heapreplace(heap, item):
     heap[0] = item
     __cmp(item, item)
     return heap[0]
 
-def merge(*iterables):
+def heapreplace_max(heap, item):
+    return heapreplace(heap, item)
+
+def merge(__kw_reverse=False, __kw_key=0, *iterables):
     item = iter(iterables).__next__()
     __cmp(item, item)
+    __cmp(__kw_key(item), __kw_key(item))
     yield item
 
-def nlargest(n, iterable): # TODO , key = None
+def nlargest(n, iterable, __kw_key=None):
     item = iter(iterable).__next__()
     __cmp(item, item)
-    #key(elem)
+    __cmp(__kw_key(item), __kw_key(item))
     yield item
 
-def nsmallest(n, iterable): # TODO , key = None
+def nsmallest(n, iterable, __kw_key=None):
     item = iter(iterable).__next__()
     __cmp(item, item)
-    #key(elem)
+    __cmp(__kw_key(item), __kw_key(item))
     yield item
