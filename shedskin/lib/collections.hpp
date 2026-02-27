@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __COLLECTIONS_HPP
 #define __COLLECTIONS_HPP
@@ -23,33 +23,42 @@ public:
     std::deque<A, gc_allocator<A> > units;
     typename std::deque<A, gc_allocator<A> >::iterator iter;
 #endif
+    __ss_int maxlen = -1;
 
-    /* XXX modulo rotate, maxlen */
+    /* XXX modulo rotate */
 
-    deque(pyiter<A> *iterable=0) {
+    deque(pyiter<A> *iterable=0, __ss_int _maxlen=-1) {
         this->__class__ = cl_deque;
         if(iterable)
             extend(iterable);
+        this->maxlen = _maxlen;
     }
 
     deque<A> *copy() {
         deque<A> *result = new deque<A>();
         result->units = units;
+        result->maxlen = maxlen;
         return result;
     }
 
     void *append(A a) {
         units.push_back(a);
-        return NULL;
-    }
-
-    void *insert(__ss_int index, A a) {
-        units.insert(units.begin() + index, a);
+        if(maxlen != -1 && units.size() > maxlen)
+            units.pop_front();
         return NULL;
     }
 
     void *appendleft(A a) {
         units.push_front(a);
+        if(maxlen != -1 && units.size() > maxlen)
+            units.pop_back();
+        return NULL;
+    }
+
+    void *insert(__ss_int index, A a) {
+        if(maxlen != -1 && units.size() == maxlen)
+            throw new IndexError(new str("deque already at its maximum size"));
+        units.insert(units.begin() + index, a);
         return NULL;
     }
 
@@ -111,7 +120,10 @@ public:
             if (i<this->__len__()-1)
                 r->unit += ", ";
         }
-        r->unit += "])";
+        r->unit += "]";
+        if(this->maxlen != -1)
+            r->unit += ", maxlen=" + __str(this->maxlen)->unit;
+        r->unit += ")";
         return r;
     }
 
@@ -215,6 +227,7 @@ public:
        memo->__setitem__(this, c);
        for(__ss_int i=0; i<this->__len__(); i++)
            c->units.push_back(__deepcopy(this->units[i], memo));
+       c->maxlen = maxlen;
        return c;
    }
 

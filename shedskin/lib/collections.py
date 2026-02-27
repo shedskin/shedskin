@@ -1,8 +1,9 @@
-# Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class deque(pyiter):
-    def __init__(self, iterable=None):  # TODO maxlen
+    def __init__(self, iterable=None, maxlen=None):
         self.unit = iter(iterable).__next__()
+        self.maxlen = 1
 
     def append(self, x):
         self.unit = x
