@@ -35,10 +35,22 @@ def test_random1():
     assert len(points) == 200 
 
 
+def test_getsetstate():
+    random.sample(range(20),k=10) # change state
+
+    st = random.getstate() # get state
+
+    get = random.sample(range(20),k=10) # change state
+
+    random.setstate(st) # restore state
+
+    get2 = random.sample(range(20),k=10)
+
+    assert get == get2  # from same state so should be identical
+
+
 def test_random2():
     random.seed(37)
-    rstate = random.getstate()   # (state is not cross-compatible with CPython)
-    random.setstate(rstate)
 
     s = "%.8f" % random.random()
     f = random.randrange(-30,15)
@@ -113,6 +125,7 @@ def test_all():
     test_random3()
     test_randbytes()
     test_choices()
+    test_getsetstate()
 
 
 if __name__ == '__main__':

@@ -475,23 +475,28 @@ bytes *Random::randbytes(__ss_int n) {
     return __random__::randbytes(n);
 }
 
-void *Random::setstate(list<__ss_float> *state) {
+bytes *Random::getstate() {
+    /**
+    Return internal state; can be passed to setstate() later.
+    */
+    bytes *state = new bytes();
+    for(size_t i=0; i<4; i++)
+        for(size_t j=0; j<64; j += 8) {
+            state->unit += (unsigned char)((s[i] >> j) & 0xff);
+    }
+    return state;
+}
+
+void *Random::setstate(bytes *state) {
     /**
     Restore internal state from object returned by getstate().
     */
-    int version;
-
-    /*
-    version = __int(state->__getfast__(0));
-    if ((version!=2)) {
-        throw ((new ValueError(__mod6(const_10, 2, version, this->VERSION))));
+    size_t x = 0;
+    for(size_t i=0; i<4; i++) {
+        s[i] = 0;
+        for(size_t j=0; j<64; j += 8)
+            s[i] |= ((uint64_t)((unsigned char)(state->unit[x++]))) << j;
     }
-    this->mti = __int(state->__getfast__(1));
-    this->gauss_switch = __int(state->__getfast__(2));
-    this->mt = list_comp_1(state->__slice__(3, 3, -1, 0));
-    this->gauss_next = state->__getfast__(-1);
-
-    */
     return NULL;
 }
 
@@ -553,18 +558,6 @@ __ss_float Random::gauss(__ss_float mu, __ss_float sigma) {
         this->gauss_switch = 1;
     }
     return (mu+(z*sigma));
-}
-
-list<__ss_float> *Random::getstate() {
-    /**
-    Return internal state; can be passed to setstate() later.
-    */
-//    list<__ss_float> *x;
-
-//    x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
-//    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
-
-    return new list<__ss_float>();
 }
 
 __ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {
@@ -633,12 +626,12 @@ __ss_float random() {
     return _inst->random();
 }
 
-list<__ss_float> *getstate() {
+bytes *getstate() {
 
     return _inst->getstate();
 }
 
-void *setstate(list<__ss_float> *state) {
+void *setstate(bytes *state) {
 
     return _inst->setstate(state);
 }
