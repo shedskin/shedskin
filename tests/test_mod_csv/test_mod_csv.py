@@ -5,11 +5,12 @@ import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 
-# TODO test restkey, restval, line_num, extrasaction
+# TODO test restkey, restval, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO rewrite parser
 # TODO check QUOTE_NONNUMERIC restriction
 # TODO NOTSET/None differences
+# TODO check reader/writer attrs
 
 # TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
@@ -225,7 +226,9 @@ def test_excel():
 
     # normal variant
     reader = csv.reader(open(path))
+    assert reader.line_num == 0
     data = list(reader)
+    assert reader.line_num == 3
 
     assert data == [
         ['aap', 'bert', 'frits'],
@@ -241,8 +244,11 @@ def test_excel():
 
     # dict variant
     dict_reader = csv.DictReader(open(path), fieldnames=['a', 'b', 'c'])  # override header
+    assert dict_reader.line_num == 0
     next(dict_reader)
+    assert dict_reader.line_num == 1
     rows = list(dict_reader)
+    assert dict_reader.line_num == 3
     assert rows == [
         {'a': 'hoi', 'b': '  hop', 'c': '18.8'},
         {'a': 'hoi2', 'b': 'a, b, c', 'c': '17'}
