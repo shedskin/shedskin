@@ -379,14 +379,33 @@ void *reader::__init__(file *input_iter_, str *dialect_, str *delimiter, str *qu
 }
 
 void *reader::parse_save_field() {
+    __ss_int quoting = this->dialect->quoting;
+
     str *field_;
 
-    field_ = (const_16)->join(this->field);
-    this->field = (new list<str *>());
-    if (this->numeric_field) {
-        this->numeric_field = 0;
+    if (this->unquoted_field &&
+        this->field_len == 0 &&
+        (quoting == QUOTE_NOTNULL || quoting == QUOTE_STRINGS))
+    {
+        field_ = NULL;
     }
-    (this->fields)->append(field_);
+    else {
+        field_ = (new str(""))->join(this->field); // TODO take stored to field_len
+
+        this->field = (new list<str *>()); // TODO remove
+
+        if (this->unquoted_field &&
+            this->field_len != 0 &&
+            (quoting == QUOTE_NONNUMERIC || quoting == QUOTE_STRINGS))
+        {
+            // TODO raise error
+        }
+
+        this->field_len = 0;
+    }
+
+    this->fields->append(field_);
+
     return NULL;
 }
 

@@ -131,11 +131,16 @@ class reader : public __iter<list<str *> *> {
 public:
     Dialect *dialect;
     __ss_int line_num;
-    list<str *> *fields;
-    list<str *> *field;
-    __ss_int state;
     __ss_int numeric_field;
     file *input_iter;
+
+
+    __ss_int state;
+    list<str *> *fields;
+    list<str *> *field;
+    size_t field_len;
+    bool unquoted_field;
+
 
     reader() {}
     template<class D> reader(
