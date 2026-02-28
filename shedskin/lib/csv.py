@@ -59,8 +59,7 @@ class DictReader:
         return {'': ''}
 
 class DictWriter:
-    def __init__(self, f, fieldnames, restval="", extrasaction="raise", dialect="excel", delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        self.dialect = Dialect()
+    def __init__(self, f, fieldnames, restval=None, extrasaction=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
         self.writer = writer(f)
         self.fieldnames = ['']
         self.restval = ''

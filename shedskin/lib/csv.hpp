@@ -39,10 +39,6 @@ class writer;
 class DictReader;
 class DictWriter;
 
-extern str *default_18, *default_19, *default_20; // TODO for DictWriter(); remove and scan other headers
-
-extern dict<str *, Dialect *> *_dialects;
-
 class Error : public Exception {
 public:
 

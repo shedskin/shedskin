@@ -34,9 +34,6 @@ __ss_int _field_limit;
 
 class_ *cl_Error, *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
 
-str * default_18; // TODO remove
-str * default_19;
-str * default_20;
 
 void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) { // TODO NOT_SET/None difference?
     if(!c)
@@ -697,6 +694,12 @@ void *DictWriter::writerows(pyiter<dict<str *, str *> *> *rowdicts) {
 }
 
 void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(!restval_)
+        restval_ = new str();
+    if(!extrasaction_)
+        extrasaction_ = new str("raise");
+    if(!dialect_)
+        dialect_ = new str("excel");
     if(fieldnames_)
         this->fieldnames = new list<str *>(fieldnames_);
     else
@@ -755,9 +758,6 @@ void __init() {
     cl_DictWriter = new class_("DictWriter");
 
     _field_limit = 128*1024;
-
-    default_18 = const_16;
-    default_19 = const_1;
 }
 
 list<str *> *list_dialects() {
