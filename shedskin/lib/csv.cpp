@@ -544,20 +544,27 @@ void *writer::writerow(list<str *> *seq) {
     this->join_reset();
 
     FOR_IN(field,seq,24,26,123)
-        quoted = 0;
-        if (dialect->quoting == QUOTE_NONNUMERIC) {
+        if (dialect->quoting == QUOTE_ALL)
             quoted = 1;
-        }
-        else if (dialect->quoting == QUOTE_ALL) {
-            quoted = 1;
-        }
+        else if (dialect->quoting == QUOTE_NOTNULL)
+            quoted = field ? 1 : 0;
+        else
+            quoted = 0;
+
         if (field == NULL) {
-            this->join_append(const_16, quoted);
+            this->join_append(NULL, quoted);
         }
         else {
-            this->join_append(__str(field), quoted);
+            this->join_append(field, quoted);
         }
     END_FOR
+
+    if (this->num_fields > 0 && len(this->rec) == 0) {
+        // TODO check error
+
+        this->num_fields -= 1;
+        this->join_append(NULL, 1);
+    }
 
     (this->rec)->append((this->dialect)->lineterminator);
     (this->output_file)->write((const_16)->join(this->rec));
@@ -595,7 +602,7 @@ void *writer::join_append(str *field, __ss_int quoted) {
     }
 
     this->join_append_data(field, quoted);
-    this->num_fields = (this->num_fields+1);
+    this->num_fields += 1;
 
     return NULL;
 }
