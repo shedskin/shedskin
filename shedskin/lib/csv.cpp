@@ -171,7 +171,7 @@ static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *row
     dict<str *, str *> *__1;
     FOR_IN(k,rowdict,1,2,3)
         if ((!(self->fieldnames)->__contains__(k)))
-            __ss_result->append(k);
+            __ss_result->append(__add_strs(3, new str("'"), k, new str("'")));
     END_FOR
     return __ss_result;
 }
