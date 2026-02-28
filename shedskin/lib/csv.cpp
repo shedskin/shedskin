@@ -232,7 +232,7 @@ void *reader::parse_process_char(str *c) {
         }
         else {
             if (dialect->quoting == QUOTE_NONNUMERIC) {
-                this->numeric_field = 1;
+                //this->numeric_field = 1;
             }
             this->parse_add_char(c);
             this->state = IN_FIELD;
@@ -332,9 +332,10 @@ void *reader::parse_process_char(str *c) {
 
 void *reader::parse_reset() {
     this->fields = (new list<str *>());
-    this->field = (new list<str *>());
+    this->field = (new list<str *>()); // TODO remove
+    this->field_len = 0;
     this->state = START_RECORD;
-    this->numeric_field = 0;
+    this->unquoted_field = false;
     return NULL;
 }
 
