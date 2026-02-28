@@ -337,6 +337,21 @@ def test_attrs():
         writer = csv.writer(f, dialect='unix')
         assert writer.dialect.quoting == 1
 
+    with open(path) as f:
+        dict_reader = csv.DictReader(f, dialect='unix', restval='rest')
+        assert dict_reader.dialect == 'unix'  # TODO can it be Dialect instance?
+        assert dict_reader.fieldnames == ['aap', 'bert', 'frits']
+        assert dict_reader.line_num == 1
+        assert dict_reader.reader.dialect.quoting == 1
+        assert dict_reader.restval == 'rest'
+
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, dialect='unix', fieldnames=['x', 'y'])
+        assert dict_writer.extrasaction == 'raise'
+        assert dict_writer.fieldnames == ['x', 'y']
+        assert dict_writer.restval == ''
+        assert dict_writer.writer.dialect.lineterminator == '\n'
+
 
 def test_all():
     test_program()  # TODO split up test
