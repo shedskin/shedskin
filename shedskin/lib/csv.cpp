@@ -460,66 +460,61 @@ class writer
 
 class_ *cl_writer;
 
-__ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quoted) {
-    str *lineterm;
-    __ss_int __18, __19, __20, __22, want_escape;
+void *writer::join_append_data(str *field, __ss_int quoted) {
+    Dialect *dialect = this->dialect;
 
-    lineterm = dialect->lineterminator;
-    if ((this->num_fields>0)) {
-        (this->rec)->append(dialect->delimiter);
-    }
-    if (quoted) {
-        (this->rec)->append(dialect->quotechar);
-    }
+    /* If this is not the first field we need a field separator */
+    if (this->num_fields > 0)
+        this->rec->append(dialect->delimiter);
 
-    str *c;
-    str::for_in_loop __3;
-    int __2;
-    str *__1;
-    FOR_IN(c,field,1,2,3)
-        want_escape = 0;
-        if (__eq(c, const_7)) {
-            break;
-        }
-        if (__OR(__eq(c, dialect->delimiter), __OR(__eq(c, dialect->escapechar), __OR(__eq(c, dialect->quotechar), lineterm->__contains__(c), 20), 19), 18)) {
-            if (dialect->quoting == QUOTE_NONE) {
+    str *rr = new str(); // TODO
+
+    for (size_t i = 0; i < field->unit.size(); i++) {
+        char c = field->unit[i];
+        int want_escape = 0;
+
+        if (c == dialect->delimiter->unit[0] ||
+            (dialect->escapechar && c == dialect->escapechar->unit[0]) ||
+            c == dialect->quotechar->unit[0] ||
+            c == '\n' ||
+            c == '\r' ||
+            dialect->lineterminator->unit.find(c) != std::string::npos) {
+            if (dialect->quoting == QUOTE_NONE)
                 want_escape = 1;
-            }
             else {
-                if (__eq(c, dialect->quotechar)) {
-                    if (dialect->doublequote) {
-                        (this->rec)->append(dialect->quotechar);
-                    }
-                    else {
+                if (c == dialect->quotechar->unit[0]) {
+                    if (dialect->doublequote)
+                        rr->unit += dialect->quotechar->unit;
+                    else
                         want_escape = 1;
-                    }
                 }
-                if ((!want_escape)) {
+                else if (dialect->escapechar && c == dialect->escapechar->unit[0]) {
+                    want_escape = 1;
+                }
+                if (!want_escape)
                     quoted = 1;
-                }
             }
             if (want_escape) {
-                if ((!___bool(dialect->escapechar))) {
-                    throw ((new Error(const_18)));
+                if (!dialect->escapechar)
+                    ; // TODO raise error
+                else {
+                    rr->unit += dialect->escapechar->unit;
                 }
-                (this->rec)->append(dialect->escapechar);
             }
         }
-        (this->rec)->append(c);
-    END_FOR
 
-    if (__AND((!___bool(field)), quote_empty, 22)) {
-        if (dialect->quoting == QUOTE_NONE) {
-            throw ((new Error(const_19)));
-        }
-        else {
-            quoted = 1;
-        }
+        /* Copy field character into record buffer.
+         */
+        rr->unit += c;
     }
-    if (quoted) {
-        (this->rec)->append(dialect->quotechar);
-    }
-    return quoted;
+
+    if(quoted)
+        this->rec->append(dialect->quotechar);
+    this->rec->append(rr);
+    if(quoted)
+        this->rec->append(dialect->quotechar);
+
+    return NULL;
 }
 
 void *writer::writerow(list<str *> *seq) {
@@ -539,10 +534,10 @@ void *writer::writerow(list<str *> *seq) {
             quoted = 1;
         }
         if (field == NULL) {
-            quoted = this->join_append(const_16, quoted, (len(seq)==1));
+            this->join_append(const_16, quoted);
         }
         else {
-            quoted = this->join_append(__str(field), quoted, (len(seq)==1));
+            this->join_append(__str(field), quoted);
         }
     END_FOR
 
@@ -571,10 +566,10 @@ void *writer::writerows(pyiter<list<str *> *> *seqs) {
     return NULL;
 }
 
-__ss_int writer::join_append(str *field, __ss_int quoted, __ss_int quote_empty) {
-    quoted = this->join_append_data(field, quote_empty, quoted);
+void *writer::join_append(str *field, __ss_int quoted) {
+    this->join_append_data(field, quoted);
     this->num_fields = (this->num_fields+1);
-    return quoted;
+    return NULL;
 }
 
 void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
@@ -672,6 +667,7 @@ list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
 }
 
 void *DictWriter::writeheader() {
+    this->_writer->writerow(this->fieldnames);
     return NULL;
 }
 

@@ -255,9 +255,9 @@ public:
     void *writerows(pyiter<list<str *> *> *seqs);
 
     // internal
-    __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
     void *join_reset();
-    __ss_int join_append(str *field, __ss_int quoted, __ss_int quote_empty);
+    void *join_append(str *field, __ss_int quoted);
+    void *join_append_data(str *field, __ss_int quoted);
 };
 
 class __driter : public __iter<dict<str *, str *> *> {
