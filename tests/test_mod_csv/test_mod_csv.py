@@ -4,13 +4,16 @@ import os
 import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
-# TODO test restkey, restval, extrasaction
+# TODO test restval, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
+# TODO error when using restkey
 # TODO rewrite parser
 # TODO check QUOTE_NONNUMERIC restriction
-# TODO NOTSET/None differences
 # TODO check reader/writer attrs
+# TODO non-file input? (strings?)
 
+
+# TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
 
@@ -268,12 +271,30 @@ def test_excel():
     assert open(path).read() == open('excel_out2.csv').read()  # TODO newline=''
 
 
+def test_restval():
+    # DictReader
+    dict_reader = csv.DictReader(['a,b,c','7,8,9'], fieldnames=['a','b','c','d'])
+    assert list(dict_reader) == [
+        {'a': 'a', 'b': 'b', 'c': 'c', 'd': None},
+        {'a': '7', 'b': '8', 'c': '9', 'd': None},
+    ]
+
+    dict_reader = csv.DictReader(['a,b,c','7,8,9'], fieldnames=['a','b','c','d'], restval='niks')
+    assert list(dict_reader) == [
+        {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'niks'},
+        {'a': '7', 'b': '8', 'c': '9', 'd': 'niks'},
+    ]
+
+    # TODO DictWriter(restval)
+
+
 def test_all():
     test_program()
     test_dialects()
     test_register_dialect()
     test_errors()
     test_excel()
+    test_restval()
 
 
 if __name__ == "__main__":
