@@ -10,7 +10,7 @@ dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
 
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8;
+str *const_1, *const_16, *const_17, *const_2, *const_21, *const_22, *const_23, *const_7;
 
 char EOL = '\000';
 
@@ -409,8 +409,9 @@ list<str *> *reader::__next__() {
         str *__1;
         FOR_IN(c,line,1,2,3) // TODO char c
             if (__eq(c, const_7)) {
-                throw ((new Error(const_15)));
+                throw new Error(new str("line contains NULL byte"));
             }
+
             this->parse_process_char(c);
         END_FOR
 
@@ -657,7 +658,7 @@ dict<str *, str *> *DictReader::__next__() {
     lf = len(this->getfieldnames());
     lr = len(row);
     if ((lf<lr)) {
-        throw ((new Error(const_20)));
+        throw new Error(new str("DictReader 'restkey' is not supported"));
     }
     else if ((lf>lr)) {
 
@@ -763,31 +764,17 @@ __ss_int field_size_limit(__ss_int new_limit) {
 }
 
 void __init() {
+    __name__ = new str("csv");
+
     const_1 = new str("raise");
     const_2 = new str("ignore");
     const_3 = (new tuple2<str *, str *>(2, const_1, const_2));
-    const_4 = new str(",");
-    const_5 = new str("\"");
-    const_6 = new str("\r\n");
     const_7 = new str("\000", 1);
-    const_8 = new str("\n\r");
-    const_10 = new str(" ");
-    const_11 = new str("\n");
-    const_12 = new str("\000\n\r", 3);
-    const_13 = new str("'%c' expected after '%c'");
-    const_14 = new str("new-line character seen in unquoted field - do you need to open the file in universal-newline mode?");
-    const_15 = new str("line contains NULL byte");
     const_16 = new str("");
     const_17 = new str("field larger than field limit (%d)");
-    const_18 = new str("need to escape, but no escapechar set");
-    const_19 = new str("single empty field record must be quoted");
-    const_20 = new str("shedskin: DictReader 'restkey' is not supported");
     const_21 = new str("dict contains fields not in fieldnames: ");
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
-    const_25 = new str("excel-tab");
-
-    __name__ = new str("csv");
 
     _dialects = new dict<str *, Dialect *>();
     _dialects->__setitem__(new str("unix"), new unix_dialect());
