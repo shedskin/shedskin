@@ -271,7 +271,6 @@ public:
     str *restval;
     str *dialect;
     __ss_int line_num;
-    str *restkey;
     list<str *> *_fieldnames;
     reader *_reader;
 

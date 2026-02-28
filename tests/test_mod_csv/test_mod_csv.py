@@ -6,12 +6,8 @@ import os.path
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 # TODO test restval, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
-# TODO error when using restkey
 # TODO rewrite parser
-# TODO check QUOTE_NONNUMERIC restriction
 # TODO check reader/writer attrs
-# TODO non-file input? (strings?)
-
 
 # TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
@@ -69,7 +65,7 @@ def test_program():
         bla, fieldnames, restval="ah", quoting=csv.QUOTE_ALL, lineterminator="\n"
     )
     rd = csv.DictReader(
-        open(csvfile_in), fieldnames, restval="uh", restkey="oh", delimiter="|"
+        open(csvfile_in), fieldnames, restval="uh", delimiter="|"
     )
     for d2 in rd:
         # print(sorted(d2.values()))

@@ -12,7 +12,6 @@ tuple2<str *, str *> *const_3;
 
 str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
-str *const_88;
 
 const __ss_int QUOTE_MINIMAL = 0;
 const __ss_int QUOTE_ALL = 1;
@@ -116,6 +115,8 @@ Dialect *_make_dialect(
     if ((quoting!=(-1))) {
         if(quoting > 5)
             throw new TypeError(new str("bad \"quoting\" value"));
+        if (quoting == QUOTE_NONNUMERIC)
+            throw new ValueError(new str("QUOTE_NONNUMERIC is not supported"));
         dialect->quoting = quoting;
     }
     if ((escapechar!=NULL)) {
@@ -403,9 +404,6 @@ list<str *> *reader::__next__() {
 }
 
 void *reader::__init__(pyiter<str *> *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if (quoting == QUOTE_NONNUMERIC) {
-        throw ((new ValueError(const_88)));
-    }
     this->input_iter = input_iter_->__iter__();
     this->line_num = 0;
     this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
@@ -583,9 +581,6 @@ void *writer::join_append(str *field, __ss_int quoted) {
 }
 
 void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if (quoting == QUOTE_NONNUMERIC) {
-        throw ((new ValueError(const_88)));
-    }
     this->output_file = output_file_;
     this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
@@ -645,12 +640,13 @@ list<str *> *DictReader::getfieldnames() {
     return this->_fieldnames;
 }
 
-void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if(fieldnames_)
         this->_fieldnames = new list<str *>(fieldnames_);
     else
         this->_fieldnames = NULL;
-    this->restkey = restkey_;
+    if(restkey)
+        throw new ValueError(new str("DictReader(restkey) argument is not supported"));
     this->restval = restval_;
     this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
     this->dialect = dialect_;
@@ -740,7 +736,6 @@ void __init() {
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
     const_25 = new str("excel-tab");
-    const_88 = new str("shedskin: QUOTE_NONNUMERIC is not supported");
 
     __name__ = new str("csv");
 
