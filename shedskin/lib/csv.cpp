@@ -14,21 +14,22 @@ str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, 
 list<void *> *const_0;
 str *const_88;
 
-__ss_int QUOTE_MINIMAL;
-__ss_int QUOTE_ALL;
-__ss_int QUOTE_NONNUMERIC;
-__ss_int QUOTE_NONE;
-__ss_int QUOTE_STRINGS;
-__ss_int QUOTE_NOTNULL;
+const __ss_int QUOTE_MINIMAL = 0;
+const __ss_int QUOTE_ALL = 1;
+const __ss_int QUOTE_NONNUMERIC = 2;
+const __ss_int QUOTE_NONE = 3;
+const __ss_int QUOTE_STRINGS = 4;
+const __ss_int QUOTE_NOTNULL = 5;
 
-__ss_int START_FIELD;
-__ss_int START_RECORD;
-__ss_int QUOTE_IN_QUOTED_FIELD;
-__ss_int EAT_CRNL;
-__ss_int ESCAPED_CHAR;
-__ss_int ESCAPE_IN_QUOTED_FIELD;
-__ss_int IN_FIELD;
-__ss_int IN_QUOTED_FIELD;
+const __ss_int START_RECORD = 0;
+const __ss_int START_FIELD = 1;
+const __ss_int ESCAPED_CHAR = 2;
+const __ss_int IN_FIELD = 3;
+const __ss_int IN_QUOTED_FIELD = 4;
+const __ss_int ESCAPE_IN_QUOTED_FIELD = 5;
+const __ss_int QUOTE_IN_QUOTED_FIELD = 6;
+const __ss_int EAT_CRNL = 7;
+const __ss_int AFTER_ESCAPED_CRNL = 8;
 
 __ss_int _field_limit;
 
@@ -196,138 +197,170 @@ class reader
 
 class_ *cl_reader;
 
-void *reader::parse_process_char(str *c) {
-    __ss_int __11, __13, __7, __9;
+char EOL = '\000';
 
-    if (this->state == START_RECORD) {
-        if (__eq(c, const_7)) {
-            return NULL;
-        }
-        else if ((const_8)->__contains__(c)) {
-            this->state = EAT_CRNL;
-            return NULL;
-        }
-        this->state = START_FIELD;
-    }
-    if (this->state == START_FIELD) {
-        if ((const_9)->__contains__(c)) {
-            this->parse_save_field();
-            if (__eq(c, const_7)) {
-                this->state = START_RECORD;
-            }
-            else {
+void *reader::parse_process_char(str *s) {
+    char c = s->unit[0];
+
+    Dialect *dialect = this->dialect;
+
+    switch (this->state) {
+        case START_RECORD:
+            /* start of record */
+            if (c == EOL)
+                /* empty line - return [] */
+                break;
+            else if (c == '\n' || c == '\r') {
                 this->state = EAT_CRNL;
+                break;
             }
-        }
-        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 7)) {
-            this->state = IN_QUOTED_FIELD;
-        }
-        else if (__eq(c, dialect->escapechar)) {
-            this->state = ESCAPED_CHAR;
-        }
-        else if (__AND(__eq(c, const_10), dialect->skipinitialspace, 9)) {
-        }
-        else if (__eq(c, dialect->delimiter)) {
-            this->parse_save_field();
-        }
-        else {
-            if (dialect->quoting == QUOTE_NONNUMERIC) {
-                //this->numeric_field = 1;
-            }
-            this->parse_add_char(c);
-            this->state = IN_FIELD;
-        }
-    }
-    else if (this->state == ESCAPED_CHAR) {
-        if (__eq(c, const_7)) {
-            c = const_11;
-        }
-        this->parse_add_char(c);
-        this->state = IN_FIELD;
-    }
-    else if (this->state == IN_FIELD) {
-        if ((const_12)->__contains__(c)) {
-            this->parse_save_field();
-            if (__eq(c, const_7)) {
-                this->state = START_RECORD;
-            }
-            else {
-                this->state = EAT_CRNL;
-            }
-        }
-        else if (__eq(c, dialect->escapechar)) {
-            this->state = ESCAPED_CHAR;
-        }
-        else if (__eq(c, dialect->delimiter)) {
-            this->parse_save_field();
+            /* normal character - handle as START_FIELD */
             this->state = START_FIELD;
-        }
-        else {
-            this->parse_add_char(c);
-        }
-    }
-    else if (this->state == IN_QUOTED_FIELD) {
-        if (__eq(c, const_7)) {
-        }
-        else if (__eq(c, dialect->escapechar)) {
-            this->state = ESCAPE_IN_QUOTED_FIELD;
-        }
-        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 11)) {
-            if (dialect->doublequote) {
-                this->state = QUOTE_IN_QUOTED_FIELD;
+
+        case START_FIELD:
+            /* expecting field */
+            this->unquoted_field = true;
+            if (c == '\n' || c == '\r' || c == EOL) {
+                /* save empty field - return [fields] */
+                parse_save_field();
+                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+            }
+            else if (c == dialect->quotechar->unit[0] &&
+                     dialect->quoting != QUOTE_NONE) {
+                /* start quoted field */
+                this->unquoted_field = false;
+                this->state = IN_QUOTED_FIELD;
+            }
+            else if (dialect->escapechar && c == dialect->escapechar->unit[0]) { // TODO check which options can be None..
+                /* possible escaped character */
+                this->state = ESCAPED_CHAR;
+            }
+            else if (c == ' ' && dialect->skipinitialspace)
+                /* ignore spaces at start of field */
+                ;
+            else if (c == dialect->delimiter->unit[0]) {
+                /* save empty field */
+                parse_save_field();
             }
             else {
+                /* begin new unquoted field */
+                parse_add_char(c);
                 this->state = IN_FIELD;
             }
-        }
-        else {
-            this->parse_add_char(c);
-        }
-    }
-    else if (this->state == ESCAPE_IN_QUOTED_FIELD) {
-        if (__eq(c, const_7)) {
-            c = const_11;
-        }
-        this->parse_add_char(c);
-        this->state = IN_QUOTED_FIELD;
-    }
-    else if (this->state == QUOTE_IN_QUOTED_FIELD) {
-        if (__AND((dialect->quoting!=QUOTE_NONE), __eq(c, dialect->quotechar), 13)) {
-            this->parse_add_char(c);
-            this->state = IN_QUOTED_FIELD;
-        }
-        else if (__eq(c, dialect->delimiter)) {
-            this->parse_save_field();
-            this->state = START_FIELD;
-        }
-        else if ((const_12)->__contains__(c)) {
-            this->parse_save_field();
-            if (__eq(c, const_7)) {
-                this->state = START_RECORD;
+            break;
+
+        case ESCAPED_CHAR:
+            if (c == '\n' || c=='\r') {
+                parse_add_char(c);
+                this->state = AFTER_ESCAPED_CRNL;
+                break;
+            }
+            if (c == EOL)
+                c = '\n';
+            parse_add_char(c);
+            this->state = IN_FIELD;
+            break;
+
+        case AFTER_ESCAPED_CRNL:
+            if (c == EOL)
+                break;
+
+        case IN_FIELD:
+            /* in unquoted field */
+            if (c == '\n' || c == '\r' || c == EOL) {
+                /* end of line - return [fields] */
+                parse_save_field();
+                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+            }
+            else if (dialect->escapechar && c == dialect->escapechar->unit[0]) {
+                /* possible escaped character */
+                this->state = ESCAPED_CHAR;
+            }
+            else if (c == dialect->delimiter->unit[0]) {
+                /* save field - wait for new field */
+                parse_save_field();
+                this->state = START_FIELD;
             }
             else {
-                this->state = EAT_CRNL;
+                /* normal character - save in field */
+                parse_add_char(c);
             }
-        }
-        else if ((!dialect->strict)) {
-            this->parse_add_char(c);
-            this->state = IN_FIELD;
-        }
-        else {
-            throw ((new Error(__mod6(const_13, 2, dialect->delimiter, dialect->quotechar))));
-        }
+            break;
+
+        case IN_QUOTED_FIELD:
+            /* in quoted field */
+            if (c == EOL)
+                ;
+            else if (dialect->escapechar && c == dialect->escapechar->unit[0]) {
+                /* Possible escape character */
+                this->state = ESCAPE_IN_QUOTED_FIELD;
+            }
+            else if (c == dialect->quotechar->unit[0] &&
+                     dialect->quoting != QUOTE_NONE) {
+                if (dialect->doublequote) {
+                    /* doublequote; " represented by "" */
+                    this->state = QUOTE_IN_QUOTED_FIELD;
+                }
+                else {
+                    /* end of quote part of field */
+                    this->state = IN_FIELD;
+                }
+            }
+            else {
+                /* normal character - save in field */
+                parse_add_char(c);
+            }
+            break;
+
+        case ESCAPE_IN_QUOTED_FIELD:
+            if (c == EOL)
+                c = '\n';
+            parse_add_char(c);
+            this->state = IN_QUOTED_FIELD;
+            break;
+
+        case QUOTE_IN_QUOTED_FIELD:
+            /* doublequote - seen a quote in a quoted field */
+            if (dialect->quoting != QUOTE_NONE &&
+                c == dialect->quotechar->unit[0]) {
+                /* save "" as " */
+                parse_add_char(c);
+                this->state = IN_QUOTED_FIELD;
+            }
+            else if (c == dialect->delimiter->unit[0]) {
+                /* save field - wait for new field */
+                parse_save_field();
+                this->state = START_FIELD;
+            }
+            else if (c == '\n' || c == '\r' || c == EOL) {
+                /* end of line - return [fields] */
+                parse_save_field();
+                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+            }
+            else if (!dialect->strict) {
+                parse_add_char(c);
+                this->state = IN_FIELD;
+            }
+            else {
+                /* illegal */
+                // TODO illegal error
+                return NULL;
+            }
+            break;
+
+        case EAT_CRNL:
+            if (c == '\n' || c == '\r')
+                ;
+            else if (c == EOL)
+                this->state = START_RECORD;
+            else {
+                // TODO error
+                return NULL;
+            }
+            break;
     }
-    else if (this->state==EAT_CRNL) {
-        if ((const_8)->__contains__(c)) {
-        }
-        else if (__eq(c, const_7)) {
-            this->state = START_RECORD;
-        }
-        else {
-            throw ((new Error(const_14)));
-        }
-    }
-    return 0;
+
+    return NULL;
 }
 
 void *reader::parse_reset() {
@@ -410,11 +443,13 @@ void *reader::parse_save_field() {
     return NULL;
 }
 
-void *reader::parse_add_char(str *c) {
+void *reader::parse_add_char(char c) {
     if ((len(this->field)>=_field_limit)) { // TODO use field_len
         throw ((new Error(__mod6(const_17, 1, _field_limit))));
     }
-    this->field->append(c); // TODO [field_len++] = c;
+    str *s = new str();
+    s->unit += c;
+    this->field->append(s); // TODO [field_len++] = c;
     this->field_len += 1;
     return NULL;
 }
@@ -717,22 +752,6 @@ void __init() {
     cl_reader = new class_("reader");
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
-
-    START_RECORD = 0;
-    START_FIELD = 1;
-    ESCAPED_CHAR = 2;
-    IN_FIELD = 3;
-    IN_QUOTED_FIELD = 4;
-    ESCAPE_IN_QUOTED_FIELD = 5;
-    QUOTE_IN_QUOTED_FIELD = 6;
-    EAT_CRNL = 7;
-
-    QUOTE_MINIMAL = 0;
-    QUOTE_ALL = 1;
-    QUOTE_NONNUMERIC = 2;
-    QUOTE_NONE = 3;
-    QUOTE_STRINGS = 4;
-    QUOTE_NOTNULL = 5;
 
     _field_limit = 128*1024;
 
