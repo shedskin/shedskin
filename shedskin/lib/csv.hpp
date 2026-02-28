@@ -10,12 +10,12 @@ namespace __csv__ {
 
 extern str *__name__;
 
-extern __ss_int QUOTE_ALL;
-extern __ss_int QUOTE_MINIMAL;
-extern __ss_int QUOTE_NONNUMERIC;
-extern __ss_int QUOTE_NONE;
-extern __ss_int QUOTE_STRINGS;
-extern __ss_int QUOTE_NOTNULL;
+extern const __ss_int QUOTE_ALL;
+extern const __ss_int QUOTE_MINIMAL;
+extern const __ss_int QUOTE_NONNUMERIC;
+extern const __ss_int QUOTE_NONE;
+extern const __ss_int QUOTE_STRINGS;
+extern const __ss_int QUOTE_NOTNULL;
 
 extern class_ *cl_Error;
 extern class_ *cl_Dialect;
@@ -200,7 +200,7 @@ public:
     void *parse_process_char(str *c);
     void *parse_reset();
     void *parse_save_field();
-    void *parse_add_char(str *c);
+    void *parse_add_char(char c);
 };
 
 class writer : public pyobj {
