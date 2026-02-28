@@ -4,7 +4,6 @@ import os
 import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
-
 # TODO test restkey, restval, extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO rewrite parser
@@ -263,7 +262,7 @@ def test_excel():
 
     with open('excel_out2.csv', 'w') as f:
         dict_writer = csv.DictWriter(f, fieldnames=iter(['aap', 'bert', 'frits']))  # iterable fieldnames
-        dict_writer.writeheader()  # TODO implement
+        dict_writer.writeheader()
         dict_writer.writerows(iter(rows))  # iterable rows
 
     assert open(path).read() == open('excel_out2.csv').read()  # TODO newline=''
