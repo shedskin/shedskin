@@ -410,11 +410,11 @@ void *reader::parse_save_field() {
 }
 
 void *reader::parse_add_char(str *c) {
-    
-    if ((len(this->field)>=_field_limit)) {
+    if ((len(this->field)>=_field_limit)) { // TODO use field_len
         throw ((new Error(__mod6(const_17, 1, _field_limit))));
     }
-    (this->field)->append(c);
+    this->field->append(c); // TODO [field_len++] = c;
+    this->field_len += 1;
     return NULL;
 }
 
