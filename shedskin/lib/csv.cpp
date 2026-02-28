@@ -10,8 +10,9 @@ dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
 
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
-list<void *> *const_0;
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_25, *const_4, *const_5, *const_6, *const_7, *const_8;
+
+char EOL = '\000';
 
 const __ss_int QUOTE_MINIMAL = 0;
 const __ss_int QUOTE_ALL = 1;
@@ -32,8 +33,17 @@ const __ss_int AFTER_ESCAPED_CRNL = 8;
 
 __ss_int _field_limit;
 
-class_ *cl_Error, *cl_Dialect, *cl_Excel, *cl_ExcelTab, *cl_UnixDialect;
+class_ *cl_Error;
+class_ *cl_Dialect;
+class_ *cl_Excel;
+class_ *cl_ExcelTab;
+class_ *cl_UnixDialect;
+class_ *cl_reader;
+class_ *cl_writer;
+class_ *cl_DictReader;
+class_ *cl_DictWriter;
 
+/* dialect */
 
 void _dialect_check_char(str *name, str *c, Dialect *dialect, bool allowspace) { // TODO NOT_SET/None difference?
     if(!c)
@@ -55,7 +65,6 @@ void _dialect_check_chars(str *name1, str *name2, str *val1, str *val2) { // TOD
     if(val1->unit[0] == val2->unit[0])
         throw new ValueError(__add_strs(5, new str("bad "), name1, new str(" or "), name2, new str(" value")));
 }
-
 
 Dialect *_make_dialect(
     str *name,
@@ -136,28 +145,34 @@ Dialect *_make_dialect(
     return dialect;
 }
 
-__csviter::__csviter(reader *r_) {
-    r = r_;
+list<str *> *list_dialects() {
+    return new list<str *>(_dialects);
 }
 
-list<str *> *__csviter::__next__() {
-    return r->__next__();
+Dialect *get_dialect(str *name) {
+    return _dialects->__getitem__(name);
 }
 
-__csviter *reader::__iter__() {
-    return new __csviter(this);
+void *register_dialect(
+    str *name,
+    str *dialect,
+    str *delimiter,
+    str *quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    str *lineterminator,
+    __ss_int quoting,
+    str *escapechar,
+    __ss_int strict
+) {
+    Dialect *new_dialect = _make_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    _dialects->__setitem__(name, new_dialect);
+    return NULL;
 }
 
-__driter::__driter(DictReader *r_) {
-    r = r_;
-}
-
-dict<str *, str *> *__driter::__next__() {
-    return r->__next__();
-}
-
-__driter *DictReader::__iter__() {
-    return new __driter(this);
+void *unregister_dialect(str *name) {
+    _dialects->__delitem__(name);
+    return NULL;
 }
 
 static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *rowdict) {
@@ -189,13 +204,14 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
     return __ss_result;
 }
 
-/**
-class reader
-*/
+/* reader */
 
-class_ *cl_reader;
-
-char EOL = '\000';
+void *reader::__init__(pyiter<str *> *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    this->input_iter = input_iter_->__iter__();
+    this->line_num = 0;
+    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    return NULL;
+}
 
 void *reader::parse_process_char(str *s) {
     char c = s->unit[0];
@@ -400,13 +416,6 @@ list<str *> *reader::__next__() {
     return fields_;
 }
 
-void *reader::__init__(pyiter<str *> *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    this->input_iter = input_iter_->__iter__();
-    this->line_num = 0;
-    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
-    return NULL;
-}
-
 void *reader::parse_save_field() {
     __ss_int quoting = this->dialect->quoting;
 
@@ -449,11 +458,25 @@ void *reader::parse_add_char(char c) {
     return NULL;
 }
 
-/**
-class writer
-*/
+__csviter::__csviter(reader *r_) {
+    r = r_;
+}
 
-class_ *cl_writer;
+list<str *> *__csviter::__next__() {
+    return r->__next__();
+}
+
+__csviter *reader::__iter__() {
+    return new __csviter(this);
+}
+
+/* writer */
+
+void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    this->output_file = output_file_;
+    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    return NULL;
+}
 
 void *writer::join_append_data(str *field, __ss_int quoted) {
     Dialect *dialect = this->dialect;
@@ -577,17 +600,21 @@ void *writer::join_append(str *field, __ss_int quoted) {
     return NULL;
 }
 
-void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    this->output_file = output_file_;
-    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+/* DictReader */
+
+void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(fieldnames_)
+        this->_fieldnames = new list<str *>(fieldnames_);
+    else
+        this->_fieldnames = NULL;
+    if(restkey)
+        throw new ValueError(new str("DictReader(restkey) argument is not supported"));
+    this->restval = restval_;
+    this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->dialect = dialect_;
+    this->line_num = 0;
     return NULL;
 }
-
-/**
-class DictReader
-*/
-
-class_ *cl_DictReader;
 
 void *DictReader::setfieldnames(list<str *> *value) {
     this->_fieldnames = value;
@@ -637,25 +664,39 @@ list<str *> *DictReader::getfieldnames() {
     return this->_fieldnames;
 }
 
-void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if(fieldnames_)
-        this->_fieldnames = new list<str *>(fieldnames_);
-    else
-        this->_fieldnames = NULL;
-    if(restkey)
-        throw new ValueError(new str("DictReader(restkey) argument is not supported"));
-    this->restval = restval_;
-    this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
-    this->dialect = dialect_;
-    this->line_num = 0;
-    return NULL;
+__driter::__driter(DictReader *r_) {
+    r = r_;
 }
 
-/**
-class DictWriter
-*/
+dict<str *, str *> *__driter::__next__() {
+    return r->__next__();
+}
 
-class_ *cl_DictWriter;
+__driter *DictReader::__iter__() {
+    return new __driter(this);
+}
+
+/* DictWriter */
+
+void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+    if(!restval_)
+        restval_ = new str();
+    if(!extrasaction_)
+        extrasaction_ = new str("raise");
+    if(!dialect_)
+        dialect_ = new str("excel");
+    if(fieldnames_)
+        this->fieldnames = new list<str *>(fieldnames_);
+    else
+        this->fieldnames = NULL;
+    this->restval = restval_;
+    if ((!(const_3)->__contains__(extrasaction_->lower()))) {
+        throw ((new ValueError(__mod6(const_23, 1, extrasaction_))));
+    }
+    this->extrasaction = extrasaction_;
+    this->_writer = (new writer(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    return NULL;
+}
 
 list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
     list<str *> *wrong_fields;
@@ -693,28 +734,19 @@ void *DictWriter::writerows(pyiter<dict<str *, str *> *> *rowdicts) {
     return NULL;
 }
 
-void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if(!restval_)
-        restval_ = new str();
-    if(!extrasaction_)
-        extrasaction_ = new str("raise");
-    if(!dialect_)
-        dialect_ = new str("excel");
-    if(fieldnames_)
-        this->fieldnames = new list<str *>(fieldnames_);
-    else
-        this->fieldnames = NULL;
-    this->restval = restval_;
-    if ((!(const_3)->__contains__(extrasaction_->lower()))) {
-        throw ((new ValueError(__mod6(const_23, 1, extrasaction_))));
+/* field_size_limit */
+
+__ss_int field_size_limit(__ss_int new_limit) {
+    __ss_int old_limit;
+
+    old_limit = _field_limit;
+    if ((new_limit!=(-1))) {
+        _field_limit = new_limit;
     }
-    this->extrasaction = extrasaction_;
-    this->_writer = (new writer(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
-    return NULL;
+    return old_limit;
 }
 
 void __init() {
-    const_0 = (new list<void *>());
     const_1 = new str("raise");
     const_2 = new str("ignore");
     const_3 = (new tuple2<str *, str *>(2, const_1, const_2));
@@ -723,7 +755,6 @@ void __init() {
     const_6 = new str("\r\n");
     const_7 = new str("\000", 1);
     const_8 = new str("\n\r");
-    const_9 = new str("\n\r\000", 3);
     const_10 = new str(" ");
     const_11 = new str("\n");
     const_12 = new str("\000\n\r", 3);
@@ -758,47 +789,6 @@ void __init() {
     cl_DictWriter = new class_("DictWriter");
 
     _field_limit = 128*1024;
-}
-
-list<str *> *list_dialects() {
-    return new list<str *>(_dialects);
-}
-
-
-Dialect *get_dialect(str *name) {
-    return _dialects->__getitem__(name);
-}
-
-void *register_dialect(
-    str *name,
-    str *dialect,
-    str *delimiter,
-    str *quotechar,
-    __ss_int doublequote,
-    __ss_int skipinitialspace,
-    str *lineterminator,
-    __ss_int quoting,
-    str *escapechar,
-    __ss_int strict
-) {
-    Dialect *new_dialect = _make_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
-    _dialects->__setitem__(name, new_dialect);
-    return NULL;
-}
-
-void *unregister_dialect(str *name) {
-    _dialects->__delitem__(name);
-    return NULL;
-}
-
-__ss_int field_size_limit(__ss_int new_limit) {
-    __ss_int old_limit;
-
-    old_limit = _field_limit;
-    if ((new_limit!=(-1))) {
-        _field_limit = new_limit;
-    }
-    return old_limit;
 }
 
 } // module namespace
