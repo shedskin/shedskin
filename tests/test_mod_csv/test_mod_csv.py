@@ -240,9 +240,7 @@ def test_excel():
         writer = csv.writer(f)
         writer.writerows(data)
 
-#    print('A', repr(open(path).read()))
-#    print('B', repr(open('excel_out.csv').read()))
-#    assert open(path).read() == open('excel_out.csv').read()  # TODO newline=''
+    assert open(path).read() == open('excel_out.csv').read()  # TODO newline=''
 
     # dict variant
     dict_reader = csv.DictReader(open(path), fieldnames=['a', 'b', 'c'])  # override header
@@ -268,9 +266,7 @@ def test_excel():
         dict_writer.writeheader()  # TODO implement
         dict_writer.writerows(iter(rows))  # iterable rows
 
-#    print('A', repr(open(path).read()))
-#    print('B', repr(open('excel_out.csv').read()))
-#    assert open(path).read() == open('excel_out2.csv').read()  # TODO newline=''
+    assert open(path).read() == open('excel_out2.csv').read()  # TODO newline=''
 
 
 def test_all():
