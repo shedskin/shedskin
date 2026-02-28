@@ -40,7 +40,7 @@ class writer:
 
 class DictReader:
     def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        self.dialect = Dialect()
+        self.dialect = '' # TODO not Dialect()?
         self.reader = reader(f)
         self._fieldnames = ['']
         self.restval = ''
