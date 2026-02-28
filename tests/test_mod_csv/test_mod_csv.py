@@ -5,7 +5,6 @@ import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 # TODO DictReader: skip empty rows/blanks? see __next__
-# TODO rewrite parser
 
 # TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel

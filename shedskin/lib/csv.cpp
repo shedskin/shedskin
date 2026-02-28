@@ -134,6 +134,13 @@ Dialect *_make_dialect(
         dialect->strict = __mbool(strict);
     }
 
+    /*
+       TODO
+    if (quotechar == Py_None && quoting == NULL)
+        self->quoting = QUOTE_NONE;
+    if (self->quoting != QUOTE_NONE && self->quotechar == NOT_SET) {
+    */
+
     _dialect_check_char(new str("delimiter"), dialect->delimiter, dialect, true);
     _dialect_check_char(new str("escapechar"), dialect->escapechar, dialect, !dialect->skipinitialspace);
     _dialect_check_char(new str("quotechar"), dialect->quotechar, dialect, !dialect->skipinitialspace);
@@ -394,12 +401,13 @@ list<str *> *reader::__next__() {
 
     while (1) {
         line = (this->input_iter)->__next__();
-        this->line_num = (this->line_num+1);
+        // TODO unexpected end of data
+        this->line_num += 1;
         str *c;
         str::for_in_loop __3;
         int __2;
         str *__1;
-        FOR_IN(c,line,1,2,3)
+        FOR_IN(c,line,1,2,3) // TODO char c
             if (__eq(c, const_7)) {
                 throw ((new Error(const_15)));
             }
@@ -407,6 +415,7 @@ list<str *> *reader::__next__() {
         END_FOR
 
         this->parse_process_char(const_7);
+
         if (this->state == START_RECORD) {
             break;
         }
