@@ -567,8 +567,18 @@ void *writer::writerows(pyiter<list<str *> *> *seqs) {
 }
 
 void *writer::join_append(str *field, __ss_int quoted) {
+    Dialect *dialect = this->dialect;
+    size_t field_len = field->unit.size();
+
+    if (!field_len && dialect->delimiter->unit[0] == ' ' && dialect->skipinitialspace) {
+        // TODO empty field check?
+
+        quoted = 1;
+    }
+
     this->join_append_data(field, quoted);
     this->num_fields = (this->num_fields+1);
+
     return NULL;
 }
 
