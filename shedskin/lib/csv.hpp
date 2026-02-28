@@ -131,7 +131,6 @@ class reader : public __iter<list<str *> *> {
 public:
     Dialect *dialect;
     __ss_int line_num;
-    __ss_int numeric_field;
     file *input_iter;
 
 
