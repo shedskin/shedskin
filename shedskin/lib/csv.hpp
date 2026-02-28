@@ -131,8 +131,7 @@ class reader : public __iter<list<str *> *> {
 public:
     Dialect *dialect;
     __ss_int line_num;
-    file *input_iter;
-
+    __iter<str *> *input_iter;
 
     __ss_int state;
     list<str *> *fields;
@@ -143,7 +142,7 @@ public:
 
     reader() {}
     template<class D> reader(
-        file *input_iter_,
+        pyiter<str *> *input_iter_,
         D dialect_,
         str *delimiter,
         str *quotechar,
@@ -181,7 +180,7 @@ public:
     }
 
     void *__init__(
-        file *input_iter_,
+        pyiter<str *> *input_iter_,
         str *dialect_,
         str *delimiter,
         str *quotechar,
@@ -278,7 +277,7 @@ public:
 
     DictReader() {}
     DictReader(
-        file *f,
+        pyiter<str *> *f,
         pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
@@ -311,7 +310,7 @@ public:
     }
 
     void *__init__(
-        file *f,
+        pyiter<str *> *f,
         pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
