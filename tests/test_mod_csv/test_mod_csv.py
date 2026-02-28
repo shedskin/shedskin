@@ -6,7 +6,6 @@ import os.path
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO rewrite parser
-# TODO check reader/writer attrs
 
 # TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
@@ -326,14 +325,28 @@ def test_extrasaction():
     assert error == "dict contains fields not in fieldnames: 'frits'"
 
 
+def test_attrs():
+    path = _csv_path('excel.csv')
+
+    with open(path) as f:
+        reader = csv.reader(f)
+        assert reader.dialect.quoting == 0
+        assert reader.line_num == 0
+
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, dialect='unix')
+        assert writer.dialect.quoting == 1
+
+
 def test_all():
-    test_program()
+    test_program()  # TODO split up test
     test_dialects()
     test_register_dialect()
-    test_errors()
     test_excel()
     test_restval()
     test_extrasaction()
+    test_attrs()
+    test_errors()
 
 
 if __name__ == "__main__":
