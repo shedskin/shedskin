@@ -4,7 +4,7 @@ import os
 import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
-# TODO test restval, extrasaction
+# TODO test extrasaction
 # TODO DictReader: skip empty rows/blanks? see __next__
 # TODO rewrite parser
 # TODO check reader/writer attrs
@@ -281,7 +281,18 @@ def test_restval():
         {'a': '7', 'b': '8', 'c': '9', 'd': 'niks'},
     ]
 
-    # TODO DictWriter(restval)
+    # DictWriter
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert', 'frits'])
+        dict_writer.writerow({'aap': 'hop', 'frits': '18'})
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'hop,,18'
+
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert', 'frits'], restval='ole')
+        dict_writer.writerow({'aap': 'hop', 'frits': '18'})
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'hop,ole,18'
 
 
 def test_all():
