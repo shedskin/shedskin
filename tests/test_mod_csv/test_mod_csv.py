@@ -334,6 +334,9 @@ def test_attrs():
     with open('test_out.csv', 'w') as f:
         writer = csv.writer(f, dialect='unix')
         assert writer.dialect.quoting == 1
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, dialect=csv.get_dialect('unix'))
+        assert writer.dialect.quoting == 1
 
     with open(path) as f:
         dict_reader = csv.DictReader(f, dialect='unix', restval='rest')

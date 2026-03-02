@@ -150,12 +150,12 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_reader;
-        str *dialectstr;
 
+        str *dialectstr;
         if constexpr (std::is_same_v<D, str *>) {
             dialectstr = dialect_;
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO lookup and pass dialect object
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
             dialectstr = new str("excel");
         }
         else
@@ -206,9 +206,9 @@ public:
     list<str *> *rec;
 
     writer() {}
-    writer(
+    template <class D> writer(
         file *output_file_,
-        str *dialect_,
+        D dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -219,9 +219,20 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_writer;
+
+        str *dialectstr;
+        if constexpr (std::is_same_v<D, str *>) {
+            dialectstr = dialect_;
+        }
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
+            dialectstr = new str("unix");
+        }
+        else
+            dialectstr = new str("excel");
+
         __init__(
             output_file_,
-            dialect_,
+            dialectstr,
             delimiter,
             quotechar,
             doublequote,
