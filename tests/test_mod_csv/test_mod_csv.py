@@ -4,7 +4,6 @@ import os
 import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
-# TODO DictReader: skip empty rows/blanks? see __next__
 
 # TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
@@ -351,6 +350,23 @@ def test_attrs():
         assert dict_writer.writer.dialect.lineterminator == '\n'
 
 
+def test_blank_lines():
+    f =['a,b', '3,4', '', '', '5,6']
+    result = list(csv.reader(f[1:]))
+    assert result == [
+        ['3', '4'],
+        [],
+        [],
+        ['5', '6'],
+    ]
+
+    result2 = list(csv.DictReader(f))
+    assert result2 == [
+        {'a': '3', 'b': '4'},
+        {'a': '5', 'b': '6'},
+    ]
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -360,6 +376,7 @@ def test_all():
     test_extrasaction()
     test_attrs()
     test_errors()
+    test_blank_lines()
 
 
 if __name__ == "__main__":
