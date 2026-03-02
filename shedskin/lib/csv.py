@@ -40,7 +40,7 @@ class writer:
 
 class DictReader:
     def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        self.dialect = '' # TODO not Dialect()?
+        # self.dialect can be string or dialect instance
         self.reader = reader(f)
         self._fieldnames = ['']
         self.restval = ''
@@ -60,6 +60,7 @@ class DictReader:
 
 class DictWriter:
     def __init__(self, f, fieldnames, restval=None, extrasaction=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+        # self.dialect can be string or dialect instance
         self.writer = writer(f)
         self.fieldnames = ['']
         self.restval = ''

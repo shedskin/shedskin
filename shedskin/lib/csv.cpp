@@ -628,7 +628,6 @@ void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *re
         throw new ValueError(new str("DictReader(restkey) argument is not supported"));
     this->restval = restval_;
     this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
-    this->dialect = dialect_;
     this->line_num = 0;
     return NULL;
 }
