@@ -124,7 +124,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `bisect`
 * `collections` (defaultdict, deque)
 * `colorsys`
-* `configparser` (no SafeConfigParser, support may be removed as of 0.9.12)
+* `configparser` (no SafeConfigParser)
 * `copy`
 * `csv` (no Sniffer, ASCII-only)
 * `datetime`
@@ -137,6 +137,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)
 * `math`
+* `math.integer`
 * `mmap` (not well tested)
 * `os` (partial)
 * `os.path`
@@ -144,7 +145,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `re`
 * `select` (not well tested)
 * `socket` (not well tested)
-* `string`
+* `string` (no Format, Template)
 * `struct` (no Struct, iter_unpack)
 * `sys` (partial)
 * `time` (partial)
