@@ -119,20 +119,20 @@ var = SomeClass # bad
 At the moment, the following 30 modules are (partially) supported.
 
 * `array`
-* `base64`
-* `binascii`
+* `base64` (no 16, 32, 85 variants)
+* `binascii` (no 16, 32, 85 variants)
 * `bisect`
 * `collections` (defaultdict, deque)
 * `colorsys`
 * `configparser` (no SafeConfigParser)
-* `copy`
+* `copy` (no replace)
 * `csv` (no Sniffer, ASCII-only)
-* `datetime`
+* `datetime` (not well tested)
 * `fnmatch`
 * `functools` (reduce)
 * `gc` (enable, disable, collect)
 * `getopt`
-* `glob`
+* `glob` (no escape, translate)
 * `heapq`
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)
@@ -142,7 +142,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `os` (partial)
 * `os.path`
 * `random`
-* `re`
+* `re` (PCRE-compatible syntax)
 * `select` (not well tested)
 * `socket` (not well tested)
 * `string` (no Format, Template)
