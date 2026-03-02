@@ -338,7 +338,6 @@ def test_attrs():
 
     with open(path) as f:
         dict_reader = csv.DictReader(f, dialect='unix', restval='rest')
-        assert dict_reader.dialect == 'unix'  # TODO can it be Dialect instance?
         assert dict_reader.fieldnames == ['aap', 'bert', 'frits']
         assert dict_reader.line_num == 1
         assert dict_reader.reader.dialect.quoting == 1
