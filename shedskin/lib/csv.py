@@ -19,7 +19,8 @@ class Dialect:
 
 class reader:
     def __init__(self, input_iter, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        pass
+        self.dialect = Dialect()
+        self.line_num = 0
 
     def __iter__(self):
         return __iter([''])
@@ -29,7 +30,7 @@ class reader:
 
 class writer:
     def __init__(self, output_file, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        pass
+        self.dialect = Dialect()
 
     def writerow(self, seq):
         pass
@@ -39,11 +40,10 @@ class writer:
 
 class DictReader:
     def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
-        self._fieldnames = ['']
-        self.restkey = ''
-        self.restval = ''
+        # self.dialect can be string or dialect instance
         self.reader = reader(f)
-        self.dialect = ''
+        self._fieldnames = ['']
+        self.restval = ''
         self.line_num = 0
 
     def __iter__(self):
@@ -59,11 +59,15 @@ class DictReader:
         return {'': ''}
 
 class DictWriter:
-    def __init__(self, f, fieldnames, restval="", extrasaction="raise", dialect="excel", delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+    def __init__(self, f, fieldnames, restval=None, extrasaction=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+        # self.dialect can be string or dialect instance
+        self.writer = writer(f)
         self.fieldnames = ['']
         self.restval = ''
         self.extrasaction = ''
-        self.writer = writer(f)
+
+    def writeheader(self):
+        pass
 
     def writerow(self, rowdict):
         pass
