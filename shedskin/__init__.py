@@ -63,11 +63,13 @@ class Shedskin:
 
         # Resolve to absolute path
         path = path.resolve()
-
-        if not path.name.endswith(".py"):
-            path = path.with_suffix(".py")
-        if not path.is_file():
-            self.log.error("no such file: '%s'", path)
+        path_py = path.with_suffix(".py")
+        if path.suffix == ".py" and path.is_file():
+            pass
+        elif path_py.is_file():
+            path = path_py
+        else:
+            self.log.error("no such module: '%s'", path)
             sys.exit(1)
 
         # Set source_root for module resolution (replaces os.chdir approach)
