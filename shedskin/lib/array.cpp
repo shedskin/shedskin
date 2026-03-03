@@ -5,7 +5,6 @@
 namespace __array__ {
 
 str *__name__;
-void * default_0;
 class_ *cl_array;
 str *typecodes;
 
@@ -59,7 +58,6 @@ void __init() {
     cl_array = new class_("array");
 
     buffy = malloc(8);
-    default_0 = NULL;
     typecodes = new str("bBuwhHiIlLqQfd");
 }
 
