@@ -5,15 +5,8 @@ import os.path
 
 # TODO QUOTE_NOTNULL, QUOTE_STRINGS
 
-# TODO DictReader, DictWriter: iterable fieldnames arg
-# TODO test restkey, restval, line_num, extrasaction
-# TODO DictReader: skip empty rows/blanks? see __next__
-# TODO *.writerows: iterable arg?
-# TODO rewrite parser
-# TODO test (in/out) csv in most common excel format
-# TODO check QUOTE_NONNUMERIC restriction
 # TODO NOTSET/None differences
-
+# TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
 
 
@@ -68,7 +61,7 @@ def test_program():
         bla, fieldnames, restval="ah", quoting=csv.QUOTE_ALL, lineterminator="\n"
     )
     rd = csv.DictReader(
-        open(csvfile_in), fieldnames, restval="uh", restkey="oh", delimiter="|"
+        open(csvfile_in), fieldnames, restval="uh", delimiter="|"
     )
     for d2 in rd:
         # print(sorted(d2.values()))
@@ -225,8 +218,11 @@ def test_errors():
 def test_excel():
     path = _csv_path('excel.csv')
 
+    # normal variant
     reader = csv.reader(open(path))
+    assert reader.line_num == 0
     data = list(reader)
+    assert reader.line_num == 3
 
     assert data == [
         ['aap', 'bert', 'frits'],
@@ -238,15 +234,152 @@ def test_excel():
         writer = csv.writer(f)
         writer.writerows(data)
 
-#    assert open(path).read() == open('excel_out.csv').read()  # TODO we should ignore lineterminator?
+    assert open(path).read().splitlines() == open('excel_out.csv').read().splitlines()  # TODO avoid splitlines() (need newline=''?)
+
+    # dict variant
+    dict_reader = csv.DictReader(open(path), fieldnames=['a', 'b', 'c'])  # override header
+    assert dict_reader.line_num == 0
+    next(dict_reader)
+    assert dict_reader.line_num == 1
+    rows = list(dict_reader)
+    assert dict_reader.line_num == 3
+    assert rows == [
+        {'a': 'hoi', 'b': '  hop', 'c': '18.8'},
+        {'a': 'hoi2', 'b': 'a, b, c', 'c': '17'}
+    ]
+
+    dict_reader = csv.DictReader(open(path))
+    rows = list(dict_reader)
+    assert rows == [
+        {'aap': 'hoi', 'bert': '  hop', 'frits': '18.8'},
+        {'aap': 'hoi2', 'bert': 'a, b, c', 'frits': '17'}
+    ]
+
+    with open('excel_out2.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=iter(['aap', 'bert', 'frits']))  # iterable fieldnames
+        dict_writer.writeheader()
+        dict_writer.writerows(iter(rows))  # iterable rows
+
+    assert open(path).read().splitlines() == open('excel_out2.csv').read().splitlines()  # TODO avoid splitlines()
+
+
+def test_restval():
+    # DictReader
+    dict_reader = csv.DictReader(['a,b,c','7,8,9'], fieldnames=['a','b','c','d'])
+    assert list(dict_reader) == [
+        {'a': 'a', 'b': 'b', 'c': 'c', 'd': None},
+        {'a': '7', 'b': '8', 'c': '9', 'd': None},
+    ]
+
+    dict_reader = csv.DictReader(['a,b,c','7,8,9'], fieldnames=['a','b','c','d'], restval='niks')
+    assert list(dict_reader) == [
+        {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'niks'},
+        {'a': '7', 'b': '8', 'c': '9', 'd': 'niks'},
+    ]
+
+    # DictWriter
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert', 'frits'])
+        dict_writer.writerow({'aap': 'hop', 'frits': '18'})
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'hop,,18'
+
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert', 'frits'], restval='ole')
+        dict_writer.writerow({'aap': 'hop', 'frits': '18'})
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'hop,ole,18'
+
+
+def test_extrasaction():
+    # ignore
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert'], extrasaction='ignore')
+        dict_writer.writerow({'aap': 'hop', 'bert': 'ok', 'frits': '18'})
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'hop,ok'
+
+    # raise
+    error = ''
+    try:
+        with open('test_out.csv', 'w') as f:
+            dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert'])
+            dict_writer.writerow({'aap': 'hop', 'bert': '18', 'frits': 'extra'})
+        lines = list(open('test_out.csv'))
+        assert lines[0].strip() == 'hop,18'
+    except ValueError as e:
+        error = str(e)
+    assert error == "dict contains fields not in fieldnames: 'frits'"
+
+    error = ''
+    try:
+        with open('test_out.csv', 'w') as f:
+            dict_writer = csv.DictWriter(f, fieldnames=['aap', 'bert'], extrasaction='raise')
+            dict_writer.writerow({'aap': 'hop', 'bert': '18', 'frits': 'extra'})
+        lines = list(open('test_out.csv'))
+        assert lines[0].strip() == 'hop,18'
+    except ValueError as e:
+        error = str(e)
+    assert error == "dict contains fields not in fieldnames: 'frits'"
+
+
+def test_attrs():
+    path = _csv_path('excel.csv')
+
+    with open(path) as f:
+        reader = csv.reader(f)
+        assert reader.dialect.quoting == 0
+        assert reader.line_num == 0
+
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, dialect='unix')
+        assert writer.dialect.quoting == 1
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, dialect=csv.get_dialect('unix'))
+        assert writer.dialect.quoting == 1
+
+    with open(path) as f:
+        dict_reader = csv.DictReader(f, dialect='unix', restval='rest')
+        assert dict_reader.fieldnames == ['aap', 'bert', 'frits']
+        assert dict_reader.line_num == 1
+        assert dict_reader.reader.dialect.quoting == 1
+        assert dict_reader.restval == 'rest'
+
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, dialect='unix', fieldnames=['x', 'y'])
+        assert dict_writer.extrasaction == 'raise'
+        assert dict_writer.fieldnames == ['x', 'y']
+        assert dict_writer.restval == ''
+        assert dict_writer.writer.dialect.lineterminator == '\n'
+
+
+def test_blank_lines():
+    f =['a,b', '3,4', '', '', '5,6']
+    result = list(csv.reader(f[1:]))
+    assert result == [
+        ['3', '4'],
+        [],
+        [],
+        ['5', '6'],
+    ]
+
+    result2 = list(csv.DictReader(f))
+    assert result2 == [
+        {'a': '3', 'b': '4'},
+        {'a': '5', 'b': '6'},
+    ]
 
 
 def test_all():
-    test_program()
+    test_program()  # TODO split up test
     test_dialects()
     test_register_dialect()
-    test_errors()
     test_excel()
+    test_restval()
+    test_extrasaction()
+    test_attrs()
+    test_errors()
+    test_blank_lines()
 
 
 if __name__ == "__main__":

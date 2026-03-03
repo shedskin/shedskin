@@ -10,12 +10,12 @@ namespace __csv__ {
 
 extern str *__name__;
 
-extern __ss_int QUOTE_ALL;
-extern __ss_int QUOTE_MINIMAL;
-extern __ss_int QUOTE_NONNUMERIC;
-extern __ss_int QUOTE_NONE;
-extern __ss_int QUOTE_STRINGS;
-extern __ss_int QUOTE_NOTNULL;
+extern const __ss_int QUOTE_ALL;
+extern const __ss_int QUOTE_MINIMAL;
+extern const __ss_int QUOTE_NONNUMERIC;
+extern const __ss_int QUOTE_NONE;
+extern const __ss_int QUOTE_STRINGS;
+extern const __ss_int QUOTE_NOTNULL;
 
 extern class_ *cl_Error;
 extern class_ *cl_Dialect;
@@ -38,10 +38,6 @@ class reader;
 class writer;
 class DictReader;
 class DictWriter;
-
-extern str *default_18, *default_19, *default_20; // TODO for DictWriter(); remove and scan other headers
-
-extern dict<str *, Dialect *> *_dialects;
 
 class Error : public Exception {
 public:
@@ -131,15 +127,18 @@ class reader : public __iter<list<str *> *> {
 public:
     Dialect *dialect;
     __ss_int line_num;
+    __iter<str *> *input_iter;
+
+    __ss_int state;
     list<str *> *fields;
     list<str *> *field;
-    __ss_int state;
-    __ss_int numeric_field;
-    file *input_iter;
+    size_t field_len;
+    bool unquoted_field;
+
 
     reader() {}
     template<class D> reader(
-        file *input_iter_,
+        pyiter<str *> *input_iter_,
         D dialect_,
         str *delimiter,
         str *quotechar,
@@ -151,12 +150,12 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_reader;
-        str *dialectstr;
 
+        str *dialectstr;
         if constexpr (std::is_same_v<D, str *>) {
             dialectstr = dialect_;
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO lookup and pass dialect object
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
             dialectstr = new str("excel");
         }
         else
@@ -177,7 +176,7 @@ public:
     }
 
     void *__init__(
-        file *input_iter_,
+        pyiter<str *> *input_iter_,
         str *dialect_,
         str *delimiter,
         str *quotechar,
@@ -196,7 +195,7 @@ public:
     void *parse_process_char(str *c);
     void *parse_reset();
     void *parse_save_field();
-    void *parse_add_char(str *c);
+    void *parse_add_char(char c);
 };
 
 class writer : public pyobj {
@@ -207,9 +206,9 @@ public:
     list<str *> *rec;
 
     writer() {}
-    writer(
+    template <class D> writer(
         file *output_file_,
-        str *dialect_,
+        D dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -220,9 +219,20 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_writer;
+
+        str *dialectstr;
+        if constexpr (std::is_same_v<D, str *>) {
+            dialectstr = dialect_;
+        }
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
+            dialectstr = new str("unix");
+        }
+        else
+            dialectstr = new str("excel");
+
         __init__(
             output_file_,
-            dialect_,
+            dialectstr,
             delimiter,
             quotechar,
             doublequote,
@@ -248,12 +258,12 @@ public:
     );
 
     void *writerow(list<str *> *seq);
-    void *writerows(list<list<str *> *> *seqs);
+    void *writerows(pyiter<list<str *> *> *seqs);
 
     // internal
-    __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
     void *join_reset();
-    __ss_int join_append(str *field, __ss_int quoted, __ss_int quote_empty);
+    void *join_append(str *field, __ss_int quoted);
+    void *join_append_data(str *field, __ss_int quoted);
 };
 
 class __driter : public __iter<dict<str *, str *> *> {
@@ -266,16 +276,14 @@ public:
 class DictReader : public __iter<dict<str *, str *> *> {
 public:
     str *restval;
-    str *dialect;
     __ss_int line_num;
-    str *restkey;
     list<str *> *_fieldnames;
     reader *_reader;
 
     DictReader() {}
     DictReader(
-        file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *f,
+        pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
         str *dialect_,
@@ -307,8 +315,8 @@ public:
     }
 
     void *__init__(
-        file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *f,
+        pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
         str *dialect_,
@@ -339,7 +347,7 @@ public:
     DictWriter() {}
     DictWriter(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
         str *dialect_,
@@ -372,7 +380,7 @@ public:
 
     void *__init__(
         file *f,
-        list<str *> *fieldnames_,
+        pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
         str *dialect_,
@@ -386,8 +394,9 @@ public:
         __ss_int strict
     );
 
+    void *writeheader();
     void *writerow(dict<str *, str *> *rowdict);
-    void *writerows(list<dict<str *, str *> *> *rowdicts);
+    void *writerows(pyiter<dict<str *, str *> *> *rowdicts);
 
     // internal
     list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
