@@ -281,12 +281,12 @@ public:
     reader *_reader;
 
     DictReader() {}
-    DictReader(
+    template <class D> DictReader(
         pyiter<str *> *f,
         pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
-        str *dialect_,
+        D dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -297,12 +297,23 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_DictReader;
+
+        str *dialectstr;
+        if constexpr (std::is_same_v<D, str *>) {
+            dialectstr = dialect_;
+        }
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
+            dialectstr = new str("unix");
+        }
+        else
+            dialectstr = new str("excel");
+
         __init__(
             f,
             fieldnames_,
             restkey_,
             restval_,
-            dialect_,
+            dialectstr,
             delimiter,
             quotechar,
             doublequote,
@@ -345,12 +356,12 @@ public:
     str *extrasaction;
 
     DictWriter() {}
-    DictWriter(
+    template <class D> DictWriter(
         file *f,
         pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
-        str *dialect_,
+        D dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -361,12 +372,23 @@ public:
         __ss_int strict
     ) {
         this->__class__ = cl_DictWriter;
+
+        str *dialectstr;
+        if constexpr (std::is_same_v<D, str *>) {
+            dialectstr = dialect_;
+        }
+        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
+            dialectstr = new str("unix");
+        }
+        else
+            dialectstr = new str("excel");
+
         __init__(
             f,
             fieldnames_,
             restval_,
             extrasaction_,
-            dialect_,
+            dialectstr,
             delimiter,
             quotechar,
             doublequote,

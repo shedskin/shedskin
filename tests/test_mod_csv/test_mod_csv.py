@@ -344,12 +344,18 @@ def test_attrs():
         assert dict_reader.line_num == 1
         assert dict_reader.reader.dialect.quoting == 1
         assert dict_reader.restval == 'rest'
+    with open(path) as f:
+        dict_reader = csv.DictReader(f, dialect=csv.get_dialect('unix'), restval='rest')
+        assert dict_reader.reader.dialect.quoting == 1
 
     with open('test_out.csv', 'w') as f:
         dict_writer = csv.DictWriter(f, dialect='unix', fieldnames=['x', 'y'])
         assert dict_writer.extrasaction == 'raise'
         assert dict_writer.fieldnames == ['x', 'y']
         assert dict_writer.restval == ''
+        assert dict_writer.writer.dialect.lineterminator == '\n'
+    with open('test_out.csv', 'w') as f:
+        dict_writer = csv.DictWriter(f, dialect=csv.get_dialect('unix'), fieldnames=['x', 'y'])
         assert dict_writer.writer.dialect.lineterminator == '\n'
 
 
