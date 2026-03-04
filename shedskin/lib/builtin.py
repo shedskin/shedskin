@@ -1,14 +1,21 @@
-# Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class class_:
     def __repr__(self):
         return self.__name__
 
 class int_:
-    def bit_count(self, i):
+    def bit_count(self):
         return 1
 
-    def bit_length(self, i):
+    def bit_length(self):
+        return 1
+
+    def to_bytes(self, length=1, byteorder=None, signed=False):
+        return b''
+
+    @classmethod
+    def from_bytes(cls, b, byteorder=None, signed=False):
         return 1
 
 #    def as_integer_ratio(self, i):
