@@ -214,6 +214,35 @@ inline __ss_int __ss_bit_length(__ss_int i) {
     return __int___::bit_length(i);
 }
 
+inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
+    bytes *b = new bytes();
+    if(n<0 && !__mbool(__ss_signed))
+        throw new OverflowError(new str("can't convert negative int to unsigned"));
+    if(!byteorder || __eq(byteorder, new str("big"))) { // TODO optimize
+        for(__ss_int i=length-1; i>=0; i--)
+            b->unit += (char)((n >> (8*i)) & 0xff);
+    } else {
+        for(__ss_int i=0; i<length; i++)
+            b->unit += (char)((n >> (8*i)) & 0xff);
+    }
+    return b;
+}
+
+namespace __int___ {
+    inline __ss_int from_bytes(bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
+        __ss_int n = 0;
+        size_t blen = b->unit.size();
+        if(!byteorder || __eq(byteorder, new str("big"))) {
+            for(size_t i=0; i<blen; i++)
+                n |= ((unsigned char)(b->unit[blen-1-i])) << (8*i);
+        } else {
+            for(size_t i=0; i<blen; i++)
+                n |= ((unsigned char)(b->unit[i])) << (8*i);
+        }
+        return n;
+    }
+}
+
 namespace __bytes___ {
     static signed char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,

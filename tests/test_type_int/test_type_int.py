@@ -1,6 +1,7 @@
 # float.as_integer_ratio requires almost arbitrary-size arithmetic
 # so we don't support int.as_integer_ratio either
 
+
 def test_int():
     assert int("12") == 12
     assert int("ff", 16) == 255
@@ -44,6 +45,29 @@ def test_bit_count():
 #    assert (-15).bit_count() == 4  # in shedskin, we assume unsigned, otherwise hard to use for bitmasking..? (othelloN example) # TODO add warning
 
 
+def test_to_bytes():  # TODO signed, overflow
+    assert (65).to_bytes() == b'A'
+
+    assert (300).to_bytes(length=2) == b'\x01,'
+    assert (300).to_bytes(length=2, byteorder='big') == b'\x01,'
+    assert (300).to_bytes(length=2, byteorder='little') == b',\x01'
+
+    error = ''
+    try:
+        (-1).to_bytes()
+    except OverflowError as e:
+        error = str(e)
+    assert error == "can't convert negative int to unsigned"
+
+#    assert (-1).to_bytes(signed=True) == b'\xff'
+
+
+def test_from_bytes():  # TODO iterable bytes, incorrect nr of args (for builtin!?), signed, overflow
+    assert int.from_bytes(b'A') == 65
+    assert int.from_bytes(b'BCD') == 4342596
+    assert int.from_bytes(b'BCD', byteorder='little') == 4473666
+
+
 def test_all():
     test_int()
     test_division()
@@ -51,6 +75,8 @@ def test_all():
     test_is_integer()
     test_bit_length()
     test_bit_count()
+    test_to_bytes()
+    test_from_bytes()
 
 
 if __name__ == "__main__":
