@@ -10,9 +10,6 @@
 
 namespace __io__ {
 
-bytes *default_0;
-str *default_1;
-
 /* BytesIO */
 
 bytes *BytesIO::read(int n) {
@@ -130,8 +127,6 @@ str *StringIO::getvalue() {
 /* init */
 
 void __init() {
-    default_0 = new bytes();
-    default_1 = new str();
 
 }
 

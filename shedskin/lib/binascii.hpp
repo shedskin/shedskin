@@ -39,13 +39,6 @@ public:
     }
 };
 
-extern void * default_4;
-extern __ss_bool  default_1;
-extern __ss_bool  default_0;
-extern __ss_bool  default_3;
-extern __ss_bool  default_2;
-extern void * default_5;
-
 bytes *a2b_uu(bytes *string);
 bytes *b2a_uu(bytes *data, __ss_bool backtick);
 bytes *a2b_base64(bytes *string, __ss_bool strict_mode, bytes *altchars=0);

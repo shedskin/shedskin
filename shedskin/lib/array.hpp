@@ -453,8 +453,6 @@ template<class T> void *array<T>::__delslice__(__ss_int a, __ss_int b) {
     return NULL;
 }
 
-extern void * default_0;
-
 void __init();
 
 } // module namespace
