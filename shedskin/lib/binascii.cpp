@@ -7,13 +7,6 @@ namespace __binascii__ {
 
 str *__name__;
 
-void * default_4;
-__ss_bool  default_1;
-__ss_bool  default_0;
-__ss_bool  default_3;
-__ss_bool  default_2;
-void * default_5;
-
 #ifndef PY_SSIZE_T_MAX
 #define PY_SSIZE_T_MAX INT_MAX 
 #endif
@@ -826,10 +819,6 @@ void __init() {
 
     cl_Error = new class_("Error");
     cl_Incomplete = new class_("Incomplete");
-    default_0 = False;
-    default_1 = False;
-    default_2 = False;
-    default_3 = False;
 
 }
 
