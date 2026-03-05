@@ -11,11 +11,11 @@ class int_:
     def bit_length(self):
         return 1
 
-    def to_bytes(self, length=1, byteorder='big', signed=False):
+    def to_bytes(self, length=1, byteorder=None, signed=False):
         return b''
 
     @classmethod
-    def from_bytes(cls, b, byteorder='big', signed=False):
+    def from_bytes(cls, b, byteorder=None, signed=False):
         return 1
 
 #    def as_integer_ratio(self, i):

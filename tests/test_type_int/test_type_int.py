@@ -59,7 +59,7 @@ def test_to_bytes():  # TODO signed, overflow
         error = str(e)
     assert error == "can't convert negative int to unsigned"
 
-#    assert (-1).to_bytes(signed=True) == b'\xff'
+    assert (-1).to_bytes(signed=True) == b'\xff'
 
 
 def test_from_bytes():  # TODO iterable bytes, incorrect nr of args (for builtin!?), signed, overflow
