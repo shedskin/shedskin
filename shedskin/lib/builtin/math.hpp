@@ -216,8 +216,12 @@ inline __ss_int __ss_bit_length(__ss_int i) {
 
 inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
     bytes *b = new bytes();
+
     if(n<0 && !__mbool(__ss_signed))
         throw new OverflowError(new str("can't convert negative int to unsigned"));
+    if(__ss_bit_length(n) > length*8)
+        throw new OverflowError(new str("int too big to convert"));
+
     if(!byteorder || __eq(byteorder, new str("big"))) { // TODO optimize
         for(__ss_int i=length-1; i>=0; i--)
             b->unit += (char)((n >> (8*i)) & 0xff);
