@@ -67,6 +67,9 @@ def test_from_bytes():  # TODO iterable bytes, incorrect nr of args (for builtin
     assert int.from_bytes(b'BCD') == 4342596
     assert int.from_bytes(b'BCD', byteorder='little') == 4473666
 
+    assert int.from_bytes(b'\xff') == 255
+#    assert int.from_bytes(b'\xff', signed=True) == -1
+
 
 def test_all():
     test_int()

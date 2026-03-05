@@ -525,6 +525,7 @@ def connect_actual_formal(
                 "rsplit",
                 "map",
                 "to_bytes",
+                "from_bytes",
             )
         )
     ):
