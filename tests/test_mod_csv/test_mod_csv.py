@@ -358,6 +358,11 @@ def test_attrs():
         dict_writer = csv.DictWriter(f, dialect=csv.get_dialect('unix'), fieldnames=['x', 'y'])
         assert dict_writer.writer.dialect.lineterminator == '\n'
 
+#    with open(path) as f:
+#        reader = csv.reader(f, quotechar=None)
+#        assert reader.dialect.quoting == csv.QUOTE_NONE
+
+
 
 def test_blank_lines():
     f =['a,b', '3,4', '', '', '5,6']
