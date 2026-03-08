@@ -214,6 +214,141 @@ inline __ss_int __ss_bit_length(__ss_int i) {
     return __int___::bit_length(i);
 }
 
+inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
+    __ss_int inc = 0;
+    __ss_int start_index = 0;
+    __ss_int end_index = 0;
+    __ss_int extension = 0;
+    __ss_int actual_size = 0;
+    unsigned char sign_ext = 0xff;
+    unsigned char zero_ext = 0x00;
+    unsigned char sign_bit = 0x80;
+
+    bytes *b = new bytes();
+    b->unit.resize(length);
+
+    /* endianness */
+    if(!byteorder || __eq(byteorder, byteorder_big)) {
+        start_index = length-1;
+        end_index = 0;
+        inc = -1;
+    } else {
+        start_index = 0;
+        end_index = length-1;
+        inc = 1;
+    }
+
+    /* check sign bit */
+    if(__ss_signed)
+        __ss_signed = __mbool(n < 0);
+
+    /* count extending 0x00/0xff bytes */
+    for(__ss_int i=sizeof(__ss_int)-1; i>0; i--) {
+        if((__ss_signed && (((n >> (8*i)) & sign_ext) == sign_ext)) ||
+           (!__ss_signed && (((n >> (8*i)) & sign_ext) == zero_ext)))
+            extension += 1;
+        else
+            break;
+    }
+
+    /* check overflow */
+    actual_size = sizeof(__ss_int) - extension;
+    if(__ss_signed && !(n & (sign_bit << (8*(actual_size-1))))) /* sign bit fell off the bus */
+        actual_size += 1;
+    if(actual_size > length)
+        throw new OverflowError(new str("int too big to convert"));
+
+    /* copy non-extending bytes */
+    __ss_int i = start_index;
+    for(__ss_int j = 0; j < actual_size; j++) {
+        b->unit[i] = (unsigned char)((n >> (8*j)) & sign_ext);
+        i += inc;
+    }
+
+    /* extend sign bit */
+    if(__ss_signed) {
+        for(__ss_int j = 0; j < length-actual_size; j++) {
+            b->unit[i] = sign_ext;
+            i += inc;
+        }
+    }
+
+    return b;
+}
+
+namespace __int___ {
+    inline __ss_int from_bytes(bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
+        __ss_int blen = len(b);
+        __ss_int inc = 0;
+        __ss_int start_index = 0;
+        __ss_int end_index = 0;
+        __ss_int extension = 0;
+        __ss_int actual_size = 0;
+        unsigned char sign_ext = 0xff;
+        unsigned char zero_ext = 0x00;
+        unsigned char sign_bit = 0x80;
+
+        if(!blen)
+            return 0;
+
+        /* endianness */
+        if(!byteorder || __eq(byteorder, byteorder_big)) {
+            start_index = blen-1;
+            end_index = 0;
+            inc = -1;
+        } else {
+            start_index = 0;
+            end_index = blen-1;
+            inc = 1;
+        }
+
+        /* check sign bit */
+        if(__ss_signed)
+            __ss_signed = __mbool((b->unit[end_index] & 0x80) == 0x80);
+
+        /* count extending 0x00/0xff bytes */
+        for(__ss_int i=end_index; ; i-= inc) {
+            if((__ss_signed && ((unsigned char)(b->unit[i])) == sign_ext) ||
+               (!__ss_signed && ((unsigned char)(b->unit[i])) == zero_ext))
+                extension += 1;
+            else
+                break;
+            if(i == start_index)
+                break;
+        }
+
+        /* check overflow */
+        actual_size = blen - extension;
+        if(__ss_signed && !(b->unit[start_index + (actual_size-1) * inc] & sign_bit)) /* sign bit fell off the bus */
+            actual_size += 1;
+
+        if(actual_size > sizeof(__ss_int))
+            throw new OverflowError(new str("int too big to convert"));
+
+        /* copy non-extending bytes */
+        __ss_int n = 0;
+        __ss_int i = start_index;
+        for(__ss_int j = 0; j < actual_size; j++) {
+            n |= ((unsigned char)(b->unit[i])) << (8*j);
+            i += inc;
+        }
+
+        /* extend sign bit */
+        if(__ss_signed) {
+            for(__ss_int j = actual_size; j < sizeof(__ss_int); j++) {
+                n |= sign_ext << (8*j);
+            }
+        }
+
+        return n;
+    }
+
+    inline __ss_int from_bytes(pyiter<int> *p, str* byteorder=0, __ss_bool __ss_signed=False) {
+        return from_bytes(__bytes(p), byteorder, __ss_signed);
+    }
+
+}
+
 namespace __bytes___ {
     static signed char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,

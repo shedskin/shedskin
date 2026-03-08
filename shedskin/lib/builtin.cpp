@@ -36,6 +36,8 @@ file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 tuple<__ss_int> *__ss_tuple_cache[1600];
 
+str *byteorder_big, *byteorder_little;
+
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
 #endif
@@ -73,6 +75,9 @@ void __init() {
 
     True.value = 1;
     False.value = 0;
+
+    byteorder_big = new str("big");
+    byteorder_little = new str("little");
 
     ws = " \n\r\t\f\v";
     __fmtchars = "#*-+ .0123456789hlL";

@@ -3056,7 +3056,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
-                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio")
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes")
                 and isinstance(node.func, ast.Attribute)
                 and (
                     (python.def_class(self.gx, "float_"), 0)
@@ -3066,7 +3066,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
             ):
                 assert isinstance(node.func, ast.Attribute)
-                self.visitm(f"__ss_{ident}(", node.func.value, ")", func)
+                self.visitm(f"__ss_{ident}(", node.func.value, ", ", func)
+                self.visit_callfunc_args(funcs, node, func)
+                if self.line.endswith(', '):
+                    self.line = self.line[:-2]
+                self.visitm(")", func)
                 return
             else:
                 self.visitm(node.func, "(", func)

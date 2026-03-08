@@ -119,6 +119,7 @@ extern __GC_VECTOR(bytes *) __byte_cache;
 
 extern str *nl;
 extern str *sp;
+extern str *byteorder_big, *byteorder_little;
 
 /* root object class */
 
