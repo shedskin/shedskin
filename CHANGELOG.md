@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Preliminary support for Python 3.15
-- Caching up with Python 3.x:
+- Catching up with Python 3.x:
     - Added support for `int.from_bytes/to_bytes` (3.2, 3.11)
     - Added support for `math.integer` module (3.15)
     - Support `collections.deque(maxlen)` (3.1)
