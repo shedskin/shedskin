@@ -7,12 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Preliminary support for Python 3.15
+- Caching up with Python 3.x:
+    - Added support for `int.from_bytes/to_bytes` (3.2, 3.11)
+    - Added support for `math.integer` module (3.15)
+    - Support `collections.deque(maxlen)` (3.1)
+    - Updated `re` module support with changes in 3.x
+    - Updated `heapq` module support with changes in 3.x
+    - Updated `csv` module support with changes in 3.x
+- Added/improved support for `__iter__` and `__call__` methods
+
 ### Fixed
 
+- Avoid creating empty Makefile when using --nomakefile (Davide Gessa)
 - Fixed dict comprehension code generation crash (`TypeError: 'Tuple' object is not subscriptable`) in `cpp.py` by accessing `node.elt.elts[0]`/`node.elt.elts[1]` instead of `node.elt[0]`/`node.elt[1]`
 - Fixed dict comprehension type inference in `graph.py`: `isinstance(node.elt, tuple)` was always `False` for `ast.Tuple` nodes, so key/value type constraints were never set up. Changed to `node in self.gx.dictcomp_to_lc.values()`
 - Fixed `runtests --run` executing unbuilt ext tests by aligning ctest regex with the build target suffix in `cmake.py`
 - Added missing `WORKING_DIRECTORY` for non-Windows ext tests in CMake configuration
+- Much improved progress bar for larger/OO-heavy programs
+- Fixed exception messages for extension modules
+- Fix for -s/--silent
+- Exporting of methods called via inheritance in extension modules
+- Make `__ifloordiv__` fall back to `__floordiv__`
+- Allow magic methods to be virtualized
+- Fix for `for in defaultdict.items()`
+- Fix for set equality
+- Remove module path from `__class__.__name__`
+- Fallback to `__index__` for ints/floats in some (but not all) cases
+- Support `array.array(q/Q)`
+- Fix for `copy.deepcopy` (forgot to pass memo dict)
+- Fix `bytearray.__class__`
+- Many GCC warnings
+
+### Optimized
+
+- random number generation now uses Xoshiro engine (many times faster)
+- added cache for 2-len tuples containing small integers (-20..20)
+- cache 0-len string
+- str/bytes.startswith/endswith
+- str.strip
+- list(range)
+- reserve some space for empty lists (in the future this will be done by the STL)
+- avoid list creation when unpacking
+- list.index
+- list(sequence)
+- str/bytes.find
+- list(dict/bytes)
+- set.update
+- iterating over file
 
 ### Changed
 
