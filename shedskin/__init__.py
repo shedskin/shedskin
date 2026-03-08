@@ -175,6 +175,7 @@ class Shedskin:
             (3, 12),
             (3, 13),
             (3, 14),
+            (3, 15),
         ]:
             self.log.error("Shed Skin is not compatible with this version of Python")
             sys.exit(1)
