@@ -5,6 +5,8 @@ def test_bytearray():
     B = bytearray(b'b')
     C = bytearray(b'c')
 
+    assert BLA.__class__.__name__ == 'bytearray'
+
     assert BA.join([A, B, C]) == bytearray(b'a-b-c')
     assert BA.expandtabs() == bytearray(b'-')
     assert BA.upper() == bytearray(b'-')
