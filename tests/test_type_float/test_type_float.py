@@ -1,5 +1,20 @@
 # float.as_integer_ratio requires almost arbitrary-size arithmetic
 
+class MyFloat:
+    def __init__(self, f):
+        self.f = f
+
+    def __float__(self):
+        return self.f
+
+class MyFloat2:
+    def __init__(self, f):
+        self.f = f
+
+    def __index__(self):
+        return int(self.f)
+
+
 def test_float():
     x = 1.0
     assert x == 1.0
@@ -12,6 +27,9 @@ def test_float():
     assert float('-1.23') == -1.23
     assert float(1) == 1.0
     assert float(7.8) == 7.8
+
+    assert float(MyFloat(17.7)) == 17.7
+    assert float(MyFloat2(17.7)) == 17.0
 
 
 def test_division():
@@ -49,6 +67,9 @@ def test_is_integer():
 def test_from_number():
     assert float.from_number(18) == 18.0
     assert float.from_number(18.87) == 18.87
+
+    assert float.from_number(MyFloat(18.87)) == 18.87
+    assert float.from_number(MyFloat2(18.87)) == 18
 
 
 def test_all():
