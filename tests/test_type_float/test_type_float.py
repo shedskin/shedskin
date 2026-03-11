@@ -51,6 +51,11 @@ def test_from_number():
     assert float.from_number(18.87) == 18.87
 
 
+def test_hex_fromhex():
+    s = (17.123).hex()
+    assert float.fromhex(s) == 17.123
+
+
 def test_all():
     test_float()
     test_inf()
@@ -58,6 +63,7 @@ def test_all():
     test_from_number()
     test_division()
     test_multiplication()
+    test_hex_fromhex()
 
 
 if __name__ == "__main__":

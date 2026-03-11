@@ -144,6 +144,13 @@ class float_:
     def from_number(cls, i):
         return 1.0
 
+    @classmethod
+    def fromhex(cls, s):
+        return 1.0
+
+    def hex(self):
+        return ''
+
     def __add__(self, b):
         return b.__with_float__()
     def __sub__(self, b):
