@@ -3056,7 +3056,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
-                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes")
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes", "hex")  # TODO no cl/builtin check?
                 and isinstance(node.func, ast.Attribute)
                 and (
                     (python.def_class(self.gx, "float_"), 0)
