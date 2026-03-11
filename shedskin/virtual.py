@@ -38,7 +38,7 @@ def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> 
     for ident, subclasses in cl.virtuals.items():
         if not subclasses:
             continue
-        if ident in cl.funcs and infer.called(cl.funcs[ident]):
+        if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
             subclasses = subclasses.copy()
             subclasses.add(cl)
 
