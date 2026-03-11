@@ -28,6 +28,8 @@ def test_re_match():
 
     assert re.match(r"(\d+)\.?(\d+)?", "24").groups() == ('24', None)
 
+    assert re.prefixmatch('x*', 'xxxa').span() == (0, 3)
+
 
 def test_re_sub():
     assert re.sub('y', 'a', 'xyz') == 'xaz'
@@ -137,6 +139,9 @@ def test_match_pos_endpos():
     assert (m.pos, m.endpos) == (1, 6)
     m = pat.match('abcde', 0, 4)
     assert (m.pos, m.endpos) == (0, 4)
+
+    m = pat.prefixmatch('abcde')
+    assert (m.pos, m.endpos) == (0, 5)
 
     m = pat.search('iiabcde')
     assert (m.pos, m.endpos) == (0, 7)
