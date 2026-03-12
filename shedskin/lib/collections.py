@@ -161,3 +161,11 @@ class defaultdict:
 
     def __iter__(self):
         return __iter(self.unit)
+
+    def __or__(self, e):
+        return self
+
+    def __ior__(self, other):
+        item = iter(other).__next__()
+        self.__setunit__(item[0], item[1])
+        return self

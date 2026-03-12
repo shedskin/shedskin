@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updated `re` module support with changes in 3.x
     - Updated `heapq` module support with changes in 3.x
     - Updated `csv` module support with changes in 3.x
+    - Added support for `collections.defaultdict` | and |= operators (3.9)
 - Added/improved support for `__iter__` and `__call__` methods
 
 ### Fixed
