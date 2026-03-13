@@ -165,7 +165,10 @@ class defaultdict:
     def __or__(self, e):
         return self
 
-    def __ior__(self, other):
-        item = iter(other).__next__()
+    def __ior__(self, d):
+        self.__setunit__(d.unit, d.value)
+        return self
+    def __ior__iter(self, i):
+        item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
         return self

@@ -1157,15 +1157,15 @@ def redirect(
         else:
             func = list(callnode.types())[0][0].funcs["__inititer__"]
 
-    # dict.update
+    # dict.{update, __ior__}
     if (
-        func.ident == "update"
+        func.ident in ("update", "__ior__")
         and isinstance(func.parent, python.Class)
         and func.parent.ident in ("dict", "defaultdict")
     ):
         clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
         if not ("dict" in clnames or "defaultdict" in clnames):
-            func = func.parent.funcs["updateiter"]
+            func = func.parent.funcs[func.ident + "iter"]
 
     # list, tuple
     if (
