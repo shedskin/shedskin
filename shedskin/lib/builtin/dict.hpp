@@ -79,7 +79,7 @@ public:
     __ss_bool __le__(dict<K,V> *s);
 
     dict<K,V> *__or__(dict<K,V> *s);
-    dict<K,V> *__ior__(dict<K,V> *s);
+    template <class U> dict<K,V> *__ior__(U *other);
 
     V setdefault(K k, V v=0);
 
@@ -371,7 +371,7 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
     return c;
 }
 
-template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
+template <class K, class V> void *dict<K,V>::update(dict<K,V> *other)
 {
    for (const auto& [key, value] : other->gcd)
        gcd[key] = value;
@@ -385,7 +385,7 @@ template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
     return result;
 }
 
-template<class K, class V> dict<K,V> *dict<K,V>::__ior__(dict<K,V> *other) {
+template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *other) {
     update(other);
     return this;
 }
@@ -396,7 +396,7 @@ template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        __setitem__(e->__getitem__(0), e->__getitem__(1));
+        __setitem__(e->__getfirst__(), e->__getsecond__());
     END_FOR
     return NULL;
 }

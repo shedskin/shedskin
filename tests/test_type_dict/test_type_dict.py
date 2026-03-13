@@ -114,7 +114,23 @@ def test_pop():
     assert len(d) == 0
 
 
+def test_update():
+    # dict
+    d = {1: '2', 2: '4'}
+    e = {2: '5', 3: '6'}
+
+    result = {1: '2', 2: '5', 3: '6'}
+    d.update(e)
+    assert d == result
+
+    # iterable
+    g = {1: '2', 2: '4'}
+    g.update([(2, '5'), (3, '6')])
+    assert g == result
+
+
 def test_merge():
+    # |, |= dict
     d = {1: '2', 2: '4'}
     e = {2: '5', 3: '6'}
 
@@ -123,6 +139,11 @@ def test_merge():
 
     d |= e
     assert d == result
+
+    # |= iterable
+    g = {1: '2', 2: '4'}
+    g |= [(2, '5'), (3, '6')]
+    assert g == result
 
 
 def test_all():
@@ -138,11 +159,9 @@ def test_all():
     # test_func_as_value()
     test_dict_fromkeys()
     test_pop()
+    test_update()
     test_merge()
 
 
 if __name__ == "__main__":
     test_all()
-
-
-
