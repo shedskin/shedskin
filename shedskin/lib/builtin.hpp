@@ -88,6 +88,7 @@ template <class T> class list;
 template <class A, class B> class tuple2;
 template <class T> class set;
 template <class K, class V> class dict;
+template <class K, class V> class frozendict;
 
 template <class T> class __iter;
 
@@ -112,7 +113,8 @@ extern __ss_bool False;
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes, *cl_bytearray;
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict,
+              *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes, *cl_bytearray, *cl_frozendict;
 
 extern __GC_VECTOR(str *) __char_cache;
 extern __GC_VECTOR(bytes *) __byte_cache;

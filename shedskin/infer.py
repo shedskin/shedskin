@@ -1149,10 +1149,11 @@ def redirect(
     # dict.__init__
     if constructor and (ident, nrargs(gx, callfunc)) in (
         ("dict", 1),
+        ("frozendict", 1),
         ("defaultdict", 2),
     ):
         clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if "dict" in clnames or "defaultdict" in clnames:
+        if "dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames:
             func = list(callnode.types())[0][0].funcs["__initdict__"]
         else:
             func = list(callnode.types())[0][0].funcs["__inititer__"]
@@ -1161,10 +1162,10 @@ def redirect(
     if (
         func.ident in ("update", "__ior__")
         and isinstance(func.parent, python.Class)
-        and func.parent.ident in ("dict", "defaultdict")
+        and func.parent.ident in ("dict", "frozendict", "defaultdict")
     ):
         clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if not ("dict" in clnames or "defaultdict" in clnames):
+        if not ("dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames):
             func = func.parent.funcs[func.ident + "iter"]
 
     # list, tuple

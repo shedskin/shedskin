@@ -93,6 +93,8 @@ public:
 
     void *__addtoitem__(K k, V v);
 
+    long __hash__();
+
     /* iteration */
 
     typedef K for_in_unit;
@@ -116,6 +118,15 @@ public:
     dict(PyObject *);
     PyObject *__to_py__();
 #endif
+};
+
+template <class K, class V> class frozendict : public dict<K, V> {
+public:
+    frozendict(dict<K, V> *p);
+
+    str *__repr__();
+
+    long __hash__();
 };
 
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
@@ -154,7 +165,7 @@ template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
 template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
     this->__class__ = cl_dict;
 
-    *this = *p;
+    this->gcd = p->gcd;
 }
 
 #ifdef __SS_BIND
@@ -343,7 +354,6 @@ template<class K, class V> str *dict<K,V>::__repr__() {
 
     *r += "}";
     return r;
-
 }
 
 template<class K, class V> __ss_int dict<K,V>::__len__() {
@@ -439,6 +449,37 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
     tuple2<K, V> *t = new tuple2<K, V>(2, (*it).first, (*it).second);
     it++;
     return t;
+}
+
+template<class K, class V> long dict<K, V>::__hash__() {
+    throw new TypeError(new str("unhashable type: 'dict'"));
+}
+
+/* frozendict */
+
+template<class K, class V> frozendict<K, V>::frozendict(dict<K, V> *p)  {
+    this->__class__ = cl_frozendict;
+    this->gcd = p->gcd;
+}
+
+template<class K, class V> long frozendict<K, V>::__hash__() {
+    return 1234; // TODO
+}
+
+template<class K, class V> str *frozendict<K,V>::__repr__() {
+    str *r = new str("frozendict({");
+    int i = this->__len__();
+
+    for (const auto& [key, value] : this->gcd) {
+        *r += repr(key)->c_str();
+        *r += ": ";
+        *r += repr(value)->c_str();
+        if(--i > 0)
+            *r += ", ";
+    }
+
+    *r += "})";
+    return r;
 }
 
 /* dict.fromkeys */
