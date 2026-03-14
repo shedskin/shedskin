@@ -706,6 +706,12 @@ class dict(pyiter):
         self.__setunit__(item[0], item[1])
         return self
 
+    def __hash__(self):
+        return 1
+
+class frozendict(dict):
+    pass
+
 class pyset(pyiter):
     def __inititer__(self, i):
         self.__setunit__(iter(i).__next__())
