@@ -84,7 +84,8 @@ def test_items():
     assert sorted(dict(["ab", "cd"]).items()) ==  [('a', 'b'), ('c', 'd')]
     assert sorted(dict(set([(1, 2.0), (3, 4.0)])).items()) == [(1, 2.0), (3, 4.0)]
 
-# def test_func_as_value(): ## FIXME: does not work
+
+# def test_func_as_value(): ## TODO: contained functions not supported
     # g = {}
     # g['f1'] = add1
     # g['f2'] = add2
@@ -102,6 +103,10 @@ def test_dict_fromkeys():
     assert dict.fromkeys([1, 2, 3], 7) == {1: 7, 2: 7, 3: 7}
     assert dict.fromkeys([1, 2, 3], 4.0) == {1: 4.0, 2: 4.0, 3: 4.0}
     assert dict.fromkeys([1, 2, 3], "abc") == {1: 'abc', 2: 'abc', 3: 'abc'}
+
+    f = dict.fromkeys(Bert(), 'ahoi')
+    assert f[5] == 'ahoi'
+    assert len(f) == 3
 
 
 def test_pop():
@@ -146,6 +151,14 @@ def test_merge():
     assert g == result
 
 
+class Bert:
+    def __init__(self):
+        self.values = [4,5,6]
+
+    def __iter__(self):
+        return iter(self.values)
+
+
 def test_frozendict():
     # init
     g = frozendict({7: '8', 8: '9'})
@@ -182,6 +195,10 @@ def test_frozendict():
     # fromkeys
     z = frozendict.fromkeys('bahh')
     assert z == frozendict({'b': None, 'a': None, 'h': None})
+
+    q = frozendict.fromkeys(Bert(), 'ahoi')
+    assert q[5] == 'ahoi'
+    assert len(q) == 3
 
     # str/repr
     assert str(f) == "frozendict({20: '30'})"

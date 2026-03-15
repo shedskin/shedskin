@@ -414,6 +414,7 @@ def typestrnew(
                 "tuple",
                 "tuple2",
                 "dict",
+                "frozendict",
                 "set",
                 "frozenset",
                 "none",
