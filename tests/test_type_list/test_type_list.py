@@ -1,5 +1,3 @@
-# TODO list.copy
-
 def ident(x):
     return x
 
@@ -132,12 +130,6 @@ def test_list_length():
     assert puzzlecolumns.__len__() == 1
 
 
-# def test_list_copy():
-#     a = [(1,2),(3,4)]
-#     b = list4.copy() # NotImplemented
-#     assert b[0] == [1,2]
-
-
 def subsets(sequence):
     result = [[]] * (2 ** len(sequence))
     for i, e in enumerate(sequence):
@@ -161,6 +153,10 @@ def test_list_copy():
     a.append(4)
     assert a == [1,2,3,4]
     assert l == [1,2,3]
+
+    aa = [(1,2),(3,4)]
+    bb = aa.copy()
+    assert bb == aa
 
 
 def test_all():
