@@ -163,7 +163,7 @@ def test_frozendict():
     assert t != u
 
     # copy
-    j = g.copy()
+    j = g.copy()  # TODO return type?
     assert j == g
 
     # or/ior
@@ -179,6 +179,8 @@ def test_frozendict():
     # fromkeys TODO
 
     # abstract TODO
+
+    # str/repr TODO
 
 
 def test_all():
