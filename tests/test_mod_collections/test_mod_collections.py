@@ -92,7 +92,7 @@ def test_deque2():
 
 
 def test_deque3():
-    d = deque([1,2,2,2,3,4])  # TODO maxlen arg
+    d = deque([1,2,2,2,3,4])
     assert d.count(2) == 3
     assert d.count(5) == 0
 

@@ -151,6 +151,7 @@ public:
 
     virtual __ss_int __int__();
     virtual __ss_float __float__();
+    virtual complex __ss___complex__();
     virtual __ss_bool __bool__();
 
     virtual __ss_int __index__();

@@ -160,6 +160,41 @@ def test_virtual_dunder():
     assert a(2, 'hop') == 'hophop'
 
 
+
+class Bert:
+    def hophop(self, a):
+        raise NotImplementedError('oops')
+
+class Gert(Bert):
+    def hophop(self, a):
+        return 'flup'
+
+class Arie(Bert):
+    def hophop(self, a):
+        return 'flap'
+
+class Jort(Bert):
+    pass
+
+
+def test_virtual_case():
+    # hophop is called for Jort, but only via inheritance
+    b = Jort()
+    error = ''
+    try:
+        l = b.hophop(12)
+    except NotImplementedError as e:
+        error = str(e)
+    assert error == 'oops'
+
+    b = Arie()
+    l = b.hophop(17)
+    assert l == 'flap'
+    b = Gert()
+    l = b.hophop(17)
+    assert l == 'flup'
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -167,8 +202,8 @@ def test_all():
     test_inheritance4()
 
     test_virtual_dunder()
+    test_virtual_case()
 
 
 if __name__ == '__main__':
-    test_all() 
-
+    test_all()
