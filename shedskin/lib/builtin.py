@@ -239,7 +239,7 @@ class list(pyseq):
         return self.unit
     def __setitem__(self, i, u):
         self.unit = u
-    def __delitem__(self, i):
+    def __delitem__(self, i):  # TODO __delitem__/__delete__ difference?
         pass
 
     def __len__(self):
@@ -709,7 +709,7 @@ class dict(pyiter):
     def __hash__(self):
         return 1
 
-class frozendict(dict):
+class frozendict(dict): # TODO fromkeys, copy model, or/ior models
     pass
 
 class pyset(pyiter):
