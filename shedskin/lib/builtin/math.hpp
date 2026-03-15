@@ -276,6 +276,12 @@ inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __s
     return b;
 }
 
+inline str *__ss_hex(__ss_float f) {
+    char buf[64];
+    std::sprintf(buf, "%a", f);
+    return new str(buf);
+}
+
 namespace __int___ {
     inline __ss_int from_bytes(bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
         __ss_int blen = len(b);
@@ -409,6 +415,15 @@ namespace __bytearray__ {
 namespace __float___ {
     template<class T> __ss_float from_number(void *, T t) {
         return __float(t);
+    }
+
+    inline __ss_float fromhex(void *, str *s) {
+        const char *start = s->unit.c_str();
+        char *end;
+        double f = std::strtod(start, &end);
+        if(start == end)
+            throw new ValueError(new str("invalid hexadecimal floating-point string"));
+        return f;
     }
 }
 
