@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added support for `collections.defaultdict` | and |= operators (3.9)
     - Added support for frozendict (3.15)
 - Added/improved support for `__iter__` and `__call__` methods
+- Added support for `float.hex/fromhex`
 - Added support for `__complex__` method
 
 ### Fixed
