@@ -718,8 +718,13 @@ class dict(pyiter):
     def __hash__(self):
         return 1
 
-class frozendict(dict): # TODO fromkeys, copy model, or/ior models
-    pass
+class frozendict(dict):
+    @classmethod
+    def fromkeys(cls, l, b=None):  # TODO iterable?
+        return frozendict({l.unit: b})
+
+    def copy(self):
+        return frozendict({self.unit: self.value})
 
 class pyset(pyiter):
     def __inititer__(self, i):

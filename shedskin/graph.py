@@ -2245,6 +2245,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if not fake_attr and isinstance(node.func.value, ast.Name):
                 if node.func.value.id in (
                     "dict",
+                    "frozendict",
                     "float",
                     "bytes",
                     "complex",
