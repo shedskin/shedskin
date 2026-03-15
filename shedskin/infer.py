@@ -571,6 +571,7 @@ def callfunc_targets(
             funcs = [constructor.funcs["__inititer__"]]
         elif (ident, nrargs(gx, node)) in (
             ("dict", 1),
+            ("frozendict", 1),
             ("defaultdict", 2),
         ):  # XXX merge infer.redirect
             funcs = [constructor.funcs["__initdict__"]]  # XXX __inititer__?
@@ -928,6 +929,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
                             continue
                         elif parent_ident in (
                             "dict",
+                            "frozendict",
                             "defaultdict",
                         ) and b.thing.name not in ["unit", "value"]:
                             continue
@@ -1673,10 +1675,11 @@ def ifa_classes_to_split(gx: "config.GlobalInfo") -> List["python.Class"]:
         "tuple",
         "tuple2",
         "dict",
+        "frozendict",
+        "defaultdict",
         "set",
         "frozenset",
         "deque",
-        "defaultdict",
         "__iter",
         "array",
     ]:

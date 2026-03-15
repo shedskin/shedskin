@@ -154,16 +154,19 @@ def test_frozendict():
     assert g[8] == '9'
     h = frozendict([(7, '8'), (8, '9')])
     assert g == h
+    a = frozendict(['ab', 'cd'])
+    assert a['a'] == 'b'
+    assert a['c'] == 'd'
 
     # hash
-    i = frozendict()
-    t = (g, i)
-    u = (i, g)
+    f = frozendict({20: '30'})
+    t = (g, f)
+    u = (f, g)
     assert t == t
     assert t != u
 
     # copy
-    j = g.copy()  # TODO return type?
+    j = g.copy()
     assert j == g
 
     # or/ior
@@ -176,11 +179,15 @@ def test_frozendict():
     assert len(oldk) == 2
     assert len(k) == 3
 
-    # fromkeys TODO
+    # fromkeys
+    z = frozendict.fromkeys('bahh')
+    assert z == frozendict({'b': None, 'a': None, 'h': None})
+
+    # str/repr
+    assert str(f) == "frozendict({20: '30'})"
+    assert repr(f) == "frozendict({20: '30'})"
 
     # abstract TODO
-
-    # str/repr TODO
 
 
 def test_all():

@@ -2270,7 +2270,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     for t in self.mergeinh[node.target.value]
                     if isinstance(t[0], python.Class)
                 ]
-            ) in [set(["dict"]), set(["defaultdict"])] and isinstance(node.op, ast.Add):
+            ) in [set(["dict"]), set(["frozendict"]), set(["defaultdict"])] and isinstance(node.op, ast.Add):
                 self.visitm(
                     node.target.value,
                     "->__addtoitem__(",
@@ -4170,6 +4170,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ident = cl.ident
                 if cl.ident in [
                     "dict",
+                    "frozendict",
                     "defaultdict",
                     "int_",
                     "float_",
