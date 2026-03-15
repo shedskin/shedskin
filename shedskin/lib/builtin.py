@@ -142,6 +142,8 @@ class bool_:
 class float_:
     @classmethod
     def from_number(cls, i):
+        (i).__float__() # TODO call float()
+        (i).__index__()
         return 1.0
 
     @classmethod

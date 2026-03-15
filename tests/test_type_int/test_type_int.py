@@ -2,6 +2,14 @@
 # so we don't support int.as_integer_ratio either
 
 
+class MyInt:
+    def __init__(self, val):
+        self.val = val
+
+    def __index__(self):
+        return self.val
+
+
 def test_int():
     assert int("12") == 12
     assert int("ff", 16) == 255
@@ -9,6 +17,8 @@ def test_int():
 
     assert int(8.8) == 8
     assert int(7) == 7
+
+    assert int(MyInt(19)) == 19
 
 
 def test_multiplication():
