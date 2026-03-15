@@ -84,11 +84,9 @@ class array:
 
     def __slice__(self, x, lower, upper, step):
         return self
-    def __delslice__(self, a, b):
-        pass
     def __setslice__(self, x, lower, upper, step, r):
         pass
-    def __delete__(self, x, a=1, b=1, s=1):
+    def __delete__(self, x, a=1, b=1, s=1):  # TODO remove
         pass
 
     def __copy__(self):
