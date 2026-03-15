@@ -541,6 +541,11 @@ match_object *re_object::match(str *subj, __ss_int pos, __ss_int endpos)
     return __exec(subj, pos, endpos, PCRE2_ANCHORED);
 }
 
+match_object *re_object::prefixmatch(str *subj, __ss_int pos, __ss_int endpos)
+{
+    return match(subj, pos, endpos);
+}
+
 match_object *re_object::fullmatch(str *subj, __ss_int pos, __ss_int endpos)
 {
     match_object *m = __exec(subj, pos, endpos, PCRE2_ANCHORED);
@@ -691,6 +696,11 @@ match_object *search(str *pat, str *subj, __ss_int flags)
 match_object *match(str *pat, str *subj, __ss_int flags)
 {
     return __exec_once(pat, subj, flags | PCRE2_ANCHORED);
+}
+
+match_object *prefixmatch(str *pat, str *subj, __ss_int flags)
+{
+    return match(pat, subj, flags);
 }
 
 match_object *fullmatch(str *pat, str *subj, __ss_int flags)

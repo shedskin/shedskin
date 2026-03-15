@@ -65,6 +65,9 @@ class re_object:
         self.groupindex = {'' : ''}
         self.pattern = ''
 
+    def prefixmatch(self, string, pos=0, endpos=-1):
+        return match_object()
+
     def match(self, string, pos=0, endpos=-1):
         return match_object()
 
@@ -98,6 +101,9 @@ def compile(pattern, flags=0):
     return re_object()
 
 def match(pattern, string, flags=0):
+    return match_object()
+
+def prefixmatch(pattern, string, flags=0):
     return match_object()
 
 def fullmatch(pattern, string, flags=0):
