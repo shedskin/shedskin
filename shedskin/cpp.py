@@ -405,7 +405,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.visit(arg, func)
 
-    # TODO func unused
     def connector(self, node: ast.AST, func: Optional["python.Function"]) -> str:
         """Generate a connector for a node"""
         if typestr.singletype(self.gx, node, python.Module):
