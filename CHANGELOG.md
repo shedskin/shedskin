@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fallback to `__index__` for ints/floats in some (but not all) cases
 - Support `array.array(q/Q)`
 - Fix for `copy.deepcopy` (forgot to pass memo dict)
+- Fix for virtual methods (base class method is called, but only via inheritance)
 - Fix `bytearray.__class__`
 - Many GCC warnings
 
