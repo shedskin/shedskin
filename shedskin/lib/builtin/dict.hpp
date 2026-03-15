@@ -159,13 +159,8 @@ template<class K, class V> template<class ... Args> dict<K, V>::dict(int, Args .
 
 template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
     this->__class__ = cl_dict;
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    FOR_IN(e,other,1,2,3)
-        __add_to_dict(this, e);
-    END_FOR
+
+    this->update(other);
 }
 
 template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
@@ -408,7 +403,7 @@ template <class K, class V> template<class U> void *dict<K,V>::update(U *other) 
         int __2;
         U *__1;
         FOR_IN(e,other,1,2,3)
-            __setitem__(e->__getfirst__(), e->__getsecond__());
+            __add_to_dict(this, e);
         END_FOR
     }
     return NULL;
@@ -528,6 +523,25 @@ namespace __dict__ {
     }
 
     template<class A> dict<A, void *> *fromkeys(void *, pyiter<A> *f) {
+        return fromkeys(NULL, f, (void *)0);
+    }
+
+}
+
+namespace __frozendict__ {
+    template<class A, class B> frozendict<A, B> *fromkeys(void *, pyiter<A> *f, B b) {
+        frozendict<A, B> *d = new frozendict<A, B>();
+        typename pyiter<A>::for_in_unit e;
+        typename pyiter<A>::for_in_loop __3;
+        int __2;
+        pyiter<A> *__1;
+        FOR_IN(e,f,1,2,3)
+            d->__setitem__(e, b);
+        END_FOR
+        return d;
+    }
+
+    template<class A> frozendict<A, void *> *fromkeys(void *, pyiter<A> *f) {
         return fromkeys(NULL, f, (void *)0);
     }
 
