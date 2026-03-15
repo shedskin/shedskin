@@ -241,7 +241,7 @@ class list(pyseq):
         return self.unit
     def __setitem__(self, i, u):
         self.unit = u
-    def __delitem__(self, i):
+    def __delitem__(self, i):  # TODO __delitem__/__delete__ difference?
         pass
 
     def __len__(self):
@@ -622,14 +622,14 @@ class bytes_(pyseq):
 
 class dict(pyiter):
     @classmethod
-    def fromkeys(cls, l, b=None):
+    def fromkeys(cls, l, b=None):  # TODO iterable?
         return {l.unit: b}
 
-    def __initdict__(self, other):
-        self.__setunit__(other.unit, other.value)
+    def __initdict__(self, d):
+        self.__setunit__(d.unit, d.value)
 
-    def __inititer__(self, other):
-        item = iter(other).__next__()
+    def __inititer__(self, i):
+        item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
 
     def __repr__(self):
@@ -683,8 +683,8 @@ class dict(pyiter):
 
     def update(self, d):
         self.__setunit__(d.unit, d.value)
-    def updateiter(self, other):
-        item = iter(other).__next__()
+    def updateiter(self, i):
+        item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
 
     def __delete__(self, k):
@@ -700,10 +700,19 @@ class dict(pyiter):
     def __or__(self, e):
         return self
 
-    def __ior__(self, other):
-        item = iter(other).__next__()
+    def __ior__(self, d):
+        self.__setunit__(d.unit, d.value)
+        return self
+    def __ior__iter(self, i):
+        item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
         return self
+
+    def __hash__(self):
+        return 1
+
+class frozendict(dict): # TODO fromkeys, copy model, or/ior models
+    pass
 
 class pyset(pyiter):
     def __inititer__(self, i):

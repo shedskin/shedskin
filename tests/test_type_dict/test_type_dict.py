@@ -114,7 +114,23 @@ def test_pop():
     assert len(d) == 0
 
 
+def test_update():
+    # dict
+    d = {1: '2', 2: '4'}
+    e = {2: '5', 3: '6'}
+
+    result = {1: '2', 2: '5', 3: '6'}
+    d.update(e)
+    assert d == result
+
+    # iterable
+    g = {1: '2', 2: '4'}
+    g.update([(2, '5'), (3, '6')])
+    assert g == result
+
+
 def test_merge():
+    # |, |= dict
     d = {1: '2', 2: '4'}
     e = {2: '5', 3: '6'}
 
@@ -123,6 +139,48 @@ def test_merge():
 
     d |= e
     assert d == result
+
+    # |= iterable
+    g = {1: '2', 2: '4'}
+    g |= [(2, '5'), (3, '6')]
+    assert g == result
+
+
+def test_frozendict():
+    # init
+    g = frozendict({7: '8', 8: '9'})
+    assert len(g) == 2
+    assert g[7] == '8'
+    assert g[8] == '9'
+    h = frozendict([(7, '8'), (8, '9')])
+    assert g == h
+
+    # hash
+    i = frozendict()
+    t = (g, i)
+    u = (i, g)
+    assert t == t
+    assert t != u
+
+    # copy
+    j = g.copy()  # TODO return type?
+    assert j == g
+
+    # or/ior
+    k = frozendict({8: '10', 9: '12'})
+    assert g | k == frozendict({7: '8', 8: '10', 9: '12'})
+
+    oldk = k
+    k |= g
+    assert k == k | g
+    assert len(oldk) == 2
+    assert len(k) == 3
+
+    # fromkeys TODO
+
+    # abstract TODO
+
+    # str/repr TODO
 
 
 def test_all():
@@ -138,11 +196,10 @@ def test_all():
     # test_func_as_value()
     test_dict_fromkeys()
     test_pop()
+    test_update()
     test_merge()
+    test_frozendict()
 
 
 if __name__ == "__main__":
     test_all()
-
-
-

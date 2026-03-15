@@ -330,6 +330,23 @@ public:
         return __add_strs(3, new str("defaultdict("), dict<K, V>::__repr__(), new str(")"));
     }
 
+    defaultdict<K, V> *copy() {
+        defaultdict<K,V> *c = new defaultdict<K,V>;
+        c->gcd = this->gcd;
+        return c;
+    }
+
+    defaultdict<K, V> *__or__(dict<K,V> *other) {
+        defaultdict<K,V> *result = copy();
+        result->update(other);
+        return result;
+    }
+
+    defaultdict<K, V> *__ior__(dict<K,V> *other) {
+        this->update(other);
+        return this;
+    }
+
 #ifdef __SS_BIND
     defaultdict(PyObject *p) { /* XXX merge with dict */
         if(!PyDict_Check(p))
