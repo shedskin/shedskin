@@ -57,18 +57,36 @@ def test_from_string():
 
 
 class PI:
+    def __complex__(self):
+        return 3+4j
+
+class PI2:
     def __float__(self):
         return 3.14
 
+class PI3:
+    def __index__(self):
+        return 27
+
 
 def test_from_class():
-    assert complex(PI()) == complex(3.14, 0)  # TODO __complex__, __index__
+    assert complex(PI()) == 3+4j
+    assert complex(PI2()) == complex(3.14, 0)
+    assert complex(PI3()) == 27+0j
 
 
 def test_from_number():
     assert complex.from_number(18) == 18+0j
     assert complex.from_number(18.8) == 18.8+0j
     assert complex.from_number(8+9j) == 8+9j
+
+    assert complex.from_number(PI()) == 3+4j
+
+    assert complex.from_number(PI2()) == complex(3.14, 0)
+    assert complex.from_number(PI2()) == 3.14
+
+    assert complex.from_number(PI3()) == 27+0j
+    assert complex.from_number(PI3()) == 27
 
 
 def test_all():

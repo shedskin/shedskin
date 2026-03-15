@@ -56,12 +56,16 @@ inline complex mcomplex(__ss_float real, __ss_float imag) {
 }
 
 template<class T> inline complex mcomplex(T t) {
-    complex c;
-    c.real = __float(t); c.imag = 0;
-    return c;
+    return t->__ss___complex__();
 }
 template<> inline complex mcomplex(complex c) {
     return mcomplex(c.real, c.imag);
+}
+template<> inline complex mcomplex(__ss_int i) {
+    return mcomplex(i, 0);
+}
+template<> inline complex mcomplex(__ss_float f) {
+    return mcomplex(f, 0);
 }
 
 /* operators */
