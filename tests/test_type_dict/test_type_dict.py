@@ -146,6 +146,41 @@ def test_merge():
     assert g == result
 
 
+def test_frozendict():
+    # init
+    g = frozendict({7: '8', 8: '9'})
+    assert len(g) == 2
+    assert g[7] == '8'
+    assert g[8] == '9'
+    h = frozendict([(7, '8'), (8, '9')])
+    assert g == h
+
+    # hash
+    i = frozendict()
+    t = (g, i)
+    u = (i, g)
+    assert t == t
+    assert t != u
+
+    # copy
+    j = g.copy()
+    assert j == g
+
+    # or/ior
+    k = frozendict({8: '10', 9: '12'})
+    assert g | k == frozendict({7: '8', 8: '10', 9: '12'})
+
+    oldk = k
+    k |= g
+    assert k == k | g
+    assert len(oldk) == 2
+    assert len(k) == 3
+
+    # fromkeys TODO
+
+    # abstract TODO
+
+
 def test_all():
     test_dict()
     test_dict_get()
@@ -161,6 +196,7 @@ def test_all():
     test_pop()
     test_update()
     test_merge()
+    test_frozendict()
 
 
 if __name__ == "__main__":

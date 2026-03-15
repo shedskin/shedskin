@@ -620,7 +620,7 @@ class bytes_(pyseq):
 
 class dict(pyiter):
     @classmethod
-    def fromkeys(cls, l, b=None):
+    def fromkeys(cls, l, b=None):  # TODO iterable?
         return {l.unit: b}
 
     def __initdict__(self, d):
