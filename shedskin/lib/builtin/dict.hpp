@@ -64,7 +64,6 @@ public:
     V pop(K k, V v);
     tuple2<K, V> *popitem();
     template <class U> void *update(U *other);
-    void *update(dict<K, V> *e);
 
     __ss_bool __gt__(pyobj *p);
     __ss_bool __lt__(pyobj *p);
@@ -122,11 +121,18 @@ public:
 
 template <class K, class V> class frozendict : public dict<K, V> {
 public:
+    frozendict();
+    template<class U> frozendict(U *other);
     frozendict(dict<K, V> *p);
 
     str *__repr__();
 
     long __hash__();
+
+    frozendict<K,V> *copy();
+
+    frozendict<K,V> *__or__(dict<K,V> *s);
+    template <class U> frozendict<K,V> *__ior__(U *other);
 };
 
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
@@ -381,14 +387,6 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
     return c;
 }
 
-template <class K, class V> void *dict<K,V>::update(dict<K,V> *other)
-{
-   for (const auto& [key, value] : other->gcd)
-       gcd[key] = value;
-
-    return NULL;
-}
-
 template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
     dict<K,V> *result = copy();
     result->update(other);
@@ -400,14 +398,19 @@ template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *o
     return this;
 }
 
-template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    FOR_IN(e,iter,1,2,3)
-        __setitem__(e->__getfirst__(), e->__getsecond__());
-    END_FOR
+template <class K, class V> template<class U> void *dict<K,V>::update(U *other) {
+    if constexpr (std::is_base_of_v<dict<K,V>, U>) {
+       for (const auto& [key, value] : other->gcd)
+           gcd[key] = value;
+    } else {
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        FOR_IN(e,other,1,2,3)
+            __setitem__(e->__getfirst__(), e->__getsecond__());
+        END_FOR
+    }
     return NULL;
 }
 
@@ -457,9 +460,24 @@ template<class K, class V> long dict<K, V>::__hash__() {
 
 /* frozendict */
 
+template<class K, class V> frozendict<K, V>::frozendict()  {
+    this->__class__ = cl_frozendict;
+}
+
+template<class K, class V> template<class U> frozendict<K, V>::frozendict(U *other) {
+    this->__class__ = cl_frozendict;
+    this->update(other);
+}
+
 template<class K, class V> frozendict<K, V>::frozendict(dict<K, V> *p)  {
     this->__class__ = cl_frozendict;
     this->gcd = p->gcd;
+}
+
+template<class K, class V> frozendict<K,V> *frozendict<K,V>::copy() { // TODO virtuals?
+    frozendict<K,V> *c = new frozendict<K,V>;
+    c->gcd = this->gcd;
+    return c;
 }
 
 template<class K, class V> long frozendict<K, V>::__hash__() {
@@ -480,6 +498,18 @@ template<class K, class V> str *frozendict<K,V>::__repr__() {
 
     *r += "})";
     return r;
+}
+
+template<class K, class V> frozendict<K,V> *frozendict<K,V>::__or__(dict<K,V> *other) {
+    frozendict<K,V> *result = this->copy();
+    result->update(other);
+    return result;
+}
+
+template <class K, class V> template<class U> frozendict<K,V> *frozendict<K,V>::__ior__(U *other) {
+    frozendict<K,V> *result = this->copy();
+    result->update(other);
+    return result;
 }
 
 /* dict.fromkeys */
