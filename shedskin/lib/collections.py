@@ -64,7 +64,7 @@ class deque(pyiter):
     def __deepcopy__(self):
         return self
 
-class defaultdict:
+class defaultdict(dict):
     def __init__(self, func=None, x=None): # XXX
         self.value = func()
 
@@ -79,78 +79,19 @@ class defaultdict:
         value = item[1]
         self.__setunit__(item[0], value)
 
-    def __setitem__(self, key, value):
-        self.__setunit__(key, value)
-
     def __getitem__(self, key):
         self.__missing__(key)
         return self.value
 
-    def __missing__(self, key):
+    def __missing__(self, key):  # TODO not called by get?
         self.__key__(key)
         self.unit = key
         return self.value
 
-    def keys(self):
-        yield self.unit
-    def values(self):
-        yield self.value
-    def items(self):
-        yield (self.unit, self.value)
-
-    def __repr__(self):
-        self.unit.__repr__()
-        self.value.__repr__()
-        return ''
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __key__(self, k):
-        k.__hash__()
-        k.__eq__(k)
-
-    def __setunit__(self, k, v):
-        self.__key__(k)
-        self.unit = k
-        self.value = v
-
-    def __delitem__(self, k):
-        self.__key__(k)
-
-    def setdefault(self, k, v=None):
-        self.__setunit__(k, v)
-        return v
-
-    def has_key(self, k):
-        self.__key__(k)
-        return 1
-
-    def __len__(self):
-        return 1
-
-    def clear(self):
-        pass
     def copy(self):
-        return {self.unit: self.value}
+        return {self.unit: self.value}  # TODO defaultdict
 
-    def get(self, k, default=None):
-        self.__key__(k)
-        return self.value
-        return default
-    def pop(self, k):
-        self.__key__(k)
-        return self.value
-    def popitem(self):
-        return (self.unit, self.value)
-
-    def update(self, d):
-        self.__setunit__(d.unit, d.value)
-    def updateiter(self, other):
-        item = iter(other).__next__()
-        self.__setunit__(item[0], item[1])
-
-    def __delete__(self, k):
+    def __delete__(self, k):  # TODO difference with delitem?
         self.__key__(k)
 
     def fromkeys(l, b=None):
@@ -158,6 +99,3 @@ class defaultdict:
         d.__setunit__(iter(l).__next__(), b)
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
-
-    def __iter__(self):
-        return __iter(self.unit)
