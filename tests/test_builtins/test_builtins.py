@@ -318,8 +318,18 @@ def test_reversed():
 
 
 def test_round():
+    assert round(0.5) == 0
     assert round(1.5) == 2
-    assert round(1.15, 0) == 1.0
+    assert round(2.5) == 2
+    assert round(3.5) == 4
+    assert round(4.5) == 4
+
+    assert round(-1.5) == -2
+    assert round(-2.5) == -2
+    assert round(-3.5) == -4
+    assert round(-4.5) == -4
+
+    assert round(1.15, 0) == 1.0  # TODO check cpython
 
 
 def test_set():
