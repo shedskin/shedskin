@@ -20,6 +20,20 @@ def test_int():
 
     assert int(MyInt(19)) == 19
 
+    error = ''
+    try:
+        int(float('-inf'))
+    except OverflowError as e:
+        error = str(e)
+    assert error == "cannot convert float infinity to integer"
+
+    error = ''
+    try:
+        int(float('nan'))
+    except ValueError as e:
+        error = str(e)
+    assert error == "cannot convert float NaN to integer"
+
 
 def test_multiplication():
     assert 9 * 2 == 18

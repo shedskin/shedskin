@@ -295,6 +295,7 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
+#include "builtin/exception.hpp"
 #define SS_DECL
 #include "builtin/function.hpp"
 #undef SS_DECL
@@ -340,7 +341,6 @@ private:
 #define __NOT(x) (__mbool(!(x)))
 
 #include "builtin/bool.hpp"
-#include "builtin/exception.hpp"
 #include "builtin/extmod.hpp"
 #include "builtin/tuple.hpp"
 #include "builtin/function.hpp"
