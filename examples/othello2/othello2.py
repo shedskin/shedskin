@@ -462,7 +462,7 @@ def do_perft(state, color, cur_max_depth):
     moves = possible_moves(state, color)
 
     if cur_max_depth == 1:
-        n = int.bit_count(moves)
+        n = moves.bit_count()
         return 1 if n == 0 else n
 
     opp_color = color ^ 1
