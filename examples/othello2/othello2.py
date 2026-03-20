@@ -365,6 +365,9 @@ def vs_cpu_ugi(max_depth):
         if line == 'ugi':
             sys.stdout.write('ugiok\n')
 
+        elif line == 'quit':
+            sys.exit(0)
+
         elif line == 'isready':
             sys.stdout.write('readyok\n')
 
