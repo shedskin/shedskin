@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added missing `WORKING_DIRECTORY` for non-Windows ext tests in CMake configuration
 - Much improved progress bar for larger/OO-heavy programs
 - Fixed exception messages for extension modules
+- Fixed escaping in string/bytes literals
 - Fix for -s/--silent
 - Exporting of methods called via inheritance in extension modules
 - Make `__ifloordiv__` fall back to `__floordiv__`
