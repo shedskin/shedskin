@@ -4457,31 +4457,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def expand_special_chars(self, val: Union[str, bytes]) -> str:
         """Expand special characters in a string"""
-        if isinstance(val, str):
-            val = val.encode("utf-8")  # restriction
-
-        value = [chr(c) for c in val]
-        replace = {
-            "\\": "\\",
-            "\n": "n",
-            "\t": "t",
-            "\r": "r",
-            "\f": "f",
-            "\b": "b",
-            "\v": "v",
-            '"': '"',
-        }
-
-        for i in range(len(value)):
-            if value[i] in replace:
-                value[i] = "\\" + replace[value[i]]
-            elif value[i] not in string.printable:
-                octval = oct(ord(value[i]))
-                if octval.startswith("0o"):  # py3
-                    octval = octval[2:]
-                value[i] = "\\" + octval.zfill(4)[1:]
-
-        return "".join(value)
+        if isinstance(val, bytes):
+            values = [chr(i) for i in val]
+        else:
+            values = list(val)
+        result = []
+        for val in values:
+            ord_val = ord(val)
+            if 32 <= ord_val <= 126 and val not in ('"', '\\'):
+                result.append(val)
+                continue
+            if ord_val > 255:
+                for i in val.encode('utf8'):
+                    result.append('\\' + oct(i)[2:].zfill(3))
+            else:
+                result.append('\\' + oct(ord_val)[2:].zfill(3))
+        return "".join(result)
 
     def visit_Constant(
         self, node: ast.Constant, func: Optional["python.Function"] = None
