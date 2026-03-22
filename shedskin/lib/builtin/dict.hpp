@@ -121,6 +121,8 @@ public:
 
 template <class K, class V> class frozendict : public dict<K, V> {
 public:
+    long hash;
+
     frozendict();
     template<class U> frozendict(U *other);
     frozendict(dict<K, V> *p);
@@ -457,15 +459,18 @@ template<class K, class V> long dict<K, V>::__hash__() {
 
 template<class K, class V> frozendict<K, V>::frozendict()  {
     this->__class__ = cl_frozendict;
+    this->hash = -1;
 }
 
 template<class K, class V> template<class U> frozendict<K, V>::frozendict(U *other) {
     this->__class__ = cl_frozendict;
+    this->hash = -1;
     this->update(other);
 }
 
 template<class K, class V> frozendict<K, V>::frozendict(dict<K, V> *p)  {
     this->__class__ = cl_frozendict;
+    this->hash = -1;
     this->gcd = p->gcd;
 }
 
@@ -476,7 +481,25 @@ template<class K, class V> frozendict<K,V> *frozendict<K,V>::copy() { // TODO vi
 }
 
 template<class K, class V> long frozendict<K, V>::__hash__() {
-    return 1234; // TODO
+    if (hash != -1)
+        return hash;
+
+    long hash_ = 1927868237L;
+
+    hash_ *= this->__len__() + 1;
+
+    for (const auto& [key, value] : this->gcd) {
+        long h = hasher<K>(key);
+        hash_ ^= hash_shuffle_bits(h);
+        h = hasher<V>(value);
+        hash_ ^= hash_shuffle_bits(h);
+    }
+    hash_ = hash_ * 69069L + 907133923L;
+    if (hash_ == -1)
+        hash_ = 590923713L;
+
+    hash = hash_;
+    return hash_;
 }
 
 template<class K, class V> str *frozendict<K,V>::__repr__() {

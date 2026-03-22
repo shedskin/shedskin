@@ -1,9 +1,16 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* hashing */
+/* hash combiner (TODO only used for tuples? move there/check cpython?) */
 
 static inline long hash_combine(long seed, long other) {
     return seed ^ (other + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
+/* bit shuffler */
+
+static inline long hash_shuffle_bits(long h)
+{
+    return ((h ^ 89869747UL) ^ (h << 16)) * 3644798167UL;
 }
 
 template<class T> inline long hasher(T t) {
