@@ -88,6 +88,7 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * `eval`, `getattr`, `hasattr`, `isinstance`, anything really dynamic
 * arbitrary-size arithmetic (integers become 32-bit (signed) by default on most architectures, see [Command-line options](#command-line-options))
 * argument (un)packing (`*args` and `**kwargs`)
+* ordered dicts
 * multiple inheritance
 * nested functions and classes
 * full unicode/builtin utf-8 support (currently restricted to 1-byte characters)
