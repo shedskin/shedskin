@@ -1,7 +1,6 @@
 name: test-dep-managers-extended
 
-on:
-  workflow_dispatch:
+on: [workflow_dispatch]
 
 concurrency:
   group: dep-managers-extended-${{ github.ref }}
