@@ -1,11 +1,11 @@
 name: test-dep-managers
 
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-  workflow_dispatch:
+on: [workflow_dispatch]
+  # push:
+  #   branches: [ "master" ]
+  # pull_request:
+  #   branches: [ "master" ]
+  # workflow_dispatch:
 
 concurrency:
   group: dep-managers-${{ github.ref }}
