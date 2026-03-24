@@ -481,10 +481,6 @@ class TestDoInitMods:
         assert output.getvalue() == ""
 
 
-def test_all():
-    """Verify module is importable for standalone execution."""
-    assert extmod is not None
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

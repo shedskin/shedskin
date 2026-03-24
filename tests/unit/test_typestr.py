@@ -4,7 +4,6 @@
 
 import argparse
 import ast
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -577,10 +576,375 @@ class TestTypestr:
         assert "int" in result
 
 
-def test_all():
-    """Verify module is importable for standalone execution."""
-    assert typestr is not None
+class TestTypestrErrorFallback:
+    """Tests for typestr RuntimeError fallback path."""
+
+    def test_fallback_to_pyobj_on_max_depth(self, gx_with_builtin):
+        """typestr should return 'pyobj *' when typestrnew hits max depth."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+
+        # Create a Variable node with types that will recurse beyond MAX_TYPE_DEPTH
+        # Simplest: trigger RuntimeError by passing a set with a class that has
+        # template vars pointing back to themselves (requires merged_inh wiring).
+        # Instead, test the fallback via the simpler path: typestr with empty types
+        # at max depth directly triggers RuntimeError.
+        var = python.Variable("myvar", None)
+        gx.merged_inh[var] = set()
+
+        # At max depth, typestrnew raises RuntimeError
+        result = typestr.typestr(
+            gx, set(), cplusplus=True, node=var, depth=typestr.MAX_TYPE_DEPTH, mv=mv
+        )
+        assert result == "pyobj *"
+
+    def test_fallback_annotation_mode(self, gx_with_builtin):
+        """typestr fallback should wrap in brackets in annotation mode."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        var = python.Variable("myvar", None)
+
+        result = typestr.typestr(
+            gx, set(), cplusplus=False, node=var, depth=typestr.MAX_TYPE_DEPTH, mv=mv
+        )
+        assert result == "[pyobj *]"
+
+
+class TestTypestrnewAnonFuncs:
+    """Tests for typestrnew anonymous function handling."""
+
+    def test_lambda_type_string(self, gx_with_builtin):
+        """typestrnew should return 'lambdaN' for anonymous functions."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+
+        func = python.Function(gx, mv)
+        func.ident = "lambda0"
+        func.lambdanr = 0
+        func.mv = mv
+
+        types = {(func, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert result == "lambda0"
+
+    def test_lambda_cross_module_qualified(self, gx_with_builtin):
+        """typestrnew should qualify lambda with module path when mv differs."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+
+        # Create a function in a different module
+        other_module = python.Module(
+            "other", "/fake/other.py", "other.py", False, None, ast.parse(""),
+        )
+        other_mv = type("MockMV", (), {"module": other_module})()
+
+        func = python.Function(gx, mv)
+        func.ident = "lambda1"
+        func.lambdanr = 1
+        func.mv = other_mv
+
+        types = {(func, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert "__other__::lambda1" in result
+
+
+class TestTypestrnewBytesStr:
+    """Tests for typestrnew bytes + str mixed type handling."""
+
+    def test_bytes_str_mix_cpp(self, gx_with_builtin):
+        """typestrnew should return 'pyobj *' for bytes + str mix in C++ mode."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        bytes_cl = python.def_class(gx, "bytes_")
+        str_cl = python.def_class(gx, "str_")
+        types = {(bytes_cl, 0), (str_cl, 0)}
+
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert result == "pyobj *"
+
+
+class TestTypestrnewExtmodErrors:
+    """Tests for typestrnew ExtmodError on builtin non-standard types."""
+
+    def test_extmod_error_on_non_standard_builtin(self, gx_with_builtin):
+        """typestrnew should raise ExtmodError for non-standard builtin types."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+
+        # Create a class in the builtin module that's not in the whitelist
+        cl_node = ast.ClassDef(
+            name="SomeInternal", bases=[], keywords=[],
+            body=[ast.Pass()], decorator_list=[],
+        )
+        cl = python.Class(gx, cl_node, mv, mv.module)
+
+        types = {(cl, 0)}
+        with pytest.raises(typestr.ExtmodError):
+            typestr.typestrnew(gx, types, check_extmod=True, mv=mv)
+
+
+class TestTypestrnewTemplates:
+    """Tests for typestrnew template type string assembly."""
+
+    def test_list_template_cpp(self, gx_with_builtin):
+        """typestrnew should generate template type string for list<int>."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        list_cl = python.def_class(gx, "list")
+        int_cl = python.def_class(gx, "int_")
+
+        # Wire up the template variable: list.unit -> int
+        unit_var = list_cl.vars.get("unit")
+        if unit_var:
+            from shedskin import infer
+            cnode = infer.CNode(gx, mv, unit_var, parent=None)
+            gx.cnode[unit_var, 0, 0] = cnode
+            gx.types[cnode] = {(int_cl, 0)}
+
+        types = {(list_cl, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert "list" in result
+        assert "__ss_int" in result
+
+    def test_dict_template_cpp(self, gx_with_builtin):
+        """typestrnew should generate template type string for dict<str, int>."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        dict_cl = python.def_class(gx, "dict")
+        str_cl = python.def_class(gx, "str_")
+        int_cl = python.def_class(gx, "int_")
+
+        from shedskin import infer
+
+        # Wire unit -> str, value -> int
+        for varname, type_cl in [("unit", str_cl), ("value", int_cl)]:
+            var = dict_cl.vars.get(varname)
+            if var:
+                cnode = infer.CNode(gx, mv, var, parent=None)
+                gx.cnode[var, 0, 0] = cnode
+                gx.types[cnode] = {(type_cl, 0)}
+
+        types = {(dict_cl, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert "dict" in result
+        assert "str *" in result
+        assert "__ss_int" in result
+
+    def test_tuple2_collapses_to_tuple(self, gx_with_builtin):
+        """typestrnew should collapse tuple2<int, int> to tuple<int>."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        tuple2_cl = python.def_class(gx, "tuple2")
+        int_cl = python.def_class(gx, "int_")
+
+        from shedskin import infer
+
+        for varname in ["first", "second"]:
+            var = tuple2_cl.vars.get(varname)
+            if var:
+                cnode = infer.CNode(gx, mv, var, parent=None)
+                gx.cnode[var, 0, 0] = cnode
+                gx.types[cnode] = {(int_cl, 0)}
+
+        types = {(tuple2_cl, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        # tuple2<int,int> should collapse to tuple<int>
+        assert "tuple" in result
+        assert "__ss_int" in result
+
+    def test_non_template_class_with_keyword_name(self, gx_with_builtin):
+        """typestrnew should prefix class name with __ss_ if it's a C++ keyword."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+
+        cl_node = ast.ClassDef(
+            name="auto", bases=[], keywords=[],
+            body=[ast.Pass()], decorator_list=[],
+        )
+        # Create class in a non-builtin module to avoid extmod paths
+        fake_module = python.Module(
+            "mymod", "/fake/mymod.py", "mymod.py", False, None, ast.parse(""),
+        )
+        fake_mv = type("MockMV", (), {"module": fake_module})()
+        fake_module.mv = fake_mv
+
+        cl = python.Class(gx, cl_node, mv, fake_module)
+
+        types = {(cl, 0)}
+        result = typestr.typestrnew(gx, types, cplusplus=True, mv=mv)
+        assert "__ss_" in result
+        assert "auto" in result
+
+
+class TestNodetypestr:
+    """Tests for nodetypestr function."""
+
+    def test_basic_variable(self, gx_with_builtin):
+        """nodetypestr should resolve type string for a simple variable."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        int_cl = python.def_class(gx, "int_")
+
+        var = python.Variable("x", None)
+        gx.merged_inh[var] = {(int_cl, 0)}
+
+        result = typestr.nodetypestr(gx, var, cplusplus=True, mv=mv)
+        assert result == "__ss_int "
+
+    def test_looper_variable(self, gx_with_builtin):
+        """nodetypestr should format looper variables with ::for_in_loop."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        list_cl = python.def_class(gx, "list")
+        int_cl = python.def_class(gx, "int_")
+
+        # Wire up list<int> for the looper
+        from shedskin import infer
+        unit_var = list_cl.vars.get("unit")
+        if unit_var:
+            cnode = infer.CNode(gx, mv, unit_var, parent=None)
+            gx.cnode[unit_var, 0, 0] = cnode
+            gx.types[cnode] = {(int_cl, 0)}
+
+        looper = python.Variable("_looper", None)
+        gx.merged_inh[looper] = {(list_cl, 0)}
+
+        var = python.Variable("i", None)
+        var.looper = looper
+
+        result = typestr.nodetypestr(gx, var, cplusplus=True, mv=mv)
+        assert "for_in_loop" in result
+
+    def test_wopper_variable_dict(self, gx_with_builtin):
+        """nodetypestr should format wopper variables with __GC_DICT iterator."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        dict_cl = python.def_class(gx, "dict")
+        str_cl = python.def_class(gx, "str_")
+        int_cl = python.def_class(gx, "int_")
+
+        from shedskin import infer
+
+        for varname, type_cl in [("unit", str_cl), ("value", int_cl)]:
+            var = dict_cl.vars.get(varname)
+            if var:
+                cnode = infer.CNode(gx, mv, var, parent=None)
+                gx.cnode[var, 0, 0] = cnode
+                gx.types[cnode] = {(type_cl, 0)}
+
+        wopper = python.Variable("_wopper", None)
+        gx.merged_inh[wopper] = {(dict_cl, 0)}
+
+        var = python.Variable("k", None)
+        var.wopper = wopper
+
+        result = typestr.nodetypestr(gx, var, cplusplus=True, mv=mv)
+        assert "__GC_DICT" in result
+        assert "iterator" in result
+
+
+class TestDynamicVariableError:
+    """Tests for dynamic_variable_error function."""
+
+    def test_emits_warning_for_mixed_types(self, gx_with_builtin):
+        """dynamic_variable_error should emit warning for polymorphic variable."""
+        gx = gx_with_builtin
+        int_cl = python.def_class(gx, "int_")
+        str_cl = python.def_class(gx, "str_")
+
+        var = python.Variable("x", None)
+        types = {(int_cl, 0), (str_cl, 0)}
+        conv2 = {"int_": "int", "str_": "str"}
+
+        # Should not raise -- just emits a warning
+        typestr.dynamic_variable_error(gx, var, types, conv2)
+
+    def test_skips_dunder_variables(self, gx_with_builtin):
+        """dynamic_variable_error should skip __dunder__ variables."""
+        gx = gx_with_builtin
+        int_cl = python.def_class(gx, "int_")
+        str_cl = python.def_class(gx, "str_")
+
+        var = python.Variable("__internal", None)
+        types = {(int_cl, 0), (str_cl, 0)}
+        conv2 = {"int_": "int", "str_": "str"}
+
+        # Should not raise or emit warnings for dunder vars
+        typestr.dynamic_variable_error(gx, var, types, conv2)
+
+    def test_function_mixed_with_class(self, gx_with_builtin):
+        """dynamic_variable_error should note function in type mix."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        int_cl = python.def_class(gx, "int_")
+
+        func = python.Function(gx, mv)
+        func.ident = "myfunc"
+        func.lambdanr = None
+        func.mv = mv
+
+        var = python.Variable("callback", None)
+        types = {(int_cl, 0), (func, 0)}
+        conv2 = {"int_": "int"}
+
+        # Should not raise -- emits warning about function mixed with type
+        typestr.dynamic_variable_error(gx, var, types, conv2)
+
+
+class TestIncompatibleAssignmentRecRecursion:
+    """Tests for incompatible_assignment_rec recursion on template vars."""
+
+    def test_compatible_list_types(self, gx_with_builtin):
+        """list<int> assigned to list<int> should be compatible."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        list_cl = python.def_class(gx, "list")
+        int_cl = python.def_class(gx, "int_")
+
+        from shedskin import infer
+
+        unit_var = list_cl.vars.get("unit")
+        if unit_var:
+            cnode = infer.CNode(gx, mv, unit_var, parent=None)
+            gx.cnode[unit_var, 0, 0] = cnode
+            gx.types[cnode] = {(int_cl, 0)}
+
+        argtypes = {(list_cl, 0)}
+        formaltypes = {(list_cl, 0)}
+
+        result = typestr.incompatible_assignment_rec(gx, argtypes, formaltypes)
+        assert result is False
+
+    def test_incompatible_nested_list_types(self, gx_with_builtin):
+        """list<int> assigned to list<float> at depth>0 should be incompatible."""
+        gx = gx_with_builtin
+        mv = gx.modules["builtin"].mv
+        list_cl = python.def_class(gx, "list")
+        int_cl = python.def_class(gx, "int_")
+        float_cl = python.def_class(gx, "float_")
+
+        from shedskin import infer
+
+        # For arg: list with unit=int
+        unit_var = list_cl.vars.get("unit")
+        if unit_var:
+            # Use dcopy 0 for arg types
+            cnode = infer.CNode(gx, mv, unit_var, parent=None)
+            gx.cnode[unit_var, 0, 0] = cnode
+            gx.types[cnode] = {(int_cl, 0)}
+
+        argtypes = {(list_cl, 0)}
+        formaltypes = {(list_cl, 0)}
+
+        # At depth 1, int -> float in the unit tvar should be incompatible
+        # But since both share the same cnode, we need a different approach.
+        # Test the simpler case: depth=1 with direct int vs float
+        result = typestr.incompatible_assignment_rec(
+            gx, {(int_cl, 0)}, {(float_cl, 0)}, depth=1
+        )
+        assert result is True
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

@@ -4,12 +4,33 @@
 
 import argparse
 import ast
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from shedskin.config import GlobalInfo
 from shedskin import graph, python, virtual
+
+
+def _make_call_node(attr_name="attr"):
+    """Create an ast.Call node for testing.
+
+    Includes a string constant arg so it works with __getattr__/__setattr__
+    paths that access node.args[0].value.
+    """
+    return ast.Call(
+        func=ast.Name(id="func", ctx=ast.Load()),
+        args=[ast.Constant(value=attr_name)],
+        keywords=[],
+    )
+
+
+def _make_non_builtin_module():
+    """Create a non-builtin python.Module for testing."""
+    return python.Module(
+        "test_mod", "/fake/test_mod.py", "test_mod.py",
+        False, None, ast.parse(""),
+    )
 
 
 @pytest.fixture
@@ -51,11 +72,11 @@ class TestUpgradeCl:
         child_cl.bases = [abstract_cl]
         abstract_cl.children = [child_cl]
 
-        mock_call = MagicMock()
+        call_node = _make_call_node()
         classes = {child_cl}
 
         # __getattr__ should not add to virtuals
-        virtual.upgrade_cl(gx, abstract_cl, mock_call, "__getattr__", classes)
+        virtual.upgrade_cl(gx, abstract_cl, call_node, "__getattr__", classes)
         assert "__getattr__" not in abstract_cl.virtuals
 
     def test_skip_builtin_module(self, gx_with_builtin):
@@ -66,11 +87,11 @@ class TestUpgradeCl:
         # Get a builtin class
         int_cl = python.def_class(gx, "int_")
 
-        mock_call = MagicMock()
+        call_node = _make_call_node()
         classes = set()
 
         # Should not crash on builtin classes
-        virtual.upgrade_cl(gx, int_cl, mock_call, "some_method", classes)
+        virtual.upgrade_cl(gx, int_cl, call_node, "some_method", classes)
         assert "some_method" not in int_cl.virtuals
 
     def test_registers_virtual_method(self, gx_with_builtin):
@@ -87,8 +108,7 @@ class TestUpgradeCl:
             decorator_list=[],
         )
         parent_cl = python.Class(gx, parent_node, mv, mv.module)
-        parent_cl.module = MagicMock()
-        parent_cl.module.builtin = False
+        parent_cl.module = _make_non_builtin_module()
 
         func_node = ast.FunctionDef(
             name="sound",
@@ -130,10 +150,10 @@ class TestUpgradeCl:
         child_func.inherited = None
         child_cl.funcs["sound"] = child_func
 
-        mock_call = MagicMock()
+        call_node = _make_call_node()
         classes = {child_cl}
 
-        virtual.upgrade_cl(gx, parent_cl, mock_call, "sound", classes)
+        virtual.upgrade_cl(gx, parent_cl, call_node, "sound", classes)
         assert "sound" in parent_cl.virtuals
         assert child_cl in parent_cl.virtuals["sound"]
 
@@ -150,8 +170,7 @@ class TestUpgradeCl:
             decorator_list=[],
         )
         parent_cl = python.Class(gx, parent_node, mv, mv.module)
-        parent_cl.module = MagicMock()
-        parent_cl.module.builtin = False
+        parent_cl.module = _make_non_builtin_module()
 
         # Child class with NO redefined method
         child_node = ast.ClassDef(
@@ -164,10 +183,10 @@ class TestUpgradeCl:
         child_cl = python.Class(gx, child_node, mv, mv.module)
         child_cl.bases = [parent_cl]
 
-        mock_call = MagicMock()
+        call_node = _make_call_node()
         classes = {child_cl}
 
-        virtual.upgrade_cl(gx, parent_cl, mock_call, "sound", classes)
+        virtual.upgrade_cl(gx, parent_cl, call_node, "sound", classes)
         assert "sound" not in parent_cl.virtuals
 
 
@@ -304,10 +323,6 @@ class TestSubclass:
 
         assert python.subclass(c_cl, gp_cl) is True
 
-
-def test_all():
-    """Verify module is importable for standalone execution."""
-    assert virtual is not None
 
 
 if __name__ == "__main__":

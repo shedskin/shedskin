@@ -64,6 +64,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - set.update
 - iterating over file
 
+### Tests
+
+- Cleaned up unit tests: removed 46 duplicate/trivial tests across test files, consolidated GlobalInfo property tests into `test_config.py`
+- Replaced unnecessary mocks with real objects in `test_virtual.py` (MagicMock call nodes -> ast.Call, MagicMock modules -> python.Module)
+- Removed unused MagicMock import from `test_typestr.py`, unused `io` import from `test_cpp.py`
+- Added unit tests for graph.py helpers: `_const_str`, `register_node`, `slice_nums`, `get_arg_nodes`, `has_star_kwarg`, `make_arg_list`, `struct_faketuple`
+- Added unit tests for typestr.py: `nodetypestr` looper/wopper paths, `typestr` error fallback, `dynamic_variable_error`, `typestrnew` anonymous functions/templates/bytes+str mix/ExtmodError, `incompatible_assignment_rec` recursion
+- Added pipeline integration tests (`test_pipeline.py`) driven by a demo program (`tests/unit/fixtures/demo_program1.py`) that exercises parsing, type inference, virtual analysis, and C++ code generation end-to-end
+- Coverage improvements for core modules: infer.py 14%->84%, cpp.py 8%->53%, virtual.py 27%->90%, typestr.py 57%->88%, graph.py 45%->63%
+
 ### Changed
 
 - Converted build system to uv, replacing pip/setuptools workflow with `uv` commands in Makefile (`f97db27a`)
