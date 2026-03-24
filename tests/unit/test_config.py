@@ -187,5 +187,9 @@ class TestUtilityFunctions:
 
 
 def test_all():
-    """Run all tests in this module."""
+    """Verify module is importable for standalone execution."""
+    assert GlobalInfo is not None
+
+
+if __name__ == "__main__":
     pytest.main([__file__, "-v"])
