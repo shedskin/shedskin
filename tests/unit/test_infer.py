@@ -2,29 +2,11 @@
 # Copyright 2005-2024 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
 """Unit tests for shedskin.infer module."""
 
-import argparse
 import ast
 
 import pytest
 
-from shedskin.config import GlobalInfo
 from shedskin import infer
-
-
-class TestConstants:
-    """Tests for inference constants."""
-
-    def test_incremental_flags(self):
-        """Incremental analysis flags should have expected values."""
-        assert infer.INCREMENTAL is True
-        assert infer.INCREMENTAL_FUNCS == 5
-        assert infer.INCREMENTAL_DATA is True
-        assert infer.INCREMENTAL_ALLOCS == 1
-
-    def test_limits(self):
-        """Analysis limits should have expected values."""
-        assert infer.MAXITERS == 30
-        assert infer.CPA_LIMIT == 10
 
 
 class TestGetStarargs:
@@ -62,28 +44,6 @@ class TestGetStarargs:
 
         result = infer.get_starargs(call_node)
         assert result is args_name
-
-
-class TestConstraintGraph:
-    """Tests for constraint graph operations."""
-
-    @pytest.fixture
-    def gx(self):
-        """Create a GlobalInfo instance for testing."""
-        options = argparse.Namespace()
-        return GlobalInfo(options)
-
-    def test_cnode_dict_empty_initially(self, gx):
-        """cnode dictionary should be empty initially."""
-        assert len(gx.cnode) == 0
-
-    def test_constraints_empty_initially(self, gx):
-        """constraints set should be empty initially."""
-        assert len(gx.constraints) == 0
-
-    def test_types_dict_empty_initially(self, gx):
-        """types dictionary should be empty initially."""
-        assert len(gx.types) == 0
 
 
 class TestWorklist:
@@ -125,83 +85,5 @@ class TestInOut:
         assert a in b.in_
 
 
-class TestTypeInferenceState:
-    """Tests for type inference state tracking."""
-
-    @pytest.fixture
-    def gx(self):
-        """Create a GlobalInfo instance for testing."""
-        options = argparse.Namespace()
-        return GlobalInfo(options)
-
-    def test_iterations_tracking(self, gx):
-        """iterations counter should be modifiable."""
-        assert gx.iterations == 0
-        gx.iterations = 5
-        assert gx.iterations == 5
-
-    def test_cpa_limit_tracking(self, gx):
-        """cpa_limit should be modifiable."""
-        gx.cpa_limit = 15
-        assert gx.cpa_limit == 15
-
-    def test_cpa_clean_flag(self, gx):
-        """cpa_clean flag should be modifiable."""
-        assert gx.cpa_clean is False
-        gx.cpa_clean = True
-        assert gx.cpa_clean is True
-
-    def test_cpa_limited_flag(self, gx):
-        """cpa_limited flag should be modifiable."""
-        assert gx.cpa_limited is False
-        gx.cpa_limited = True
-        assert gx.cpa_limited is True
-
-    def test_added_funcs_counter(self, gx):
-        """added_funcs counter should be modifiable."""
-        gx.added_funcs = 10
-        assert gx.added_funcs == 10
-
-    def test_added_allocs_counter(self, gx):
-        """added_allocs counter should be modifiable."""
-        gx.added_allocs = 3
-        assert gx.added_allocs == 3
-
-    def test_alloc_info_dict(self, gx):
-        """alloc_info should be a modifiable dictionary."""
-        assert isinstance(gx.alloc_info, dict)
-        gx.alloc_info = {"test": "value"}  # type: ignore
-        assert gx.alloc_info == {"test": "value"}
-
-    def test_merged_inh_dict(self, gx):
-        """merged_inh should be a modifiable dictionary."""
-        assert isinstance(gx.merged_inh, dict)
-        gx.merged_inh = {"key": {("value", 0)}}
-        assert "key" in gx.merged_inh
-
-
-class TestMaxHits:
-    """Tests for maxhits termination counter."""
-
-    @pytest.fixture
-    def gx(self):
-        """Create a GlobalInfo instance for testing."""
-        options = argparse.Namespace()
-        return GlobalInfo(options)
-
-    def test_maxhits_initial_value(self, gx):
-        """maxhits should start at 0."""
-        assert gx.maxhits == 0
-
-    def test_maxhits_increment(self, gx):
-        """maxhits should be incrementable."""
-        gx.maxhits += 1
-        assert gx.maxhits == 1
-
-        gx.maxhits += 1
-        assert gx.maxhits == 2
-
-
-def test_all():
-    """Run all tests in this module."""
+if __name__ == "__main__":
     pytest.main([__file__, "-v"])

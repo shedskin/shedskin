@@ -47,17 +47,53 @@ class TestGlobalInfo:
         """NamingContext properties should be accessible via gx."""
         assert isinstance(gx.cpp_keywords, set)
         assert len(gx.cpp_keywords) > 0
-        assert "int" in gx.cpp_keywords  # C++ keyword
         assert gx.ss_prefix == "__ss_"
         assert isinstance(gx.builtins, list)
-        assert "str_" in gx.builtins
+
+    def test_cpp_keywords_loaded(self, gx):
+        """C++ keywords should be loaded from illegal.txt."""
+        assert "int" in gx.cpp_keywords
+        assert "auto" in gx.cpp_keywords
+        assert "const" in gx.cpp_keywords
+        assert "virtual" in gx.cpp_keywords
+        assert "template" in gx.cpp_keywords
+
+    def test_builtins_list(self, gx):
+        """Builtins list should contain all expected types in order."""
+        expected = [
+            "none",
+            "str_",
+            "bytes_",
+            "float_",
+            "int_",
+            "class_",
+            "list",
+            "tuple",
+            "tuple2",
+            "dict",
+            "set",
+            "frozenset",
+            "bool_",
+        ]
+        assert gx.builtins == expected
 
     def test_build_config_property_delegation(self, gx):
         """BuildConfiguration properties should be accessible via gx."""
         assert gx.bounds_checking is True
         assert gx.wrap_around_check is True
+        assert gx.assertions is True
         assert gx.executable_product is True
         assert gx.pyextension_product is False
+        assert gx.nogc is False
+        assert gx.backtrace is False
+
+    def test_build_config_numeric_type_defaults(self, gx):
+        """Numeric type width flags should default to False."""
+        assert gx.int32 is False
+        assert gx.int64 is False
+        assert gx.int128 is False
+        assert gx.float32 is False
+        assert gx.float64 is False
 
     def test_build_config_setters(self, gx):
         """BuildConfiguration properties should be settable."""
@@ -79,7 +115,6 @@ class TestGlobalInfo:
 
     def test_entity_registry_mutable(self, gx):
         """EntityRegistry collections should be mutable."""
-        # These are mutable collections, test we can add to them
         initial_len = len(gx.allfuncs)
         gx.allfuncs.add("test_func")  # type: ignore
         assert len(gx.allfuncs) == initial_len + 1
@@ -186,6 +221,5 @@ class TestUtilityFunctions:
         assert (pkg_path / "__init__.py").exists()
 
 
-def test_all():
-    """Run all tests in this module."""
+if __name__ == "__main__":
     pytest.main([__file__, "-v"])

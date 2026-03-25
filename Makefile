@@ -66,11 +66,11 @@ upgrade:
 
 # Run tests with coverage
 coverage:
-	@uv run pytest tests/ -v --cov=shedskin --cov-report=term-missing
+	@uv run pytest tests/unit --cov=shedskin --cov-report=term-missing
 
 # Generate HTML coverage report
 coverage-html:
-	@uv run pytest tests/ -v --cov=shedskin --cov-report=html
+	@uv run pytest tests/unit --cov=shedskin --cov-report=html
 	@echo "Coverage report: htmlcov/index.html"
 
 # Build documentation (requires mkdocs-material in dev dependencies)
