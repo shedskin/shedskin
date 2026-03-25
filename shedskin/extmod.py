@@ -265,7 +265,7 @@ class ExtensionModule:
             write("    virtual PyObject *__to_py__();")
         else:
             for n in cl.module.name_list:
-                write("namespace __%s__ { /* XXX */" % n)
+                write("namespace __%s__ {" % n)
             write("")
 
             write("PyObject *%s::__to_py__() {" % self.gv.cpp_name(cl))
@@ -289,7 +289,7 @@ class ExtensionModule:
                 write("} // module namespace")
             write("")
 
-            write("namespace __shedskin__ { /* XXX */\n")
+            write("namespace __shedskin__ {\n")
 
             write(
                 "template<> %s::%s *__to_ss(PyObject *p) {"
@@ -468,7 +468,7 @@ class ExtensionModule:
             self.do_extmod_class(cl)
 
         for n in self.gv.module.name_list:
-            write("namespace __%s__ { /* XXX */" % n)
+            write("namespace __%s__ {" % n)
 
         # global functions
         funcs = self.supported_funcs(self.gv.module.mv.funcs.values())
@@ -543,7 +543,7 @@ class ExtensionModule:
         """Generates a python c-api extension type."""
         write = self.write
         for n in cl.module.name_list:
-            write("namespace __%s__ { /* XXX */" % n)
+            write("namespace __%s__ {" % n)
         write("")
 
         # determine methods, vars to expose
@@ -749,7 +749,7 @@ class ExtensionModule:
         for cl in self.exported_classes():
             write('extern "C" PyTypeObject %sObjectType;' % clname(cl))
 
-        write("namespace __shedskin__ { /* XXX */\n")
+        write("namespace __shedskin__ {\n")
         for cl in self.exported_classes():
             write(
                 "template<> %s::%s *__to_ss(PyObject *p);"
