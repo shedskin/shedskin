@@ -179,10 +179,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             output_file.parent.mkdir(exist_ok=True)
         return open(output_file, mode)
 
-    def insert_consts(self, declare: bool) -> None:  # XXX ugly
+    def insert_consts(self, declare: bool) -> None:
         """Insert constant declarations into the output file"""
-        if not self.consts:
-            return
         self.filling_consts = True
 
         if declare:
@@ -192,14 +190,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         with self.get_output_file(ext=suffix, mode="r") as f:
             lines = f.readlines()
-        newlines = []
-        j = -1
-        for i, line in enumerate(lines):
-            if line.startswith("namespace ") and "XXX" not in line:  # XXX
-                j = i + 1
-            newlines.append(line)
 
-            if i == j:
+        newlines = []
+        for line in lines:
+            # add declarations to hpp/cpp
+            if line.strip() == '// __ss_constants__':
                 pairs = []
                 done = set()
                 for node, name in self.consts.items():
@@ -215,18 +210,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             ts = "extern " + ts
                         pairs.append((ts, name))
                         done.add(name)
-
                 newlines.extend(self.group_declarations(pairs))
                 newlines.append("\n")
 
-        newlines2 = []
-        j = -1
-        for i, line in enumerate(newlines):
-            if line.startswith("void __init() {"):
-                j = i
-            newlines2.append(line)
-
-            if i == j:
+            # initialize constants in __init
+            elif suffix == ".cpp"and line.startswith("void __init() {"):
+                newlines.append(line)
                 todo: dict[int, ast.AST] = {}
                 for node, name in self.consts.items():
                     if int(name[6:]) not in todo:
@@ -254,12 +243,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             self.visit(
                                 const_node, infer.inode(self.gx, const_node).parent
                             )
-                        newlines2.append(self.line + ";\n")
-
-                newlines2.append("\n")
+                        newlines.append(self.line + ";\n")
+            else:
+                newlines.append(line)
 
         with self.get_output_file(ext=suffix, mode="w") as f:
-            f.writelines(newlines2)
+            f.writelines(newlines)
+
         self.filling_consts = False
 
     def insert_extras(self, suffix: str) -> None:
@@ -284,7 +274,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if _module.builtin:
                 continue
             for name in _module.name_list:
-                lines.append("namespace __%s__ { /* XXX */\n" % name)
+                lines.append("namespace __%s__ {\n" % name)
             for cl in _module.mv.classes.values():
                 lines.append("class %s;\n" % self.cpp_name(cl))
             for name in _module.name_list:
@@ -468,6 +458,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print("using namespace __shedskin__;")
         for n in self.module.name_list:
             self.print("namespace __" + n + "__ {")
+        self.print("// __ss_constants__");
         self.print()
 
         # class declarations
@@ -568,7 +559,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if "__ge__" not in cl.funcs and "__le__" in cl.funcs:
                 ge_cls.append(cl)
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
-            self.print("namespace __shedskin__ { /* XXX */")
+            self.print("namespace __shedskin__ {")
             for cl in cmp_cls:
                 t = "__%s__::%s *" % (self.mv.module.ident, self.cpp_name(cl))
                 self.print("template<> inline __ss_int __cmp(%sa, %sb) {" % (t, t))
@@ -612,6 +603,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- namespace fun
         for n in self.module.name_list:
             self.print("namespace __" + n + "__ {")
+        self.print("// __ss_constants__");
         self.print()
 
         for child in node.body:
