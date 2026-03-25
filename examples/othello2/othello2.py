@@ -365,6 +365,9 @@ def vs_cpu_ugi(max_depth):
         if line == 'ugi':
             sys.stdout.write('ugiok\n')
 
+        elif line == 'quit':
+            sys.exit(0)
+
         elif line == 'isready':
             sys.stdout.write('readyok\n')
 
@@ -455,8 +458,45 @@ def speed_test(max_depth):
     print('%d nodes in %.2f seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
 
+def do_perft(state, color, cur_max_depth):
+    moves = possible_moves(state, color)
+
+    if cur_max_depth == 1:
+        n = moves.bit_count()
+        return 1 if n == 0 else n
+
+    opp_color = color ^ 1
+    new_max_depth = cur_max_depth - 1
+    if moves == 0:
+        if possible_moves(state, opp_color) == 0:
+            return 1
+        return do_perft(state, opp_color, new_max_depth)
+
+    count = 0
+    for move in range(64):
+        if moves & (1 << move):
+            new_state = [state[0], state[1]]
+            do_move(new_state, color, move)
+            count += do_perft(new_state, opp_color, new_max_depth)
+    return count
+
+
+def vs_perft(max_depth):
+    global NODES
+
+    for i in range(1, max_depth + 1):
+        board = empty_board()
+        state = parse_state(board)
+        color = BLACK
+
+        t0 = time.time()
+        nodes = do_perft(state, color, i)
+        t1 = time.time()-t0
+        print('%d] %d nodes in %.2f seconds (%.2f/second)' % (i, nodes, t1, nodes/t1))
+
+
 def main():
-    max_depth = 10
+    max_depth = 12
     mode = None
 
     for i, arg in enumerate(sys.argv[1:]):
@@ -468,6 +508,8 @@ def main():
             mode = 'ugi'
         elif arg == '--cli':
             mode = 'cli'
+        elif arg == '--perft':
+            mode = 'perft'
 
     if mode == 'nboard':
         vs_cpu_nboard(max_depth)
@@ -475,6 +517,8 @@ def main():
         vs_cpu_ugi(max_depth)
     elif mode == 'cli':
         vs_cpu_cli(max_depth)
+    elif mode == 'perft':
+        vs_perft(max_depth)
     else:
         speed_test(max_depth)
 
