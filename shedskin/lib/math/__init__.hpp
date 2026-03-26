@@ -73,8 +73,11 @@ inline __ss_float log10(__ss_float x) {
 }
 
 inline __ss_float sqrt(__ss_float x) {
+    if(x < 0.0)
+        throw new ValueError(__add_strs(2, new str("expected a nonnegative input, got "), __str(x)));
     return std::sqrt(x);
 }
+
 inline __ss_float cbrt(__ss_float x) {
     return std::cbrt(x);
 }
@@ -136,6 +139,10 @@ inline __ss_float tanh(__ss_float x) {
 }
 
 inline __ss_float pow(__ss_float x, __ss_float y) {
+    if(x < 0.0 && std::floor(y) != y)
+        throw new ValueError(new str("math domain error"));
+    if(x == 0.0 && y < 0.0)
+        throw new ValueError(new str("math domain error"));
     return std::pow(x,y);
 }
 
