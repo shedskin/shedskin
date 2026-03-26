@@ -139,6 +139,8 @@ template<class T> void *array<T>::fromstring(bytes *s) {
 
 template<class T> void *array<T>::frombytes(bytes *s) {
     size_t len = s->unit.size();
+    if(len % sizeof(T) != 0)
+        throw new ValueError(new str("bytes length not a multiple of item size"));
     if(len == 1)
         this->units.push_back(s->unit[0]);
     else {
