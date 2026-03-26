@@ -280,3 +280,4 @@ WNOHANG
 W_OK
 WUNTRACED
 X_OK
+issubnormal
