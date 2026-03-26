@@ -30,6 +30,18 @@ def test_fsum():
         # print(math.fsum(vals), expected)
 
 
+def test_sqrt():
+    assert math.sqrt(0.0) == 0.0
+    assert math.sqrt(16) == 4.0
+
+    error = ''
+    try:
+        math.sqrt(-1)
+    except ValueError as e:
+        error = str(e)
+    assert error.startswith('expected a nonnegative input')
+
+
 def test_pow():
     assert int(math.pow(2, 3)) == 8
     assert math.pow(2.0, 3.0) == 8.0
@@ -37,6 +49,20 @@ def test_pow():
     assert math.pow(2.0, 3) == 8.0
     assert math.pow(2, 3) == 8.0
     assert math.pow(1, 1000) == 1.0
+
+    error = ''
+    try:
+        math.pow(-1, -0.5)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'math domain error'
+
+    error = ''
+    try:
+        math.pow(0, -1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'math domain error'
 
 
 def test_math():
@@ -213,6 +239,7 @@ def test_math_integer():
 def test_all():
     test_fsum()
     test_pow()
+    test_sqrt()
     test_math()
     test_prod()
     test_isclose()
