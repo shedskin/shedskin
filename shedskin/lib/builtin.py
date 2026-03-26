@@ -265,8 +265,6 @@ class list(pyseq):
         return self
     def __slice__(self, x, lower, upper, step):
         return self
-    def __delslice__(self, a, b):
-        pass
     def __setslice__(self, x, lower, upper, step, r):
         self.unit = r.unit
     def __delete__(self, x, a=1, b=1, s=1):
