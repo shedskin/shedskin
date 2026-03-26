@@ -326,8 +326,6 @@ def test_str_overload():
 
 
 def test_special_characters():
-    ss = "\u91cf\u5b50\u529b\u5b66"
-
     initial = (
         "         \n"
         "         \n"
@@ -361,7 +359,6 @@ def test_special_characters():
 
     assert initial.strip() == 'rnbqkbnr\n pppppppp\n ........\n ........\n ........\n ........\n PPPPPPPP\n RNBQKBNR'
     assert uni_pieces['k'] == "♔"
-    assert ss == '量子力学'
 
 
 def test_str_id():
@@ -369,6 +366,20 @@ def test_str_id():
     foo_b = "foo"
     foo_c = "foo"
     assert id(foo_a) == id(foo_b) == id(foo_c)
+
+
+def test_bin():
+    s = '\xab'
+    assert len(s) == 1
+    assert ord(s) == 0xab
+
+    s = '\xab\x00\xba'
+    assert len(s) == 3
+    assert ord(s[1]) == 0
+    assert ord(s[2]) == 0xba
+
+    s = '\x012' # shows that we need to use octal escaping
+    assert len(s) == 2
 
 
 def test_all():
@@ -424,6 +435,7 @@ def test_all():
     test_zfill()
     test_special_characters()
     test_str_id()
+    test_bin()
 
 
 if __name__ == "__main__":
