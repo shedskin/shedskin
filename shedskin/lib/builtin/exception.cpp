@@ -55,6 +55,8 @@ void __throw_stop_iteration() {
     throw new StopIteration();
 }
 
+/* BaseException */
+
 BaseException::BaseException(str *msg) {
     __init__(msg);
 
@@ -69,4 +71,26 @@ str *BaseException::__str__() {
 
 str *BaseException::__repr__() {
     return __add_strs(4, this->__class__->__name__, new str("('"), args->__getitem__(0), new str("')"));
+}
+
+/* SystemExit */
+
+SystemExit::SystemExit(__ss_int c) {
+        this->__class__ = cl_systemexit;
+        this->code = c;
+        this->message = __str(this->code);
+        this->show_message = 0;
+}
+
+SystemExit::SystemExit() {
+        this->__class__ = cl_systemexit;
+        this->code = 0;
+        this->message = __str(this->code);
+        this->show_message = 0;
+}
+
+SystemExit::SystemExit(str *msg) : BaseException(msg) {
+        this->__class__ = cl_systemexit;
+        this->code = 1;
+        this->show_message = 1;
 }

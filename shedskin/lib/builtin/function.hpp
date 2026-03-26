@@ -15,7 +15,13 @@ template<> inline __ss_int __int(__ss_int i) { return i; }
 template<> inline __ss_int __int(int i) { return i; }
 template<> inline __ss_int __int(str *s) { return __int(s, 10); }
 template<> inline __ss_int __int(__ss_bool b) { return b.value; }
-template<> inline __ss_int __int(__ss_float d) { return (__ss_int)d; }
+template<> inline __ss_int __int(__ss_float d) {
+    if(std::isnan(d))
+        throw new ValueError(new str("cannot convert float NaN to integer"));
+    if(!std::isfinite(d))
+        throw new OverflowError(new str("cannot convert float infinity to integer"));
+    return (__ss_int)d;
+}
 
 /* float */
 
