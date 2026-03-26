@@ -57,18 +57,26 @@ inline __ss_float exp2(__ss_float x) {
 }
 
 inline __ss_float log(__ss_float x) {
+    if(x <= 0)
+        throw new ValueError(new str("math domain error"));
     return std::log(x);
 }
 
 inline __ss_float log2(__ss_float x) {
+    if(x <= 0)
+        throw new ValueError(new str("math domain error"));
     return std::log2(x);
 }
 
 inline __ss_float log(__ss_float x, __ss_float base) {
+    if(x <= 0)
+        throw new ValueError(new str("math domain error"));
     return std::log(x) / std::log(base);
 }
 
 inline __ss_float log10(__ss_float x) {
+    if(x <= 0)
+        throw new ValueError(new str("math domain error"));
     return std::log10(x);
 }
 
