@@ -165,7 +165,7 @@ str *bytes::__repr__() {
     return new str(ss.str().c_str());
 }
 
-long bytes::__hash__() {
+long bytes::__hash__() { // TODO check cpython, change -1 to const?
     if(!frozen)
         throw new TypeError(new str("unhashable type: 'bytearray'"));
 

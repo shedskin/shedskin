@@ -173,10 +173,11 @@ def test_frozendict():
 
     # hash
     f = frozendict({20: '30'})
-    t = (g, f)
-    u = (f, g)
-    assert t == t
-    assert t != u
+    s = set([f, f])
+    assert len(s) == 1
+    t = set([f])
+    assert t == s
+    assert hash(f) != -1
 
     # copy
     j = g.copy()

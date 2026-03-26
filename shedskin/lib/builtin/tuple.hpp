@@ -223,7 +223,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
     return c;
 }
 
-template<class T> long tuple2<T, T>::__hash__() {
+template<class T> long tuple2<T, T>::__hash__() { // TODO check current cpython.. change -1 result to some const also I guess
     long seed = 0;
     size_t sz = this->units.size();
     for(size_t i = 0; i<sz; i++)
