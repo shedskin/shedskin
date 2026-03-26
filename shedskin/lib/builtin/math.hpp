@@ -349,7 +349,7 @@ namespace __int___ {
         return n;
     }
 
-    inline __ss_int from_bytes(pyiter<int> *p, str* byteorder=0, __ss_bool __ss_signed=False) {
+    inline __ss_int from_bytes(pyiter<__ss_int> *p, str* byteorder=0, __ss_bool __ss_signed=False) {
         return from_bytes(__bytes(p), byteorder, __ss_signed);
     }
 
