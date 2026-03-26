@@ -491,7 +491,7 @@ str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
-long str::__hash__() {
+long str::__hash__() { // TODO check cpython, check for -1 result?
     if (hash != -1)
         return hash;
 

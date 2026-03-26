@@ -273,15 +273,13 @@ template<class T> long set<T>::__hash__() {
     if (hash != -1)
         return hash;
 
-    // element order does not matter!
-
     long hash_ = 1927868237L;
 
     hash_ *= __len__() + 1;
 
     for (const auto& key : gcs) {
         long h = hasher<T>(key);
-        hash_ ^= (h ^ (h << 16) ^ 89869747L)  * 3644798167u;
+        hash_ ^= hash_shuffle_bits(h);
     }
     hash_ = hash_ * 69069L + 907133923L;
     if (hash_ == -1)
