@@ -347,6 +347,17 @@ def test_fromhex():
     assert bytes.fromhex('aabb  \tcc \n') == b'\xaa\xbb\xcc'
 
 
+def test_bin():
+    s = b'\xab'
+    assert len(s) == 1
+    assert s[0] == 0xab
+
+    s = b'\xab\x00\xba'
+    assert len(s) == 3
+    assert s[1] == 0
+    assert s[2] == 0xba
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -397,6 +408,7 @@ def test_all():
     test_iadd_imul()
     test_hex()
     test_fromhex()
+    test_bin()
 
 
 if __name__ == "__main__":
