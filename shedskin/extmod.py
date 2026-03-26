@@ -168,13 +168,13 @@ class ExtensionModule:
                     )
         return supported
 
-    def has_method(self, cl: "python.Class", name: str) -> bool:  # XXX shared.py
+    def has_method(self, cl: "python.Class", name: str) -> bool:  # TODO move func-supported checks here
         """Check if a class has a method"""
         return (
             name in cl.funcs
             and not cl.funcs[name].invisible
             and not cl.funcs[name].inherited
-            and infer.called(cl.funcs[name])
+            and infer.called(cl.funcs[name])  # TODO inhcpa?
         )
 
     def do_add_globals(self, classes: List["python.Class"], ssmod: str) -> None:
@@ -688,12 +688,17 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         if (
-            self.has_method(cl, "__iter__") and not cl.funcs["__iter__"].isGenerator
+            self.has_method(cl, "__iter__")
+            and cl.funcs["__iter__"] in funcs
+            and not cl.funcs["__iter__"].isGenerator
         ):  # TODO what if not called? also for other slots
             write("    (PyObject *(*)(PyObject *))%s___iter__," % clname(cl))
         else:
             write("    0,")
-        if self.has_method(cl, "__next__"):
+        if (
+            self.has_method(cl, "__next__")
+            and cl.funcs["__next__"] in funcs
+        ):
             write("    (PyObject *(*)(PyObject *))%s___next__," % clname(cl))
         else:
             write("    0,")

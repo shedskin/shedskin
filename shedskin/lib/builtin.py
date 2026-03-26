@@ -627,8 +627,8 @@ class bytes_(pyseq):
 
 class dict(pyiter):
     @classmethod
-    def fromkeys(cls, l, b=None):  # TODO iterable?
-        return {l.unit: b}
+    def fromkeys(cls, l, b=None):
+        return {iter(l).__next__(): b}
 
     def __initdict__(self, d):
         self.__setunit__(d.unit, d.value)
@@ -718,8 +718,8 @@ class dict(pyiter):
 
 class frozendict(dict):
     @classmethod
-    def fromkeys(cls, l, b=None):  # TODO iterable?
-        return frozendict({l.unit: b})
+    def fromkeys(cls, l, b=None):
+        return frozendict({iter(l).__next__(): b})
 
     def copy(self):
         return frozendict({self.unit: self.value})
