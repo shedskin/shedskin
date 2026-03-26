@@ -306,23 +306,10 @@ class SystemExit : public BaseException {
 public:
     int code;
     int show_message;
-    SystemExit(__ss_int c) {
-        this->__class__ = cl_systemexit;
-        this->code = c;
-        this->message = __str(this->code);
-        this->show_message = 0;
-    }
-    SystemExit() {
-        this->__class__ = cl_systemexit;
-        this->code = 0;
-        this->message = __str(this->code);
-        this->show_message = 0;
-    }
-    SystemExit(str *msg) : BaseException(msg) {
-        this->__class__ = cl_systemexit;
-        this->code = 1;
-        this->show_message = 1;
-    }
+    SystemExit();
+    SystemExit(__ss_int c);
+    SystemExit(str *msg);
+
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
 #endif
