@@ -400,5 +400,22 @@ inline __ss_bool isclose(__ss_float a, __ss_float b, __ss_float rel_tol=1e-09, _
     return __mbool(diff <= abs_tol || diff <= fabs(rel_tol * a) || diff <= fabs(rel_tol * b));
 }
 
+
+inline __ss_float fmax(__ss_float x, __ss_float y) {
+    return std::fmax(x, y);
+}
+
+inline __ss_float fmin(__ss_float x, __ss_float y) {
+    return std::fmin(x, y);
+}
+
+inline __ss_bool isnormal(__ss_float x) {
+    return __mbool(std::isnormal(x));
+}
+
+inline __ss_bool __ss_issubnormal(__ss_float x) {
+    return __mbool(std::fpclassify(x) == FP_SUBNORMAL);
+}
+
 } // module namespace
 #endif

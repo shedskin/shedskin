@@ -73,6 +73,12 @@ def sumprod(p, q):
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return True
 
+def fmax(x, y): return 1.0
+def fmin(x, y): return 1.0
+
+def isnormal(x): return True
+def issubnormal(x): return True
+
 # soft deprecated (moved to math.integer)
 def comb(n, k): return 1
 def factorial(x): return 1
