@@ -1,4 +1,4 @@
-/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifdef SS_DECL
 
@@ -988,13 +988,22 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* round */
 
+inline __ss_float ___round(__ss_float x) {
+    __ss_float f = std::floor(x);
+    __ss_float diff = x - f;
+
+    if (diff < 0.5) return f;
+    if (diff > 0.5) return f + 1.0;
+
+    // Tie-break: round to the nearest EVEN integer
+    return (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+}
+
 static inline __ss_float __portableround(__ss_float x) {
     if(x<0) return ceil(x-0.5);
     return floor(x+0.5);
 }
-inline __ss_float ___round(__ss_float a) {
-    return __portableround(a);
-}
+
 inline __ss_float ___round(__ss_float a, int n) {
     return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
 }
