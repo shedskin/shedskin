@@ -3137,9 +3137,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             parent_constr,
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
-        target: Union[
-            "python.Function", "python.Class"
-        ]  # TODO should be one of the two
+        target: "python.Function"
         target = funcs[0]  # XXX
 
         swap_env = False

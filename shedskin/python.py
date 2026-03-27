@@ -268,19 +268,23 @@ class Function:
         mv: "graph.ModuleVisitor",
         node: Optional[ast.FunctionDef] = None,
         parent: Optional[AllParent] = None,
-        inherited_from: Optional[
-            Union["Class", "Function"]
-        ] = None,  # TODO should be one
+        inherited_from: Optional["Function"] = None,
     ):
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
         self.inherited: Optional[ast.FunctionDef] = None
         self.ident: str
+        self.parent = parent
         if node:
             ident = node.name
-            if inherited_from and isinstance(parent, Class) and ident in parent.funcs:
-                ident += inherited_from.ident + "__"  # XXX ugly
+            if (inherited_from
+                and inherited_from.parent
+                and isinstance(parent, Class)
+                and ident in parent.funcs
+            ):
+                # keep overloaded functions around
+                ident += inherited_from.parent.ident + "__"
             self.ident = ident
             self.formals = extract_argnames(node.args)
             self.flags = None
@@ -289,7 +293,6 @@ class Function:
         self.retnode: Optional["infer.CNode"] = None
         self.lambdanr: Optional[int] = None
         self.lambdawrapper = False
-        self.parent = parent
         self.constraints: set[Tuple["infer.CNode", "infer.CNode"]] = set()
         self.vars: dict[str, Variable] = {}
         self.globals: List[str] = []
