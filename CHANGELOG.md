@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updated `csv` module support with changes in 3.x
     - Added support for `collections.defaultdict` | and |= operators (3.9)
     - Added support for frozendict (3.15)
-    - Added support for `math.{fmax, fmin, isnormal, issubnormal}`
+    - Added support for `math.{fmax, fmin, isnormal, issubnormal}` (3.15)
+    - Added support for `float.hex/fromhex` (3.0)
 - Added/improved support for `__iter__` and `__call__` methods
-- Added support for `float.hex/fromhex`
 - Added support for `__complex__` method
 
 ### Fixed
