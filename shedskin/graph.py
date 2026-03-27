@@ -695,7 +695,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     inherit_rec(self.gx, func.node, func_copy, func.mv)
                     tempmv, mv = getmv(), func.mv
                     setmv(mv)
-                    self.visit_FunctionDef(func_copy, cl, inherited_from=ancestor)
+                    self.visit_FunctionDef(func_copy, cl, inherited_from=func)
                     mv = tempmv
                     setmv(mv)
 
@@ -984,7 +984,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         node: ast.FunctionDef,
         parent: Optional["python.Class"] = None,
         is_lambda: bool = False,
-        inherited_from: Optional["python.Class"] = None,
+        inherited_from: Optional["python.Function"] = None,
     ) -> None:
         """Visit a function definition"""
 
