@@ -236,6 +236,43 @@ def test_math_integer():
     assert math.integer.isqrt(18) == 4
 
 
+def test_fmax_fmin():
+    # Standard comparisons
+    assert math.fmax(10.5, 20.5) == 20.5
+    assert math.fmax(-1.0, -2.0) == -1.0
+    assert math.fmin(10.5, 20.5) == 10.5
+    assert math.fmin(-1.0, -2.0) == -2.0
+
+    # Handling NaN (fmax/fmin return the non-NaN value if one is NaN)
+    nan = float('nan')
+    assert math.fmax(5.0, nan) == 5.0
+    assert math.fmin(5.0, nan) == 5.0
+
+    # Both NaN should return NaN (nan != nan, so we check with isnan)
+    assert math.isnan(math.fmax(nan, nan))
+    assert math.isnan(math.fmin(nan, nan))
+
+
+def test_classification():
+    # Normal numbers
+    assert math.isnormal(1.0) == True
+    assert math.isnormal(-123.456) == True
+
+    # Non-normal numbers (Zero, Inf, NaN)
+    assert math.isnormal(0.0) == False
+    assert math.isnormal(float('inf')) == False
+    assert math.isnormal(float('nan')) == False
+
+    # Subnormal numbers
+    # Smallest normal double is ~2.22e-308
+    sub = 1e-308 / 100.0
+    assert math.issubnormal(sub) == True
+    assert math.isnormal(sub) == False
+
+    # Zero is NOT subnormal
+    assert math.issubnormal(0.0) == False
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -246,6 +283,8 @@ def test_all():
     test_dist()
     test_sumprod()
     test_math_integer()
+    test_fmax_fmin()
+    test_classification()
 
 
 if __name__ == '__main__':
