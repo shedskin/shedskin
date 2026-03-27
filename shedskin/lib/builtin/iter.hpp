@@ -1,4 +1,4 @@
-/* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -52,5 +52,11 @@
         if (__ ## temp->__eof() and len(l) == 0) \
             break;
 
-#define END_FOR }
+#define FOR_IN_SLICE(e, l, a, b, t, u, v, n) \
+    __ ## t = l; \
+    __ ## u = __wrap(l, a); \
+    __ ## v = __wrap(l, b); \
+    for(__ ## n = __ ## u; (unsigned int)__ ## n < __ ## v; __ ## n ++) { \
+        e = (__ ## t)->units[__ ## n];
 
+#define END_FOR }
