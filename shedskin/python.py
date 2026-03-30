@@ -432,7 +432,9 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
 
 
 def lookup_class_module(
-    objexpr: ast.AST, mv: "graph.ModuleVisitor", parent: Optional[AllParent]
+    objexpr: ast.AST,
+    mv: "graph.ModuleVisitor",
+    parent: Optional[AllParent]
 ) -> Tuple[Optional["Class"], Optional["Module"]]:
     """Find the class and module of an expression"""
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
@@ -443,7 +445,8 @@ def lookup_class_module(
 
 
 def lookup_func(
-    node: ast.AST, mv: "graph.ModuleVisitor"
+    node: ast.AST,
+    mv: "graph.ModuleVisitor"
 ) -> Optional["Function"]:  # XXX lookup_var first?
     """Find a function by name"""
     if isinstance(node, ast.Name):
@@ -461,7 +464,8 @@ def lookup_func(
 
 
 def lookup_class(
-    node: ast.AST, mv: "graph.ModuleVisitor"
+    node: ast.AST,
+    mv: "graph.ModuleVisitor"
 ) -> Optional["Class"]:  # XXX lookup_var first?
     """Find a class by name"""
     if isinstance(node, ast.Name):

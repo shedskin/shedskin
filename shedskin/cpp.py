@@ -1305,24 +1305,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Visit a raise node"""
         exc = node.exc
         assert exc
-
-        cl = None  # XXX sep func
-        t = [t[0] for t in self.mergeinh[exc]]
-        if len(t) == 1:
-            cl = t[0]
         self.start("throw (")
-
-        # --- raise class  # TODO lookup_class?
-        if isinstance(exc, ast.Name) and not python.lookup_var(exc.id, func, self.mv):
-            self.append("new %s()" % exc.id)
-
-        # --- raise instance
-        elif (
-            isinstance(cl, python.Class)
-            and cl.mv.module.ident == "builtin"
-            and not [a for a in cl.ancestors_upto(None) if a.ident == "BaseException"]
-        ):
-            self.append("new Exception()")
+        cl, module = python.lookup_class_module(exc, self.mv, func)
+        if cl:
+            self.visitm("new ", self.namer.namespace_class(cl), "()", func)
         else:
             self.visit(exc, func)
         self.eol(")")
