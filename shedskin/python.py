@@ -18,7 +18,7 @@ The type system uses these classes to:
 3. Generate appropriate C++ code
 
 Major Features:
-- Full class hierarchy modeling with multiple inheritance
+- Full class hierarchy modeling (no multiple inheritance)
 - Function overloading and polymorphism support
 - Module import system and dependency tracking
 - Static vs instance method handling
@@ -176,7 +176,6 @@ class Class(PyObject):
 
     def ancestors(self, inclusive: bool = False) -> set["Class"]:
         """Get the ancestors of a class"""
-        # XXX attribute (faster)
         a = set(self.bases)
         changed = 1
         while changed:
@@ -197,14 +196,11 @@ class Class(PyObject):
             result.append(a)
             if not a.bases:
                 break
-            if len(a.bases) > 1:  # XXX multiple inheritance quick hack
-                result = list(set(result) | set(a.bases))
             a = a.bases[0]
         return result
 
     def descendants(self, inclusive: bool = False) -> set["Class"]:
         """Get the descendants of a class"""
-        # XXX attribute (faster)
         a = set()
         if inclusive:
             a.add(self)
@@ -418,19 +414,6 @@ def find_module(
     return absolute_name, filename, relative_filename, builtin
 
 
-# XXX ugly: find ancestor class that implements function 'ident'
-def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
-    """Find the class that implements a given function"""
-    while cl:
-        if ident in cl.funcs and not cl.funcs[ident].inherited:
-            return cl.ident
-        if cl.bases:
-            cl = cl.bases[0]
-        else:
-            break
-    return None
-
-
 def lookup_class_module(
     objexpr: ast.AST, mv: "graph.ModuleVisitor", parent: Optional[AllParent]
 ) -> Tuple[Optional["Class"], Optional["Module"]]:
@@ -581,4 +564,4 @@ def subclass(a: Class, b: Class) -> bool:
     if b in a.bases:
         return True
     else:
-        return bool(a.bases) and subclass(a.bases[0], b)  # XXX mult inh
+        return bool(a.bases) and subclass(a.bases[0], b)

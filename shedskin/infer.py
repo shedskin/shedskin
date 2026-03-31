@@ -652,22 +652,23 @@ def analyze_callfunc(
             # ancestor call
             elif ident not in ["__setattr__", "__getattr__"] and cnode.parent:
                 thiscl = cnode.parent.parent
-                if isinstance(thiscl, python.Class) and cl.ident in (
-                    x.ident for x in thiscl.ancestors_upto(None)
-                ):  # XXX
-                    implementor = python.lookup_implementor(cl, ident)
-                    if implementor:
-                        parent_constr = True
-                        ident = ident + implementor + "__"  # XXX change data structure
-                        return (
-                            objexpr,
-                            ident,
-                            direct_call,
-                            method_call,
-                            constructor,
-                            parent_constr,
-                            anon_func,
-                        )
+                if isinstance(thiscl, python.Class):
+                    for x in thiscl.ancestors_upto(None):
+                        if (x.ident == cl.ident
+                            and ident in x.funcs
+                            and not x.funcs[ident].inherited
+                        ):
+                            parent_constr = True
+                            ident = ident + x.ident + "__"  # XXX change data structure
+                            return (
+                                objexpr,
+                                ident,
+                                direct_call,
+                                method_call,
+                                constructor,
+                                parent_constr,
+                                anon_func,
+                            )
 
         if module:  # XXX elif?
             namespace, objexpr = module, None
