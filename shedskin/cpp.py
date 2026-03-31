@@ -66,6 +66,19 @@ Parent: TypeAlias = Union["python.Class", "python.Function"]
 AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
 
 
+def _inhcpa(func, gx):
+    return bool(
+        infer.called(func)
+        or (
+            func in gx.inheritance_relations
+            and [
+                1
+                for f in gx.inheritance_relations[func]
+                if isinstance(f, python.Function) and infer.called(f)
+            ]
+        )
+    )
+
 class CPPNamer:
     """Class for naming C++ entities"""
 
@@ -136,6 +149,31 @@ class CPPNamer:
         return name
 
 
+class ConstVisitor(ast_utils.BaseNodeVisitor):
+    """Visitor for collecting str/bytes literals (uniquely per module)"""
+
+    def __init__(self, gx: "config.GlobalInfo"):
+        self.gx = gx
+        self.value_name = {}
+
+    def visit_Constant(
+        self, node: ast.Constant, func: Optional["python.Function"] = None
+    ) -> None:
+        value = node.value
+        if (isinstance(value, (str, bytes))
+            and value not in self.value_name
+        ):
+            # skip inherited methods  TODO existing helper?
+            parent: Optional[AllParent] = infer.inode(self.gx, node).parent
+            while isinstance(parent, python.Function) and parent.listcomp:
+                parent = parent.parent
+            if isinstance(parent, python.Function) and (
+                parent.inherited or not _inhcpa(parent, self.gx)
+            ):
+                return None
+            self.value_name[value] = 'const_' + str(len(self.value_name))
+
+
 # --- code generation visitor; use type information
 
 
@@ -143,11 +181,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     """Visitor for generating C++ code from Python ASTs"""
 
     def __init__(
-        self, gx: "config.GlobalInfo", module: "python.Module", analyze: bool = False
+        self, gx: "config.GlobalInfo", module: "python.Module", cv: "ConstVisitor", analyze: bool = False,
     ):
         self.gx = gx
         self.module = module
         self.analyze = analyze
+        self.cv = cv
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
@@ -155,7 +194,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.mergeinh = self.gx.merged_inh
         self.mv = module.mv
         self.name = module.ident
-        self.filling_consts = False
         self.with_count = 0
         self.bool_wrapper: dict["ast.AST", bool] = {}
         self.namer = CPPNamer(self.gx, self)
@@ -179,84 +217,46 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             output_file.parent.mkdir(exist_ok=True)
         return open(output_file, mode)
 
-    def insert_consts(self, declare: bool) -> None:
-        """Insert constant declarations into the output file"""
-        self.filling_consts = True
-
-        if declare:
-            suffix = ".hpp"
-        else:
-            suffix = ".cpp"
-
-        with self.get_output_file(ext=suffix, mode="r") as f:
-            lines = f.readlines()
-
-        newlines = []
-        for line in lines:
-            # add declarations to hpp/cpp
-            if line.strip() == '// __ss_constants__':
-                pairs = []
-                done = set()
-                for node, name in self.consts.items():
-                    if (
-                        name not in done
-                        and node in self.mergeinh
-                        and self.mergeinh[node]
-                    ):  # XXX
-                        ts = typestr.nodetypestr(
-                            self.gx, node, infer.inode(self.gx, node).parent, mv=self.mv
-                        )
-                        if declare:
-                            ts = "extern " + ts
-                        pairs.append((ts, name))
-                        done.add(name)
-                newlines.extend(self.group_declarations(pairs))
-                newlines.append("\n")
-
-            # initialize constants in __init
-            elif suffix == ".cpp"and line.startswith("void __init() {"):
-                newlines.append(line)
-                todo: dict[int, ast.AST] = {}
-                for node, name in self.consts.items():
-                    if int(name[6:]) not in todo:
-                        todo[int(name[6:])] = node
-                todolist = list(todo)
-                todolist.sort()
-                for number in todolist:
-                    const_node = todo[number]
-                    if self.mergeinh[const_node]:  # XXX
-                        name = "const_" + str(number)
-                        self.start("    " + name + " = ")
-                        if (
-                            isinstance(const_node, ast.Constant)
-                            and isinstance(const_node.value, str)
-                            and len(const_node.value.encode("utf-8")) == 1
-                        ):
-                            self.append("__char_cache[%d]" % ord(const_node.value))
-                        elif (
-                            isinstance(const_node, ast.Constant)
-                            and isinstance(const_node.value, bytes)
-                            and len(const_node.value) == 1
-                        ):
-                            self.append("__byte_cache[%d]" % ord(const_node.value))
-                        else:
-                            self.visit(
-                                const_node, infer.inode(self.gx, const_node).parent
-                            )
-                        newlines.append(self.line + ";\n")
+    def insert_consts(self, declare: bool) -> None:  # TODO literal tuples?
+        """Insert constant declarations"""
+        pairs = []
+        done = set()
+        for value, name in self.cv.value_name.items():
+            if isinstance(value, str):
+                ts = "str *"
             else:
-                newlines.append(line)
+                ts = "bytes *"
+            if declare:
+                ts = 'extern ' + ts
+            pairs.append((ts, name))
+        self.output(self.indentation.join(self.group_declarations(pairs)))
 
-        with self.get_output_file(ext=suffix, mode="w") as f:
-            f.writelines(newlines)
-
-        self.filling_consts = False
+    def init_consts(self) -> None:
+        """Initialize constants"""
+        for value, name in self.cv.value_name.items():
+            self.start(name + " = ")
+            if isinstance(value, str):
+                if len(value.encode("utf-8")) == 1:  # TODO ord < 256?
+                    self.append("__char_cache[%d]" % ord(value))
+                else:
+                    self.append('new str("%s"' % self.expand_special_chars(value))
+                    if "\0" in value:
+                        self.append(", %d" % len(value))
+                    self.append(")")
+            else:
+                if len(value) == 1:
+                    self.append("__byte_cache[%d]" % ord(value))
+                else:
+                    self.append('new bytes("%s"' % self.expand_special_chars(value))
+                    if b"\0" in value:
+                        self.append(", (size_t)%d" % len(value))
+                    self.append(")")
+            self.eol()
 
     def insert_extras(self, suffix: str) -> None:
         """Insert extra lines into the output file"""
         with self.get_output_file(ext=suffix, mode="r") as f:
             lines = f.readlines()
-        # lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         for line in lines:
             newlines.append(line)
@@ -432,21 +432,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             pairs.append((ts, name))
         return "".join(self.group_declarations(pairs))
 
-    def get_constant(self, node: ast.Constant) -> Optional[str]:
-        """Get a constant name for a node"""
-        parent: Optional[AllParent] = infer.inode(self.gx, node).parent
-        while isinstance(parent, python.Function) and parent.listcomp:  # XXX
-            parent = parent.parent
-        if isinstance(parent, python.Function) and (
-            parent.inherited or not self.inhcpa(parent)
-        ):  # XXX
-            return None
-        for other in self.consts:  # XXX use mapping
-            if node.value == other.value:
-                return self.consts[other]
-        self.consts[node] = "const_" + str(len(self.consts))
-        return self.consts[node]
-
     def module_hpp(self, node: ast.Module) -> None:
         """Generate the header file for a module"""
         define = "_".join(self.module.name_list).upper() + "_HPP"
@@ -457,8 +442,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print("using namespace __shedskin__;")
         for n in self.module.name_list:
             self.print("namespace __" + n + "__ {")
-        self.print("// __ss_constants__");
         self.print()
+        self.insert_consts(declare=True)
 
         # class declarations
         for child in node.body:
@@ -602,8 +587,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- namespace fun
         for n in self.module.name_list:
             self.print("namespace __" + n + "__ {")
-        self.print("// __ss_constants__");
         self.print()
+        self.insert_consts(declare=False)
 
         for child in node.body:
             if isinstance(child, ast.ImportFrom) and child.module not in (
@@ -660,11 +645,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- __init
         self.output("void __init() {")
         self.indent()
+
         if self.module == self.gx.main_module and not self.gx.pyextension_product:
             module_ident = "__main__"
         else:
             module_ident = self.module.ident
         self.output('__name__ = new str("%s");\n' % module_ident)
+
+        self.init_consts()
+        self.print()
 
         for child in node.body:
             if isinstance(child, ast.FunctionDef):
@@ -770,6 +759,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.module_hpp(node)
         else:
             self.module_cpp(node)
+        self.out.close()
 
     def do_main(self) -> None:
         """Generate the main function"""
@@ -1094,19 +1084,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             return "0"
 
-    def inhcpa(self, func: "python.Function") -> bool:
+    def inhcpa(self, func: "python.Function") -> bool:  # TODO remove method
         """Check if a function is inherited"""
-        return bool(
-            infer.called(func)
-            or (
-                func in self.gx.inheritance_relations
-                and [
-                    1
-                    for f in self.gx.inheritance_relations[func]
-                    if isinstance(f, python.Function) and infer.called(f)
-                ]
-            )
-        )
+        return _inhcpa(func, self.gx)
 
     def visit_Slice(
         self, node: ast.Slice, func: Optional["python.Function"] = None
@@ -4497,27 +4477,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(value, complex):
             self.append("mcomplex(%s, %s)" % (value.real, value.imag))
 
-        elif isinstance(value, str):
-            if not self.filling_consts:
-                const = self.get_constant(node)
-                assert const
-                self.append(const)
-            else:
-                self.append('new str("%s"' % self.expand_special_chars(value))
-                if "\0" in value:
-                    self.append(", %d" % len(value))
-                self.append(")")
-
-        elif isinstance(value, bytes):  # TODO merge with str above
-            if not self.filling_consts:
-                const = self.get_constant(node)
-                assert const
-                self.append(const)
-            else:
-                self.append('new bytes("%s"' % self.expand_special_chars(value))
-                if b"\0" in value:
-                    self.append(", (size_t)%d" % len(value))
-                self.append(")")
+        elif isinstance(value, (str, bytes)):
+            self.append(self.cv.value_name[value])
 
         else:
             assert False
@@ -4529,12 +4490,10 @@ def generate_code(gx: "config.GlobalInfo", analyze: bool = False) -> None:
         print('>> generating C++')
     for module in gx.modules.values():
         if not module.builtin:
-            gv = GenerateVisitor(gx, module, analyze)
+            cv = ConstVisitor(gx)
+            cv.visit(module.ast)
+            gv = GenerateVisitor(gx, module, cv, analyze)
             gv.visit(module.ast)
-            gv.out.close()
             gv.header_file()
-            gv.out.close()
-            gv.insert_consts(declare=False)
-            gv.insert_consts(declare=True)
             gv.insert_extras(".hpp")
             gv.insert_extras(".cpp")
