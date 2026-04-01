@@ -357,7 +357,9 @@ private:
 /* pyiter methods */
 
 template<class T> inline __iter<T> *pyiter<T>::for_in_init() {
-    return this->__iter__();
+    __iter<T> *it = this->__iter__();
+    it->__stop_iteration = false;
+    return it;
 }
 
 template<class T> inline bool pyiter<T>::for_in_has_next(__iter<T> *iter) {
