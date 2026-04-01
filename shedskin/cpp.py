@@ -1798,7 +1798,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif func.returnexpr:
             assert func.retnode
             if func.ftypes:
-                header += func.ftypes[0]
+                header += typestr.typestr(self.gx, func.ftypes[0], mv=self.mv)
             else:
                 header += typestr.nodetypestr(
                     self.gx, func.retnode.thing, func, mv=self.mv
@@ -1814,7 +1814,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # if arguments type too precise (e.g. virtually called) cast them back
         oldftypes = ftypes
         if func.ftypes:
-            ftypes = func.ftypes[1:]
+            ftypes = [typestr.typestr(self.gx, ft, mv=self.mv) for ft in func.ftypes[1:]]
 
         # --- method header
         if method and not declare:
