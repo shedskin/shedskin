@@ -647,6 +647,7 @@ template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
 }
 
 template<class T> __setiter<T>::__setiter(set<T> *s) {
+    this->p = s;
     it = s->gcs.begin();
 }
 

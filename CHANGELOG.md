@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow magic methods to be virtualized
 - Fix for `for in defaultdict.items()`
 - Fix for set equality
+- Fix for set iteration
+- Fix for slice assignment with iterable
 - Remove module path from `__class__.__name__`
 - Fallback to `__index__` for ints/floats in some (but not all) cases
 - Support `array.array(q/Q)`
