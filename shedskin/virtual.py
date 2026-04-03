@@ -91,7 +91,7 @@ def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> 
         # --- prepare for having to cast back arguments (virtual function call means multiple targets)
         for subcl in subclasses:
             if ident in subcl.funcs:
-                subcl.funcs[ident].ftypes = ftypes
+                subcl.funcs[ident].ftypes = merged
 
         # --- virtual function declaration
         if declare:
