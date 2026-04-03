@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 Parent: TypeAlias = Union["Class", "Function"]
 AllParent: TypeAlias = Union["Class", "Function", "StaticClass"]
 CartesianProduct: TypeAlias = Tuple[Tuple["Class", int], ...]
+Types: TypeAlias = set[Tuple["Class", int]]
 
 
 class PyObject:
@@ -310,7 +311,7 @@ class Function:
         self.yieldNodes: List[ast.Yield] = []
         self.yieldnode: "infer.CNode"
         # function is called via a virtual call: arguments may have to be cast
-        self.ftypes: List[str] = []
+        self.ftypes: List[Types] = []
 
         if node:
             self.gx.allfuncs.add(self)
