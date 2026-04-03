@@ -72,7 +72,7 @@ def test_list_index2():
     assert xs.index(1, -3, 4) == 3
 
 
-def test_list_slice():
+def test_list_slice_assign():
     a = [1,2,3,4,5]
     assert a[:-1] == [1, 2, 3, 4]
     assert a[1:3] == [2, 3]
@@ -80,6 +80,27 @@ def test_list_slice():
     assert a[:3:] == [1, 2, 3]
     assert a[::-1] == [5, 4, 3, 2, 1]
     assert a[1::3] == [2, 5]
+
+    # iterator
+    data = [1, 2, 3, 4]
+    data[::2] = iter([10, 20])
+    assert data == [10, 2, 20, 4]
+
+    # set
+    data = [1, 2, 3, 4]
+    s = set([17, 18, 18])
+    data[2:] = s
+    assert sorted(data) == [1, 2, 17, 18]
+
+    # TODO silly duplicate from literal set
+    #data = [1, 2, 3, 4]
+    #data[2:] = set([17, 18, 18])
+    #assert sorted(data) == [1, 2, 17, 18]
+
+    # empty list
+    data = [1, 2, 3, 4]
+    data[:] = []
+    assert data == []
 
 
 def test_list_del():
@@ -171,7 +192,7 @@ def test_all():
     test_list_length()
     test_list_misc()
     test_list_nested()
-    test_list_slice()
+    test_list_slice_assign()
     test_list_subsets()
     test_list_copy()
     test_tuple_in_list()

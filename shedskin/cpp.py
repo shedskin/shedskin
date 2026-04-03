@@ -3623,18 +3623,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         func,
                     )
                     if [
-                        t for t in self.mergeinh[lvalue.value] if t[0].ident == "bytes_"
-                    ]:  # TODO more general fix
+                        t for t in self.mergeinh[lvalue.value] if t[0].ident == "list"
+                        and t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "list"
+                    ]:
                         self.visit(fakefunc.args[4], func)
                     elif [
-                        t
-                        for t in self.mergeinh[fakefunc.args[4]]
-                        if t[0].ident == "__xrange"
+                        t for t in self.mergeinh[lvalue.value] if t[0].ident == "bytes_"
+                        and t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "bytes_"
                     ]:
                         self.visit(fakefunc.args[4], func)
                     else:
                         self.impl_visit_conv(
-                            fakefunc.args[4], self.mergeinh[lvalue.value], func
+                            fakefunc.args[4], self.mergeinh[lvalue.value], func,
                         )
                     self.append(")")
                     self.eol()
