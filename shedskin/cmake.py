@@ -914,7 +914,7 @@ class CMakeBuilder:
         """Test error messages from tests in the errs directory"""
         failures = []
         os.chdir("errs")
-        tests = sorted(os.path.basename(t) for t in glob.glob("[0-9][0-9].py"))
+        tests = sorted(os.path.basename(t) for t in glob.glob("[0-9]*.py"))
         for test in tests:
             print("*** test:", test)
             try:

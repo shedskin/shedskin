@@ -1,3 +1,4 @@
+import camera
 
 def hap(x):
     print(x)
