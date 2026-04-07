@@ -204,6 +204,7 @@ def typestr(
     check_extmod: bool = False,
     depth: int = 0,
     check_ret: bool = False,
+    tuple_check: bool = False,
     mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
@@ -216,6 +217,7 @@ def typestr(
             check_extmod,
             depth,
             check_ret,
+            tuple_check,
             mv=mv,
         )
     except RuntimeError:
@@ -293,6 +295,7 @@ def typestrnew(
     check_extmod: bool = False,
     depth: int = 0,
     check_ret: bool = False,
+    tuple_check: bool = False,
     mv: Optional["graph.ModuleVisitor"] = None,
 ) -> str:
     """Get the type string of a node"""
@@ -382,13 +385,22 @@ def typestrnew(
             dynamic_variable_error(gx, node, types, conv2)
             return "pyobj *"
         elif node not in gx.bool_test_only:
-            error.error(
-                "expression has dynamic (sub)type: {%s}"
-                % ", ".join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)),
-                gx,
-                node,
-                warning=True,
-            )
+            if tuple_check:
+                error.error(
+                    "tuple with length > 2 and different types of elements",
+                    gx,
+                    node,
+                    warning=True,
+                    mv=mv,
+                )
+            else:
+                error.error(
+                    "expression has dynamic (sub)type: {%s}"
+                    % ", ".join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)),
+                    gx,
+                    node,
+                    warning=True,
+                )
     elif not classes:
         if cplusplus:
             return "void *"
@@ -460,6 +472,7 @@ def typestrnew(
                 node,
                 check_extmod,
                 depth + 1,
+                tuple_check=tuple_check,
                 mv=mv,
             )
             if [t[0] for t in vartypes if isinstance(t[0], python.Function)]:

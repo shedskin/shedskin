@@ -1222,6 +1222,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 types = set()
                 for child in node.elts:
                     types.update(self.mergeinh[child])
+                typestr.typestr(  # generate dynamic typing error
+                    self.gx, types, node=child, tuple_check=True, mv=self.mv
+                )
             self.visit_tuple_list(node, func, argtypes)
 
         elif isinstance(node.ctx, ast.Store):
