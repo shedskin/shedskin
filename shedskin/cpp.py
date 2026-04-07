@@ -66,7 +66,7 @@ Parent: TypeAlias = Union["python.Class", "python.Function"]
 AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
 
 
-def _inhcpa(func, gx):
+def _inhcpa(func: "python.Function", gx: "config.GlobalInfo") -> bool:
     return bool(
         infer.called(func)
         or (
@@ -154,7 +154,7 @@ class ConstVisitor(ast_utils.BaseNodeVisitor):
 
     def __init__(self, gx: "config.GlobalInfo"):
         self.gx = gx
-        self.value_name = {}
+        self.value_name: dict[str | bytes, str] = {}
 
     def visit_Constant(
         self, node: ast.Constant, func: Optional["python.Function"] = None
@@ -220,7 +220,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def insert_consts(self, declare: bool) -> None:  # TODO literal tuples?
         """Insert constant declarations"""
         pairs = []
-        done = set()
         for value, name in self.cv.value_name.items():
             if isinstance(value, str):
                 ts = "str *"
