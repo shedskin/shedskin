@@ -1,4 +1,4 @@
 ```bash
-shedskin build sto_atom.py
-build/sto_atom
+shedskin build quameon.py
+build/quameon
 ```
