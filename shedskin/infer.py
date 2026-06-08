@@ -254,13 +254,10 @@ class CNode:
         self.assignhop: ast.Assign
 
         # --- add node to surrounding non-listcomp function
-        if parent:  # do this only once! (not when copying)
-            while parent and isinstance(parent, python.Function) and parent.listcomp:
-                parent = parent.parent
-            if isinstance(parent, python.Function):
-                if self not in parent.nodes:
-                    parent.nodes.add(self)
-                    parent.nodes_ordered.append(self)
+        parent = python.outer_func(parent)
+        if parent and self not in parent.nodes:
+            parent.nodes.add(self)
+            parent.nodes_ordered.append(self)
 
     def copy(
         self, dcpa: int, cpa: int, worklist: Optional[List["CNode"]] = None
@@ -366,12 +363,7 @@ def is_anon_callable(
 
 def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional["python.Function"]:
     """Get the parent function of a node"""
-    parent: Optional[AllParent] = inode(gx, thing).parent
-    while parent:
-        if isinstance(parent, python.Function) and not parent.listcomp:
-            return parent
-        parent = parent.parent
-    return None
+    return python.outer_func(inode(gx, thing).parent)
 
 
 def analyze_args(
@@ -2268,9 +2260,7 @@ def default_var(
         gx.types[newnode] = set()
 
     if isinstance(parent, python.Function) and parent.listcomp and not var.registered:
-        while isinstance(parent, python.Function) and parent.listcomp:  # XXX
-            parent = parent.parent
-        register_temp_var(var, parent)
+        register_temp_var(var, python.outer_func(parent))
 
     return var
 
