@@ -442,12 +442,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Add a regular constraint to a function"""
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
-        parent: Optional[AllParent] = func
-        while (
-            isinstance(parent, python.Function) and parent.listcomp
-        ):  # TODO occurs frequently, ugly typing.. add Function method(s)
-            parent = parent.parent
-        if isinstance(parent, python.Function):
+        parent = python.outer_func(func)
+        if parent:
             parent.constraints.add(constraint)
 
     def struct_unpack(self, rvalue: ast.AST, func: Optional["python.Function"]) -> bool:
