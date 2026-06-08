@@ -940,6 +940,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 for cl2, _ in self.mergeinh[retnode.thing]:
                     if "__next__" in cl2.funcs:
                         next_retnode = cl2.funcs["__next__"].retnode
+                        assert next_retnode is not None
                         ts = typestr.nodetypestr(
                             self.gx, next_retnode.thing, mv=self.mv
                         )
