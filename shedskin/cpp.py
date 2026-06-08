@@ -165,10 +165,10 @@ class ConstVisitor(ast_utils.BaseNodeVisitor):
         ):
             # skip inherited methods  TODO existing helper?
             parent: Optional[AllParent] = infer.inode(self.gx, node).parent
-            while isinstance(parent, python.Function) and parent.listcomp:
-                parent = parent.parent
-            if isinstance(parent, python.Function) and (
-                parent.inherited or not _inhcpa(parent, self.gx)
+            parent = python.outer_func(parent)
+            if(
+                parent and
+                (parent.inherited or not _inhcpa(parent, self.gx))
             ):
                 return None
             self.value_name[value] = 'const_' + str(len(self.value_name))
@@ -3689,13 +3689,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if lcfunc.mv.module.builtin:
                 continue
 
-            parent: Optional[AllParent] = func
-            while isinstance(parent, python.Function) and parent.listcomp:
-                parent = parent.parent
-
-            if isinstance(parent, python.Function):
-                if not self.inhcpa(parent) or parent.inherited:
-                    continue
+            parent = python.outer_func(func)
+            if(
+                parent and
+                not (self.inhcpa(parent) or parent.inherited)
+            ):
+                continue
 
             genexpr = listcomp in self.gx.genexp_to_lc.values()
             if declare:
