@@ -467,6 +467,20 @@ def lookup_func(
     return None
 
 
+def outer_func(
+    func: Optional[AllParent],
+) -> Optional[Function]:
+    """Find surrounding function, skipping list comprehensions,
+    which are implemented as functions.
+    """
+    while isinstance(func, Function) and func.listcomp:
+        func = func.parent
+    if isinstance(func, Function):
+        return func
+    else:
+        return None
+
+
 def lookup_class(
     node: ast.AST,
     mv: "graph.ModuleVisitor"
