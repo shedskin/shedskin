@@ -5,12 +5,12 @@
 import ast
 import logging
 import sys
-from typing import TYPE_CHECKING, Optional, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, Optional, TypeAlias, Union
 
 if TYPE_CHECKING:
     from . import config, graph, python
 
-Error: TypeAlias = Tuple[int, str, Optional[int], str]
+Error: TypeAlias = tuple[int, str, Optional[int], str]
 
 logger = logging.getLogger("shedskin")
 ch = logging.StreamHandler(sys.stdout)
