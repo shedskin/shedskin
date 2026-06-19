@@ -205,7 +205,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return (next() >> 11) * 0x1.0p-53;
+    return static_cast<__ss_float>(next() >> 11) * 0x1.0p-53;
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
