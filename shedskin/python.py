@@ -42,15 +42,15 @@ import re
 import sys
 
 # type-checking
-from typing import TYPE_CHECKING, List, NamedTuple, Optional, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, NamedTuple, Optional, TypeAlias, Union
 
 if TYPE_CHECKING:
     from . import config, graph, infer
 
 Parent: TypeAlias = Union["Class", "Function"]
 AllParent: TypeAlias = Union["Class", "Function", "StaticClass"]
-CartesianProduct: TypeAlias = Tuple[Tuple["Class", int], ...]
-Types: TypeAlias = set[Tuple["Class", int]]
+CartesianProduct: TypeAlias = tuple[tuple["Class", int], ...]
+Types: TypeAlias = set[tuple["Class", int]]
 
 
 class PyObject:
@@ -162,9 +162,9 @@ class Class(PyObject):
         self.funcs: dict[str, "Function"] = {}
         self.virtuals: dict[str, set["Class"]] = {}  # 'virtually' called methods
         self.virtualvars: dict[str, set["Class"]] = {}  # 'virtual' variables
-        self.properties: dict[str, List[str]] = {}
-        self.staticmethods: List[str] = []
-        self.classmethods: List[str] = []
+        self.properties: dict[str, list[str]] = {}
+        self.staticmethods: list[str] = []
+        self.classmethods: list[str] = []
         self.splits: dict[
             int, int
         ] = {}  # contour: old contour (used between iterations)
@@ -190,7 +190,7 @@ class Class(PyObject):
             a.add(self)
         return a
 
-    def ancestors_upto(self, other: Optional["Class"]) -> List["Class"]:
+    def ancestors_upto(self, other: Optional["Class"]) -> list["Class"]:
         """Get the ancestors of a class up to a given class"""
         a = self
         result = []
@@ -214,7 +214,7 @@ class Class(PyObject):
             a.update(cl.descendants())
         return a
 
-    def tvar_names(self) -> List[str]:
+    def tvar_names(self) -> list[str]:
         """Get the names of the types of variables in a class"""
         if self.mv.module.builtin:
             if self.ident in [
@@ -242,7 +242,7 @@ class StaticClass(PyObject):
 
     def __init__(self, cl: "Class", mv: "graph.ModuleVisitor"):
         self.vars: dict[str, Variable] = {}
-        self.static_nodes: List[ast.AST] = []
+        self.static_nodes: list[ast.AST] = []
         self.funcs: dict[str, Function] = {}
         self.ident = cl.ident
         self.parent = None
@@ -250,7 +250,7 @@ class StaticClass(PyObject):
         self.module = cl.module
 
 
-def extract_argnames(arg_struct: ast.arguments) -> List[str]:
+def extract_argnames(arg_struct: ast.arguments) -> list[str]:
     """Get the names of the arguments of a function"""
     argnames = [arg.arg for arg in arg_struct.args]
     if arg_struct.vararg:
@@ -290,28 +290,28 @@ class Function:
             self.formals = extract_argnames(node.args)
             self.flags = None
             self.doc = ast.get_docstring(node)
-        self.returnexpr: List[ast.AST] = []
+        self.returnexpr: list[ast.AST] = []
         self.retnode: Optional["infer.CNode"] = None
         self.lambdanr: Optional[int] = None
         self.lambdawrapper = False
-        self.constraints: set[Tuple["infer.CNode", "infer.CNode"]] = set()
+        self.constraints: set[tuple["infer.CNode", "infer.CNode"]] = set()
         self.vars: dict[str, Variable] = {}
-        self.globals: List[str] = []
+        self.globals: list[str] = []
         self.mv = mv
         self.nodes: set["infer.CNode"] = set()
-        self.nodes_ordered: List["infer.CNode"] = []
-        self.defaults: List[ast.expr] = []
+        self.nodes_ordered: list["infer.CNode"] = []
+        self.defaults: list[ast.expr] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
         self.cp: dict[int, dict[CartesianProduct, int]] = {}
-        self.xargs: dict[Tuple[int, int], int] = {}
+        self.xargs: dict[tuple[int, int], int] = {}
         self.largs: Optional[int] = None
         self.listcomp = False
         self.isGenerator = False
-        self.yieldNodes: List[ast.Yield] = []
+        self.yieldNodes: list[ast.Yield] = []
         self.yieldnode: "infer.CNode"
         # function is called via a virtual call: arguments may have to be cast
-        self.ftypes: List[Types] = []
+        self.ftypes: list[Types] = []
 
         if node:
             self.gx.allfuncs.add(self)
@@ -320,8 +320,8 @@ class Function:
         self.fakeret: Optional[ast.Return] = None
         self.declared = False
 
-        self.registered: List[ast.AST] = []
-        self.registered_temp_vars: List[Variable] = []
+        self.registered: list[ast.AST] = []
+        self.registered_temp_vars: list[Variable] = []
 
     def __repr__(self) -> str:
         if self.parent:
@@ -341,7 +341,7 @@ class Variable:
         self.registered = False
         self.looper: Optional[ast.AST] = None
         self.wopper: Optional[ast.AST] = None
-        self.const_assign: List[ast.Constant] = []
+        self.const_assign: list[ast.Constant] = []
 
     def masks_global(self) -> bool:
         """Check if a variable masks a global variable"""
@@ -375,13 +375,13 @@ def parse_file(name: pathlib.Path) -> ast.Module:
     try:
         return ast.parse(filebuf)
     except SyntaxError as s:
-        print("*ERROR* %s:%s: %s" % (name, str(s.lineno), s.msg))
+        print("*ERROR* {}:{}: {}".format(name, str(s.lineno), s.msg))
         sys.exit(1)
 
 
 def find_module(
-    gx: "config.GlobalInfo", name: str, paths: List[str]
-) -> Tuple[str, str, str, bool]:
+    gx: "config.GlobalInfo", name: str, paths: list[str]
+) -> tuple[str, str, str, bool]:
     """Find a module by name"""
     if "." in name:
         name, module_name = name.rsplit(".", 1)
@@ -439,7 +439,7 @@ def lookup_class_module(
     objexpr: ast.AST,
     mv: "graph.ModuleVisitor",
     parent: Optional[AllParent]
-) -> Tuple[Optional["Class"], Optional["Module"]]:
+) -> tuple[Optional["Class"], Optional["Module"]]:
     """Find the class and module of an expression"""
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
@@ -507,7 +507,7 @@ def lookup_class(
 
 def lookup_module(node: ast.AST, mv: "graph.ModuleVisitor") -> Optional[Module]:
     """Find a module by name"""
-    path: List[str] = []
+    path: list[str] = []
     module: Optional[Module] = None
 
     imports = mv.imports
@@ -578,7 +578,7 @@ def smart_lookup_var(
         return VarLookup(parent.vars[name], False)
     elif not (parent and local):
         # recursive lookup
-        chain: List[Function] = []
+        chain: list[Function] = []
         while isinstance(parent, Function):
             if name in parent.vars:
                 for ancestor in chain:

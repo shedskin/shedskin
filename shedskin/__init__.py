@@ -16,7 +16,7 @@ import platform
 import subprocess
 import sys
 import time
-from typing import List, Optional
+from typing import Optional
 
 from . import cmake, config, cpp, error, graph, infer, log, makefile, stats
 
@@ -378,7 +378,7 @@ class Shedskin:
         return parsers
 
     @classmethod
-    def commandline(cls, bypassargs: Optional[List[str]] = None) -> None:
+    def commandline(cls, bypassargs: Optional[list[str]] = None) -> None:
         """Command line API."""
         sys.setrecursionlimit(100000)
         # Enable ANSI color output on Windows by invoking cmd

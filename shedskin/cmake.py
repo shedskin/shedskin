@@ -33,7 +33,7 @@ import subprocess
 import sys
 import time
 import zipfile
-from typing import Callable, List, Optional, Union
+from typing import Callable, Optional, Union
 
 from . import config
 from .utils import CYAN, GREEN, RED, RESET, WHITE
@@ -910,7 +910,7 @@ class CMakeBuilder:
                 most_recent_test = test
         return most_recent_test
 
-    def error_tests(self) -> List[str]:
+    def error_tests(self) -> list[str]:
         """Test error messages from tests in the errs directory"""
         failures = []
         os.chdir("errs")
