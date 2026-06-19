@@ -328,7 +328,7 @@ namespace __int___ {
         if(__ss_signed && !(b->unit[start_index + (actual_size-1) * inc] & sign_bit)) /* sign bit fell off the bus */
             actual_size += 1;
 
-        if(actual_size > sizeof(__ss_int))
+        if((size_t)actual_size > sizeof(__ss_int))
             throw new OverflowError(new str("int too big to convert"));
 
         /* copy non-extending bytes */
@@ -341,7 +341,7 @@ namespace __int___ {
 
         /* extend sign bit */
         if(__ss_signed) {
-            for(__ss_int j = actual_size; j < sizeof(__ss_int); j++) {
+            for(__ss_int j = actual_size; (size_t)j < sizeof(__ss_int); j++) {
                 n |= sign_ext << (8*j);
             }
         }
