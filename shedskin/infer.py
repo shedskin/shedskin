@@ -68,14 +68,11 @@ import sys
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    Iterable,
-    List,
     Optional,
-    Tuple,
     TypeAlias,
     Union,
 )
+from collections.abc import Iterable
 
 from . import ast_utils, error, python, utils
 
@@ -83,21 +80,21 @@ if TYPE_CHECKING:
     from . import config, graph
 
 Types: TypeAlias = set[
-    Tuple["python.Class", int]
+    tuple["python.Class", int]
 ]  # TODO merge with other modules, reuse common types
-FTypes: TypeAlias = frozenset[Tuple["python.Class", int]]
-CartesianProduct: TypeAlias = Tuple[
-    Tuple["python.Class", int], ...
+FTypes: TypeAlias = frozenset[tuple["python.Class", int]]
+CartesianProduct: TypeAlias = tuple[
+    tuple["python.Class", int], ...
 ]  # TODO wrong name!!
 Parent: TypeAlias = Union["python.Class", "python.Function"]
 AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
-Merged: TypeAlias = Dict[Any, set[Tuple[Any, int]]]
-Split: TypeAlias = List[Tuple["python.Class", int, List["CNode"], int]]
-ClassesNr: TypeAlias = Dict[Tuple[FTypes, ...], int]
-NrClasses: TypeAlias = Dict[int, Tuple[FTypes, ...]]
-AllCSites: TypeAlias = dict[Tuple["python.Class", int], set["CNode"]]
-CreationPoints: TypeAlias = Dict[FTypes, List["CNode"]]
-Analysis: TypeAlias = Tuple[
+Merged: TypeAlias = dict[Any, set[tuple[Any, int]]]
+Split: TypeAlias = list[tuple["python.Class", int, list["CNode"], int]]
+ClassesNr: TypeAlias = dict[tuple[FTypes, ...], int]
+NrClasses: TypeAlias = dict[int, tuple[FTypes, ...]]
+AllCSites: TypeAlias = dict[tuple["python.Class", int], set["CNode"]]
+CreationPoints: TypeAlias = dict[FTypes, list["CNode"]]
+Analysis: TypeAlias = tuple[
     Optional[ast.AST],
     Optional[str],
     Optional["python.Function"],
@@ -106,14 +103,14 @@ Analysis: TypeAlias = Tuple[
     bool,
     bool,
 ]
-Backup: TypeAlias = Tuple[
-    dict["CNode", set[Tuple[Any, int]]],  # gx.types
+Backup: TypeAlias = tuple[
+    dict["CNode", set[tuple[Any, int]]],  # gx.types
     set[tuple["CNode", "CNode"]],  # gx.constraints
-    Dict["CNode", Tuple[set["CNode"], set["CNode"]]],  # cnode -> (cnode.in_, cnode.out)
-    dict[Tuple[Any, int, int], "CNode"],  # gx.cnode
+    dict["CNode", tuple[set["CNode"], set["CNode"]]],  # cnode -> (cnode.in_, cnode.out)
+    dict[tuple[Any, int, int], "CNode"],  # gx.cnode
 ]
-PossibleFuncs: TypeAlias = List[
-    Tuple["python.Function", int, Optional[Tuple["python.Class", int]]]
+PossibleFuncs: TypeAlias = list[
+    tuple["python.Function", int, Optional[tuple["python.Class", int]]]
 ]
 
 logger = logging.getLogger("infer")
@@ -239,14 +236,14 @@ class CNode:
         # --- iterative dataflow analysis
 
         self.in_list = 0  # node in work-list
-        self.callfuncs: List[Any] = []  # callfuncs to which node is object/argument
+        self.callfuncs: list[Any] = []  # callfuncs to which node is object/argument
 
         self.nodecp: set[
-            Tuple["python.Function", CartesianProduct, CartesianProduct]
+            tuple["python.Function", CartesianProduct, CartesianProduct]
         ] = set()  # already analyzed cp's # XXX kill!?
 
         self.csites: set[CNode]
-        self.paths: List[FTypes]
+        self.paths: list[FTypes]
 
         self.temp1: str
         self.temp2: str
@@ -260,7 +257,7 @@ class CNode:
             parent.nodes_ordered.append(self)
 
     def copy(
-        self, dcpa: int, cpa: int, worklist: Optional[List["CNode"]] = None
+        self, dcpa: int, cpa: int, worklist: Optional[list["CNode"]] = None
     ) -> "CNode":  # XXX to infer.py
         """Copy a node"""
         # if not self.mv.module.builtin: print 'copy', self
@@ -347,7 +344,7 @@ def is_anon_callable(
     expr: ast.Call,
     node: Optional[CNode],
     merge: Optional[Merged] = None,
-) -> Tuple[bool, bool]:
+) -> tuple[bool, bool]:
     """Check if an anonymous function is callable"""
     types = get_types(gx, expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], python.Function)])
@@ -373,8 +370,8 @@ def analyze_args(
     node: Optional[CNode] = None,
     skip_defaults: bool = False,
     merge: Optional[Merged] = None,
-) -> Tuple[
-    List[Optional[ast.AST]], List[str], List[ast.AST], List[Optional[ast.AST]], bool
+) -> tuple[
+    list[Optional[ast.AST]], list[str], list[ast.AST], list[Optional[ast.AST]], bool
 ]:
     """Analyze the arguments of a call node"""
     (
@@ -387,7 +384,7 @@ def analyze_args(
         anon_func,
     ) = analyze_callfunc(gx, expr, node, merge)
 
-    args: List[Optional[ast.AST]] = []
+    args: list[Optional[ast.AST]] = []
     kwdict = {}
     for a in expr.args:
         args.append(a)
@@ -411,9 +408,9 @@ def analyze_args(
             kwextra.append(kw)
 
     argnr = 0
-    actuals: List[Optional[ast.AST]] = []
+    actuals: list[Optional[ast.AST]] = []
     formals = []
-    defaults: List[ast.AST] = []
+    defaults: list[ast.AST] = []
     missing = False
     for i, formal in enumerate(formal_args):
         if formal in kwdict:
@@ -468,12 +465,12 @@ def connect_actual_formal(
     func: "python.Function",
     parent_constr: bool = False,
     merge: Optional[Merged] = None,
-) -> Tuple[List[Tuple[ast.AST, "python.Variable"]], int, bool]:
+) -> tuple[list[tuple[ast.AST, "python.Variable"]], int, bool]:
     """Connect actual and formal arguments"""
 
     pairs = []
 
-    actuals: List[Optional[ast.AST]] = [
+    actuals: list[Optional[ast.AST]] = [
         a for a in expr.args if not isinstance(a, ast.keyword)
     ]
     if isinstance(func.parent, python.Class):
@@ -539,7 +536,7 @@ def connect_actual_formal(
 # --- return list of potential call targets
 def callfunc_targets(
     gx: "config.GlobalInfo", node: ast.Call, merge: Merged
-) -> List["python.Function"]:
+) -> list["python.Function"]:
     """Get the potential call targets of a call node"""
 
     (
@@ -585,7 +582,7 @@ def callfunc_targets(
         funcs = [direct_call]
 
     elif method_call:
-        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], python.Class))
+        classes = {t[0] for t in merge[objexpr] if isinstance(t[0], python.Class)}
         funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
 
     return funcs
@@ -757,7 +754,7 @@ def inode(gx: "config.GlobalInfo", node: Any) -> CNode:
 
 
 def add_constraint(
-    gx: "config.GlobalInfo", a: CNode, b: CNode, worklist: Optional[List[CNode]] = None
+    gx: "config.GlobalInfo", a: CNode, b: CNode, worklist: Optional[list[CNode]] = None
 ) -> None:
     """Add a constraint to the graph"""
     gx.constraints.add((a, b))
@@ -772,7 +769,7 @@ def in_out(a: CNode, b: CNode) -> None:
 
 
 def add_to_worklist(
-    worklist: Optional[List[CNode]], node: CNode
+    worklist: Optional[list[CNode]], node: CNode
 ) -> None:  # XXX to infer.py
     """Add a node to the worklist"""
     if worklist is not None and not node.in_list:
@@ -818,7 +815,7 @@ def func_copy(
     func: "python.Function",
     dcpa: int,
     cpa: int,
-    worklist: Optional[List[CNode]] = None,
+    worklist: Optional[list[CNode]] = None,
     cart: Optional[CartesianProduct] = None,
 ) -> None:
     """Copy a function"""
@@ -967,7 +964,7 @@ def possible_functions(
     if anon_func:
         # anonymous call
         types2 = gx.cnode[expr.func, node.dcpa, node.cpa].types()
-        types: List[Tuple["python.Function", int]] = []
+        types: list[tuple["python.Function", int]] = []
         for t in types2:
             if isinstance(t[0], python.Function):
                 types.append(t)
@@ -1027,8 +1024,8 @@ def possible_argtypes(
     node: CNode,
     funcs: PossibleFuncs,
     analysis: Analysis,
-    worklist: List[CNode],
-) -> List[Types]:
+    worklist: list[CNode],
+) -> list[Types]:
     """Determine the possible argument types for a call node"""
     expr = node.thing
     (
@@ -1116,7 +1113,7 @@ def redirect(
     callnode: CNode,
     direct_call: Optional["python.Function"],
     constructor: Optional["python.Class"],
-) -> Tuple[CartesianProduct, int, "python.Function"]:
+) -> tuple[CartesianProduct, int, "python.Function"]:
     """Redirect a call node"""
 
     # redirect based on number of arguments (__%s%d syntax in builtins)
@@ -1233,7 +1230,7 @@ def redirect(
 # --- cartesian product algorithm; adds interprocedural constraints
 
 
-def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: List[CNode]) -> None:
+def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None:
     """Perform the cartesian product algorithm"""
 
     analysis = analyze_callfunc(gx, callnode.thing, callnode)
@@ -1333,7 +1330,7 @@ def connect_getsetattr(
     callnode: CNode,
     callfunc: ast.Call,
     dcpa: int,
-    worklist: List[CNode],
+    worklist: list[CNode],
 ) -> bool:
     """Connect a get/setattr call to the target attribute"""
 
@@ -1380,7 +1377,7 @@ def create_template(
     func: "python.Function",
     dcpa: int,
     c: CartesianProduct,
-    worklist: List[CNode],
+    worklist: list[CNode],
 ) -> None:
     """Create a new template for a function"""
     # --- unseen cartesian product: create new template
@@ -1404,7 +1401,7 @@ def actuals_formals(
     cpa: int,
     types: CartesianProduct,
     analysis: Analysis,
-    worklist: List[CNode],
+    worklist: list[CNode],
 ) -> None:
     """Connect actual and formal arguments"""
     (
@@ -1420,7 +1417,7 @@ def actuals_formals(
     starargs = get_starargs(expr)
     if starargs:  # XXX only in lib/
         formals = func.formals
-        actuals: List[Optional[ast.AST]] = []
+        actuals: list[Optional[ast.AST]] = []
         for _ in range(len(formals)):
             actuals.append(starargs)
         types = len(formals) * types
@@ -1487,7 +1484,7 @@ def ifa_split_vars(
     gx: "config.GlobalInfo",
     cl: "python.Class",
     dcpa: int,
-    vars: List["python.Variable"],
+    vars: list["python.Variable"],
     nr_classes: NrClasses,
     classes_nr: ClassesNr,
     split: Split,
@@ -1576,8 +1573,8 @@ def ifa_split_no_confusion(
     varnum: int,
     classes_nr: ClassesNr,
     nr_classes: NrClasses,
-    csites: List[CNode],
-    emptycsites: List[CNode],
+    csites: list[CNode],
+    emptycsites: list[CNode],
     allnodes: set[CNode],
     split: Split,
 ) -> None:
@@ -1585,7 +1582,7 @@ def ifa_split_no_confusion(
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
     others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites: dict[Tuple[FTypes, ...], List[CNode]] = {}
+    subtype_csites: dict[tuple[FTypes, ...], list[CNode]] = {}
     for node in noconf:
         if node.paths:
             assign_set = node.paths[0]
@@ -1614,8 +1611,8 @@ def ifa_split_no_confusion(
 
 
 def ifa_class_types(
-    gx: "config.GlobalInfo", cl: "python.Class", vars: List["python.Variable"]
-) -> Tuple[ClassesNr, NrClasses]:
+    gx: "config.GlobalInfo", cl: "python.Class", vars: list["python.Variable"]
+) -> tuple[ClassesNr, NrClasses]:
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
@@ -1641,7 +1638,7 @@ def ifa_class_types(
     return classes_nr, nr_classes
 
 
-def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> List[set[CNode]]:
+def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> list[set[CNode]]:
     """determine split along incoming dataflow edges"""
     remaining = [
         incoming.csites.copy() for incoming in node.in_ if incoming in allnodes
@@ -1659,7 +1656,7 @@ def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> List[set[CNode]]:
     return remaining
 
 
-def ifa_classes_to_split(gx: "config.GlobalInfo") -> List["python.Class"]:
+def ifa_classes_to_split(gx: "config.GlobalInfo") -> list["python.Class"]:
     """setup classes to perform splitting on"""
     classes = []
     for ident in [
@@ -1702,8 +1699,8 @@ def ifa_flow_graph(
     dcpa: int,
     node: CNode,
     allcsites: AllCSites,
-) -> Tuple[
-    CreationPoints, CreationPoints, CreationPoints, set[CNode], List[CNode], List[CNode]
+) -> tuple[
+    CreationPoints, CreationPoints, CreationPoints, set[CNode], list[CNode], list[CNode]
 ]:
     """Create a flow graph for a given node"""
     creation_points = {}
@@ -1757,7 +1754,7 @@ def ifa_flow_graph(
 def ifa_split_class(
     cl: "python.Class",
     dcpa: int,
-    things: List[CNode],
+    things: list[CNode],
     split: Split,
 ) -> None:
     """Split a class"""
@@ -1902,7 +1899,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
             # print 'split off', nodes, newnr
             for n in nodes:
                 if not parent_func(gx, n.thing):
-                    beforetypes[n] = set([(cl, newnr)])
+                    beforetypes[n] = {(cl, newnr)}
 
         # --- restore network
         restore_network(gx, backup)
@@ -1917,7 +1914,7 @@ def ifa_seed_template(
     cart: Optional[CartesianProduct],
     dcpa: int,
     cpa: int,
-    worklist: Optional[List[CNode]],
+    worklist: Optional[list[CNode]],
 ) -> None:
     """Seed allocation sites in newly created templates"""
     if cart is not None:  # (None means we are not in the process of propagation)
@@ -1946,7 +1943,7 @@ def ifa_seed_template(
                 while isinstance(parent.parent, python.Function):
                     parent = parent.parent
 
-                alloc_id: Tuple[str, CartesianProduct, ast.AST] = (
+                alloc_id: tuple[str, CartesianProduct, ast.AST] = (
                     parent.ident,
                     cart,
                     node.thing,
@@ -2007,7 +2004,7 @@ def ifa_seed_template(
 def backflow_path(
     gx: "config.GlobalInfo",
     worklist: set[CNode],
-    t: Tuple["python.Class", int],
+    t: tuple["python.Class", int],
     fout_dict: dict[CNode, set[CNode]],
 ) -> list[CNode]:
     """Find the path of creation points for a given target node"""
@@ -2086,7 +2083,7 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
 
 def merge_simple_types(
     gx: "config.GlobalInfo", types: Types
-) -> frozenset[Tuple["python.Class", int]]:
+) -> frozenset[tuple["python.Class", int]]:
     """Merge simple types"""
     merge = types.copy()
     if len(types) > 1 and (python.def_class(gx, "none"), 0) in types:
@@ -2102,11 +2099,11 @@ def merge_simple_types(
 
 def get_classes(gx: "config.GlobalInfo", var: "python.Variable") -> set["python.Class"]:
     """Get the classes of a variable"""
-    return set(
+    return {
         t[0]
         for t in gx.merged_inh[var]
         if isinstance(t[0], python.Class) and not t[0].mv.module.builtin
-    )
+    }
 
 
 def deepcopy_classes(
@@ -2154,7 +2151,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     for cl in gx.allclasses:
         if cl.ident == "class_":
             var = default_var(gx, "__name__", cl)
-            gx.types[inode(gx, var)] = set([(python.def_class(gx, "str_"), 0)])
+            gx.types[inode(gx, var)] = {(python.def_class(gx, "str_"), 0)}
 
     # --- non-ifa: copy classes for each allocation site
     for cl in gx.allclasses:
@@ -2171,11 +2168,11 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     # --- seed str/bytes unit
     cl = python.def_class(gx, "str_")
     var = default_var(gx, "unit", cl)
-    gx.types[inode(gx, var)] = set([(cl, 0)])
+    gx.types[inode(gx, var)] = {(cl, 0)}
 
     cl = python.def_class(gx, "bytes_")
     var = default_var(gx, "unit", cl)
-    gx.types[inode(gx, var)] = set([(python.def_class(gx, "int_"), 0)])
+    gx.types[inode(gx, var)] = {(python.def_class(gx, "int_"), 0)}
 
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis(gx)
@@ -2231,7 +2228,7 @@ def default_var(
     gx: "config.GlobalInfo",
     name: str,
     parent: Optional[AllParent],
-    worklist: Optional[List[CNode]] = None,
+    worklist: Optional[list[CNode]] = None,
     mv: Optional["graph.ModuleVisitor"] = None,
     exc_name: bool = False,
 ) -> "python.Variable":

@@ -35,7 +35,7 @@ import pathlib
 import re
 import string
 import sys
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union
 
 from . import ast_utils, error, infer, python
 
@@ -116,9 +116,9 @@ def register_node(node: ast.AST, func: Optional["python.Function"]) -> None:
         func.registered.append(node)
 
 
-def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
+def slice_nums(nodes: list[Optional[ast.AST]]) -> list[ast.AST]:
     """Slice numbers from a list of nodes"""
-    nodes2: List[ast.AST] = []
+    nodes2: list[ast.AST] = []
     x = 0
     for i, n in enumerate(nodes):
         if not n or ast_utils.is_none(n):
@@ -130,7 +130,7 @@ def slice_nums(nodes: List[Optional[ast.AST]]) -> List[ast.AST]:
     return nodes2
 
 
-def get_arg_nodes(node: ast.Call) -> List[ast.expr]:
+def get_arg_nodes(node: ast.Call) -> list[ast.expr]:
     """Get argument nodes from a call node"""
     args = []
 
@@ -158,7 +158,7 @@ def has_star_kwarg(node: ast.Call) -> bool:
     return False
 
 
-def make_arg_list(argnames: List[str]) -> ast.arguments:
+def make_arg_list(argnames: list[str]) -> ast.arguments:
     """Make a simple argument list from a list of argument names"""
     args = [ast.arg(a) for a in argnames]
     return ast.arguments([], args, None, [], [], None, [])
@@ -185,7 +185,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.funcs: dict[str, "python.Function"] = {}
         self.globals: dict[str, "python.Variable"] = {}
         self.exc_names: dict[str, "python.Variable"] = {}
-        self.current_with_vars: List[List[str]] = []
+        self.current_with_vars: list[list[str]] = []
 
         self.lambdas: dict[str, "python.Function"] = {}
         self.imports: dict[str, "python.Module"] = {}
@@ -195,14 +195,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lambdaname: dict[ast.AST, str] = {}
         self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
-        self.listcomps: List[
-            Tuple[ast.ListComp, "python.Function", Optional["python.Function"]]
+        self.listcomps: list[
+            tuple[ast.ListComp, "python.Function", Optional["python.Function"]]
         ] = []
-        self.defaults: dict[ast.AST, Tuple[int, "python.Function", int]] = {}
+        self.defaults: dict[ast.AST, tuple[int, "python.Function", int]] = {}
 
-        self.importnodes: List[ast.AST] = []
-        self.funcnodes: List[ast.FunctionDef]
-        self.classnodes: List[ast.ClassDef]
+        self.importnodes: list[ast.AST] = []
+        self.funcnodes: list[ast.FunctionDef]
+        self.classnodes: list[ast.ClassDef]
 
     def visit(self, node: ast.AST, *args: Any) -> None:
         """Visit a node"""
@@ -214,7 +214,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         node: Any,
         objexpr: ast.AST,
         attrname: str,
-        args: List[ast.AST],
+        args: list[ast.AST],
         func: Optional[python.Function] = None,
     ) -> ast.Call:
         """Generate a fake function"""
@@ -305,12 +305,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         newnode.constructor = True
 
         if cl.ident in ["int_", "float_", "str_", "bytes_", "none", "class_", "bool_"]:
-            self.gx.types[newnode] = set([(cl, cl.dcpa - 1)])
+            self.gx.types[newnode] = {(cl, cl.dcpa - 1)}
         else:
             if cl.ident == "list" and (dcpa := self.list_type(node)):
-                self.gx.types[newnode] = set([(cl, dcpa)])
+                self.gx.types[newnode] = {(cl, dcpa)}
             else:
-                self.gx.types[newnode] = set([(cl, cl.dcpa)])
+                self.gx.types[newnode] = {(cl, cl.dcpa)}
 
     def constructor(
         self,
@@ -364,10 +364,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
     def filter_redundant_children(
         self, node: Union[ast.Tuple, ast.List, ast.Set]
-    ) -> List[ast.AST]:
+    ) -> list[ast.AST]:
         """Filter redundant children from a compound list/tuple/dict constructor"""
         done = set()
-        nonred: List[ast.AST] = []
+        nonred: list[ast.AST] = []
         for child in node.elts:
             type = self.child_type_rec(child)
             if not type or type not in done:
@@ -376,7 +376,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return nonred
 
     # --- determine single constructor child node type, used by the above
-    def child_type_rec(self, node: ast.AST) -> Tuple["python.Class", ...]:
+    def child_type_rec(self, node: ast.AST) -> tuple["python.Class", ...]:
         """Determine the type of a single constructor child node"""
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
             node = node.operand
@@ -436,7 +436,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     # --- add regular constraint to function
     def add_constraint(
         self,
-        constraint: Tuple[infer.CNode, infer.CNode],
+        constraint: tuple[infer.CNode, infer.CNode],
         func: Optional["python.Function"],
     ) -> None:
         """Add a regular constraint to a function"""
@@ -470,7 +470,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def struct_info(
         self, node: ast.AST, func: Optional["python.Function"]
-    ) -> List[Tuple[str, str, str, int]]:
+    ) -> list[tuple[str, str, str, int]]:
         """Get struct information"""
         if isinstance(node, ast.Name):
             var = python.lookup_var(node.id, func, self)  # XXX fwd ref?
@@ -545,9 +545,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 digits = ""
         return result
 
-    def struct_faketuple(self, info: List[Tuple[str, str, str, int]]) -> ast.Tuple:
+    def struct_faketuple(self, info: list[tuple[str, str, str, int]]) -> ast.Tuple:
         """Generate a fake tuple for struct unpack"""
-        result: List[ast.expr] = []
+        result: list[ast.expr] = []
         for o, c, t, d in info:
             if d != 0 or c == "s":
                 if t == "int":
@@ -643,9 +643,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- __name__
         if self.module.ident != "builtin":
             namevar = infer.default_var(self.gx, "__name__", None, mv=getmv())
-            self.gx.types[infer.inode(self.gx, namevar)] = set(
-                [(python.def_class(self.gx, "str_"), 0)]
-            )
+            self.gx.types[infer.inode(self.gx, namevar)] = {
+                (python.def_class(self.gx, "str_"), 0)
+            }
 
         self.forward_references(node)
 
@@ -771,7 +771,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             node.args.posonlyargs = []
             node.args.kwonlyargs = []
 
-    def get_globals(self, node: ast.AST) -> List[str]:
+    def get_globals(self, node: ast.AST) -> list[str]:
         """Get global variables"""
         if isinstance(node, ast.Global):
             result = node.names
@@ -781,7 +781,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.extend(self.get_globals(child))
         return result
 
-    def local_assignments(self, node: ast.AST, global_: bool = False) -> List[ast.Name]:
+    def local_assignments(self, node: ast.AST, global_: bool = False) -> list[ast.Name]:
         """Get local assignments"""
         if global_ and isinstance(node, (ast.ClassDef, ast.FunctionDef)):
             return []
@@ -792,7 +792,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
-            children: List[ast.AST]
+            children: list[ast.AST]
 
             if isinstance(node, ast.Try):
                 children = list(node.body)
@@ -868,7 +868,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if not fake:
             var = infer.default_var(self.gx, pseudonym or name, None, mv=getmv())
             var.imported = True
-            self.gx.types[infer.inode(self.gx, var)] = set([(module, 0)])
+            self.gx.types[infer.inode(self.gx, var)] = {(module, 0)}
         return module
 
     def visit_ImportFrom(
@@ -922,7 +922,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         self.gx, import_name, None, mv=getmv()
                     )  # XXX merge
                     var.imported = True
-                    self.gx.types[infer.inode(self.gx, var)] = set([(import_module, 0)])
+                    self.gx.types[infer.inode(self.gx, var)] = {(import_module, 0)}
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
                     if not extvar.imported and name not in ["__name__"]:
@@ -958,7 +958,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.import_module(modname, name, node, False)
             else:
                 error.error(
-                    "no identifier '%s' in module '%s'" % (name, node.module),
+                    "no identifier '{}' in module '{}'".format(name, node.module),
                     self.gx,
                     node,
                     mv=getmv(),
@@ -1138,7 +1138,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         f.lambdanr = lambdanr
         self.lambdaname[node] = name
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
-        self.gx.types[newnode] = set([(f, 0)])
+        self.gx.types[newnode] = {(f, 0)}
         newnode.copymetoo = True
 
     def visit_BoolOp(
@@ -1280,7 +1280,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self,
         node: Union[ast.Slice, ast.Subscript],
         expr: ast.AST,
-        nodes: List[Optional[ast.AST]],
+        nodes: list[Optional[ast.AST]],
         func: Optional["python.Function"],
         replace: Optional[ast.AST] = None,
     ) -> None:
@@ -1302,9 +1302,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.bool_test_add(node.operand)
             newnode = infer.CNode(self.gx, getmv(), node, parent=func)
             newnode.copymetoo = True
-            self.gx.types[newnode] = set(
-                [(python.def_class(self.gx, "bool_"), 0)]
-            )  # XXX new type?
+            self.gx.types[newnode] = {
+                (python.def_class(self.gx, "bool_"), 0)
+            }  # XXX new type?
             self.visit(node.operand, func)
         else:
             op_map = {
@@ -1320,9 +1320,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Visit a comparison"""
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         newnode.copymetoo = True
-        self.gx.types[newnode] = set(
-            [(python.def_class(self.gx, "bool_"), 0)]
-        )  # XXX new type?
+        self.gx.types[newnode] = {
+            (python.def_class(self.gx, "bool_"), 0)
+        }  # XXX new type?
         self.visit(node.left, func)
         msgs = {
             ast.Eq: "eq",
@@ -1573,9 +1573,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> "python.Variable":
         """Create a temporary integer variable"""
         var = self.temp_var(node, func)
-        self.gx.types[infer.inode(self.gx, var)] = set(
-            [(python.def_class(self.gx, "int_"), 0)]
-        )
+        self.gx.types[infer.inode(self.gx, var)] = {
+            (python.def_class(self.gx, "int_"), 0)
+        }
         infer.inode(self.gx, var).copymetoo = True
         return var
 
@@ -1642,7 +1642,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
                 var.invisible = True
                 infer.inode(self.gx, var).copymetoo = True
-                self.gx.types[infer.inode(self.gx, var)] = set([(cl, 1)])
+                self.gx.types[infer.inode(self.gx, var)] = {(cl, 1)}
 
         if node.finalbody:
             error.error("'try..finally' is not supported", self.gx, node, mv=getmv())
@@ -2147,7 +2147,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Handle tuple flow"""
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
-        lvalues: List[ast.expr]
+        lvalues: list[ast.expr]
         if isinstance(lvalue, tuple):
             assert False
         elif ast_utils.is_assign_list_or_tuple(lvalue):
@@ -2453,14 +2453,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if "class_" in getmv().classes or "class_" in getmv().ext_classes:
             var = infer.default_var(self.gx, "__class__", newclass)
             var.invisible = True
-            self.gx.types[infer.inode(self.gx, var)] = set(
-                [
+            self.gx.types[infer.inode(self.gx, var)] = {
                     (
                         python.def_class(self.gx, "class_"),
                         python.def_class(self.gx, "class_").dcpa,
                     )
-                ]
-            )
+            }
             python.def_class(self.gx, "class_").dcpa += 1
 
         # --- staticmethod, property
@@ -2644,14 +2642,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             elif lfunc.ident not in lfunc.mv.lambdas:
                 lfunc.lambdanr = len(lfunc.mv.lambdas)
                 lfunc.mv.lambdas[lfunc.ident] = lfunc
-            self.gx.types[newnode] = set([(lfunc, 0)])
+            self.gx.types[newnode] = {(lfunc, 0)}
         elif lclass:
             lclass2: Union["python.Function", "python.StaticClass"]
             if lclass.mv.module.builtin:
                 lclass2 = self.builtin_wrapper(node, func)
             else:
                 lclass2 = lclass.parent
-            self.gx.types[newnode] = set([(lclass2, 0)])
+            self.gx.types[newnode] = {(lclass2, 0)}
         else:
             return False
         newnode.copymetoo = True  # XXX merge into some kind of 'seeding' function
@@ -2691,7 +2689,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         pass
                     elif node.id in ["int", "float", "str"]:  # XXX
                         cl = self.ext_classes[node.id + "_"]
-                        self.gx.types[newnode] = set([(cl.parent, 0)])
+                        self.gx.types[newnode] = {(cl.parent, 0)}
                         newnode.copymetoo = True
                     else:
                         var = infer.default_var(self.gx, node.id, None, mv=getmv())
