@@ -530,11 +530,10 @@ def lookup_module(node: ast.AST, mv: "graph.ModuleVisitor") -> Optional[Module]:
     return module
 
 
-# XXX: this is weird class or bool?
 def def_class(
     gx: "config.GlobalInfo", name: str, mv: Optional["graph.ModuleVisitor"] = None
 ) -> Class:
-    """Define a class"""
+    """Lookup (default) class by name"""
     if not mv:
         mv = gx.modules["builtin"].mv
     assert mv
