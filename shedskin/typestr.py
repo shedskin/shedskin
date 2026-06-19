@@ -27,21 +27,18 @@ import logging
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    Iterable,
     Optional,
-    Tuple,
-    Type,
     TypeAlias,
     Union,
 )
+from collections.abc import Iterable
 
 from . import error, infer, python
 
 if TYPE_CHECKING:
     from . import config, graph
 
-Types: TypeAlias = set[Tuple["python.Class", int]]  # TODO merge with cpp.py version
+Types: TypeAlias = set[tuple["python.Class", int]]  # TODO merge with cpp.py version
 
 
 logger = logging.getLogger("typestr")
@@ -69,14 +66,14 @@ def types_var_types(gx: "config.GlobalInfo", types: Types, varname: str) -> Type
 
 def types_classes(types: Types) -> set["python.Class"]:
     """Get the classes of a variable"""
-    return set(t[0] for t in types if isinstance(t[0], python.Class))
+    return {t[0] for t in types if isinstance(t[0], python.Class)}
 
 
 def unboxable(gx: "config.GlobalInfo", types: Types) -> Optional[str]:
     """Check if a variable is unboxable"""
     if not isinstance(types, set):
         types = infer.inode(gx, types).types()
-    classes = set(t[0] for t in types)
+    classes = {t[0] for t in types}
 
     if [cl for cl in classes if cl.ident not in ["int_", "float_", "bool_", "complex"]]:
         return None
@@ -86,14 +83,14 @@ def unboxable(gx: "config.GlobalInfo", types: Types) -> Optional[str]:
         return None
 
 
-def singletype(gx: "config.GlobalInfo", node: Any, t: Type[Any]) -> Any:
+def singletype(gx: "config.GlobalInfo", node: Any, t: type[Any]) -> Any:
     """Check if a variable has a single type"""
     types = [t[0] for t in infer.inode(gx, node).types()]
     if len(types) == 1 and isinstance(types[0], t):
         return types[0]
 
 
-def singletype2(types: Types, t: Type[Any]) -> Any:
+def singletype2(types: Types, t: type[Any]) -> Any:
     """Check if a variable has a single type"""
     ltypes = list(types)
     if len(types) == 1 and isinstance(ltypes[0][0], t):
@@ -109,7 +106,7 @@ def polymorphic_cl(
     gx: "config.GlobalInfo", classes: Iterable["python.Class"]
 ) -> set["python.Class"]:
     """Get the polymorphic classes of a variable"""
-    cls = set(cl for cl in classes)
+    cls = {cl for cl in classes}
     if (
         len(cls) > 1
         and python.def_class(gx, "none") in cls
@@ -246,7 +243,7 @@ def dynamic_variable_error(
     gx: "config.GlobalInfo",
     node: "python.Variable",
     types: Types,
-    conv2: Dict[str, str],
+    conv2: dict[str, str],
 ) -> None:
     """Handle a dynamic variable error"""
     if not node.name.startswith("__"):  # XXX startswith
@@ -333,8 +330,8 @@ def typestrnew(
             return ident + " *"
         return conv.get(ident, ident)
 
-    anon_funcs = set(t[0] for t in types if isinstance(t[0], python.Function))
-    static_cls = set(t[0] for t in types if isinstance(t[0], python.StaticClass))
+    anon_funcs = {t[0] for t in types if isinstance(t[0], python.Function)}
+    static_cls = {t[0] for t in types if isinstance(t[0], python.StaticClass)}
     if (anon_funcs or static_cls) and check_extmod:
         raise ExtmodError()
     if anon_funcs:
@@ -366,9 +363,9 @@ def typestrnew(
 
     # --- multiple parent classes
     if len(lcp) > 1:
-        if set(lcp) == set(
-            [python.def_class(gx, "int_"), python.def_class(gx, "float_")]
-        ):
+        if set(lcp) == {
+            python.def_class(gx, "int_"), python.def_class(gx, "float_")
+        }:
             return conv["float_"]
         elif not node or (
             infer.inode(gx, node).mv and infer.inode(gx, node).mv.module.builtin
@@ -525,11 +522,11 @@ def incompatible_assignment_rec(
     floattype = (python.def_class(gx, "float_"), 0)
 
     # int -> float
-    if depth > 0 and (argtypes == set([inttype]) and floattype in formaltypes):
+    if depth > 0 and (argtypes == {inttype} and floattype in formaltypes):
         return True
 
     # bool -> int
-    if depth > 0 and (argtypes == set([booltype]) and inttype in formaltypes):
+    if depth > 0 and (argtypes == {booltype} and inttype in formaltypes):
         return True
 
     # void * -> non-pointer

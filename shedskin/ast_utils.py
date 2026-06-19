@@ -29,7 +29,7 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
-from typing import Any, List, Tuple, Union
+from typing import Any, Union
 
 from . import config
 
@@ -120,7 +120,7 @@ def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
 
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
-def assign_rec(left: ast.AST, right: ast.AST) -> List[Tuple[ast.AST, ast.AST]]:
+def assign_rec(left: ast.AST, right: ast.AST) -> list[tuple[ast.AST, ast.AST]]:
     """Recursively determine (lvalue, rvalue) pairs in assignment expressions"""
     if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
         assert isinstance(left, (ast.Tuple, ast.List))

@@ -20,7 +20,8 @@ CPython side.
 """
 
 import logging
-from typing import TYPE_CHECKING, Iterable, List, Optional
+from typing import TYPE_CHECKING, Optional
+from collections.abc import Iterable
 
 from . import infer, python, typestr
 
@@ -42,7 +43,7 @@ OVERLOAD = [
 
 def clname(cl: "python.Class") -> str:
     """Class name normalizer"""
-    return "__ss_%s_%s" % ("_".join(cl.mv.module.name_list), cl.ident)
+    return "__ss_{}_{}".format("_".join(cl.mv.module.name_list), cl.ident)
 
 
 class ExtensionModule:
@@ -67,7 +68,7 @@ class ExtensionModule:
 
     def supported_vars(
         self, variables: Iterable["python.Variable"]
-    ) -> List["python.Variable"]:  # XXX virtuals?
+    ) -> list["python.Variable"]:  # XXX virtuals?
         """Supported variables
         XXX currently only classs / instance variables"""
         supported = []
@@ -101,7 +102,7 @@ class ExtensionModule:
 
     def supported_funcs(
         self, funcs: Iterable["python.Function"]
-    ) -> List["python.Function"]:
+    ) -> list["python.Function"]:
         """Supported functions"""
         supported = []
         for func in funcs:
@@ -177,7 +178,7 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])  # TODO inhcpa?
         )
 
-    def do_add_globals(self, classes: List["python.Class"], ssmod: str) -> None:
+    def do_add_globals(self, classes: list["python.Class"], ssmod: str) -> None:
         """Add global variables to the module"""
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
@@ -211,7 +212,7 @@ class ExtensionModule:
                 )
 
     def do_reduce_setstate(
-        self, cl: "python.Class", vars: List["python.Variable"]
+        self, cl: "python.Class", vars: list["python.Variable"]
     ) -> None:
         """Generate a reduce and setstate method"""
         write = self.write
@@ -311,7 +312,7 @@ class ExtensionModule:
             write("}\n}")
 
     def do_extmod_methoddef(
-        self, ident: str, funcs: List["python.Function"], cl: Optional["python.Class"]
+        self, ident: str, funcs: list["python.Function"], cl: Optional["python.Class"]
     ) -> None:
         """Generate an extension method definition"""
         write = self.write
@@ -325,7 +326,7 @@ class ExtensionModule:
                 assert isinstance(f.parent, python.Class)
                 if overload == "__abs__":
                     write(
-                        "    (int (*)(PyObject *))%s_%s," % (clname(f.parent), overload)
+                        "    (int (*)(PyObject *)){}_{},".format(clname(f.parent), overload)
                     )
                 elif overload in OVERLOAD_SINGLE:
                     write(
@@ -333,7 +334,7 @@ class ExtensionModule:
                         % (clname(f.parent), overload)
                     )
                 else:
-                    write("    (PyCFunction)%s_%s," % (clname(f.parent), overload))
+                    write("    (PyCFunction){}_{},".format(clname(f.parent), overload))
             else:
                 write("    0,")
         write("};\n")
@@ -406,9 +407,9 @@ class ExtensionModule:
                 self.gv.append("1, ")
                 defau = func.defaults[i - (len(formals) - len(func.defaults))]
                 if defau in func.mv.defaults:
-                    if self.gv.mergeinh[defau] == set(
-                        [(python.def_class(self.gx, "none"), 0)]
-                    ):
+                    if self.gv.mergeinh[defau] == {
+                        (python.def_class(self.gx, "none"), 0)
+                    }:
                         self.gv.append("0")
                     else:
                         self.gv.append(
@@ -508,7 +509,7 @@ class ExtensionModule:
         write("    // create extension module")
         __ss_mod = "_".join(self.gv.module.name_list)
         write(
-            "    __ss_mod_%s = m = PyModule_Create(&Module_%s);" % (__ss_mod, __ss_mod)
+            "    __ss_mod_{} = m = PyModule_Create(&Module_{});".format(__ss_mod, __ss_mod)
         )
         write("    if (m == NULL)")
         write("        return NULL;\n")
@@ -555,7 +556,7 @@ class ExtensionModule:
         write("typedef struct {")
         write("    PyObject_HEAD")
         write(
-            "    %s::%s *__ss_object;" % (cl.module.full_path(), self.gv.cpp_name(cl))
+            "    {}::{} *__ss_object;".format(cl.module.full_path(), self.gv.cpp_name(cl))
         )
         write("} %sObject;\n" % clname(cl))
 
@@ -604,7 +605,7 @@ class ExtensionModule:
         write("}\n")
 
         # tp_dealloc
-        write("void %sDealloc(%sObject *self) {" % (clname(cl), clname(cl)))
+        write("void {}Dealloc({}Object *self) {{".format(clname(cl), clname(cl)))
         write("    Py_TYPE(self)->tp_free((PyObject *)self);")
         write("    __ss_proxy->__delitem__(self->__ss_object);")
         write("}\n")
@@ -654,7 +655,7 @@ class ExtensionModule:
         # python type (new)
         write("PyTypeObject %sObjectType = {" % clname(cl))
         write("    PyVarObject_HEAD_INIT(NULL, 0)")
-        write('    "%s.%s",' % (cl.module.ident, cl.ident))
+        write('    "{}.{}",'.format(cl.module.ident, cl.ident))
         write("    sizeof( %sObject)," % clname(cl))
         write("    0,")
         write("    (destructor) %sDealloc," % clname(cl))
@@ -732,7 +733,7 @@ class ExtensionModule:
             "PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list)
         )
 
-    def exported_classes(self, warns: bool = False) -> List["python.Class"]:
+    def exported_classes(self, warns: bool = False) -> list["python.Class"]:
         """Get exported classes"""
         classes = []
         for cl in self.gv.module.mv.classes.values():

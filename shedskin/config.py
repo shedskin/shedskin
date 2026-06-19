@@ -10,7 +10,7 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union
 
 from .state import (
     BuildConfiguration,
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from .utils import ProgressBar
 
 # types aliases
-CartesianProduct: TypeAlias = Tuple[Tuple["python.Class", int], ...]
+CartesianProduct: TypeAlias = tuple[tuple["python.Class", int], ...]
 
 # constants
 PLATFORM = platform.system()
@@ -50,7 +50,7 @@ class GlobalInfo:
 
         # Load C++ keywords from illegal.txt
         with open(self._paths.shedskin_illegal / "illegal.txt") as illegal_file:
-            cpp_keywords = set(line.strip() for line in illegal_file)
+            cpp_keywords = {line.strip() for line in illegal_file}
 
         # Initialize focused state objects
         self._naming = NamingContext(cpp_keywords=cpp_keywords)
@@ -62,7 +62,7 @@ class GlobalInfo:
         self._build_config = BuildConfiguration()
 
         # Mutable copy of libdirs (can be modified via --extra-lib)
-        self._libdirs: List[str] = list(self._paths.libdirs)
+        self._libdirs: list[str] = list(self._paths.libdirs)
 
         # Mutable module state (not in state objects)
         self.main_module: "python.Module"
@@ -136,11 +136,11 @@ class GlobalInfo:
         return self._paths.shedskin_lib
 
     @property
-    def libdirs(self) -> List[str]:
+    def libdirs(self) -> list[str]:
         return self._libdirs
 
     @libdirs.setter
-    def libdirs(self, value: List[str]) -> None:
+    def libdirs(self, value: list[str]) -> None:
         self._libdirs = value
 
     @property
@@ -339,12 +339,12 @@ class GlobalInfo:
         self,
     ) -> dict[
         Union["python.Function", "ast.AST"],
-        List[Union["python.Function", "ast.AST"]],
+        list[Union["python.Function", "ast.AST"]],
     ]:
         return self._registry.inheritance_relations
 
     @property
-    def inheritance_temp_vars(self) -> dict["python.Variable", List["python.Variable"]]:
+    def inheritance_temp_vars(self) -> dict["python.Variable", list["python.Variable"]]:
         return self._registry.inheritance_temp_vars
 
     @property
@@ -377,7 +377,7 @@ class GlobalInfo:
         return self._graph_context.tempcount
 
     @property
-    def loopstack(self) -> List[Union["ast.While", "ast.For"]]:
+    def loopstack(self) -> list[Union["ast.While", "ast.For"]]:
         return self._graph_context.loopstack
 
     @property
@@ -411,7 +411,7 @@ class GlobalInfo:
     @property
     def struct_unpack(
         self,
-    ) -> dict["ast.Assign", Tuple[List[Tuple[str, str, str, int]], str, str]]:
+    ) -> dict["ast.Assign", tuple[list[tuple[str, str, str, int]], str, str]]:
         return self._graph_context.struct_unpack
 
     @property
@@ -427,7 +427,7 @@ class GlobalInfo:
         return self._graph_context.from_module
 
     @property
-    def list_types(self) -> dict[Tuple[int, "ast.AST"], int]:
+    def list_types(self) -> dict[tuple[int, "ast.AST"], int]:
         return self._graph_context.list_types
 
     # TypeInferenceState delegation
@@ -440,40 +440,40 @@ class GlobalInfo:
         self._type_inference.constraints = value
 
     @property
-    def cnode(self) -> dict[Tuple[Any, int, int], "infer.CNode"]:
+    def cnode(self) -> dict[tuple[Any, int, int], "infer.CNode"]:
         return self._type_inference.cnode
 
     @cnode.setter
-    def cnode(self, value: dict[Tuple[Any, int, int], "infer.CNode"]) -> None:
+    def cnode(self, value: dict[tuple[Any, int, int], "infer.CNode"]) -> None:
         self._type_inference.cnode = value
 
     @property
-    def types(self) -> dict["infer.CNode", set[Tuple[Any, int]]]:
+    def types(self) -> dict["infer.CNode", set[tuple[Any, int]]]:
         return self._type_inference.types
 
     @types.setter
-    def types(self, value: dict["infer.CNode", set[Tuple[Any, int]]]) -> None:
+    def types(self, value: dict["infer.CNode", set[tuple[Any, int]]]) -> None:
         self._type_inference.types = value
 
     @property
-    def orig_types(self) -> dict["infer.CNode", set[Tuple[Any, int]]]:
+    def orig_types(self) -> dict["infer.CNode", set[tuple[Any, int]]]:
         return self._type_inference.orig_types
 
     @orig_types.setter
-    def orig_types(self, value: dict["infer.CNode", set[Tuple[Any, int]]]) -> None:
+    def orig_types(self, value: dict["infer.CNode", set[tuple[Any, int]]]) -> None:
         self._type_inference.orig_types = value
 
     @property
     def alloc_info(
         self,
-    ) -> dict[Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]]:
+    ) -> dict[tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]]:
         return self._type_inference.alloc_info
 
     @alloc_info.setter
     def alloc_info(
         self,
         value: dict[
-            Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
+            tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]
         ],
     ) -> None:
         self._type_inference.alloc_info = value
@@ -481,14 +481,14 @@ class GlobalInfo:
     @property
     def new_alloc_info(
         self,
-    ) -> dict[Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]]:
+    ) -> dict[tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]]:
         return self._type_inference.new_alloc_info
 
     @new_alloc_info.setter
     def new_alloc_info(
         self,
         value: dict[
-            Tuple[str, CartesianProduct, "ast.AST"], Tuple["python.Class", int]
+            tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]
         ],
     ) -> None:
         self._type_inference.new_alloc_info = value
@@ -574,11 +574,11 @@ class GlobalInfo:
         self._type_inference.cpa_limited = value
 
     @property
-    def merged_inh(self) -> dict[Any, set[Tuple[Any, int]]]:
+    def merged_inh(self) -> dict[Any, set[tuple[Any, int]]]:
         return self._type_inference.merged_inh
 
     @merged_inh.setter
-    def merged_inh(self, value: dict[Any, set[Tuple[Any, int]]]) -> None:
+    def merged_inh(self, value: dict[Any, set[tuple[Any, int]]]) -> None:
         self._type_inference.merged_inh = value
 
     @property
