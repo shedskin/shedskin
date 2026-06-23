@@ -39,10 +39,10 @@ class Shedskin:
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(logging.INFO)
-        # debug=3 -> IFA (iterative flow analysis) logging enabled.
-        self.ifa_log = logging.getLogger("infer.ifa")
-        self.ifa_log.addHandler(console)
-        self.ifa_log.setLevel(logging.INFO)
+        # debug=3 -> IFA (iterative flow analysis) debug logging enabled.
+        self.infer_log = logging.getLogger("infer")
+        self.infer_log.addHandler(console)
+        self.infer_log.setLevel(logging.INFO)
 
     def get_name(self, module_path: str) -> str:
         """Returns name of module to be translated.
@@ -101,8 +101,8 @@ class Shedskin:
 
             if args.debug:
                 self.log.setLevel(logging.DEBUG)
-                if args.debug == 3:
-                    self.ifa_log.setLevel(logging.DEBUG)
+                if args.debug >= 3:
+                    self.infer_log.setLevel(logging.DEBUG)
 
             if args.int32:
                 gx.int32 = True
