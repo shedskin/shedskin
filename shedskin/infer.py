@@ -114,7 +114,6 @@ PossibleFuncs: TypeAlias = list[
 ]
 
 logger = logging.getLogger("infer")
-ifa_logger = logging.getLogger("infer.ifa")
 
 
 def _const_str(node: ast.AST) -> str:
@@ -1463,7 +1462,7 @@ def ifa(gx: "config.GlobalInfo") -> Split:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
     for cl in ifa_classes_to_split(gx):
-        ifa_logger.debug("IFA: --- class %s ---", cl.ident)
+        logger.debug("IFA: --- class %s ---", cl.ident)
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
@@ -1474,9 +1473,9 @@ def ifa(gx: "config.GlobalInfo") -> Split:
                 )
                 is not None
             ):
-                ifa_logger.debug("IFA found splits, return")
+                logger.debug("IFA found splits, return")
                 return split
-    ifa_logger.debug("IFA final return")
+    logger.debug("IFA final return")
     return split
 
 
@@ -1504,7 +1503,7 @@ def ifa_split_vars(
             csites,
             emptycsites,
         ) = ifa_flow_graph(gx, cl, dcpa, node, allcsites)
-        ifa_logger.debug(
+        logger.debug(
             "IFA visit var %s.%s, %d, csites %d", cl.ident, var.name, dcpa, len(csites)
         )
         if len(csites) + len(emptycsites) == 1:
@@ -1537,7 +1536,7 @@ def ifa_split_vars(
             if len(remaining) < 2 or len(remaining) >= 10:
                 continue
             # --- if it exists, perform actual splitting
-            ifa_logger.debug("IFA normal split, remaining: %d", len(remaining))
+            logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, list(splitsites), split)
             return split
@@ -1553,12 +1552,12 @@ def ifa_split_vars(
                 prt[ts] = []
             prt[ts].append(c)
         if len(prt) > 1:
-            ifa_logger.debug("IFA partition csites: %s", list(prt.values())[0])
+            logger.debug("IFA partition csites: %s", list(prt.values())[0])
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
-            ifa_logger.debug("IFA wholesale splitting, csites: %d", len(csites))
+            logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
@@ -1607,7 +1606,7 @@ def ifa_split_no_confusion(
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
     if subtype_csites:
-        ifa_logger.debug("IFA found simple split: %s", subtype_csites.keys())
+        logger.debug("IFA found simple split: %s", subtype_csites.keys())
 
 
 def ifa_class_types(
@@ -1626,7 +1625,7 @@ def ifa_class_types(
                 attr_types_list.append(frozenset())
         attr_types = tuple(attr_types_list)
         if all(attr_types):
-            ifa_logger.debug(
+            logger.debug(
                 "IFA %s: %s",
                 dcpa,
                 list(zip([var.name for var in vars], [list(a) for a in attr_types])),
@@ -1817,8 +1816,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
         split = ifa(gx)
         if split:
             logger.debug("%d splits", len(split))
-            if ifa_logger.isEnabledFor(logging.DEBUG):
-                ifa_logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
+            logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
 
         if not split or maxiter:
             if not maxiter:
