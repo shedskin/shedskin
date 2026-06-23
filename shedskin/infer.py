@@ -1537,7 +1537,7 @@ def ifa_split_vars(
             if len(remaining) < 2 or len(remaining) >= 10:
                 continue
             # --- if it exists, perform actual splitting
-            ifa_logger.debug("IFA normal split, remaining:", len(remaining))
+            ifa_logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, list(splitsites), split)
             return split
