@@ -112,13 +112,13 @@ inline __ss_float __floordiv(__ss_float a, __ss_int b) { return floor(a/((__ss_f
 template<class A> A __mods(A a, A b);
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
-    int m = a%b;
+    __ss_int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }
 #endif
 template<> inline int __mods(int a, int b) {
-    int m = a%b;
+    __ss_int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }
