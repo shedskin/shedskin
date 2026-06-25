@@ -1275,7 +1275,7 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None
                         continue
                     gx.added_funcs += 1
                     gx.added_funcs_set.add(func)
-                    logger.debug("adding %s", func)
+                    logger.debug("adding func %s", func)
 
             objtype2: CartesianProduct  # TODO wrong name for type!
             if objtype:
@@ -1816,7 +1816,8 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
         split = ifa(gx)
         if split:
             logger.debug("%d splits", len(split))
-            logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
 
         if not split or maxiter:
             if not maxiter:
@@ -1934,6 +1935,8 @@ def ifa_seed_template(
                         added_new += 1
                         gx.added_allocs += 1
                     added.add(node.thing)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug("adding alloc %s (%s:%s)", ast.unparse(node.thing), node.mv.module.ident, getattr(node.thing, 'lineno', None))
 
                 # --- contour is specified in alloc_info
                 assert isinstance(node.parent, python.Function)
