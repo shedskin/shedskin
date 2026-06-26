@@ -886,6 +886,32 @@ def propagate(gx: "config.GlobalInfo") -> None:
                     callnodes.add(gx.cnode[t])
 
             for b in a.out.copy():  # XXX can change...?
+                typesa = types[a]
+                typesb = types[b]
+
+                if typesa:
+                     ints = {t for t in typesa if t[0].ident == 'int_'}
+                     strs = {t for t in typesa if t[0].ident == 'str'}
+                     tupls = {t for t in typesa if t[0].ident == 'tuple'}
+
+                     if (ints and strs) or (ints and tupls):
+                         print('RESTRICT PROP:', typesa)
+                         continue
+
+                if isinstance(b.thing, python.Variable) and isinstance(
+                    b.thing.parent, python.Class
+                ):
+                    alltypes = typesb.copy()
+                    alltypes.update(typesa)
+
+                    ints = {t for t in alltypes if t[0].ident == 'int_'}
+                    strs = {t for t in alltypes if t[0].ident == 'str'}
+                    tupls = {t for t in alltypes if t[0].ident == 'tuple'}
+
+                    if (ints and strs) or (ints and tupls):
+                        print('RESTRICT OUT:', alltypes)
+                        continue
+
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
                 if isinstance(b.thing, python.Variable) and isinstance(
                     b.thing.parent, python.Class
@@ -929,8 +955,8 @@ def propagate(gx: "config.GlobalInfo") -> None:
                         ]:
                             continue
 
-                typesa = types[a]
-                typesb = types[b]
+#                typesa = types[a]
+#                typesb = types[b]
                 oldsize = len(typesb)
 
                 typesb.update(typesa)
