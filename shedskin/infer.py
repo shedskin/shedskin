@@ -890,13 +890,15 @@ def propagate(gx: "config.GlobalInfo") -> None:
                 typesb = types[b]
 
                 if typesa:
-                     ints = {t for t in typesa if t[0].ident == 'int_'}
-                     strs = {t for t in typesa if t[0].ident == 'str'}
-                     tupls = {t for t in typesa if t[0].ident == 'tuple'}
+                    ints = {t for t in typesa if t[0].ident == 'int_'}
+                    tupl2s = {t for t in typesa if t[0].ident == 'tuple2'}
+                    prdn = {t for t in typesa if t[0].ident == 'Period'}
+                    vrsn = {t for t in typesa if t[0].ident == 'Verstrekking'}
+                    nonnum = {t for t in typesa if t[0].ident not in ('int_', 'float_')}
 
-                     if (ints and strs) or (ints and tupls):
-                         print('RESTRICT PROP:', typesa)
-                         continue
+                    if (prdn and vrsn) or (ints and nonnum) or (vrsn and tupl2s):
+#                        print('RESTRICT PROP:', typesa)
+                        continue
 
                 if isinstance(b.thing, python.Variable) and isinstance(
                     b.thing.parent, python.Class
@@ -905,11 +907,13 @@ def propagate(gx: "config.GlobalInfo") -> None:
                     alltypes.update(typesa)
 
                     ints = {t for t in alltypes if t[0].ident == 'int_'}
-                    strs = {t for t in alltypes if t[0].ident == 'str'}
-                    tupls = {t for t in alltypes if t[0].ident == 'tuple'}
+                    tupl2s = {t for t in alltypes if t[0].ident == 'tuple2'}
+                    prdn = {t for t in alltypes if t[0].ident == 'Period'}
+                    vrsn = {t for t in alltypes if t[0].ident == 'Verstrekking'}
+                    nonnum = {t for t in alltypes if t[0].ident not in ('int_', 'float_')}
 
-                    if (ints and strs) or (ints and tupls):
-                        print('RESTRICT OUT:', alltypes)
+                    if (prdn and vrsn) or (ints and nonnum) or (vrsn and tupl2s):
+#                        print('RESTRICT OUT:', alltypes)
                         continue
 
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
