@@ -1769,7 +1769,10 @@ def ifa_split_class(
 
 def update_progressbar(gx: "config.GlobalInfo", perc: float) -> None:
     """Update the progress bar"""
-    if not gx.silent:
+    if (
+        not gx.silent
+        and not logger.isEnabledFor(logging.DEBUG)
+    ):
         if gx.progressbar is None:
             gx.progressbar = utils.ProgressBar(total=1)
 
@@ -1844,6 +1847,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
                 perc = 1.0
                 if allfuncs:
                     perc = min((len(added_funcs) / len(allfuncs))**2, 0.99)
+                logger.debug('%d functions added out of %d', len(added_funcs), len(allfuncs))
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
