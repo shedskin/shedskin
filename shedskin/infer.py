@@ -1463,8 +1463,7 @@ def ifa(gx: "config.GlobalInfo") -> Split:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
     for cl in ifa_classes_to_split(gx):
-        if TRACE:
-            logger.debug("IFA: --- class %s ---", cl.ident)
+        logger.debug("IFA: --- class %s ---", cl.ident)
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
@@ -1609,7 +1608,10 @@ def ifa_split_no_confusion(
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
     if subtype_csites:
-        logger.debug("IFA found simple split: %s", subtype_csites.keys())
+        if not TRACE:
+            logger.debug("IFA found simple split for (%s, %s):", cl.ident, dcpa)
+        for t in subtype_csites:
+            logger.debug("    %s", tuple(map(set, t)))
 
 
 def ifa_class_types(
@@ -1627,7 +1629,7 @@ def ifa_class_types(
             else:
                 attr_types_list.append(frozenset())
         attr_types = tuple(attr_types_list)
-        if TRACE and all(attr_types):
+        if any(attr_types):
             logger.debug(
                 "IFA %s: %s",
                 dcpa,
