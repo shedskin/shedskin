@@ -114,6 +114,7 @@ PossibleFuncs: TypeAlias = list[
 ]
 
 logger = logging.getLogger("infer")
+TRACE = False  # TODO add logging level?
 
 
 def _const_str(node: ast.AST) -> str:
@@ -1462,7 +1463,8 @@ def ifa(gx: "config.GlobalInfo") -> Split:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
     for cl in ifa_classes_to_split(gx):
-        logger.debug("IFA: --- class %s ---", cl.ident)
+        if TRACE:
+            logger.debug("IFA: --- class %s ---", cl.ident)
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
@@ -1503,9 +1505,10 @@ def ifa_split_vars(
             csites,
             emptycsites,
         ) = ifa_flow_graph(gx, cl, dcpa, node, allcsites)
-        logger.debug(
-            "IFA visit var %s.%s, %d, csites %d", cl.ident, var.name, dcpa, len(csites)
-        )
+        if TRACE:
+            logger.debug(
+                "IFA visit var %s.%s, %d, csites %d", cl.ident, var.name, dcpa, len(csites)
+            )
         if len(csites) + len(emptycsites) == 1:
             continue
         if (
@@ -1624,7 +1627,7 @@ def ifa_class_types(
             else:
                 attr_types_list.append(frozenset())
         attr_types = tuple(attr_types_list)
-        if all(attr_types):
+        if TRACE and all(attr_types):
             logger.debug(
                 "IFA %s: %s",
                 dcpa,
