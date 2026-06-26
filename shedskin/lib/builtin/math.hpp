@@ -100,9 +100,19 @@ template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { return floor(a/b); }
 
 #ifdef __SS_LONG /* XXX */
-template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) { return (__ss_int)floor((__ss_float)a/b); } /* XXX */
+template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
+    __ss_int r = a / b;
+    __ss_int m = a % b;
+    if (m != 0 && ((a ^ b) < 0)) r -= 1;
+    return r;
+}
 #endif
-template<> inline int __floordiv(int a, int b) { return (int)floor((__ss_float)a/b); } /* XXX */
+template<> inline int __floordiv(int a, int b) {
+    int r = a / b;
+    int m = a % b;
+    if (m != 0 && ((a ^ b) < 0)) r -= 1;
+    return r;
+}
 
 inline __ss_float __floordiv(__ss_int a, __ss_float b) { return floor((__ss_float)a/b); }
 inline __ss_float __floordiv(__ss_float a, __ss_int b) { return floor(a/((__ss_float)b)); }
