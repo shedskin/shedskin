@@ -589,6 +589,14 @@ class GlobalInfo:
     def maxhits(self, value: int) -> None:
         self._type_inference.maxhits = value
 
+    @property
+    def retry_maxiters(self) -> int:
+        return self._type_inference.retry_maxiters
+
+    @retry_maxiters.setter
+    def retry_maxiters(self, value: bool) -> None:
+        self._type_inference.retry_maxiters = value
+
     def get_stats(self) -> dict[str, Any]:
         assert self.module_path is not None
         pyfile = Path(self.module_path)
