@@ -61,3 +61,4 @@ class TypeInferenceState:
     cpa_limited: bool = False
     merged_inh: Dict[Any, Set[Tuple[Any, int]]] = field(default_factory=dict)
     maxhits: int = 0
+    retry_maxiters: bool = False

@@ -104,6 +104,9 @@ class Shedskin:
                 if args.debug >= 3:
                     self.infer_log.setLevel(logging.DEBUG)
 
+            if args.retry:
+                gx.retry_maxiters = True
+
             if args.int32:
                 gx.int32 = True
 
@@ -216,9 +219,16 @@ class Shedskin:
 
     def translate(self) -> None:
         """Translate the main module"""
-        self.pre_analyze()
-        t0 = time.time()
-        infer.analyze(self.gx, self.module_name)
+        while True:
+            try:
+                self.pre_analyze()
+                t0 = time.time()
+                infer.analyze(self.gx, self.module_name)
+                break
+            except infer.MaxIterationsException:
+                self.log.info("[restarting analysis]")
+                self.gx = self.configure(self.gx.options)
+                self.module_name = self.get_name(self.gx.options.name)
         cpp.generate_code(self.gx)
         error.print_errors()
         prebuild_secs = time.time() - t0
@@ -319,6 +329,7 @@ class Shedskin:
         grp("-l", "--link-libs", help="Add a link library", action="append")
         grp("-X", "--extra-lib", help="Add an extra builtins library directory")
         grp("-o", "--outputdir", help="Specify output directory for generated files")
+        grp("--retry", help="Retry analysis when hitting max iterations", action="store_true")
         grp(
             "-s",
             "--silent",
