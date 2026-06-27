@@ -117,6 +117,10 @@ logger = logging.getLogger("infer")
 TRACE = False  # TODO add logging level?
 
 
+class MaxIterationsException(Exception):
+    pass
+
+
 def _const_str(node: ast.AST) -> str:
     """Return string value from a constant node."""
     assert isinstance(node, ast.Constant)
@@ -1851,6 +1855,8 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
+                if gx.retry_maxiters:
+                    raise MaxIterationsException
                 gx.maxhits += 1
                 if gx.maxhits == 3:
                     return
@@ -2004,7 +2010,7 @@ def ifa_seed_template(
                     gx.types[alloc_node].add(gx.alloc_info[alloc_id])
                     add_to_worklist(worklist, alloc_node)
 
-        if added_new and not func.mv.module.builtin:
+        if added_new and not func.mv.module.builtin:  # TODO improve logging
             logger.debug("%d seed(s): %s", added_new, func)
 
 
