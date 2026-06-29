@@ -62,6 +62,14 @@ def test_list_index1():
     assert a[-2] == 2
     assert a[-1] == 3
 
+    lst = [1,0,2,3]
+    missing = False
+    try:
+        lst.index(3,0,2)
+    except ValueError as e:
+        missing = True
+    assert missing
+
 
 def test_list_index2():
     xs = [1, 2, 3, 1]
