@@ -112,6 +112,10 @@ def test_list_del():
     del a[::2]
     assert a == [3, 5, 7]
 
+    lst = list(range(10))
+    del lst[8:2:-2]
+    assert lst == [0, 1, 2, 3, 5, 7, 9]
+
 
 def test_list_append():
     a = []
