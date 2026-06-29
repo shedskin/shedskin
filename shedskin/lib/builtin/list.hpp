@@ -492,7 +492,7 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, 
 template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    auto it = std::find(this->units.begin()+s, this->units.end()+e, a);
+    auto it = std::find(this->units.begin()+s, this->units.begin()+e, a);
     if (it != this->units.end()) {
         return (__ss_int)std::distance(this->units.begin(), it);
     }
