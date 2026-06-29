@@ -396,9 +396,15 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
         __delslice__(l, u);
     else {
         __GC_VECTOR(T) v;
-        for(__ss_int i=0; i<this->__len__();i++)
-            if(i < l or i >= u or (i-l)%s)
+        for(__ss_int i=0; i<this->__len__();i++) {
+            bool remove;
+            if(s > 0)
+                remove = (i >= l && i < u && (i-l)%s == 0);
+            else
+                remove = (i <= l && i > u && (l-i)%(-s) == 0);
+            if(!remove)
                 v.push_back(this->units[(size_t)i]);
+        }
         units = v;
     }
     return NULL;
