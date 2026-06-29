@@ -463,10 +463,14 @@ template<class T> template<class U> list<T> *list<T>::__iadd__(U *iter) {
 }
 
 template<class T> list<T> *list<T>::__imul__(__ss_int n) {
+    if(n < 0 ) {
+        this->units.resize(0);
+        return this;
+    }
     __ss_int l1 = this->__len__();
     this->units.resize(l1*n);
     for(__ss_int i = 1; i <= n-1; i++)
-        std::copy(this->units.begin(), this->units.begin()+l1, this>units.begin()+l1*i);
+        std::copy(this->units.begin(), this->units.begin()+l1, this->units.begin()+l1*i);
     return this;
 }
 
