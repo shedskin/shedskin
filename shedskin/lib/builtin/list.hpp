@@ -396,9 +396,15 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
         __delslice__(l, u);
     else {
         __GC_VECTOR(T) v;
-        for(__ss_int i=0; i<this->__len__();i++)
-            if(i < l or i >= u or (i-l)%s)
+        for(__ss_int i=0; i<this->__len__();i++) {
+            bool remove;
+            if(s > 0)
+                remove = (i >= l && i < u && (i-l)%s == 0);
+            else
+                remove = (i <= l && i > u && (l-i)%(-s) == 0);
+            if(!remove)
                 v.push_back(this->units[(size_t)i]);
+        }
         units = v;
     }
     return NULL;
@@ -463,10 +469,14 @@ template<class T> template<class U> list<T> *list<T>::__iadd__(U *iter) {
 }
 
 template<class T> list<T> *list<T>::__imul__(__ss_int n) {
+    if(n < 0 ) {
+        this->units.resize(0);
+        return this;
+    }
     __ss_int l1 = this->__len__();
     this->units.resize(l1*n);
     for(__ss_int i = 1; i <= n-1; i++)
-        std::copy(this->units.begin(), this->units.begin()+l1, this>units.begin()+l1*i);
+        std::copy(this->units.begin(), this->units.begin()+l1, this->units.begin()+l1*i);
     return this;
 }
 
@@ -482,8 +492,8 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, 
 template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    auto it = std::find(this->units.begin()+s, this->units.end()+e, a);
-    if (it != this->units.end()) {
+    auto it = std::find(this->units.begin()+s, this->units.begin()+e, a);
+    if (it != this->units.begin()+e) {
         return (__ss_int)std::distance(this->units.begin(), it);
     }
     throw new ValueError(new str("list.index(x): x not in list"));

@@ -59,8 +59,16 @@ def test_list_index1():
     a = [1, 2, 3]
     assert a[0] == 1
     assert a[1] == 2
-    assert a[-2] == 2 
+    assert a[-2] == 2
     assert a[-1] == 3
+
+    lst = [1,0,2,3]
+    missing = False
+    try:
+        lst.index(3,0,2)
+    except ValueError as e:
+        missing = True
+    assert missing
 
 
 def test_list_index2():
@@ -111,6 +119,10 @@ def test_list_del():
     assert a == [0, 3, 4, 5, 6, 7, 8]
     del a[::2]
     assert a == [3, 5, 7]
+
+    lst = list(range(10))
+    del lst[8:2:-2]
+    assert lst == [0, 1, 2, 3, 5, 7, 9]
 
 
 def test_list_append():
@@ -180,6 +192,16 @@ def test_list_copy():
     assert bb == aa
 
 
+def test_list_imul():
+    l = [1,2,3]
+    l *= 4
+    assert l == [1,2,3,1,2,3,1,2,3,1,2,3]
+
+    l = [1,2,3]
+    l *= -1
+    assert l == []
+
+
 def test_all():
     test_list_append()
     test_list_assign()
@@ -196,6 +218,7 @@ def test_all():
     test_list_subsets()
     test_list_copy()
     test_tuple_in_list()
+    test_list_imul()
 
 
 if __name__ == "__main__":
