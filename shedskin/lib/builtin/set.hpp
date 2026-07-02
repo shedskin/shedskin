@@ -196,7 +196,7 @@ template<class T> template<class U> set<T>::set(U *other) {
 }
 
 template<class T> template<class ... Args> set<T>::set(int, Args ... args)  {
-    this->__class__ = cl_dict;
+    this->__class__ = cl_set;
     this->frozen = 0;
     this->hash = -1;
 
