@@ -210,8 +210,6 @@ template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
         return False;
 
     // TODO why can't we just use unordered_map operator==
-    typename __GC_SET<T>::iterator it;
-
     for (const auto& key : gcs)
         if (b->gcs.find(key) == b->gcs.end())
             return False;
