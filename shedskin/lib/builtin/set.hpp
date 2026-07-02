@@ -628,13 +628,13 @@ template<class T> __ss_bool set<T>::isdisjoint(pyiter<T> *s) {
 }
 
 template<class T> set<T> *set<T>::__copy__() {
-    set<T> *c = new set<T>();
+    set<T> *c = new set<T>(this->frozen);
     c->gcs = gcs;
     return c;
 }
 
 template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    set<T> *c = new set<T>();
+    set<T> *c = new set<T>(this->frozen);
     memo->__setitem__(this, c);
     typename set<T>::for_in_unit e;
     typename set<T>::for_in_loop __3;
