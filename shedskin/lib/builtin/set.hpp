@@ -196,7 +196,7 @@ template<class T> template<class U> set<T>::set(U *other) {
 }
 
 template<class T> template<class ... Args> set<T>::set(int, Args ... args)  {
-    this->__class__ = cl_dict;
+    this->__class__ = cl_set;
     this->frozen = 0;
     this->hash = -1;
 
@@ -210,8 +210,6 @@ template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
         return False;
 
     // TODO why can't we just use unordered_map operator==
-    typename __GC_SET<T>::iterator it;
-
     for (const auto& key : gcs)
         if (b->gcs.find(key) == b->gcs.end())
             return False;
@@ -628,13 +626,13 @@ template<class T> __ss_bool set<T>::isdisjoint(pyiter<T> *s) {
 }
 
 template<class T> set<T> *set<T>::__copy__() {
-    set<T> *c = new set<T>();
+    set<T> *c = new set<T>(this->frozen);
     c->gcs = gcs;
     return c;
 }
 
 template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    set<T> *c = new set<T>();
+    set<T> *c = new set<T>(this->frozen);
     memo->__setitem__(this, c);
     typename set<T>::for_in_unit e;
     typename set<T>::for_in_loop __3;
