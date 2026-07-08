@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <limits>
+#include <numeric>
 
 #ifndef WIN32
 #include <cxxabi.h>
