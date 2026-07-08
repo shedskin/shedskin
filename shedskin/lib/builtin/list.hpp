@@ -269,7 +269,7 @@ template<class T> void *list<T>::extend(list<T> *p) {
     if(l2 > 0) {
         l1 = this->units.size();
         this->units.resize(l1+l2);
-        std::copy(p->units.begin(), p->units.end(), this->units.begin()+l1);
+        std::copy(p->units.begin(), p->units.begin()+l2, this->units.begin()+l1);
     }
     return NULL;
 }
