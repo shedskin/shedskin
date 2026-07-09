@@ -1963,6 +1963,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         func2 = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)[7:-3]
         self.output("%s __get_next() {" % func2)
+        self.output("%s __get_next_awesome() {" % func2)
         self.indent()
         self.output("switch(__last_yield) {")
         self.indent()
@@ -3774,12 +3775,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("class " + lcfunc.ident + " : public " + ts[:-2] + " {")
             self.output("public:")
             self.indent()
+            self.output("static constexpr bool is_awesome=true;")
             self.local_defs(lcfunc)
             for a, b in args:
                 self.output(a + b + ";")
             self.output("int __last_yield;\n")
             self.output(func1 + ";")
             self.output(func2 + " __get_next();")
+            self.output(func2 + " __get_next_awesome();")
             self.deindent()
             self.output("};\n")
         else:
@@ -3788,13 +3791,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.output("    this->{} = {};".format(b, b))
             self.output("    __last_yield = -1;")
             self.output("}\n")
-            self.output(func2 + " " + lcfunc.ident + "::__get_next() {")
+            self.output(func2 + " " + lcfunc.ident + "::__get_next_awesome() {")
             self.indent()
             self.output("if(!__last_yield) goto __after_yield_0;")
             self.output("__last_yield = 0;\n")
             self.listcomp_rec(node, node.generators, lcfunc, True)
             self.output("__stop_iteration = true;")
             self.output("return __zero<%s>();" % func2)
+            self.deindent()
+            self.output("}\n")
+            self.output(func2 + " " + lcfunc.ident + "::__get_next() {")
+            self.indent()
+            self.output("return __get_next_awesome();")
             self.deindent()
             self.output("}\n")
 

@@ -14,12 +14,10 @@
 
 #define FOR_IN(e, iter, temp, i, t) \
     __ ## temp = iter; \
-    __ ## i = -1; \
     (void)__ ## i; \
     __ ## t = __ ## temp->for_in_init(); \
-    while(__ ## temp->for_in_has_next(__ ## t)) \
+    for(__ ## i = 0; __ ## temp->for_in_has_next(__ ## t); __ ## i ++) \
     { \
-        __ ## i ++; \
         e = __ ## temp->for_in_next(__ ## t);
 
 #define FOR_IN_ZIP(a, b, k, l, t, u, n, m) \

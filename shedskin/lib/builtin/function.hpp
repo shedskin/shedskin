@@ -112,6 +112,13 @@ template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
 template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
     typename __sumtype1<typename U::for_in_unit>::type result;
+    if constexpr (U::is_awesome) {
+        result = 0;
+        iter->__stop_iteration = false;
+        while(!iter->__stop_iteration)
+            result += iter->__get_next_awesome();
+        return result;
+    }
     result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -814,6 +821,15 @@ template<class T> inline ifilteriter<T, bool> *filter(void * /* null */, pyiter<
 /* any */
 
 template<class A> __ss_bool any(A *iter) {
+    if constexpr (A::is_awesome) {
+        iter->__stop_iteration = false;
+        while(!iter->__stop_iteration) {
+            __ss_bool hum = iter->__get_next_awesome();
+            if(!iter->__stop_iteration && hum)
+                return True;
+        }
+        return False;
+    }
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
     int __2;
@@ -828,6 +844,15 @@ template<class A> __ss_bool any(A *iter) {
 /* all */
 
 template<class A> __ss_bool all(A *iter) {
+    if constexpr (A::is_awesome) {
+        iter->__stop_iteration = false;
+        while(!iter->__stop_iteration) {
+            __ss_bool hum = iter->__get_next_awesome();
+            if(!iter->__stop_iteration && !hum)
+                return False;
+        }
+        return True;
+    }
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
     int __2;
