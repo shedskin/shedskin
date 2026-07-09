@@ -1963,6 +1963,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         func2 = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)[7:-3]
         self.output("%s __get_next() {" % func2)
+        self.output("    return __get_next_awesome();")
+        self.output("}")
         self.output("%s __get_next_awesome() {" % func2)
         self.indent()
         self.output("switch(__last_yield) {")
