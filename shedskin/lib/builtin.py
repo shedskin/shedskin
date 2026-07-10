@@ -229,7 +229,7 @@ class list(pyseq):
     def append(self, u):
         self.unit = u
 
-    def index(self, u, s=0, e=0):
+    def index(self, u, start=0, stop=0):
         u == self.unit
         return 1
     def count(self, u):
@@ -280,7 +280,7 @@ class list(pyseq):
     def insert(self, i, u):
         self.unit = u
 
-    def pop(self, m=0):
+    def pop(self, index=0):
         return self.unit
 
     def reverse(self):
@@ -393,13 +393,13 @@ class str_(pyseq):
     def casefold(self):
         return ''
 
-    def find(self, sub, s=0, e=0):
+    def find(self, sub, start=0, end=0):
         return 1
-    def rfind(self, sub, s=0, e=0):
+    def rfind(self, sub, start=0, end=0):
         return 1
-    def index(self, sub, s=0, e=0):
+    def index(self, sub, start=0, end=0):
         return 1
-    def rindex(self, sub, s=0, e=0):
+    def rindex(self, sub, start=0, end=0):
         return 1
 
     def isdigit(self):
@@ -427,9 +427,9 @@ class str_(pyseq):
 
     def zfill(self, width):
         return ''
-    def ljust(self, width, chars=''):
+    def ljust(self, width, fillchar=''):
         return ''
-    def rjust(self, width, chars=''):
+    def rjust(self, width, fillchar=''):
         return ''
     def expandtabs(self, tabsize=8):
         return ''
@@ -445,7 +445,7 @@ class str_(pyseq):
     def replace(self, a, b, count=-1):
         return ''
 
-    def translate(self, table, delchars=''):
+    def translate(self, table):
         return ''
 
     def swapcase(self):
@@ -468,11 +468,11 @@ class bytes_(pyseq):
     def fromhex(cls, s):
         return b''
 
-    def strip(self, chars=''):
+    def strip(self, bytes=''):
         return b''
-    def lstrip(self, chars=''):
+    def lstrip(self, bytes=''):
         return b''
-    def rstrip(self, chars=''):
+    def rstrip(self, bytes=''):
         return b''
 
     def istitle(self):
@@ -514,13 +514,13 @@ class bytes_(pyseq):
     def capitalize(self):
         return b''
 
-    def find(self, sub, s=0, e=0):
+    def find(self, sub, start=0, end=0):
         return 1
-    def rfind(self, sub, s=0, e=0):
+    def rfind(self, sub, start=0, end=0):
         return 1
-    def index(self, sub, s=0, e=0):
+    def index(self, sub, start=0, end=0):
         return 1
-    def rindex(self, sub, s=0, e=0):
+    def rindex(self, sub, start=0, end=0):
         return 1
 
     def isdigit(self):
@@ -540,9 +540,9 @@ class bytes_(pyseq):
 
     def zfill(self, width):
         return b''
-    def ljust(self, width, chars=''):
+    def ljust(self, width, fillchar=''):
         return b''
-    def rjust(self, width, chars=''):
+    def rjust(self, width, fillchar=''):
         return b''
     def expandtabs(self, tabsize=8):
         return b''
@@ -563,10 +563,10 @@ class bytes_(pyseq):
     def center(self, width, fillchar=b''):
         return b''
 
-    def replace(self, a, b, c=0):
+    def replace(self, a, b, count=0):
         return b''
 
-    def translate(self, table, delchars=''):
+    def translate(self, table):
         return b''
 
     def swapcase(self):
@@ -627,8 +627,8 @@ class bytes_(pyseq):
 
 class dict(pyiter):
     @classmethod
-    def fromkeys(cls, l, b=None):
-        return {iter(l).__next__(): b}
+    def fromkeys(cls, l, value=None):
+        return {iter(l).__next__(): value}
 
     def __initdict__(self, d):
         self.__setunit__(d.unit, d.value)
@@ -661,9 +661,9 @@ class dict(pyiter):
     def __delitem__(self, k):
         self.__key__(k)
 
-    def setdefault(self, u, v=None):
-        self.__setunit__(u, v)
-        return v
+    def setdefault(self, u, default=None):
+        self.__setunit__(u, default)
+        return default
 
     def has_key(self, u):
         self.__key__(u)
@@ -676,11 +676,11 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
-    def get(self, u, v=None):
+    def get(self, u, default=None):
         self.__key__(u)
         return self.value
         return v
-    def pop(self, k, d=None):
+    def pop(self, k, default=None):
         self.__key__(k)
         return self.value
     def popitem(self):
@@ -950,7 +950,7 @@ def bin(x):
 def isinstance(a, b):
     return True
 
-def input(msg=''):
+def input(prompt=''):
     return ''
 
 class file(pyiter):
@@ -1068,7 +1068,7 @@ def open_binary(name, flags=None):
 def ord(c):
     return 1
 
-def round(x, n=0):
+def round(x, ndigits=0):
     return 1.0
 
 def divmod(a, b):
@@ -1088,7 +1088,7 @@ def hash(x):
 def len(w):
     return w.__len__()
 
-def pow(a, b, c=1):
+def pow(a, b, mod=1):
     return a.__pow__(b)
 
 def abs(x):
