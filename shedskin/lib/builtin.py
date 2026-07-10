@@ -676,7 +676,7 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
-    def get(self, u, default=None):
+    def get(self, u, v=None):  # TODO v -> default.. breaks plcfrs??
         self.__key__(u)
         return self.value
         return v
