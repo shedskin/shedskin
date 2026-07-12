@@ -114,12 +114,42 @@ def test_sort_dict():
     ]
 
 
+def test_sorted_key_kwarg():
+    words = ["banana", "kiwi", "fig", "apple"]
+    assert sorted(words, key=len) == ["fig", "kiwi", "apple", "banana"]
+    assert sorted(words, key=lambda w: w[-1]) == ["banana", "apple", "fig", "kiwi"]
+
+
+def test_sorted_reverse_kwarg():
+    nums = [5, 2, 8, 1, 9, 3]
+    assert sorted(nums, reverse=True) == [9, 8, 5, 3, 2, 1]
+    assert sorted(nums, reverse=False) == [1, 2, 3, 5, 8, 9]
+
+
+def test_sorted_key_and_reverse_kwargs():
+    words = ["banana", "kiwi", "fig", "apple"]
+    # keywords in declared order
+    assert sorted(words, key=len, reverse=True) == ["banana", "apple", "kiwi", "fig"]
+    # keywords passed out of declared order
+    assert sorted(words, reverse=True, key=len) == ["banana", "apple", "kiwi", "fig"]
+
+
+def test_sorted_positional_iterable_with_kwargs():
+    pairs = [(1, "b"), (3, "a"), (2, "c")]
+    assert sorted(pairs, key=lambda p: p[1]) == [(3, "a"), (1, "b"), (2, "c")]
+    assert sorted(pairs, key=lambda p: p[1], reverse=True) == [(2, "c"), (1, "b"), (3, "a")]
+
+
 def test_all():
     test_sorted1()
     test_sorted2()
     test_sorted3()
     test_reversed()
     test_sort_dict()
+    test_sorted_key_kwarg()
+    test_sorted_reverse_kwarg()
+    test_sorted_key_and_reverse_kwargs()
+    test_sorted_positional_iterable_with_kwargs()
 
 
 if __name__ == '__main__':
