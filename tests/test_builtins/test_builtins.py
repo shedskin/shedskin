@@ -182,6 +182,8 @@ def test_max():
     assert max(xs) == 3
     assert max(xs, key=neg) == 1
 
+    assert max(xs, key=lambda y: -y) == 1
+
 
 def test_min():
     assert min([1]) == 1
@@ -204,6 +206,8 @@ def test_min():
     assert min(1, 2, key=neg) == 2
     assert min(xs) == 1
     assert min(xs, key=neg) == 3
+
+    assert min(xs, key=lambda u: -u) == 3
 
 
 def test_oct():

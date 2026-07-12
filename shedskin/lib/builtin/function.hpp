@@ -164,6 +164,7 @@ template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename
     return max;
 }
 
+template<class A> typename A::for_in_unit ___max(int nn, A *iter) { return ___max(nn, (int (*)(typename A::for_in_unit))0, iter); }
 template<class A> typename A::for_in_unit ___max(int nn, int, A *iter) { return ___max(nn, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
@@ -200,7 +201,7 @@ template<class T, class ... Args> T ___max(int, int key, T a, T b, T c, Args ...
 template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit min;
     B minkey, minkey2;
-    min = __zero<typename A::for_in_unit>(); 
+    min = __zero<typename A::for_in_unit>();
     minkey = __zero<B>(); 
     minkey2 = __zero<B>();
     int first = 1;
@@ -224,6 +225,7 @@ template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename
         throw new ValueError(new str("min() arg is an empty sequence"));
     return min;
 }
+template<class A> typename A::for_in_unit ___min(int nn, A *iter) { return ___min(nn, (int (*)(typename A::for_in_unit))0, iter); }
 template<class A> typename A::for_in_unit ___min(int nn, int, A *iter) { return ___min(nn, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B> inline T ___min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
