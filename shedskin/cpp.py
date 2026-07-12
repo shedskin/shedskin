@@ -3100,6 +3100,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             parent_constr,
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
+
         target: "python.Function"
         target = funcs[0]  # XXX
 
@@ -3167,7 +3168,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             rest = func.largs
 
         assert target.node
-        if target.node.args.vararg:
+        if target.node.args.vararg or target.ident in ('__min1', '__max1'):
             assert isinstance(rest, int)
             self.append("%d" % rest)
             if rest or pairs:
