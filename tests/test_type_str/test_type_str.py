@@ -6,7 +6,10 @@ def test_capitalize():
 
 
 def test_casefold():
-    assert 'BLA'.casefold()
+    assert 'BLA'.casefold() == 'bla'
+    assert 'hello'.casefold() == 'hello'
+    assert '123'.casefold() == '123'
+    assert 'Hi 5! Bye.'.casefold() == 'hi 5! bye.'
 
 
 def test_center():

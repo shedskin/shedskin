@@ -684,11 +684,11 @@ str *str::casefold() {
     for(size_t i=0; i<len; i++) {
         unsigned char c = (unsigned char)unit[i];
 
-        if(65 >= c and c <= 90)
+        if(65 <= c and c <= 90)
             c += 32;
-        else if(192 >= c and c <= 214)
+        else if(192 <= c and c <= 214)
             c += 32;
-        else if(216 >= c and c <= 222)
+        else if(216 <= c and c <= 222)
             c += 32;
 
         r->unit += (char)c;
