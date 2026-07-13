@@ -696,6 +696,8 @@ def analyze_callfunc(
         else:
             if namespace != mv.module:
                 return objexpr, ident, None, False, None, False, False
+        if direct_call and direct_call.ident in ('min', 'max'):  # TODO remove ident check
+            direct_call = redirect_func(direct_call, node)
 
     return (
         objexpr,
@@ -1107,20 +1109,11 @@ def possible_argtypes(
     return argtypes
 
 
-def redirect(
-    gx: "config.GlobalInfo",
-    c: CartesianProduct,
-    dcpa: int,
+def redirect_func(
     func: "python.Function",
     callfunc: ast.Call,
-    ident: Optional[str],
-    callnode: CNode,
-    direct_call: Optional["python.Function"],
-    constructor: Optional["python.Class"],
-) -> tuple[CartesianProduct, int, "python.Function"]:
-    """Redirect a call node"""
-
-    # redirect based on number of arguments (__%s%d syntax in builtins)
+) -> "python.Function":
+    """ redirect based on number of arguments (__%s%d syntax in builtins) """
     if func.mv.module.builtin:
         if isinstance(func.parent, python.Class):
             funcs = func.parent.funcs
@@ -1133,6 +1126,22 @@ def redirect(
             ),
         )
         func = funcs.get(redir, func)
+    return func
+
+
+def redirect(
+    gx: "config.GlobalInfo",
+    c: CartesianProduct,
+    dcpa: int,
+    func: "python.Function",
+    callfunc: ast.Call,
+    ident: Optional[str],
+    callnode: CNode,
+    direct_call: Optional["python.Function"],
+    constructor: Optional["python.Class"],
+) -> tuple[CartesianProduct, int, "python.Function"]:
+    """Redirect a call node"""
+    func = redirect_func(func, callfunc)
 
     # staticmethod
     if isinstance(func.parent, python.Class) and (
