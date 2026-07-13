@@ -256,6 +256,7 @@ def test_print():  # TODO print to StringIO and check?
     print({1, 2})
     print([])
     print(1, 2.2, end='hoep', sep='--')
+    print()
     assert True
 
 
@@ -360,6 +361,9 @@ def test_sum():
     assert sum([1, 2, 3], 4) == 10
     assert sum([[1], [2], [3, 4]], [0]) == [0, 1, 2, 3, 4]
     assert sum([[1], [2], [3, 4]], []) == [1, 2, 3, 4]
+    a = [1,2,3]
+    a = []
+    assert sum(a, start=7) == 7
 
 
 def test_tuple():

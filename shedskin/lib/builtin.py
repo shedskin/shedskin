@@ -908,17 +908,17 @@ __exception.strerror = ''
 __exception2 = SystemExit('')
 __exception2.code = 1
 
-def str(x=None):
-    x.__str__()
-    x.__repr__()
+def str(object=None):
+    object.__str__()
+    object.__repr__()
     return ''
 
-def bytes(x=None):
-    x.__bytes__()
+def bytes(source=None):
+    source.__bytes__()
     return b''
 
-def bytearray(x=None):
-#x.__bytes__()
+def bytearray(source=None):
+#source.__bytes__()
     return b''
 
 def int(x=None, base=1):
@@ -1068,7 +1068,7 @@ def open_binary(name, flags=None):
 def ord(c):
     return 1
 
-def round(x, ndigits=0):
+def round(number, ndigits=0):
     return 1.0
 
 def divmod(a, b):
@@ -1088,8 +1088,8 @@ def hash(x):
 def len(w):
     return w.__len__()
 
-def pow(a, b, mod=1):
-    return a.__pow__(b)
+def pow(base, exp, mod=1):
+    return base.__pow__(exp)
 
 def abs(x):
     return x.__abs__()
@@ -1103,8 +1103,8 @@ def sorted(it, cmp=0, key=0, reverse=0):
 def reversed(l):
     return iter(l)
 
-def enumerate(x, start=0):
-    return __iter((1, iter(x).__next__()))
+def enumerate(iterable, start=0):
+    return __iter((1, iter(iterable).__next__()))
 
 class __xrange(pyseq):
     def __init__(self):
@@ -1148,11 +1148,11 @@ def __min1(arg, __kw_key=0, __kw_default=0):
     __kw_key(elem)
     return elem
 
-def sum(l, b):
-    return sum(l)
-    return b
-def __sum1(l):
-    elem = iter(l).__next__()
+def sum(iterable, start):
+    return sum(iterable)
+    return start
+def __sum1(iterable):
+    elem = iter(iterable).__next__()
     elem.__add__(elem)
     return elem
 
