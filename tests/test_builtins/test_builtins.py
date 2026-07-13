@@ -135,6 +135,14 @@ def test_int():
     assert int(100.2) == 100
 
     assert (12345).bit_count() == 6
+
+
+def test_int_base():
+    assert int('ff', 16) == 255
+    assert int('ff', base=16) == 255
+    assert int('101', base=2) == 5
+    assert int('0x1A', base=0) == 26
+    assert int('  42  ') == 42
     assert (0b11111111111111111111111111111111).bit_count() == 32
 #    assert int.bit_count(-12345) == 6
 
@@ -390,6 +398,7 @@ def test_all():
     test_hash()
     test_hex()
     test_int()
+    test_int_base()
     test_isinstance() # always returns True
     # test_issubclass()
     test_len()
