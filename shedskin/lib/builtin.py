@@ -1132,7 +1132,7 @@ def max(__kw_key=0, *arg): # XXX 0
     __cmp(arg, arg)
     __kw_key(arg)
     return arg
-def __max1(arg, __kw_key=0):
+def __max1(arg, __kw_key=0, __kw_default=0):
     elem = iter(arg).__next__()
     __cmp(elem, elem)
     __kw_key(elem)
@@ -1142,7 +1142,7 @@ def min(__kw_key=0, *arg): # XXX 0
     __cmp(arg, arg)
     __kw_key(arg)
     return arg
-def __min1(arg, __kw_key=0):
+def __min1(arg, __kw_key=0, __kw_default=0):
     elem = iter(arg).__next__()
     __cmp(elem, elem)
     __kw_key(elem)
