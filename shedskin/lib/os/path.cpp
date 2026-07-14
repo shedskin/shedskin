@@ -177,7 +177,7 @@ str *commonprefix(list<str *> *m) {
         return const_0;
     }
     s1 = ___min(1, 0, m);
-    s2 = ___max(1, 0, m);
+    s2 = ___max(1, 0, 0, m);
     n = ___min(2, 0, len(s1), len(s2));
 
     FAST_FOR(i,0,n,1,11,12)
@@ -579,7 +579,7 @@ tuple2<str *, str *> *splitext(str *p) {
     __ss_int i;
 
     i = p->rfind(const_0);
-    if ((i<=___max(2, 0, p->rfind(const_6), p->rfind(const_4)))) {
+    if ((i<=___max(2, 0, 0, p->rfind(const_6), p->rfind(const_4)))) {
         return (new tuple2<str *, str *>(2, p, const_1));
     }
     else {
