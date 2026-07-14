@@ -3214,7 +3214,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("((void *)(")
 
             if arg in target.mv.defaults:
-                if self.mergeinh[arg] == {(python.def_class(self.gx, "none"), 0)}:
+                if (
+                    isinstance(arg, ast.Name)
+                    and arg.id == '__void'
+                ):
+                    self.append("__ss_void")
+                elif self.mergeinh[arg] == {(python.def_class(self.gx, "none"), 0)}:
                     self.append("NULL")
                 elif target.mv.module == self.mv.module:
                     self.append("default_%d" % (target.mv.defaults[arg][0]))

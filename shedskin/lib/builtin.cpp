@@ -27,6 +27,8 @@ __GC_VECTOR(bytes *) __byte_cache;
 __ss_bool True;
 __ss_bool False;
 
+__ss_int __ss_void;
+
 str *__case_swap_cache;
 
 char __str_cache[4000];
@@ -76,6 +78,8 @@ void __init() {
 
     True.value = 1;
     False.value = 0;
+
+    __ss_void = 0;
 
     byteorder_big = new str("big");
     byteorder_little = new str("little");

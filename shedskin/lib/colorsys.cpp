@@ -47,7 +47,7 @@ tuple2<__ss_float, __ss_float> *yiq_to_rgb(__ss_float y, __ss_float i, __ss_floa
 tuple2<__ss_float, __ss_float> *rgb_to_hls(__ss_float r, __ss_float g, __ss_float b) {
     __ss_float bc, gc, h, l, maxc, minc, rc, s;
 
-    maxc = ___max(3, ((__ss_float)(0)), r, g, b);
+    maxc = ___max(3, 0, ((__ss_float)(0)), r, g, b);
     minc = ___min(3, ((__ss_float)(0)), r, g, b);
     l = ((minc+maxc)/2.0);
     if (minc == maxc) {
@@ -109,7 +109,7 @@ __ss_float _v(__ss_float m1, __ss_float m2, __ss_float hue) {
 tuple2<__ss_float, __ss_float> *rgb_to_hsv(__ss_float r, __ss_float g, __ss_float b) {
     __ss_float bc, gc, h, maxc, minc, rc, s, v;
 
-    maxc = ___max(3, ((__ss_float)(0)), r, g, b);
+    maxc = ___max(3, 0, ((__ss_float)(0)), r, g, b);
     minc = ___min(3, ((__ss_float)(0)), r, g, b);
     v = maxc;
     if (minc == maxc) {
