@@ -512,6 +512,7 @@ def connect_actual_formal(
                 "sorted",
                 "min",
                 "max",
+                "__max1",
                 "__print",
                 "zip",
                 "split",
