@@ -1131,11 +1131,11 @@ def range(a, b=1, s=1):  # TODO use class directly
 
 __void = 0
 
-def max(__kw_key=0, __kw_default=__void, *arg): # XXX 0
+def max(__kw_key=__void, __kw_default=__void, *arg):
     __cmp(arg, arg)
     __kw_key(arg)
     return arg
-def __max1(arg, __kw_key=0, __kw_default=__void):
+def __max1(arg, __kw_key=__void, __kw_default=__void):
     elem = iter(arg).__next__()
     __cmp(elem, elem)
     __kw_key(elem)
