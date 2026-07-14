@@ -110,6 +110,7 @@ using tuple = tuple2<T, T>;
 
 extern __ss_bool True;
 extern __ss_bool False;
+extern __ss_int __ss_void;  // TODO own type
 
 /* externs */
 
