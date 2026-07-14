@@ -136,7 +136,7 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
 
 /* max */
 
-template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename A::for_in_unit), A *iter) {
+template<class A, class B> typename A::for_in_unit ___max(int, __ss_int default_, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit max;
     B maxkey, maxkey2;
     max = __zero<typename A::for_in_unit>(); 
@@ -164,18 +164,17 @@ template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename
     return max;
 }
 
-template<class A> typename A::for_in_unit ___max(int nn, A *iter) { return ___max(nn, (int (*)(typename A::for_in_unit))0, iter); }
-template<class A> typename A::for_in_unit ___max(int nn, int, A *iter) { return ___max(nn, (int (*)(typename A::for_in_unit))0, iter); }
+template<class A> typename A::for_in_unit ___max(int nn, __ss_int default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
-template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
-template<class T> inline  T ___max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
+template<class T, class B> inline T ___max(int, __ss_int default_, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
+template<class T> inline  T ___max(int, __ss_int default_, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
 template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
     if(__cmp(key(a),key(m))==1)
         m=a;
 }
 
-template<class T, class B, class ... Args> T ___max(int, B (*key)(T), T a, T b, T c, Args ... args) {
+template<class T, class B, class ... Args> T ___max(int, __ss_int default_, B (*key)(T), T a, T b, T c, Args ... args) {
     T m = a;
     update_max(m, key, b);
     update_max(m, key, c);
@@ -188,7 +187,7 @@ template<class T> inline void update_max(T &m, int, T a) {
         m=a;
 }
 
-template<class T, class ... Args> T ___max(int, int key, T a, T b, T c, Args ... args) {
+template<class T, class ... Args> T ___max(int, __ss_int default_, int key, T a, T b, T c, Args ... args) {
     T m = a;
     update_max(m, key, b);
     update_max(m, key, c);
