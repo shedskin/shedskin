@@ -1128,7 +1128,7 @@ class __xrange(pyseq):
 def range(a, b=1, s=1):  # TODO use class directly
     return __xrange()
 
-def max(__kw_key=0, *arg): # XXX 0
+def max(__kw_key=0, __kw_default=0, *arg): # XXX 0
     __cmp(arg, arg)
     __kw_key(arg)
     return arg
