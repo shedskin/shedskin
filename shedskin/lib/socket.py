@@ -101,7 +101,7 @@ class socket(object):
     def sendto(self, bufsize, flags=0, address=0):
         return 0
 
-def getfqdn(host):
+def getfqdn(name):
     return ''
 
 def gethostname():
