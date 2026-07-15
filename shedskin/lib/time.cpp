@@ -115,6 +115,27 @@ double time() {
     return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
 }
 
+#ifdef WIN32
+double perf_counter() {
+    static LARGE_INTEGER frequency;
+    static bool frequency_initialized = false;
+    if (!frequency_initialized) {
+        QueryPerformanceFrequency(&frequency);
+        frequency_initialized = true;
+    }
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / (double)frequency.QuadPart;
+}
+#else
+double perf_counter() {
+    timespec ts { 0, 0 };
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
+}
+#endif
+
 #ifndef WIN32
 void *sleep(double s) {
     time_t seconds = time_t(s);
