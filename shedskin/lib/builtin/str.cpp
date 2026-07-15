@@ -624,6 +624,24 @@ __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
     return __mbool(j == 0);
 }
 
+__ss_bool str::startswith(tuple<str *> *s) { return startswith(s, 0, __len__()); }
+__ss_bool str::startswith(tuple<str *> *s, __ss_int start) { return startswith(s, start, __len__()); }
+__ss_bool str::startswith(tuple<str *> *s, __ss_int start, __ss_int end) {
+    for(__ss_int i = 0; i < s->__len__(); i++)
+        if (___bool(startswith(s->__getitem__(i), start, end)))
+            return True;
+    return False;
+}
+
+__ss_bool str::endswith(tuple<str *> *s) { return endswith(s, 0, __len__()); }
+__ss_bool str::endswith(tuple<str *> *s, __ss_int start) { return endswith(s, start, __len__()); }
+__ss_bool str::endswith(tuple<str *> *s, __ss_int start, __ss_int end) {
+    for(__ss_int i = 0; i < s->__len__(); i++)
+        if (___bool(endswith(s->__getitem__(i), start, end)))
+            return True;
+    return False;
+}
+
 str *str::replace(str *a, str *b, __ss_int c) {
     __GC_STRING s = unit;
     size_t i, j, p;

@@ -96,9 +96,15 @@ public:
     __ss_bool startswith(str *s);
     __ss_bool startswith(str *s, __ss_int start);
     __ss_bool startswith(str *s, __ss_int start, __ss_int end);
+    __ss_bool startswith(tuple<str *> *s);
+    __ss_bool startswith(tuple<str *> *s, __ss_int start);
+    __ss_bool startswith(tuple<str *> *s, __ss_int start, __ss_int end);
     __ss_bool endswith(str *s);
     __ss_bool endswith(str *s, __ss_int start);
     __ss_bool endswith(str *s, __ss_int start, __ss_int end);
+    __ss_bool endswith(tuple<str *> *s);
+    __ss_bool endswith(tuple<str *> *s, __ss_int start);
+    __ss_bool endswith(tuple<str *> *s, __ss_int start, __ss_int end);
 
     str *zfill(__ss_int width);
     str *expandtabs(__ss_int tabsize=8);

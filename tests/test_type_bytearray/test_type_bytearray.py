@@ -8,6 +8,10 @@ def test_bytearray():
     assert BLA.__class__.__name__ == 'bytearray'
 
     assert BA.join([A, B, C]) == bytearray(b'a-b-c')
+    assert BLA.startswith((b'bla', b'xx'))
+    assert not BLA.startswith((b'xx', b'yy'))
+    assert BLA.endswith((b'la', b'xx'))
+    assert not BLA.endswith((b'xx', b'yy'))
     assert BA.expandtabs() == bytearray(b'-')
     assert BA.upper() == bytearray(b'-')
     assert BA.lower() == bytearray(b'-')

@@ -28,6 +28,8 @@ def test_encode():
 def test_endswith():  # TODO start, stop
     assert b'bla'.endswith(b'la')
     assert not b'bla'.endswith(b'xx')
+    assert b'hello world'.endswith((b'world', b'planet'))
+    assert not b'hello world'.endswith((b'bye', b'planet'))
 
 def test_expandtabs():
     assert b'bla\tbla'.expandtabs() == b'bla     bla'
@@ -215,6 +217,8 @@ def test_splitlines():
 def test_startswith():  # TODO start, stop
     assert b'bla'.startswith(b'bla')
     assert not b'bla'.startswith(b'xx')
+    assert b'hello world'.startswith((b'hello', b'hi'))
+    assert not b'hello world'.startswith((b'bye', b'hi'))
 
 def test_strip():
     assert b'bla  '.strip() == b'bla'
