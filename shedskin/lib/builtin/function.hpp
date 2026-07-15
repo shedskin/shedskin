@@ -201,7 +201,7 @@ template<class T, class D, class ... Args> T ___max(int, D default_, int key, T 
 
 /* min */
 
-template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename A::for_in_unit), A *iter) {
+template<class A, class B, class D> typename A::for_in_unit ___min(int, D default_, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit min;
     B minkey, minkey2;
     min = __zero<typename A::for_in_unit>();
@@ -224,22 +224,26 @@ template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename
         if(first)
             first = 0;
     END_FOR
-    if(first)
-        throw new ValueError(new str("min() arg is an empty sequence"));
+    if(first) {
+        if constexpr( std::is_same_v<D, __ss_void_struct> )
+            throw new ValueError(new str("min() arg is an empty sequence"));
+        else
+            return default_;
+    }
     return min;
 }
-template<class A> typename A::for_in_unit ___min(int nn, A *iter) { return ___min(nn, (int (*)(typename A::for_in_unit))0, iter); }
-template<class A> typename A::for_in_unit ___min(int nn, int, A *iter) { return ___min(nn, (int (*)(typename A::for_in_unit))0, iter); }
+//template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
+template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
-template<class T, class B> inline T ___min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
-template<class T> inline  T ___min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
+template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
+template<class T, class D> inline  T ___min(int, D default_, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
 template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
     if(__cmp(key(a),key(m))==-1)
         m=a;
 }
 
-template<class T, class B, class ... Args> T ___min(int, B (*key)(T), T a, T b, T c, Args ... args) {
+template<class T, class B, class D, class ... Args> T ___min(int, D default_, B (*key)(T), T a, T b, T c, Args ... args) {
     T m = a;
     update_min(m, key, b);
     update_min(m, key, c);
@@ -252,7 +256,7 @@ template<class T> inline void update_min(T &m, int, T a) {
         m=a;
 }
 
-template<class T, class ... Args> T ___min(int, int key, T a, T b, T c, Args ... args) {
+template<class T, class D, class ... Args> T ___min(int, D default_, int key, T a, T b, T c, Args ... args) {
     T m = a;
     update_min(m, key, b);
     update_min(m, key, c);

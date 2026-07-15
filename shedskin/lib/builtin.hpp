@@ -391,7 +391,7 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     if (!p) return 1;
     pyseq<T> *b = (pyseq<T> *)p;
     int i, cmp;
-    int mnm = ___min(2, 0, this->__len__(), b->__len__());
+    int mnm = ___min(2, __ss_void, 0, this->__len__(), b->__len__());
     for(i = 0; i < mnm; i++) {
         cmp = __cmp(this->__getitem__(i), b->__getitem__(i));
         if(cmp)
