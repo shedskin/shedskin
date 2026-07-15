@@ -202,6 +202,19 @@ def test_list_imul():
     assert l == []
 
 
+def test_list_iadd():
+    # 'list += iterable' extends in place: aliases DO see the change
+    l = [1, 2]
+    t = l
+    l += [3]
+    assert l == [1, 2, 3]
+    assert t == [1, 2, 3]
+    assert l is t
+
+    l += (4, 5)
+    assert t == [1, 2, 3, 4, 5]
+
+
 def test_all():
     test_list_append()
     test_list_assign()
@@ -219,6 +232,7 @@ def test_all():
     test_list_copy()
     test_tuple_in_list()
     test_list_imul()
+    test_list_iadd()
 
 
 if __name__ == "__main__":
