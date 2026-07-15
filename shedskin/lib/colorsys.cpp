@@ -48,7 +48,7 @@ tuple2<__ss_float, __ss_float> *rgb_to_hls(__ss_float r, __ss_float g, __ss_floa
     __ss_float bc, gc, h, l, maxc, minc, rc, s;
 
     maxc = ___max(3, __ss_void, ((__ss_float)(0)), r, g, b);
-    minc = ___min(3, ((__ss_float)(0)), r, g, b);
+    minc = ___min(3, __ss_void, ((__ss_float)(0)), r, g, b);
     l = ((minc+maxc)/2.0);
     if (minc == maxc) {
         return (new tuple2<__ss_float, __ss_float>(3,0.0,l,0.0));
@@ -110,7 +110,7 @@ tuple2<__ss_float, __ss_float> *rgb_to_hsv(__ss_float r, __ss_float g, __ss_floa
     __ss_float bc, gc, h, maxc, minc, rc, s, v;
 
     maxc = ___max(3, __ss_void, ((__ss_float)(0)), r, g, b);
-    minc = ___min(3, ((__ss_float)(0)), r, g, b);
+    minc = ___min(3, __ss_void, ((__ss_float)(0)), r, g, b);
     v = maxc;
     if (minc == maxc) {
         return (new tuple2<__ss_float, __ss_float>(3,0.0,0.0,v));
