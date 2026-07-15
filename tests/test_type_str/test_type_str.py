@@ -284,6 +284,49 @@ def test_upper():
     assert 'bla'.upper() == 'BLA'
 
 
+def concat_from_literal():
+    s = 'ab'
+    s += 'x'
+    return s
+
+
+def concat_param(p):
+    p += '!'
+    return p
+
+
+def test_iadd():
+    # 'str += str' rebinds to a new object: aliases must not change
+    s = 'ab'
+    t = s
+    s += 'x'
+    assert s == 'abx'
+    assert t == 'ab'
+
+    # literals must not be corrupted across calls
+    assert concat_from_literal() == 'abx'
+    assert concat_from_literal() == 'abx'
+
+    # caller's string unchanged when parameter is extended
+    u = 'hi'
+    assert concat_param(u) == 'hi!'
+    assert u == 'hi'
+
+    # references held by containers must not change
+    l = ['hello']
+    s2 = l[0]
+    s2 += '!'
+    assert s2 == 'hello!'
+    assert l[0] == 'hello'
+
+    # dict keys must stay intact
+    k = 'ab'
+    d = {k: 1}
+    k += 'c'
+    assert 'ab' in d
+    assert 'abc' not in d
+
+
 def test_zfill():
     assert 'bla'.zfill(10) == '0000000bla'
 
@@ -436,6 +479,7 @@ def test_all():
     test_translate()
     test_upper()
     test_zfill()
+    test_iadd()
     test_special_characters()
     test_str_id()
     test_bin()
