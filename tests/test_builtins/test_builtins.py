@@ -228,6 +228,17 @@ def test_min():
 
     assert min(xs, key=lambda u: -u) == 3
 
+    xs = []
+    assert min(xs, default=7) == 7
+    assert min(xs, default=7, key=lambda y: -y) == 7
+
+    try:
+        min(xs)
+    except ValueError:
+        pass
+    else:
+        assert False
+
 
 def test_oct():
     assert oct(10) == '0o12'

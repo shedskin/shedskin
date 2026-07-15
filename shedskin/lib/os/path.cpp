@@ -176,9 +176,9 @@ str *commonprefix(list<str *> *m) {
     if ((!___bool(m))) {
         return const_0;
     }
-    s1 = ___min(1, 0, m);
+    s1 = ___min(1, __ss_void, 0, m);
     s2 = ___max(1, __ss_void, 0, m);
-    n = ___min(2, 0, len(s1), len(s2));
+    n = ___min(2, __ss_void, 0, len(s1), len(s2));
 
     FAST_FOR(i,0,n,1,11,12)
         if (__ne(s1->__getitem__(i), s2->__getitem__(i))) {
