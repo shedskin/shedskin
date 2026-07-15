@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
+  This can help a lot with larger programs (no need to manually retry).
+- Catching up with Python 3.x:
+  - support `min/max(default)` argument
+
+### Fixed
+
+- Several builtin arguments can now be passed by keyword (e.g. `sum(start)`)
+- Several `--int64` related fixes (floordiv, modulo)
+- Fixed many minor bugs uncovered by Claude
+- Fixed several C++ compilation warnings
+
+### Optimized
+
+- Iteration over generator expressions is now much faster (though some work remains)
+
+### Tests
+
+- Added many tests for previously untested features
+
+### Changed
+
+- Improved type inference logging
+- Modernized type annotations (while still compatible with Python 3.9)
+
+## [0.9.12]
+
+### Added
+
 - Preliminary support for Python 3.15
 - Catching up with Python 3.x:
     - Added support for `int.from_bytes/to_bytes` (3.2, 3.11)
@@ -94,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed `requirements.txt` (dependencies now managed via `pyproject.toml` and uv) (`9602bf6b`)
 
-## [0.9.12]
+## [0.9.11]
 
 ### Added
 
