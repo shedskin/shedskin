@@ -1,19 +1,19 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
 ONE_THIRD = 1.0
 ONE_SIXTH = 1.0
 TWO_THIRD = 1.0
 
-def hls_to_rgb(a, b, c):
+def hls_to_rgb(h, l, s):
     return (1.0,)
-def rgb_to_hls(a, b, c):
+def rgb_to_hls(r, g, b):
     return (1.0,)
-def yiq_to_rgb(a, b, c):
+def yiq_to_rgb(y, i, q):
     return (1.0,)
-def rgb_to_yiq(a, b, c):
+def rgb_to_yiq(r, g, b):
     return (1.0,)
-def hsv_to_rgb(a, b, c):
+def hsv_to_rgb(h, s, v):
     return (1.0,)
-def rgb_to_hsv(a, b, c):
+def rgb_to_hsv(r, g, b):
     return (1.0,)
