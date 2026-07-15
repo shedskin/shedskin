@@ -104,6 +104,7 @@ def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id == "enumerate"
         and len(node.iter.args) == 1
+        and not node.iter.keywords  # TODO start arg not supported
         and is_assign_list_or_tuple(node.target)
     )
 
