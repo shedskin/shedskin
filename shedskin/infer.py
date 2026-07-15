@@ -511,6 +511,7 @@ def connect_actual_formal(
                 "sort",
                 "sorted",
                 "min",
+                "__min1",
                 "max",
                 "__max1",
                 "__print",
