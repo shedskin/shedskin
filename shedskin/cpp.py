@@ -3204,7 +3204,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             )
             formal_types = builtin_types or self.mergeinh[formal]
 
-            if double and self.mergeinh[arg] == {
+            if (
+                isinstance(arg, ast.Name)
+                and arg.id == '__void'
+            ):
+                pass
+            elif double and self.mergeinh[arg] == {
                 (python.def_class(self.gx, "int_"), 0)
             }:
                 cast = True

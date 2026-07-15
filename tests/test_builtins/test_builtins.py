@@ -192,6 +192,17 @@ def test_max():
 
     assert max(xs, key=lambda y: -y) == 1
 
+    xs = []
+    assert max(xs, default=7) == 7
+    assert max(xs, default=7, key=lambda y: -y) == 7
+
+    try:
+        max(xs)
+    except ValueError:
+        pass
+    else:
+        assert False
+
 
 def test_min():
     assert min([1]) == 1
