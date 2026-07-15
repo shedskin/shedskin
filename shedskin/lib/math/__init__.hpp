@@ -6,6 +6,7 @@
 #include "builtin.hpp"
 #include <math.h>
 #include <numeric>
+#include <limits>
 
 #include "integer.hpp"
 
@@ -310,11 +311,11 @@ template<class A> A prod(pyiter<A> *iterable, A start) {
 }
 
 inline __ss_float prod(pyiter<__ss_float> *iterable) {
-    return prod(iterable, 1.0);
+    return prod(iterable, (__ss_float)1.0);
 }
 
 inline __ss_int prod(pyiter<__ss_int> *iterable) {
-    return prod(iterable, 1);
+    return prod(iterable, (__ss_int)1);
 }
 
 inline __ss_float prod(pyiter<__ss_float> *iterable, __ss_int start) {
@@ -415,6 +416,35 @@ inline __ss_bool isnormal(__ss_float x) {
 
 inline __ss_bool __ss_issubnormal(__ss_float x) {
     return __mbool(std::fpclassify(x) == FP_SUBNORMAL);
+}
+
+inline __ss_float nextafter(__ss_float x, __ss_float y) {
+    return std::nextafter(x, y);
+}
+
+inline __ss_float ulp(__ss_float x) {
+    if(std::isnan(x))
+        return x;
+    x = fabs(x);
+    if(std::isinf(x))
+        return x;
+    __ss_float x2 = std::nextafter(x, std::numeric_limits<__ss_float>::infinity());
+    if(std::isinf(x2)) {
+        /* x is the largest positive representable value */
+        x2 = std::nextafter(x, -std::numeric_limits<__ss_float>::infinity());
+        return x - x2;
+    }
+    return x2 - x;
+}
+
+inline __ss_float remainder(__ss_float x, __ss_float y) {
+    if(std::isnan(x) || std::isnan(y))
+        return std::remainder(x, y);
+    if(std::isinf(x))
+        throw new ValueError(new str("math domain error"));
+    if(y == 0.0)
+        throw new ValueError(new str("math domain error"));
+    return std::remainder(x, y);
 }
 
 } // module namespace
