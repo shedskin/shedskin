@@ -27,6 +27,14 @@ def test_start_with_iterator():
     assert list(enumerate(it, start=10)) == [(10, 9), (11, 8), (12, 7)]
 
 
+def test_start_keyword_forloop():
+    # don't use FOR_IN_ENUMERATE with 'start' argument for now
+    result = []
+    for i, v in enumerate(['a', 'b', 'c'], start=1):
+        result.append((i, v))
+    assert result == [(1, 'a'), (2, 'b'), (3, 'c')]
+
+
 def test_all():
     test_list()
     test_iter()
@@ -34,6 +42,7 @@ def test_all():
     test_start_keyword()
     test_start_negative()
     test_start_with_iterator()
+    test_start_keyword_forloop()
 
 
 if __name__ == '__main__':
