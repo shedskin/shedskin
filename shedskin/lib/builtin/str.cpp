@@ -187,10 +187,10 @@ str *str::rjust(__ss_int width, str *s) {
 
 str *str::zfill(__ss_int width) {
     if(width<=__len__()) return this;
-    if(__len__() > 0 and (unit[0] == '-' or unit[0] == '+'))
-        return __add__((new str("0"))->__mul__(width-__len__()));
-    else
-        return (new str("0"))->__mul__(width-__len__())->__add__(this);
+    __GC_STRING r = unit;
+    size_t offset = (__len__() > 0 and (unit[0] == '-' or unit[0] == '+')) ? 1 : 0;
+    r.insert(offset, (size_t)(width-__len__()), '0');
+    return new str(r);
 }
 
 str *str::expandtabs(__ss_int tabsize) {

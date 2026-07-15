@@ -286,6 +286,15 @@ def test_upper():
 
 def test_zfill():
     assert 'bla'.zfill(10) == '0000000bla'
+    assert '42'.zfill(5) == '00042'
+    assert '-42'.zfill(5) == '-0042'
+    assert '+42'.zfill(5) == '+0042'
+    assert '-'.zfill(3) == '-00'
+    assert '+'.zfill(3) == '+00'
+    assert ''.zfill(3) == '000'
+    assert '-42'.zfill(3) == '-42'
+    assert '-42'.zfill(2) == '-42'
+    assert '-42'.zfill(0) == '-42'
 
 
 def heuk(x):
