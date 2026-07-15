@@ -231,6 +231,15 @@ def test_translate(): pass
 def test_upper():
     assert b'bla'.upper() == b'BLA'
 
+def test_iadd():
+    # 'bytes += bytes' rebinds to a new object: aliases must not change
+    b = b'ab'
+    c = b
+    b += b'x'
+    assert b == b'abx'
+    assert c == b'ab'
+
+
 def test_zfill():
     assert b'bla'.zfill(10) == b'0000000bla'
     assert b'42'.zfill(5) == b'00042'
@@ -411,6 +420,7 @@ def test_all():
     test_translate()
     test_upper()
     test_zfill()
+    test_iadd()
     test_bytes_hash()
     test_bytes_builtin()
     test_contains()
