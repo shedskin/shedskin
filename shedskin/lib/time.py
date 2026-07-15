@@ -6,6 +6,9 @@ tzname = ("str", "str")
 def clock():
     return 1.0
 
+def perf_counter():
+    return 1.0
+
 def sleep(s):
     pass
 
