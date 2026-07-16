@@ -576,8 +576,8 @@ __ss_int str::__checkneg(__ss_int i) {
 __ss_int str::index(str *s, __ss_int a) { return __checkneg(find(s, a)); }
 __ss_int str::index(str *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
 
-__ss_int str::rindex(str *s, __ss_int a) { return __checkneg(find(s, a)); }
-__ss_int str::rindex(str *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
+__ss_int str::rindex(str *s, __ss_int a) { return __checkneg(rfind(s, a)); }
+__ss_int str::rindex(str *s, __ss_int a, __ss_int b) { return __checkneg(rfind(s, a, b)); }
 
 __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__()); }
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
