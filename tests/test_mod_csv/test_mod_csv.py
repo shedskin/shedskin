@@ -381,6 +381,37 @@ def test_blank_lines():
     ]
 
 
+def test_writerow_none_field():
+    # a None value in a row must be written as an empty field, for any
+    # dialect/quoting -- it must not crash (regression test).
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['a', None, 'c'])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'a,,c'
+
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+        writer.writerow([None, 'b'])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == '"","b"'
+
+
+def test_writerow_single_empty_field():
+    # a row with exactly one empty/None field must be disambiguated from a
+    # truly blank row (regression test).
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f)
+        row_empty = []
+        row_single_empty = ['']
+        row_empty.append('x')
+        row_empty.pop()
+        writer.writerow(row_empty)         # [] -> blank line
+        writer.writerow(row_single_empty)  # [''] -> quoted "" to disambiguate
+    lines = [line.strip() for line in open('test_out.csv')]
+    assert lines == ['', '""']
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -391,6 +422,8 @@ def test_all():
     test_attrs()
     test_errors()
     test_blank_lines()
+    test_writerow_none_field()
+    test_writerow_single_empty_field()
 
 
 if __name__ == "__main__":
