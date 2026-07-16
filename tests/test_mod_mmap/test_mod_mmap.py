@@ -41,6 +41,9 @@ def test_anonymous():
 
     # print("# get/set:")
     assert map[:15] == b"foo bar\tbaz\nqux"
+    assert map[:] == map[:PAGESIZE]      # bare full slice must work like an explicit one
+    assert map[PAGESIZE:] == b""         # slicing from the exact end returns empty
+    assert map[15:PAGESIZE] == b"\x00" * (PAGESIZE - 15)  # slicing up to the exact end
     # print(map[0])
     map[-1] = ord("Z")
     # print(map[-1])
@@ -49,6 +52,20 @@ def test_anonymous():
     map[4:7] = b"foo"
     map[PAGESIZE - 3 :] = b"xyz"
     # print(map[PAGESIZE - 3 :])
+
+    saved = map[:]
+    map[:] = saved                       # bare full-slice assignment must work
+    assert map[:] == saved
+    try:
+        map[0:15] = b"too short"
+        assert False, "should have raised on size mismatch"
+    except IndexError:
+        pass
+    try:
+        map[0:15] = b"this string is much too long for the slice"
+        assert False, "should have raised on size mismatch"
+    except IndexError:
+        pass
 
     # print("# find/seek:")
     assert map.find(b"foo") == -1
