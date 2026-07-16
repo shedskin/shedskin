@@ -291,6 +291,28 @@ def test_translate():
     assert 'hello world'.translate(table, 'lo') == 'if!xse'
 
 
+def test_maketrans_translate():
+    # 2-arg maketrans: simple 1-to-1 char substitution
+    t2 = ''.maketrans('ab', 'xy')
+    assert 'abcdef'.translate(t2) == 'xycdef'
+
+    # 3-arg maketrans: substitution plus deletion
+    t3 = ''.maketrans('ab', 'xy', 'cd')
+    assert 'abcdef'.translate(t3) == 'xyef'
+
+    # 1-arg maketrans/translate: dict with int keys, str/None values,
+    # and a multi-character replacement string
+    d_int = {97: 'X', 98: None, 99: 'zzz'}
+    assert 'abcdef'.translate(d_int) == 'Xzzzdef'
+    assert 'abcdef'.translate(''.maketrans(d_int)) == 'Xzzzdef'
+
+    # 1-arg maketrans: dict with single-character string keys instead of
+    # ordinals -- must go through maketrans() first (translate() itself
+    # only ever looks up ordinals, exactly like CPython)
+    d_str = {'a': 'X', 'b': None}
+    assert 'abcdef'.translate(''.maketrans(d_str)) == 'Xcdef'
+
+
 def test_upper():
     assert 'bla'.upper() == 'BLA'
 
@@ -497,6 +519,7 @@ def test_all():
     test_swapcase()
     test_title()
     test_translate()
+    test_maketrans_translate()
     test_upper()
     test_zfill()
     test_iadd()

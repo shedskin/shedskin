@@ -345,6 +345,9 @@ class tuple2(pyseq):
         return 1
 
 class str_(pyseq):
+    def maketrans(self, x, y=None, z=None):
+        return {1: ''}
+
     def strip(self, chars=''):
         return ''
     def lstrip(self, chars=''):
@@ -468,6 +471,10 @@ class bytes_(pyseq):
     def fromhex(cls, s):
         return b''
 
+    @classmethod
+    def maketrans(cls, frm, to):
+        return b''
+
     def strip(self, bytes=''):
         return b''
     def lstrip(self, bytes=''):
@@ -566,7 +573,7 @@ class bytes_(pyseq):
     def replace(self, a, b, count=0):
         return b''
 
-    def translate(self, table):
+    def translate(self, table, delete=b''):
         return b''
 
     def swapcase(self):

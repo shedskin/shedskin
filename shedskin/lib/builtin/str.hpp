@@ -75,6 +75,10 @@ public:
 
     str *replace(str *a, str *b, __ss_int c=-1);
     str *translate(str *table, str *delchars=0);
+    str *translate(dict<__ss_int, str *> *table);
+    dict<__ss_int, str *> *maketrans(str *x, str *y, str *z=0);
+    dict<__ss_int, str *> *maketrans(dict<__ss_int, str *> *table);
+    dict<__ss_int, str *> *maketrans(dict<str *, str *> *table);
     str *swapcase();
     str *center(__ss_int width, str *fillchar=0);
 
