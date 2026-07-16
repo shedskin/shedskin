@@ -445,7 +445,7 @@ class str_(pyseq):
     def replace(self, a, b, count=-1):
         return ''
 
-    def translate(self, table):
+    def translate(self, table, delchars=''):
         return ''
 
     def swapcase(self):
@@ -1059,11 +1059,11 @@ class file_binary(pyiter):
     def __next__(self):
         return self.unit
 
-def open(name, flags=None):
-    return file(name, flags)
+def open(name, mode=None):
+    return file(name, mode)
 
-def open_binary(name, flags=None):
-    return file_binary(name, flags)
+def open_binary(name, mode=None):
+    return file_binary(name, mode)
 
 def ord(c):
     return 1
