@@ -66,7 +66,8 @@ public:
     //subject string
     str *string;
 
-    //NOTE: not implemented
+    //computed in re_object::__exec by scanning groupindex for the
+    //highest-numbered named group that participated in the match
     str *lastgroup;
 
     //functions
