@@ -38,6 +38,13 @@ def test_conversions():
 def test_tzname():
     assert len(time.tzname) == 2
 
+def test_perf_counter():
+    t1 = time.perf_counter()
+    time.sleep(0.1)
+    t2 = time.perf_counter()
+    assert t2 > t1
+    assert (t2 - t1) >= 0.09
+
 def test_sleep():
     t1 = time.time()
     time.sleep(0.5)
@@ -55,6 +62,7 @@ def test_all():
     test_sleep()
     # test_epoch()
     test_tzname()
+    test_perf_counter()
 
 if __name__ == '__main__':
     test_all() 

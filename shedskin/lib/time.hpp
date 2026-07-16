@@ -27,6 +27,7 @@ extern __ss_int timezone;
 extern tuple2<str *, str *> *tzname;
 
 double time();
+double perf_counter();
 void *sleep(double s);
 
 extern str *const_0, *const_1;
