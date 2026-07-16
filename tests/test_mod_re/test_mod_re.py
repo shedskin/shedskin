@@ -166,6 +166,54 @@ def test_flags():
     assert re.ASCII == 256
 
 
+def test_re_match_anchored():
+    # re.match() must anchor at the start of the string; previously the
+    # ANCHORED flag was silently dropped in __convert_flags(), making
+    # module-level match() behave like search() instead.
+    assert re.match('b', 'ab') is None
+    assert re.match('a', 'ab') is not None
+    assert re.match('a', 'ab').span() == (0, 1)
+
+
+def test_re_fullmatch_anchored():
+    # fullmatch() must reject partial matches, and must not crash when
+    # there's no match at all (a NULL match_object* used to be
+    # dereferenced unconditionally once anchoring actually worked).
+    assert re.fullmatch('b', 'ab') is None
+    assert re.fullmatch('ab', 'ab') is not None
+    assert re.fullmatch('ab', 'abc') is None
+    assert re.fullmatch('nomatch', 'ab') is None
+
+
+def test_re_locale_rejected():
+    error = ''
+    try:
+        re.compile('a', re.LOCALE)
+    except re.error as e:
+        error = str(e)
+    assert error == 'cannot use LOCALE flag with a str pattern'
+
+
+def test_re_compile_error_message():
+    # a real syntax error positioned well past byte 5, so the old
+    # "char " + erroroffset pointer-arithmetic bug would have produced
+    # garbage instead of a proper "char <N>:..." message
+    error = ''
+    try:
+        re.compile('aaaaaaaaaa(')
+    except re.error as e:
+        error = str(e)
+    assert error.startswith('char ')
+    offset = error[5:].split(':')[0]
+    assert offset.isdigit()
+
+
+def test_re_groups_count():
+    assert re.compile('abc').groups == 0
+    assert re.compile('(a)(b)(c)').groups == 3
+    assert re.compile('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)').groups == 12
+
+
 def test_purge():
     re.purge()
 
@@ -183,6 +231,11 @@ def test_all():
     test_re_example3()
     test_match_pos_endpos()
     test_flags()
+    test_re_match_anchored()
+    test_re_fullmatch_anchored()
+    test_re_locale_rejected()
+    test_re_compile_error_message()
+    test_re_groups_count()
     test_purge()
 
 

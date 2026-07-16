@@ -3,7 +3,7 @@
 
 # TODO fix re_object.groups, rename re_object to Pattern
 
-NOFLAGS = 0
+NOFLAG = 0
 I = IGNORECASE = 2
 L = LOCALE = 4
 M = MULTILINE = 8
