@@ -262,6 +262,13 @@ def test_startswith():
     assert not "hoi".startswith(":", 3)
     assert "hoi:".startswith(":", 3)
 
+    assert "hello world".startswith(("hello", "hi"))
+    assert not "hello world".startswith(("bye", "hi"))
+    assert "hello world".endswith(("world", "planet"))
+    assert not "hello world".endswith(("bye", "planet"))
+    assert "hello world".startswith(("ello",), 1)
+    assert "hello world".endswith(("worl",), 0, 10)
+
 
 def test_strip():
     assert 'bla  '.strip() == 'bla'

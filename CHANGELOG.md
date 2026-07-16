@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `min/max(default)`
   - Support `time.perf_counter`
   - Support `math.{ulp, nextafter, remainder}`
+  - Support `str/bytes.startswith/endswith(tuple)`
 
 ### Fixed
 

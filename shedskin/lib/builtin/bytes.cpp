@@ -457,6 +457,24 @@ __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
     return __mbool(j == 0);
 }
 
+__ss_bool bytes::startswith(tuple<bytes *> *s) { return startswith(s, 0, __len__()); }
+__ss_bool bytes::startswith(tuple<bytes *> *s, __ss_int start) { return startswith(s, start, __len__()); }
+__ss_bool bytes::startswith(tuple<bytes *> *s, __ss_int start, __ss_int end) {
+    for(__ss_int i = 0; i < s->__len__(); i++)
+        if (___bool(startswith(s->__getitem__(i), start, end)))
+            return True;
+    return False;
+}
+
+__ss_bool bytes::endswith(tuple<bytes *> *s) { return endswith(s, 0, __len__()); }
+__ss_bool bytes::endswith(tuple<bytes *> *s, __ss_int start) { return endswith(s, start, __len__()); }
+__ss_bool bytes::endswith(tuple<bytes *> *s, __ss_int start, __ss_int end) {
+    for(__ss_int i = 0; i < s->__len__(); i++)
+        if (___bool(endswith(s->__getitem__(i), start, end)))
+            return True;
+    return False;
+}
+
 bytes *bytes::removeprefix(bytes *prefix) {
     size_t l = prefix->unit.size();
     if(startswith(prefix))
