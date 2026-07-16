@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
   This can help a lot with larger programs (no need to manually retry).
 - Catching up with Python 3.x:
-  - support `min/max(default)` argument
+  - Support `min/max(default)`
+  - Support `math.{ulp, nextafter, remainder}'
 
 ### Fixed
 

@@ -273,6 +273,63 @@ def test_classification():
     assert math.issubnormal(0.0) == False
 
 
+def test_nextafter():
+    assert math.nextafter(1.0, 1.0) == 1.0
+    assert math.nextafter(0.0, math.inf) > 0.0
+    assert math.nextafter(0.0, -math.inf) < 0.0
+    assert math.nextafter(0.0, math.inf) == -math.nextafter(0.0, -math.inf)
+    assert math.nextafter(math.inf, 0.0) < math.inf
+    assert math.nextafter(-math.inf, 0.0) > -math.inf
+    assert math.isnan(math.nextafter(math.nan, 1.0))
+    assert math.nextafter(1.0, math.inf) > 1.0
+    assert math.nextafter(1.0, -math.inf) < 1.0
+
+
+def test_ulp():
+    assert math.ulp(1.0) > 0.0
+    assert math.ulp(-1.0) == math.ulp(1.0)
+    assert math.ulp(0.0) > 0.0
+    assert math.ulp(math.inf) == math.inf
+    assert math.isnan(math.ulp(math.nan))
+    assert math.nextafter(1.0, math.inf) - 1.0 == math.ulp(1.0)
+
+    # the largest finite float: ulp should be the gap to the previous float
+    largest = math.nextafter(math.inf, 0.0)
+    prev = math.nextafter(largest, -math.inf)
+    assert math.ulp(largest) == largest - prev
+
+
+def test_remainder():
+    assert math.remainder(5.0, 3.0) == -1.0
+    assert math.remainder(4.0, 2.0) == 0.0
+    assert math.remainder(-4.0, 2.0) == 0.0
+    assert math.remainder(1.0, math.inf) == 1.0
+    assert math.remainder(-1.0, math.inf) == -1.0
+    assert math.isnan(math.remainder(math.nan, 1.0))
+    assert math.isnan(math.remainder(1.0, math.nan))
+
+    error = ''
+    try:
+        math.remainder(1.0, 0.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'math domain error'
+
+    error = ''
+    try:
+        math.remainder(math.inf, 1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'math domain error'
+
+    error = ''
+    try:
+        math.remainder(math.inf, math.inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'math domain error'
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -285,6 +342,9 @@ def test_all():
     test_math_integer()
     test_fmax_fmin()
     test_classification()
+    test_nextafter()
+    test_ulp()
+    test_remainder()
 
 
 if __name__ == '__main__':
