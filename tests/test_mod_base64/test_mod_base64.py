@@ -1,4 +1,5 @@
 import base64
+import binascii
 
 
 def test_basic():
@@ -30,9 +31,33 @@ def test_altchars():
     assert base64.b64decode(a2, altchars=b'*?') == input_bytes
 
 
+def test_name():
+    assert base64.__name__ == 'base64'
+
+
+def test_validate():
+    good = base64.b64encode(b'Hello!')
+    assert base64.b64decode(good, validate=True) == b'Hello!'
+
+    # non-alphabet characters raise when validate=True ...
+    bad = b'SGVsbG8h@#$%'
+    ok = False
+    try:
+        base64.b64decode(bad, validate=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+    # ... but are tolerated when validate=False (the default)
+    assert base64.b64decode(bad, validate=False) == b'Hello!'
+    assert base64.b64decode(bad) == b'Hello!'
+
+
 def test_all():
     test_basic()
     test_altchars()
+    test_name()
+    test_validate()
 
 
 if __name__ == '__main__':

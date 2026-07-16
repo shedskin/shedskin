@@ -259,8 +259,8 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         table_a2b_base64['/'] = 63;
     }
 
-    if(strict_mode && pascii->unit[0] == BASE64_PAD)
-        throw new Error(new str("Leading padding not allowed"));  // TODO check new strict_mode behaviour in python source
+    if(strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)
+        throw new Error(new str("Leading padding not allowed"));
 
     char * ascii_data = &pascii->unit[0];
     size_t ascii_len = pascii->unit.size();
@@ -272,6 +272,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     int leftbits = 0;
     unsigned char this_ch;
     unsigned int leftchar = 0;
+    bool complete = false; /* true once a valid closing pad has been seen */
 
     size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
     bytes *binary = new bytes("", (int)bin_len, 1);
@@ -281,9 +282,21 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     for( ; ascii_len > 0; ascii_len--, ascii_data++) {
         this_ch = (unsigned char)(*ascii_data);
 
-        if (this_ch > 0x7f ||
-            this_ch == '\r' || this_ch == '\n' || this_ch == ' ')
+        /* In strict mode, nothing (not even whitespace) may follow
+        ** a valid closing pad sequence.
+        */
+        if (complete) {
+            if (strict_mode)
+                throw new Error(new str("Excess data after padding"));
             continue;
+        }
+
+        if (this_ch > 0x7f ||
+            this_ch == '\r' || this_ch == '\n' || this_ch == ' ') {
+            if (strict_mode)
+                throw new Error(new str("Only base64 data is allowed"));
+            continue;
+        }
 
         /* Check for pad sequences and ignore
         ** the invalid ones.
@@ -294,6 +307,8 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
                   (find_valid(ascii_data, ascii_len, 2, table_a2b_base64)
                    != BASE64_PAD)) )
             {
+                if (strict_mode)
+                    throw new Error(new str("Discontinuous padding not allowed"));
                 continue;
             }
             else {
@@ -302,13 +317,17 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
                 ** from the quad at this point.
                 */
                 leftbits = 0;
-                break;
+                complete = true;
+                continue;
             }
         }
 
         this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
-        if ( this_ch == (unsigned char) -1 )
+        if ( this_ch == (unsigned char) -1 ) {
+            if (strict_mode)
+                throw new Error(new str("Only base64 data is allowed"));
             continue;
+        }
 
         /*
         ** Shift it in on the low end, and see if there's
@@ -325,10 +344,6 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
             leftchar &= (unsigned int)((1 << leftbits) - 1);
         }
     }
-
-/*    if (leftbits != 0) {
-        throw new Error(new str("Incorrect padding"));
-    } */ 
 
     /* And set string size correctly. If the result string is empty
     ** (because the input was all invalid) return the shared empty
