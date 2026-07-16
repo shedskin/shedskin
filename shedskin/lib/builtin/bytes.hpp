@@ -57,10 +57,16 @@ public:
     __ss_bool startswith(bytes *s);
     __ss_bool startswith(bytes *s, __ss_int start);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
+    __ss_bool startswith(tuple<bytes *> *s);
+    __ss_bool startswith(tuple<bytes *> *s, __ss_int start);
+    __ss_bool startswith(tuple<bytes *> *s, __ss_int start, __ss_int end);
 
     __ss_bool endswith(bytes *s);
     __ss_bool endswith(bytes *s, __ss_int start);
     __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
+    __ss_bool endswith(tuple<bytes *> *s);
+    __ss_bool endswith(tuple<bytes *> *s, __ss_int start);
+    __ss_bool endswith(tuple<bytes *> *s, __ss_int start, __ss_int end);
 
     bytes *removeprefix(bytes *prefix);
     bytes *removesuffix(bytes *suffix);
