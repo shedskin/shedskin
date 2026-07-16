@@ -713,17 +713,21 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     size_t size = 0;
     switch (kind)
     {
+    case 0: // [:]
+        start = m_begin;
+        size = (size_t)(m_end - m_begin);
+        break;
     case 1: // step[x:]
-        start = m_begin + __subscript(lower);
+        start = m_begin + __subscript(lower, true);
         size = (size_t)(m_end - start);
         break;
     case 2: // step[:x]
         start = m_begin;
-        size = __subscript(upper);
+        size = __subscript(upper, true);
         break;
     case 3: // step[x:y]
-        start = m_begin + __subscript(lower);
-        size = __subscript(upper) - __subscript(lower);
+        start = m_begin + __subscript(lower, true);
+        size = __subscript(upper, true) - __subscript(lower, true);
         break;
     default:
         assert(false);
@@ -739,6 +743,10 @@ void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int
     iterator finish = m_end;
     switch (kind)
     {
+    case 0: // [:]
+        start = m_begin;
+        finish= m_end;
+        break;
     case 1: // step[x:]
         start = m_begin + __subscript(lower, true);
         finish= m_end;
@@ -753,6 +761,11 @@ void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int
         break;
     default:
         assert(false);
+    }
+
+    if (sequence->unit.size() != (size_t)(finish - start))
+    {
+        throw new IndexError(const_10);
     }
 
     memcpy(start, sequence->unit.data(), (size_t)(finish - start));
