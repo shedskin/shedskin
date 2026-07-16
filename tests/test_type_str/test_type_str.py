@@ -284,7 +284,11 @@ def test_title():
 
 
 def test_translate():
-    pass
+    table = ''.join(chr((i + 1) % 256) for i in range(256))
+    assert 'abcdef'.translate(table) == 'bcdefg'
+    assert 'abcdef'.translate(table, 'bc') == 'befg'
+    assert 'abcdef'.translate(table, '') == 'bcdefg'
+    assert 'hello world'.translate(table, 'lo') == 'if!xse'
 
 
 def test_upper():
