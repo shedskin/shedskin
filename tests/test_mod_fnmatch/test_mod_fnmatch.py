@@ -15,6 +15,17 @@ def test_fnmatchcase():
     assert not fnmatch.fnmatchcase("RUN.py", "run.[py]y")
 
 
+def test_fnmatch_newline():
+    # a bare trailing $ (instead of a strict end-of-string anchor) would
+    # wrongly let a trailing newline sneak through a match
+    assert not fnmatch.fnmatch("foo.txt\n", "foo.txt")
+    assert not fnmatch.fnmatchcase("foo.txt\n", "foo.txt")
+    # '?' and '*' should match a literal newline character, same as real
+    # fnmatch (this requires DOTALL semantics in the translated regex)
+    assert fnmatch.fnmatch("fo\no", "fo?o")
+    assert fnmatch.fnmatch("fo\no", "fo*o")
+
+
 def test_filter():
     fnmatch.filter(fs, '*.txt') == ['a.txt', 'b.txt', 'c.txt']
 
@@ -30,6 +41,7 @@ def test_translate():
 def test_all():
     test_fnmatch()
     test_fnmatchcase()
+    test_fnmatch_newline()
     test_filter()
     test_filterfalse()
     test_translate()
