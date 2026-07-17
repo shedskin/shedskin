@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `math.{ulp, nextafter, remainder}`
   - Support `str/bytes.startswith/endswith(tuple)`
   - Support `str/bytes.maketrans/translate`
+  - Support `glob.escape`
 
 ### Fixed
 

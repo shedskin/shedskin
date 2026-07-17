@@ -10,3 +10,6 @@ def glob(pathname):
 
 def has_magic(s):
     return True
+
+def escape(pathname):
+    return pathname
