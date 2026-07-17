@@ -15,6 +15,22 @@
 #include <gc/gc_cpp.h>
 #endif
 
+#define __SS_STL
+// #define __SS_ABSEIL
+// # define __SS_BOOST
+
+#ifdef __SS_ABSEIL
+#include "absl/container/inlined_vector.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#endif
+
+#ifdef __SS_BOOST
+#include <boost/container/small_vector.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
+#endif
+
 #include <vector>
 #include <deque>
 #include <bitset>
@@ -98,16 +114,20 @@ using tuple = tuple2<T, T>;
 
 /* STL types */
 
-// TODO switch to template aliases
-#ifdef __SS_NOGC
-#define __GC_VECTOR(T) std::vector< T >
-#define __GC_DEQUE(T) std::deque< T >
-#define __GC_STRING std::basic_string<char,std::char_traits<char> >
-#else
+#ifdef __SS_STL
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
+#endif
+
+#ifdef __SS_ABSEIL
+#define __GC_VECTOR(T) absl::InlinedVector<T, 8, gc_allocator<T> >
+#endif
+
+#ifdef __SS_BOOST
+#define __GC_VECTOR(T) boost::container::small_vector<T, 8, gc_allocator<T> >
+#endif
+
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
-#endif
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -236,19 +256,28 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 #include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
-#ifdef __SS_NOGC
-template <class K, class V>
-using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K> >;
-
-template <class T>
-using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T> >;
-
-#else
+#ifdef __SS_STL
 template <class K, class V>
 using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
 
 template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+#endif
+
+#ifdef __SS_ABSEIL
+template <class K, class V>
+using __GC_DICT = absl::flat_hash_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >;
+
+template <class T>
+using __GC_SET = absl::flat_hash_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+#endif
+
+#ifdef __SS_BOOST
+template <class K, class V>
+using __GC_DICT = boost::unordered_flat_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >;
+
+template <class T>
+using __GC_SET = boost::unordered_flat_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
 #endif
 
 class class_: public pyobj {
