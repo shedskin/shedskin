@@ -54,13 +54,13 @@ __ss_int BytesIO::seek(__ss_int i, __ss_int w) {
 
 __ss_int BytesIO::write(bytes *data) {
     __check_closed();
-    if(data) {
-        const size_t size = data->unit.size();
-        s->unit.insert((size_t)pos, data->unit);
-        pos += (int)size;
-        s->unit.erase((size_t)pos, size);
-    }
-    return (__ss_int)data->unit.size();
+    if(!data)
+        throw new TypeError(new str("a bytes-like object is required, not 'NoneType'"));
+    const size_t size = data->unit.size();
+    s->unit.insert((size_t)pos, data->unit);
+    pos += (int)size;
+    s->unit.erase((size_t)pos, size);
+    return (__ss_int)size;
 }
 
 bytes *BytesIO::getvalue() {
@@ -111,13 +111,13 @@ __ss_int StringIO::seek(__ss_int i, __ss_int w) {
 
 __ss_int StringIO::write(str *data) {
     __check_closed();
-    if(data) {
-        const size_t size = data->unit.size();
-        s->unit.insert((size_t)pos, data->unit);
-        pos += (int)size;
-        s->unit.erase((size_t)pos, size);
-    }
-    return (__ss_int)data->unit.size();
+    if(!data)
+        throw new TypeError(new str("string argument expected, got 'NoneType'"));
+    const size_t size = data->unit.size();
+    s->unit.insert((size_t)pos, data->unit);
+    pos += (int)size;
+    s->unit.erase((size_t)pos, size);
+    return (__ss_int)size;
 }
 
 str *StringIO::getvalue() {
