@@ -31,6 +31,26 @@ def test_env():
     os.putenv('bert', 'value2') # does not change os.environ
 
 
+def test_makedirs_exist_ok():
+    path = '/tmp/shedskin_test_makedirs_exist_ok/a/b'
+
+    os.makedirs(path, exist_ok=True)
+    assert os.path.isdir(path)
+
+    # calling again without exist_ok must raise
+    try:
+        os.makedirs(path)
+        assert False
+    except OSError as e:
+        assert e.errno == 17  # EEXIST
+
+    # calling again with exist_ok=True must be a no-op, not raise
+    os.makedirs(path, exist_ok=True)
+    assert os.path.isdir(path)
+
+    os.removedirs(path)
+
+
 def test_urandom():
     bts = os.urandom(10)
     assert len(bts) == 10
@@ -65,6 +85,8 @@ def test_all():
     test_chdir()
     test_exceptions()
     test_listdir()
+
+    test_makedirs_exist_ok()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
