@@ -28,6 +28,8 @@ extern tuple2<str *, str *> *tzname;
 
 double time();
 double perf_counter();
+double monotonic();
+double process_time();
 void *sleep(double s);
 
 extern str *const_0, *const_1;

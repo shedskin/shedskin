@@ -45,6 +45,28 @@ def test_perf_counter():
     assert t2 > t1
     assert (t2 - t1) >= 0.09
 
+def test_monotonic():
+    t1 = time.monotonic()
+    time.sleep(0.1)
+    t2 = time.monotonic()
+    assert t2 > t1
+    assert (t2 - t1) >= 0.09
+
+def test_process_time():
+    p1 = time.process_time()
+    x = 0
+    for i in range(1000000):
+        x += i * i
+    p2 = time.process_time()
+    # cpu time should never go backwards
+    assert p2 >= p1
+    print(x)
+
+def test_isdst_attribute():
+    t = time.localtime(0)
+    # regression test: struct_time must expose tm_isdst (not "isdst")
+    assert t.tm_isdst == -1 or t.tm_isdst == 0 or t.tm_isdst == 1
+
 def test_sleep():
     t1 = time.time()
     time.sleep(0.5)
@@ -63,6 +85,9 @@ def test_all():
     # test_epoch()
     test_tzname()
     test_perf_counter()
+    test_monotonic()
+    test_process_time()
+    test_isdst_attribute()
 
 if __name__ == '__main__':
     test_all() 
