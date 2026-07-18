@@ -361,6 +361,9 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
     list<str *> *result = new list<str *>();
     __ss_int splits = 0;
 
+    if(sep_ && sep_->unit.empty())
+        throw new ValueError(new str("empty separator"));
+
     if(sep_ == NULL) {
         pos_start = unit.find_first_not_of(ws, pos_start);
         if (pos_start == std::string::npos)
@@ -373,7 +376,7 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         else
             pos_end = unit.find(sep_->unit, pos_start);
 
-        if(pos_end == std::string::npos || ((maxsplit != -1) && splits >= maxsplit)) {
+        if(pos_end == std::string::npos || ((maxsplit >= 0) && splits >= maxsplit)) {
             count = unit.size()-pos_start;
             if(count == 1)
                 result->append(__char_cache[(unsigned char)unit[pos_start]]);
