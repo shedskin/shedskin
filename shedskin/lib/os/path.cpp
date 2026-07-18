@@ -120,17 +120,24 @@ tuple2<str *, str *> *splitext(str *p) {
     /**
     Split the extension from a pathname.  Extension is everything from the
     last dot to the end.  Returns "(root, ext)", either part may be empty.
-    */
-    __ss_int i;
 
-    i = p->rfind(const_1);
-    if ((i<=p->rfind(const_4))) {
-        return (new tuple2<str *, str *>(2, p, const_0));
+    Leading dots on the basename are skipped, so dotfiles like ".cshrc"
+    are not treated as having an extension.
+    */
+    __ss_int sep_index, dot_index, filename_index;
+
+    sep_index = p->rfind(const_4);
+    dot_index = p->rfind(const_1);
+    if (dot_index > sep_index) {
+        filename_index = sep_index + 1;
+        while (filename_index < dot_index) {
+            if (__ne(p->__getitem__(filename_index), const_1)) {
+                return (new tuple2<str *, str *>(2, p->__slice__(2, 0, dot_index, 0), p->__slice__(1, dot_index, 0, 0)));
+            }
+            filename_index++;
+        }
     }
-    else {
-        return (new tuple2<str *, str *>(2, p->__slice__(2, 0, i, 0), p->__slice__(1, i, 0, 0)));
-    }
-    return 0;
+    return (new tuple2<str *, str *>(2, p, const_0));
 }
 
 tuple2<str *, str *> *splitdrive(str *p) {
@@ -575,17 +582,24 @@ tuple2<str *, str *> *splitext(str *p) {
 
     Extension is everything from the last dot to the end.
     Return (root, ext), either part may be empty.
-    */
-    __ss_int i;
 
-    i = p->rfind(const_0);
-    if ((i<=___max(2, __ss_void, 0, p->rfind(const_6), p->rfind(const_4)))) {
-        return (new tuple2<str *, str *>(2, p, const_1));
+    Leading dots on the basename are skipped, so dotfiles like ".cshrc"
+    are not treated as having an extension.
+    */
+    __ss_int sep_index, dot_index, filename_index;
+
+    sep_index = ___max(2, __ss_void, 0, p->rfind(const_6), p->rfind(const_4));
+    dot_index = p->rfind(const_0);
+    if (dot_index > sep_index) {
+        filename_index = sep_index + 1;
+        while (filename_index < dot_index) {
+            if (__ne(p->__getitem__(filename_index), const_0)) {
+                return (new tuple2<str *, str *>(2, p->__slice__(2, 0, dot_index, 0), p->__slice__(1, dot_index, 0, 0)));
+            }
+            filename_index++;
+        }
     }
-    else {
-        return (new tuple2<str *, str *>(2, p->__slice__(2, 0, i, 0), p->__slice__(1, i, 0, 0)));
-    }
-    return 0;
+    return (new tuple2<str *, str *>(2, p, const_1));
 }
 
 str *basename(str *p) {
