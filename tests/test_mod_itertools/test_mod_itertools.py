@@ -173,6 +173,30 @@ def test_tee():
     assert list(it5) == [1, 2, 3, 4, 5]
 
 
+def test_tee_interleaved():
+    # draining both iterators in lockstep (rather than one fully before
+    # the other) forces the "leader" role to switch back and forth
+    # between them, over a re-iterable source (a list, not a generator)
+    it1, it2 = itertools.tee([1, 2, 3, 4, 5, 6])
+
+    res1 = []
+    res2 = []
+
+    res1.append(next(it1))
+    res1.append(next(it1))
+    res2.append(next(it2))
+    res2.append(next(it2))
+    res2.append(next(it2))
+    res1.append(next(it1))
+    res1.append(next(it1))
+    res2.append(next(it2))
+    res2.append(next(it2))
+    res2.append(next(it2))
+
+    assert res1 == [1, 2, 3, 4]
+    assert res2 == [1, 2, 3, 4, 5, 6]
+
+
 def pred1(x):
     return x % 2
 
@@ -246,6 +270,7 @@ def test_all():
     test_product_repeat()
     test_compress()
     test_tee()
+    test_tee_interleaved()
     test_filterfalse()
     test_zip_longest()
     test_pairwise()
