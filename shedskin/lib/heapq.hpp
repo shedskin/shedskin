@@ -310,6 +310,15 @@ template<class T, template <class Y, class Z> class Cmp, class Key> inline nheap
     this->index = 0;
 }
 template<class T, template <class Y, class Z> class Cmp, class Key> inline nheapiter<T, Cmp, Key>::nheapiter(__ss_int n, pyiter<T> *iterable, Key key) {
+    this->index = 0;
+
+    if (n <= 0) {
+        /* match CPython: nlargest/nsmallest never touch the iterable
+         * when n <= 0, instead of draining it (or looping forever on
+         * an infinite iterable) for no result. */
+        return;
+    }
+
     __iter<T> *iter = iterable->__iter__();
     std::vector<T> heap;
 
