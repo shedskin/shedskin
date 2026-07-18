@@ -95,6 +95,10 @@ inline __ss_int isqrt(__ss_float x) {
     return (__ss_int)(floor(std::sqrt(x))); // TODO optimize?
 }
 
+inline __ss_int isqrt(__ss_int n) {
+    return __math__::__integer__::isqrt(n);
+}
+
 inline __ss_float acos(__ss_float x) {
     return std::acos(x);
 }
