@@ -2372,7 +2372,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Visit a class definition"""
         if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
-        if len(node.bases) > 1:
+        real_bases = [
+            base
+            for base in node.bases
+            if not (isinstance(base, ast.Name) and base.id == "object")
+        ]
+        if len(real_bases) > 1:
             error.error(
                 "multiple inheritance is not supported", self.gx, node, mv=getmv()
             )

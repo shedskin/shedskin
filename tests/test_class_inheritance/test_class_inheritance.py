@@ -161,6 +161,19 @@ def test_virtual_dunder():
 
 
 
+class RedundantObjectBase(MyBase, object):
+    def __call__(self, x, y):
+        return x + y
+
+
+def test_redundant_object_base():
+    # regression test: an explicit, redundant 'object' base alongside a real
+    # base is still single inheritance and must not be rejected as
+    # multiple inheritance
+    a = RedundantObjectBase()
+    assert a(2, 3) == 5
+
+
 class Bert:
     def hophop(self, a):
         raise NotImplementedError('oops')
@@ -203,6 +216,7 @@ def test_all():
 
     test_virtual_dunder()
     test_virtual_case()
+    test_redundant_object_base()
 
 
 if __name__ == '__main__':
