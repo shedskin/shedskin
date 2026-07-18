@@ -51,6 +51,12 @@ inline __ss_int factorial(__ss_int x) {
 /* perm */
 
 inline __ss_int perm(__ss_int n, __ss_int k) {
+    if (n < 0)
+        throw new ValueError(new str("n must be a non-negative integer"));
+    if (k < 0)
+        throw new ValueError(new str("k must be a non-negative integer"));
+    if (k > n)
+        return 0;
     __ss_int result = 1;
     for(__ss_int i = n-k+1; i <= n; i++)
         result *= i;
@@ -78,6 +84,24 @@ inline __ss_int comb(__ss_int n, __ss_int k) { // TODO faster/std version?
 
 inline __ss_int isqrt(__ss_float x) {
     return (__ss_int)(floor(std::sqrt(x))); // TODO optimize?
+}
+
+/* exact integer version: avoids precision loss from converting large
+ * __ss_int values (beyond 2**53) to double, which matters most with
+ * --int64. Preferred by overload resolution whenever the argument is
+ * already an __ss_int. */
+inline __ss_int isqrt(__ss_int n) {
+    if (n < 0)
+        throw new ValueError(new str("isqrt() argument must be nonnegative"));
+    if (n == 0)
+        return 0;
+    __ss_int x = n;
+    __ss_int y = x / 2 + (x & 1); /* == (x+1)/2, without overflowing when x is INT_MAX */
+    while (y < x) {
+        x = y;
+        y = (x + n / x) / 2;
+    }
+    return x;
 }
 
 void __init();
