@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This can help a lot with larger programs (no need to manually retry).
 - Catching up with Python 3.x:
   - Support `min/max(default)`
-  - Support `time.perf_counter`
+  - Support `time.{perf_counter, monotonic, process_time}`
   - Support `math.{ulp, nextafter, remainder}`
   - Support `str/bytes.startswith/endswith(tuple)`
 
