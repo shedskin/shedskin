@@ -12,6 +12,13 @@ def test_os_path():
     assert commonprefix(["xxx", "xxxx"]) == 'xxx'
     assert normcase("hoei") == 'hoei'
     assert splitext("hoei/woei") == ('hoei/woei', '')
+    assert splitext(".cshrc") == ('.cshrc', '')
+    assert splitext(".gitignore") == ('.gitignore', '')
+    assert splitext("..test") == ('..test', '')
+    assert splitext(".a.b") == ('.a', '.b')
+    assert splitext("/a/b/.hidden") == ('/a/b/.hidden', '')
+    assert splitext("/a/b/.hidden.txt") == ('/a/b/.hidden', '.txt')
+    assert splitext("foo.bar.baz") == ('foo.bar', '.baz')
     assert splitdrive("hoei/woei") == ('', 'hoei/woei')
     assert basename("hoei/woei") == 'woei'
     assert dirname("hoei/woei") == 'hoei'
