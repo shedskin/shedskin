@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Several builtin arguments can now be passed by keyword (e.g. `sum(start)`)
-- Several `--int64` related fixes (floordiv, modulo)
-- Fixed many minor bugs uncovered by Claude
+- Several `--int64`, `--float32` related fixes
+- Many other minor bugs uncovered (and fixed) by Claude
 - Fixed several C++ compilation warnings
 
 ### Optimized
@@ -34,8 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved type inference logging
 - Modernized type annotations (while still compatible with Python 3.9)
+- Improved type inference logging
 
 ## [0.9.12]
 
