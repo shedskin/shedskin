@@ -197,7 +197,7 @@ void _exit(__ss_int code) {
     ::exit(code);
 }
 
-void *makedirs(str *name_, __ss_int mode) {
+void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok) {
     tuple<str *> *__0, *__1;
     str *head, *tail;
 
@@ -211,7 +211,7 @@ void *makedirs(str *name_, __ss_int mode) {
     }
     if ((___bool(head) && ___bool(tail) && (!__path__::exists(head)))) {
         try {
-            makedirs(head, mode);
+            makedirs(head, mode, exist_ok);
         } catch (OSError *e) {
             if (e->__ss_errno != EEXIST) {
                 throw (e);
@@ -221,7 +221,13 @@ void *makedirs(str *name_, __ss_int mode) {
             return NULL;
         }
     }
-    mkdir(name_, mode);
+    try {
+        mkdir(name_, mode);
+    } catch (OSError *e) {
+        if (!(exist_ok.value && e->__ss_errno == EEXIST && __path__::isdir(name_).value)) {
+            throw (e);
+        }
+    }
     return NULL;
 }
 
