@@ -229,6 +229,12 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
     def _handle_target(self, target: ast.AST, value: ast.expr) -> None:
         assert self.graph is not None
         if isinstance(target, ast.Name):
+            if self.graph.name == "<module>":
+                # a name bound at module top level is an implicit global:
+                # every function in the module can read it for the whole
+                # program lifetime, whether or not it says `global`
+                self._mark_value_escape(value, "assigned to module-level global")
+                return
             if target.id in self.nonlocal_names:
                 self._mark_value_escape(
                     value, f"assigned to global/nonlocal '{target.id}'"
