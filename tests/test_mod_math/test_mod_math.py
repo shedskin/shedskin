@@ -175,6 +175,31 @@ def test_math():
     assert math.perm(7, 6) == 5040
     assert math.perm(7, 3) == 210
 
+    assert math.perm(3, 5) == 0
+
+    error = ''
+    try:
+        math.perm(-1, 2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'n must be a non-negative integer'
+
+    error = ''
+    try:
+        math.perm(5, -2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'k must be a non-negative integer'
+
+    assert math.isqrt(0) == 0
+    assert math.isqrt(1) == 1
+    assert math.isqrt(99) == 9
+    assert math.isqrt(100) == 10
+    assert math.isqrt(999999999) == 31622
+    assert math.isqrt(46340 * 46340) == 46340
+    assert math.isqrt(46340 * 46340 + 1) == 46340
+    assert math.isqrt(46340 * 46340 - 1) == 46339
+
 
 class Bert:
     def __init__(self, x):
@@ -234,6 +259,23 @@ def test_math_integer():
     assert math.integer.factorial(5) == 120
 
     assert math.integer.isqrt(18) == 4
+    assert math.integer.isqrt(46340 * 46340) == 46340
+
+    assert math.integer.perm(3, 5) == 0
+
+    error = ''
+    try:
+        math.integer.perm(-1, 2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'n must be a non-negative integer'
+
+    error = ''
+    try:
+        math.integer.perm(5, -2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'k must be a non-negative integer'
 
 
 def test_fmax_fmin():
