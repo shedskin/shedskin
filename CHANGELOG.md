@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
   This can help a lot with larger programs (no need to manually retry).
+- Added initial escape analysis (just reporting for now)
 - Catching up with Python 3.x:
   - Support `min/max(default)`
   - Support `time.{perf_counter, monotonic, process_time}`
