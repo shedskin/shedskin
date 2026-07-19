@@ -172,6 +172,15 @@ def test_nsmallest():
     assert list(heapq.nsmallest(5, [3, 15])) == [3, 15]
 
 
+def test_nlargest_nsmallest_n_le_0():
+    # n <= 0 must short-circuit to [] without draining the iterable
+    # (regression test: used to loop forever on an infinite iterable)
+    assert list(heapq.nlargest(0, [3, 1, 2])) == []
+    assert list(heapq.nlargest(-2, [3, 1, 2])) == []
+    assert list(heapq.nsmallest(0, [3, 1, 2])) == []
+    assert list(heapq.nsmallest(-2, [3, 1, 2])) == []
+
+
 class Bert:
     def __init__(self, val):
         self.val = val
@@ -220,6 +229,7 @@ def test_all():
 
     test_nlargest()
     test_nsmallest()
+    test_nlargest_nsmallest_n_le_0()
 
     test_heapq_1()  # TODO split up/remove
     test_heapq_2()
