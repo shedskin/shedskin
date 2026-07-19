@@ -17,7 +17,7 @@ corresponding to PATTERN.  (It does not compile it.)
 
 namespace __fnmatch__ {
 
-str *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 dict<str *, __re__::re_object *> *_cache;
 str *__name__;
@@ -36,7 +36,15 @@ void __init() {
     const_15 = new str("\\\\");
     const_16 = new str("^");
     const_17 = new str("%s[%s]");
-    const_18 = new str("$");
+    /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
+       DOTALL scope and anchors with \Z. shedskin's re module hands patterns
+       straight to pcre2_compile() with no escape translation, and PCRE2's
+       \Z means "end of subject, or just before a trailing newline" -- the
+       same loose semantics as a bare $. Python's re \Z (strict end of
+       string, no trailing-newline exception) is PCRE2's \z, so that's what
+       we anchor with here. */
+    const_18 = new str(")\\z");
+    const_19 = new str("(?s:");
 
     __name__ = new str("__fnmatch__");
 
@@ -155,7 +163,7 @@ str *translate(str *pat) {
     __6 = len(pat);
     i = 0;
     n = __6;
-    res = const_5;
+    res = const_19;
 
     while((i<n)) {
         c = pat->__getitem__(i);
