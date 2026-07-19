@@ -186,7 +186,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
             opts = __5->__getfirst__();
             args = __5->__getsecond__();
         }
-        else if (__eq((args->__getfast__(0))->__slice__(2, 0, 1, 0), const_1)) {
+        else if ((__eq((args->__getfast__(0))->__slice__(2, 0, 1, 0), const_1) && __ne(args->__getfast__(0), const_1))) {
             __6 = do_shorts(opts, (args->__getfast__(0))->__slice__(1, 1, 0, 0), shortopts, args->__slice__(1, 1, 0, 0));
             opts = __6->__getfirst__();
             args = __6->__getsecond__();
