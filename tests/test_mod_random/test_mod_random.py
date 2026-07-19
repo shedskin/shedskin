@@ -99,6 +99,14 @@ def test_random3():
     f = random.triangular(-2.0, 2.1, 1.5)
     f = random.triangular(mode=1.5)
     f = random.triangular(0, 5, 0)
+
+    # regression test: integer 'mode' must be normalized just like a float
+    # 'mode' is (bug: an unnormalized int mode could push the result
+    # outside the [low, high] range)
+    for i in range(1000):
+        f = random.triangular(2, 8, 5)
+        assert 2.0 <= f <= 8.0
+
     random.seed()
     random.seed('seed')
     random.seed(8.0)

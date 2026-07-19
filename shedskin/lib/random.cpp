@@ -404,7 +404,7 @@ static inline __ss_float __triangular(__ss_float low, __ss_float high, __ss_floa
         low = __0;
         high = __1;
     }
-    return (low+((high-low)*__power((u*c), 0.5)));
+    return (low+((high-low)*__power((u*c), (__ss_float)0.5)));
 }
 
 __ss_float Random::triangular(__ss_float low, __ss_float high, __ss_float mode) {
@@ -421,7 +421,8 @@ __ss_float Random::triangular(__ss_float low, __ss_float high, __ss_float mode) 
 }
 
 __ss_float Random::triangular(__ss_float low, __ss_float high, __ss_int mode) {
-    return __triangular(low, high, this->random(), (__ss_float)mode);
+    __ss_float fmode = (__ss_float)mode;
+    return __triangular(low, high, this->random(), ((fmode-low)/(high-low)));
 }
 
 __ss_float Random::triangular(__ss_float low, __ss_float high, void *) {
