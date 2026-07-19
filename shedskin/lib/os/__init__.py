@@ -158,7 +158,7 @@ def removedirs(name):
 def mkdir(a, mode=0o0777):
     pass
 
-def makedirs(name, mode=0o0777):
+def makedirs(name, mode=0o0777, exist_ok=False):
     pass
 
 def fork():
