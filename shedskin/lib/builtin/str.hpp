@@ -7,7 +7,7 @@ class str : public pyseq<str *> {
 protected:
 public:
     __GC_STRING unit;
-    long hash;
+    __ss_int hash;
     bool charcache;
 
     str();
@@ -120,7 +120,7 @@ public:
     str *removesuffix(str *suffix);
 
     __ss_int __cmp__(pyobj *p);
-    long __hash__();
+    __ss_int __hash__();
 
     __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
 

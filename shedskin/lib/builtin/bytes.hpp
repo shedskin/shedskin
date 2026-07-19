@@ -7,7 +7,7 @@ class bytes : public pyseq<__ss_int> {
 protected:
 public:
     __GC_STRING unit;
-    long hash;
+    __ss_int hash;
     int frozen;
 
     bytes(int frozen=1);
@@ -119,7 +119,7 @@ public:
     __ss_bool __contains__(bytes *);
 
     __ss_bool __eq__(pyobj *s);
-    long __hash__();
+    __ss_int __hash__();
 
     __ss_bool __ctype_function(int (*cfunc)(int));
 

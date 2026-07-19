@@ -325,8 +325,8 @@ str *pyobj::__repr__() {
     return __add_strs(5, new str("<"), __class__->__name__, new str(" object at "), new str(stream.str().c_str()), new str(">"));
 }
 
-long pyobj::__hash__() {
-    return (intptr_t)this;
+__ss_int pyobj::__hash__() {
+    return (__ss_int)(intptr_t)this;
 }
 
 __ss_int pyobj::__cmp__(pyobj *p) {
