@@ -9,6 +9,12 @@ def clock():
 def perf_counter():
     return 1.0
 
+def monotonic():
+    return 1.0
+
+def process_time():
+    return 1.0
+
 def sleep(s):
     pass
 
@@ -25,7 +31,7 @@ class struct_time:
         self.tm_sec = 0
         self.tm_wday = 0
         self.tm_yday = 0
-        self.isdst = 0
+        self.tm_isdst = 0
     def __getitem__(self, n):
         return 1
     def __repr__(self):

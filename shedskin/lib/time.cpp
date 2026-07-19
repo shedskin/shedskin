@@ -127,10 +127,35 @@ double perf_counter() {
     QueryPerformanceCounter(&counter);
     return (double)counter.QuadPart / (double)frequency.QuadPart;
 }
+double monotonic() {
+    return perf_counter();
+}
+double process_time() {
+    FILETIME creation, exit, kernel, user;
+    GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user);
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime;
+    k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime;
+    u.HighPart = user.dwHighDateTime;
+    /* FILETIME units are 100ns */
+    return (double)(k.QuadPart + u.QuadPart) / 10000000.0;
+}
 #else
 double perf_counter() {
     timespec ts { 0, 0 };
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
+}
+
+double monotonic() {
+    return perf_counter();
+}
+
+double process_time() {
+    timespec ts { 0, 0 };
+    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
 }
