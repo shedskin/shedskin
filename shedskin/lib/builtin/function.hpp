@@ -112,20 +112,26 @@ template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
 template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
     typename __sumtype1<typename U::for_in_unit>::type result;
-    result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    bool first = true;
-    FOR_IN(e,iter,1,2,3)
-        if(first) {
-            result = (typename __sumtype1<typename U::for_in_unit>::type)e;
-            first = false;
-        }
-        else
-            result = __add(result, (typename __sumtype1<typename U::for_in_unit>::type)e);
-    END_FOR
+    if constexpr (std::is_same_v<U, list<__ss_int> > || std::is_same_v<U, list<__ss_float> >) {
+//        result = std::reduce(std::execution::unseq, iter->units.begin(), iter->units.end()); // TODO faster with -O3, slower with -O2 :S
+        result = std::reduce(iter->units.begin(), iter->units.end());
+    }
+    else {
+        result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        bool first = true;
+        FOR_IN(e,iter,1,2,3)
+            if(first) {
+                result = (typename __sumtype1<typename U::for_in_unit>::type)e;
+                first = false;
+            }
+            else
+                result = __add(result, (typename __sumtype1<typename U::for_in_unit>::type)e);
+        END_FOR
+    }
     return result;
 }
 
