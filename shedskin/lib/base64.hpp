@@ -19,6 +19,9 @@ bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate);
 bytes *standard_b64decode(bytes *s);
 bytes *urlsafe_b64decode(bytes *s);
 
+bytes *b16encode(bytes *s);
+bytes *b16decode(bytes *s, __ss_bool casefold);
+
 void __init();
 
 } // module namespace
