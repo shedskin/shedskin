@@ -29,9 +29,9 @@ public:
 
     deque(pyiter<A> *iterable=0, __ss_int _maxlen=-1) {
         this->__class__ = cl_deque;
+        this->maxlen = _maxlen;
         if(iterable)
             extend(iterable);
-        this->maxlen = _maxlen;
     }
 
     deque<A> *copy() {
@@ -93,6 +93,17 @@ public:
         i = __wrap(this, i);
         units.erase(units.begin()+i);
         return NULL;
+    }
+
+    __ss_bool __eq__(pyobj *p) {
+        deque<A> *b = (deque<A> *)p;
+        size_t len = units.size();
+        if(b->units.size() != len)
+            return False;
+        for(size_t i = 0; i < len; i++)
+            if(!__eq(units[i], b->units[i]))
+                return False;
+        return True;
     }
 
     __ss_bool __contains__(A value) {
@@ -158,7 +169,7 @@ public:
            }
            iter++;
        }
-       throw new ValueError(new str("hops"));
+       throw new ValueError(new str("deque.remove(x): x not in deque"));
        return NULL;
    }
 
