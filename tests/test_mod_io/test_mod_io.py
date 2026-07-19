@@ -75,12 +75,58 @@ def test_bytesio():
     assert b.read() == b'hup'
 
 
+def _maybe_none_bytes(flag):
+    if flag:
+        return b'hallo'
+    return None
+
+
+def _maybe_none_str(flag):
+    if flag:
+        return 'hallo'
+    return None
+
+
+def test_bytesio_write_none():
+    # write(None) must raise TypeError, not crash (regression test for a
+    # null-pointer dereference that previously segfaulted here)
+    b = io.BytesIO()
+    data = _maybe_none_bytes(False)
+    raised = False
+    try:
+        b.write(data)
+    except TypeError:
+        raised = True
+    assert raised
+    # BytesIO must still be usable afterwards
+    assert b.write(b'ok') == 2
+    b.seek(0)
+    assert b.read() == b'ok'
+
+
+def test_stringio_write_none():
+    s = io.StringIO()
+    data = _maybe_none_str(False)
+    raised = False
+    try:
+        s.write(data)
+    except TypeError:
+        raised = True
+    assert raised
+    # StringIO must still be usable afterwards
+    assert s.write('ok') == 2
+    s.seek(0)
+    assert s.read() == 'ok'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
     test_io_from_file()
     test_io_read_from_binary_string()
     test_io_write_to_binary_string()
+    test_bytesio_write_none()
+    test_stringio_write_none()
 
 
 if __name__ == '__main__':
