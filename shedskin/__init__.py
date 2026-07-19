@@ -18,7 +18,7 @@ import sys
 import time
 from typing import Optional
 
-from . import cmake, config, cpp, error, graph, infer, log, makefile, stats
+from . import cmake, config, cpp, error, escape, graph, infer, log, makefile, stats
 
 
 class Shedskin:
@@ -194,6 +194,8 @@ class Shedskin:
     def analyze(self) -> None:
         """Analyze the main module"""
         self.pre_analyze()
+        if self.gx.options.stack:
+            escape.analyze(self.gx)
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         cpp.generate_code(self.gx, analyze=True)
@@ -222,6 +224,8 @@ class Shedskin:
         while True:
             try:
                 self.pre_analyze()
+                if self.gx.options.stack:
+                    escape.analyze(self.gx)
                 t0 = time.time()
                 infer.analyze(self.gx, self.module_name)
                 break
@@ -323,6 +327,11 @@ class Shedskin:
         parsers["compiler"] = argparse.ArgumentParser(add_help=False)
         grp = parsers["compiler"].add_argument
         grp("-d", "--debug", help="Set debug level", type=int)
+        grp(
+            "--stack",
+            help="Report list literals that do not escape their frame",
+            action="store_true",
+        )
         grp("-e", "--extmod", help="Generate extension module", action="store_true")
         grp("-I", "--include-dirs", help="Add an include directory", action="append")
         grp("-L", "--link-dirs", help="Add a link library directory", action="append")
@@ -418,6 +427,11 @@ class Shedskin:
             parents=[shared["stats"]],
         )
         parser_analyze.add_argument("name", help="Python file or module to analyze")
+        parser_analyze.add_argument(
+            "--stack",
+            help="Report list literals that do not escape their frame",
+            action="store_true",
+        )
 
         # ---------------------------------------------------------------------
         # translate subcommand
