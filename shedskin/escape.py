@@ -40,9 +40,15 @@ the "escapes" direction just means a missed optimization. So:
   treated as non-escaping call sites; every other call is an escape
 - tuple/list-unpacking targets, closures (nonlocal/global), attribute and
   subscript stores, returns, and yields are all treated as escaping
+- list comprehensions (`[... for ... in ...]`) are tracked the same way as
+  list literals: the comprehension itself is a "literal" node, its
+  generator sources are consumed locally (iterating over something does
+  not make it escape, the same as `SAFE_CONSUMING_BUILTINS`), and a
+  literal/comprehension directly in the element position is treated as
+  escaping, the same as a list literal nested inside another list literal
 
 Later iterations can relax these one at a time (e.g. track `sorted()`,
-`reversed()`, comprehension sources, or trace values through more
+`reversed()`, set/dict comprehensions, or trace values through more
 expression kinds) without changing the overall shape of the graph.
 
 Usage
@@ -200,8 +206,30 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
         self.graph.literals.append(node)
         for elt in node.elts:
             self.visit(elt)
-            if isinstance(elt, ast.List):
+            if isinstance(elt, (ast.List, ast.ListComp)):
                 self.graph.mark_escape(id(elt), "nested inside another list literal")
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        assert self.graph is not None
+        self.graph.node(id(node), "literal", lineno=getattr(node, "lineno", None))
+        self.graph.literals.append(node)
+        # comprehensions introduce their own scope in real Python, but for
+        # this rudimentary analysis we don't yet model that separately; we
+        # only need to know whether the *result* list escapes, and whether
+        # its sources/element expression do
+        for gen in node.generators:
+            self.visit(gen.iter)
+            # iterating over something in a comprehension just reads its
+            # elements locally, it is never stashed anywhere -- the same
+            # non-escaping treatment as SAFE_CONSUMING_BUILTINS, so we
+            # deliberately do *not* call _mark_value_escape here
+            for if_ in gen.ifs:
+                self.visit(if_)
+        self.visit(node.elt)
+        if isinstance(node.elt, (ast.List, ast.ListComp)):
+            self.graph.mark_escape(
+                id(node.elt), "nested inside comprehension result"
+            )
 
     # --- assignment / aliasing -----------------------------------------------
 
@@ -255,7 +283,7 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
     def _connect_value(self, value: ast.expr, dst_key: Any) -> None:
         """If `value` is a tracked literal or variable, add an edge to dst_key."""
         assert self.graph is not None
-        if isinstance(value, ast.List):
+        if isinstance(value, (ast.List, ast.ListComp)):
             self.graph.add_edge(id(value), dst_key)
         elif isinstance(value, ast.Name):
             src_key = (self.graph.name, value.id)
@@ -266,7 +294,7 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
 
     def _mark_value_escape(self, value: ast.expr, reason: str) -> None:
         assert self.graph is not None
-        if isinstance(value, ast.List):
+        if isinstance(value, (ast.List, ast.ListComp)):
             self.graph.mark_escape(id(value), reason)
         elif isinstance(value, ast.Name):
             self.graph.mark_escape((self.graph.name, value.id), reason)
