@@ -18,8 +18,9 @@ def test_reduce():
     error = False
     try:
         reduce(lambda a,b: a+b, a)
-    except TypeError:
+    except TypeError as e:
         error = True
+        assert str(e) == "reduce() of empty iterable with no initial value"
     assert error
 
 
