@@ -194,10 +194,27 @@ str *str::zfill(__ss_int width) {
 }
 
 str *str::expandtabs(__ss_int tabsize) {
-    size_t i;
-    __GC_STRING r = unit;
-    while((i = r.find("\t")) != std::string::npos)
-        r.replace(i, 1, (new str(" "))->__mul__(tabsize-((__ss_int)i)%tabsize)->unit);
+    __GC_STRING r;
+    size_t len = unit.size();
+    r.reserve(len);
+    __ss_int col = 0;
+    for(size_t i = 0; i < len; i++) {
+        char c = unit[i];
+        if(c == '\t') {
+            if(tabsize > 0) {
+                __ss_int spaces = tabsize - (col % tabsize);
+                r.append((size_t)spaces, ' ');
+                col += spaces;
+            }
+            /* tabsize <= 0: tab is dropped, column unchanged (matches CPython) */
+        } else {
+            r += c;
+            if(c == '\n' || c == '\r')
+                col = 0;
+            else
+                col++;
+        }
+    }
     return new str(r);
 }
 
