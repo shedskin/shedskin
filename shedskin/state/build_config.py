@@ -28,6 +28,7 @@ class BuildConfiguration:
         flags: Optional path to custom compiler flags file.
         silent: Suppress output messages.
         nogc: Disable garbage collection.
+        dense_table: Use an open-addressing table for dict/set (default: std::unordered).
         backtrace: Enable backtrace on errors.
         makefile_name: Name of the generated makefile.
         debug_level: Debug verbosity level.
@@ -48,6 +49,7 @@ class BuildConfiguration:
     flags: Optional[Path] = None
     silent: bool = False
     nogc: bool = False
+    dense_table: bool = False
     backtrace: bool = False
     makefile_name: str = "Makefile"
     debug_level: int = 0

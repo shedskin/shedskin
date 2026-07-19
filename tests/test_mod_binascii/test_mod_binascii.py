@@ -74,6 +74,61 @@ def test_base64():
     assert binascii.a2b_base64(b2a) == input_bytes
 
 
+def test_base64_strict_mode():
+    # valid data is accepted in strict mode
+    assert binascii.a2b_base64(b'SGVsbG8h', strict_mode=True) == b'Hello!'
+
+    # non-alphabet characters are rejected in strict mode ...
+    ok = False
+    try:
+        binascii.a2b_base64(b'SGVsbG8h@#$%', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+    # ... but silently skipped otherwise
+    assert binascii.a2b_base64(b'SGVsbG8h@#$%', strict_mode=False) == b'Hello!'
+
+    # embedded whitespace is rejected in strict mode ...
+    ok = False
+    try:
+        binascii.a2b_base64(b'SGVs\r\nbG8h', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+    # ... but tolerated otherwise
+    assert binascii.a2b_base64(b'SGVs\r\nbG8h', strict_mode=False) == b'Hello!'
+
+    # leading padding is always rejected in strict mode
+    ok = False
+    try:
+        binascii.a2b_base64(b'=SGVsbG8h', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+    # discontinuous / misplaced padding is rejected in strict mode
+    ok = False
+    try:
+        binascii.a2b_base64(b'S=GVsbG8h', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+    # trailing data (even just a newline) after a valid pad is rejected
+    # in strict mode, but tolerated otherwise
+    padded = binascii.b2a_base64(b'hello', newline=False)
+    ok = False
+    try:
+        binascii.a2b_base64(padded + b'\n', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+    assert binascii.a2b_base64(padded + b'\n', strict_mode=False) == b'hello'
+
+    # empty input is fine in strict mode
+    assert binascii.a2b_base64(b'', strict_mode=True) == b''
+
+
 def test_hex():  # b2a_hex == hexlify
     b2a = binascii.hexlify(s)
     assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
@@ -123,6 +178,7 @@ def test_all():
     test_qp()
     test_uu()
     test_base64()
+    test_base64_strict_mode()
     test_hex()
     test_crc()
 
