@@ -8,6 +8,12 @@ def test_string_module():
     assert string.ascii_lowercase == 'abcdefghijklmnopqrstuvwxyz'
     assert string.ascii_uppercase == 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     assert string.capwords('ik haat smurven') == 'Ik Haat Smurven'
+    assert string.capwords('a,b,,c', sep=',') == 'A,B,,C'
+    try:
+        string.capwords('anything', sep='')
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
     assert string.digits == '0123456789'
     assert string.hexdigits == '0123456789abcdefABCDEF'
     assert string.octdigits == '01234567'

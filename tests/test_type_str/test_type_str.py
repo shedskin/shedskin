@@ -245,6 +245,15 @@ def test_rsplit():
     assert s.rsplit('  ', maxsplit=2) == ['hop  hap', 'hup hup', 'woef ']
     assert s.rsplit(maxsplit=2) == ['hop  hap  hup', 'hup', 'woef']
 
+    assert 'a,b,c'.rsplit(',', -2) == ['a', 'b', 'c']
+    assert 'a,b,c'.rsplit(',', -100) == ['a', 'b', 'c']
+
+    try:
+        'a,b,c'.rsplit('')
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
+
 
 def test_split():
     assert 'bla'.split('l') == ['b', 'a']
@@ -258,6 +267,23 @@ def test_split():
     s = 'hop  hap  hup hup  woef '
     assert s.split('  ', maxsplit=2) == ['hop', 'hap', 'hup hup  woef ']
     assert s.split(maxsplit=2) == ['hop', 'hap', 'hup hup  woef ']
+
+    # any negative maxsplit means unlimited, not just -1
+    assert 'a,b,c'.split(',', -2) == ['a', 'b', 'c']
+    assert 'a,b,c'.split(',', -100) == ['a', 'b', 'c']
+    assert 'a b c d'.split(sep=None, maxsplit=-3) == ['a', 'b', 'c', 'd']
+
+    # empty separator is invalid, matching CPython
+    try:
+        'a,b,c'.split('')
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
+    try:
+        ''.split('')
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
 
 
 def test_splitlines():
