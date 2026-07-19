@@ -8,19 +8,23 @@ Filename globbing utility.
 
 namespace __glob__ {
 
-str *const_0, *const_2, *const_3;
+str *const_0, *const_2, *const_3, *const_4, *const_5;
 
 str *__name__;
 __re__::re_object *magic_check;
+__re__::re_object *magic_check_escape;
 
 void __init() {
     const_0 = new str("[*?[]");
     const_2 = new str(".");
     const_3 = new str("");
+    const_4 = new str("([*?[])");
+    const_5 = new str("[\\1]");
 
     __name__ = new str("__glob__");
 
     magic_check = __re__::compile(const_0);
+    magic_check_escape = __re__::compile(const_4);
 }
 
 list<str *> *glob(str *pathname) {
@@ -189,6 +193,26 @@ list<str *> *glob0(str *dirname, str *basename) {
 __ss_bool has_magic(str *s) {
 
     return __mbool(magic_check->search(s)!=0);
+}
+
+str *escape(str *pathname) {
+    /**
+    Escape all special characters ('?', '*' and '[').
+
+    This is useful if you want to match an arbitrary literal string that may
+    have special characters in it.
+
+    */
+    tuple2<str *, str *> *__0;
+    str *drive, *rest;
+
+    __0 = __os__::__path__::splitdrive(pathname);
+    drive = __0->__getfirst__();
+    rest = __0->__getsecond__();
+
+    rest = magic_check_escape->sub(const_5, rest);
+
+    return __add_strs(2, drive, rest);
 }
 
 } // module namespace

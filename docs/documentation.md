@@ -133,7 +133,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `functools` (reduce)
 * `gc` (enable, disable, collect)
 * `getopt`
-* `glob` (no escape, translate)
+* `glob` (no recursive globbing, translate)
 * `heapq`
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)

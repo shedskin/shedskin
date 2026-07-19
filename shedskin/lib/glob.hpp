@@ -12,16 +12,18 @@
 using namespace __shedskin__;
 namespace __glob__ {
 
-extern str *const_0, *const_2, *const_3;
+extern str *const_0, *const_2, *const_3, *const_4, *const_5;
 
 extern str *__name__;
 extern __re__::re_object *magic_check;
+extern __re__::re_object *magic_check_escape;
 
 list<str *> *glob(str *pathname);
 __iter<str *> *iglob(str *pathname);
 list<str *> *glob1(str *dirname, str *pattern);
 list<str *> *glob0(str *dirname, str *basename);
 __ss_bool has_magic(str *s);
+str *escape(str *pathname);
 
 void __init(void);
 
