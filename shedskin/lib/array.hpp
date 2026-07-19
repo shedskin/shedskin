@@ -313,9 +313,9 @@ template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
 template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     if(typechar == 'f')
-        return *((float *)(&units[(size_t)i*itemsize]));
+        return (__ss_float)(*((float *)(&units[(size_t)i*itemsize])));
     else
-        return *((__ss_float *)(&units[(size_t)i*itemsize]));
+        return (__ss_float)(*((double *)(&units[(size_t)i*itemsize])));
 }
 
 template<class T> void *array<T>::append(T t) {

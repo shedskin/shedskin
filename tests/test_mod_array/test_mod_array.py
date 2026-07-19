@@ -175,6 +175,19 @@ def test_repr_empty():
     assert repr(array.array('i', [1, 2])) == "array('i', [1, 2])"
 
 
+def test_double_typecode_roundtrip():
+    # 'd' arrays must store/retrieve full-width doubles regardless of the
+    # --float32 build flag (which only affects the *runtime* float type,
+    # not the on-disk/in-memory width of a typecode 'd' array element).
+    arr = array.array('d', [1.0, 2.0, 3.5, -7.25])
+    assert arr.itemsize == 8
+    lst = arr.tolist()
+    for got, expected in zip(lst, [1.0, 2.0, 3.5, -7.25]):
+        assert abs(got - expected) < 1e-6
+    assert arr[0] == 1.0
+    assert arr[1] == 2.0
+
+
 def test_all():
     test_typecodes()
     test_list()
@@ -186,6 +199,7 @@ def test_all():
     test_mul_nonpositive()
     test_insert_out_of_range()
     test_repr_empty()
+    test_double_typecode_roundtrip()
 
 
 if __name__ == '__main__':
