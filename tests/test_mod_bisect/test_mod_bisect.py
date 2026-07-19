@@ -77,10 +77,35 @@ def test_key():
     assert bisect.bisect(l, 'w', key=lambda a: idx[a]) == 2
 
 
+def test_bounds():
+    xs = [1, 2, 3, 4, 5]
+
+    # negative 'lo' is always rejected
+    ok = False
+    try:
+        bisect.bisect_right(xs, 3, -1, 5)
+    except ValueError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        bisect.insort_right(xs, 3, -1, 5)
+    except ValueError:
+        ok = True
+    assert ok
+
+    # negative 'hi' is NOT an error: it's just used as a bound, so
+    # 'lo < hi' is immediately false and the search range is empty
+    assert bisect.bisect_right(xs, 3, 0, -100) == 0
+    assert bisect.bisect_left(xs, 3, 0, -100) == 0
+
+
 def test_all():
     test_bisect()
     test_bisect_insort()
     test_key()
+    test_bounds()
 
 
 if __name__ == '__main__':
