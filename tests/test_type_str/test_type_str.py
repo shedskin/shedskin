@@ -37,6 +37,10 @@ def test_endswith():
 
 def test_expandtabs():
     assert 'bla\tbla'.expandtabs() == 'bla     bla'
+    assert 'a\tb\tc'.expandtabs(0) == 'abc'
+    assert 'a\tb\tc'.expandtabs(-1) == 'abc'
+    assert 'ab\ncd\te'.expandtabs(4) == 'ab\ncd  e'
+    assert 'ab\rcd\te'.expandtabs(4) == 'ab\rcd  e'
 
 
 def test_find():
