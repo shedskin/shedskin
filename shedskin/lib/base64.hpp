@@ -9,6 +9,8 @@
 using namespace __shedskin__;
 namespace __base64__ {
 
+extern str *__name__;
+
 bytes *b64encode(bytes *s, bytes *altchars);
 bytes *standard_b64encode(bytes *s);
 bytes *urlsafe_b64encode(bytes *s);

@@ -557,6 +557,7 @@ def add_shedskin_product(
     # has_lib: bool = False,
     enable_externalproject: bool = False,
     enable_spm: bool = False,
+    enable_dense_table: bool = False,
     debug: bool = False,
     name: Optional[str] = None,
     extra_lib_dir: Optional[str] = None,
@@ -573,6 +574,9 @@ def add_shedskin_product(
 
     radio options (mutually exclusive):
         ENABLE_SPM ENABLE_EXTERNALPROJECT
+
+    boolean options:
+        ENABLE_DENSE_TABLE
 
     single_value options:
         NAME MAIN_MODULE
@@ -617,6 +621,9 @@ def add_shedskin_product(
         add(1, "ENABLE_EXTERNALPROJECT")
     elif enable_spm:
         add(1, "ENABLE_SPM")
+
+    if enable_dense_table:
+        add(1, "ENABLE_DENSE_TABLE")
 
     if debug:
         add(1, "DEBUG")
@@ -801,6 +808,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_dirs=gx.options.link_dirs,
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
+                enable_dense_table=gx.dense_table,
                 compile_options=compile_opts,
                 cmdline_options=cmdline_opts,
             ),
@@ -822,6 +830,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_dirs=gx.options.link_dirs,
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
+                enable_dense_table=gx.dense_table,
                 compile_options=compile_opts,
                 cmdline_options=cmdline_opts,
             )
@@ -859,6 +868,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_dirs=gx.options.link_dirs,
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
+                enable_dense_table=gx.dense_table,
                 compile_options=compile_opts,
                 cmdline_options=cmdline_opts,
             ),

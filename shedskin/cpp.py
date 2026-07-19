@@ -195,6 +195,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
+        # --- reducer/genexpr fusion (sum/any/all/min/max over a genexpr)
+        self.fusedreducer: dict[ast.ListComp, tuple[str, ast.Call]] = {}
+        self.fusedreducer_calls: dict[ast.Call, ast.ListComp] = {}
+        self.reducer_kind: Optional[str] = None
+        self.reducer_acct = ""
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -623,6 +628,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.listcomps = {}
         for listcomp, lcfunc, func2 in self.mv.listcomps:
             self.listcomps[listcomp] = (lcfunc, func2)
+        self.compute_fused_reducers(node)
         self.do_listcomps(True)
         self.do_lambdas(True)
         self.print()
@@ -2770,6 +2776,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
         funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
 
+        # --- fused reducer over a genexpr: call the accumulator function
+        if node in self.fusedreducer_calls:
+            self.emit_reducer_call(self.fusedreducer_calls[node], func)
+            return
+
         if self.library_func(funcs, "re", None, "findall") or self.library_func(
             funcs, "re", "re_object", "findall"
         ):
@@ -3698,6 +3709,138 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 assert lam.node
                 self.visit_FunctionDef(lam.node, declare=declare)
 
+    # --- reducer/genexpr fusion --------------------------------------------
+    # `sum`/`any`/`all`/`min`/`max` over a generator expression normally lower
+    # to a heap-allocated iterator class (see genexpr_class) driven by a virtual
+    # __get_next() per element. When the generator expression is consumed
+    # directly by one of these builtin reducers, we instead emit a plain
+    # static-inline accumulator function that loops over the same generators
+    # and folds a scalar -- no heap allocation, no virtual dispatch, no goto
+    # state machine. Semantics mirror the runtime __sum/any/all/___min/___max
+    # in lib/builtin/function.hpp exactly (including min/max's ValueError on an
+    # empty sequence). Only the simplest forms fuse: `min`/`max` with a `key=`
+    # or `default=` keyword, or the varargs `max(a, b)` form, fall back.
+
+    REDUCERS = ("sum", "any", "all", "min", "max")
+
+    def compute_fused_reducers(self, node: ast.Module) -> None:
+        """Find `reducer(<genexpr>)` call sites eligible for loop fusion"""
+        self.fusedreducer = {}
+        self.fusedreducer_calls = {}
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            if (
+                not isinstance(child.func, ast.Name)
+                or child.func.id not in self.REDUCERS
+                or child.keywords
+                or len(child.args) != 1
+                or not isinstance(child.args[0], ast.GeneratorExp)
+                or child.args[0] not in self.gx.genexp_to_lc
+            ):
+                continue
+            lc = self.gx.genexp_to_lc[child.args[0]]
+            if lc not in self.listcomps:
+                continue
+            # confirm the call really binds the builtin reducer (not a shadow)
+            _, ident, direct_call, _, _, _, _ = infer.analyze_callfunc(
+                self.gx, child, merge=self.gx.merged_inh
+            )
+            if (
+                ident not in self.REDUCERS
+                or not direct_call
+                or direct_call.mv.module.ident != "builtin"
+            ):
+                continue
+            # `sum` only fuses for a numeric (unboxable) accumulator, matching
+            # what the runtime __sum supports and what __zero/__add expect
+            if ident == "sum" and not typestr.unboxable(
+                self.gx, self.mergeinh.get(child, set())
+            ):
+                continue
+            self.fusedreducer[lc] = (ident, child)
+            self.fusedreducer_calls[child] = lc
+
+    def reducer_acct_str(
+        self, kind: str, callnode: ast.Call, func: Optional["python.Function"]
+    ) -> str:
+        """Accumulator C++ type for a fused reducer (with trailing space)"""
+        if kind in ("any", "all"):
+            return "__ss_bool "
+        ts = typestr.nodetypestr(self.gx, callnode, func, mv=self.mv)
+        if not ts.endswith("*"):
+            ts += " "
+        return ts
+
+    def reducer_head(self, node: ast.ListComp, declare: bool) -> None:
+        """Header/forward-declaration for a fused reducer function"""
+        lcfunc, func = self.listcomps[node]
+        kind, callnode = self.fusedreducer[node]
+        acct = self.reducer_acct_str(kind, callnode, func)
+        args = [a + b for a, b in self.lc_args(lcfunc, func)]
+        self.output(
+            "static inline "
+            + acct
+            + lcfunc.ident
+            + "("
+            + ", ".join(args)
+            + ")"
+            + [" {", ";"][declare]
+        )
+
+    def reducer_func(self, node: ast.ListComp) -> None:
+        """Generate a fused reducer function (sum/any/all/min/max over a genexpr)"""
+        lcfunc, func = self.listcomps[node]
+        kind, callnode = self.fusedreducer[node]
+        acct = self.reducer_acct_str(kind, callnode, func)
+        self.reducer_head(node, False)
+        self.indent()
+        self.local_defs(lcfunc)
+        if kind == "sum":
+            self.output(acct + "__ss_result = __zero<" + acct.strip() + ">();")
+        elif kind in ("min", "max"):
+            # __zero placeholder is never read (first element overwrites it);
+            # __ss_first tracks emptiness, __ss_elt avoids double-evaluating elt
+            self.output(acct + "__ss_result = __zero<" + acct.strip() + ">();")
+            self.output(acct + "__ss_elt;")
+            self.output("__ss_int __ss_first = 1;")
+        self.reducer_kind = kind
+        self.reducer_acct = acct.strip()
+        self.listcomp_rec(node, node.generators, lcfunc, False)
+        self.reducer_kind = None
+        if kind == "sum":
+            self.output("return __ss_result;")
+        elif kind == "any":
+            self.output("return False;")
+        elif kind == "all":
+            self.output("return True;")
+        else:  # min / max
+            self.output(
+                'if (__ss_first) throw new ValueError(new str('
+                '"%s() arg is an empty sequence"));' % kind
+            )
+            self.output("return __ss_result;")
+        self.deindent()
+        self.output("}\n")
+
+    def emit_reducer_call(
+        self, lcnode: ast.ListComp, func: Optional["python.Function"]
+    ) -> None:
+        """Emit a direct call to a fused reducer function at the call site"""
+        # identical to visit_ListComp's argument gathering, minus the `new`
+        lcfunc, _ = self.listcomps[lcnode]
+        args = []
+        temp = self.line
+        for name in lcfunc.misses:
+            var = python.lookup_var(name, func, self.mv)
+            if var and var.parent:
+                if name == "self" and not (func and func.listcomp):
+                    args.append("this")
+                else:
+                    args.append(self.cpp_name(var))
+        self.line = temp
+        self.append(lcfunc.ident + "(" + ", ".join(args) + ")")
+
     def do_listcomps(self, declare: bool) -> None:
         """Generate list comprehensions"""
         for listcomp, lcfunc, func in self.mv.listcomps:  # XXX cleanup
@@ -3712,7 +3855,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 continue
 
             genexpr = listcomp in self.gx.genexp_to_lc.values()
-            if declare:
+            if listcomp in self.fusedreducer:
+                # sum/any/all/min/max over a genexpr: emit an accumulator
+                # function (not a heap-allocated iterator class) -- reducer_func
+                if declare:
+                    self.reducer_head(listcomp, True)
+                else:
+                    self.reducer_func(listcomp)
+            elif declare:
                 self.listcomp_head(listcomp, True, genexpr)
             elif genexpr:
                 self.genexpr_class(listcomp, declare)
@@ -3865,6 +4015,35 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Generate nested for loops"""
         if not quals:
+            if self.reducer_kind == "sum":
+                self.start("__ss_result = __add(__ss_result, (" + self.reducer_acct + ")(")
+                self.visit(node.elt, lcfunc)
+                self.append("))")
+                self.eol()
+                return
+            elif self.reducer_kind == "any":
+                self.start("if (___bool(")
+                self.visit(node.elt, lcfunc)
+                self.append(")) return True")
+                self.eol()
+                return
+            elif self.reducer_kind == "all":
+                self.start("if (!___bool(")
+                self.visit(node.elt, lcfunc)
+                self.append(")) return False")
+                self.eol()
+                return
+            elif self.reducer_kind in ("min", "max"):
+                cmp = "1" if self.reducer_kind == "max" else "-1"
+                self.start("__ss_elt = ")
+                self.visit(node.elt, lcfunc)
+                self.eol()
+                self.output(
+                    "if (__ss_first || __cmp(__ss_elt, __ss_result) == %s) "
+                    "__ss_result = __ss_elt;" % cmp
+                )
+                self.output("__ss_first = 0;")
+                return
             if genexpr:
                 self.start("__result = ")
                 self.visit(node.elt, lcfunc)
@@ -3926,6 +4105,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # to avoid heap allocations (for 1 elem, 2 elems, 4 elems.. :S)
         try_reserve = (
             not genexpr
+            and not self.reducer_kind
             and node not in self.gx.setcomp_to_lc.values()
             and node not in self.gx.dictcomp_to_lc.values()
         )

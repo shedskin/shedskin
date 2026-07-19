@@ -20,7 +20,7 @@ bytes *urlsafe_b64encode(bytes *s) {
 }
 
 bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate) {
-    return __binascii__::a2b_base64(s, True, altchars);
+    return __binascii__::a2b_base64(s, validate, altchars);
 }
 
 bytes *standard_b64decode(bytes *s) {
@@ -32,7 +32,7 @@ bytes *urlsafe_b64decode(bytes *s) {
 }
 
 void __init() {
-    __name__ = new str("binascii");
+    __name__ = new str("base64");
 }
 
 }
