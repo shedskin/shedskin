@@ -76,8 +76,24 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
             result |= (c2 << 8*i);
     }
     *pos += (__ss_int)itemsize;
-    if(c == 'h')
-        return (short)result;
+
+    /* sign-extend for signed format codes narrower than 8 bytes; without
+       this, e.g. unpacking 'b' (signed char) returns a positive value for
+       negative input, and 'i'/'l' break the same way whenever __ss_int is
+       wider than the format's native itemsize (as with --int64). */
+    switch(c) {
+        case 'b':
+        case 'h':
+        case 'i':
+        case 'l':
+        case 'q':
+            if(itemsize < 8 and (result & (1ULL << (8*itemsize - 1))))
+                result |= (~0ULL << (8*itemsize));
+            break;
+        default:
+            ;
+    }
+
     return (__ss_int)result;
 }
 
@@ -326,10 +342,10 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
     }
 }
 
-void fillbuf_float(char c, double t, char, unsigned int) {
+void fillbuf_float(char c, __ss_float t, char, unsigned int) {
     switch(c) {
         case 'f': *((float *)buffy) = (float)t; break;
-        case 'd': *((double *)buffy) = t; break;
+        case 'd': *((double *)buffy) = (double)t; break;
     }
 }
 
