@@ -492,12 +492,14 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
     Dialect *dialect = this->dialect;
 
     /* If this is not the first field we need a field separator */
-    if (this->num_fields > 0)
+    if (this->num_fields > 0) {
         this->rec->append(dialect->delimiter);
+        this->rec_len += dialect->delimiter->unit.size();
+    }
 
     str *rr = new str(); // TODO
 
-    for (size_t i = 0; i < field->unit.size(); i++) {
+    for (size_t i = 0; field != NULL && i < field->unit.size(); i++) {
         char c = field->unit[i];
         int want_escape = 0;
 
@@ -536,11 +538,16 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
         rr->unit += c;
     }
 
-    if(quoted)
+    if(quoted) {
         this->rec->append(dialect->quotechar);
+        this->rec_len += dialect->quotechar->unit.size();
+    }
     this->rec->append(rr);
-    if(quoted)
+    this->rec_len += rr->unit.size();
+    if(quoted) {
         this->rec->append(dialect->quotechar);
+        this->rec_len += dialect->quotechar->unit.size();
+    }
 
     return NULL;
 }
@@ -569,7 +576,7 @@ void *writer::writerow(list<str *> *seq) {
         }
     END_FOR
 
-    if (this->num_fields > 0 && len(this->rec) == 0) {
+    if (this->num_fields > 0 && this->rec_len == 0) {
         // TODO check error
 
         this->num_fields -= 1;
@@ -584,6 +591,7 @@ void *writer::writerow(list<str *> *seq) {
 void *writer::join_reset() {
     this->rec = (new list<str *>());
     this->num_fields = 0;
+    this->rec_len = 0;
     return NULL;
 }
 
@@ -603,7 +611,7 @@ void *writer::writerows(pyiter<list<str *> *> *seqs) {
 
 void *writer::join_append(str *field, __ss_int quoted) {
     Dialect *dialect = this->dialect;
-    size_t field_len = field->unit.size();
+    size_t field_len = field ? field->unit.size() : 0;
 
     if (!field_len && dialect->delimiter->unit[0] == ' ' && dialect->skipinitialspace) {
         // TODO empty field check?
