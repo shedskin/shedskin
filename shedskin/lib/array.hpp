@@ -181,17 +181,22 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
 
 template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     array<T> *a = new array<T>(typecode);
+    if(n<=0) return a;
     size_t len = this->units.size();
-    a->units.resize(len*n);
+    a->units.resize(len*(size_t)n);
     for(size_t i=0; i<(size_t)n; i++)
         memcpy(&(a->units[i*len]), &(this->units[0]), len);
     return a;
 }
 
 template<class T> array<T> *array<T>::__imul__(__ss_int n) {
+    if(n<=0) {
+        this->units.clear();
+        return this;
+    }
     size_t len = this->units.size();
-    this->units.resize(len*n);
-    for(size_t i=1; i<n; i++)
+    this->units.resize(len*(size_t)n);
+    for(size_t i=1; i<(size_t)n; i++)
         memcpy(&(this->units[i*len]), &(this->units[0]), len);
     return this;
 }
@@ -329,7 +334,10 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
 }
 
 template<class T> void *array<T>::insert(__ss_int i, T t) {
-    i = __wrap(this, i);
+    __ss_int len = this->__len__();
+    if(i<0) i += len;
+    if(i<0) i = 0;
+    if(i>len) i = len;
     this->units.insert(this->units.begin()+(i*itemsize), itemsize, '\0');
     this->__setitem__(i, t);
     return NULL;
@@ -345,7 +353,7 @@ template<class T> str *array<T>::__repr__() {
     if (this->__len__())
         return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
     else
-        return __add_strs(5, new str("array('"), typecode, new str(")"));
+        return __add_strs(5, new str("array('"), typecode, new str("')"));
 }
 
 template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */
