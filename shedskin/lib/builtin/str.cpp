@@ -579,11 +579,11 @@ str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
-long str::__hash__() { // TODO check cpython, check for -1 result?
+__ss_int str::__hash__() { // TODO check cpython, check for -1 result?
     if (hash != -1)
         return hash;
 
-    hash = (long)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    hash = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash; 
 }

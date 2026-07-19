@@ -139,7 +139,7 @@ public:
     virtual str *__repr__();
     virtual str *__str__();
 
-    virtual long __hash__();
+    virtual __ss_int __hash__();
     virtual __ss_int __cmp__(pyobj *p);
 
     virtual __ss_bool __eq__(pyobj *p);
