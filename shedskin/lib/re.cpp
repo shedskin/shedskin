@@ -588,6 +588,11 @@ re_object *compile(str *pat, __ss_int flags)
     PCRE2_SPTR nametable;
     uint32_t options, ntlen, nteach, i;
 
+    //re.LOCALE only makes sense for bytes patterns in CPython; we only
+    //support str patterns, so mirror CPython's rejection of this combination
+    if(flags & LOCALE)
+        throw new error(new str("cannot use LOCALE flag with a str pattern"));
+
     //convert flags
     options = __convert_flags(flags);
 
@@ -607,7 +612,8 @@ re_object *compile(str *pat, __ss_int flags)
         PCRE2_UCHAR errormessage[128];
         pcre2_get_error_message(errorcode, errormessage, sizeof(errormessage));
 
-        fullerr = "char " + erroroffset;
+        fullerr = "char ";
+        fullerr += std::to_string((unsigned long long) erroroffset).c_str();
         fullerr += ":";
         fullerr += (char *) errormessage;
 
@@ -636,8 +642,10 @@ re_object *compile(str *pat, __ss_int flags)
     //extra info
     reobj->pattern = new str(pat->unit);
     reobj->flags = flags;
-    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &reobj->groups);
-    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &reobj->capture_count);
+    uint32_t capturecount;
+    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &capturecount);
+    reobj->groups = (__ss_int) capturecount;
+    reobj->capture_count = (__ss_int) capturecount;
 
     return reobj;
 }
@@ -681,7 +689,7 @@ match_object *__exec_once(str *pat, str *subj, __ss_int flags)
     match_object *mo;
 
     r = compile(pat, flags);
-    mo = r->__exec(subj, 0, -1, 0);
+    mo = r->__exec(subj, 0, -1, flags & PCRE2_ANCHORED);
 
     if(!mo) GC_FREE(r);
 
@@ -706,7 +714,7 @@ match_object *prefixmatch(str *pat, str *subj, __ss_int flags)
 match_object *fullmatch(str *pat, str *subj, __ss_int flags)
 {
     match_object *m = __exec_once(pat, subj, flags | PCRE2_ANCHORED);
-    if(m->end() == len(subj))
+    if(m && m->end() == len(subj))
         return m;
     return NULL;
 }
