@@ -236,7 +236,7 @@ class MazeSolver(object):
 
             if self.endlessLoop():
                 print(self._loops)
-                point = (-1, -1)
+                point = None
                 break
 
             point2 = point
@@ -245,7 +245,7 @@ class MazeSolver(object):
                 break
             else:
                 point = self.getNextClosestPointNotInPath(points, point2)
-                if point == (-1, -1):
+                if not point:
                     self.retracePath()
                     self._tryalternate = True
                     point = self._start
@@ -292,7 +292,7 @@ class MazeSolver(object):
 
         if point2 in self._path:
             point = self.getNextClosestPointNotInPath(points, point2)
-            if point == (-1, -1):
+            if not point:
                 point = point2
 
         if self._tryalternate:
@@ -311,7 +311,7 @@ class MazeSolver(object):
 
         distances.sort()
 
-        points2 = [(-1, -1)]*len(points) # SS: same-arity sentinel so the list stays homogeneous (int,int)
+        points2 = [()]*len(points) # SS
         count = 0
 
         for dist in distances:
@@ -341,7 +341,7 @@ class MazeSolver(object):
         if points2:
             return random.choice(points2)
 
-        return (-1, -1)
+        return None
 
     def getNextClosestPoint(self, points, point):
         points2 = self.sortPoints(points)
@@ -350,7 +350,7 @@ class MazeSolver(object):
         try:
             return points2[idx+1]
         except:
-            return (-1, -1)
+            return None 
 
     def getNextClosestPointNotInPath(self, points, point):
 
@@ -388,7 +388,7 @@ class MazeSolver(object):
             self._steps += 1
             pt = self.getNextPoint()
 
-            if pt != (-1, -1):
+            if pt:
                 self.setCurrentPoint(pt)
             else:
                 print('Dead-lock - maze unsolvable')

@@ -23,7 +23,6 @@ function(add_shedskin_product)
         ENABLE_SPM
         ENABLE_FETCH_CONTENT
         ENABLE_LOCAL_DEPS
-        ENABLE_DENSE_TABLE
         DEBUG
     )
     set(oneValueArgs
@@ -73,13 +72,6 @@ function(add_shedskin_product)
 
     if(SHEDSKIN_BUILD_TEST)
         set(BUILD_TEST ON)
-    endif()
-
-    # locate vendored third-party headers (e.g. ankerl/unordered_dense.h) relative
-    # to the shedskin lib dir, so every caller need not define it themselves
-    if(NOT DEFINED SHEDSKIN_EXT_INCLUDE)
-        cmake_path(GET SHEDSKIN_LIB PARENT_PATH _shedskin_pkg_dir)
-        set(SHEDSKIN_EXT_INCLUDE ${_shedskin_pkg_dir}/ext/include)
     endif()
 
     if(DEFINED SHEDSKIN_NAME)
@@ -424,12 +416,10 @@ function(add_shedskin_product)
         target_compile_definitions(${EXE} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
-            $<$<OR:$<BOOL:${SHEDSKIN_ENABLE_DENSE_TABLE}>,$<BOOL:${ENABLE_DENSE_TABLE}>>:__SS_DENSE_TABLE>
         )
 
         target_include_directories(${EXE} PRIVATE
             ${SHEDSKIN_LIB}
-            ${SHEDSKIN_EXT_INCLUDE}
             ${CMAKE_SOURCE_DIR}
             ${PROJECT_EXE_DIR}
             ${LIB_INCLUDES}
@@ -537,7 +527,6 @@ function(add_shedskin_product)
         target_include_directories(${EXT} PRIVATE
             ${Python_INCLUDE_DIRS}
             ${SHEDSKIN_LIB}
-            ${SHEDSKIN_EXT_INCLUDE}
             ${CMAKE_SOURCE_DIR}
             ${PROJECT_EXT_DIR}
             ${LIB_INCLUDES}
@@ -577,7 +566,6 @@ function(add_shedskin_product)
         target_compile_definitions(${EXT} PRIVATE
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
-            $<$<OR:$<BOOL:${SHEDSKIN_ENABLE_DENSE_TABLE}>,$<BOOL:${ENABLE_DENSE_TABLE}>>:__SS_DENSE_TABLE>
         )
 
         target_link_options(${EXT} PRIVATE

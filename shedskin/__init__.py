@@ -128,9 +128,6 @@ class Shedskin:
             if args.nogc:
                 gx.nogc = True
 
-            if args.dense_table:
-                gx.dense_table = True
-
             if args.nowrap:
                 gx.wrap_around_check = False
 
@@ -320,11 +317,6 @@ class Shedskin:
         grp("--noassert", help="Disable assert statements", action="store_true")
         grp("-b", "--nobounds", help="Disable bounds checking", action="store_true")
         grp("--nogc", help="Disable garbage collection", action="store_true")
-        grp(
-            "--dense-table",
-            help="Use an open-addressing table for dict/set (default: std::unordered)",
-            action="store_true",
-        )
         grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
 
         # Compiler options (debug, extmod, dirs, output, etc.)
