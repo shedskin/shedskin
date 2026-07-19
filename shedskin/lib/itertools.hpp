@@ -645,15 +645,15 @@ public:
     teecache<T> *cache;
 
     teeiter();
-    teeiter(pyiter<T> *iterable, teecache<T> *cache);
+    teeiter(__iter<T> *iter, teecache<T> *cache);
 
     T __next__();
 };
 
 template<class T> inline teeiter<T>::teeiter() {}
-template<class T> inline teeiter<T>::teeiter(pyiter<T> *iterable, teecache<T> *cache_) {
+template<class T> inline teeiter<T>::teeiter(__iter<T> *iter_, teecache<T> *cache_) {
     position = 0;
-    iter = iterable->__iter__();
+    iter = iter_;
     cache = cache_;
 }
 
@@ -667,15 +667,16 @@ template<class T> T teeiter<T>::__next__() {
 
 template<class T> inline tuple2<__iter<T> *, __iter<T> *> *tee(pyiter<T> *iterable, int n = 2) {
     teecache<T> *cache = new teecache<T>(n);
+    __iter<T> *iter = iterable->__iter__();
 
     if (n == 2) {
-        return new tuple2<__iter<T> *, __iter<T> *>(n, new teeiter<T>(iterable, cache), new teeiter<T>(iterable, cache));
+        return new tuple2<__iter<T> *, __iter<T> *>(n, new teeiter<T>(iter, cache), new teeiter<T>(iter, cache));
     }
 
-    tuple2<__iter<T> *, __iter<T> *>* tuple = new tuple2<__iter<T> *, __iter<T> *>(1, new teeiter<T>(iterable, cache));
+    tuple2<__iter<T> *, __iter<T> *>* tuple = new tuple2<__iter<T> *, __iter<T> *>(1, new teeiter<T>(iter, cache));
 
     for (int i = 1; i < n; ++i) {
-        tuple->units.push_back(new teeiter<T>(iterable, cache));
+        tuple->units.push_back(new teeiter<T>(iter, cache));
     }
 
     return tuple;
