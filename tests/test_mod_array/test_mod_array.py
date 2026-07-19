@@ -126,6 +126,55 @@ def test_codes():  # TODO check these type codes: bBuwhHiIlLfd
     assert list(arr) == [3,2,1]
 
 
+def test_mul_nonpositive():
+    # negative or zero multiplier must yield an empty array, not crash
+    arr = array.array('i', [1, 2, 3])
+    assert arr * -1 == array.array('i')
+    assert arr * -100 == array.array('i')
+    assert arr * 0 == array.array('i')
+    assert -1 * arr == array.array('i')
+
+    # original array must be untouched by __mul__
+    assert arr.tolist() == [1, 2, 3]
+
+    arr2 = array.array('i', [1, 2, 3])
+    arr2 *= -1
+    assert arr2 == array.array('i')
+
+    arr3 = array.array('i', [1, 2, 3])
+    arr3 *= 0
+    assert arr3 == array.array('i')
+
+    # sanity check positive multiplier still works
+    arr4 = array.array('i', [1, 2])
+    assert arr4 * 2 == array.array('i', [1, 2, 1, 2])
+
+
+def test_insert_out_of_range():
+    # insert() must clamp like list.insert(), not raise IndexError
+    arr = array.array('i', [1, 2, 3])
+    arr.insert(100, 9)
+    assert arr.tolist() == [1, 2, 3, 9]
+
+    arr2 = array.array('i', [1, 2, 3])
+    arr2.insert(-100, 9)
+    assert arr2.tolist() == [9, 1, 2, 3]
+
+    # in-range and negative-in-range inserts still behave normally
+    arr3 = array.array('i', [1, 2, 3])
+    arr3.insert(1, 9)
+    assert arr3.tolist() == [1, 9, 2, 3]
+
+    arr4 = array.array('i', [1, 2, 3])
+    arr4.insert(-1, 9)
+    assert arr4.tolist() == [1, 2, 9, 3]
+
+
+def test_repr_empty():
+    assert repr(array.array('i')) == "array('i')"
+    assert repr(array.array('i', [1, 2])) == "array('i', [1, 2])"
+
+
 def test_all():
     test_typecodes()
     test_list()
@@ -134,6 +183,9 @@ def test_all():
     test_sequence_immutable()
     test_sequence_mutable()
     test_codes()
+    test_mul_nonpositive()
+    test_insert_out_of_range()
+    test_repr_empty()
 
 
 if __name__ == '__main__':
