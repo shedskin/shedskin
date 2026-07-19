@@ -199,10 +199,27 @@ def test_rfind():
     assert 'bla'.rfind('la') == 1
     assert 'bla'.rfind('ba') == -1
 
+    # repeated substring: rfind must differ from find/index
+    assert 'abcabc'.find('bc') == 1
+    assert 'abcabc'.rfind('bc') == 4
+    assert 'abcabc'.rfind('bc', 0, 4) == 1
+
 
 def test_rindex():
     assert 'bla'.rindex('la') == 1
     assert 'bla'.rindex('bl') == 0
+
+    # repeated substring: rindex must return the rightmost match,
+    # not the same result as index()
+    assert 'abcabc'.index('bc') == 1
+    assert 'abcabc'.rindex('bc') == 4
+    assert 'abcabc'.rindex('bc', 0, 4) == 1
+
+    try:
+        'abcabc'.rindex('zz')
+        assert False
+    except ValueError:
+        pass
 
 
 def test_rjust():
