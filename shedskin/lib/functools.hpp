@@ -33,7 +33,7 @@ template<class A, class B> A reduce(A (*func)(A, A), B *iter) {
             result = (*func)(result, iter->for_in_next(__7));
     }
     if(first) 
-        throw new TypeError(new str("reduce() of empty sequence with no initial value"));
+        throw new TypeError(new str("reduce() of empty iterable with no initial value"));
     return result;
 }
 
