@@ -3454,11 +3454,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(node.value, ast.Call)
             self.visitm(tvar, " = ", node.value.args[1], func)
             self.eol()
-            if len(node.value.args) > 2:  # TODO unpack_from: nicer check
+            offset_expr = None
+            if len(node.value.args) > 2:
+                offset_expr = node.value.args[2]
+            else:
+                for kw in node.value.keywords:
+                    if kw.arg == "offset":
+                        offset_expr = kw.value
+                        break
+            if offset_expr is not None:
                 self.start()
-                self.visitm(
-                    tvar_pos, " = __wrap(", tvar, ", ", node.value.args[2], ")", func
-                )
+                self.visitm(tvar_pos, " = __wrap(", tvar, ", ", offset_expr, ")", func)
                 self.eol()
             else:
                 self.output("%s = 0;" % tvar_pos)
