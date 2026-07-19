@@ -787,6 +787,22 @@ bytes *bytes::swapcase() {
     return r;
 }
 
+bytes *bytes::translate(bytes *table, bytes *delete_chars) {
+    if(table && len(table) != 256)
+        throw new ValueError(new str("translation table must be 256 characters long"));
+
+    bytes *newbytes = new bytes();
+
+    size_t self_size = this->unit.size();
+    for(size_t i = 0; i < self_size; i++) {
+        char c = unit[i];
+        if(!delete_chars || delete_chars->unit.find(c) == std::string::npos)
+            newbytes->unit += table ? table->unit[(unsigned char)c] : c;
+    }
+
+    return newbytes;
+}
+
 void *bytes::__delitem__(__ss_int i) {
     i = __wrap(this, i);
     unit.erase((size_t)i, 1);

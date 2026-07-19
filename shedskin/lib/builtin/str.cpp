@@ -424,6 +424,74 @@ str *str::translate(str *table, str *delchars) {
     return newstr;
 }
 
+str *str::translate(dict<__ss_int, str *> *table) {
+    str *newstr = new str();
+
+    size_t self_size = this->unit.size();
+    for(size_t i = 0; i < self_size; i++) {
+        __ss_int ord = (__ss_int)(unsigned char)unit[i];
+        if(table->__contains__(ord)) {
+            str *repl = table->__getitem__(ord);
+            if(repl)
+                newstr->unit += repl->unit;
+            /* else: None in the table means delete this character */
+        } else {
+            *newstr += unit[i];
+        }
+    }
+
+    return newstr;
+}
+
+/* str.maketrans(x, y[, z]): x, y equal-length strings mapping ord(x[i])->y[i];
+   chars in optional z are mapped to None (deletion). Note: unlike CPython's own
+   maketrans (whose dict values may be raw int ordinals, strings, or None all in
+   the same dict), Shed Skin cannot mix int and str/None within one dict's value
+   type, so substitutions are always represented here as single-character str
+   objects rather than ordinals. This is observably identical when used with
+   translate(), just a different internal representation. */
+dict<__ss_int, str *> *str::maketrans(str *x, str *y, str *z) {
+    if(x->unit.size() != y->unit.size())
+        throw new ValueError(new str("the first two maketrans arguments must have equal length"));
+
+    dict<__ss_int, str *> *table = new dict<__ss_int, str *>();
+    size_t n = x->unit.size();
+    for(size_t i = 0; i < n; i++) {
+        __ss_int k = (__ss_int)(unsigned char)x->unit[i];
+        table->__setitem__(k, new str(y->unit.substr(i, 1)));
+    }
+    if(z) {
+        size_t zn = z->unit.size();
+        for(size_t i = 0; i < zn; i++) {
+            __ss_int k = (__ss_int)(unsigned char)z->unit[i];
+            table->__setitem__(k, (str *)0);
+        }
+    }
+    return table;
+}
+
+/* str.maketrans(table): table already in the dict[int, str|None] shape
+   translate() expects; return a shallow copy (CPython's maketrans always
+   returns a fresh dict). */
+dict<__ss_int, str *> *str::maketrans(dict<__ss_int, str *> *table) {
+    return table->copy();
+}
+
+/* str.maketrans(table): table has single-character string keys instead of
+   ordinals (the other form CPython's single-argument maketrans() accepts);
+   normalize keys to ordinals. */
+dict<__ss_int, str *> *str::maketrans(dict<str *, str *> *table) {
+    dict<__ss_int, str *> *result = new dict<__ss_int, str *>();
+    for(auto& kv : table->gcd) {
+        str *k = kv.first;
+        if(k->unit.size() != 1)
+            throw new ValueError(new str("string keys in translate table must be of length 1"));
+        __ss_int ord = (__ss_int)(unsigned char)k->unit[0];
+        result->__setitem__(ord, kv.second);
+    }
+    return result;
+}
+
 str *str::swapcase() {
     str *r = new str(unit);
     size_t len = unit.size();

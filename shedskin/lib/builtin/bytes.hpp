@@ -28,6 +28,8 @@ public:
     bytes *strip(bytes *chars=0);
     bytes *lstrip(bytes *chars=0);
 
+    bytes *translate(bytes *table, bytes *delete_chars=0);
+
     list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
     list<bytes *> *rsplit(bytes *sep=0, __ss_int maxsplit=-1);
     tuple2<bytes *, bytes *> *rpartition(bytes *sep);
@@ -290,5 +292,22 @@ template<class T> bytes *__bytearray(T *t) {
 bytes *__bytearray(bytes *b);
 bytes *__bytearray(__ss_int t);
 bytes *__bytearray();
+
+namespace __bytes___ {
+    inline bytes *maketrans(void *, bytes *frm, bytes *to) {
+        if(frm->unit.size() != to->unit.size())
+            throw new ValueError(new str("maketrans arguments must have same length"));
+
+        __GC_STRING result(256, '\0');
+        for(int i = 0; i < 256; i++)
+            result[i] = (char)i;
+
+        size_t n = frm->unit.size();
+        for(size_t i = 0; i < n; i++)
+            result[(unsigned char)frm->unit[i]] = to->unit[i];
+
+        return new bytes(result, 1);
+    }
+}
 
 #endif
