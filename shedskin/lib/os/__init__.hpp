@@ -35,7 +35,7 @@ void *remove(str *a);
 void *rmdir(str *a);
 void *removedirs(str *name_);
 void *mkdir(str *path, __ss_int mode=0777);
-void *makedirs(str *name_, __ss_int mode=0777);
+void *makedirs(str *name_, __ss_int mode=0777, __ss_bool exist_ok=False);
 void *abort();
 __ss_int system(str *c);
 
