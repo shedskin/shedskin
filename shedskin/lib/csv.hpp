@@ -204,6 +204,7 @@ public:
     __ss_int num_fields;
     file *output_file;
     list<str *> *rec;
+    size_t rec_len;
 
     writer() {}
     template <class D> writer(
