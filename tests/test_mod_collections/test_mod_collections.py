@@ -148,6 +148,45 @@ def test_deque_maxlen():
     assert e.maxlen == 4
 
 
+def test_deque_maxlen_on_init():
+    # regression test: maxlen used to be applied *after* the initial
+    # extend(), so an iterable longer than maxlen wasn't truncated
+    d = deque([1,2,3,4,5,6], maxlen=3)
+    assert list(d) == [4,5,6]
+    assert d.maxlen == 3
+
+    e = deque([1,2], maxlen=3)
+    assert list(e) == [1,2]
+    assert e.maxlen == 3
+
+
+def test_deque_eq():
+    # regression test: deque used to fall back to pyobj's default
+    # __eq__ (pointer identity), so equal-content deques compared unequal
+    assert deque([1,2,3]) == deque([1,2,3])
+    assert not (deque([1,2,3]) == deque([1,2,4]))
+    assert deque([1,2,3]) != deque([1,2,4])
+    assert not (deque([1,2,3]) != deque([1,2,3]))
+    assert deque([1,2]) != deque([1,2,3])
+
+    # equality ignores maxlen, matching real deque semantics
+    assert deque([1,2,3], maxlen=5) == deque([1,2,3], maxlen=10)
+
+    assert deque([]) == deque([])
+
+
+def test_deque_remove_missing():
+    d = deque([1,2,3])
+    raised = False
+    try:
+        d.remove(9)
+    except ValueError:
+        raised = True
+    assert raised
+    # value untouched
+    assert list(d) == [1,2,3]
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -157,6 +196,9 @@ def test_all():
     test_deque3()
     test_deque4()
     test_deque_maxlen()
+    test_deque_maxlen_on_init()
+    test_deque_eq()
+    test_deque_remove_missing()
 
 
 if __name__ == '__main__':
