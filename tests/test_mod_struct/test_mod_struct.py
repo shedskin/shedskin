@@ -234,6 +234,26 @@ def test_calcsize():
     assert struct.calcsize("!c3q2b3d") == 51
 
 
+def test_signed_narrow():
+    # 'b' (signed char) must sign-extend on unpack, same as 'h'/'i'/'l'/'q'
+    packer = struct.pack('b', -5)
+    a, = struct.unpack('b', packer)
+    assert a == -5
+
+    packer = struct.pack('<b', -1)
+    a, = struct.unpack('<b', packer)
+    assert a == -1
+
+    packer = struct.pack('>3b', -1, -128, 127)
+    a, b, c = struct.unpack('>3b', packer)
+    assert (a, b, c) == (-1, -128, 127)
+
+    # unsigned 'B' must NOT sign-extend
+    packer = struct.pack('B', 251)
+    a, = struct.unpack('B', packer)
+    assert a == 251
+
+
 def test_repeat():
     packer = struct.pack("<3c", b'a', b'a', b'p')
     d, e, f, = struct.unpack("<3c", packer)
@@ -353,6 +373,7 @@ def test_all():
     test_p()
     test_x()
     test_nonzero()
+    test_signed_narrow()
     test_repeat()
     test_pack_into()
     test_calcsize()
