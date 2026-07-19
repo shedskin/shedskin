@@ -230,7 +230,11 @@ def test_swapcase():
 def test_title():
     assert b'bla bla'.title() == b'Bla Bla'
 
-def test_translate(): pass
+def test_translate():
+    table = bytes.maketrans(b'ab', b'xy')
+    assert b'abcdef'.translate(table) == b'xycdef'
+    assert b'abcdef'.translate(table, b'cd') == b'xyef'
+    assert b'hello world'.translate(None, b'lo') == b'he wrd'
 
 def test_upper():
     assert b'bla'.upper() == b'BLA'
