@@ -53,11 +53,41 @@ def test_validate():
     assert base64.b64decode(bad) == b'Hello!'
 
 
+def test_b16():
+    input_bytes = bytes(range(256))
+    e = base64.b16encode(input_bytes)
+    assert e == binascii.hexlify(input_bytes).upper()
+    assert base64.b16decode(e) == input_bytes
+    assert base64.b16decode(e.lower(), casefold=True) == input_bytes
+
+    ok = False
+    try:
+        base64.b16decode(e.lower())
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+# regression test for a global-buffer-overflow (OOB read past the
+# empty string literal used to preallocate output buffers) that
+# AddressSanitizer catches on completely ordinary encode/decode calls,
+# with no altchars or adversarial input needed.
+def test_asan_regression():
+    for n in (0, 1, 2, 3, 4, 5, 16, 45, 60, 61, 62, 63, 64, 100, 1000):
+        data = bytes((i * 37) % 256 for i in range(n))
+        e = base64.b64encode(data)
+        assert base64.b64decode(e) == data
+        h = base64.b16encode(data)
+        assert base64.b16decode(h) == data
+
+
 def test_all():
     test_basic()
     test_altchars()
     test_name()
     test_validate()
+    test_b16()
+    test_asan_regression()
 
 
 if __name__ == '__main__':
