@@ -33,12 +33,6 @@
 #include <stdint.h>
 #include <limits>
 
-/* third-party open-addressing hash table (dict/set backend), pulled in only when
-   the open-addressing backend is opted into via --dense-table / __SS_DENSE_TABLE */
-#ifdef __SS_DENSE_TABLE
-#include <ankerl/unordered_dense.h>
-#endif
-
 #ifndef WIN32
 #include <cxxabi.h>
 #include <exception>
@@ -241,28 +235,6 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 #include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
-/* dict/set backend. By default these alias the chaining std::unordered_map/set,
-   the long-standing, well-tested backend. The shedskin --dense-table command-line
-   option (or the ENABLE_DENSE_TABLE CMake option, or defining __SS_DENSE_TABLE
-   directly) opts into an open-addressing table (ankerl::unordered_dense) that
-   stores entries densely in a contiguous vector, giving cache-friendly iteration
-   and bulk operations; the two are API-compatible and semantically identical. */
-#ifdef __SS_DENSE_TABLE
-#ifdef __SS_NOGC
-template <class K, class V>
-using __GC_DICT = ankerl::unordered_dense::map<K, V, ss_hash<K>, ss_eq<K> >;
-
-template <class T>
-using __GC_SET = ankerl::unordered_dense::set<T, ss_hash<T>, ss_eq<T> >;
-
-#else
-template <class K, class V>
-using __GC_DICT = ankerl::unordered_dense::map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K, V> > >;
-
-template <class T>
-using __GC_SET = ankerl::unordered_dense::set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
-#endif
-#else
 #ifdef __SS_NOGC
 template <class K, class V>
 using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K> >;
@@ -276,7 +248,6 @@ using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< s
 
 template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
-#endif
 #endif
 
 class class_: public pyobj {

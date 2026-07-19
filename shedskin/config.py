@@ -278,14 +278,6 @@ class GlobalInfo:
         self._build_config.nogc = value
 
     @property
-    def dense_table(self) -> bool:
-        return self._build_config.dense_table
-
-    @dense_table.setter
-    def dense_table(self, value: bool) -> None:
-        self._build_config.dense_table = value
-
-    @property
     def backtrace(self) -> bool:
         return self._build_config.backtrace
 

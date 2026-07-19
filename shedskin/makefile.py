@@ -654,11 +654,6 @@ class ShedskinBuilder(Builder):
         for _dir in self.shedskin_libdirs[:-1]:
             self.add_include_dirs(_dir)
 
-        # third-party vendored headers (e.g. ankerl/unordered_dense.h)
-        self.add_include_dirs(
-            os.path.join(os.path.dirname(self.SHEDSKIN_LIBDIR), "ext", "include")
-        )
-
         if self.gx.pyextension_product:
             self.add_include_dirs(self.py.include_dir)
             if self.py.include_dir != self.py.config_h_dir:
@@ -756,8 +751,6 @@ class ShedskinBuilder(Builder):
             self.add_cxxflags("-D__SS_BACKTRACE", "-rdynamic", "-fno-inline")
         if self.gx.nogc:
             self.add_cxxflags("-D__SS_NOGC")
-        if self.gx.dense_table:
-            self.add_cxxflags("-D__SS_DENSE_TABLE")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
@@ -1171,14 +1164,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         self.add_include_dirs(
             SHEDSKIN_LIBDIR=self._normalize_path(self.shedskin_libdirs[-1])
         )
-        # third-party vendored headers (e.g. ankerl/unordered_dense.h)
-        self.add_include_dirs(
-            SHEDSKIN_EXT_INCLUDE=self._normalize_path(
-                os.path.join(
-                    os.path.dirname(self.shedskin_libdirs[-1]), "ext", "include"
-                )
-            )
-        )
         for _dir in self.shedskin_libdirs[:-1]:
             self.add_include_dirs(self._normalize_path(_dir))
 
@@ -1311,8 +1296,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags("-D__SS_BACKTRACE", "-rdynamic", "-fno-inline")
         if self.gx.nogc:
             self.add_cxxflags("-D__SS_NOGC")
-        if self.gx.dense_table:
-            self.add_cxxflags("-D__SS_DENSE_TABLE")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
