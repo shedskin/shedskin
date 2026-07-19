@@ -16,6 +16,11 @@ graph while walking the AST:
 - every `list` literal (`ast.List` in `Load` context) becomes a node ("literal")
 - every local variable that a literal (or another tracked variable) is
   assigned to becomes a node ("var")
+- every function parameter is *also* pre-registered as a "var" node in its
+  own function's graph (whether or not it is ever assigned), so that we can
+  later ask "did this specific parameter escape through this function
+  body?" and reuse the answer at every call site that passes an argument
+  into it
 - assignments, returns, stores to attributes/subscripts/globals, calls, and
   so on add edges or directly mark a node as "escaping"
 
@@ -35,21 +40,48 @@ the "escapes" direction just means a missed optimization. So:
   is simply not tracked, so that variable's literal-ness is unknown and any
   literal already reachable through it is left alone (not spuriously
   cleared)
-- only a small allowlist of builtins that are known to read their argument
+- a small allowlist of builtins that are known to read their argument
   without stashing a reference anywhere (`SAFE_CONSUMING_BUILTINS`) are
-  treated as non-escaping call sites; every other call is an escape
-- tuple/list-unpacking targets, closures (nonlocal/global), attribute and
-  subscript stores, returns, and yields are all treated as escaping
+  treated as non-escaping call sites unconditionally
+- calls to *ordinary user-defined functions* (module-level `def`s with only
+  plain positional parameters -- no `*args`/`**kwargs`/keyword-only/
+  positional-only params, and called without keyword arguments) are also
+  potentially safe, per argument position: interprocedurally, we compute
+  whether each function's own parameters ever escape *through that
+  function's body*, and reuse that per-position verdict at every call site.
+  This is a whole-module fixpoint (see `analyze`): start by assuming no
+  user function is safe in any position (matching the old, fully
+  conservative behavior), analyze every function, derive a new safety
+  verdict per (function, parameter position) from what was actually proven
+  in that pass, and repeat with the refined assumptions until nothing
+  changes. Recursive and mutually-recursive functions fall out naturally:
+  if a parameter's only interesting use is being forwarded unchanged to
+  other calls whose safety is still unknown, it stays conservatively
+  "escaping" for that round and gets a chance to be re-examined (with
+  better information) on the next one; a genuinely-recursive parameter
+  that is never actually the thing forwarded (e.g. a *derived copy* is
+  passed to the recursive call instead of the parameter itself) can still
+  be proven safe once the calls it depends on are.
+- every other call is an escape for arguments not covered by either of the
+  above
+- tuple/list-unpacking *assignment targets*, closures (nonlocal/global),
+  attribute and subscript stores, and yields are all treated as escaping;
+  `return`/`yield` of a bare `ast.Tuple` recurses element-wise (so
+  `return x, some_list` still marks `some_list`, without needing to track
+  tuples as containers in their own right)
 - list comprehensions (`[... for ... in ...]`) are tracked the same way as
   list literals: the comprehension itself is a "literal" node, its
   generator sources are consumed locally (iterating over something does
   not make it escape, the same as `SAFE_CONSUMING_BUILTINS`), and a
-  literal/comprehension directly in the element position is treated as
-  escaping, the same as a list literal nested inside another list literal
+  literal/comprehension directly in the element position gets an edge to
+  its enclosing literal/comprehension (nested containers only escape if
+  the container holding them does -- being nested is not, by itself, an
+  escape)
 
 Later iterations can relax these one at a time (e.g. track `sorted()`,
-`reversed()`, set/dict comprehensions, or trace values through more
-expression kinds) without changing the overall shape of the graph.
+`reversed()`, set/dict comprehensions, attribute/subscript-store targets,
+or trace values through more expression kinds) without changing the
+overall shape of the graph.
 
 Usage
 -----
@@ -65,6 +97,12 @@ from . import ast_utils
 
 if TYPE_CHECKING:
     from . import config
+
+# safety cap on the interprocedural fixpoint below; real programs converge
+# in far fewer rounds than this (each round can only ever *add* safe
+# positions, over a finite number of (function, parameter) pairs, so this
+# is just a defensive bound against a bug turning it into an infinite loop)
+MAX_INTERPROCEDURAL_ROUNDS = 50
 
 # --- builtins that consume an iterable argument locally (read elements
 # during the call) and are known to never retain a reference to the
@@ -87,6 +125,29 @@ def _callee_name(func: ast.expr) -> str:
     if isinstance(func, ast.Attribute):
         return func.attr
     return "<call>"
+
+
+def _simple_function_params(node: "ast.FunctionDef | ast.AsyncFunctionDef") -> Optional[list[str]]:
+    """Positional parameter names for `node`, or None if it has any
+    parameter kind we don't reason about interprocedurally (*args,
+    **kwargs, keyword-only, or positional-only params). Defaults are fine
+    -- we only match call sites by position, not by how a parameter ends
+    up bound."""
+    a = node.args
+    if a.vararg or a.kwarg or a.kwonlyargs or a.posonlyargs:
+        return None
+    return [arg.arg for arg in a.args]
+
+
+def _collect_simple_functions(module_ast: ast.Module) -> dict[str, "ast.FunctionDef | ast.AsyncFunctionDef"]:
+    """Map name -> def node, for module-level functions simple enough for
+    the interprocedural per-parameter safety check below."""
+    funcs: dict[str, "ast.FunctionDef | ast.AsyncFunctionDef"] = {}
+    for node in module_ast.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _simple_function_params(node) is not None:
+                funcs[node.name] = node
+    return funcs
 
 
 @dataclass
@@ -160,18 +221,35 @@ class EscapeReport:
 class EscapeVisitor(ast_utils.BaseNodeVisitor):
     """Builds one EscapeGraph per function (and the module top-level)."""
 
-    def __init__(self, gx: "config.GlobalInfo"):
+    def __init__(
+        self,
+        gx: "config.GlobalInfo",
+        known_funcs: Optional[dict[str, "ast.FunctionDef | ast.AsyncFunctionDef"]] = None,
+        safe_positions: Optional[dict[str, set]] = None,
+    ):
         self.gx = gx
         self.graphs: list[EscapeGraph] = []
         self.graph: Optional[EscapeGraph] = None
         self.nonlocal_names: set[str] = set()
+        # interprocedural context for this round (see `analyze`): which
+        # user functions we're allowed to reason about at all, and which
+        # (function, positional-arg-index) pairs are currently *known* not
+        # to escape through that function's body, as of the previous round
+        self.known_funcs = known_funcs or {}
+        self.safe_positions: dict[str, set] = safe_positions or {}
 
     # --- scopes -----------------------------------------------------------
 
-    def _enter_scope(self, name: str, node: ast.AST) -> None:
+    def _enter_scope(self, name: str, node: ast.AST, params: Optional[list[str]] = None) -> None:
         outer_graph, outer_nonlocal = self.graph, self.nonlocal_names
         self.graph = EscapeGraph(name)
         self.nonlocal_names = set()
+        # pre-register parameters as var nodes *before* walking the body,
+        # whether or not the body ever assigns to them, so that a
+        # parameter which is simply never touched in an escaping way ends
+        # up with a real (non-escaping) node rather than no node at all
+        for p in params or ():
+            self.graph.node((name, p), "var")
         self.generic_visit(node)
         self.graph.propagate()
         self.graphs.append(self.graph)
@@ -181,7 +259,7 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
         self._enter_scope("<module>", node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self._enter_scope(node.name, node)
+        self._enter_scope(node.name, node, params=_simple_function_params(node))
 
     visit_AsyncFunctionDef = visit_FunctionDef
 
@@ -207,7 +285,11 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
         for elt in node.elts:
             self.visit(elt)
             if isinstance(elt, (ast.List, ast.ListComp)):
-                self.graph.mark_escape(id(elt), "nested inside another list literal")
+                # a nested literal is *stored as an element* of the outer
+                # one: it escapes exactly when the outer container does,
+                # no more and no less, so this is an edge (propagated by
+                # EscapeGraph.propagate), not an unconditional escape
+                self.graph.add_edge(id(elt), id(node))
 
     def visit_ListComp(self, node: ast.ListComp) -> None:
         assert self.graph is not None
@@ -227,9 +309,8 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(if_)
         self.visit(node.elt)
         if isinstance(node.elt, (ast.List, ast.ListComp)):
-            self.graph.mark_escape(
-                id(node.elt), "nested inside comprehension result"
-            )
+            # same reasoning as visit_List above: nested, not escaping
+            self.graph.add_edge(id(node.elt), id(node))
 
     # --- assignment / aliasing -----------------------------------------------
 
@@ -298,6 +379,13 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
             self.graph.mark_escape(id(value), reason)
         elif isinstance(value, ast.Name):
             self.graph.mark_escape((self.graph.name, value.id), reason)
+        elif isinstance(value, ast.Tuple):
+            # a bare tuple isn't itself tracked as a container, but each of
+            # its elements is exposed exactly as much as the tuple is (e.g.
+            # `return x, some_list` still exposes `some_list`), so recurse
+            # instead of silently doing nothing for the Tuple case
+            for elt in value.elts:
+                self._mark_value_escape(elt, reason)
 
     # --- exits from the scope -----------------------------------------------
 
@@ -315,29 +403,41 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
         self.visit(node.value)
         self._mark_value_escape(node.value, "yielded")
 
-    # --- calls: the one place we currently allow a "safe" non-escaping use --
+    # --- calls: builtins and (once proven safe) ordinary user functions ----
 
     def visit_Call(self, node: ast.Call) -> None:
         self.visit(node.func)
         func = node.func
-        is_safe_sink = (
-            isinstance(func, ast.Name)
-            and func.id in SAFE_CONSUMING_BUILTINS
+        callee_name = func.id if isinstance(func, ast.Name) else None
+
+        is_safe_builtin_call = (
+            callee_name in SAFE_CONSUMING_BUILTINS
             and len(node.args) == 1
             and not node.keywords
             and not isinstance(node.args[0], ast.Starred)
         )
-        for arg in node.args:
+
+        # per-argument-position safety for calls to ordinary user
+        # functions, from the previous round's interprocedural fixpoint
+        # (see `analyze`). Keyword arguments make position-matching
+        # unreliable, so those calls stay fully conservative.
+        user_safe_positions: set = set()
+        if callee_name is not None and callee_name in self.known_funcs and not node.keywords:
+            user_safe_positions = self.safe_positions.get(callee_name, set())
+
+        for i, arg in enumerate(node.args):
             if isinstance(arg, ast.Starred):
                 self.visit(arg.value)
                 self._mark_value_escape(arg.value, "starred call argument")
                 continue
             self.visit(arg)
-            if not is_safe_sink:
+            safe_here = is_safe_builtin_call or i in user_safe_positions
+            if not safe_here:
                 self._mark_value_escape(
                     arg, f"passed to '{_callee_name(func)}(...)'"
                 )
-            # else: e.g. sum([1, 2, 3]) -- read locally, does not escape
+            # else: e.g. sum([1, 2, 3]) or a call into a parameter position
+            # already proven not to escape -- read locally, does not escape
         for kw in node.keywords:
             self.visit(kw.value)
             self._mark_value_escape(kw.value, "passed as keyword argument")
@@ -346,15 +446,70 @@ class EscapeVisitor(ast_utils.BaseNodeVisitor):
 # --- entry point -------------------------------------------------------------
 
 
+def _param_safety_from_round(
+    graphs: list[EscapeGraph],
+    func_param_names: dict[str, list[str]],
+) -> dict[str, set]:
+    """From one round's per-function graphs, extract which (function,
+    positional-index) parameters were actually proven not to escape in
+    that round -- i.e. this round's *output* facts, which become next
+    round's input assumptions."""
+    by_name = {g.name: g for g in graphs}
+    result: dict[str, set] = {}
+    for name, params in func_param_names.items():
+        safe_here: set = set()
+        g = by_name.get(name)
+        if g is not None:
+            for i, p in enumerate(params):
+                node = g.nodes.get((name, p))
+                # every parameter is pre-registered in _enter_scope, so
+                # `node` should always exist; a parameter that nothing in
+                # the body ever marked escaping is non-escaping
+                if node is None or not node.escapes:
+                    safe_here.add(i)
+        result[name] = safe_here
+    return result
+
+
+def _analyze_module(gx: "config.GlobalInfo", module: Any) -> list[EscapeGraph]:
+    """Run the whole-module interprocedural fixpoint for one module and
+    return the final round's per-function graphs.
+
+    Round 0 assumes no user function is safe in any parameter position
+    (identical to the original, fully call-conservative behavior). Each
+    round derives, from what was *actually* proven that round, a new set
+    of (function, position) facts; since assuming more safety can only
+    ever let a later round prove at least as much (never less), the set
+    of known-safe positions only grows round over round, so this
+    converges to a fixpoint (bounded by the finite number of
+    (function, position) pairs in the module).
+    """
+    funcs = _collect_simple_functions(module.ast)
+    func_param_names = {name: _simple_function_params(f) or [] for name, f in funcs.items()}
+
+    safe_positions: dict[str, set] = {name: set() for name in funcs}
+    graphs: list[EscapeGraph] = []
+
+    for _ in range(MAX_INTERPROCEDURAL_ROUNDS):
+        visitor = EscapeVisitor(gx, known_funcs=funcs, safe_positions=safe_positions)
+        visitor.visit(module.ast)
+        graphs = visitor.graphs
+
+        new_safe_positions = _param_safety_from_round(graphs, func_param_names)
+        if new_safe_positions == safe_positions:
+            break
+        safe_positions = new_safe_positions
+
+    return graphs
+
+
 def analyze(gx: "config.GlobalInfo") -> list[EscapeReport]:
     """Run escape analysis over all non-builtin modules and print a report."""
     reports: list[EscapeReport] = []
     for module in gx.modules.values():
         if module.builtin or module.ast is None:
             continue
-        visitor = EscapeVisitor(gx)
-        visitor.visit(module.ast)
-        for scope_graph in visitor.graphs:
+        for scope_graph in _analyze_module(gx, module):
             for literal in scope_graph.literals:
                 node = scope_graph.nodes[id(literal)]
                 reports.append(
