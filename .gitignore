@@ -28,7 +28,8 @@ uv.lock
 
 # exclude test.py detritus
 test
-test.*
+test.hpp
+test.cpp
 
 # exclude tests and static analysis detritus
 .tox/
