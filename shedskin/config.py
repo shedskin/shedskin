@@ -278,6 +278,14 @@ class GlobalInfo:
         self._build_config.nogc = value
 
     @property
+    def boost(self) -> bool:
+        return self._build_config.boost
+
+    @boost.setter
+    def boost(self, value: bool) -> None:
+        self._build_config.boost = value
+
+    @property
     def backtrace(self) -> bool:
         return self._build_config.backtrace
 
@@ -643,6 +651,7 @@ class GlobalInfo:
             "float64": self.float64,
             "silent": self.silent,
             "nogc": self.nogc,
+            "boost": self.boost,
             "backtrace": self.backtrace,
         }
 
