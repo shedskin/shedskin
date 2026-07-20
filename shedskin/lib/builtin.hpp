@@ -15,6 +15,12 @@
 #include <gc/gc_cpp.h>
 #endif
 
+#ifdef __SS_BOOST
+#include <boost/container/small_vector.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
+#endif
+
 #include <vector>
 #include <deque>
 #include <bitset>
@@ -98,16 +104,22 @@ using tuple = tuple2<T, T>;
 
 /* STL types */
 
-// TODO switch to template aliases
 #ifdef __SS_NOGC
-#define __GC_VECTOR(T) std::vector< T >
-#define __GC_DEQUE(T) std::deque< T >
-#define __GC_STRING std::basic_string<char,std::char_traits<char> >
+template <class T>
+using __ss_allocator = std::allocator< T >;
 #else
-#define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
-#define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
-#define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
+template <class T>
+using __ss_allocator = gc_allocator< T >;
 #endif
+
+#ifdef __SS_BOOST
+#define __GC_VECTOR(T) boost::container::small_vector<T, 4, __ss_allocator<T> >
+#else
+#define __GC_VECTOR(T) std::vector< T, __ss_allocator< T > >
+#endif
+
+#define __GC_DEQUE(T) std::deque< T, __ss_allocator< T > >
+#define __GC_STRING std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -236,19 +248,19 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 #include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
-#ifdef __SS_NOGC
+#ifdef __SS_BOOST
 template <class K, class V>
-using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K> >;
+using __GC_DICT = boost::unordered_flat_map<K, V, ss_hash<K>, ss_eq<K>, __ss_allocator< std::pair<const K, V> > >;
 
 template <class T>
-using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T> >;
+using __GC_SET = boost::unordered_flat_set<T, ss_hash<T>, ss_eq<T>, __ss_allocator< T > >;
 
 #else
 template <class K, class V>
-using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
+using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, __ss_allocator< std::pair<K const, V> > >;
 
 template <class T>
-using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, __ss_allocator< T > >;
 #endif
 
 class class_: public pyobj {
@@ -475,7 +487,9 @@ template<class T> T __seqiter<T>::__next__() {
 
 template<class T> list<T> *__ss_list() {
     list<T> *l =  new list<T>();
+#ifndef __SS_BOOST
     l->units.reserve(4);
+#endif
     return l;
 }
 
