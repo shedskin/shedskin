@@ -28,13 +28,18 @@ class_ *cl_error;
 str *match_object::group(__ss_int /* n */, __ss_int matchid)
 {
     PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
+
+    if(matchid > re->capture_count || matchid < 0) throw new IndexError(new str("no such group"));
+    if(captured[matchid * 2] == PCRE2_UNSET) return 0; // group exists but did not participate in the match
+
     return new str(re->__group(&string->unit, captured, matchid));
 }
 
 str *match_object::group(__ss_int /* n */, str *mname)
 {
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
-    return new str(re->__group(&string->unit, captured, mname));
+    if(!re->groupindex->has_key(mname)) throw new IndexError(new str("no such group"));
+
+    return group(0, re->groupindex->__getitem__(mname));
 }
 
 str *match_object::__getitem__(__ss_int g) {
@@ -144,18 +149,20 @@ str *re_object::__repr__() {
     return new str("<Re object>");
 }
 
-//these are for internal use
+//these are for internal use (used by expand()/sub() template backreference resolution)
 __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int matchid)
 {
-    if(matchid > capture_count || matchid < 0) throw new IndexError(new str("no such group"));
-    if(captured[matchid * 2] == PCRE2_UNSET) throw new error(new str("group is unmatched"));
+    //an out-of-range numeric backreference is a template/pattern error
+    if(matchid > capture_count || matchid < 0) throw new error(new str("invalid group reference"));
+    //a group that exists but did not participate in the match expands to an empty string
+    if(captured[matchid * 2] == PCRE2_UNSET) return "";
 
     return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
 }
 
 __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, str *mname)
 {
-    if(!groupindex->has_key(mname)) throw new IndexError(new str("no such group exists"));
+    if(!groupindex->has_key(mname)) throw new IndexError(new str("unknown group name"));
 
     return __group(subj, captured, groupindex->__getitem__(mname));
 }
