@@ -119,11 +119,11 @@ using tuple = tuple2<T, T>;
 #endif
 
 #ifdef __SS_ABSEIL
-#define __GC_VECTOR(T) absl::InlinedVector<T, 8, gc_allocator<T> >
+#define __GC_VECTOR(T) absl::InlinedVector<T, 4, gc_allocator<T> >
 #endif
 
 #ifdef __SS_BOOST
-#define __GC_VECTOR(T) boost::container::small_vector<T, 8, gc_allocator<T> >
+#define __GC_VECTOR(T) boost::container::small_vector<T, 4, gc_allocator<T> >
 #endif
 
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
@@ -504,7 +504,9 @@ template<class T> T __seqiter<T>::__next__() {
 
 template<class T> list<T> *__ss_list() {
     list<T> *l =  new list<T>();
+#ifdef __SS_STL
     l->units.reserve(4);
+#endif
     return l;
 }
 
