@@ -134,6 +134,9 @@ class Shedskin:
             #            if args.random:
             #                gx.fast_random = True
 
+            if args.boost:
+                gx.boost = True
+
             if args.noassert:
                 gx.assertions = False
 
@@ -318,6 +321,7 @@ class Shedskin:
         grp("-b", "--nobounds", help="Disable bounds checking", action="store_true")
         grp("--nogc", help="Disable garbage collection", action="store_true")
         grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
+        grp("--boost", help="Use boost containers", action="store_true")
 
         # Compiler options (debug, extmod, dirs, output, etc.)
         parsers["compiler"] = argparse.ArgumentParser(add_help=False)

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
   This can help a lot with larger programs (no need to manually retry).
+- Added `--boost` option, to use faster boost containers
 - Catching up with Python 3.x:
   - Support `min/max(default)`
   - Support `time.{perf_counter, monotonic, process_time}`
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Optimized
 
 - Iteration over generator expressions is now much faster (though some work remains)
+- With `--boost`, use boost inlined-vector and flat_hash_map/set
 
 ### Tests
 

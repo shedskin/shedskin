@@ -53,3 +53,4 @@ class BuildConfiguration:
     debug_level: int = 0
     nomakefile: bool = False
     generate_cmakefile: bool = False
+    boost: bool = False
