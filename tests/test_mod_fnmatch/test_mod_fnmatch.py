@@ -26,6 +26,24 @@ def test_fnmatch_newline():
     assert fnmatch.fnmatch("fo\no", "fo*o")
 
 
+def test_fnmatch_bad_range():
+    # a lexicographically out-of-order range inside a character class
+    # (e.g. "[a-!]", since ord('!') < ord('a')) is invalid as a regex
+    # range. Real Python's fnmatch neutralizes this into a pattern that
+    # simply never matches; it must not raise, crash, or otherwise take
+    # down the whole program just because a caller passed a funny-looking
+    # glob pattern.
+    assert not fnmatch.fnmatch("x", "[a-!]")
+    assert not fnmatch.fnmatchcase("x", "[a-!]")
+    assert not fnmatch.fnmatch("x", "[[-*]")
+    # negated out-of-order range: matches anything
+    assert fnmatch.fnmatch("x", "[!a-!]")
+    assert fnmatch.fnmatch("!", "[!a-!]")
+    # a valid, ordinary range should still work as before
+    assert fnmatch.fnmatch("b", "[a-c]")
+    assert not fnmatch.fnmatch("d", "[a-c]")
+
+
 def test_filter():
     fnmatch.filter(fs, '*.txt') == ['a.txt', 'b.txt', 'c.txt']
 
@@ -42,6 +60,7 @@ def test_all():
     test_fnmatch()
     test_fnmatchcase()
     test_fnmatch_newline()
+    test_fnmatch_bad_range()
     test_filter()
     test_filterfalse()
     test_translate()
