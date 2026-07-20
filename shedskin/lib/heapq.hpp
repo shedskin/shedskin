@@ -168,7 +168,7 @@ template<class T> inline T heappop_max(list<T> *l) {
 template<template <class Y, class Z> class Cmp, class Key, class E, class T> E heappushpop(T &heap, E item, Key key) {
     Cmp<E, Key> cmp(key);
 
-    if (!heap.size() || cmp(item, heap.front()) < 0) {
+    if (!heap.size() || cmp(heap.front(), item) >= 0) {
         return item;
     }
 
