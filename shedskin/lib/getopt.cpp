@@ -239,7 +239,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
             args = __13;
         }
     }
-    else if (___bool(optarg)) {
+    else if (optarg != 0) {
         throw ((new GetoptError(__mod6(const_7, 1, opt),opt)));
     }
     opts->append((new tuple2<str *, str *>(2, (const_2)->__add__(opt), __OR(optarg, const_0, 14))));
