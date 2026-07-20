@@ -147,6 +147,32 @@ def test_long_option_error_messages():
     assert error_msg == "option --zzz not recognized"
 
 
+def test_long_option_empty_argument_rejected():
+    # '--foo=' supplies an argument (the empty string), which is not
+    # the same as supplying no argument at all. Even though '' is
+    # falsy, a no-argument long option must still reject it, the same
+    # way CPython's getopt.getopt(['--foo='], '', ['foo']) does.
+    error_msg = None
+    error_opt = None
+    try:
+        getopt(["--foo="], "", ["foo"])
+    except GetoptError as e:
+        error_msg = e.msg
+        error_opt = e.opt
+    assert error_msg == "option --foo must not have an argument"
+    assert error_opt == "foo"
+
+    error_msg = None
+    error_opt = None
+    try:
+        gnu_getopt(["--foo="], "", ["foo"])
+    except GetoptError as e:
+        error_msg = e.msg
+        error_opt = e.opt
+    assert error_msg == "option --foo must not have an argument"
+    assert error_opt == "foo"
+
+
 def test_error_alias_catches_getopterror():
     # 'error' is an alias for GetoptError and should be catchable
     # the same way real getopt.error is in CPython.
@@ -178,6 +204,7 @@ def test_all():
     test_long_option_prefix_matching()
     test_getopt_error_messages()
     test_long_option_error_messages()
+    test_long_option_empty_argument_rejected()
     test_error_alias_catches_getopterror()
     test_posixly_correct_env()
 
