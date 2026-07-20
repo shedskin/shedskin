@@ -3,8 +3,6 @@ import collections
 import os
 import os.path
 
-# TODO QUOTE_NOTNULL, QUOTE_STRINGS
-
 # TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
@@ -412,6 +410,26 @@ def test_writerow_single_empty_field():
     assert lines == ['', '""']
 
 
+def test_quote_strings_writer():
+    # regression test: QUOTE_STRINGS must quote every non-None (string)
+    # field, and leave None fields unquoted -- it must not silently fall
+    # back to QUOTE_MINIMAL-style (unquoted) output.
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_STRINGS, lineterminator='\n')
+        writer.writerow(['hello', None, 'world'])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == '"hello",,"world"'
+
+
+def test_quote_notnull_writer():
+    # QUOTE_NOTNULL: quote every field that is not None.
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_NOTNULL, lineterminator='\n')
+        writer.writerow(['hello', None, 'world'])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == '"hello",,"world"'
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -424,6 +442,8 @@ def test_all():
     test_blank_lines()
     test_writerow_none_field()
     test_writerow_single_empty_field()
+    test_quote_strings_writer()
+    test_quote_notnull_writer()
 
 
 if __name__ == "__main__":
