@@ -351,7 +351,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child, func)
 
             for key, value in zip(node.keys, node.values):  # XXX filter
-                assert key  # TODO when None?
+                if key is None:  # dict unpacking, e.g. {**d1, 'c': 3}
+                    error.error(
+                        "dict unpacking ('**') in a dict display is not supported",
+                        self.gx,
+                        node,
+                        mv=getmv(),
+                    )
                 self.add_dynamic_constraint(node, key, "unit", func)
                 self.add_dynamic_constraint(node, value, "value", func)
         else:
