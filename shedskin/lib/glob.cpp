@@ -167,10 +167,10 @@ list<str *> *glob1(str *dirname, str *pattern) {
         FOR_IN(nm,names,17,19,123)
             if (__ne(nm->__getitem__(0), const_2)) {
                 n2->append(nm);
-                names = n2;
             }
         END_FOR
 
+        names = n2;
     }
     return __fnmatch__::filter(names, pattern);
 }
