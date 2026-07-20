@@ -751,6 +751,8 @@ class ShedskinBuilder(Builder):
             self.add_cxxflags("-D__SS_BACKTRACE", "-rdynamic", "-fno-inline")
         if self.gx.nogc:
             self.add_cxxflags("-D__SS_NOGC")
+        if self.gx.boost:
+            self.add_cxxflags("-D__SS_BOOST")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
@@ -1296,6 +1298,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags("-D__SS_BACKTRACE", "-rdynamic", "-fno-inline")
         if self.gx.nogc:
             self.add_cxxflags("-D__SS_NOGC")
+        if self.gx.boost:
+            self.add_cxxflags("-D__SS_BOOST")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
