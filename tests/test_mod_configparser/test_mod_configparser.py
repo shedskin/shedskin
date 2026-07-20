@@ -1,7 +1,6 @@
 # configparser # XXX readfp not covered yet
 
 import os
-import re
 import configparser
 
 if os.path.exists("testdata"):
@@ -90,31 +89,31 @@ def test_interpolation():
     config = configparser.ConfigParser()
     config.add_section('paths')
     config.set('paths', 'home_dir', '/home/user')
-    config.set('paths', 'config_dir', '%(home_dir)s')
+    config.set('paths', 'my_dir', '%(home_dir)s/mine')
+    config.set('paths', 'both', 'prefix-%(home_dir)s-mid-%(my_dir)s-suffix')
+    config.set('paths', 'no_ref', 'just a plain value')
+    # a literal '%' has to be doubled to survive interpolation, but only
+    # once the value also contains a real "%(...)s" reference somewhere
+    # -- ConfigParser._interpolate only runs its %-substitution pass at
+    # all when "%(" appears in the value (this mirrors old ConfigParser,
+    # not modern configparser's BasicInterpolation).
+    config.set('paths', 'mixed_percent', '%(home_dir)s has 100%% capacity')
 
-    assert config.get('paths', 'config_dir') == '/home/user'
-    assert config.get('paths', 'config_dir', raw=True) == '%(home_dir)s'
+    assert config.get('paths', 'home_dir') == '/home/user'
+    assert config.get('paths', 'my_dir') == '/home/user/mine'
+    assert config.get('paths', 'both') == 'prefix-/home/user-mid-/home/user/mine-suffix'
+    assert config.get('paths', 'no_ref') == 'just a plain value'
+    assert config.get('paths', 'mixed_percent') == '/home/user has 100% capacity'
 
-def test_interpolation_bug():
-    # KNOWN BUG: interpolation currently raises whenever the value
-    # contains anything besides a single, bare %(name)s reference.
-    # ConfigParser._KEYCRE ("%\\(([^)]*)\\)s|.") falls back to matching
-    # any other character one at a time via the "." alternative, in
-    # which case group 1 does not participate in the match. CPython's
-    # re returns None for such a group; shedskin's match_object.group()
-    # instead raises re.error("group is unmatched") (see re.cpp), which
-    # ConfigParser._interpolate/_interpolation_replace don't handle.
-    # This effectively breaks interpolation for any realistic value
-    # (e.g. "%(home_dir)s/config"), not just contrived ones.
-    config = configparser.ConfigParser()
-    config.add_section('paths')
-    config.set('paths', 'home_dir', '/home/user')
-    config.set('paths', 'config_dir', '%(home_dir)s/config')
+    # raw bypasses interpolation entirely
+    assert config.get('paths', 'both', raw=True) == 'prefix-%(home_dir)s-mid-%(my_dir)s-suffix'
 
+    # a reference to a name that doesn't exist anywhere -> InterpolationMissingOptionError
+    config.set('paths', 'bad_ref', '%(does_not_exist)s')
     ok = False
     try:
-        config.get('paths', 'config_dir')
-    except re.error:
+        config.get('paths', 'bad_ref')
+    except configparser.InterpolationMissingOptionError:
         ok = True
     assert ok
 
@@ -125,7 +124,7 @@ def test_all():
     test_rawconfigparser()
     test_defaults_section()
     test_interpolation()
-#    test_interpolation_bug()
 
 if __name__ == '__main__':
     test_all()
+    print("ALL OK")

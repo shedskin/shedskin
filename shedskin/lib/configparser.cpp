@@ -860,7 +860,19 @@ __iter<tuple<str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str
 str *_interpolation_replace(__re__::match_object *match) {
     str *s;
 
-    s = match->group(1, 1);
+    /* ConfigParser._KEYCRE is "%\(([^)]*)\)s|.": group 1 only
+       participates in the match when the "%(name)s" alternative fired.
+       When the catch-all "." alternative matched instead, group 1 is
+       unmatched. CPython's re returns None for match.group(1) in that
+       case; shedskin's match_object.group() raises re.error("group is
+       unmatched") instead (see re.cpp), so that has to be caught here
+       to get the same "s is None" behavior the original Python code
+       relies on. */
+    try {
+        s = match->group(1, 1);
+    } catch (__re__::error *) {
+        s = 0;
+    }
     if (s == 0) {
         return match->group(1);
     }
