@@ -182,11 +182,15 @@ def test_nlargest_nsmallest_n_le_0():
 
 
 class Bert:
-    def __init__(self, val):
+    def __init__(self, val, tag=0):
         self.val = val
+        self.tag = tag
 
     def __lt__(self, other):
         return self.val < other.val
+
+    def __eq__(self, other):
+        return self.val == other.val
 
 
 def get_list(berten):
@@ -212,6 +216,37 @@ def test_custom_class():
     assert get_list(l) == []
 
 
+def test_heappushpop_ties():
+    # regression test: when the pushed item compares equal to heap[0],
+    # heappushpop (and heappushpop_max) must leave the heap untouched and
+    # return the pushed item unmodified, matching CPython's
+    # "if heap[0] < item: swap" semantics (strict '<', not '<='). A previous
+    # bug swapped on ties too, mutating the heap and returning the wrong
+    # object.
+    heap = [Bert(1, tag=1)]
+    item = Bert(1, tag=2)
+    result = heapq.heappushpop(heap, item)
+    assert result.tag == 2
+    assert heap[0].tag == 1
+
+    heap_max = [Bert(1, tag=1)]
+    item_max = Bert(1, tag=2)
+    result_max = heapq.heappushpop_max(heap_max, item_max)
+    assert result_max.tag == 2
+    assert heap_max[0].tag == 1
+
+    # sanity check: strictly smaller/larger items still swap as before
+    heap2 = [Bert(1, tag=1)]
+    result2 = heapq.heappushpop(heap2, Bert(2, tag=2))
+    assert result2.tag == 1
+    assert heap2[0].tag == 2
+
+    heap3 = [Bert(2, tag=1)]
+    result3 = heapq.heappushpop(heap3, Bert(1, tag=2))
+    assert result3.tag == 2
+    assert heap3[0].tag == 1
+
+
 def test_all():
     test_heapify()
     test_heapify_max()
@@ -235,6 +270,8 @@ def test_all():
     test_heapq_2()
 
     test_custom_class()
+
+    test_heappushpop_ties()
 
 
 if __name__ == '__main__':
