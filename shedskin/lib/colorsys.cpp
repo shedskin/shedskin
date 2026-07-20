@@ -71,7 +71,7 @@ tuple2<__ss_float, __ss_float> *rgb_to_hls(__ss_float r, __ss_float g, __ss_floa
     else {
         h = ((4.0+gc)-rc);
     }
-    h = __mods((h/6.0), 1.0);
+    h = __mods((h/(__ss_float)6.0), (__ss_float)1.0);
     return (new tuple2<__ss_float, __ss_float>(3,h,l,s));
 }
 
@@ -93,7 +93,7 @@ tuple2<__ss_float, __ss_float> *hls_to_rgb(__ss_float h, __ss_float l, __ss_floa
 
 __ss_float _v(__ss_float m1, __ss_float m2, __ss_float hue) {
     
-    hue = __mods(hue, 1.0);
+    hue = __mods(hue, (__ss_float)1.0);
     if ((hue<ONE_SIXTH)) {
         return (m1+(((m2-m1)*hue)*6.0));
     }
@@ -128,7 +128,7 @@ tuple2<__ss_float, __ss_float> *rgb_to_hsv(__ss_float r, __ss_float g, __ss_floa
     else {
         h = ((4.0+gc)-rc);
     }
-    h = __mods((h/6.0), 1.0);
+    h = __mods((h/(__ss_float)6.0), (__ss_float)1.0);
     return (new tuple2<__ss_float, __ss_float>(3,h,s,v));
 }
 
@@ -139,7 +139,7 @@ tuple2<__ss_float, __ss_float> *hsv_to_rgb(__ss_float h, __ss_float s, __ss_floa
     if (s == 0.0) {
         return (new tuple2<__ss_float, __ss_float>(3,v,v,v));
     }
-    i = __int((h*6.0));
+    i = __int((h*(__ss_float)6.0));
     f = ((h*6.0)-i);
     p = (v*(1.0-s));
     q = (v*(1.0-(s*f)));
