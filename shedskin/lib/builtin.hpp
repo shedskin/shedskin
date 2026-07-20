@@ -487,7 +487,7 @@ template<class T> T __seqiter<T>::__next__() {
 
 template<class T> list<T> *__ss_list() {
     list<T> *l =  new list<T>();
-#ifdef __SS_STL
+#ifndef __SS_BOOST
     l->units.reserve(4);
 #endif
     return l;
