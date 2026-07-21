@@ -163,6 +163,9 @@ def test_math():
     assert math.gcd(15) == 15
     assert math.lcm(14) == 14
 
+    assert math.gcd(-15) == 15
+    assert math.lcm(-14) == 14
+
     assert math.gcd() == 0
     assert math.lcm() == 1
 
@@ -254,6 +257,9 @@ def test_math_integer():
 
     assert math.integer.gcd(15) == 15
     assert math.integer.lcm(14) == 14
+
+    assert math.integer.gcd(-15) == 15
+    assert math.integer.lcm(-14) == 14
 
     assert math.integer.factorial(2) == 2
     assert math.integer.factorial(5) == 120
