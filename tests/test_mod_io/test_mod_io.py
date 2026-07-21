@@ -119,6 +119,47 @@ def test_stringio_write_none():
     assert s.read() == 'ok'
 
 
+def test_bytesio_write_past_end():
+    # seeking past the current end and then writing must zero-pad the gap,
+    # not crash (regression test for an out-of-range exception previously
+    # thrown by std::string::insert when pos > buffer size)
+    b = io.BytesIO()
+    b.seek(5)
+    assert b.write(b'hi') == 2
+    assert b.getvalue() == b'\x00\x00\x00\x00\x00hi'
+    assert b.tell() == 7
+
+    # writing exactly at the current end still works and needs no padding
+    b2 = io.BytesIO(b'abc')
+    b2.seek(3)
+    assert b2.write(b'def') == 3
+    assert b2.getvalue() == b'abcdef'
+
+    # overwrite-in-the-middle semantics must be unaffected by the fix
+    b3 = io.BytesIO(b'abcdef')
+    b3.seek(2)
+    assert b3.write(b'XY') == 2
+    assert b3.getvalue() == b'abXYef'
+
+
+def test_stringio_write_past_end():
+    s = io.StringIO()
+    s.seek(5)
+    assert s.write('hi') == 2
+    assert s.getvalue() == '\x00\x00\x00\x00\x00hi'
+    assert s.tell() == 7
+
+    s2 = io.StringIO(initial_value='abc')
+    s2.seek(3)
+    assert s2.write('def') == 3
+    assert s2.getvalue() == 'abcdef'
+
+    s3 = io.StringIO(initial_value='abcdef')
+    s3.seek(2)
+    assert s3.write('XY') == 2
+    assert s3.getvalue() == 'abXYef'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -127,6 +168,8 @@ def test_all():
     test_io_write_to_binary_string()
     test_bytesio_write_none()
     test_stringio_write_none()
+    test_bytesio_write_past_end()
+    test_stringio_write_past_end()
 
 
 if __name__ == '__main__':
