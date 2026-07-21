@@ -466,7 +466,10 @@ __ss_int Random::getrandbits(__ss_int k) {
     */
 
     if ((k<=0)) {
-        throw (const_8);
+        throw (new ValueError(const_8));
+    }
+    if ((size_t)k > sizeof(__ss_int)*8 - 2) {
+        throw (new ValueError(const_9));
     }
 
     return randrange((__ss_int)1<<k);
