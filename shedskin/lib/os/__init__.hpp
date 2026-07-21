@@ -38,6 +38,7 @@ void *mkdir(str *path, __ss_int mode=0777);
 void *makedirs(str *name_, __ss_int mode=0777, __ss_bool exist_ok=False);
 void *abort();
 __ss_int system(str *c);
+void *unlink(str *path);
 
 class namedtuple : public pyobj {
 public:
@@ -102,6 +103,8 @@ void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
 void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
 
 bytes *urandom(__ss_int n);
+
+__ss_bool isatty(__ss_int fd);
 
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
@@ -243,7 +246,6 @@ void *chown(str *path, __ss_int uid, __ss_int gid);
 void *chroot(str *path);
 
 str *ctermid();
-__ss_bool isatty(__ss_int fd);
 str *ttyname(__ss_int fd);
 
 tuple2<str *, str *> *uname();
@@ -274,7 +276,6 @@ void *ftruncate(__ss_int fd, __ss_int n);
 
 tuple2<__ss_float, __ss_float> *getloadavg();
 void *mkfifo(str *path, __ss_int mode=438);
-void *unlink(str *path);
 
 void *fsync(__ss_int fd);
 void *lseek(__ss_int fd, __ss_int pos, __ss_int how);
