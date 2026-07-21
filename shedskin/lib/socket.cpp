@@ -436,8 +436,8 @@ __ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
 {
     write_wait();
 
-    const char *buf = msg->c_str();
-    size_t buflen = strlen(buf);
+    const char *buf = msg->unit.data();
+    size_t buflen = msg->unit.size();
 
     sockaddr *sa;
     socklen_t salen;
