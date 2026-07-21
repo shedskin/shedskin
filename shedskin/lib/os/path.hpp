@@ -13,6 +13,7 @@ namespace __os__ {
 namespace __path__ {
 
 extern str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
+extern str *default_0;
 extern tuple2<str *, str *> *const_2;
 extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 #ifdef WIN32
@@ -48,6 +49,8 @@ __ss_bool isfile(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
 str *realpath(str *filename);
+str *relpath(str *path);
+str *relpath(str *path, str *start);
 
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
