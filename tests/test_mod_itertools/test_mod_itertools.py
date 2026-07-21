@@ -49,6 +49,8 @@ def test_repeat():
     assert next(r) == 10
 
     assert list(itertools.repeat(42, 3)) == [42, 42, 42]
+    assert list(itertools.repeat(42, 0)) == []
+    assert list(itertools.repeat(42, -1)) == []
 
 
 def test_chain():

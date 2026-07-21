@@ -261,11 +261,11 @@ public:
 template<class T> inline repeatiter<T>::repeatiter() {}
 template<class T> inline repeatiter<T>::repeatiter(T object_, int times_) {
     object = object_;
-    times = times_ ? times_ : -1;
+    times = times_;
 }
 
 template<class T> T repeatiter<T>::__next__() {
-  if (!times)
+  if (times == 0)
     throw new StopIteration();
 
   if (times > 0)
@@ -274,8 +274,11 @@ template<class T> T repeatiter<T>::__next__() {
   return object;
 }
 
-template<class T> inline repeatiter<T> *repeat(T object, int times = 0) {
-    return new repeatiter<T>(object, times);
+template<class T, class D> inline repeatiter<T> *repeat(T object, D times_) {
+    if constexpr (std::is_same_v<D, __ss_void_struct>)
+        return new repeatiter<T>(object, -1);                          // times omitted -> infinite
+    else
+        return new repeatiter<T>(object, times_ > 0 ? (int)times_ : 0); // explicit count: <=0 -> immediately empty
 }
 
 /* Iterators terminating on the shortest input sequence */
