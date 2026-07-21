@@ -33,27 +33,33 @@ template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *
     FD_ZERO(&lxFDs);
     FOR_IN(FDa,rFDs,0,2,3)
         FD = (intptr_t)FDa;
-        if(FD > -1) {
-            FD_SET(FD, &lrFDs);
-            if(FD > maxFD)
-                maxFD = FD;
-        }
+        if(FD < 0)
+            throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+        if(FD >= FD_SETSIZE)
+            throw new ValueError(new str("filedescriptor out of range in select()"));
+        FD_SET(FD, &lrFDs);
+        if(FD > maxFD)
+            maxFD = FD;
     END_FOR
     FOR_IN(FDb,wFDs,4,6,7)
         FD = (intptr_t)FDb;
-        if(FD > -1) {
-            FD_SET(FD, &lwFDs);
-            if(FD > maxFD)
-                maxFD = FD;
-        }
+        if(FD < 0)
+            throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+        if(FD >= FD_SETSIZE)
+            throw new ValueError(new str("filedescriptor out of range in select()"));
+        FD_SET(FD, &lwFDs);
+        if(FD > maxFD)
+            maxFD = FD;
     END_FOR
     FOR_IN(FDc,xFDs,8,10,11)
         FD = (intptr_t)FDc;
-        if(FD > -1) {
-            FD_SET(FD, &lxFDs);
-            if(FD > maxFD)
-                maxFD = FD;
-        }
+        if(FD < 0)
+            throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+        if(FD >= FD_SETSIZE)
+            throw new ValueError(new str("filedescriptor out of range in select()"));
+        FD_SET(FD, &lxFDs);
+        if(FD > maxFD)
+            maxFD = FD;
     END_FOR
     memset(&ltimeout, 0, sizeof(ltimeout));
     ltimeout.tv_sec = timeout;
@@ -64,19 +70,19 @@ template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *
     rrFDs = (new list<__ss_int>());
     FOR_IN(FDa,rFDs,0,2,3)
         FD = (intptr_t)FDa;
-        if(FD > -1 && FD_ISSET(FD, &lrFDs))
+        if(FD_ISSET(FD, &lrFDs))
             rrFDs->append(FD);
     END_FOR
     rwFDs = (new list<__ss_int>());
     FOR_IN(FDb,wFDs,4,6,7)
         FD = (intptr_t)FDb;
-        if(FD > -1 && FD_ISSET(FD, &lwFDs))
+        if(FD_ISSET(FD, &lwFDs))
             rwFDs->append(FD);
     END_FOR
     rxFDs = (new list<__ss_int>());
     FOR_IN(FDc,xFDs,8,10,11)
         FD = (intptr_t)FDc;
-        if(FD > -1 && FD_ISSET(FD, &lxFDs))
+        if(FD_ISSET(FD, &lxFDs))
             rxFDs->append(FD);
     END_FOR
     return (new tuple2<list<__ss_int> *, list<__ss_int> *>(3,rrFDs,rwFDs,rxFDs));
