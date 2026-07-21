@@ -35,15 +35,15 @@ void __init() {
    __ss_ST_MTIME = 8;
    __ss_ST_CTIME = 9;
 
-#if !defined( _MSC_VER )
    __ss_S_IFDIR = S_IFDIR;
    __ss_S_IFCHR = S_IFCHR;
-   __ss_S_IFBLK = S_IFBLK;
    __ss_S_IFREG = S_IFREG;
    __ss_S_IFIFO = S_IFIFO;
    __ss_S_IREAD = S_IREAD;
    __ss_S_IWRITE = S_IWRITE;
    __ss_S_IEXEC = S_IEXEC;
+#if !defined( _MSC_VER )
+   __ss_S_IFBLK = S_IFBLK;
    __ss_S_IRWXU = S_IRWXU;
    __ss_S_IRUSR = S_IRUSR;
    __ss_S_IWUSR = S_IWUSR;
