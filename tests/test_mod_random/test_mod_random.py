@@ -117,6 +117,38 @@ def test_random3():
 rr = random.Random()  # TODO test all methods
 
 
+def test_getrandbits():
+    # sanity: valid k still returns a value with no more than k bits set
+    for k in (1, 8, 16, 30):
+        b = random.getrandbits(k)
+        assert 0 <= b < (1 << k)
+
+    # k <= 0 must raise ValueError, not crash
+    ok = False
+    try:
+        random.getrandbits(0)
+    except ValueError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        random.getrandbits(-1)
+    except ValueError:
+        ok = True
+    assert ok
+
+    # k large enough to overflow the internal (1 << k) shift must raise
+    # ValueError rather than throwing the wrong exception type or hitting
+    # shift overflow/UB
+    ok = False
+    try:
+        random.getrandbits(31)
+    except ValueError:
+        ok = True
+    assert ok
+
+
 def test_randbytes():
     assert len(random.randbytes(4)) == 4
     assert len(rr.randbytes(5)) == 5
@@ -134,6 +166,7 @@ def test_all():
     test_randbytes()
     test_choices()
     test_getsetstate()
+    test_getrandbits()
 
 
 if __name__ == '__main__':
