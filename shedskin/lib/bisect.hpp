@@ -19,7 +19,7 @@ template <class A, class B> void *insort_left(B (*key)(A), list<A> *a, A x, __ss
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(key(a->units[mid]), key(x)) == -1)
+        if (__lt(key(a->units[mid]), key(x)))
             lo = (mid+1);
         else
             hi = mid;
@@ -34,7 +34,7 @@ template <class A> void *insort_left(long int /* key = None */, list<A> *a, A x,
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(a->units[mid], x) == -1) {
+        if (__lt(a->units[mid], x)) {
             lo = (mid+1);
         }
         else {
@@ -52,7 +52,7 @@ template <class A, class B> void *insort_right(B (*key)(A), list<A> *a, A x, __s
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(key(x), key(a->units[mid])) == -1) {
+        if (__lt(key(x), key(a->units[mid]))) {
             hi = mid;
         }
         else {
@@ -69,7 +69,7 @@ template <class A> void *insort_right(long int /* key = None */, list<A> *a, A x
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(x, a->units[mid]) == -1) {
+        if (__lt(x, a->units[mid])) {
             hi = mid;
         }
         else {
@@ -92,7 +92,7 @@ template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, B x, _
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(key(a->units[mid]), x)==-1)
+        if (__lt(key(a->units[mid]), x))
             lo = (mid+1);
         else
             hi = mid;
@@ -106,7 +106,7 @@ template <class A> __ss_int bisect_left(long int /* key = None */, list<A> *a, A
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(a->units[mid], x)==-1)
+        if (__lt(a->units[mid], x))
             lo = (mid+1);
         else
             hi = mid;
@@ -120,7 +120,7 @@ template <class A, class B> __ss_int bisect_right(B (*key)(A), list<A> *a, B x, 
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(x, key(a->units[mid]))==-1)
+        if (__lt(x, key(a->units[mid])))
             hi = mid;
         else
             lo = (mid+1);
@@ -134,7 +134,7 @@ template <class A> __ss_int bisect_right(long int /* key = None */, list<A> *a, 
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__cmp(x, a->units[mid])==-1)
+        if (__lt(x, a->units[mid]))
             hi = mid;
         else
             lo = (mid+1);
