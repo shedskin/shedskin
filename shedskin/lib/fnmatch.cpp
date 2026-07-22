@@ -17,39 +17,31 @@ corresponding to PATTERN.  (It does not compile it.)
 
 namespace __fnmatch__ {
 
-str *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_5, *const_6, *const_7, *const_8, *const_9;
-
 dict<str *, __re__::re_object *> *_cache;
 str *__name__;
 
 void __init() {
-    const_5 = new str("");
-    const_6 = new str("*");
-    const_7 = new str(".*");
-    const_8 = new str("?");
-    const_9 = new str(".");
-    const_10 = new str("[");
-    const_11 = new str("!");
-    const_12 = new str("]");
-    const_13 = new str("\\[");
-    const_14 = new str("\\");
-    const_15 = new str("\\\\");
-    const_16 = new str("^");
-    const_17 = new str("%s[%s]");
-    /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
-       DOTALL scope and anchors with \Z. shedskin's re module hands patterns
-       straight to pcre2_compile() with no escape translation, and PCRE2's
-       \Z means "end of subject, or just before a trailing newline" -- the
-       same loose semantics as a bare $. Python's re \Z (strict end of
-       string, no trailing-newline exception) is PCRE2's \z, so that's what
-       we anchor with here. */
-    const_18 = new str(")\\z");
-    const_19 = new str("(?s:");
-
     __name__ = new str("__fnmatch__");
 
     _cache = (new dict<str *, __re__::re_object *>());
 }
+
+namespace {
+
+/* Mirrors re.escape()'s "pass alnum through, backslash-escape everything
+   else" rule for a single character, without the overhead of building a
+   str object and round-tripping through __re__::escape(). */
+inline void escape_char(__GC_STRING &out, char c) {
+    if (::isalnum((unsigned char)c)) {
+        out += c;
+    }
+    else {
+        out += '\\';
+        out += c;
+    }
+}
+
+} // anonymous namespace
 
 __ss_bool fnmatch(str *name, str *pat) {
     /**
@@ -157,55 +149,150 @@ str *translate(str *pat) {
 
     There is no way to quote meta-characters.
     */
-    str *c, *res, *stuff;
-    __ss_int __11, __6, __7, __9, i, j, n;
+    const __GC_STRING &p = pat->unit;
+    size_t n = p.size();
+    size_t i = 0;
+    __GC_STRING res;
+    bool last_was_star = false;
 
-    __6 = len(pat);
-    i = 0;
-    n = __6;
-    res = const_19;
+    while (i < n) {
+        char c = p[i];
+        i++;
 
-    while((i<n)) {
-        c = pat->__getitem__(i);
-        i = (i+1);
-        if (__eq(c, const_6)) {
-            res = res->__add__(const_7);
+        if (c == '*') {
+            /* compress consecutive `*` into one, as CPython's translate()
+               does -- purely an optimization (".*.*" and ".*" match the
+               same strings), but it keeps pathological patterns like
+               "a****************b" from building up redundant, slower
+               regexes. */
+            if (!last_was_star) {
+                res += ".*";
+                last_was_star = true;
+            }
+            continue;
         }
-        else if (__eq(c, const_8)) {
-            res = res->__add__(const_9);
-        }
-        else if (__eq(c, const_10)) {
-            j = i;
-            if (__AND((j<n), __eq(pat->__getitem__(j), const_11), 7)) {
-                j = (j+1);
-            }
-            if (__AND((j<n), __eq(pat->__getitem__(j), const_12), 9)) {
-                j = (j+1);
-            }
+        last_was_star = false;
 
-            while(__AND((j<n), __ne(pat->__getitem__(j), const_12), 11)) {
-                j = (j+1);
-            }
-            if ((j>=n)) {
-                res = res->__add__(const_13);
+        if (c == '?') {
+            res += '.';
+        }
+        else if (c == '[') {
+            size_t j = i;
+            if (j < n && p[j] == '!') j++;
+            if (j < n && p[j] == ']') j++;
+            while (j < n && p[j] != ']') j++;
+
+            if (j >= n) {
+                res += "\\[";
             }
             else {
-                stuff = (pat->__slice__(3, i, j, 0))->replace(const_14, const_15);
-                i = (j+1);
-                if (__eq(stuff->__getitem__(0), const_11)) {
-                    stuff = (const_16)->__add__(stuff->__slice__(1, 1, 0, 0));
+                __GC_STRING stuff;
+                __GC_STRING raw = p.substr(i, j - i); /* pat[i:j] */
+
+                if (raw.find('-') == __GC_STRING::npos) {
+                    /* no ranges in this class: just double up backslashes */
+                    for (size_t k = 0; k < raw.size(); k++) {
+                        if (raw[k] == '\\') stuff += '\\';
+                        stuff += raw[k];
+                    }
                 }
-                else if (__eq(stuff->__getitem__(0), const_16)) {
-                    stuff = (const_14)->__add__(stuff);
+                else {
+                    /* Split the class body on '-' into "chunks" the way
+                       CPython's fnmatch.translate() does since Python 3.6
+                       (bpo-29249), so a lexicographically out-of-order
+                       range like "[a-!]" or "[[-*]" -- which PCRE2 (and
+                       modern CPython's own re) rejects as invalid at
+                       compile time -- gets neutralized into a construct
+                       that simply never matches, instead of blowing up
+                       the whole program with an uncaught regex-compile
+                       exception the moment somebody feeds fnmatch/glob an
+                       unlucky pattern. */
+                    std::vector<__GC_STRING> chunks;
+                    size_t start = i;
+                    size_t k = (p[i] == '!') ? i + 2 : i + 1;
+
+                    while (true) {
+                        size_t dash = p.find('-', k);
+                        if (dash == __GC_STRING::npos || dash >= j) break;
+                        chunks.push_back(p.substr(start, dash - start));
+                        start = dash + 1;
+                        k = dash + 3;
+                    }
+                    __GC_STRING last_chunk = p.substr(start, j - start);
+                    if (!last_chunk.empty()) {
+                        chunks.push_back(last_chunk);
+                    }
+                    else if (!chunks.empty()) {
+                        chunks.back() += '-';
+                    }
+                    else {
+                        chunks.push_back(__GC_STRING("-"));
+                    }
+
+                    /* Remove empty/out-of-order ranges -- invalid in a
+                       regex: if the last character of one chunk sorts
+                       after the first character of the next, "x-y" isn't
+                       a real range, so fold the two chunks into one
+                       literal run instead of emitting it as a range. */
+                    for (size_t m = chunks.size(); m-- > 1; ) {
+                        if (!chunks[m-1].empty() && !chunks[m].empty() &&
+                            (unsigned char)chunks[m-1].back() > (unsigned char)chunks[m].front()) {
+                            chunks[m-1] = chunks[m-1].substr(0, chunks[m-1].size()-1) + chunks[m].substr(1);
+                            chunks.erase(chunks.begin() + (long)m);
+                        }
+                    }
+
+                    /* Escape backslashes and hyphens (the hyphens that
+                       still form real ranges live *between* chunks, not
+                       inside one, so they're untouched by this) then
+                       rejoin with '-'; also escape the PCRE2/newer-regex
+                       set-operation chars &, ~, | for safety. */
+                    for (size_t m = 0; m < chunks.size(); m++) {
+                        if (m) stuff += '-';
+                        for (size_t k2 = 0; k2 < chunks[m].size(); k2++) {
+                            char ch = chunks[m][k2];
+                            if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|') {
+                                stuff += '\\';
+                            }
+                            stuff += ch;
+                        }
+                    }
                 }
-                res = __mod6(const_17, 2, res, stuff);
+
+                i = j + 1;
+
+                if (stuff.empty()) {
+                    res += "(?!)"; /* empty range: never matches */
+                }
+                else if (stuff == "!") {
+                    res += '.'; /* negated empty range: matches anything */
+                }
+                else {
+                    if (stuff[0] == '!') {
+                        stuff = "^" + stuff.substr(1);
+                    }
+                    else if (stuff[0] == '^' || stuff[0] == '[') {
+                        stuff = "\\" + stuff;
+                    }
+                    res += '[';
+                    res += stuff;
+                    res += ']';
+                }
             }
         }
         else {
-            res = res->__add__(__re__::escape(c));
+            escape_char(res, c);
         }
     }
-    return res->__add__(const_18);
+
+    /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
+       DOTALL scope and anchors with \Z. shedskin's re module hands patterns
+       straight to pcre2_compile() with no escape translation, and PCRE2's
+       \Z means "end of subject, or just before a trailing newline" -- the
+       same loose semantics as a bare $. Python's re \Z (strict end of
+       string, no trailing-newline exception) is PCRE2's \z, so that's what
+       we anchor with here. */
+    return new str("(?s:" + res + ")\\z");
 }
 
 } // module namespace
