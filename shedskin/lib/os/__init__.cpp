@@ -37,6 +37,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#include <io.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -618,6 +619,12 @@ bytes *urandom(__ss_int n) {
 #endif
 }
 
+#ifdef WIN32
+__ss_bool isatty(__ss_int fd) {
+    return __mbool(::_isatty(fd));
+}
+#endif
+
 /* UNIX-only functionality */
 
 #ifndef WIN32
@@ -855,6 +862,8 @@ list<__ss_int> *getgroups() {
     return r;
 }
 void *setgroups(pyseq<__ss_int> *groups) {
+    if(len(groups) > MAXENTRIES)
+        throw new ValueError(new str("too many groups"));
     gid_t l[MAXENTRIES];
     for(__ss_int i=0; i<len(groups); i++)
         l[i] = (gid_t)groups->__getitem__(i);

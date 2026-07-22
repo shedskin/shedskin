@@ -51,6 +51,23 @@ def test_makedirs_exist_ok():
     os.removedirs(path)
 
 
+def test_setgroups_overflow():
+    # Regression test: os.setgroups used to fill a fixed-size 4096-slot
+    # gid_t stack buffer without checking the input length first, so
+    # passing more groups than that overflowed the stack. 4096 (MAXENTRIES)
+    # is shedskin's own internal buffer limit -- the same cap os.getgroups
+    # already uses -- not the real kernel NGROUPS_MAX, which is typically
+    # much larger (e.g. 65536 on Linux) and not itself the thing under
+    # test here. This must raise before touching the buffer, not crash
+    # or corrupt memory, regardless of the caller's privileges.
+    too_many = [0] * (4096 + 1)
+    try:
+        os.setgroups(too_many)
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert str(e) == "too many groups"
+
+
 def test_urandom():
     bts = os.urandom(10)
     assert len(bts) == 10
@@ -76,6 +93,12 @@ def test_rdwr():
     os.close(fd)
 
 
+def test_isatty():
+    fd = os.open('/dev/null', os.O_RDONLY)
+    assert os.isatty(fd) == False
+    os.close(fd)
+
+
 def test_system():
     assert os.system('ls') == 0
 
@@ -92,8 +115,14 @@ def test_all():
         test_posix()
         test_env()
         test_rdwr()
+        test_isatty()
         test_system()
         test_urandom()
+        # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
+        # __os__ in lib/os/__init__.hpp, and shedskin translates this
+        # function's body to C++ unconditionally (the `os.name == 'posix'`
+        # check above is a runtime guard, not a compile-time one), so calling
+        # it here breaks the Windows build even though it never runs there.
 
 
 if __name__ == '__main__':
