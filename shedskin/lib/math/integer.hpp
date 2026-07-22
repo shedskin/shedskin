@@ -16,7 +16,7 @@ template<class ... Args> __ss_int gcd(int, __ss_int x, Args ... args) {
     return ((x = std::gcd(x, args)), ...);
 }
 inline __ss_int gcd(int, __ss_int x) {
-    return x;
+    return x < 0 ? -x : x;
 }
 inline __ss_int gcd(int) {
     return 0;
@@ -28,7 +28,7 @@ template<class ... Args> __ss_int lcm(int, __ss_int x, Args ... args) {
     return ((x = std::lcm(x, args)), ...);
 }
 inline __ss_int lcm(int, __ss_int x) {
-    return x;
+    return x < 0 ? -x : x;
 }
 inline __ss_int lcm(int) {
     return 1;
