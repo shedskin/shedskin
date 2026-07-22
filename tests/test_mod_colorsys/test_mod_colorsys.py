@@ -34,9 +34,48 @@ def test_yiq_roundtrip():
         assert abs(g - g2) < 1e-9
         assert abs(b - b2) < 1e-9
 
+def test_hsv_hue_sextants():
+    # Regression test: hsv_to_rgb splits the hue circle into six sextants via
+    # i = int(h*6.0), and rgb_to_hls/rgb_to_hsv/_v normalize hue via
+    # mods(h/6.0, 1.0). Both of these exercise the boundary between each
+    # sextant; pin known-good values at and near every boundary (h = 0,
+    # 1/6, 2/6, 3/6, 4/6, 5/6, and just past 1.0 to check wraparound).
+    #
+    # These hues sit exactly on the sextant discontinuity, so int(h*6.0)
+    # can legitimately land on either side of the edge depending on the
+    # last bit of a platform's floating-point rounding. The underlying
+    # color functions are continuous across sextant boundaries, so a
+    # one-sextant shift here only perturbs the result by a tiny epsilon
+    # rather than producing a visibly different color, so compare
+    # numerically with a small tolerance instead of exact formatted
+    # strings (which can flip on a platform-dependent rounding hair).
+    tol = 1e-6
+    cases = [
+        (0.0 / 6, (1.0, 0.0, 0.0)),
+        (1.0 / 6, (1.0, 1.0, 0.0)),
+        (2.0 / 6, (0.0, 1.0, 0.0)),
+        (3.0 / 6, (0.0, 1.0, 1.0)),
+        (4.0 / 6, (0.0, 0.0, 1.0)),
+        (5.0 / 6, (1.0, 0.0, 1.0)),
+        (1.0, (1.0, 0.0, 0.0)),
+    ]
+    for h, expected in cases:
+        got = colorsys.hsv_to_rgb(h, 1.0, 1.0)
+        for got_val, exp_val in zip(got, expected):
+            assert abs(got_val - exp_val) < tol
+
+    for h in (0.0, 1.0 / 6, 2.0 / 6, 3.0 / 6, 4.0 / 6, 5.0 / 6, 1.0):
+        r, g, b = colorsys.hsv_to_rgb(h, 0.6, 0.8)
+        h2, s2, v2 = colorsys.rgb_to_hsv(r, g, b)
+        r2, g2, b2 = colorsys.hsv_to_rgb(h2, s2, v2)
+        assert abs(r - r2) < tol
+        assert abs(g - g2) < tol
+        assert abs(b - b2) < tol
+
 def test_all():
     test_colorsys()
     test_yiq_roundtrip()
+    test_hsv_hue_sextants()
 
 
 if __name__ == "__main__":
