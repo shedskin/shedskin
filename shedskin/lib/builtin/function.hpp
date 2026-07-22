@@ -156,11 +156,11 @@ template<class A, class B, class D> typename A::for_in_unit ___max(int, D defaul
     FOR_IN(e,iter,1,2,3)
         if(key) {
             maxkey2 = key(e);
-            if(first || __cmp(maxkey2, maxkey) == 1) {
+            if(first || __gt(maxkey2, maxkey)) {
                 max = e;
                 maxkey = maxkey2;
             }
-        } else if(first || __cmp(e, max) == 1)
+        } else if(first || __gt(e, max))
             max = e;
         if(first)
             first = 0;
@@ -176,11 +176,11 @@ template<class A, class B, class D> typename A::for_in_unit ___max(int, D defaul
 
 template<class A, class D> typename A::for_in_unit ___max(int nn, D default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
-template<class T, class B, class D> inline T ___max(int, D default_, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
-template<class T, class D> inline  T ___max(int, D default_, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
+template<class T, class B, class D> inline T ___max(int, D default_, B (*key)(T), T a, T b) { return __gt(key(a), key(b))?a:b; }
+template<class T, class D> inline  T ___max(int, D default_, int, T a, T b) { return __gt(a, b)?a:b; }
 
 template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
-    if(__cmp(key(a),key(m))==1)
+    if(__gt(key(a),key(m)))
         m=a;
 }
 
@@ -193,7 +193,7 @@ template<class T, class B, class D, class ... Args> T ___max(int, D default_, B 
 }
 
 template<class T> inline void update_max(T &m, int, T a) {
-    if(__cmp(a,m)==1)
+    if(__gt(a,m))
         m=a;
 }
 
@@ -221,11 +221,11 @@ template<class A, class B, class D> typename A::for_in_unit ___min(int, D defaul
     FOR_IN(e,iter,1,2,3)
         if(key) {
             minkey2 = key(e);
-            if(first || __cmp(minkey2, minkey) == -1) {
+            if(first || __lt(minkey2, minkey)) {
                 min = e;
                 minkey = minkey2;
             }
-        } else if(first || __cmp(e, min) == -1)
+        } else if(first || __lt(e, min))
             min = e;
         if(first)
             first = 0;
@@ -241,11 +241,11 @@ template<class A, class B, class D> typename A::for_in_unit ___min(int, D defaul
 //template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
-template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
-template<class T, class D> inline  T ___min(int, D default_, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
+template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { return __lt(key(a), key(b))?a:b; }
+template<class T, class D> inline  T ___min(int, D default_, int, T a, T b) { return __lt(a, b)?a:b; }
 
 template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
-    if(__cmp(key(a),key(m))==-1)
+    if(__lt(key(a),key(m)))
         m=a;
 }
 
@@ -258,7 +258,7 @@ template<class T, class B, class D, class ... Args> T ___min(int, D default_, B 
 }
 
 template<class T> inline void update_min(T &m, int, T a) {
-    if(__cmp(a,m)==-1)
+    if(__lt(a,m))
         m=a;
 }
 
