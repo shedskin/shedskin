@@ -68,6 +68,7 @@ CREATE TABLE pymodule (
 
     wrap_around_check bool default true,
     bounds_checking bool default true,
+    zero_division_check bool default true,
     assertions bool default true,
     executable_product bool default true,
     pyextension_product bool default false,
