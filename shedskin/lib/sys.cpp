@@ -3,6 +3,7 @@
 #include "sys.hpp"
 #include <stdio.h>
 #include <climits>
+#include <limits>
 
 namespace __sys__ {
 
@@ -41,7 +42,7 @@ void __init(int c, char **v) {
     platform = new str("win32");
 #endif
 
-    maxsize = INT_MAX;
+    maxsize = std::numeric_limits<__ss_int>::max();
     maxunicode = 255; /* str is byte-based here; chr()/ord() are limited to range(256) */
 
     for(int i=0; i<c; i++)
