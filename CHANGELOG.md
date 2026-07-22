@@ -11,8 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
   This can help a lot with larger programs (no need to manually retry).
-- Added `--boost` option, to use boost containers
-- Catching up with Python 3.x:
+
+- Added `--boost` option, to use boost containers.
+  This can help for many dictionaries/sets or very short lists.
+  The 'dijkstra2' example, for example, now becomes twice as fast.
+
+- Catching up with Python 3.x features:
   - Support `min/max(default)`
   - Support `time.{perf_counter, monotonic, process_time}`
   - Support `math.{ulp, nextafter, remainder}`
@@ -24,9 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Several builtin arguments could not be passed by keyword (e.g. `sum(start)`)
+- Several builtin arguments could not be passed by keyword (e.g. `sum(start=..)`)
 - Several `--int64`, `--float32` related fixes
-- Many other minor bugs uncovered (and fixed) by Claude
+- About 100 minor bugs uncovered (and fixed) by Claude
 - Fixed several C++ compilation warnings
 
 ### Optimized
