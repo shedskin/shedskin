@@ -95,7 +95,7 @@ ConfigParser -- responsible for parsing a list of
 namespace __configparser__ {
 
 tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_49, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
 
 list<str *> *__all__;
 str *DEFAULTSECT, *__name__;
@@ -860,7 +860,19 @@ __iter<tuple<str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str
 str *_interpolation_replace(__re__::match_object *match) {
     str *s;
 
-    s = match->group(1, 1);
+    /* ConfigParser._KEYCRE is "%\(([^)]*)\)s|.": group 1 only
+       participates in the match when the "%(name)s" alternative fired.
+       When the catch-all "." alternative matched instead, group 1 is
+       unmatched. CPython's re returns None for match.group(1) in that
+       case; shedskin's match_object.group() raises re.error("group is
+       unmatched") instead (see re.cpp), so that has to be caught here
+       to get the same "s is None" behavior the original Python code
+       relies on. */
+    try {
+        s = match->group(1, 1);
+    } catch (__re__::error *) {
+        s = 0;
+    }
     if (s == 0) {
         return match->group(1);
     }
@@ -922,7 +934,6 @@ void __init() {
     const_46 = new str("ParsingError");
     const_47 = new str("MissingSectionHeaderError");
     const_48 = new str("ConfigParser");
-    const_49 = new str("SafeConfigParser");
     const_50 = new str("RawConfigParser");
     const_51 = new str("DEFAULTSECT");
     const_52 = new str("MAX_INTERPOLATION_DEPTH");
@@ -947,7 +958,7 @@ void __init() {
     cl_ConfigParser = new class_("ConfigParser");
     ConfigParser::_KEYCRE = __re__::compile(const_39);
 
-    __all__ = (new list<str *>(13, const_40, const_41, const_42, const_43, const_44, const_45, const_46, const_47, const_48, const_49, const_50, const_51, const_52));
+    __all__ = (new list<str *>(12, const_40, const_41, const_42, const_43, const_44, const_45, const_46, const_47, const_48, const_50, const_51, const_52));
     DEFAULTSECT = const_53;
     MAX_INTERPOLATION_DEPTH = 10;
     default_0 = const_17;
