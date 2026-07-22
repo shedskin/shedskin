@@ -427,7 +427,7 @@ void *mmap::resize(__ss_int new_size)
                      0,
                      0,
                      tagname);
-    if (map_handle != NULL)
+    if (map_handle == NULL)
     {
         throw new OSError();
     }
