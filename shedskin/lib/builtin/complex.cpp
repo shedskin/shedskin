@@ -81,6 +81,10 @@ template<> complex __power(complex a, complex b) {
         r.imag = 0;
     }
     else if(a.real == 0 and a.imag == 0) {
+#ifndef __SS_NOZERO
+        if(b.imag != 0 || b.real < 0)
+            __throw_zero_division("0.0 to a negative or complex power");
+#endif
         r.real = 0;
         r.imag = 0;
     }

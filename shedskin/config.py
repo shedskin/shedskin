@@ -190,6 +190,14 @@ class GlobalInfo:
         self._build_config.bounds_checking = value
 
     @property
+    def zero_division_check(self) -> bool:
+        return self._build_config.zero_division_check
+
+    @zero_division_check.setter
+    def zero_division_check(self, value: bool) -> None:
+        self._build_config.zero_division_check = value
+
+    @property
     def assertions(self) -> bool:
         return self._build_config.assertions
 
@@ -641,6 +649,7 @@ class GlobalInfo:
             # commandline-options
             "wrap_around_check": self.wrap_around_check,
             "bounds_checking": self.bounds_checking,
+            "zero_division_check": self.zero_division_check,
             "assertions": self.assertions,
             "executable_product": self.executable_product,
             "pyextension_product": self.pyextension_product,

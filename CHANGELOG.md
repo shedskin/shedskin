@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `base64.{b16encode, b16decode}`
   - Support `os.path.relpath`
 
+- Now raising ZeroDivisionError, can be disabled with `--nozero`
+
 ### Fixed
 
 - Several builtin arguments could not be passed by keyword (e.g. `sum(start=..)`)

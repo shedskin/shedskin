@@ -81,6 +81,7 @@ class TestGlobalInfo:
         """BuildConfiguration properties should be accessible via gx."""
         assert gx.bounds_checking is True
         assert gx.wrap_around_check is True
+        assert gx.zero_division_check is True
         assert gx.assertions is True
         assert gx.executable_product is True
         assert gx.pyextension_product is False
@@ -99,6 +100,9 @@ class TestGlobalInfo:
         """BuildConfiguration properties should be settable."""
         gx.bounds_checking = False
         assert gx.bounds_checking is False
+
+        gx.zero_division_check = False
+        assert gx.zero_division_check is False
 
         gx.int64 = True
         assert gx.int64 is True
