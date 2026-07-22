@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Several `--int64`, `--float32` related fixes
 - About 100 minor bugs uncovered (and fixed) by Claude
 - Fixed several C++ compilation warnings
+- Hash values are now same type as shedskin int type
 
 ### Optimized
 

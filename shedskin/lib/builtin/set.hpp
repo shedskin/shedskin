@@ -19,7 +19,7 @@ public:
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
-    long hash;
+    __ss_int hash;
 
     __GC_SET<T> gcs;
 
@@ -136,7 +136,7 @@ public:
     PyObject *__to_py__();
 #endif
 
-    long __hash__();
+    __ss_int __hash__();
 };
 
 
@@ -264,19 +264,19 @@ template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> long set<T>::__hash__() {
+template<class T> __ss_int set<T>::__hash__() {
     if(!frozen)
         throw new TypeError(new str("unhashable type: 'set'"));
 
     if (hash != -1)
         return hash;
 
-    long hash_ = 1927868237L;
+    __ss_int hash_ = 1927868237L;
 
     hash_ *= __len__() + 1;
 
     for (const auto& key : gcs) {
-        long h = hasher<T>(key);
+        __ss_int h = hasher<T>(key);
         hash_ ^= hash_shuffle_bits(h);
     }
     hash_ = hash_ * 69069L + 907133923L;

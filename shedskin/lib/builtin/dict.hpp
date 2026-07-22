@@ -92,7 +92,7 @@ public:
 
     void *__addtoitem__(K k, V v);
 
-    long __hash__();
+    __ss_int __hash__();
 
     /* iteration */
 
@@ -121,7 +121,7 @@ public:
 
 template <class K, class V> class frozendict : public dict<K, V> {
 public:
-    long hash;
+    __ss_int hash;
 
     frozendict();
     template<class U> frozendict(U *other);
@@ -129,7 +129,7 @@ public:
 
     str *__repr__();
 
-    long __hash__();
+    __ss_int __hash__();
 
     frozendict<K,V> *copy();
 
@@ -451,7 +451,7 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
     return t;
 }
 
-template<class K, class V> long dict<K, V>::__hash__() {
+template<class K, class V> __ss_int dict<K, V>::__hash__() {
     throw new TypeError(new str("unhashable type: 'dict'"));
 }
 
@@ -480,16 +480,16 @@ template<class K, class V> frozendict<K,V> *frozendict<K,V>::copy() { // TODO vi
     return c;
 }
 
-template<class K, class V> long frozendict<K, V>::__hash__() {
+template<class K, class V> __ss_int frozendict<K, V>::__hash__() {
     if (hash != -1)
         return hash;
 
-    long hash_ = 1927868237L;
+    __ss_int hash_ = 1927868237L;
 
     hash_ *= this->__len__() + 1;
 
     for (const auto& [key, value] : this->gcd) {
-        long h = hasher<K>(key);
+        __ss_int h = hasher<K>(key);
         hash_ ^= hash_shuffle_bits(h);
         h = hasher<V>(value);
         hash_ ^= hash_shuffle_bits(h);
