@@ -118,7 +118,11 @@ def test_all():
         test_isatty()
         test_system()
         test_urandom()
-        test_setgroups_overflow()
+        # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
+        # __os__ in lib/os/__init__.hpp, and shedskin translates this
+        # function's body to C++ unconditionally (the `os.name == 'posix'`
+        # check above is a runtime guard, not a compile-time one), so calling
+        # it here breaks the Windows build even though it never runs there.
 
 
 if __name__ == '__main__':
