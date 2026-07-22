@@ -14,7 +14,9 @@ def count(start = 0, step = 1):
 def cycle(iterable):
     yield iter(iterable).__next__()
 
-def repeat(object, times = 0):
+__void = 0
+
+def repeat(object, times = __void):
     yield object
 
 # Iterators terminating on the shortest input iterableuence
