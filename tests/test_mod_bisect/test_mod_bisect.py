@@ -76,6 +76,13 @@ def test_key():
 
     assert bisect.bisect(l, 'w', key=lambda a: idx[a]) == 2
 
+    # regression test: key's return type (str) differs from the list's
+    # element type (int); bisect_left previously mis-typed its 'x'
+    # parameter as the element type instead of the key's return type,
+    # which failed to compile for exactly this case
+    assert bisect.bisect_left(l, 'w', key=lambda a: idx[a]) == 1
+    assert bisect.bisect_right(l, 'w', key=lambda a: idx[a]) == 2
+
 
 def test_bounds():
     xs = [1, 2, 3, 4, 5]
