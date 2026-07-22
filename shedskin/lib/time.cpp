@@ -73,6 +73,31 @@ str *struct_time::__repr__() {
     return __mod6(const_1, 9, this->tm_year, this->tm_mon, this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec, this->tm_wday, this->tm_yday, this->tm_isdst);
 }
 
+__ss_int struct_time::__len__() {
+    return 9;
+}
+
+__ss_bool struct_time::__eq__(pyobj *p) {
+    struct_time *b = (struct_time *)p;
+    return __mbool(tm_year==b->tm_year && tm_mon==b->tm_mon && tm_mday==b->tm_mday &&
+                    tm_hour==b->tm_hour && tm_min==b->tm_min && tm_sec==b->tm_sec &&
+                    tm_wday==b->tm_wday && tm_yday==b->tm_yday && tm_isdst==b->tm_isdst);
+}
+
+__ss_int struct_time::__cmp__(pyobj *p) {
+    if (!p) return 1;
+    struct_time *b = (struct_time *)p;
+    if(int c = __cmp(tm_year, b->tm_year)) return c;
+    if(int c = __cmp(tm_mon, b->tm_mon)) return c;
+    if(int c = __cmp(tm_mday, b->tm_mday)) return c;
+    if(int c = __cmp(tm_hour, b->tm_hour)) return c;
+    if(int c = __cmp(tm_min, b->tm_min)) return c;
+    if(int c = __cmp(tm_sec, b->tm_sec)) return c;
+    if(int c = __cmp(tm_wday, b->tm_wday)) return c;
+    if(int c = __cmp(tm_yday, b->tm_yday)) return c;
+    return __cmp(tm_isdst, b->tm_isdst);
+}
+
 tm* tuple2tm(struct_time* tuple) {
     tm *time_tuple = new tm;
 

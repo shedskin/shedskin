@@ -57,6 +57,9 @@ public:
     __ss_int __getitem__(__ss_int n);
     struct_time(tuple2<__ss_int, __ss_int> *_tuple);
     str *__repr__();
+    __ss_int __len__();
+    __ss_bool __eq__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
 };
 
 
