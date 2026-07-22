@@ -32,6 +32,9 @@ def test_bytearray():
     assert BA.rjust(10) == bytearray(b'         -')
     assert BA.title() == bytearray(b'-')
     assert BA.capitalize() == bytearray(b'-')
+    assert bytearray(b'').capitalize() == bytearray(b'')
+    assert bytearray(b'BLA BLA').capitalize() == bytearray(b'Bla bla')
+    assert bytearray(b'bLA bLA').capitalize() == bytearray(b'Bla bla')
     assert BA.splitlines() == [bytearray(b'-')]
     assert BLA.partition(A)
     assert BLA.rpartition(B)
