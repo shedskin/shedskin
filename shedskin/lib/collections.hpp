@@ -58,6 +58,11 @@ public:
     void *insert(__ss_int index, A a) {
         if(maxlen != -1 && units.size() == maxlen)
             throw new IndexError(new str("deque already at its maximum size"));
+        __ss_int len = this->__len__();
+        if(index < 0)
+            index = (len + index < 0) ? 0 : len + index;
+        else if(index > len)
+            index = len;
         units.insert(units.begin() + index, a);
         return NULL;
     }
