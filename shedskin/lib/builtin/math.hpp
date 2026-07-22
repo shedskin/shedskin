@@ -7,17 +7,28 @@
 
 /* pow */
 
-inline __ss_float __power(__ss_int a, __ss_float b) { return pow(a,b); }
+#ifndef __SS_NOZERO
+template<class A, class B> static inline void __check_pow_zero(A a, B b) {
+    if(a == 0 && b < 0) __throw_zero_division("0.0 cannot be raised to a negative power");
+}
+#define __SS_POW_ZERO_CHECK(a, b) __check_pow_zero(a, b)
+#else
+#define __SS_POW_ZERO_CHECK(a, b) ((void)0)
+#endif
+
+inline __ss_float __power(__ss_int a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow(a,b); }
 inline __ss_float __power(__ss_float a, __ss_int b) { 
+    __SS_POW_ZERO_CHECK(a, b);
     if(b==2) return a*a;
     else if(b==3) return a*a*a;
     else return pow(a,b); 
 }
 
 template<class A> A __power(A a, A b);
-template<> inline __ss_float __power(__ss_float a, __ss_float b) { return pow(a,b); }
+template<> inline __ss_float __power(__ss_float a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow(a,b); }
 
 template<> inline __ss_int __power(__ss_int a, __ss_int b) {
+    __SS_POW_ZERO_CHECK(a, b);
     switch(b) {
         case 2: return a*a;
         case 3: return a*a*a;
@@ -46,6 +57,7 @@ template<> inline __ss_int __power(__ss_int a, __ss_int b) {
 
 #ifdef __SS_LONG
 inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
+    if(c == 0) throw new ValueError(new str("pow() 3rd argument cannot be 0"));
     __ss_int res, tmp;
 
     res = 1;
@@ -63,6 +75,7 @@ inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
 #endif
 
 inline int __power(int a, int b, int c) {
+    if(c == 0) throw new ValueError(new str("pow() 3rd argument cannot be 0"));
     long long res, tmp;
 
     res = 1;
@@ -80,10 +93,28 @@ inline int __power(int a, int b, int c) {
 
 /* division */
 
+#ifndef __SS_NOZERO
+static inline void __check_nonzero(__ss_float b, const char *msg) {
+    if(b == 0) __throw_zero_division(msg);
+}
+#ifdef __SS_LONG
+static inline void __check_nonzero(__ss_int b, const char *msg) {
+    if(b == 0) __throw_zero_division(msg);
+}
+#endif
+static inline void __check_nonzero(int b, const char *msg) {
+    if(b == 0) __throw_zero_division(msg);
+}
+#define __SS_ZERO_CHECK(b, msg) __check_nonzero(b, msg)
+#else
+#define __SS_ZERO_CHECK(b, msg) ((void)0)
+#endif
+
 template<class A> A __divs(A a, A b);
-template<> inline __ss_float __divs(__ss_float a, __ss_float b) { return a/b; }
+template<> inline __ss_float __divs(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float division by zero"); return a/b; }
 #ifdef __SS_LONG
 template<> inline __ss_int __divs(__ss_int a, __ss_int b) {
+    __SS_ZERO_CHECK(b, "division by zero");
     if(a<0 && b>0) return (a-b+1)/b;
     else if(b<0 && a>0) return (a-b-1)/b;
     else return a/b;
@@ -91,16 +122,17 @@ template<> inline __ss_int __divs(__ss_int a, __ss_int b) {
 #endif
 
 template<class A, class B> __ss_float __divs(A a, B b);
-template<> inline __ss_float __divs(__ss_int a, __ss_float b) { return (__ss_float)a/b; }
-template<> inline __ss_float __divs(__ss_float a, __ss_int b) { return a/((__ss_float)b); }
+template<> inline __ss_float __divs(__ss_int a, __ss_float b) { __SS_ZERO_CHECK(b, "float division by zero"); return (__ss_float)a/b; }
+template<> inline __ss_float __divs(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(b, "float division by zero"); return a/((__ss_float)b); }
 
-inline __ss_float __divs(__ss_int a, __ss_int b) { return a/((__ss_float)b); }
+inline __ss_float __divs(__ss_int a, __ss_int b) { __SS_ZERO_CHECK(b, "division by zero"); return a/((__ss_float)b); }
 
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
-template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { return floor(a/b); }
+template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor(a/b); }
 
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
+    __SS_ZERO_CHECK(b, "integer division or modulo by zero");
     __ss_int r = a / b;
     __ss_int m = a % b;
     if (m != 0 && ((a ^ b) < 0)) r -= 1;
@@ -108,31 +140,35 @@ template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
 }
 #endif
 template<> inline int __floordiv(int a, int b) {
+    __SS_ZERO_CHECK(b, "integer division or modulo by zero");
     int r = a / b;
     int m = a % b;
     if (m != 0 && ((a ^ b) < 0)) r -= 1;
     return r;
 }
 
-inline __ss_float __floordiv(__ss_int a, __ss_float b) { return floor((__ss_float)a/b); }
-inline __ss_float __floordiv(__ss_float a, __ss_int b) { return floor(a/((__ss_float)b)); }
+inline __ss_float __floordiv(__ss_int a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor((__ss_float)a/b); }
+inline __ss_float __floordiv(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor(a/((__ss_float)b)); }
 
 /* modulo */
 
 template<class A> A __mods(A a, A b);
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
+    __SS_ZERO_CHECK(b, "integer modulo by zero");
     __ss_int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }
 #endif
 template<> inline int __mods(int a, int b) {
+    __SS_ZERO_CHECK(b, "integer modulo by zero");
     __ss_int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }
 template<> inline __ss_float __mods(__ss_float a, __ss_float b) {
+    __SS_ZERO_CHECK(b, "float modulo");
     __ss_float f = fmod(a,b);
     if((f<0 && b>0)||(f>0 && b<0)) f+=b;
     return f;
@@ -145,6 +181,7 @@ template<> inline __ss_float __mods(__ss_float a, __ss_int b) { return __mods(a,
 #endif
 template<> inline __ss_float __mods(int a, __ss_float b) { return __mods((__ss_float)a, b); }
 template<> inline __ss_float __mods(__ss_float a, int b) { return __mods(a, (__ss_float)b); }
+
 
 /* divmod */
 

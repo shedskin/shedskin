@@ -735,6 +735,8 @@ class ShedskinBuilder(Builder):
             self.add_cxxflags("-D__SS_NOWRAP")
         if not self.gx.bounds_checking:
             self.add_cxxflags("-D__SS_NOBOUNDS")
+        if not self.gx.zero_division_check:
+            self.add_cxxflags("-D__SS_NOZERO")
         if not self.gx.assertions:
             self.add_cxxflags("-D__SS_NOASSERT")
         if self.gx.int32:
@@ -1282,6 +1284,8 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags("-D__SS_NOWRAP")
         if not self.gx.bounds_checking:
             self.add_cxxflags("-D__SS_NOBOUNDS")
+        if not self.gx.zero_division_check:
+            self.add_cxxflags("-D__SS_NOZERO")
         if not self.gx.assertions:
             self.add_cxxflags("-D__SS_NOASSERT")
         if self.gx.int32:

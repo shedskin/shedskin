@@ -54,6 +54,9 @@ void __throw_slice_step_zero() {
 void __throw_stop_iteration() {
     throw new StopIteration();
 }
+void __throw_zero_division(const char *msg) {
+    throw new ZeroDivisionError(new str(msg));
+}
 
 /* BaseException */
 

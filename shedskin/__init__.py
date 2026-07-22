@@ -131,6 +131,9 @@ class Shedskin:
             if args.nowrap:
                 gx.wrap_around_check = False
 
+            if args.nozero:
+                gx.zero_division_check = False
+
             #            if args.random:
             #                gx.fast_random = True
 
@@ -321,6 +324,7 @@ class Shedskin:
         grp("-b", "--nobounds", help="Disable bounds checking", action="store_true")
         grp("--nogc", help="Disable garbage collection", action="store_true")
         grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
+        grp("-z", "--nozero", help="Disable zero-division checking", action="store_true")
         grp("--boost", help="Use boost containers", action="store_true")
 
         # Compiler options (debug, extmod, dirs, output, etc.)
