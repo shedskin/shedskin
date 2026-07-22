@@ -226,17 +226,17 @@ class pyseq(pyiter):
     pass
 
 class list(pyseq):
-    def append(self, u):
-        self.unit = u
+    def append(self, object):
+        self.unit = object
 
-    def index(self, u, start=0, stop=0):
-        u == self.unit
+    def index(self, value, start=0, stop=0):
+        value == self.unit
         return 1
-    def count(self, u):
-        u == self.unit
+    def count(self, value):
+        value == self.unit
         return 1
-    def remove(self, u):
-        u == self.unit
+    def remove(self, value):
+        value == self.unit
 
     def clear(self):
         pass
@@ -277,8 +277,8 @@ class list(pyseq):
 
     def extend(self, other):
         self.unit = other.unit
-    def insert(self, i, u):
-        self.unit = u
+    def insert(self, index, object):
+        self.unit = object
 
     def pop(self, index=0):
         return self.unit
@@ -437,15 +437,15 @@ class str_(pyseq):
     def expandtabs(self, tabsize=8):
         return ''
 
-    def count(self, e, start=0, end=0):
+    def count(self, sub, start=0, end=0):
         return 1
 
-    def startswith(self, e, start=0, end=0):
+    def startswith(self, prefix, start=0, end=0):
         return True
-    def endswith(self, e, start=0, end=0):
+    def endswith(self, suffix, start=0, end=0):
         return True
 
-    def replace(self, a, b, count=-1):
+    def replace(self, old, new, count=-1):
         return ''
 
     def translate(self, table, delchars=''):
@@ -554,12 +554,12 @@ class bytes_(pyseq):
     def expandtabs(self, tabsize=8):
         return b''
 
-    def count(self, e, start=0, end=0):
+    def count(self, sub, start=0, end=0):
         return 1
 
-    def startswith(self, e, start=0, end=0):
+    def startswith(self, prefix, start=0, end=0):
         return True
-    def endswith(self, e, start=0, end=0):
+    def endswith(self, suffix, start=0, end=0):
         return True
 
     def removeprefix(self, prefix):
@@ -570,7 +570,7 @@ class bytes_(pyseq):
     def center(self, width, fillchar=b''):
         return b''
 
-    def replace(self, a, b, count=0):
+    def replace(self, old, new, count=0):
         return b''
 
     def translate(self, table, delete=b''):
@@ -668,8 +668,8 @@ class dict(pyiter):
     def __delitem__(self, k):
         self.__key__(k)
 
-    def setdefault(self, u, default=None):
-        self.__setunit__(u, default)
+    def setdefault(self, key, default=None):
+        self.__setunit__(key, default)
         return default
 
     def has_key(self, u):
@@ -683,12 +683,12 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
-    def get(self, u, v=None):  # TODO v -> default.. breaks plcfrs??
-        self.__key__(u)
+    def get(self, key, v=None):  # TODO v -> default.. breaks plcfrs??
+        self.__key__(key)
         return self.value
         return v
-    def pop(self, k, default=None):
-        self.__key__(k)
+    def pop(self, key, default=None):
+        self.__key__(key)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
