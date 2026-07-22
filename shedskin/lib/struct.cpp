@@ -112,6 +112,8 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
         case 'p':
              result = new bytes();
              len = (unsigned char)data->unit[(size_t)(*pos)];
+             if(d > 0 and len > d-1)
+                 len = d-1;
              for(unsigned i=0; i<len; i++)
                  result->unit += data->unit[(size_t)(*pos+(__ss_int)i+1)];
              break;
