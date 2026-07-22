@@ -364,6 +364,60 @@ str *abspath(str *path) {
     return normpath(path);
 }
 
+str *relpath(str *path, str *start) {
+    /**
+    Return a relative version of a path
+    */
+    list<str *> *__50, *start_list, *path_list, *rel_list;
+    list<str *>::for_in_loop __123;
+    str *start_abs, *path_abs, *part;
+    __ss_int __51, i, n, j;
+
+    if (!start) {
+        start = curdir;
+    }
+
+    if ((!___bool(path))) {
+        throw new ValueError(new str("no path specified"));
+    }
+
+    start_abs = abspath(start);
+    path_abs = abspath(path);
+
+    start_list = new list<str *>();
+    FOR_IN(part,start_abs->split(const_4),50,51,123)
+        if (___bool(part)) {
+            start_list->append(part);
+        }
+    END_FOR
+
+    path_list = new list<str *>();
+    FOR_IN(part,path_abs->split(const_4),50,51,123)
+        if (___bool(part)) {
+            path_list->append(part);
+        }
+    END_FOR
+
+    n = ___min(2, __ss_void, 0, len(start_list), len(path_list));
+    i = 0;
+    while ((i < n) && __eq(start_list->__getfast__(i), path_list->__getfast__(i))) {
+        i++;
+    }
+
+    rel_list = new list<str *>();
+    for (j = i; j < len(start_list); j++) {
+        rel_list->append(const_3);
+    }
+    for (j = i; j < len(path_list); j++) {
+        rel_list->append(path_list->__getfast__(j));
+    }
+
+    if ((!___bool(rel_list))) {
+        return const_1;
+    }
+    return joinl(rel_list);
+}
+
 str *realpath(str *filename) {
     /**
     Return the canonical path of the specified filename, eliminating any
@@ -807,6 +861,72 @@ str *abspath(str *path) {
         path = join(2, __os__::getcwd(), path);
     }
     return normpath(path);
+}
+
+str *relpath(str *path, str *start) {
+    /**
+    Return a relative version of a path
+    */
+    tuple2<str *, str *> *__60, *__61;
+    list<str *> *__62, *start_list, *path_list, *rel_list;
+    list<str *>::for_in_loop __123;
+    str *start_abs, *path_abs, *start_drive, *start_rest, *path_drive, *path_rest, *part;
+    __ss_int __63, i, n, j;
+
+    if (!start) {
+        start = curdir;
+    }
+
+    if ((!___bool(path))) {
+        throw new ValueError(new str("no path specified"));
+    }
+
+    start_abs = abspath(start);
+    path_abs = abspath(path);
+
+    __60 = splitdrive(start_abs);
+    start_drive = __60->__getfirst__();
+    start_rest = __60->__getsecond__();
+    __61 = splitdrive(path_abs);
+    path_drive = __61->__getfirst__();
+    path_rest = __61->__getsecond__();
+
+    if (__ne(normcase(start_drive), normcase(path_drive))) {
+        throw new ValueError(__add_strs(4, new str("path is on mount "), path_drive, new str(", start on mount "), start_drive));
+    }
+
+    start_list = new list<str *>();
+    FOR_IN(part,start_rest->split(const_4),62,63,123)
+        if (___bool(part)) {
+            start_list->append(part);
+        }
+    END_FOR
+
+    path_list = new list<str *>();
+    FOR_IN(part,path_rest->split(const_4),62,63,123)
+        if (___bool(part)) {
+            path_list->append(part);
+        }
+    END_FOR
+
+    n = ___min(2, __ss_void, 0, len(start_list), len(path_list));
+    i = 0;
+    while ((i < n) && __eq(start_list->__getfast__(i), path_list->__getfast__(i))) {
+        i++;
+    }
+
+    rel_list = new list<str *>();
+    for (j = i; j < len(start_list); j++) {
+        rel_list->append(pardir);
+    }
+    for (j = i; j < len(path_list); j++) {
+        rel_list->append(path_list->__getfast__(j));
+    }
+
+    if ((!___bool(rel_list))) {
+        return curdir;
+    }
+    return joinl(rel_list);
 }
 
 str *realpath(str *path) {
