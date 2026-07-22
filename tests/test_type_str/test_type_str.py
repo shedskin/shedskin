@@ -3,6 +3,12 @@
 
 def test_capitalize():
     assert 'bla bla'.capitalize() == 'Bla bla'
+    assert 'BLA BLA'.capitalize() == 'Bla bla'
+    assert 'bLA bLA'.capitalize() == 'Bla bla'
+    assert ''.capitalize() == ''
+    assert 'a'.capitalize() == 'A'
+    assert 'A'.capitalize() == 'A'
+    assert '1bla'.capitalize() == '1bla'
 
 
 def test_casefold():
