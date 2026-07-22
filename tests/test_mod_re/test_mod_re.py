@@ -218,6 +218,68 @@ def test_purge():
     re.purge()
 
 
+def test_re_unmatched_group_returns_none():
+    m = re.match(r'(a)(b)?', 'a')
+    assert m.group(1) == 'a'
+    assert m.group(2) is None
+
+
+def test_re_unmatched_named_group_returns_none():
+    m = re.match(r'(?P<one>a)(?P<two>b)?', 'a')
+    assert m.group('one') == 'a'
+    assert m.group('two') is None
+
+
+def test_re_out_of_range_group_raises_indexerror():
+    m = re.match(r'(a)(b)', 'ab')
+    error = ''
+    try:
+        m.group(17)
+    except IndexError as e:
+        error = str(e)
+    assert error == 'no such group'
+
+
+def test_re_out_of_range_named_group_raises_indexerror():
+    m = re.match(r'(?P<one>a)', 'a')
+    error = ''
+    try:
+        m.group('nope')
+    except IndexError as e:
+        error = str(e)
+    assert error == 'no such group'
+
+
+def test_re_unmatched_group_in_groups_tuple():
+    m = re.match(r'(a)(b)?', 'a')
+    assert m.groups() == ('a', None)
+    assert m.groups('X') == ('a', 'X')
+
+
+def test_re_expand_unmatched_group_is_empty_string():
+    m = re.match(r'(a)(b)?', 'a')
+    assert m.expand(r'\1-\2') == 'a-'
+
+
+def test_re_expand_unmatched_named_group_is_empty_string():
+    m = re.match(r'(?P<one>a)(?P<two>b)?', 'a')
+    assert m.expand(r'\g<one>-\g<two>') == 'a-'
+
+
+def test_re_sub_unmatched_group_is_empty_string():
+    assert re.sub(r'(a)(b)?', r'\1-\2', 'a') == 'a-'
+    assert re.sub(r'(a)(b)?', r'\1-\2', 'ab') == 'a-b'
+
+
+def test_re_sub_out_of_range_group_raises_error():
+    error = ''
+    try:
+        re.sub(r'(a)(b)?', r'\1-\3', 'a')
+    except re.error as e:
+        error = str(e)
+    assert error != ''
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -236,6 +298,15 @@ def test_all():
     test_re_locale_rejected()
     test_re_compile_error_message()
     test_re_groups_count()
+    test_re_unmatched_group_returns_none()
+    test_re_unmatched_named_group_returns_none()
+    test_re_out_of_range_group_raises_indexerror()
+    test_re_out_of_range_named_group_raises_indexerror()
+    test_re_unmatched_group_in_groups_tuple()
+    test_re_expand_unmatched_group_is_empty_string()
+    test_re_expand_unmatched_named_group_is_empty_string()
+    test_re_sub_unmatched_group_is_empty_string()
+    test_re_sub_out_of_range_group_raises_error()
     test_purge()
 
 
