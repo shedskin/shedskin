@@ -563,7 +563,7 @@ void *writer::writerow(list<str *> *seq) {
     FOR_IN(field,seq,24,26,123)
         if (dialect->quoting == QUOTE_ALL)
             quoted = 1;
-        else if (dialect->quoting == QUOTE_NOTNULL)
+        else if (dialect->quoting == QUOTE_NOTNULL || dialect->quoting == QUOTE_STRINGS)
             quoted = field ? 1 : 0;
         else
             quoted = 0;
