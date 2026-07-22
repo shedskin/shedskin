@@ -48,6 +48,7 @@ __ss_bool isfile(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
 str *realpath(str *filename);
+str *relpath(str *path, str *start=0);
 
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);

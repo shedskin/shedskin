@@ -45,9 +45,32 @@ def test_os_path():
 
 
 
+def test_os_path_relpath():
+    base = abspath(join("testdir_a", "b"))
+    child = join(base, "c")
+
+    assert relpath(child, base) == "c"
+    assert relpath(base, child) == ".."
+    assert relpath(base, base) == "."
+    assert relpath("a/b/c", "a/b/c") == "."
+
+    sibling = join(dirname(base), "d")
+    assert relpath(child, sibling) == join("..", "b", "c")
+
+    # relative to cwd by default
+    assert relpath(join("x", "y")) == join("x", "y")
+
+    try:
+        relpath("")
+        assert False, "expected ValueError for empty path"
+    except ValueError:
+        pass
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
+    test_os_path_relpath()
 
 if __name__ == '__main__':
     test_all()

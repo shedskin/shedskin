@@ -68,6 +68,9 @@ def realpath(s):
 def normpath(s):
     return ''
 
+def relpath(path, start=None):
+    return ''
+
 def getsize(s):
     return 1
 
