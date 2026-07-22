@@ -20,3 +20,9 @@ def standard_b64decode(s):
 
 def urlsafe_b64decode(s):
     return b''
+
+def b16encode(s):
+    return b''
+
+def b16decode(s, casefold=False):
+    return b''

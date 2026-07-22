@@ -76,7 +76,8 @@ bytes *unhexlify(bytes *hex) {
     // output will be half as long
     __ss_int len = hex->__len__();
     if ( len&1 ) throw new Error(new str("Odd-length string"));
-    bytes *data = new bytes("",len>>1,1);
+    bytes *data = new bytes(1);
+    data->unit.resize(len>>1);
 
     char * curdata = &data->unit[0];
     char * curhex = &hex->unit[0];
@@ -102,7 +103,8 @@ bytes *a2b_uu(bytes *string) {
     char * ascii_data = &string->unit[0];
 
     __ss_int bin_len = (*ascii_data++ - ' ') & 077;
-    bytes *binary = new bytes("",bin_len,1);
+    bytes *binary = new bytes(1);
+    binary->unit.resize(bin_len);
     char * bin_data = &binary->unit[0];
     unsigned char this_ch;
     __ss_int leftchar=0, leftbits=0;
@@ -170,7 +172,8 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
 
     /* We're lazy and allocate too much (fixed up later) */
     __ss_int ascii_len = 2 + (bin_len+2)/3*4;
-    bytes * ascii = new bytes("",ascii_len,1);
+    bytes * ascii = new bytes(1);
+    ascii->unit.resize(ascii_len);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     unsigned char this_ch;
@@ -275,7 +278,8 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     bool complete = false; /* true once a valid closing pad has been seen */
 
     size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
-    bytes *binary = new bytes("", (int)bin_len, 1);
+    bytes *binary = new bytes(1);
+    binary->unit.resize(bin_len);
     char * bin_data = &binary->unit[0];
     bin_len = 0;
 
@@ -376,7 +380,8 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
     __ss_int leftbits = 0,leftchar = 0;
     char this_ch;
 
-    bytes *ascii = new bytes("",bin_len*2 + 3, 1);
+    bytes *ascii = new bytes(1);
+    ascii->unit.resize(bin_len*2 + 3);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     
@@ -417,7 +422,8 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("", (int)datalen, 1);
+    bytes *outdata = new bytes(1);
+    outdata->unit.resize(datalen);
     char * odata = &outdata->unit[0];
     memset(odata, 0, datalen);
 
@@ -568,7 +574,8 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("", (int)odatalen, 1);
+    bytes *outdata = new bytes(1);
+    outdata->unit.resize(odatalen);
     unsigned char * odata = (unsigned char *)&outdata->unit[0];
     memset(odata, 0, odatalen);
 

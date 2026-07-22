@@ -31,6 +31,20 @@ bytes *urlsafe_b64decode(bytes *s) {
     return b64decode(s, new bytes("-_"), False);
 }
 
+bytes *b16encode(bytes *s) {
+    return __binascii__::hexlify(s)->upper();
+}
+
+bytes *b16decode(bytes *s, __ss_bool casefold) {
+    bytes *t = casefold ? s->upper() : s;
+    for (size_t i = 0; i < t->unit.size(); i++) {
+        char c = t->unit[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')))
+            throw new __binascii__::Error(new str("Non-base16 digit found"));
+    }
+    return __binascii__::unhexlify(t);
+}
+
 void __init() {
     __name__ = new str("base64");
 }

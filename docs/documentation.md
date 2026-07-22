@@ -120,7 +120,7 @@ var = SomeClass # bad
 At the moment, the following 30 modules are (partially) supported.
 
 * `array`
-* `base64` (no 16, 32, 85 variants)
+* `base64` (no 32, 85 variants)
 * `binascii` (no 16, 32, 85 variants)
 * `bisect`
 * `collections` (defaultdict, deque)
