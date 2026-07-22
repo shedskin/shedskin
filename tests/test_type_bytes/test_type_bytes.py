@@ -1,5 +1,11 @@
 def test_capitalize():
     assert b'bla bla'.capitalize() == b'Bla bla'
+    assert b'BLA BLA'.capitalize() == b'Bla bla'
+    assert b'bLA bLA'.capitalize() == b'Bla bla'
+    assert b''.capitalize() == b''
+    assert b'a'.capitalize() == b'A'
+    assert b'A'.capitalize() == b'A'
+    assert b'1bla'.capitalize() == b'1bla'
 
 def test_center():
     assert b'bla'.center(10) == b'   bla    '

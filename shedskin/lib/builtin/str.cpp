@@ -821,7 +821,12 @@ str *str::removesuffix(str *suffix) {
 
 str *str::capitalize() {
     str *r = new str(unit);
-    r->unit[0] = (char)::toupper(r->unit[0]);
+    size_t len = r->unit.size();
+    if(len) {
+        r->unit[0] = (char)::toupper((unsigned char)r->unit[0]);
+        for(size_t i = 1; i < len; i++)
+            r->unit[i] = (char)::tolower((unsigned char)r->unit[i]);
+    }
     return r;
 }
 

@@ -630,7 +630,12 @@ bytes *bytes::title() {
 
 bytes *bytes::capitalize() {
     bytes *r = new bytes(unit, frozen);
-    r->unit[0] = (char)::toupper(r->unit[0]);
+    size_t len = r->unit.size();
+    if(len) {
+        r->unit[0] = (char)::toupper((unsigned char)r->unit[0]);
+        for(size_t i = 1; i < len; i++)
+            r->unit[i] = (char)::tolower((unsigned char)r->unit[i]);
+    }
     return r;
 }
 
