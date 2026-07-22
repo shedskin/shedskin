@@ -67,6 +67,24 @@ def test_isdst_attribute():
     # regression test: struct_time must expose tm_isdst (not "isdst")
     assert t.tm_isdst == -1 or t.tm_isdst == 0 or t.tm_isdst == 1
 
+def test_len():
+    # regression test: struct_time is a 9-sequence, len() must reflect that
+    # (previously fell back to pyobj's default __len__, which is always 1)
+    t = time.gmtime(1700000000)
+    assert len(t) == 9
+
+def test_eq_and_ordering():
+    # regression test: struct_time must compare by value, not by identity
+    # (previously fell back to pyobj's default __eq__/__cmp__)
+    t1 = time.gmtime(1700000000)
+    t2 = time.gmtime(1700000000)
+    t3 = time.gmtime(1700000100)
+    assert t1 == t2
+    assert not (t1 == t3)
+    assert t1 < t3
+    assert not (t3 < t1)
+    assert t3 > t1
+
 def test_sleep():
     t1 = time.time()
     time.sleep(0.5)
@@ -88,6 +106,8 @@ def test_all():
     test_monotonic()
     test_process_time()
     test_isdst_attribute()
+    test_len()
+    test_eq_and_ordering()
 
 if __name__ == '__main__':
     test_all() 
