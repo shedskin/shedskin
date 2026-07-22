@@ -751,6 +751,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_NOBOUNDS")
     if not gx.wrap_around_check:
         compile_options.append("-D__SS_NOWRAP")
+    if not gx.zero_division_check:
+        compile_options.append("-D__SS_NOZERO")
     if gx.backtrace:
         compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
     if not gx.assertions:

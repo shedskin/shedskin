@@ -81,6 +81,9 @@ inline complex complex::operator-(complex b) {
 inline complex complex::operator-(__ss_float b) { return (*this) - mcomplex(b); }
 
 inline complex complex::operator/(complex b) {
+#ifndef __SS_NOZERO
+    if(b.real == 0 && b.imag == 0) __throw_zero_division("complex division by zero");
+#endif
     complex c;
     __ss_float norm = b.real*b.real+b.imag*b.imag;
     c.real = (real*b.real+imag*b.imag)/norm;

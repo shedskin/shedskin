@@ -2428,12 +2428,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- inline mod/div
         # XXX C++ knows %, /, so we can overload?
         if floattype.intersection(ltypes) or inttype.intersection(ltypes):
-            if inline in ["%"] or (
-                inline in ["/"]
-                and not (
-                    floattype.intersection(ltypes) or floattype.intersection(rtypes)
-                )
-            ):
+            if inline in ["%", "/"]:
                 if python.def_class(self.gx, "complex") not in (
                     t[0] for t in rtypes
                 ):  # XXX

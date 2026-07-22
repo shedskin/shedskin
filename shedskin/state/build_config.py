@@ -17,6 +17,7 @@ class BuildConfiguration:
     Attributes:
         wrap_around_check: Enable wrap-around checking for integers.
         bounds_checking: Enable bounds checking for sequences.
+        zero_division_check: Enable zero-division checking for division/modulo.
         assertions: Enable assertion checking.
         executable_product: Build an executable.
         pyextension_product: Build a Python extension module.
@@ -37,6 +38,7 @@ class BuildConfiguration:
 
     wrap_around_check: bool = True
     bounds_checking: bool = True
+    zero_division_check: bool = True
     assertions: bool = True
     executable_product: bool = True
     pyextension_product: bool = False
