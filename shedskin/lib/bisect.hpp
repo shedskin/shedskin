@@ -86,7 +86,7 @@ template <class A> void *insort(__ss_int, list<A> *a, A x, __ss_int lo, __ss_int
 }
 
 
-template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
+template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, B x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
 
