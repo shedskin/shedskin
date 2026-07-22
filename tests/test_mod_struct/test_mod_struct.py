@@ -169,6 +169,23 @@ def test_p():
     assert p == 255*b'w'
 
 
+def test_p_oversized_length_byte():
+    # 'p' unpacking must clamp the embedded length byte to the declared
+    # field width minus one, even when the buffer wasn't produced by
+    # pack() itself (e.g. malformed or externally-sourced data). A
+    # too-large length byte must not cause a read past the field (or the
+    # buffer) -- it should be clamped, matching CPython's struct module.
+    buf = bytes([250]) + b'ABB'  # length byte claims 250, only 3 bytes follow
+    x, = struct.unpack('4p', buf)
+    assert x == b'ABB'
+    assert len(x) == 3
+
+    buf2 = bytes([255]) + b'wo'  # field width 3 -> at most 2 data bytes
+    y, = struct.unpack('3p', buf2)
+    assert y == b'wo'
+    assert len(y) == 2
+
+
 def test_x():
     packed = struct.pack('!3xH', 19)
     assert packed == b'\x00\x00\x00\x00\x13'
@@ -371,6 +388,7 @@ def test_all():
     test_c()
     test_s()
     test_p()
+    test_p_oversized_length_byte()
     test_x()
     test_nonzero()
     test_signed_narrow()
