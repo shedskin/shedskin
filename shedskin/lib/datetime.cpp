@@ -90,7 +90,7 @@ date::date(__ss_int year_, __ss_int month_, __ss_int day_){
 
     if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
     if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
-    if(day_<=0 || day>days_in_month(year_,month_)) throw new ValueError(new str("day is out of range for month"));
+    if(day_<=0 || day_>days_in_month(year_,month_)) throw new ValueError(new str("day is out of range for month"));
 
     this->year=year_;
     this->month=month_;
