@@ -1758,8 +1758,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         header = ""
         if is_init:
             pass
-        elif func.ident in ["__hash__"]:
-            header += "long "  # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
             assert func.retnode
             if func.ftypes:

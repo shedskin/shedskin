@@ -30,7 +30,7 @@ public:
     inline complex conjugate();
     complex parsevalue(str *s);
 
-    inline long __hash__();
+    inline __ss_int __hash__();
     str *__repr__();
 };
 
@@ -184,10 +184,10 @@ inline complex __power(__ss_float a, complex b) { return __power(mcomplex(a), b)
 
 /* hashing */
 
-template<> inline long hasher(complex c) {
+template<> inline __ss_int hasher(complex c) {
     return c.__hash__();
 }
-inline long complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
+inline __ss_int complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
 
 /* conjugate */
 

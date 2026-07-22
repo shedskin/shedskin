@@ -20,7 +20,7 @@ public:
 
     __ss_bool __eq__(pyobj *p);
     __ss_int __cmp__(pyobj *p);
-    long __hash__();
+    __ss_int __hash__();
 
     tuple2<A,B> *__copy__();
     tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -65,7 +65,7 @@ public:
 
     tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
-    long __hash__();
+    __ss_int __hash__();
 
     tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
     tuple2<T,T> *__copy__();
@@ -223,8 +223,8 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
     return c;
 }
 
-template<class T> long tuple2<T, T>::__hash__() { // TODO check current cpython.. change -1 result to some const also I guess
-    long seed = 0;
+template<class T> __ss_int tuple2<T, T>::__hash__() { // TODO check current cpython.. change -1 result to some const also I guess
+    __ss_int seed = 0;
     size_t sz = this->units.size();
     for(size_t i = 0; i<sz; i++)
         seed = hash_combine(seed, hasher<T>(this->units[i]));
@@ -300,8 +300,8 @@ template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     return __cmp(second, b->second);
 }
 
-template<class A, class B> long tuple2<A, B>::__hash__() {
-    long seed = 0;
+template<class A, class B> __ss_int tuple2<A, B>::__hash__() {
+    __ss_int seed = 0;
     seed = hash_combine(seed, hasher<A>(first));
     seed = hash_combine(seed, hasher<B>(second));
     return seed;
