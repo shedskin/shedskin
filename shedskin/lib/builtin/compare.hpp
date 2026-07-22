@@ -36,25 +36,41 @@ template<> inline __ss_bool __ne(str *a, str *b) {
 /* gt */
 
 template<class T> inline __ss_bool __gt(T a, T b) { return a->__gt__(b); }
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_bool __gt(__ss_int a, __ss_int b) { return __mbool(a > b); }
+#endif
 template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
 template<> inline __ss_bool __gt(__ss_float a, __ss_float b) { return __mbool(a > b); }
+template<> inline __ss_bool __gt(__ss_bool a, __ss_bool b) { return __mbool(a.value > b.value); }
 
 /* ge */
 
 template<class T> inline __ss_bool __ge(T a, T b) { return a->__ge__(b); }
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_bool __ge(__ss_int a, __ss_int b) { return __mbool(a >= b); }
+#endif
 template<> inline __ss_bool __ge(int a, int b) { return __mbool(a >= b); }
 template<> inline __ss_bool __ge(__ss_float a, __ss_float b) { return __mbool(a >= b); }
+template<> inline __ss_bool __ge(__ss_bool a, __ss_bool b) { return __mbool(a.value >= b.value); }
 
 /* lt */
 template<class T> inline __ss_bool __lt(T a, T b) { return a->__lt__(b); }
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_bool __lt(__ss_int a, __ss_int b) { return __mbool(a < b); }
+#endif
 template<> inline __ss_bool __lt(int a, int b) { return __mbool(a < b); }
 template<> inline __ss_bool __lt(__ss_float a, __ss_float b) { return __mbool(a < b); }
+template<> inline __ss_bool __lt(__ss_bool a, __ss_bool b) { return __mbool(a.value < b.value); }
 
 /* le */
 
 template<class T> inline __ss_bool __le(T a, T b) { return a->__le__(b); }
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_bool __le(__ss_int a, __ss_int b) { return __mbool(a <= b); }
+#endif
 template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
 template<> inline __ss_bool __le(__ss_float a, __ss_float b) { return __mbool(a <= b); }
+template<> inline __ss_bool __le(__ss_bool a, __ss_bool b) { return __mbool(a.value <= b.value); }
 
 /* comparison */
 
