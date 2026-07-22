@@ -23,7 +23,6 @@ namespace __path__ {
 tuple2<str *, str *> *const_2;
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
-str *default_0;
 #ifdef WIN32
 __ss_int supports_unicode_filenames;
 #endif
@@ -51,8 +50,6 @@ void __init() {
     defpath = const_6;
     altsep = NULL;
     devnull = const_7;
-
-    default_0 = const_1;
 }
 
 str *normcase(str *s) {
@@ -367,10 +364,6 @@ str *abspath(str *path) {
     return normpath(path);
 }
 
-str *relpath(str *path) {
-    return relpath(path, curdir);
-}
-
 str *relpath(str *path, str *start) {
     /**
     Return a relative version of a path
@@ -379,6 +372,10 @@ str *relpath(str *path, str *start) {
     list<str *>::for_in_loop __123;
     str *start_abs, *path_abs, *part;
     __ss_int __51, i, n, j;
+
+    if (!start) {
+        start = curdir;
+    }
 
     if ((!___bool(path))) {
         throw new ValueError(new str("no path specified"));
@@ -506,8 +503,6 @@ void __init() {
     defpath = const_7;
     devnull = const_8;
     supports_unicode_filenames = 0;
-
-    default_0 = const_0;
 }
 
 str *normcase(str *s) {
@@ -868,10 +863,6 @@ str *abspath(str *path) {
     return normpath(path);
 }
 
-str *relpath(str *path) {
-    return relpath(path, curdir);
-}
-
 str *relpath(str *path, str *start) {
     /**
     Return a relative version of a path
@@ -881,6 +872,10 @@ str *relpath(str *path, str *start) {
     list<str *>::for_in_loop __123;
     str *start_abs, *path_abs, *start_drive, *start_rest, *path_drive, *path_rest, *part;
     __ss_int __63, i, n, j;
+
+    if (!start) {
+        start = curdir;
+    }
 
     if ((!___bool(path))) {
         throw new ValueError(new str("no path specified"));
