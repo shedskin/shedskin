@@ -134,10 +134,10 @@ template<> inline __ss_int __cmp(void *a, void *b) {
 }
 
 template<class T> __ss_int cpp_cmp(T a, T b) {
-    return __cmp(a, b) == -1;
+    return __lt(a, b);
 }
 template<class T> __ss_int cpp_cmp_rev(T a, T b) {
-    return __cmp(a, b) == 1;
+    return __gt(a, b);
 }
 template<class T> class cpp_cmp_custom {
     typedef __ss_int (*hork)(T, T);
@@ -158,14 +158,14 @@ template<class T, class V> class cpp_cmp_key {
     hork key;
 public:
     cpp_cmp_key(hork a) { key = a; }
-    __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
+    __ss_int operator()(T a, T b) const { return __lt(key(a), key(b)); }
 };
 template<class T, class V> class cpp_cmp_key_rev {
     typedef V (*hork)(T);
     hork key;
 public:
     cpp_cmp_key_rev(hork a) { key = a; }
-    __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
+    __ss_int operator()(T a, T b) const { return __gt(key(a), key(b)); }
 };
 
 template<class T> class ss_eq {
