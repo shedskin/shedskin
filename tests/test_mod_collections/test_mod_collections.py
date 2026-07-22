@@ -175,6 +175,28 @@ def test_deque_eq():
     assert deque([]) == deque([])
 
 
+def test_deque_insert_out_of_range():
+    # regression test: insert used to compute an invalid iterator for
+    # out-of-range indices instead of clamping like list.insert, which
+    # silently corrupted the deque (large positive index) or crashed
+    # (large negative index)
+    d = deque([1, 2, 3])
+    d.insert(100, 9)
+    assert list(d) == [1, 2, 3, 9]
+
+    e = deque([1, 2, 3])
+    e.insert(-100, 8)
+    assert list(e) == [8, 1, 2, 3]
+
+    f = deque([1, 2, 3])
+    f.insert(3, 9)
+    assert list(f) == [1, 2, 3, 9]
+
+    g = deque([1, 2, 3])
+    g.insert(-1, 9)
+    assert list(g) == [1, 2, 9, 3]
+
+
 def test_deque_remove_missing():
     d = deque([1,2,3])
     raised = False
@@ -198,6 +220,7 @@ def test_all():
     test_deque_maxlen()
     test_deque_maxlen_on_init()
     test_deque_eq()
+    test_deque_insert_out_of_range()
     test_deque_remove_missing()
 
 
