@@ -11,6 +11,24 @@ __ss_int __ss_SIGABRT, __ss_SIGALRM, __ss_SIGBUS, __ss_SIGCHLD, __ss_SIGCLD, __s
 void __init() {
     __name__ = new str("signal");
 
+    /* Not every constant below is defined on every platform (e.g. most
+     * POSIX signals don't exist on Windows, and SIGCLD/SIGPOLL/SIGPWR/
+     * SIGRTMAX/SIGRTMIN don't exist on macOS). Whichever of these are
+     * left unassigned by the platform-specific blocks further down
+     * must not be allowed to silently read back as 0, since 0 is the
+     * real (and meaningful) null signal, not a "does not exist" marker.
+     * Sentinel-initialize everything to -1 first so unsupported
+     * constants fail loudly/obviously instead of behaving like signal 0. */
+    __ss_SIGABRT = __ss_SIGALRM = __ss_SIGBUS = __ss_SIGCHLD = __ss_SIGCLD =
+        __ss_SIGCONT = __ss_SIGFPE = __ss_SIGHUP = __ss_SIGILL = __ss_SIGINT =
+        __ss_SIGIO = __ss_SIGIOT = __ss_SIGKILL = __ss_SIGPIPE = __ss_SIGPOLL =
+        __ss_SIGPROF = __ss_SIGPWR = __ss_SIGQUIT = __ss_SIGRTMAX =
+        __ss_SIGRTMIN = __ss_SIGSEGV = __ss_SIGSTOP = __ss_SIGSYS =
+        __ss_SIGTERM = __ss_SIGTRAP = __ss_SIGTSTP = __ss_SIGTTIN =
+        __ss_SIGTTOU = __ss_SIGURG = __ss_SIGUSR1 = __ss_SIGUSR2 =
+        __ss_SIGVTALRM = __ss_SIGWINCH = __ss_SIGXCPU = __ss_SIGXFSZ =
+        __ss_SIGBREAK = -1;
+
     __ss_SIGABRT = SIGABRT;
     __ss_SIGFPE = SIGFPE;
     __ss_SIGILL = SIGILL;
