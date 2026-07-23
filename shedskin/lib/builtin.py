@@ -226,17 +226,17 @@ class pyseq(pyiter):
     pass
 
 class list(pyseq):
-    def append(self, object):
-        self.unit = object
+    def append(self, u):
+        self.unit = u
 
-    def index(self, value, start=0, stop=0):
-        value == self.unit
+    def index(self, u, start=0, stop=0):
+        u == self.unit
         return 1
-    def count(self, value):
-        value == self.unit
+    def count(self, u):
+        u == self.unit
         return 1
-    def remove(self, value):
-        value == self.unit
+    def remove(self, u):
+        u == self.unit
 
     def clear(self):
         pass
@@ -277,8 +277,8 @@ class list(pyseq):
 
     def extend(self, other):
         self.unit = other.unit
-    def insert(self, index, object):
-        self.unit = object
+    def insert(self, index, u):
+        self.unit = u
 
     def pop(self, index=0):
         return self.unit
@@ -668,9 +668,9 @@ class dict(pyiter):
     def __delitem__(self, k):
         self.__key__(k)
 
-    def setdefault(self, key, default=None):
-        self.__setunit__(key, default)
-        return default
+    def setdefault(self, u, v=None):
+        self.__setunit__(u, v)
+        return v
 
     def has_key(self, u):
         self.__key__(u)
@@ -683,8 +683,8 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
-    def get(self, key, v=None):  # TODO v -> default.. breaks plcfrs??
-        self.__key__(key)
+    def get(self, u, v=None):  # TODO v -> default.. breaks plcfrs??
+        self.__key__(u)
         return self.value
         return v
     def pop(self, key, default=None):
