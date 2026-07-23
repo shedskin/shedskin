@@ -61,11 +61,33 @@ def test_str_precision():
     assert ('%.8r' % b'abracadabra') == "b'abraca"
 
 
+def test_unterminated_mapping_key():
+    # "%(name" with no closing ')' used to scan past the end of the
+    # format string looking for ')', reading arbitrary memory instead
+    # of raising. CPython raises ValueError here.
+    d = {"aap": "aapje"}
+    try:
+        "%(aap" % d
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
+
+    try:
+        "hello %(aap" % d
+        assert False, 'expected ValueError'
+    except ValueError:
+        pass
+
+    # sanity: well-formed mapping keys still work fine
+    assert ("%(aap)s" % d) == 'aapje'
+
+
 def test_all():
     test_classic1()
     test_classic2()
     test_classic3()
     test_str_precision()
+    test_unterminated_mapping_key()
 
 
 if __name__ == "__main__":
