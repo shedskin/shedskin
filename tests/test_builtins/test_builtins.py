@@ -329,6 +329,36 @@ def test_range():
     assert bool(r)
     assert not bool(range(0))
 
+    # negative step: count()/index() must use the same sign-aware bounds
+    # check as __contains__ (they previously always returned "not found")
+    r = range(10, 0, -1)
+    assert r.count(10) == 1
+    assert r.count(5) == 1
+    assert r.count(1) == 1
+    assert r.count(0) == 0
+    assert r.count(11) == 0
+    assert r.index(10) == 0
+    assert r.index(5) == 5
+    assert r.index(1) == 9
+
+    try:
+        r.index(0)
+        assert False
+    except ValueError:
+        pass
+
+    r = range(-5, -20, -3)
+    assert list(r) == [-5, -8, -11, -14, -17]
+    assert r.count(-11) == 1
+    assert r.index(-11) == 2
+    assert r.count(-12) == 0
+
+    # step size > 1 skips values even when within bounds
+    r = range(1, 10, 2)
+    assert r.count(2) == 0
+    assert r.count(3) == 1
+    assert r.index(3) == 1
+
 
 def test_range_slicing():
     r = range(2,20,2)
