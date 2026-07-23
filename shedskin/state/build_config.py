@@ -34,6 +34,7 @@ class BuildConfiguration:
         debug_level: Debug verbosity level.
         nomakefile: Skip makefile generation.
         generate_cmakefile: Generate CMakeLists.txt.
+        predict: Enable experimental per-call-site list size prediction.
     """
 
     wrap_around_check: bool = True
@@ -56,3 +57,4 @@ class BuildConfiguration:
     nomakefile: bool = False
     generate_cmakefile: bool = False
     boost: bool = False
+    predict: bool = False

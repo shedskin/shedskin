@@ -38,8 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Optimized
 
-- Iteration over generator expressions is now much faster (though some work remains)
-- With `--boost` option, use boost small-vector and flat_hash_map/set
+- Added `--boost` option, to use boost small-vector and flat_hash_map/set containers
+- Measure and predict list-comprehension sizes to avoid reallocations
+- Optimized iteration over generator expressions
 
 ### Tests
 

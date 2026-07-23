@@ -3769,7 +3769,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             + typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)[:-2]
             + "();\n"
         )
+        self._reserve_hint_active = False
         self.listcomp_rec(node, node.generators, lcfunc, False)
+        if getattr(self, "_reserve_hint_active", False):
+            # feed this call's exact final size into the site's estimator,
+            # to seed reserve() on the *next* call to this comprehension
+            self.output("__list_site_update(__ss_lcstat, (float)__ss_result->units.size());")
         self.output("return __ss_result;")
         self.deindent()
         self.output("}\n")
@@ -3936,9 +3941,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
+                    if self.gx.predict:
+                        self.output("static ListSiteStat __ss_lcstat;")
+                        self.output(
+                            "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        )
+                        self._reserve_hint_active = True
+                    else:
+                        self.output(
+                            f"__ss_result->units.reserve({4 * len(node.generators)});"
+                        )
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
@@ -3971,9 +3983,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
+                    if self.gx.predict:
+                        self.output("static ListSiteStat __ss_lcstat;")
+                        self.output(
+                            "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        )
+                        self._reserve_hint_active = True
+                    else:
+                        self.output(
+                            f"__ss_result->units.reserve({4 * len(node.generators)});"
+                        )
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
