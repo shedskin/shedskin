@@ -294,6 +294,14 @@ class GlobalInfo:
         self._build_config.boost = value
 
     @property
+    def predict(self) -> bool:
+        return self._build_config.predict
+
+    @predict.setter
+    def predict(self, value: bool) -> None:
+        self._build_config.predict = value
+
+    @property
     def backtrace(self) -> bool:
         return self._build_config.backtrace
 
