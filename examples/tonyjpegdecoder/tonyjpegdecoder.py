@@ -648,7 +648,6 @@ class TonyJpegDecoder:
        inbuf is source data in jpg format
        return is bmp bgr format, bottom_up"""
     self.ReadJpgHeader(inbuf)
-    outbuf = [0] * (self.Width * self.Height * 3)
     #    horizontal and vertical count of tile, macroblocks, 
     #    MCU(Minimum Coded Unit), 
     #        case 1: maybe is 16*16 pixels, 6 blocks
@@ -658,6 +657,7 @@ class TonyJpegDecoder:
 
     #    BMP row width, must be divided by 4
     nRowBytes = (self.Width * 3 + 3) // 4 * 4
+    outbuf = [0] * (nRowBytes * self.Height)
 
     # FIXME: source ptr (don't need to read as we already read the header)
     # self.Data = inbuf
