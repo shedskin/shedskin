@@ -129,7 +129,7 @@ struct_time *tm2tuple(tm* tm_time) {
     return time_tuple;
 }
 
-double time() {
+__ss_float time() {
     timespec ts { 0, 0 };
 #ifdef _MSC_VER
     if (clock_gettime(0, &ts) == -1)
@@ -137,11 +137,11 @@ double time() {
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
 	    throw new Exception(new str("clock_gettime"));
-    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
 #ifdef WIN32
-double perf_counter() {
+__ss_float perf_counter() {
     static LARGE_INTEGER frequency;
     static bool frequency_initialized = false;
     if (!frequency_initialized) {
@@ -150,12 +150,12 @@ double perf_counter() {
     }
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
-    return (double)counter.QuadPart / (double)frequency.QuadPart;
+    return (__ss_float)counter.QuadPart / (__ss_float)frequency.QuadPart;
 }
-double monotonic() {
+__ss_float monotonic() {
     return perf_counter();
 }
-double process_time() {
+__ss_float process_time() {
     FILETIME creation, exit, kernel, user;
     GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user);
     ULARGE_INTEGER k, u;
@@ -164,32 +164,32 @@ double process_time() {
     u.LowPart = user.dwLowDateTime;
     u.HighPart = user.dwHighDateTime;
     /* FILETIME units are 100ns */
-    return (double)(k.QuadPart + u.QuadPart) / 10000000.0;
+    return (__ss_float)(k.QuadPart + u.QuadPart) / 10000000.0;
 }
 #else
-double perf_counter() {
+__ss_float perf_counter() {
     timespec ts { 0, 0 };
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
-    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
-double monotonic() {
+__ss_float monotonic() {
     return perf_counter();
 }
 
-double process_time() {
+__ss_float process_time() {
     timespec ts { 0, 0 };
     if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
-    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 #endif
 
 #ifndef WIN32
-void *sleep(double s) {
+void *sleep(__ss_float s) {
     time_t seconds = time_t(s);
-    double nanosecs = (s - (double)seconds) * 1000000000l;
+    __ss_float nanosecs = (s - (__ss_float)seconds) * 1000000000l;
 
     struct timespec time1, time2;
     time1.tv_sec = seconds;
@@ -206,28 +206,28 @@ void *sleep(double s) {
     return NULL;
 }
 #else
-void *sleep(double s) {
+void *sleep(__ss_float s) {
     Sleep(s*1000); // TODO ms resolution..
     return NULL;
     }
 #endif
 
-double mktime(struct_time *tuple) {
-    return (double)::mktime(tuple2tm(tuple));
+__ss_float mktime(struct_time *tuple) {
+    return (__ss_float)::mktime(tuple2tm(tuple));
 }
 
-double mktime(tuple2<__ss_int, __ss_int> *tuple) {
+__ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
     struct_time *st = new struct_time(tuple);
 
-    return (double)::mktime(tuple2tm(st));
+    return (__ss_float)::mktime(tuple2tm(st));
 }
 
 struct_time *localtime() {
     time_t time = ::time(NULL);
-    return localtime((double)time);
+    return localtime((__ss_float)time);
 }
 
-struct_time *localtime(const double timep) {
+struct_time *localtime(const __ss_float timep) {
     time_t timet = static_cast<time_t>(timep);
     tm *tm_time = ::localtime(&timet);
     return tm2tuple(tm_time);
@@ -235,10 +235,10 @@ struct_time *localtime(const double timep) {
 
 struct_time *gmtime() {
     time_t time = ::time(NULL);
-    return gmtime((double)time);
+    return gmtime((__ss_float)time);
 }
 
-struct_time *gmtime(const double seconds) {
+struct_time *gmtime(const __ss_float seconds) {
     time_t timet = static_cast<time_t>(seconds);
     tm *tm_time = ::gmtime(&timet);
     return tm2tuple(tm_time);
@@ -257,7 +257,7 @@ str *ctime() {
     return asctime(localtime());
 }
 
-str *ctime(const double seconds) {
+str *ctime(const __ss_float seconds) {
     return asctime(localtime(seconds));
 }
 
