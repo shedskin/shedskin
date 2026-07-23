@@ -3772,16 +3772,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self._reserve_hint_active = False
         self.listcomp_rec(node, node.generators, lcfunc, False)
         if getattr(self, "_reserve_hint_active", False):
-            # Update this site's exponentially-weighted mean/variance of the
-            # resulting length (alpha=1/8), used to seed reserve() on the
-            # *next* call to this comprehension. Recurrence: Finch's online
-            # EWMA/EWMV (single-pass, no stored history).
-            self.output(
-                "{ float __ss_diff = (float)__ss_result->units.size() - __ss_reserve_mean;\n"
-                "  float __ss_incr = 0.125f * __ss_diff;\n"
-                "  __ss_reserve_mean += __ss_incr;\n"
-                "  __ss_reserve_var = 0.875f * (__ss_reserve_var + __ss_diff * __ss_incr); }"
-            )
+            # feed this call's exact final size into the site's estimator,
+            # to seed reserve() on the *next* call to this comprehension
+            self.output("__list_site_update(__ss_lcstat, (float)__ss_result->units.size());")
         self.output("return __ss_result;")
         self.deindent()
         self.output("}\n")
@@ -3948,14 +3941,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
-                    self.output(
-                        "static float __ss_reserve_mean = 0, __ss_reserve_var = 0;"
-                    )
-                    self.output(
-                        "__ss_result->units.reserve((size_t)std::max(0.0f, "
-                        "__ss_reserve_mean + 2.0f*std::sqrt(__ss_reserve_var)));"
-                    )
-                    self._reserve_hint_active = True
+                    if self.gx.predict:
+                        self.output("static ListSiteStat __ss_lcstat;")
+                        self.output(
+                            "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        )
+                        self._reserve_hint_active = True
+                    else:
+                        self.output(
+                            f"__ss_result->units.reserve({4 * len(node.generators)});"
+                        )
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
@@ -3988,14 +3983,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
-                    self.output(
-                        "static float __ss_reserve_mean = 0, __ss_reserve_var = 0;"
-                    )
-                    self.output(
-                        "__ss_result->units.reserve((size_t)std::max(0.0f, "
-                        "__ss_reserve_mean + 2.0f*std::sqrt(__ss_reserve_var)));"
-                    )
-                    self._reserve_hint_active = True
+                    if self.gx.predict:
+                        self.output("static ListSiteStat __ss_lcstat;")
+                        self.output(
+                            "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        )
+                        self._reserve_hint_active = True
+                    else:
+                        self.output(
+                            f"__ss_result->units.reserve({4 * len(node.generators)});"
+                        )
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
