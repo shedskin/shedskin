@@ -173,8 +173,11 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
         if(fmt->unit[j] == '(') {
             j++;
             namepos = j;
-            while(fmt->unit[j++] != ')')
-                ;
+            while(j < fmtlen && fmt->unit[j] != ')')
+                j++;
+            if(j >= fmtlen)
+                throw new ValueError(new str("incomplete format key"));
+            j++;
             name = new str(fmt->unit.c_str()+namepos, j-namepos-1);
         }
         else
