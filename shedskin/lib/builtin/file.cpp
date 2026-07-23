@@ -138,7 +138,7 @@ str *file::readline(__ss_int n) {
     if(__error())
         throw new OSError();
 
-    return new str(&__read_cache[0], __read_cache.size());
+    return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
 }
 
 static void __throw_io_error() {
@@ -165,7 +165,7 @@ str *file::read(__ss_int n) {
     }
     if(__error())
         __throw_io_error();
-    return new str(&__read_cache[0], __read_cache.size());
+    return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
 }
 
 list<str *> *file::readlines(__ss_int /*size_hint*/) {
@@ -371,7 +371,7 @@ bytes *file_binary::readline(__ss_int n) {
     if(__error())
         throw new OSError();
 
-    bytes *b = new bytes(&__read_cache[0], __read_cache.size());
+    bytes *b = new bytes(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
     b->frozen = 1;
     return b;
 }
@@ -396,7 +396,7 @@ bytes *file_binary::read(__ss_int n) {
     }
     if(__error())
         __throw_io_error();
-    bytes *b = new bytes(&__read_cache[0], __read_cache.size());
+    bytes *b = new bytes(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
     b->frozen = 1;
     return b;
 }
