@@ -1,5 +1,7 @@
 /* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#include "builtin/sitestats.hpp"
+
 #ifdef SS_DECL
 
 template <class T> class list : public pyseq<T> {
@@ -61,6 +63,8 @@ public:
     void *insert(__ss_int m, T e);
 
     void *append(T a);
+    void *append(T a, ListSiteStat &site);
+    void __reserve_from_site(ListSiteStat &site);
 
     void *reverse();
     template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
@@ -250,6 +254,28 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
 template<class T> void *list<T>::append(T a) {
     this->units.push_back(a);
     return NULL;
+}
+
+/* Site-tagged variant: pays one extra branch (size == capacity) per call,
+ * almost always predicted not-taken since push_back is about to evaluate
+ * the same predicate internally anyway. Only reallocation-triggering
+ * grow events feed the estimator -- everything else is free. Only
+ * list.append() reports grow events for now; extend/__iadd__/etc. don't
+ * yet (fine for a first benchmark, worth revisiting). */
+template<class T> void *list<T>::append(T a, ListSiteStat &site) {
+    if (this->units.size() == this->units.capacity()) {
+        __shedskin__::__list_site_update(site, (float)this->units.size());
+    }
+    this->units.push_back(a);
+    return NULL;
+}
+
+/* Called once right after construction, before an append loop starts. */
+template<class T> void list<T>::__reserve_from_site(ListSiteStat &site) {
+    std::size_t hint = __shedskin__::__list_site_hint(site);
+    if (hint > this->units.capacity()) {
+        this->units.reserve(hint);
+    }
 }
 
 template<class T> template<class U> void *list<T>::extend(U *iter) {

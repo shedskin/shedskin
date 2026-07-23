@@ -766,6 +766,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     cmdline_options = []
     if gx.options.collect_stats:
         cmdline_options.append("--collect-stats")
+    if gx.predict:
+        cmdline_options.append("--predict")
     cmdline_opts = " ".join(cmdline_options)
 
     for module in modules:
