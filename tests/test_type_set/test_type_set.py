@@ -135,6 +135,37 @@ def test_frozenset_hash():
     v, w = frozenset(z), frozenset(y)
     assert hash(v) == hash(w)
 
+def test_frozen_propagation():
+    # frozen-ness should follow the receiver (self), not the argument,
+    # matching CPython: frozenset op set -> frozenset, set op frozenset -> set.
+    fs = frozenset([1, 2, 3])
+    s = set([2, 3, 4])
+
+    d1 = fs.difference(s)
+    assert sorted(d1) == [1]
+    assert repr(d1).startswith("frozenset")
+
+    d2 = fs - s
+    assert sorted(d2) == [1]
+    assert repr(d2).startswith("frozenset")
+
+    d3 = s.difference(fs)
+    assert sorted(d3) == [4]
+    assert not repr(d3).startswith("frozenset")
+
+    i1 = fs.intersection([2, 3])
+    assert sorted(i1) == [2, 3]
+    assert repr(i1).startswith("frozenset")
+
+    i2 = fs & frozenset([2, 3])
+    assert sorted(i2) == [2, 3]
+    assert repr(i2).startswith("frozenset")
+
+    i3 = s.intersection([2, 3])
+    assert sorted(i3) == [2, 3]
+    assert not repr(i3).startswith("frozenset")
+
+
 def test_set_cmp():
     a = set([1, 2])
     b = set([2, 3])
@@ -196,6 +227,7 @@ def test_all():
     test_set2()
     test_set3()
     test_set4()
+    test_frozen_propagation()
     test_set_cmp()
     test_frozenset()
     test_frozenset_hash()
