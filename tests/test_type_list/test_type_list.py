@@ -80,6 +80,16 @@ def test_list_index2():
     assert xs.index(1, -3, 4) == 3
 
 
+def test_list_index_str_identity():
+    # 'foo' built via concatenation is value-equal to the literal in xs,
+    # but is a separate allocation (distinct pointer identity). index()
+    # must dispatch through __eq__, not compare object identity.
+    needle = "f" + "oo"
+    xs = ["foo", "bar", "foo"]
+    assert xs.index(needle) == 0
+    assert xs.index(needle, 1) == 2
+
+
 def test_list_slice_assign():
     a = [1,2,3,4,5]
     assert a[:-1] == [1, 2, 3, 4]
@@ -224,6 +234,7 @@ def test_all():
     test_list_del()
     test_list_index1()
     test_list_index2()
+    test_list_index_str_identity()
     test_list_length()
     test_list_misc()
     test_list_nested()
