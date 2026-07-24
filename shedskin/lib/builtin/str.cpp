@@ -340,7 +340,7 @@ __ss_bool str::isidentifier() {
         return False;
 
     for(i = 0; i < len; i++)
-        if(not (('a' <= unit[i] and unit[i] <= 'z') or ('A' <= unit[i] and unit[i] <= 'Z') or (unit[i] == '_')))
+        if(not (('a' <= unit[i] and unit[i] <= 'z') or ('A' <= unit[i] and unit[i] <= 'Z') or ('0' <= unit[i] and unit[i] <= '9') or (unit[i] == '_')))
             return False;
 
     return True;
