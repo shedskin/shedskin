@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `os.path.relpath`
 
 - Now raising ZeroDivisionError, can be disabled with `--nozero`
-- The default int size is now 64-bits (override with `--int32`)
 
 ### Fixed
 
@@ -35,21 +34,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Several `--int64`, `--float32` related fixes
 - About 100 minor bugs uncovered (and fixed) by Claude
 - Fixed several C++ compilation warnings
-- Hash values are now same type as shedskin int type
 
 ### Optimized
 
 - Iteration over generator expressions is now much faster (though some work remains)
 - With `--boost` option, use boost small-vector and flat_hash_map/set
 
-### Tests
-
-- Added many tests for previously untested features
-
 ### Changed
+
+- The default int size is now 64-bits (override with `--int32`)
+- Hash values are now same type as shedskin int type
+
+### Development
 
 - Modernized type annotations (while still compatible with Python 3.9)
 - Improved type inference logging
+- Added many tests for previously untested features
+
 
 ## [0.9.12]
 
