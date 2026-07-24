@@ -63,6 +63,12 @@ public:
     __ss_bool __contains__(T a);
     __ss_bool __eq__(pyobj *p);
 
+    __ss_int index(T a);
+    __ss_int index(T a, __ss_int s);
+    __ss_int index(T a, __ss_int s, __ss_int e);
+
+    __ss_int count(T a);
+
     tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     __ss_int __hash__();
@@ -206,6 +212,30 @@ template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
         if(!__eq(this->units[i], b->units[i]))
             return False;
     return True;
+}
+
+template<class T> __ss_int tuple2<T, T>::index(T a) {
+    return index(a, 0, this->__len__());
+}
+template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s) {
+    return index(a, s, this->__len__());
+}
+template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s, __ss_int e) {
+    __ss_int one = 1;
+    slicenr(7, s, e, one, this->__len__());
+    for(__ss_int i = s; i<e; i++)
+        if(__eq(this->units[(size_t)i], a))
+            return i;
+    throw new ValueError(new str("tuple.index(x): x not in tuple"));
+}
+
+template<class T> __ss_int tuple2<T, T>::count(T a) {
+    __ss_int c = 0;
+    __ss_int len = this->__len__();
+    for(__ss_int i = 0; i<len; i++)
+        if(__eq(a, units[i]))
+            c++;
+    return c;
 }
 
 template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
