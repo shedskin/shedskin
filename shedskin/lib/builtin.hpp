@@ -486,9 +486,16 @@ template<class T> T __seqiter<T>::__next__() {
         throw new ValueError(new str("not enough values to unpack"));
 #endif
 
-template<class T> list<T> *__ss_list() {
-    list<T> *l =  new list<T>();
-#ifndef __SS_BOOST
+template<class T, int SiteId> list<T> *__ss_list() {
+    list<T> *l = new list<T>();
+#ifdef __SS_PREDICT
+    static ListSiteStat __ss_stat;
+    std::size_t hint = __shedskin__::__list_site_hint(__ss_stat);
+    if (hint > 0) {
+        l->units.reserve(hint);
+    }
+    l->__ss_site = &__ss_stat;
+#elif !defined(__SS_BOOST)
     l->units.reserve(4);
 #endif
     return l;

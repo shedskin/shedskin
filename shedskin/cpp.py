@@ -1135,7 +1135,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts == "tuple<__ss_int> *" and isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
         elif isinstance(node, ast.List) and not node.elts:
-            self.append("(__ss_list<" + ts[5:-3] + ">(")
+            if not hasattr(self, "_ss_list_site_ids"):
+                self._ss_list_site_ids = {}
+            if id(node) not in self._ss_list_site_ids:
+                self._ss_list_site_ids[id(node)] = len(self._ss_list_site_ids)
+            site_id = self._ss_list_site_ids[id(node)]
+            self.append("(__ss_list<" + ts[5:-3] + ", " + str(site_id) + ">(")
         else:
             self.append("(new " + ts[:-2] + "(")
         return argtypes
@@ -3769,7 +3774,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             + typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)[:-2]
             + "();\n"
         )
+        self._reserve_hint_active = False
         self.listcomp_rec(node, node.generators, lcfunc, False)
+        if getattr(self, "_reserve_hint_active", False):
+            # feed this call's exact final size into the site's estimator,
+            # to seed reserve() on the *next* call to this comprehension.
+            # #ifdef'd, not gx.predict-branched, so a generated build tree
+            # can flip --predict on/off by recompiling with/without
+            # -D__SS_PREDICT, no need to re-run the Python translator.
+            self.output("#ifdef __SS_PREDICT")
+            self.output("__list_site_update(__ss_lcstat, (float)__ss_result->units.size());")
+            self.output("#endif")
         self.output("return __ss_result;")
         self.deindent()
         self.output("}\n")
@@ -3936,9 +3951,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
+                    self.output("#ifdef __SS_PREDICT")
+                    self.output("static ListSiteStat __ss_lcstat;")
+                    self.output(
+                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                    )
+                    self.output("#else")
                     self.output(
                         f"__ss_result->units.reserve({4 * len(node.generators)});"
                     )
+                    self.output("#endif")
+                    self._reserve_hint_active = True
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
@@ -3971,9 +3994,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
+                    self.output("#ifdef __SS_PREDICT")
+                    self.output("static ListSiteStat __ss_lcstat;")
+                    self.output(
+                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                    )
+                    self.output("#else")
                     self.output(
                         f"__ss_result->units.reserve({4 * len(node.generators)});"
                     )
+                    self.output("#endif")
+                    self._reserve_hint_active = True
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
