@@ -892,10 +892,7 @@ bytes *__mmapiter::__next__()
 {
     if (map->__eof())
         throw new StopIteration();
-    bytes* byte = new bytes(__char_cache[(unsigned char)(map->read_byte())]->unit);
-    if (map->__eof())
-        throw new StopIteration();
-    return byte;
+    return new bytes(__char_cache[(unsigned char)(map->read_byte())]->unit);
 }
 
 void __init()
