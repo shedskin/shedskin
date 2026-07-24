@@ -2,6 +2,9 @@
 
 import re
 
+DEFAULTSECT = "DEFAULT"
+MAX_INTERPOLATION_DEPTH = 10
+
 class Error(Exception):
     def __init__(self, msg=''): pass
 class NoSectionError(Error):

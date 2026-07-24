@@ -10,6 +10,9 @@
 
 namespace __io__ {
 
+const __ss_int DEFAULT_BUFFER_SIZE = 8192;
+const __ss_int __ss_SEEK_SET = 0, __ss_SEEK_CUR = 1, __ss_SEEK_END = 2;
+
 /* BytesIO */
 
 bytes *BytesIO::read(int n) {
