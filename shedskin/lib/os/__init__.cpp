@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <filesystem>
+#include <thread>
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -137,6 +138,22 @@ void *rename(str *a, str *b) {
     if(std::rename(a->c_str(), b->c_str()) == -1)
         throw new OSError(a);
     return NULL;
+}
+
+void *replace(str *a, str *b) {
+    /* on POSIX, rename() already atomically replaces an existing
+     * destination, which is exactly what os.replace() promises */
+    return rename(a, b);
+}
+
+__ss_int cpu_count() {
+    /* CPython can return None here if the count can't be determined;
+     * shedskin doesn't allow mixing None with a scalar int return type
+     * (see docs/documentation.md), so we fall back to 1 instead */
+    unsigned int n = std::thread::hardware_concurrency();
+    if (n == 0)
+        n = 1;
+    return (__ss_int)n;
 }
 
 void *remove(str *path) {

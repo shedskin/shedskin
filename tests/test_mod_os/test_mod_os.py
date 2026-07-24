@@ -74,6 +74,39 @@ def test_urandom():
     assert bts.__class__.__name__ == 'bytes'
 
 
+def test_cpu_count():
+    n = os.cpu_count()
+    assert n >= 1
+
+
+def test_replace():
+    # use relative paths (resolved against the test binary's cwd) rather
+    # than a hardcoded '/tmp', which doesn't exist on Windows
+    src = 'shedskin_test_replace_src.txt'
+    dst = 'shedskin_test_replace_dst.txt'
+
+    with open(src, 'w') as f:
+        f.write('new content')
+
+    # replace() must overwrite an existing destination, unlike rename()
+    # on some platforms
+    with open(dst, 'w') as f:
+        f.write('old content')
+
+    os.replace(src, dst)
+
+    assert not os.path.exists(src)
+    with open(dst) as f:
+        assert f.read() == 'new content'
+
+    os.remove(dst)
+
+
+def test_fspath():
+    assert os.fspath('/tmp/somefile.txt') == '/tmp/somefile.txt'
+    assert os.path.join(os.fspath('a'), os.fspath('b')) == 'a/b'
+
+
 def test_posix():
     assert os.curdir == '.'
     assert os.pardir == '..'
@@ -110,6 +143,9 @@ def test_all():
     test_listdir()
 
     test_makedirs_exist_ok()
+    test_cpu_count()
+    test_replace()
+    test_fspath()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
