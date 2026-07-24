@@ -54,7 +54,7 @@
  * contributes at most one grow event, gated by a per-instance flag.
  */
 struct ListSiteStat {
-    std::size_t current_class = 2;
+    std::size_t current_class = 4;
     unsigned samples = 0;         // list instances constructed this window
     unsigned grow_events = 0;     // of those, how many overflowed current_class
     unsigned demote_backoff = 0;  // exponential backoff level for halving attempts
