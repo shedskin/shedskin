@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `os.path.relpath`
 
 - Now raising ZeroDivisionError, can be disabled with `--nozero`
+- The default int size is now 64-bits (override with `--int32`)
 
 ### Fixed
 
