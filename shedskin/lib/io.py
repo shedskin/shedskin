@@ -1,5 +1,8 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
+DEFAULT_BUFFER_SIZE = 8192
+SEEK_SET = SEEK_CUR = SEEK_END = 0
+
 
 class BytesIO(file_binary):
     def __init__(self, initial_bytes=None):

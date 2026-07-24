@@ -20,6 +20,7 @@ extern const __ss_int
 PAGESIZE,    /* 4096 bytes usually. */
 
 /* Access */
+ACCESS_DEFAULT,/* Use flags/prot as given. */
 ACCESS_READ,   /* Read-only memory.     */
 ACCESS_WRITE,  /* Write-through memory. */
 ACCESS_COPY,   /* Copy-on-write memory. */
@@ -33,7 +34,13 @@ PROT_EXEC,     /* Page can be executed. */
 MAP_SHARED,    /* Share changes.        */
 MAP_PRIVATE,   /* Changes are private.  */
 MAP_ANONYMOUS, /* Don't use a file.     */
-MAP_ANON;      /* Syn. MAP_ANONYMOUS.   */
+MAP_ANON,      /* Syn. MAP_ANONYMOUS.   */
+
+/* Linux-specific flags (value is -1 on platforms that lack them). */
+MAP_DENYWRITE, /* ETXTBSY on write access.   */
+MAP_EXECUTABLE,/* Mark it as an executable.  */
+MAP_POPULATE,  /* Populate page tables.      */
+MAP_STACK;     /* Reserve for a process stack.*/
 
 extern str *__name__;
 extern class_ *cl_mmap;
