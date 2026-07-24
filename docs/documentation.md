@@ -149,7 +149,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `string` (no Format, Template)
 * `struct` (no Struct, iter_unpack)
 * `sys` (partial)
-* `time` (partial)
+* `time` (partial, do not combine with --float32)
 
 Note that any other module, such as `pygame`, `pyqt` or `pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the [Shed Skin examples](https://github.com/shedskin/shedskin/tree/master/examples).
 
