@@ -146,6 +146,15 @@ def chdir(d):
 def rename(a, b):
     pass
 
+def replace(a, b):
+    pass
+
+def cpu_count():
+    return 1
+
+def fspath(path):
+    return path
+
 def remove(path):
     pass
 
