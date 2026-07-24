@@ -226,6 +226,32 @@ def test_tougher_find():
     tearDown(m)
 
 
+def test_explicit_iter():
+    # exercises __mmapiter/__next__ directly (iter()/list()/zip()),
+    # as opposed to the inlined for-loop fast path, which doesn't
+    # go through __mmapiter at all.
+    setUp()
+    f = open(TESTFILE_OUT, "wb+")
+    data = b"foobar"
+    f.write(data)
+    f.flush()
+    m = mmap.mmap(f.fileno(), len(data))
+    f.close()
+
+    assert list(iter(m)) == [bytes([b]) for b in data]
+
+    it = iter(m)
+    collected = []
+    while True:
+        try:
+            collected.append(next(it))
+        except StopIteration:
+            break
+    assert collected == [bytes([b]) for b in data]
+
+    tearDown(m)
+
+
 def test_ctx_mgr():
     with open(TESTFILE_IN, "rb") as f:
         with mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ) as mm:
@@ -241,6 +267,7 @@ def test_all():
         test_readonly()
         test_rfind()
         test_tougher_find()
+        test_explicit_iter()
         test_ctx_mgr()
 
 if __name__ == '__main__':
