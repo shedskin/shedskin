@@ -62,7 +62,7 @@ struct ListSiteStat {
     bool demote_pending = false;  // true right after a halve, until its outcome is known
 };
 
-constexpr std::size_t __ss_site_min_class = 2;
+constexpr std::size_t __ss_site_min_class = 4;
 constexpr std::size_t __ss_site_max_class = std::size_t(1) << 24; // sanity ceiling
 
 constexpr unsigned __ss_site_window = 1000; // list instances per decision window
