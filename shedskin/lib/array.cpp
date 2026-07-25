@@ -32,7 +32,7 @@ size_t get_itemsize(char typechar) {
     throw new TypeError(new str("must be char, not str"));
 }
 
-template<> template<> void *array<int>::extend(list<__ss_int> *l) {
+template<> template<> void *array<__ss_int>::extend(list<__ss_int> *l) {
     size_t len = l->units.size();
     size_t pos = this->units.size();
     this->units.resize(pos+len*itemsize);

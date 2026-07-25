@@ -141,7 +141,7 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
     }
     return NULL;
 }
-template<> template<> void *array<int>::extend(list<__ss_int> *l);
+template<> template<> void *array<__ss_int>::extend(list<__ss_int> *l);
 
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     extend(iter);
