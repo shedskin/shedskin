@@ -104,11 +104,27 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *
      * constructor as well, so a differently-typed array is unpacked by hand
      * before falling back to extend() for the same-typecode/generic cases. */
     if(iter->__class__ == cl_array) {
+        /* 'arr' is only used to read typechar below: that field sits at the
+         * same offset in every array<T> specialization, so the cast is safe
+         * for it. Elements themselves are read through 'iter' -- which,
+         * unlike 'arr', keeps its real, compiler-inferred type U -- so that
+         * __getitem__() resolves to the source array's own specialization
+         * instead of reinterpreting its raw bytes under array<T>'s. */
         array<T> *arr = (array<T> *)iter;
         if(this->typechar != arr->typechar) {
-            __ss_int n = arr->__len__();
+            /* CPython rejects this combination too: a Python float has no
+             * __index__, so assigning it into an int-typed array item raises
+             * TypeError rather than truncating. An int source into a float-
+             * typed target, or an int/float source into a same-kind target
+             * of different width, remains a plain (possibly overflow-
+             * checked) numeric conversion, same as CPython. */
+            bool this_is_float = this->typechar == 'f' || this->typechar == 'd';
+            bool src_is_float = arr->typechar == 'f' || arr->typechar == 'd';
+            if(!this_is_float && src_is_float)
+                throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
+            __ss_int n = iter->__len__();
             for(__ss_int i=0; i<n; i++)
-                this->append(arr->__getitem__(i));
+                this->append(iter->__getitem__(i));
             return NULL;
         }
     }
