@@ -399,8 +399,13 @@ template<class T> void *array<T>::insert(__ss_int i, T t) {
     if(i<0) i += len;
     if(i<0) i = 0;
     if(i>len) i = len;
-    this->units.insert(this->units.begin()+(i*itemsize), itemsize, '\0');
-    this->__setitem__(i, t);
+    /* validate/encode 't' into buffy *before* mutating 'units': fillbuf()
+     * may throw OverflowError, and CPython leaves the array untouched in
+     * that case. Splicing the placeholder bytes first and validating via
+     * __setitem__() afterwards (as before) left a corrupt zero-element
+     * behind whenever the value was out of range for the typecode. */
+    fillbuf(t);
+    this->units.insert(this->units.begin()+(i*itemsize), (char *)buffy, (char *)buffy+itemsize);
     return NULL;
 }
 
