@@ -13,8 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This can help a lot with larger programs (no need to manually retry).
 
 - Added `--boost` option, to use boost containers.
-  This can help for many dictionaries/sets or very short lists.
-  The 'dijkstra2' example, for example, now becomes twice as fast.
+  This can help when using dictionaries/sets or many very short lists.
+  The 'dijkstra2' example, for example, becomes twice as fast!
+
+- Added `--predict` option, which tries to predict maximum list sizes before
+  (re)allocating storage, based on run-time sampling per allocation site. This
+  can greatly improve performance if reallocation is the bottleneck.
 
 - Catching up with Python 3.x features:
   - Support `min/max(default)`
@@ -39,7 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Optimized
 
 - Iteration over generator expressions is now much faster (though some work remains)
-- With `--boost` option, use boost small-vector and flat_hash_map/set
 
 ### Tests
 
