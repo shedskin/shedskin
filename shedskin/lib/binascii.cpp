@@ -250,7 +250,22 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
         15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
         -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
+        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1,
+        /* 0x80-0xff: never valid base64 data, but must still be present
+        ** so that indexing with (unsigned char)c for c > 0x7f (e.g. a
+        ** high-byte altchars character) can't write/read past the end
+        ** of this array. Previously sized to 128 entries (0x00-0x7f
+        ** only); a caller-supplied altchars byte >= 0x80 caused an
+        ** out-of-bounds stack write here.
+        */
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1
     };
 
     // Standard '+' and '/' must remain valid regardless of altchars: base64.py's
