@@ -212,8 +212,10 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
     tuple2<T,T> *c = new tuple2<T,T>();
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        c->units.resize(u-l);
-        std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
+        if(u > l) {
+            c->units.resize(u-l);
+            std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
+        }
     } else if(s > 0)
         for(int i=l; i<u; i += s)
             c->units.push_back(units[i]);

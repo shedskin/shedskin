@@ -239,7 +239,7 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     slicenr(x, l, u, s, (__ss_int)len);
     bytes *b;
     if(s == 1)
-        b = new bytes(unit.data()+l, u-l, frozen);
+        b = new bytes(unit.data()+l, (u>l) ? (size_t)(u-l) : 0, frozen);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
