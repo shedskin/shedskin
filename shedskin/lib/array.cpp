@@ -28,8 +28,17 @@ size_t get_itemsize(char typechar) {
         case 'Q': return sizeof(unsigned long long);
         case 'f': return sizeof(float);
         case 'd': return sizeof(double);
+        /* 'u' and 'w' are real, valid CPython typecodes (unicode characters --
+         * 'u' deprecated since 3.3/scheduled for removal in 3.16, 'w' its
+         * replacement, added in 3.13) and so belong in array.typecodes, but
+         * shedskin has no unicode array element type to back them with. Give
+         * a clear, honest error instead of falling through to the generic
+         * "not a valid typecode at all" case below with a message that has
+         * nothing to do with the actual problem. */
+        case 'u': case 'w':
+            throw new NotImplementedError(new str("unicode array typecodes ('u', 'w') are not supported"));
     }
-    throw new TypeError(new str("must be char, not str"));
+    throw new ValueError(new str("bad typecode (must be b, B, u, h, H, i, I, l, L, q, Q, f, d or w)"));
 }
 
 template<> template<> void *array<__ss_int>::extend(list<__ss_int> *l) {
