@@ -129,7 +129,7 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
         size_t s1 = this->units.size();
         size_t s2 = arr->units.size();
         this->units.resize(s1+s2);
-        memcpy(&(this->units[s1]), &(arr->units[0]), s2);
+        if(s2) memcpy(&(this->units[s1]), &(arr->units[0]), s2);
     } else {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
@@ -152,7 +152,7 @@ template<class T> bytes *array<T>::tobytes() {
     bytes *s = new bytes();
     size_t s1 = this->units.size();
     s->unit.resize(s1);
-    memcpy(&(s->unit[0]), &(this->units[0]), s1);
+    if(s1) memcpy(&(s->unit[0]), &(this->units[0]), s1);
     return s;
 }
 
@@ -167,7 +167,7 @@ template<class T> void *array<T>::frombytes(bytes *s) {
         throw new ValueError(new str("bytes length not a multiple of item size"));
     if(len == 1)
         this->units.push_back(s->unit[0]);
-    else {
+    else if(len) {
         size_t s1 = this->units.size();
         this->units.resize(s1+len);
         memcpy(&(this->units[s1]), &(s->unit[0]), len);
@@ -195,8 +195,8 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    __ss_int len = this->__len__();
    if(b->__len__() != len)
        return False;
-   if(this->typechar == b->typechar)
-       return __mbool(memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
+   if(this->typechar == b->typechar && this->typechar != 'f' && this->typechar != 'd')
+       return __mbool(this->units.empty() || memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
    for(__ss_int i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
@@ -208,8 +208,9 @@ template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     if(n<=0) return a;
     size_t len = this->units.size();
     a->units.resize(len*(size_t)n);
-    for(size_t i=0; i<(size_t)n; i++)
-        memcpy(&(a->units[i*len]), &(this->units[0]), len);
+    if(len)
+        for(size_t i=0; i<(size_t)n; i++)
+            memcpy(&(a->units[i*len]), &(this->units[0]), len);
     return a;
 }
 
@@ -220,8 +221,9 @@ template<class T> array<T> *array<T>::__imul__(__ss_int n) {
     }
     size_t len = this->units.size();
     this->units.resize(len*(size_t)n);
-    for(size_t i=1; i<(size_t)n; i++)
-        memcpy(&(this->units[i*len]), &(this->units[0]), len);
+    if(len)
+        for(size_t i=1; i<(size_t)n; i++)
+            memcpy(&(this->units[i*len]), &(this->units[0]), len);
     return this;
 }
 
@@ -232,8 +234,8 @@ template<class T> array<T> *array<T>::__add__(array<T> *b) {
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
     a->units.resize(s1+s2);
-    memcpy(&(a->units[0]), &(this->units[0]), s1);
-    memcpy(&(a->units[s1]), &(b->units[0]), s2);
+    if(s1) memcpy(&(a->units[0]), &(this->units[0]), s1);
+    if(s2) memcpy(&(a->units[s1]), &(b->units[0]), s2);
     return a;
 }
 
@@ -243,7 +245,7 @@ template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
     this->units.resize(s1+s2);
-    memcpy(&(this->units[s1]), &(b->units[0]), s2);
+    if(s2) memcpy(&(this->units[s1]), &(b->units[0]), s2);
     return this;
 }
 
@@ -303,16 +305,46 @@ template<class T> void *array<T>::clear() {
 
 template<class T> void array<T>::fillbuf(T t) {
     switch(typechar) {
-        case 'b': *((signed char *)buffy) = (signed char)t; break;
-        case 'B': *((unsigned char *)buffy) = (unsigned char)t; break;
-        case 'h': *((signed short *)buffy) = (signed short)t; break;
-        case 'H': *((unsigned short *)buffy) = (unsigned short)t; break;
-        case 'i': *((signed int *)buffy) = (signed int)t; break;
-        case 'I': *((unsigned int *)buffy) = (unsigned int)t; break;
-        case 'l': *((signed long *)buffy) = (signed long)t; break;
-        case 'L': *((unsigned long *)buffy) = (unsigned long)t; break;
-        case 'q': *((signed long long *)buffy) = (signed long long)t; break;
-        case 'Q': *((unsigned long long *)buffy) = (unsigned long long)t; break;
+        case 'b':
+            if(t > 127) throw new OverflowError(new str("signed char is greater than maximum"));
+            if(t < -128) throw new OverflowError(new str("signed char is less than minimum"));
+            *((signed char *)buffy) = (signed char)t; break;
+        case 'B':
+            if(t < 0) throw new OverflowError(new str("unsigned byte integer is less than minimum"));
+            if(t > 255) throw new OverflowError(new str("unsigned byte integer is greater than maximum"));
+            *((unsigned char *)buffy) = (unsigned char)t; break;
+        case 'h':
+            if(t > 32767) throw new OverflowError(new str("signed short integer is greater than maximum"));
+            if(t < -32768) throw new OverflowError(new str("signed short integer is less than minimum"));
+            *((signed short *)buffy) = (signed short)t; break;
+        case 'H':
+            if(t < 0) throw new OverflowError(new str("unsigned short is less than minimum"));
+            if(t > 65535) throw new OverflowError(new str("unsigned short is greater than maximum"));
+            *((unsigned short *)buffy) = (unsigned short)t; break;
+        case 'i':
+            if(t > 2147483647LL) throw new OverflowError(new str("signed integer is greater than maximum"));
+            if(t < -2147483648LL) throw new OverflowError(new str("signed integer is less than minimum"));
+            *((signed int *)buffy) = (signed int)t; break;
+        case 'I':
+            if(t < 0) throw new OverflowError(new str("can't convert negative value to unsigned int"));
+            if(t > 4294967295LL) throw new OverflowError(new str("unsigned int is greater than maximum"));
+            *((unsigned int *)buffy) = (unsigned int)t; break;
+        case 'l':
+            if(t > std::numeric_limits<signed long>::max()) throw new OverflowError(new str("signed long is greater than maximum"));
+            if(t < std::numeric_limits<signed long>::min()) throw new OverflowError(new str("signed long is less than minimum"));
+            *((signed long *)buffy) = (signed long)t; break;
+        case 'L':
+            if(t < 0) throw new OverflowError(new str("can't convert negative value to unsigned long"));
+            if(t > std::numeric_limits<unsigned long>::max()) throw new OverflowError(new str("unsigned long is greater than maximum"));
+            *((unsigned long *)buffy) = (unsigned long)t; break;
+        case 'q':
+            if(t > std::numeric_limits<signed long long>::max()) throw new OverflowError(new str("signed long long is greater than maximum"));
+            if(t < std::numeric_limits<signed long long>::min()) throw new OverflowError(new str("signed long long is less than minimum"));
+            *((signed long long *)buffy) = (signed long long)t; break;
+        case 'Q':
+            if(t < 0) throw new OverflowError(new str("can't convert negative int to unsigned"));
+            if(t > std::numeric_limits<unsigned long long>::max()) throw new OverflowError(new str("unsigned long long is greater than maximum"));
+            *((unsigned long long *)buffy) = (unsigned long long)t; break;
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = (double)t; break;
     }
@@ -448,8 +480,9 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
     array<T> *c = new array<T>(typecode);
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        c->units.resize((u-l)*itemsize);
-        memcpy(&(c->units[0]), &(this->units[l*itemsize]), (u-l)*itemsize);
+        size_t slen = (u>l) ? (size_t)(u-l)*itemsize : 0;
+        c->units.resize(slen);
+        if(slen) memcpy(&(c->units[0]), &(this->units[l*itemsize]), slen);
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
             for(size_t j=0; j<itemsize; j++)
@@ -466,6 +499,23 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
 template<class T> void *array<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, array<T> *b) {
     if(this->typecode != b->typecode)
         throw new TypeError(new str("bad argument type for built-in operation"));
+    if(x&4 && s != 1) { // extended slice (step 's' explicitly given): pre-check the size
+        __ss_int nl = l, nu = u, ns = s; // local copies -- don't disturb l/u/s below
+        slicenr(x, nl, nu, ns, this->__len__());
+        __ss_int slicesize;
+        if(nl == nu) slicesize = 0;
+        else if(ns > 0 && nu < nl) slicesize = 0;
+        else if(ns < 0 && nl < nu) slicesize = 0;
+        else {
+            __ss_int slicelen = __abs(nu-nl);
+            __ss_int absstep = __abs(ns);
+            slicesize = slicelen/absstep;
+            if(slicelen%absstep) slicesize += 1;
+        }
+        __ss_int blen = b->__len__();
+        if(slicesize != blen)
+            throw new ValueError(__add_strs(0, new str("attempt to assign array of size "), __str(blen), new str(" to extended slice of size "), __str(slicesize)));
+    }
     list<T> *l2 = this->tolist();
     l2->__setslice__(x, l, u, s, b->tolist());
     this->units.clear();
