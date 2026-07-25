@@ -129,6 +129,25 @@ def test_base64_strict_mode():
     assert binascii.a2b_base64(b'', strict_mode=True) == b''
 
 
+def test_base64_padding_errors():
+    # a lone data character, or any leftover bits with no closing pad,
+    # must raise -- not silently decode to truncated/fabricated bytes.
+    for bad in (b'QQ', b'QQ=', b'AA', b'A', b'A='):
+        ok = False
+        try:
+            binascii.a2b_base64(bad)
+        except binascii.Error:
+            ok = True
+        assert ok
+
+    # legitimately padded strings (single and double '=') must still
+    # decode correctly -- regression check for the find_valid lookahead
+    # used to detect a valid closing pad sequence.
+    assert binascii.a2b_base64(b'QQ==') == b'A'
+    assert binascii.a2b_base64(b'QUJ=') == b'AB'
+    assert binascii.a2b_base64(b'QUJD') == b'ABC'
+
+
 def test_hex():  # b2a_hex == hexlify
     b2a = binascii.hexlify(s)
     assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
@@ -179,6 +198,7 @@ def test_all():
     test_uu()
     test_base64()
     test_base64_strict_mode()
+    test_base64_padding_errors()
     test_hex()
     test_crc()
 

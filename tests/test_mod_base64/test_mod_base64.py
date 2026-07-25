@@ -68,6 +68,60 @@ def test_b16():
     assert ok
 
 
+# regression test: altchars must be exactly 2 bytes, like CPython's
+# `assert len(altchars) == 2, repr(altchars)` in base64.py. Without this
+# check, a too-short altchars caused an out-of-bounds vector read and a
+# too-long one was silently (and incorrectly) truncated.
+#
+# Note: CPython's base64.py enforces this with a plain `assert`, which
+# raises AssertionError (and can be compiled away with -O); shedskin
+# raises ValueError instead, which is deliberate and more robust. Both
+# are accepted here so this test runs the same under CPython and
+# shedskin.
+def test_altchars_bad_length():
+    for bad in (b'', b'-', b'-_-'):
+        ok = False
+        try:
+            base64.b64encode(b'hello world', altchars=bad)
+        except (AssertionError, ValueError):
+            ok = True
+        assert ok
+
+        ok = False
+        try:
+            base64.b64decode(b'aGVsbG8gd29ybGQ=', altchars=bad)
+        except (AssertionError, ValueError):
+            ok = True
+        assert ok
+
+
+# regression test: b64decode must reject truncated/incorrectly padded
+# input instead of silently returning wrong (truncated or fabricated)
+# bytes. Mirrors CPython's binascii.Error('Incorrect padding') and
+# binascii.Error('Invalid base64-encoded string: ...') behavior.
+def test_decode_bad_padding():
+    # b'QQ': 2 chars, no padding at all
+    # b'QQ=': 2 chars, only one pad (needs two)
+    # b'AA': 2 chars decode to < 1 full byte
+    # b'A': single dangling char, never valid
+    # b'A=': single dangling char + one pad
+    for bad in (b'QQ', b'QQ=', b'AA', b'A', b'A='):
+        ok = False
+        try:
+            base64.b64decode(bad)
+        except binascii.Error:
+            ok = True
+        assert ok
+
+    # well-formed padding must still decode correctly (regression check
+    # for the fix itself: an earlier version of this fix broke this case)
+    assert base64.b64decode(b'QQ==') == b'A'
+    assert base64.b64decode(b'QUJD') == b'ABC'
+    assert base64.b64decode(b'QUJ=') == b'AB'
+    assert base64.b64decode(b'====') == b''
+    assert base64.b64decode(b'') == b''
+
+
 # regression test for a global-buffer-overflow (OOB read past the
 # empty string literal used to preallocate output buffers) that
 # AddressSanitizer catches on completely ordinary encode/decode calls,
@@ -84,8 +138,10 @@ def test_asan_regression():
 def test_all():
     test_basic()
     test_altchars()
+    test_altchars_bad_length()
     test_name()
     test_validate()
+    test_decode_bad_padding()
     test_b16()
     test_asan_regression()
 
