@@ -96,6 +96,22 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *
     typecode = typecode_;
     typechar = typecode_->unit[0];
     itemsize = get_itemsize(typechar);
+    /* CPython special-cases this too: array(typecode, other_array) accepts an
+     * array of a *different* typecode, treating it as a plain iterable of
+     * values -- only the explicit extend()/fromlist() methods reject a
+     * mismatched-typecode array with TypeError. Delegating straight to
+     * extend() here would incorrectly apply that stricter check to the
+     * constructor as well, so a differently-typed array is unpacked by hand
+     * before falling back to extend() for the same-typecode/generic cases. */
+    if(iter->__class__ == cl_array) {
+        array<T> *arr = (array<T> *)iter;
+        if(this->typechar != arr->typechar) {
+            __ss_int n = arr->__len__();
+            for(__ss_int i=0; i<n; i++)
+                this->append(arr->__getitem__(i));
+            return NULL;
+        }
+    }
     extend(iter);
     return NULL;
 }
