@@ -253,13 +253,17 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
     };
 
+    // Standard '+' and '/' must remain valid regardless of altchars: base64.py's
+    // altchars support works by translating the altchars onto '+'/'/' before
+    // decoding, which leaves any literal '+'/'/' already present untouched (and
+    // still valid data). Previously this was an if/else, so passing altchars
+    // (e.g. via urlsafe_b64decode) silently made '+' and '/' invalid instead of
+    // adding '-'/'_' as extra encodings of 62/63.
+    table_a2b_base64['+'] = 62;
+    table_a2b_base64['/'] = 63;
     if(altchars) { // TODO check len
         table_a2b_base64[(unsigned char)altchars->unit[0]] = 62;
         table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
-    }
-    else {
-        table_a2b_base64['+'] = 62;
-        table_a2b_base64['/'] = 63;
     }
 
     if(strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)

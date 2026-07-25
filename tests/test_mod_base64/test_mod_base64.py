@@ -31,6 +31,35 @@ def test_altchars():
     assert base64.b64decode(a2, altchars=b'*?') == input_bytes
 
 
+# regression test: passing altchars must *add* '-'/'_' as extra encodings
+# of 62/63, not make the standard '+'/'/' invalid. CPython's base64.py
+# implements altchars by translating them onto '+'/'/' before decoding,
+# which leaves any literal '+'/'/' already in the string untouched (and
+# still valid data) -- so urlsafe_b64decode (and b64decode with an
+# explicit altchars=) must still accept plain '+' and '/' characters.
+def test_altchars_preserves_standard_chars():
+    # data chosen so the standard b64 alphabet encodes it using '+' and '/'
+    data = bytes([251, 255, 191, 62])
+    enc = base64.b64encode(data)
+    assert enc == b'+/+/Pg=='
+
+    # urlsafe_b64decode must still decode this correctly even though it
+    # contains literal '+'/'/' rather than the url-safe '-'/'_'
+    assert base64.urlsafe_b64decode(enc) == data
+
+    # same via explicit altchars=
+    assert base64.b64decode(enc, altchars=b'-_') == data
+
+    # sanity: '-'/'_' still work as before
+    urlsafe_enc = base64.urlsafe_b64encode(data)
+    assert urlsafe_enc == b'-_-_Pg=='
+    assert base64.urlsafe_b64decode(urlsafe_enc) == data
+
+    # and a mix of both '+/' and '-_' in the same string must decode fine
+    mixed = b'+/-_Pg=='
+    assert base64.b64decode(mixed, altchars=b'-_') == data
+
+
 def test_name():
     assert base64.__name__ == 'base64'
 
@@ -138,6 +167,7 @@ def test_asan_regression():
 def test_all():
     test_basic()
     test_altchars()
+    test_altchars_preserves_standard_chars()
     test_altchars_bad_length()
     test_name()
     test_validate()
