@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `tuple.{index, count}`
   - Support `socket.{getblocking, create_connection}`
   - Support `datetime.timedelta.total_seconds`
+  - Support `os.path.{relpath, expanduser}`
 
 - Now raising ZeroDivisionError, can be disabled with `--nozero`
 

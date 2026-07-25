@@ -21,7 +21,7 @@ namespace __os__ {
 namespace __path__ {
 
 tuple2<str *, str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 #ifdef WIN32
 __ss_int supports_unicode_filenames;
@@ -39,6 +39,8 @@ void __init() {
     const_7 = new str("/dev/null");
     const_14 = new str("//");
     const_15 = new str("///");
+    const_20 = new str("~");
+    const_21 = new str("HOME");
 
     __name__ = new str("__main__");
 
@@ -478,6 +480,35 @@ str *_resolve_link(str *path) {
     }
     return path;
 }
+
+str *expanduser(str *path) {
+    /**
+    Expand ~ and ~user constructions.  If user or $HOME is unknown,
+    do nothing.
+    */
+    str *userhome, *result;
+    __ss_int i;
+
+    if (!path->startswith(const_20))
+        return path;
+
+    i = path->find(const_4, 1);
+    if (i < 0)
+        i = len(path);
+
+    if (i != 1)
+        return path; /* ~user lookups need pwd, which isn't supported */
+
+    userhome = __os__::getenv(const_21);
+    if (!userhome)
+        return path;
+
+    userhome = userhome->rstrip(const_4);
+    result = userhome->__add__(path->__slice__(1, i, 0, 0));
+    if (!len(result))
+        return const_4;
+    return result;
+}
 #else
 void __init() {
     const_0 = new str(".");
@@ -491,6 +522,11 @@ void __init() {
     const_8 = new str("nul");
     const_18 = new str("/\\");
     const_19 = new str(":");
+    const_20 = new str("~");
+    const_21 = new str("USERPROFILE");
+    const_23 = new str("HOMEPATH");
+    const_24 = new str("HOMEDRIVE");
+    const_25 = new str("USERNAME");
 
     __name__ = new str("__main__");
 
@@ -932,6 +968,52 @@ str *relpath(str *path, str *start) {
 str *realpath(str *path) {
 
     return abspath(path);
+}
+
+str *expanduser(str *path) {
+    /**
+    Expand ~ and ~user constructs.  If user or $HOME is unknown,
+    do nothing.
+    */
+    str *userhome, *homepath, *homedrive, *target_user, *current_user;
+    __ss_int i, n;
+
+    if (!path->startswith(const_20))
+        return path;
+
+    n = len(path);
+    i = 1;
+    while ((i < n) && (!(const_18)->__contains__(path->__getitem__(i))))
+        i++;
+
+    userhome = __os__::getenv(const_21); /* USERPROFILE */
+    if (!userhome) {
+        homepath = __os__::getenv(const_23); /* HOMEPATH */
+        if (!homepath)
+            return path;
+        homedrive = __os__::getenv(const_24, const_1); /* HOMEDRIVE, default '' */
+        userhome = join(2, homedrive, homepath);
+    }
+    userhome = userhome->rstrip(const_18);
+
+    if (i != 1) { /* ~user */
+        target_user = path->__slice__(3, 1, i, 0);
+        current_user = __os__::getenv(const_25); /* USERNAME */
+        if (!current_user)
+            return path;
+        if (__ne(target_user, current_user)) {
+            /* Try to guess the user's home directory.  By default all
+               user profile directories are located in the same place and
+               are named by corresponding usernames.  If userhome isn't a
+               normal profile directory, this guess is likely wrong, so
+               bail out. */
+            if (__ne(current_user, basename(userhome)))
+                return path;
+            userhome = join(2, dirname(userhome), target_user);
+        }
+    }
+
+    return userhome->__add__(path->__slice__(1, i, 0, 0));
 }
 
 #endif
