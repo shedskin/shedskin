@@ -229,6 +229,42 @@ def test_hex():  # b2a_hex == hexlify
     assert binascii.a2b_hex(b2a) == input_bytes
 
 
+# regression test: bytes_per_sep=0 used to divide/modulo by zero and crash
+# the process with SIGFPE. CPython instead treats 0 the same as "no
+# separators requested" (matching hexlify(data) with no sep at all).
+def test_hex_bytes_per_sep_zero():
+    assert binascii.hexlify(b'hello world', '-', 0) == b'68656c6c6f20776f726c64'
+    assert binascii.hexlify(b'', '-', 0) == b''
+
+
+# regression test: negative bytes_per_sep means "count groups from the
+# left" in CPython, as opposed to positive values which count from the
+# right. Shedskin used to ignore negative values entirely and emit no
+# separators at all, regardless of magnitude.
+def test_hex_bytes_per_sep_negative():
+    data = bytes.fromhex('4dfad71427a0aeb3fee9')  # 10 bytes
+    # evenly divisible lengths: left- and right-counting coincide
+    assert binascii.hexlify(data, '-', 1) == binascii.hexlify(data, '-', -1)
+    assert binascii.hexlify(data, '-', 2) == binascii.hexlify(data, '-', -2)
+    # not evenly divisible by 3: left- and right-counting differ
+    assert binascii.hexlify(data, '-', 3) == b'4d-fad714-27a0ae-b3fee9'
+    assert binascii.hexlify(data, '-', -3) == b'4dfad7-1427a0-aeb3fe-e9'
+
+
+# regression test: an invalid (non-length-1) sep must raise ValueError
+# even when data is empty. This used to be skipped because the
+# empty-data early return happened before the sep length was checked.
+def test_hex_sep_validated_on_empty_data():
+    for bad_sep in ('', 'ab'):
+        ok = False
+        try:
+            binascii.hexlify(b'', bad_sep, 1)
+        except ValueError as e:
+            ok = True
+            assert str(e) == 'sep must be length 1.'
+        assert ok
+
+
 def test_crc():
     crc = binascii.crc32(s)
     assert crc == 1546323114
@@ -247,6 +283,9 @@ def test_all():
     test_base64_strict_mode()
     test_base64_padding_errors()
     test_hex()
+    test_hex_bytes_per_sep_zero()
+    test_hex_bytes_per_sep_negative()
+    test_hex_sep_validated_on_empty_data()
     test_crc()
 
 
