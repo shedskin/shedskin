@@ -187,6 +187,7 @@ public:
     timedelta *__neg__();
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
     timedelta *__abs__();
+    __ss_float total_seconds();
 
     __ss_int __cmp__(timedelta *other);
     __ss_bool __eq__(timedelta *other);
