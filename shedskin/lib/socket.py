@@ -62,6 +62,9 @@ class socket(object):
     def setblocking(self, flag):
         return self
 
+    def getblocking(self):
+        return True
+
     def settimeout(self, value):
         return self
 
@@ -100,6 +103,12 @@ class socket(object):
 
     def sendto(self, bufsize, flags=0, address=0):
         return 0
+
+# FIXME CPython default is timeout=None; like settimeout()/setdefaulttimeout()
+# elsewhere in this module, None isn't supported so a negative value means
+# "no timeout given" instead.
+def create_connection(address, timeout=-1, source_address=None):
+    return socket()
 
 def getfqdn(name):
     return ''

@@ -119,6 +119,7 @@ public:
     socket *connect(inet_address address);
     socket *connect(pyseq<str *> *address);
     socket *setblocking(__ss_int flag);
+    __ss_bool getblocking() { return __mbool(_blocking); }
     socket *shutdown(__ss_int how);
     __ss_int send(str *string, __ss_int flags=0);
     __ss_int sendall(str *string, __ss_int flags=0);
@@ -140,6 +141,7 @@ public:
 
 extern str * __name__;
 void __init();
+socket *create_connection(socket::inet_address address, double timeout=-1, socket::inet_address source_address=0);
 str *gethostbyname(str *hostname);
 str *inet_aton(str *x);
 str *inet_ntoa(str *x);
