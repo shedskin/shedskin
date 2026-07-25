@@ -353,6 +353,45 @@ def test_extend_typecode_mismatch():
     assert e.tolist() == [1.0, 2.0]
 
 
+def test_extend_overflow_no_corruption():
+    # if a later element in the list is out of range for the typecode,
+    # extend() must leave exactly the elements that were successfully
+    # converted before the failure -- not a corrupted trailing element from
+    # the underlying buffer having already been grown to its final size
+    # before validation reached that far. (Note: real CPython's fromlist()
+    # is stricter still -- it validates the whole list up front and leaves
+    # the array completely untouched on any failure. Shedskin's fromlist()
+    # is implemented directly in terms of extend(), so it shares extend()'s
+    # partial-commit behavior rather than that atomic one; this test covers
+    # the corruption bug, not that CPython/shedskin discrepancy.)
+    arr2 = array.array('B')
+    try:
+        arr2.extend([1, 2, 300])
+        assert False, "expected OverflowError"
+    except OverflowError:
+        pass
+    assert arr2.tolist() == [1, 2]
+
+    # a failure on the very first element must leave the array untouched
+    arr3 = array.array('B')
+    try:
+        arr3.extend([300])
+        assert False, "expected OverflowError"
+    except OverflowError:
+        pass
+    assert arr3.tolist() == []
+
+    # extending onto a non-empty array: existing elements must survive,
+    # and no corrupted tail should appear after the failure point
+    arr4 = array.array('B', [9, 8])
+    try:
+        arr4.extend([1, 2, 300])
+        assert False, "expected OverflowError"
+    except OverflowError:
+        pass
+    assert arr4.tolist() == [9, 8, 1, 2]
+
+
 def test_all():
     test_typecodes()
     test_list()
@@ -374,6 +413,7 @@ def test_all():
     test_fromfile_ragged_short_read()
     test_setslice_typecode_mismatch()
     test_extend_typecode_mismatch()
+    test_extend_overflow_no_corruption()
 
 
 if __name__ == '__main__':
