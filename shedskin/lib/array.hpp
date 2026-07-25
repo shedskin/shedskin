@@ -36,6 +36,7 @@ public:
     }
 
     template<class U> void *__init__(str *typecode_, U *iter);
+    void *__init__(str *typecode_, bytes *b);
 
     template<class U> void *extend(U *iter);
     template<class U> void *fromlist(U *iter);
@@ -99,9 +100,32 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *
     return NULL;
 }
 
+/* CPython special-cases the constructor: a bytes-like initializer is interpreted
+ * directly as a raw buffer of machine values (like frombytes()). This does NOT
+ * apply to extend()/fromlist(), which treat bytes/bytearray as an ordinary
+ * iterable of small ints -- hence this is a separate, non-template overload
+ * rather than something extend() itself should do. */
+template<class T> void *array<T>::__init__(str *typecode_, bytes *b) {
+    typecode = typecode_;
+    typechar = typecode_->unit[0];
+    itemsize = get_itemsize(typechar);
+    frombytes(b);
+    return NULL;
+}
+
 template<class T> template<class U> void *array<T>::extend(U *iter) {
     if(iter->__class__ == cl_array) {
         array<T> *arr = (array<T> *)iter;
+        /* cl_array is a single shared class marker for *all* array
+         * specializations, so this cast alone does not guarantee 'arr'
+         * has the same typecode/itemsize as 'this' (e.g. an array('i', ...)
+         * and an array('h', ...) both instantiate array<__ss_int> and reach
+         * this branch). CPython rejects extending with a differently-typed
+         * array; without this check the raw memcpy below silently
+         * reinterprets the source bytes under the wrong itemsize and
+         * corrupts the buffer. */
+        if(this->typechar != arr->typechar)
+            throw new TypeError(new str("can only extend with array of same kind"));
         size_t s1 = this->units.size();
         size_t s2 = arr->units.size();
         this->units.resize(s1+s2);
@@ -139,7 +163,7 @@ template<class T> void *array<T>::fromstring(bytes *s) {
 
 template<class T> void *array<T>::frombytes(bytes *s) {
     size_t len = s->unit.size();
-    if(len % sizeof(T) != 0)
+    if(len % itemsize != 0)
         throw new ValueError(new str("bytes length not a multiple of item size"));
     if(len == 1)
         this->units.push_back(s->unit[0]);
@@ -239,7 +263,7 @@ template<class T> __ss_int array<T>::index(T t, __ss_int start) {
     for(__ss_int i=start; i<stop; i++)
         if(__eq(t, this->__getitem__(i)))
             return i;
-    throw new ValueError(new str("array.index(x): x not in list"));
+    throw new ValueError(new str("array.index(x): x not in array"));
 }
 
 template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
@@ -248,17 +272,22 @@ template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
     for(__ss_int i=start; i<stop; i++)
         if(__eq(t, this->__getitem__(i)))
             return i;
-    throw new ValueError(new str("array.index(x): x not in list"));
+    throw new ValueError(new str("array.index(x): x not in array"));
 }
 template<class T> void *array<T>::remove(T t) {
-    this->pop(this->index(t));
-    return NULL;
+    __ss_int len = this->__len__();
+    for(__ss_int i=0; i<len; i++)
+        if(__eq(t, this->__getitem__(i))) {
+            this->pop(i);
+            return NULL;
+        }
+    throw new ValueError(new str("array.remove(x): x not in array"));
 }
 
 template<class T> T array<T>::pop(__ss_int i) {
     __ss_int len = this->__len__();
     if(len==0)
-        throw new IndexError(new str("pop from empty list"));
+        throw new IndexError(new str("pop from empty array"));
     if(i<0) i = len+i;
     if(i<0 or i>=len)
         throw new IndexError(new str("pop index out of range"));
@@ -396,10 +425,11 @@ template<class T> void *array<T>::tofile(file_binary *f) {
 template<class T> void *array<T>::fromfile(file_binary *f, __ss_int n) {
     bytes *s = f->read(n*(__ss_int)itemsize);
     size_t len = s->__len__();
-    size_t bytes = (len/itemsize)*itemsize;
-    for(size_t i=0; i<bytes; i++)
+    if(len % itemsize != 0)
+        throw new ValueError(new str("bytes length not a multiple of item size"));
+    for(size_t i=0; i<len; i++)
         units.push_back(s->unit[i]);
-    if (len < n*itemsize)
+    if (len < (size_t)n*itemsize)
         throw new EOFError(new str("read() didn't return enough bytes"));
     return NULL;
 }
@@ -421,19 +451,21 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
         c->units.resize((u-l)*itemsize);
         memcpy(&(c->units[0]), &(this->units[l*itemsize]), (u-l)*itemsize);
     } else if(s > 0)
-        for(int i=l; i<u; i += s)
+        for(__ss_int i=l; i<u; i += s)
             for(size_t j=0; j<itemsize; j++)
-                c->units.push_back(units[i*itemsize+j]);
+                c->units.push_back(units[(size_t)i*itemsize+j]);
     else
-        for(int i=l; i>u; i += s)
+        for(__ss_int i=l; i>u; i += s)
             for(size_t j=0; j<itemsize; j++)
-                c->units.push_back(units[i*itemsize+j]);
+                c->units.push_back(units[(size_t)i*itemsize+j]);
     return c;
 }
 
 /* XXX optimize XXX */
 
 template<class T> void *array<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, array<T> *b) {
+    if(this->typecode != b->typecode)
+        throw new TypeError(new str("bad argument type for built-in operation"));
     list<T> *l2 = this->tolist();
     l2->__setslice__(x, l, u, s, b->tolist());
     this->units.clear();
