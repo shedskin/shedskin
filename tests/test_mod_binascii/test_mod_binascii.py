@@ -128,6 +128,43 @@ def test_base64_strict_mode():
     # empty input is fine in strict mode
     assert binascii.a2b_base64(b'', strict_mode=True) == b''
 
+    # regression: trailing padding right after an already-complete group
+    # (quad_pos == 0) must be *accepted* in strict mode, not rejected as
+    # "discontinuous". CPython tolerates any number of these.
+    assert binascii.a2b_base64(b'wK8j=', strict_mode=True) == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'wK8j==', strict_mode=True) == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'AAAA=', strict_mode=True) == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'AAAA====', strict_mode=True) == b'\x00\x00\x00'
+
+    # ... but real data after that trailing padding is still rejected
+    ok = False
+    try:
+        binascii.a2b_base64(b'AAAA=BBBB', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+    # regression: a single (unmatched) pad at quad_pos == 2 followed by
+    # whitespace must report the whitespace, not "discontinuous padding"
+    # (the fix must not look ahead past the whitespace to find real data)
+    ok = False
+    try:
+        binascii.a2b_base64(b'YpIygf=\rd', strict_mode=True)
+    except binascii.Error as e:
+        ok = True
+        assert 'base64 data' in str(e)
+    assert ok
+
+    # regression: a single trailing pad at quad_pos == 2 with nothing
+    # else following is "Incorrect padding", not "discontinuous padding"
+    ok = False
+    try:
+        binascii.a2b_base64(b'8H=', strict_mode=True)
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Incorrect padding'
+    assert ok
+
 
 def test_base64_padding_errors():
     # a lone data character, or any leftover bits with no closing pad,
@@ -146,6 +183,16 @@ def test_base64_padding_errors():
     assert binascii.a2b_base64(b'QQ==') == b'A'
     assert binascii.a2b_base64(b'QUJ=') == b'AB'
     assert binascii.a2b_base64(b'QUJD') == b'ABC'
+
+    # regression: the "1 more than a multiple of 4" message must include
+    # the actual data-character count, matching CPython's wording.
+    try:
+        binascii.a2b_base64(b'AAAAA')
+        assert False
+    except binascii.Error as e:
+        assert str(e) == (
+            'Invalid base64-encoded string: number of data characters '
+            '(5) cannot be 1 more than a multiple of 4')
 
 
 def test_hex():  # b2a_hex == hexlify

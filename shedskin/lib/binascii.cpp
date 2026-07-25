@@ -276,6 +276,15 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     unsigned char this_ch;
     unsigned int leftchar = 0;
     bool complete = false; /* true once a valid closing pad has been seen */
+    bool pad_after_complete = false; /* true once excess/trailing padding has
+                                      ** been seen right at a quad boundary
+                                      ** (quad_pos == 0); further padding is
+                                      ** harmless, but further *data* is not */
+    bool seen_pad_at_2 = false; /* true once a first (unmatched) pad has
+                                 ** been seen at quad_pos == 2, awaiting a
+                                 ** second pad to close the group */
+    __ss_int data_chars = 0; /* count of actual base64 data characters seen,
+                              ** for error messages */
 
     size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
     bytes *binary = new bytes(1);
@@ -306,24 +315,55 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         ** the invalid ones.
         */
         if (this_ch == BASE64_PAD) {
-            if ( (quad_pos < 2) ||
-                 ((quad_pos == 2) &&
-                  (find_valid(ascii_data, ascii_len, 1, table_a2b_base64)
-                   != BASE64_PAD)) )
-            {
-                if (strict_mode)
-                    throw new Error(new str("Discontinuous padding not allowed"));
-                continue;
-            }
-            else {
-                /* A pad sequence means no more input.
-                ** We've already interpreted the data
-                ** from the quad at this point.
+            if (quad_pos == 2 && !seen_pad_at_2) {
+                /* First pad closing a quad_pos == 2 group: this only
+                ** completes the group once a *second* pad is reached.
+                ** We deliberately don't look ahead past any whitespace
+                ** or junk in between here -- doing so would let us jump
+                ** straight to that second pad (or to real data further
+                ** along) before the character(s) in between get their
+                ** own normal per-character handling, which in strict
+                ** mode would report the wrong error (e.g. reporting
+                ** "discontinuous padding" for what should be reported as
+                ** embedded whitespace). Instead, just wait for the loop
+                ** to naturally reach whatever comes next.
                 */
-                leftbits = 0;
-                complete = true;
+                seen_pad_at_2 = true;
+                pad_after_complete = true;
                 continue;
             }
+            if (quad_pos < 2) {
+                /* quad_pos == 0: a pad right at a quad boundary is
+                ** either leading padding (already rejected above, before
+                ** the loop) or harmless excess/trailing padding after an
+                ** already-complete group -- CPython accepts any number
+                ** of these, even in strict mode.
+                **
+                ** quad_pos == 1: a single dangling data character can
+                ** never be turned into a whole byte, padded or not.
+                ** CPython doesn't error out here either; if nothing but
+                ** padding/whitespace follows, this is reported once the
+                ** whole input has been scanned, by the leftover-bits
+                ** check below.
+                **
+                ** Either way, remember that we've seen a pad here so
+                ** that, in strict mode, any further *data* (as opposed
+                ** to more padding or whitespace) can still be flagged as
+                ** discontinuous below.
+                */
+                pad_after_complete = true;
+                continue;
+            }
+
+            /* quad_pos == 3 (a single pad always closes the group), or
+            ** quad_pos == 2 with seen_pad_at_2 already set (this is the
+            ** second pad closing the group). Either way, no more input
+            ** is expected; we've already interpreted the data from the
+            ** quad at this point.
+            */
+            leftbits = 0;
+            complete = true;
+            continue;
         }
 
         this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
@@ -333,10 +373,20 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
             continue;
         }
 
+        /* Real data seen: any pending lone pad at a quad boundary was
+        ** just noise/ignorable rather than the start of a genuine
+        ** closing sequence.
+        */
+        seen_pad_at_2 = false;
+
+        if (strict_mode && pad_after_complete)
+            throw new Error(new str("Discontinuous padding not allowed"));
+
         /*
         ** Shift it in on the low end, and see if there's
         ** a byte ready for output.
         */
+        data_chars++;
         quad_pos = (quad_pos + 1) & 0x03;
         leftchar = (leftchar << 6) | (this_ch);
         leftbits += 6;
@@ -357,9 +407,11 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     */
     if (!complete && leftbits != 0) {
         if (leftbits == 6)
-            throw new Error(new str(
-                "Invalid base64-encoded string: number of data "
-                "characters cannot be 1 more than a multiple of 4"));
+            throw new Error(__add_strs(3,
+                new str("Invalid base64-encoded string: number of data "
+                        "characters ("),
+                __str(data_chars),
+                new str(") cannot be 1 more than a multiple of 4")));
         throw new Error(new str("Incorrect padding"));
     }
 
