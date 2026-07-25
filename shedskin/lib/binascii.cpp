@@ -308,7 +308,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         if (this_ch == BASE64_PAD) {
             if ( (quad_pos < 2) ||
                  ((quad_pos == 2) &&
-                  (find_valid(ascii_data, ascii_len, 2, table_a2b_base64)
+                  (find_valid(ascii_data, ascii_len, 1, table_a2b_base64)
                    != BASE64_PAD)) )
             {
                 if (strict_mode)
@@ -347,6 +347,20 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
             bin_len++;
             leftchar &= (unsigned int)((1 << leftbits) - 1);
         }
+    }
+
+    /* Check that we ended up in a valid state: no dangling data
+    ** characters without proper padding. A single leftover data
+    ** character (leftbits == 6) can never represent a whole byte;
+    ** any other nonzero leftover means the input was truncated
+    ** before a terminating pad was reached.
+    */
+    if (!complete && leftbits != 0) {
+        if (leftbits == 6)
+            throw new Error(new str(
+                "Invalid base64-encoded string: number of data "
+                "characters cannot be 1 more than a multiple of 4"));
+        throw new Error(new str("Incorrect padding"));
     }
 
     /* And set string size correctly. If the result string is empty
