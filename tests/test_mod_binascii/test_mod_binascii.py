@@ -292,6 +292,26 @@ def test_hex():  # b2a_hex == hexlify
     assert binascii.a2b_hex(b2a) == input_bytes
 
 
+# regression test: unhexlify indexed its lookup table with a signed
+# char, so any input byte >= 0x80 sign-extended into a negative
+# (out-of-bounds) index instead of being rejected as invalid hex.
+def test_unhexlify_high_bit_bytes_rejected():
+    for bad in (0x80, 0xff, 0xfe, 0x81):
+        ok = False
+        try:
+            binascii.unhexlify(bytes([bad, 0x30]))
+        except binascii.Error:
+            ok = True
+        assert ok, f"byte 0x{bad:02x} should have been rejected as invalid hex"
+
+        ok = False
+        try:
+            binascii.a2b_hex(bytes([0x30, bad]))
+        except binascii.Error:
+            ok = True
+        assert ok, f"byte 0x{bad:02x} should have been rejected as invalid hex"
+
+
 # regression test: bytes_per_sep=0 used to divide/modulo by zero and crash
 # the process with SIGFPE. CPython instead treats 0 the same as "no
 # separators requested" (matching hexlify(data) with no sep at all).
@@ -362,6 +382,7 @@ def test_all():
     test_base64_strict_mode()
     test_base64_padding_errors()
     test_hex()
+    test_unhexlify_high_bit_bytes_rejected()
     test_hex_bytes_per_sep_zero()
     test_hex_bytes_per_sep_negative()
     test_hex_sep_validated_on_empty_data()
