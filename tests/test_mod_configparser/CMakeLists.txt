@@ -1,6 +1,7 @@
 add_shedskin_product(
     SYS_MODULES
         configparser
+        io
         os
         os.path
         re

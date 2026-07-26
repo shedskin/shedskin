@@ -18,7 +18,7 @@ dep_graph = {
     "bisect": [],
     "collections": [],
     "colorsys": [],
-    "configparser": ["re"],
+    "configparser": ["re", "io"],
     "copy": [],
     "csv": [],
     "datetime": ["time", "string"],

@@ -52,17 +52,22 @@ ConfigParser -- responsible for parsing a list of
         name.  A single filename is also allowed.  Non-existing files
         are ignored.  Return list of successfully read files.
 
-    readfp(fp, filename=None)
-        read and parse one configuration file, given as a file object.
-        The filename defaults to fp.name; it is only used in error
-        messages (if fp has no `name' attribute, the string `<???>' is used).
+    read_string(string, source='<string>')
+        read and parse configuration data from the given string, as if it
+        were the contents of a file.
 
-    get(section, option, raw=False, vars=None)
+    read_dict(dictionary, source='<dict>')
+        read configuration from a dict of dicts (section name -> option
+        name -> value); existing sections are extended, new ones created.
+
+    get(section, option, raw=False, vars=None, fallback=None)
         return a string value for the named option.  All % interpolations are
         expanded in the return values, based on the defaults passed into the
         constructor and the DEFAULT section.  Additional substitutions may be
         provided using the `vars' argument, which must be a dictionary whose
-        contents override any pre-existing defaults.
+        contents override any pre-existing defaults.  If the section/option
+        isn't found and `fallback' is given (non-None), it is returned
+        instead of raising NoSectionError/NoOptionError.
 
     getint(section, options)
         like get(), but convert value to an integer
@@ -95,7 +100,7 @@ ConfigParser -- responsible for parsing a list of
 namespace __configparser__ {
 
 tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -104,12 +109,10 @@ str * default_11;
 __ss_int  default_10;
 __ss_int  default_13;
 __ss_int  default_23;
-__ss_int  default_2;
 __ss_int  default_25;
 __ss_int  default_28;
 __ss_int  default_1;
 __ss_int  default_5;
-__ss_int  default_3;
 __ss_int  default_19;
 __ss_int  default_29;
 __ss_int  default_12;
@@ -517,29 +520,37 @@ list<str *> *RawConfigParser::sections() {
     return new list<str *>((this->_sections)->keys());
 }
 
-str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *> *) {
+str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *> *, str *fallback) {
     str *opt;
 
     opt = this->optionxform(option);
-    if ((!(this->_sections)->__contains__(section))) {
-        if (__ne(section, DEFAULTSECT)) {
-            throw ((new NoSectionError(section)));
+    try {
+        if ((!(this->_sections)->__contains__(section))) {
+            if (__ne(section, DEFAULTSECT)) {
+                throw ((new NoSectionError(section)));
+            }
+            if ((this->_defaults)->__contains__(opt)) {
+                return (this->_defaults)->__getitem__(opt);
+            }
+            else {
+                throw ((new NoOptionError(option,section)));
+            }
         }
-        if ((this->_defaults)->__contains__(opt)) {
+        else if (((this->_sections)->__getitem__(section))->__contains__(opt)) {
+            return ((this->_sections)->__getitem__(section))->__getitem__(opt);
+        }
+        else if ((this->_defaults)->__contains__(opt)) {
             return (this->_defaults)->__getitem__(opt);
         }
         else {
             throw ((new NoOptionError(option,section)));
         }
-    }
-    else if (((this->_sections)->__getitem__(section))->__contains__(opt)) {
-        return ((this->_sections)->__getitem__(section))->__getitem__(opt);
-    }
-    else if ((this->_defaults)->__contains__(opt)) {
-        return (this->_defaults)->__getitem__(opt);
-    }
-    else {
-        throw ((new NoOptionError(option,section)));
+    } catch (NoSectionError *) {
+        if (fallback != NULL) return fallback;
+        throw;
+    } catch (NoOptionError *) {
+        if (fallback != NULL) return fallback;
+        throw;
     }
     return (str *)NULL;
 }
@@ -625,7 +636,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     and just about everything else are ignored.
     */
     __re__::match_object *mo;
-    __ss_int __33, __35, __41, __43, lineno, pos;
+    __ss_int __33, __41, __43, lineno, pos;
 
     ParsingError *e;
     str *line, *optname, *optval, *sectname, *value, *vi;
@@ -643,9 +654,6 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         }
         lineno = (lineno+1);
         if (__OR(__eq(line->strip(), const_17), (const_18)->__contains__(line->__getitem__(0)), 33)) {
-            continue;
-        }
-        if (__AND(__eq(((line->split(NULL, 1))->__getfast__(0))->lower(), const_19), (const_20)->__contains__(line->__getitem__(0)), 35)) {
             continue;
         }
         if (((line->__getitem__(0))->isspace() && (cursect!=0) && ___bool(optname))) {
@@ -704,6 +712,58 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     if (___bool(e)) {
         throw (e);
     }
+    return NULL;
+}
+
+void *RawConfigParser::read_string(str *string_, str *source) {
+    /**
+    Read configuration from a given string, as if it were the contents
+    of a file.
+    */
+    __io__::StringIO *sfile;
+
+    if (source == NULL) {
+        source = new str("<string>");
+    }
+    sfile = new __io__::StringIO(string_);
+    this->_read(sfile, source);
+    return NULL;
+}
+
+void *RawConfigParser::read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source) {
+    /**
+    Read configuration from a dict of dicts (section name -> option name
+    -> value). Existing sections are extended in place, new ones created.
+
+    `source` is accepted for signature compatibility with CPython but is
+    currently unused: this parser doesn't implement strict-mode duplicate
+    detection (DuplicateSectionError/DuplicateOptionError) for read_dict yet.
+    */
+    dict<str *, dict<str *, str *> *> *__300;
+    int __301;
+    dict<str *, dict<str *, str *> *>::for_in_loop __302;
+    str *section, *key, *value;
+    dict<str *, str *> *keys;
+    tuple<str *> *pair;
+    __iter<tuple<str *> *> *__310;
+    __ss_int __311;
+    __iter<tuple<str *> *>::for_in_loop __312;
+
+    (void)source;
+
+    FOR_IN(section,dictionary,300,301,302)
+        if (__ne(section, DEFAULTSECT) && (!(this->_sections)->__contains__(section))) {
+            this->add_section(section);
+        }
+        keys = dictionary->__getitem__(section);
+
+        FOR_IN(pair,keys->items(),310,311,312)
+            key = pair->__getfirst__();
+            value = pair->__getsecond__();
+            this->_set(section, key, value);
+        END_FOR
+    END_FOR
+
     return NULL;
 }
 
@@ -772,7 +832,7 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
     return value;
 }
 
-str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
+str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback) {
     /**
     Get an option value for a given section.
 
@@ -783,6 +843,9 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     any pre-existing defaults.
 
     The section DEFAULT is special.
+
+    If the section/option isn't found and `fallback' is given (non-None),
+    it is returned instead of raising NoSectionError/NoOptionError.
     */
     __ss_int __49;
     tuple<str *> *__46;
@@ -792,35 +855,43 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
 
     __iter<tuple<str *> *>::for_in_loop __123;
 
-    d = (this->_defaults)->copy();
     try {
-        d->update((this->_sections)->__getitem__(section));
-    } catch (KeyError *) {
-        if (__ne(section, DEFAULTSECT)) {
-            throw ((new NoSectionError(section)));
+        d = (this->_defaults)->copy();
+        try {
+            d->update((this->_sections)->__getitem__(section));
+        } catch (KeyError *) {
+            if (__ne(section, DEFAULTSECT)) {
+                throw ((new NoSectionError(section)));
+            }
         }
-    }
-    if (___bool(vars)) {
+        if (___bool(vars)) {
 
-        FOR_IN(__46,vars->items(),47,49,123)
-            __46 = __46;
-            key = __46->__getfirst__();
-            value = __46->__getsecond__();
-            d->__setitem__(this->optionxform(key), value);
-        END_FOR
+            FOR_IN(__46,vars->items(),47,49,123)
+                __46 = __46;
+                key = __46->__getfirst__();
+                value = __46->__getsecond__();
+                d->__setitem__(this->optionxform(key), value);
+            END_FOR
 
-    }
-    option = this->optionxform(option);
-    try {
-        value = d->__getitem__(option);
-    } catch (KeyError *) {
-        throw ((new NoOptionError(option,section)));
-    }
-    if (raw) {
-        return value;
-    }
-    else {
-        return this->_interpolate(section, option, value, d);
+        }
+        option = this->optionxform(option);
+        try {
+            value = d->__getitem__(option);
+        } catch (KeyError *) {
+            throw ((new NoOptionError(option,section)));
+        }
+        if (raw) {
+            return value;
+        }
+        else {
+            return this->_interpolate(section, option, value, d);
+        }
+    } catch (NoSectionError *) {
+        if (fallback != NULL) return fallback;
+        throw;
+    } catch (NoOptionError *) {
+        if (fallback != NULL) return fallback;
+        throw;
     }
     return (str *)NULL;
 }
@@ -912,8 +983,6 @@ void __init() {
     const_16 = new str("Not a boolean: %s");
     const_17 = new str("");
     const_18 = new str("#;");
-    const_19 = new str("rem");
-    const_20 = new str("rR");
     const_21 = new str("%s\n%s");
     const_22 = new str("header");
     const_23 = new str("option");
@@ -970,8 +1039,6 @@ void __init() {
     MAX_INTERPOLATION_DEPTH = 10;
     default_0 = const_17;
     default_1 = 0;
-    default_2 = 0;
-    default_3 = 0;
     default_4 = 0;
     default_5 = 0;
     default_6 = 0;
