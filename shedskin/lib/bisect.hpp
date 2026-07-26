@@ -16,10 +16,11 @@ void __pos_check(__ss_int lo, __ss_int hi);
 template <class A, class B> void *insort_left(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
+    B key_x = key(x);
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__lt(key(a->units[mid]), key(x)))
+        if (__lt(key(a->units[mid]), key_x))
             lo = (mid+1);
         else
             hi = mid;
@@ -49,10 +50,11 @@ template <class A> void *insort_left(long int /* key = None */, list<A> *a, A x,
 template <class A, class B> void *insort_right(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
     __pos_check(lo, hi);
+    B key_x = key(x);
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__lt(key(x), key(a->units[mid]))) {
+        if (__lt(key_x, key(a->units[mid]))) {
             hi = mid;
         }
         else {
