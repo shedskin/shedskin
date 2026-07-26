@@ -14,6 +14,7 @@ template <class A> class deque;
 template <class T> class __dequeiter;
 
 extern class_ *cl_deque;
+extern class_ *cl_defaultdict;
 template <class A> class deque : public pyiter<A> {
 public:
 #ifdef __SS_NOGC
@@ -29,6 +30,8 @@ public:
 
     deque(pyiter<A> *iterable=0, __ss_int _maxlen=-1) {
         this->__class__ = cl_deque;
+        if(_maxlen < -1)
+            throw new ValueError(new str("maxlen must be non-negative"));
         this->maxlen = _maxlen;
         if(iterable)
             extend(iterable);
@@ -109,6 +112,10 @@ public:
             if(!__eq(units[i], b->units[i]))
                 return False;
         return True;
+    }
+
+    __ss_int __hash__() {
+        throw new TypeError(new str("unhashable type: 'deque'"));
     }
 
     __ss_bool __contains__(A value) {
@@ -293,16 +300,19 @@ template <class K, class V> class defaultdict : public dict<K, V> {
 
 public:
     defaultdict(V (*func_)()=NULL) {
+        this->__class__ = cl_defaultdict;
         func = func_;
     }
 
     defaultdict(V (*func_)(), dict<K, V> *d) : dict<K,V>(d) {
+        this->__class__ = cl_defaultdict;
         func = func_;
     }
 
     defaultdict(V (*func_)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
+        this->__class__ = cl_defaultdict;
         func = func_;
-        tuple2<K, __ss_int> *k;
+        tuple2<K, V> *k;
         typename pyiter<tuple2<K, V> *>::for_in_loop __3;
         int __2;
         pyiter<tuple2<K, V> *> *__1;
@@ -347,8 +357,25 @@ public:
     }
 
     defaultdict<K, V> *copy() {
-        defaultdict<K,V> *c = new defaultdict<K,V>;
+        defaultdict<K,V> *c = new defaultdict<K,V>(func);
         c->gcd = this->gcd;
+        return c;
+    }
+
+    defaultdict<K, V> *__copy__() {
+        return copy();
+    }
+
+    defaultdict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo) {
+        defaultdict<K,V> *c = new defaultdict<K,V>(func);
+        memo->__setitem__(this, c);
+        K e;
+        typename dict<K,V>::for_in_loop __3;
+        int __2;
+        dict<K,V> *__1;
+        FOR_IN(e,this,1,2,3)
+            c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
+        END_FOR
         return c;
     }
 
@@ -368,7 +395,7 @@ public:
         if(!PyDict_Check(p))
             throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
 
-        this->__class__ = cl_dict;
+        this->__class__ = cl_defaultdict;
         PyObject *key, *value;
 
         PyObject *iter = PyObject_GetIter(p);
