@@ -102,6 +102,10 @@ def test_isidentifier():
     assert 'Bla_'.isidentifier()
     assert not '9bla'.isidentifier()
     assert not ''.isidentifier()
+    assert 'x1'.isidentifier()
+    assert 'abc123'.isidentifier()
+    assert 'valid_name42'.isidentifier()
+    assert '_9foo'.isidentifier()
 
 
 def test_islower():
