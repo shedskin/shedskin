@@ -167,7 +167,7 @@ bytes *a2b_uu(bytes *string) {
         /* Extra '`' may be written as padding in some cases */
         if ( this_ch != ' ' && this_ch != ' '+64 &&
              this_ch != '\n' && this_ch != '\r' ) {
-            throw new Error(0);
+            throw new Error(new str("Trailing garbage"));
         }
     }
 
