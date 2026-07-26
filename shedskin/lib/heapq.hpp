@@ -36,15 +36,29 @@ template<class T, class Key> struct InvCmp {
     }
 };
 
+template<class T> inline __ss_int _cmp_index(const T& a, const T& b) {
+    if (a < b) return -1;
+    else if (a > b) return 1;
+    return 0;
+}
+
 template<class T, class Key> struct CmpSecond {
     Key key;
     CmpSecond(Key key) : key(key) {}
 
     inline __ss_int operator()(T& first, T& second) const {
+        __ss_int c;
         if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
-            return __cmp(first.second, second.second);
+            c = __cmp(first.second, second.second);
         else
-            return __cmp(key(first.second), key(second.second));
+            c = __cmp(key(first.second), key(second.second));
+        /* break ties by iterable index (first.first), matching CPython's
+         * heapq.merge, which preserves the relative order of the input
+         * iterables for equal elements. Without this, the heap's internal
+         * structure decides ties arbitrarily. */
+        if (c != 0)
+            return c;
+        return _cmp_index(first.first, second.first);
     }
 };
 
@@ -53,10 +67,17 @@ template<class T, class Key> struct InvCmpSecond {
     InvCmpSecond(Key key) : key(key) {}
 
     inline __ss_int operator()(T& first, T& second) const {
+        __ss_int c;
         if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
-            return -__cmp(first.second, second.second);
+            c = -__cmp(first.second, second.second);
         else
-            return -__cmp(key(first.second), key(second.second));
+            c = -__cmp(key(first.second), key(second.second));
+        /* tie-break by iterable index, same direction as CmpSecond (not
+         * inverted): reverse only affects value ordering, not which of two
+         * equal-valued iterables should come first. */
+        if (c != 0)
+            return c;
+        return _cmp_index(first.first, second.first);
     }
 };
 

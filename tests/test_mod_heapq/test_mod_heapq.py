@@ -158,6 +158,24 @@ def test_merge():
     assert list(heapq.merge(['Arie', 'ans', 'aap'], ['ANSJOVIS', 'ALAAF', 'alaaf'], key=lambda x:x.lower(), reverse=True)) == ['Arie', 'ANSJOVIS', 'ans', 'ALAAF', 'alaaf', 'aap']
 
 
+def test_merge_stable_ties():
+    # regression test: for equal elements, heapq.merge must preserve the
+    # relative order of the input iterables (like CPython), not whatever
+    # order the internal heap structure happens to produce.
+    a = [Bert(1, 1), Bert(2, 1), Bert(3, 1)]
+    b = [Bert(1, 2), Bert(2, 2), Bert(3, 2)]
+    c = [Bert(1, 3), Bert(2, 3)]
+    tags = [bert.tag for bert in heapq.merge(a, b, c)]
+    assert tags == [1, 2, 3, 1, 2, 3, 1, 2]
+
+    # same guarantee must hold with reverse=True
+    a2 = [Bert(3, 1), Bert(2, 1), Bert(1, 1)]
+    b2 = [Bert(3, 2), Bert(2, 2), Bert(1, 2)]
+    c2 = [Bert(3, 3), Bert(2, 3)]
+    tags2 = [bert.tag for bert in heapq.merge(a2, b2, c2, reverse=True)]
+    assert tags2 == [1, 2, 3, 1, 2, 3, 1, 2]
+
+
 def test_nlargest():
     assert list(heapq.nlargest(5, [3, 15, 56, 38, 49, 12, 41])) == [56, 49, 41, 38, 15]
     assert list(heapq.nlargest(5, [3, 15])) == [15, 3]
@@ -261,6 +279,7 @@ def test_all():
     test_heapreplace_max()
 
     test_merge()
+    test_merge_stable_ties()
 
     test_nlargest()
     test_nsmallest()
