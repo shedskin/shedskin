@@ -428,7 +428,7 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
 }
 
 template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) {
-    set<T>* result = new set<T>;
+    set<T>* result = new set<T>(this->frozen);
 
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -481,7 +481,7 @@ template<class T> template<class U, class V, class W> set<T>* set<T>::difference
 
 template <class T> set<T>* set<T>::difference(int, set<T> *other)
 {
-    set<T>* result = new set<T>();
+    set<T>* result = new set<T>(this->frozen);
     for (const auto& key : gcs)
         if (!other->__contains__(key))
             result->gcs.insert(key);
