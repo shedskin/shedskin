@@ -430,6 +430,28 @@ def test_quote_notnull_writer():
     assert lines[0].strip() == '"hello",,"world"'
 
 
+def test_eof_mid_row():
+    # regression test: if the underlying iterator runs out while a row is
+    # still being parsed (e.g. an unterminated quoted field, or a trailing
+    # delimiter, on the last line), the row must still be returned rather
+    # than silently dropped.
+    result = list(csv.reader(['"a""b",c', '"unterminated']))
+    assert result == [
+        ['a"b', 'c'],
+        ['unterminated'],
+    ]
+
+    result2 = list(csv.reader(['a,']))
+    assert result2 == [['a', '']]
+
+    # a genuinely empty input must still yield no rows at all
+    empty = []  # type: list[str]
+    empty.append('x')
+    empty.pop()
+    result3 = list(csv.reader(empty))
+    assert result3 == []
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -444,6 +466,7 @@ def test_all():
     test_writerow_single_empty_field()
     test_quote_strings_writer()
     test_quote_notnull_writer()
+    test_eof_mid_row()
 
 
 if __name__ == "__main__":
