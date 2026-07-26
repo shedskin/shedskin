@@ -140,6 +140,9 @@ class Shedskin:
             if args.boost:
                 gx.boost = True
 
+            if args.predict:
+                gx.predict = True
+
             if args.noassert:
                 gx.assertions = False
 
@@ -326,6 +329,14 @@ class Shedskin:
         grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
         grp("-z", "--nozero", help="Disable zero-division checking", action="store_true")
         grp("--boost", help="Use boost containers", action="store_true")
+        grp(
+            "--predict",
+            help="Experimental: adapt per-call-site list capacity online, "
+            "during a single run, based on observed list.append() growth "
+            "(list comprehensions and list.append() for now). Learning "
+            "resets at each program start; nothing is persisted across runs",
+            action="store_true",
+        )
 
         # Compiler options (debug, extmod, dirs, output, etc.)
         parsers["compiler"] = argparse.ArgumentParser(add_help=False)

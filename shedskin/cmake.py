@@ -761,11 +761,15 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
+    if gx.predict:
+        compile_options.append("-D__SS_PREDICT")
     compile_opts = " ".join(compile_options)
 
     cmdline_options = []
     if gx.options.collect_stats:
         cmdline_options.append("--collect-stats")
+    if gx.predict:
+        cmdline_options.append("--predict")
     cmdline_opts = " ".join(cmdline_options)
 
     for module in modules:
