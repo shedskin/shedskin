@@ -16,19 +16,25 @@
 #include <new>
 
 /* gc_cpp.h only redirects the classic, non-aligned, throwing global
- * operator new/delete to the GC heap. C++17 introduced a separate
- * overload set for over-aligned allocation (std::align_val_t) and
- * there is also the pre-existing nothrow overload set; neither is
- * covered by gc_cpp.h. Any allocation that goes through one of these
- * uncovered overloads therefore bypasses GC_MALLOC and lands in the
- * plain system allocator, producing memory the collector never scans.
- * If a pointer into a GC-managed object is ever stored only in such a
+ * operator new/delete to the GC heap. C++14 added a separate sized
+ * deallocation overload, and C++17 added another overload set for
+ * over-aligned allocation (std::align_val_t), plus there is the
+ * pre-existing nothrow overload set; none of these are covered by
+ * gc_cpp.h. Any allocation that goes through one of these uncovered
+ * overloads therefore bypasses GC_MALLOC and lands in the plain
+ * system allocator, producing memory the collector never scans. If a
+ * pointer into a GC-managed object is ever stored only in such a
  * buffer (e.g. a standard library algorithm's internal scratch space,
- * such as libc++'s std::stable_sort merge buffer), a collection that
- * runs while it's live there can reclaim the object out from under it,
- * leading to a dangling pointer and, eventually, a crash. Redirect
- * these remaining overloads to GC_MALLOC as well so *all* allocation
- * paths stay inside the traced heap. */
+ * such as std::stable_sort's merge buffer, allocated via the nothrow
+ * operator new below but released via the plain sized operator
+ * delete(void*, size_t)), a collection that runs while it's live
+ * there can reclaim the object out from under it -- or, since the
+ * sized delete overload here was previously missing entirely, the
+ * pointer can instead be handed to the system allocator's free()
+ * even though it was never obtained from malloc, aborting immediately
+ * with "free(): invalid pointer". Redirect these remaining overloads
+ * to GC_MALLOC (and make the matching deletes no-ops) so *all*
+ * allocation paths stay inside the traced heap. */
 inline void *operator new(std::size_t sz, std::align_val_t) {
     return GC_MALLOC(sz);
 }
@@ -52,7 +58,13 @@ inline void *operator new[](std::size_t sz, std::align_val_t,
 
 /* GC_MALLOC'd memory is reclaimed by the collector itself, so the
  * matching deallocation overloads are deliberate no-ops (consistent
- * with how gc_cpp.h treats the classic operator delete). */
+ * with how gc_cpp.h treats the classic operator delete). This sized
+ * overload in particular is the one std::stable_sort's temporary
+ * buffer (stl_tempbuf.h's __return_temporary_buffer) actually calls;
+ * without it, freeing that buffer falls through to the system
+ * allocator's free() on a GC_MALLOC'd pointer and aborts. */
+inline void operator delete(void *, std::size_t) noexcept {}
+inline void operator delete[](void *, std::size_t) noexcept {}
 inline void operator delete(void *, std::align_val_t) noexcept {}
 inline void operator delete[](void *, std::align_val_t) noexcept {}
 inline void operator delete(void *, const std::nothrow_t &) noexcept {}
