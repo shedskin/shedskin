@@ -91,3 +91,5 @@ class array:
 
     def __copy__(self):
         return self
+    def __repr__(self):
+        return ''
