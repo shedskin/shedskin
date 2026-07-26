@@ -276,6 +276,19 @@ def test_crc():
     assert crc == 53552
 
 
+def test_crc_hqx_high_bit_bytes():
+    # regression test: crc_hqx indexed its lookup table with a signed
+    # char, so any input byte >= 0x80 sign-extended into a negative
+    # (out-of-bounds) index instead of being treated as 0-255.
+    data = bytes(range(256))
+    assert binascii.crc_hqx(data, 0) == 32341
+    assert binascii.crc_hqx(data, 12) == 8465
+
+    data2 = bytes([0x8b, 0xff, 0x00, 0x80, 0x7f, 0xde, 0xad, 0xbe, 0xef])
+    assert binascii.crc_hqx(data2, 0) == 18254
+    assert binascii.crc_hqx(data2, 0xffff) == 24380
+
+
 def test_all():
     test_qp()
     test_uu()
@@ -287,6 +300,7 @@ def test_all():
     test_hex_bytes_per_sep_negative()
     test_hex_sep_validated_on_empty_data()
     test_crc()
+    test_crc_hqx_high_bit_bytes()
 
 
 if __name__ == '__main__':
