@@ -30,6 +30,8 @@ public:
 
     deque(pyiter<A> *iterable=0, __ss_int _maxlen=-1) {
         this->__class__ = cl_deque;
+        if(_maxlen < -1)
+            throw new ValueError(new str("maxlen must be non-negative"));
         this->maxlen = _maxlen;
         if(iterable)
             extend(iterable);

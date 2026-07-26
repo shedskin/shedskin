@@ -268,6 +268,25 @@ def test_deque_insert_out_of_range():
     assert list(g) == [1, 2, 9, 3]
 
 
+def test_deque_maxlen_negative():
+    # regression test: maxlen used the C++ sentinel -1 to mean "no maxlen",
+    # but any other negative value (e.g. -5) silently also behaved as
+    # unbounded instead of raising ValueError like real deque, because the
+    # bound check compared a signed maxlen against an unsigned size() and
+    # always came out false for negative values
+    raised = False
+    try:
+        deque([1, 2, 3], maxlen=-5)
+    except ValueError:
+        raised = True
+    assert raised
+
+    # 0 is a legitimate maxlen (always-empty deque) and must still work
+    d = deque([1, 2, 3], maxlen=0)
+    assert list(d) == []
+    assert d.maxlen == 0
+
+
 def test_deque_remove_missing():
     d = deque([1,2,3])
     raised = False
@@ -307,6 +326,7 @@ def test_all():
     test_deque4()
     test_deque_maxlen()
     test_deque_maxlen_on_init()
+    test_deque_maxlen_negative()
     test_deque_eq()
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
