@@ -273,6 +273,19 @@ def test_deque_remove_missing():
     assert list(d) == [1,2,3]
 
 
+def test_deque_unhashable():
+    # regression test: deque defines __eq__ but had no __hash__ override,
+    # so it silently fell back to the default identity-based hash instead
+    # of being unhashable like real deque (and like this module's dict)
+    d = deque([1, 2, 3])
+    raised = False
+    try:
+        hash(d)
+    except TypeError:
+        raised = True
+    assert raised
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -290,6 +303,7 @@ def test_all():
     test_deque_eq()
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
+    test_deque_unhashable()
 
 
 if __name__ == '__main__':
