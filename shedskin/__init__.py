@@ -113,11 +113,11 @@ class Shedskin:
             if args.int64:
                 gx.int64 = True
 
-            if args.int128:
-                if platform.system() == "Windows":
-                    self.log.error("--int128 not supported on windows")
-                    sys.exit(1)
-                gx.int128 = True
+#            if args.int128:
+#                if platform.system() == "Windows":
+#                    self.log.error("--int128 not supported on windows")
+#                    sys.exit(1)
+#                gx.int128 = True
 
             if args.float32:
                 gx.float32 = True
@@ -316,7 +316,7 @@ class Shedskin:
         grp = parsers["types"].add_argument
         grp("--int32", help="Use 32-bit integers", action="store_true")
         grp("--int64", help="Use 64-bit integers", action="store_true")
-        grp("--int128", help="Use 128-bit integers", action="store_true")
+#        grp("--int128", help="Use 128-bit integers", action="store_true")
         grp("--float32", help="Use 32-bit floats", action="store_true")
         grp("--float64", help="Use 64-bit floats", action="store_true")
 
