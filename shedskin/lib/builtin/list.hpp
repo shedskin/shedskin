@@ -561,20 +561,20 @@ template<class T> void *list<T>::reverse() {
 template<class T> template <class U> void *list<T>::sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse) {
     if(key) {
         if(reverse)
-            std::sort(units.begin(), units.end(), cpp_cmp_key_rev<T, U>(key));
+            std::stable_sort(units.begin(), units.end(), cpp_cmp_key_rev<T, U>(key));
         else
-            std::sort(units.begin(), units.end(), cpp_cmp_key<T, U>(key));
+            std::stable_sort(units.begin(), units.end(), cpp_cmp_key<T, U>(key));
     }
     else if(cmp) {
         if(reverse)
-            std::sort(units.begin(), units.end(), cpp_cmp_custom_rev<T>(cmp));
+            std::stable_sort(units.begin(), units.end(), cpp_cmp_custom_rev<T>(cmp));
         else
-            std::sort(units.begin(), units.end(), cpp_cmp_custom<T>(cmp));
+            std::stable_sort(units.begin(), units.end(), cpp_cmp_custom<T>(cmp));
     } else {
         if(reverse)
-            std::sort(units.begin(), units.end(), cpp_cmp_rev<T>);
+            std::stable_sort(units.begin(), units.end(), cpp_cmp_rev<T>);
         else
-            std::sort(units.begin(), units.end(), cpp_cmp<T>);
+            std::stable_sort(units.begin(), units.end(), cpp_cmp<T>);
     }
 
     return NULL;

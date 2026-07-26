@@ -13,6 +13,54 @@
 #endif
 #include <gc/gc_allocator.h>
 #include <gc/gc_cpp.h>
+#include <new>
+
+/* gc_cpp.h only redirects the classic, non-aligned, throwing global
+ * operator new/delete to the GC heap. C++17 introduced a separate
+ * overload set for over-aligned allocation (std::align_val_t) and
+ * there is also the pre-existing nothrow overload set; neither is
+ * covered by gc_cpp.h. Any allocation that goes through one of these
+ * uncovered overloads therefore bypasses GC_MALLOC and lands in the
+ * plain system allocator, producing memory the collector never scans.
+ * If a pointer into a GC-managed object is ever stored only in such a
+ * buffer (e.g. a standard library algorithm's internal scratch space,
+ * such as libc++'s std::stable_sort merge buffer), a collection that
+ * runs while it's live there can reclaim the object out from under it,
+ * leading to a dangling pointer and, eventually, a crash. Redirect
+ * these remaining overloads to GC_MALLOC as well so *all* allocation
+ * paths stay inside the traced heap. */
+inline void *operator new(std::size_t sz, std::align_val_t) {
+    return GC_MALLOC(sz);
+}
+inline void *operator new[](std::size_t sz, std::align_val_t) {
+    return GC_MALLOC(sz);
+}
+inline void *operator new(std::size_t sz, const std::nothrow_t &) noexcept {
+    return GC_MALLOC(sz);
+}
+inline void *operator new[](std::size_t sz, const std::nothrow_t &) noexcept {
+    return GC_MALLOC(sz);
+}
+inline void *operator new(std::size_t sz, std::align_val_t,
+                           const std::nothrow_t &) noexcept {
+    return GC_MALLOC(sz);
+}
+inline void *operator new[](std::size_t sz, std::align_val_t,
+                             const std::nothrow_t &) noexcept {
+    return GC_MALLOC(sz);
+}
+
+/* GC_MALLOC'd memory is reclaimed by the collector itself, so the
+ * matching deallocation overloads are deliberate no-ops (consistent
+ * with how gc_cpp.h treats the classic operator delete). */
+inline void operator delete(void *, std::align_val_t) noexcept {}
+inline void operator delete[](void *, std::align_val_t) noexcept {}
+inline void operator delete(void *, const std::nothrow_t &) noexcept {}
+inline void operator delete[](void *, const std::nothrow_t &) noexcept {}
+inline void operator delete(void *, std::align_val_t,
+                             const std::nothrow_t &) noexcept {}
+inline void operator delete[](void *, std::align_val_t,
+                               const std::nothrow_t &) noexcept {}
 #endif
 
 #ifdef __SS_BOOST
