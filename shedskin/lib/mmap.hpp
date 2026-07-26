@@ -58,7 +58,7 @@ class __mmapiter;
  * mmap class.
  * ref: http://docs.python.org/library/mmap.html
  */
-class mmap: public pyobj
+class mmap: public pyiter<bytes *>
 {
   public:
     typedef char* iterator;
@@ -178,7 +178,8 @@ class __mmapiter : public __iter<bytes *>
 {
   public:
     mmap *map;
-    __mmapiter(mmap *map_) : map(map_) {}
+    size_t pos;
+    __mmapiter(mmap *map_) : map(map_), pos(0) {}
     bytes *__next__();
 };
 

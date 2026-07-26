@@ -1,4 +1,4 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
 PAGESIZE = 0x1000
@@ -15,7 +15,7 @@ MAP_EXECUTABLE = 4096
 MAP_POPULATE = 32768
 MAP_STACK = 131072
 
-class mmap:
+class mmap(pyiter):
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
         pass
 
@@ -24,10 +24,10 @@ class mmap:
 
     def close(self):
         pass
-    
+
     def __enter__(self):
         pass
-    
+
     def __exit__(self):
         pass
 
@@ -74,7 +74,7 @@ class mmap:
         return False
 
     def __iter__(self):
-        return __mmapiter()
+        return __iter(b'')
 
     def __len__(self):
         return 0
@@ -90,7 +90,3 @@ class mmap:
 
     def __setslice__(self, kind, lower, upper, step, sequence):
         pass
-
-class __mmapiter:
-    def __next__(self):
-        return b''
