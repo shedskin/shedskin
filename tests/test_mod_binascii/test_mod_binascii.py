@@ -112,6 +112,31 @@ def test_base64():
     assert binascii.a2b_base64(b2a) == input_bytes
 
 
+def test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input():
+    # regression test: both b2a_uu and b2a_base64 accumulate bytes into
+    # a signed accumulator ("leftchar") that, unlike its a2b_uu and
+    # a2b_base64 counterparts, was never masked back down after each
+    # 6-bit group was extracted. Every remaining bit ever shifted in
+    # stayed in the value forever, so leftchar's magnitude grew by 8
+    # bits per input byte with no bound -- for any input longer than a
+    # handful of bytes this overflows the signed accumulator, which is
+    # undefined behavior (caught by UBSan), even though the shift-and-
+    # mask used to pull out each 6-bit group happens to read the
+    # correct bits regardless. These exercise inputs long enough to
+    # have triggered it.
+    data45 = bytes(range(45))
+    assert binascii.b2a_uu(data45) == b'M  $" P0%!@<("0H+# T.#Q 1$A,4%187&!D:&QP=\'A\\@(2(C)"4F)R@I*BLL\n'
+
+    data200 = bytes(range(200))
+    assert binascii.b2a_base64(data200) == (
+        b'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4v'
+        b'MDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5f'
+        b'YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6P'
+        b'kJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/'
+        b'wMHCw8TFxsc=\n'
+    )
+
+
 def test_base64_strict_mode():
     # valid data is accepted in strict mode
     assert binascii.a2b_base64(b'SGVsbG8h', strict_mode=True) == b'Hello!'
@@ -333,6 +358,7 @@ def test_all():
     test_uu()
     test_a2b_uu_short_input()
     test_base64()
+    test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input()
     test_base64_strict_mode()
     test_base64_padding_errors()
     test_hex()
