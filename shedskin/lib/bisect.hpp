@@ -87,6 +87,10 @@ template <class A> void *insort(__ss_int, list<A> *a, A x, __ss_int lo, __ss_int
     return insort_right((A (*)(A))0, a, x, lo, hi);
 }
 
+template <class A, class B> void *insort(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
+    return insort_right(key, a, x, lo, hi);
+}
+
 
 template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, B x, __ss_int lo, __ss_int hi) {
     __ss_int mid;
@@ -146,6 +150,10 @@ template <class A> __ss_int bisect_right(long int /* key = None */, list<A> *a, 
 
 template <class A> __ss_int bisect(__ss_int, list<A> *a, A x, __ss_int lo, __ss_int hi) {
     return bisect_right((A (*)(A))0, a, x, lo, hi);
+}
+
+template <class A, class B> __ss_int bisect(B (*key)(A), list<A> *a, B x, __ss_int lo, __ss_int hi) {
+    return bisect_right(key, a, x, lo, hi);
 }
 
 template <class A, class B, class C> __ss_int bisect_left(C key, list<A> *a, B x, __ss_int lo=0) {
