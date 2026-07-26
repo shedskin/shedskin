@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections import deque
+import copy
 
 
 def test_defaultdict1():
@@ -39,6 +40,76 @@ def test_defaultdict3():
     for key, value in d.items():
         keys.add(key)
     assert keys == set([1,2])
+
+
+def test_defaultdict_copy():
+    # regression test: copy() used to drop the default_factory, so
+    # missing-key access on the copy raised KeyError instead of using
+    # the factory like the original does
+    d = defaultdict(int)
+    d['a'] = 1
+
+    e = d.copy()
+    assert e['a'] == 1
+
+    e['b'] += 1
+    assert e['b'] == 1
+    assert d['a'] == 1
+    assert 'b' not in d
+
+
+def test_defaultdict_copy_module():
+    # regression test: defaultdict had no __copy__/__deepcopy__ overrides,
+    # so copy.copy()/copy.deepcopy() fell back to plain dict's versions,
+    # silently downgrading the result to a dict and dropping default_factory
+    d = defaultdict(int, {'a': 1})
+
+    e = copy.copy(d)
+    assert e['a'] == 1
+    e['b'] += 1
+    assert e['b'] == 1
+    assert 'b' not in d
+
+    f = copy.deepcopy(d)
+    assert f['a'] == 1
+    f['c'] += 1
+    assert f['c'] == 1
+    assert 'c' not in d
+
+
+def test_defaultdict_from_pairs():
+    # regression test: the constructor backing defaultdict(factory, iterable)
+    # hardcoded the value type as __ss_int internally, so this only worked
+    # when the value type actually was int; any other value type (str here)
+    # failed to compile
+    d = defaultdict(str, [(1, "a"), (2, "b")])
+    assert d[1] == "a"
+    assert d[2] == "b"
+    assert d[99] == ""
+
+
+def test_defaultdict_type_identity():
+    # regression test: defaultdict never got its own class object, so every
+    # defaultdict instance's __class__ silently stayed the base dict's. We
+    # can't check this with isinstance()/type(): shedskin always evaluates
+    # isinstance() to True and doesn't support type() at all. __repr__ is
+    # overridden specifically for defaultdict, so it's a usable observable
+    # proxy for whether an object is "really" a defaultdict.
+    d = defaultdict(int)
+    d['a'] = 1
+    plain = dict()
+    plain['a'] = 1
+
+    assert repr(d) != repr(plain)
+    assert repr(d).startswith('defaultdict(')
+    assert not repr(plain).startswith('defaultdict(')
+
+    # copy() must preserve the type too, not just the runtime __class__:
+    # a prior version of this fix set __class__ correctly but copy()'s
+    # type-inference stub still returned a plain dict, so the copy silently
+    # lost the default_factory as far as the compiler was concerned
+    e = d.copy()
+    assert repr(e).startswith('defaultdict(')
 
 
 def test_deque1():
@@ -197,6 +268,25 @@ def test_deque_insert_out_of_range():
     assert list(g) == [1, 2, 9, 3]
 
 
+def test_deque_maxlen_negative():
+    # regression test: maxlen used the C++ sentinel -1 to mean "no maxlen",
+    # but any other negative value (e.g. -5) silently also behaved as
+    # unbounded instead of raising ValueError like real deque, because the
+    # bound check compared a signed maxlen against an unsigned size() and
+    # always came out false for negative values
+    raised = False
+    try:
+        deque([1, 2, 3], maxlen=-5)
+    except ValueError:
+        raised = True
+    assert raised
+
+    # 0 is a legitimate maxlen (always-empty deque) and must still work
+    d = deque([1, 2, 3], maxlen=0)
+    assert list(d) == []
+    assert d.maxlen == 0
+
+
 def test_deque_remove_missing():
     d = deque([1,2,3])
     raised = False
@@ -209,19 +299,38 @@ def test_deque_remove_missing():
     assert list(d) == [1,2,3]
 
 
+def test_deque_unhashable():
+    # regression test: deque defines __eq__ but had no __hash__ override,
+    # so it silently fell back to the default identity-based hash instead
+    # of being unhashable like real deque (and like this module's dict)
+    d = deque([1, 2, 3])
+    raised = False
+    try:
+        hash(d)
+    except TypeError:
+        raised = True
+    assert raised
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
     test_defaultdict3()
+    test_defaultdict_copy()
+    test_defaultdict_copy_module()
+    test_defaultdict_from_pairs()
+    test_defaultdict_type_identity()
     test_deque1()
     test_deque2()
     test_deque3()
     test_deque4()
     test_deque_maxlen()
     test_deque_maxlen_on_init()
+    test_deque_maxlen_negative()
     test_deque_eq()
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
+    test_deque_unhashable()
 
 
 if __name__ == '__main__':
