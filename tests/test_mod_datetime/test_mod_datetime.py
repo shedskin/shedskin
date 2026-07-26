@@ -32,6 +32,28 @@ def test_date_day_out_of_range():
         error = str(e)
     assert error == 'day is out of range for month'
 
+def test_date_compare_year_boundary():
+    # regression test: __cmp__ used to encode dates as year*366+month*31+day,
+    # but month*31+day can reach 403, which is larger than the 366 weight
+    # given to a single year -- so late-December dates could compare as
+    # greater than early-January dates of the following year.
+    a = datetime.date(2000, 12, 31)
+    b = datetime.date(2001, 1, 1)
+    assert a < b
+    assert b > a
+    assert not a > b
+    assert not b < a
+    assert a != b
+
+def test_datetime_compare_year_boundary():
+    a = datetime.datetime(2000, 12, 31, 23, 0, 0)
+    b = datetime.datetime(2001, 1, 1, 0, 0, 0)
+    assert a < b
+    assert b > a
+    assert not a > b
+    assert not b < a
+    assert a != b
+
 def test_datetime_basic():
     assert datetime.MAXYEAR == 9999
     assert datetime.MINYEAR == 1
@@ -57,6 +79,8 @@ def test_datetime_custom_tzinfo():
 def test_all():
         test_date()
         test_date_day_out_of_range()
+        test_date_compare_year_boundary()
+        test_datetime_compare_year_boundary()
         test_datetime_basic()
         test_datetime_custom_tzinfo()
 
