@@ -8,6 +8,8 @@ namespace __time__ {
 
 clock_t start;
 __ss_int timezone;
+__ss_int altzone;
+__ss_int daylight;
 tuple2<str *, str *> *tzname;
 
 #ifdef _MSC_VER
@@ -958,9 +960,16 @@ void __init() {
     timezone = (gmt_hour - localt_hour) * 3600;
 #ifdef WIN32
     tzname = new tuple2<str *, str *>(2, new str(_tzname[0]), new str(_tzname[1]));
+    daylight = _daylight;
 #else
     tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
+    daylight = ::daylight;
 #endif
+    /* Not all platforms expose a standard "altzone" global (the DST
+       counterpart of timezone). When no DST rule applies, altzone simply
+       coincides with timezone; otherwise mirror CPython's own fallback
+       of guessing it's one hour ahead of the standard offset. */
+    altzone = daylight ? (timezone - 3600) : timezone;
 }
 
 

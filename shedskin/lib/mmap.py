@@ -6,7 +6,14 @@ ALLOCATIONGRANULARITY = 0x10000
 
 MAP_SHARED, MAP_PRIVATE, MAP_ANON, MAP_ANONYMOUS = (1, 2, 32, 32)
 PROT_READ, PROT_WRITE, PROT_EXEC = (1, 2, 4)
-ACCESS_READ, ACCESS_WRITE, ACCESS_COPY = (1, 2, 3)
+ACCESS_DEFAULT, ACCESS_READ, ACCESS_WRITE, ACCESS_COPY = (0, 1, 2, 3)
+
+# Linux-only flags for mmap()'s `flags` argument; -1 on platforms that
+# don't support them (e.g. Windows, macOS).
+MAP_DENYWRITE = 2048
+MAP_EXECUTABLE = 4096
+MAP_POPULATE = 32768
+MAP_STACK = 131072
 
 class mmap:
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):

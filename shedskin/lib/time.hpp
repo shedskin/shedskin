@@ -24,6 +24,8 @@ namespace __time__ {
 #endif
 
 extern __ss_int timezone;
+extern __ss_int altzone;
+extern __ss_int daylight;
 extern tuple2<str *, str *> *tzname;
 
 __ss_float time();
