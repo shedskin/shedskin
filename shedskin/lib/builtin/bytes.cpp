@@ -656,14 +656,27 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
 str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
     // output will be twice as long
     size_t len = unit.size();
+    if(sep && sep->unit.size() != 1)
+        throw new ValueError(new str("sep must be length 1."));
     if(len == 0)
         return new str();
     __GC_STRING hexstr = __GC_STRING(unit);
+
+    /* bytes_per_sep follows CPython semantics: 0 means "no separators"
+    ** (must not divide/modulo by it), a positive value groups counting
+    ** from the right (the traditional/only behavior this function used
+    ** to implement), and a negative value groups counting from the
+    ** left -- e.g. hexlify(b'\x01\x02\x03', '-', -2) groups as '0102-03'
+    ** rather than '01-0203'. abs_bps is the actual group size either way.
+    */
+    size_t abs_bps = bytes_per_sep < 0
+        ? (size_t)(-bytes_per_sep)
+        : (size_t)bytes_per_sep;
+    bool count_from_left = bytes_per_sep < 0;
+
     size_t result_len = (len<<1);
-    if(sep) {
-        if(sep->unit.size() != 1)
-            throw new ValueError(new str("sep must be length 1."));
-        result_len += (len-1) / bytes_per_sep;
+    if(sep && abs_bps != 0) {
+        result_len += (len-1) / abs_bps;
     }
     hexstr.reserve(result_len);
     hexstr.resize(result_len);
@@ -675,11 +688,17 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     char c;
     // from python's implementation (2.7.1, if it matters)
     size_t remaining = len;
+    size_t processed = 0;
     while(curdata < end)
     {
-        if(sep and !(remaining % bytes_per_sep) and remaining != len) {
-            for(size_t j=0; j<sep->unit.size(); j++)
-                *(curhex++) = sep->unit[j];
+        if(sep && abs_bps != 0) {
+            bool at_boundary = count_from_left
+                ? (processed != 0 && !(processed % abs_bps))
+                : (remaining != len && !(remaining % abs_bps));
+            if(at_boundary) {
+                for(size_t j=0; j<sep->unit.size(); j++)
+                    *(curhex++) = sep->unit[j];
+            }
         }
         c = (*curdata>>4) & 0xf;
         c = (c>9) ? c+'a'-10 : c + '0';
@@ -689,6 +708,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
         *(curhex++) = c;
         curdata++;
         remaining -= 1;
+        processed += 1;
     }
 
     return hex;

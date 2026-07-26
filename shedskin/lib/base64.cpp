@@ -8,6 +8,8 @@ namespace __base64__ {
 str *__name__;
 
 bytes *b64encode(bytes *s, bytes *altchars) {
+    if (altchars && altchars->unit.size() != 2)
+        throw new ValueError(new str("invalid altchars"));
     return __binascii__::b2a_base64(s, False, altchars);
 }
 
@@ -20,6 +22,8 @@ bytes *urlsafe_b64encode(bytes *s) {
 }
 
 bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate) {
+    if (altchars && altchars->unit.size() != 2)
+        throw new ValueError(new str("invalid altchars"));
     return __binascii__::a2b_base64(s, validate, altchars);
 }
 

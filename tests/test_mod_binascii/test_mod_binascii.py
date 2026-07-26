@@ -32,6 +32,22 @@ def test_qp():
     assert binascii.a2b_qp(b2a) == input_bytes
 
 
+def test_b2a_qp_leading_dot_at_end():
+    # regression test: b2a_qp checked whether a leading "." at the
+    # start of a line is followed by a newline/CR/NUL (the historical
+    # C-string-terminator check) by unconditionally reading data[in+1],
+    # which reads one byte past the buffer when "." is the very last
+    # byte of the input.
+    assert binascii.b2a_qp(b'.') == b'=2E'
+    assert binascii.b2a_qp(b'.\x00') == b'=2E=00'
+    assert binascii.b2a_qp(b'.\x00x') == b'=2E=00x'
+    assert binascii.b2a_qp(b'.\n') == b'=2E\n'
+    assert binascii.b2a_qp(b'.\r') == b'=2E\r'
+    assert binascii.b2a_qp(b'a.') == b'a.'
+    assert binascii.b2a_qp(b'test.') == b'test.'
+    assert binascii.b2a_qp(b'.A') == b'.A'
+
+
 def test_uu():
     b2a = binascii.b2a_uu(s)
     assert b2a == b'G;7D@9W5I=&%R(\'=A;G1S(\'1O(\'-T<G5M(&%L;"!N:6=H="!L;VYG\n'
@@ -56,6 +72,50 @@ def test_uu():
         output_bytes = binascii.b2a_uu(input_bytes)
         assert binascii.a2b_uu(output_bytes) == input_bytes
 
+
+def test_a2b_uu_short_input():
+    # regression test: a2b_uu read the declared length byte (and later
+    # data bytes) straight off the input buffer, with no guard for the
+    # buffer running out before that many bytes were actually supplied.
+    # CPython's buffers are always NUL-terminated so reading "past the
+    # end" harmlessly sees an implicit 0 there and CPython treats that
+    # like whitespace/padding; our storage has no such terminator, so
+    # this used to read past the end of the buffer.
+    assert binascii.a2b_uu(b'') == b'\x00' * 32
+
+    # length byte claims 45 bytes of output, but only one data
+    # character follows before the line ends.
+    assert binascii.a2b_uu(bytes.fromhex('4d4d0a')) == b'\xb4' + b'\x00' * 44
+
+    # the common case this code path exists for: a mail transport (or
+    # a human) strips the trailing whitespace from a uuencoded line.
+    encoded = binascii.b2a_uu(b'hoepa')
+    stripped = encoded.rstrip(b' \n') + b'\n'
+    assert binascii.a2b_uu(stripped) == b'hoepa'
+
+
+def test_a2b_uu_trailing_garbage_message():
+    # regression test: a2b_uu raised binascii.Error with no message
+    # (None) for illegal trailing characters, where CPython raises
+    # binascii.Error("Trailing garbage"). The exception type already
+    # matched CPython; only the message text was missing.
+    ok = False
+    try:
+        binascii.a2b_uu(b'!XXXXX!\n')
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Trailing garbage'
+    assert ok
+
+    ok = False
+    try:
+        binascii.a2b_uu(b'!AB!!\n')
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Trailing garbage'
+    assert ok
+
+
 def test_base64():
     b2a = binascii.b2a_base64(s)
     assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
@@ -72,6 +132,31 @@ def test_base64():
     b2a = binascii.b2a_base64(input_bytes)
     assert b2a == output_bytes
     assert binascii.a2b_base64(b2a) == input_bytes
+
+
+def test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input():
+    # regression test: both b2a_uu and b2a_base64 accumulate bytes into
+    # a signed accumulator ("leftchar") that, unlike its a2b_uu and
+    # a2b_base64 counterparts, was never masked back down after each
+    # 6-bit group was extracted. Every remaining bit ever shifted in
+    # stayed in the value forever, so leftchar's magnitude grew by 8
+    # bits per input byte with no bound -- for any input longer than a
+    # handful of bytes this overflows the signed accumulator, which is
+    # undefined behavior (caught by UBSan), even though the shift-and-
+    # mask used to pull out each 6-bit group happens to read the
+    # correct bits regardless. These exercise inputs long enough to
+    # have triggered it.
+    data45 = bytes(range(45))
+    assert binascii.b2a_uu(data45) == b'M  $" P0%!@<("0H+# T.#Q 1$A,4%187&!D:&QP=\'A\\@(2(C)"4F)R@I*BLL\n'
+
+    data200 = bytes(range(200))
+    assert binascii.b2a_base64(data200) == (
+        b'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4v'
+        b'MDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5f'
+        b'YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6P'
+        b'kJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/'
+        b'wMHCw8TFxsc=\n'
+    )
 
 
 def test_base64_strict_mode():
@@ -128,6 +213,72 @@ def test_base64_strict_mode():
     # empty input is fine in strict mode
     assert binascii.a2b_base64(b'', strict_mode=True) == b''
 
+    # regression: trailing padding right after an already-complete group
+    # (quad_pos == 0) must be *accepted* in strict mode, not rejected as
+    # "discontinuous". CPython tolerates any number of these.
+    assert binascii.a2b_base64(b'wK8j=', strict_mode=True) == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'wK8j==', strict_mode=True) == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'AAAA=', strict_mode=True) == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'AAAA====', strict_mode=True) == b'\x00\x00\x00'
+
+    # ... but real data after that trailing padding is still rejected
+    ok = False
+    try:
+        binascii.a2b_base64(b'AAAA=BBBB', strict_mode=True)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+    # regression: a single (unmatched) pad at quad_pos == 2 followed by
+    # whitespace must report the whitespace, not "discontinuous padding"
+    # (the fix must not look ahead past the whitespace to find real data)
+    ok = False
+    try:
+        binascii.a2b_base64(b'YpIygf=\rd', strict_mode=True)
+    except binascii.Error as e:
+        ok = True
+        assert 'base64 data' in str(e)
+    assert ok
+
+    # regression: a single trailing pad at quad_pos == 2 with nothing
+    # else following is "Incorrect padding", not "discontinuous padding"
+    ok = False
+    try:
+        binascii.a2b_base64(b'8H=', strict_mode=True)
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Incorrect padding'
+    assert ok
+
+
+def test_base64_padding_errors():
+    # a lone data character, or any leftover bits with no closing pad,
+    # must raise -- not silently decode to truncated/fabricated bytes.
+    for bad in (b'QQ', b'QQ=', b'AA', b'A', b'A='):
+        ok = False
+        try:
+            binascii.a2b_base64(bad)
+        except binascii.Error:
+            ok = True
+        assert ok
+
+    # legitimately padded strings (single and double '=') must still
+    # decode correctly -- regression check for the find_valid lookahead
+    # used to detect a valid closing pad sequence.
+    assert binascii.a2b_base64(b'QQ==') == b'A'
+    assert binascii.a2b_base64(b'QUJ=') == b'AB'
+    assert binascii.a2b_base64(b'QUJD') == b'ABC'
+
+    # regression: the "1 more than a multiple of 4" message must include
+    # the actual data-character count, matching CPython's wording.
+    try:
+        binascii.a2b_base64(b'AAAAA')
+        assert False
+    except binascii.Error as e:
+        assert str(e) == (
+            'Invalid base64-encoded string: number of data characters '
+            '(5) cannot be 1 more than a multiple of 4')
+
 
 def test_hex():  # b2a_hex == hexlify
     b2a = binascii.hexlify(s)
@@ -163,6 +314,62 @@ def test_hex():  # b2a_hex == hexlify
     assert binascii.a2b_hex(b2a) == input_bytes
 
 
+# regression test: unhexlify indexed its lookup table with a signed
+# char, so any input byte >= 0x80 sign-extended into a negative
+# (out-of-bounds) index instead of being rejected as invalid hex.
+def test_unhexlify_high_bit_bytes_rejected():
+    for bad in (0x80, 0xff, 0xfe, 0x81):
+        ok = False
+        try:
+            binascii.unhexlify(bytes([bad, 0x30]))
+        except binascii.Error:
+            ok = True
+        assert ok, f"byte 0x{bad:02x} should have been rejected as invalid hex"
+
+        ok = False
+        try:
+            binascii.a2b_hex(bytes([0x30, bad]))
+        except binascii.Error:
+            ok = True
+        assert ok, f"byte 0x{bad:02x} should have been rejected as invalid hex"
+
+
+# regression test: bytes_per_sep=0 used to divide/modulo by zero and crash
+# the process with SIGFPE. CPython instead treats 0 the same as "no
+# separators requested" (matching hexlify(data) with no sep at all).
+def test_hex_bytes_per_sep_zero():
+    assert binascii.hexlify(b'hello world', '-', 0) == b'68656c6c6f20776f726c64'
+    assert binascii.hexlify(b'', '-', 0) == b''
+
+
+# regression test: negative bytes_per_sep means "count groups from the
+# left" in CPython, as opposed to positive values which count from the
+# right. Shedskin used to ignore negative values entirely and emit no
+# separators at all, regardless of magnitude.
+def test_hex_bytes_per_sep_negative():
+    data = bytes.fromhex('4dfad71427a0aeb3fee9')  # 10 bytes
+    # evenly divisible lengths: left- and right-counting coincide
+    assert binascii.hexlify(data, '-', 1) == binascii.hexlify(data, '-', -1)
+    assert binascii.hexlify(data, '-', 2) == binascii.hexlify(data, '-', -2)
+    # not evenly divisible by 3: left- and right-counting differ
+    assert binascii.hexlify(data, '-', 3) == b'4d-fad714-27a0ae-b3fee9'
+    assert binascii.hexlify(data, '-', -3) == b'4dfad7-1427a0-aeb3fe-e9'
+
+
+# regression test: an invalid (non-length-1) sep must raise ValueError
+# even when data is empty. This used to be skipped because the
+# empty-data early return happened before the sep length was checked.
+def test_hex_sep_validated_on_empty_data():
+    for bad_sep in ('', 'ab'):
+        ok = False
+        try:
+            binascii.hexlify(b'', bad_sep, 1)
+        except ValueError as e:
+            ok = True
+            assert str(e) == 'sep must be length 1.'
+        assert ok
+
+
 def test_crc():
     crc = binascii.crc32(s)
     assert crc == 1546323114
@@ -174,13 +381,36 @@ def test_crc():
     assert crc == 53552
 
 
+def test_crc_hqx_high_bit_bytes():
+    # regression test: crc_hqx indexed its lookup table with a signed
+    # char, so any input byte >= 0x80 sign-extended into a negative
+    # (out-of-bounds) index instead of being treated as 0-255.
+    data = bytes(range(256))
+    assert binascii.crc_hqx(data, 0) == 32341
+    assert binascii.crc_hqx(data, 12) == 8465
+
+    data2 = bytes([0x8b, 0xff, 0x00, 0x80, 0x7f, 0xde, 0xad, 0xbe, 0xef])
+    assert binascii.crc_hqx(data2, 0) == 18254
+    assert binascii.crc_hqx(data2, 0xffff) == 24380
+
+
 def test_all():
     test_qp()
+    test_b2a_qp_leading_dot_at_end()
     test_uu()
+    test_a2b_uu_short_input()
+    test_a2b_uu_trailing_garbage_message()
     test_base64()
+    test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input()
     test_base64_strict_mode()
+    test_base64_padding_errors()
     test_hex()
+    test_unhexlify_high_bit_bytes_rejected()
+    test_hex_bytes_per_sep_zero()
+    test_hex_bytes_per_sep_negative()
+    test_hex_sep_validated_on_empty_data()
     test_crc()
+    test_crc_hqx_high_bit_bytes()
 
 
 if __name__ == '__main__':
