@@ -31,6 +31,35 @@ def test_altchars():
     assert base64.b64decode(a2, altchars=b'*?') == input_bytes
 
 
+# regression test: passing altchars must *add* '-'/'_' as extra encodings
+# of 62/63, not make the standard '+'/'/' invalid. CPython's base64.py
+# implements altchars by translating them onto '+'/'/' before decoding,
+# which leaves any literal '+'/'/' already in the string untouched (and
+# still valid data) -- so urlsafe_b64decode (and b64decode with an
+# explicit altchars=) must still accept plain '+' and '/' characters.
+def test_altchars_preserves_standard_chars():
+    # data chosen so the standard b64 alphabet encodes it using '+' and '/'
+    data = bytes([251, 255, 191, 62])
+    enc = base64.b64encode(data)
+    assert enc == b'+/+/Pg=='
+
+    # urlsafe_b64decode must still decode this correctly even though it
+    # contains literal '+'/'/' rather than the url-safe '-'/'_'
+    assert base64.urlsafe_b64decode(enc) == data
+
+    # same via explicit altchars=
+    assert base64.b64decode(enc, altchars=b'-_') == data
+
+    # sanity: '-'/'_' still work as before
+    urlsafe_enc = base64.urlsafe_b64encode(data)
+    assert urlsafe_enc == b'-_-_Pg=='
+    assert base64.urlsafe_b64decode(urlsafe_enc) == data
+
+    # and a mix of both '+/' and '-_' in the same string must decode fine
+    mixed = b'+/-_Pg=='
+    assert base64.b64decode(mixed, altchars=b'-_') == data
+
+
 def test_name():
     assert base64.__name__ == 'base64'
 
@@ -68,6 +97,60 @@ def test_b16():
     assert ok
 
 
+# regression test: altchars must be exactly 2 bytes, like CPython's
+# `assert len(altchars) == 2, repr(altchars)` in base64.py. Without this
+# check, a too-short altchars caused an out-of-bounds vector read and a
+# too-long one was silently (and incorrectly) truncated.
+#
+# Note: CPython's base64.py enforces this with a plain `assert`, which
+# raises AssertionError (and can be compiled away with -O); shedskin
+# raises ValueError instead, which is deliberate and more robust. Both
+# are accepted here so this test runs the same under CPython and
+# shedskin.
+def test_altchars_bad_length():
+    for bad in (b'', b'-', b'-_-'):
+        ok = False
+        try:
+            base64.b64encode(b'hello world', altchars=bad)
+        except (AssertionError, ValueError):
+            ok = True
+        assert ok
+
+        ok = False
+        try:
+            base64.b64decode(b'aGVsbG8gd29ybGQ=', altchars=bad)
+        except (AssertionError, ValueError):
+            ok = True
+        assert ok
+
+
+# regression test: b64decode must reject truncated/incorrectly padded
+# input instead of silently returning wrong (truncated or fabricated)
+# bytes. Mirrors CPython's binascii.Error('Incorrect padding') and
+# binascii.Error('Invalid base64-encoded string: ...') behavior.
+def test_decode_bad_padding():
+    # b'QQ': 2 chars, no padding at all
+    # b'QQ=': 2 chars, only one pad (needs two)
+    # b'AA': 2 chars decode to < 1 full byte
+    # b'A': single dangling char, never valid
+    # b'A=': single dangling char + one pad
+    for bad in (b'QQ', b'QQ=', b'AA', b'A', b'A='):
+        ok = False
+        try:
+            base64.b64decode(bad)
+        except binascii.Error:
+            ok = True
+        assert ok
+
+    # well-formed padding must still decode correctly (regression check
+    # for the fix itself: an earlier version of this fix broke this case)
+    assert base64.b64decode(b'QQ==') == b'A'
+    assert base64.b64decode(b'QUJD') == b'ABC'
+    assert base64.b64decode(b'QUJ=') == b'AB'
+    assert base64.b64decode(b'====') == b''
+    assert base64.b64decode(b'') == b''
+
+
 # regression test for a global-buffer-overflow (OOB read past the
 # empty string literal used to preallocate output buffers) that
 # AddressSanitizer catches on completely ordinary encode/decode calls,
@@ -84,8 +167,11 @@ def test_asan_regression():
 def test_all():
     test_basic()
     test_altchars()
+    test_altchars_preserves_standard_chars()
+    test_altchars_bad_length()
     test_name()
     test_validate()
+    test_decode_bad_padding()
     test_b16()
     test_asan_regression()
 

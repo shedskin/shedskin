@@ -86,8 +86,8 @@ bytes *unhexlify(bytes *hex) {
     // from python's implementation (2.7.1, if it matters), but way better :)
     while(curhex <= end-2) // must be two characters left
     {
-        top = table_a2b_hex[(int)*(curhex++)];
-        bot = table_a2b_hex[(int)*(curhex++)];
+        top = table_a2b_hex[(unsigned char)*(curhex++)];
+        bot = table_a2b_hex[(unsigned char)*(curhex++)];
         if (top==(char)-1 || bot==(char)-1)
             throw new Error(new str("Invalid hex"));
         *(curdata++) = (char)((top<<4) + bot);
@@ -102,18 +102,23 @@ bytes *a2b_uu(bytes *string) {
     size_t ascii_len = string->unit.size();
     char * ascii_data = &string->unit[0];
 
-    __ss_int bin_len = (*ascii_data++ - ' ') & 077;
+    /* CPython's buffers are always NUL-terminated, so a length byte
+    ** read from an empty (or otherwise exhausted) input is implicitly
+    ** 0 there; our own storage has no such guarantee, so guard the
+    ** read explicitly instead of dereferencing past the end.
+    */
+    __ss_int bin_len = ((ascii_len ? *ascii_data++ : 0) - ' ') & 077;
     bytes *binary = new bytes(1);
     binary->unit.resize(bin_len);
     char * bin_data = &binary->unit[0];
     unsigned char this_ch;
     __ss_int leftchar=0, leftbits=0;
 
-    ascii_len--;
-    for( ; bin_len > 0 ; ascii_len--, ascii_data++ ) {
+    if (ascii_len) ascii_len--;
+    for( ; bin_len > 0 ; ascii_data++ ) {
         /* XXX is it really best to add NULs if there's no more data */
         this_ch = (unsigned char)((ascii_len > 0) ? *ascii_data : 0);
-        if ( this_ch == '\n' || this_ch == '\r' || ascii_len == 0 || ascii_len == std::string::npos) {
+        if ( this_ch == '\n' || this_ch == '\r' || ascii_len == 0) {
             /*
             ** Whitespace. Assume some spaces got eaten at
             ** end-of-line. (We check this later)
@@ -130,6 +135,13 @@ bytes *a2b_uu(bytes *string) {
             }
             this_ch = (this_ch - ' ') & 077;
         }
+        /* Once genuinely out of input, don't decrement any further:
+        ** ascii_len is unsigned, and letting it wrap past 0 would turn
+        ** every subsequent "any data left?" check above into a false
+        ** positive, sending ascii_data on reading arbitrarily far past
+        ** the end of the buffer for the rest of this loop.
+        */
+        if (ascii_len) ascii_len--;
         /*
         ** Shift it in on the low end, and see if there's
         ** a byte ready for output.
@@ -149,12 +161,13 @@ bytes *a2b_uu(bytes *string) {
     ** Finally, check that if there's anything left on the line
     ** that it's whitespace only.
     */
-    while( ascii_len-- > 0 ) {
+    while( ascii_len > 0 ) {
+        ascii_len--;
         this_ch = (unsigned char)(*ascii_data++);
         /* Extra '`' may be written as padding in some cases */
         if ( this_ch != ' ' && this_ch != ' '+64 &&
              this_ch != '\n' && this_ch != '\r' ) {
-            throw new Error(0);
+            throw new Error(new str("Trailing garbage"));
         }
     }
 
@@ -194,6 +207,16 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
+            /* Without this mask, leftchar keeps every bit it has ever
+            ** accumulated (each iteration only ever adds bits, never
+            ** discards the ones already consumed above), so it grows
+            ** by 8 bits every byte with no bound -- for any input of
+            ** more than a handful of bytes this overflows __ss_int
+            ** (signed), which is undefined behavior, even though the
+            ** shift-and-mask above always happens to read out the
+            ** correct low-order bits regardless.
+            */
+            leftchar &= ((1 << leftbits) - 1);
             if(backtick && !this_ch)
                 *ascii_data++ = '`';
             else
@@ -250,16 +273,35 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
         15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
         -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
+        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1,
+        /* 0x80-0xff: never valid base64 data, but must still be present
+        ** so that indexing with (unsigned char)c for c > 0x7f (e.g. a
+        ** high-byte altchars character) can't write/read past the end
+        ** of this array. Previously sized to 128 entries (0x00-0x7f
+        ** only); a caller-supplied altchars byte >= 0x80 caused an
+        ** out-of-bounds stack write here.
+        */
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1
     };
 
+    // Standard '+' and '/' must remain valid regardless of altchars: base64.py's
+    // altchars support works by translating the altchars onto '+'/'/' before
+    // decoding, which leaves any literal '+'/'/' already present untouched (and
+    // still valid data). Previously this was an if/else, so passing altchars
+    // (e.g. via urlsafe_b64decode) silently made '+' and '/' invalid instead of
+    // adding '-'/'_' as extra encodings of 62/63.
+    table_a2b_base64['+'] = 62;
+    table_a2b_base64['/'] = 63;
     if(altchars) { // TODO check len
         table_a2b_base64[(unsigned char)altchars->unit[0]] = 62;
         table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
-    }
-    else {
-        table_a2b_base64['+'] = 62;
-        table_a2b_base64['/'] = 63;
     }
 
     if(strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)
@@ -276,6 +318,15 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     unsigned char this_ch;
     unsigned int leftchar = 0;
     bool complete = false; /* true once a valid closing pad has been seen */
+    bool pad_after_complete = false; /* true once excess/trailing padding has
+                                      ** been seen right at a quad boundary
+                                      ** (quad_pos == 0); further padding is
+                                      ** harmless, but further *data* is not */
+    bool seen_pad_at_2 = false; /* true once a first (unmatched) pad has
+                                 ** been seen at quad_pos == 2, awaiting a
+                                 ** second pad to close the group */
+    __ss_int data_chars = 0; /* count of actual base64 data characters seen,
+                              ** for error messages */
 
     size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
     bytes *binary = new bytes(1);
@@ -306,24 +357,55 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         ** the invalid ones.
         */
         if (this_ch == BASE64_PAD) {
-            if ( (quad_pos < 2) ||
-                 ((quad_pos == 2) &&
-                  (find_valid(ascii_data, ascii_len, 2, table_a2b_base64)
-                   != BASE64_PAD)) )
-            {
-                if (strict_mode)
-                    throw new Error(new str("Discontinuous padding not allowed"));
-                continue;
-            }
-            else {
-                /* A pad sequence means no more input.
-                ** We've already interpreted the data
-                ** from the quad at this point.
+            if (quad_pos == 2 && !seen_pad_at_2) {
+                /* First pad closing a quad_pos == 2 group: this only
+                ** completes the group once a *second* pad is reached.
+                ** We deliberately don't look ahead past any whitespace
+                ** or junk in between here -- doing so would let us jump
+                ** straight to that second pad (or to real data further
+                ** along) before the character(s) in between get their
+                ** own normal per-character handling, which in strict
+                ** mode would report the wrong error (e.g. reporting
+                ** "discontinuous padding" for what should be reported as
+                ** embedded whitespace). Instead, just wait for the loop
+                ** to naturally reach whatever comes next.
                 */
-                leftbits = 0;
-                complete = true;
+                seen_pad_at_2 = true;
+                pad_after_complete = true;
                 continue;
             }
+            if (quad_pos < 2) {
+                /* quad_pos == 0: a pad right at a quad boundary is
+                ** either leading padding (already rejected above, before
+                ** the loop) or harmless excess/trailing padding after an
+                ** already-complete group -- CPython accepts any number
+                ** of these, even in strict mode.
+                **
+                ** quad_pos == 1: a single dangling data character can
+                ** never be turned into a whole byte, padded or not.
+                ** CPython doesn't error out here either; if nothing but
+                ** padding/whitespace follows, this is reported once the
+                ** whole input has been scanned, by the leftover-bits
+                ** check below.
+                **
+                ** Either way, remember that we've seen a pad here so
+                ** that, in strict mode, any further *data* (as opposed
+                ** to more padding or whitespace) can still be flagged as
+                ** discontinuous below.
+                */
+                pad_after_complete = true;
+                continue;
+            }
+
+            /* quad_pos == 3 (a single pad always closes the group), or
+            ** quad_pos == 2 with seen_pad_at_2 already set (this is the
+            ** second pad closing the group). Either way, no more input
+            ** is expected; we've already interpreted the data from the
+            ** quad at this point.
+            */
+            leftbits = 0;
+            complete = true;
+            continue;
         }
 
         this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
@@ -333,10 +415,20 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
             continue;
         }
 
+        /* Real data seen: any pending lone pad at a quad boundary was
+        ** just noise/ignorable rather than the start of a genuine
+        ** closing sequence.
+        */
+        seen_pad_at_2 = false;
+
+        if (strict_mode && pad_after_complete)
+            throw new Error(new str("Discontinuous padding not allowed"));
+
         /*
         ** Shift it in on the low end, and see if there's
         ** a byte ready for output.
         */
+        data_chars++;
         quad_pos = (quad_pos + 1) & 0x03;
         leftchar = (leftchar << 6) | (this_ch);
         leftbits += 6;
@@ -347,6 +439,22 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
             bin_len++;
             leftchar &= (unsigned int)((1 << leftbits) - 1);
         }
+    }
+
+    /* Check that we ended up in a valid state: no dangling data
+    ** characters without proper padding. A single leftover data
+    ** character (leftbits == 6) can never represent a whole byte;
+    ** any other nonzero leftover means the input was truncated
+    ** before a terminating pad was reached.
+    */
+    if (!complete && leftbits != 0) {
+        if (leftbits == 6)
+            throw new Error(__add_strs(3,
+                new str("Invalid base64-encoded string: number of data "
+                        "characters ("),
+                __str(data_chars),
+                new str(") cannot be 1 more than a multiple of 4")));
+        throw new Error(new str("Incorrect padding"));
     }
 
     /* And set string size correctly. If the result string is empty
@@ -394,6 +502,11 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
+            /* See the comment on the equivalent line in b2a_uu: without
+            ** this, leftchar grows unboundedly and overflows __ss_int
+            ** (signed) for any input longer than a handful of bytes.
+            */
+            leftchar &= ((1 << leftbits) - 1);
             *ascii_data++ = (char)table_b2a_base64[(unsigned char)this_ch];
         }
     }
@@ -515,7 +628,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
             (data[in] == '=') ||
             (header && data[in] == '_') ||
             ((data[in] == '.') && (linelen == 0) &&
-             (data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
+             (in+1 >= datalen || data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
             (!istext && ((data[in] == '\r') || (data[in] == '\n'))) ||
             ((data[in] == '\t' || data[in] == ' ') && (in + 1 == datalen)) ||
             ((data[in] < 33) &&
@@ -585,7 +698,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
             (data[in] == '=') ||
             (header && data[in] == '_') ||
             ((data[in] == '.') && (linelen == 0) &&
-             (data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
+             (in+1 >= datalen || data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
             (!istext && ((data[in] == '\r') || (data[in] == '\n'))) ||
             ((data[in] == '\t' || data[in] == ' ') && (in + 1 == datalen)) ||
             ((data[in] < 33) &&
@@ -691,7 +804,7 @@ __ss_int crc_hqx(bytes *data, __ss_int crc) {
     __ss_int len = data->__len__();
     char * bin_data = &data->unit[0];
     while (len-- > 0) {
-        crc=((crc<<8)&0xff00)^crctab_hqx[((crc>>8)&0xff)^*bin_data++];
+        crc=((crc<<8)&0xff00)^crctab_hqx[((crc>>8)&0xff)^(unsigned char)(*bin_data++)];
     }
     return crc;
 }
