@@ -36,6 +36,7 @@ public:
     }
 
     template<class U> void *__init__(str *typecode_, U *iter);
+    template<class X> void *__init__(str *typecode_, array<X> *iter);
     void *__init__(str *typecode_, bytes *b);
 
     template<class U> void *extend(U *iter);
@@ -96,39 +97,47 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *
     typecode = typecode_;
     typechar = typecode_->unit[0];
     itemsize = get_itemsize(typechar);
-    /* CPython special-cases this too: array(typecode, other_array) accepts an
-     * array of a *different* typecode, treating it as a plain iterable of
-     * values -- only the explicit extend()/fromlist() methods reject a
-     * mismatched-typecode array with TypeError. Delegating straight to
-     * extend() here would incorrectly apply that stricter check to the
-     * constructor as well, so a differently-typed array is unpacked by hand
-     * before falling back to extend() for the same-typecode/generic cases. */
-    if(iter->__class__ == cl_array) {
-        /* 'arr' is only used to read typechar below: that field sits at the
-         * same offset in every array<T> specialization, so the cast is safe
-         * for it. Elements themselves are read through 'iter' -- which,
-         * unlike 'arr', keeps its real, compiler-inferred type U -- so that
-         * __getitem__() resolves to the source array's own specialization
-         * instead of reinterpreting its raw bytes under array<T>'s. */
-        array<T> *arr = (array<T> *)iter;
-        if(this->typechar != arr->typechar) {
-            /* CPython rejects this combination too: a Python float has no
-             * __index__, so assigning it into an int-typed array item raises
-             * TypeError rather than truncating. An int source into a float-
-             * typed target, or an int/float source into a same-kind target
-             * of different width, remains a plain (possibly overflow-
-             * checked) numeric conversion, same as CPython. */
-            bool this_is_float = this->typechar == 'f' || this->typechar == 'd';
-            bool src_is_float = arr->typechar == 'f' || arr->typechar == 'd';
-            if(!this_is_float && src_is_float)
-                throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
-            __ss_int n = iter->__len__();
-            for(__ss_int i=0; i<n; i++)
-                this->append(iter->__getitem__(i));
-            return NULL;
-        }
-    }
+    /* Generic-iterable path (lists, tuples, generators, list comprehensions,
+     * ranges, ...). The array-from-array case, including CPython's
+     * different-typecode special case, is handled by the array<X>*
+     * overload below instead of here: U is not guaranteed to support
+     * __getitem__() (e.g. a generator/list-comp iterator only supports
+     * __iter__()), so that logic must not be instantiated for this
+     * template. */
     extend(iter);
+    return NULL;
+}
+
+/* CPython special-cases array(typecode, other_array) too: unlike the
+ * explicit extend()/fromlist() methods, the constructor accepts an array of
+ * a *different* typecode here, treating it as a plain iterable of values
+ * rather than rejecting the mismatch with TypeError. This overload is more
+ * specialized than the generic template<class U> one above, so ordinary
+ * overload resolution -- based on the source's static, compiler-inferred
+ * type -- selects it whenever the argument is statically known to be some
+ * array<X>, and falls back to the generic overload otherwise (so U there
+ * never needs to support __getitem__). */
+template<class T> template<class X> void *array<T>::__init__(str *typecode_, array<X> *arr) {
+    typecode = typecode_;
+    typechar = typecode_->unit[0];
+    itemsize = get_itemsize(typechar);
+    if(this->typechar != arr->typechar) {
+        /* CPython rejects this combination too: a Python float has no
+         * __index__, so assigning it into an int-typed array item raises
+         * TypeError rather than truncating. An int source into a float-
+         * typed target, or an int/float source into a same-kind target
+         * of different width, remains a plain (possibly overflow-
+         * checked) numeric conversion, same as CPython. */
+        bool this_is_float = this->typechar == 'f' || this->typechar == 'd';
+        bool src_is_float = arr->typechar == 'f' || arr->typechar == 'd';
+        if(!this_is_float && src_is_float)
+            throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
+        __ss_int n = arr->__len__();
+        for(__ss_int i=0; i<n; i++)
+            this->append(arr->__getitem__(i));
+        return NULL;
+    }
+    extend(arr);
     return NULL;
 }
 
