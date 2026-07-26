@@ -302,7 +302,7 @@ public:
 
     defaultdict(V (*func_)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
         func = func_;
-        tuple2<K, __ss_int> *k;
+        tuple2<K, V> *k;
         typename pyiter<tuple2<K, V> *>::for_in_loop __3;
         int __2;
         pyiter<tuple2<K, V> *> *__1;
