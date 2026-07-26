@@ -104,7 +104,8 @@ def test_replace():
 
 def test_fspath():
     assert os.fspath('/tmp/somefile.txt') == '/tmp/somefile.txt'
-    assert os.path.join(os.fspath('a'), os.fspath('b')) == 'a/b'
+    # don't hardcode '/' here: os.path.join uses '\\' on Windows
+    assert os.path.join(os.fspath('a'), os.fspath('b')) == os.path.join('a', 'b')
 
 
 def test_posix():
