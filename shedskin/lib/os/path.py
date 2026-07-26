@@ -71,6 +71,9 @@ def normpath(s):
 def relpath(path, start=None):
     return ''
 
+def expanduser(s):
+    return s
+
 def getsize(s):
     return 1
 
