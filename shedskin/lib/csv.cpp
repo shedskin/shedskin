@@ -364,8 +364,7 @@ void *reader::parse_process_char(str *s) {
             }
             else {
                 /* illegal */
-                // TODO illegal error
-                return NULL;
+                throw new Error(__add_strs(5, new str("'"), dialect->delimiter, new str("' expected after '"), dialect->quotechar, new str("'")));
             }
             break;
 
@@ -375,8 +374,7 @@ void *reader::parse_process_char(str *s) {
             else if (c == EOL)
                 this->state = START_RECORD;
             else {
-                // TODO error
-                return NULL;
+                throw new Error(new str("new-line character seen in unquoted field - do you need to open the file with newline=''?"));
             }
             break;
     }
