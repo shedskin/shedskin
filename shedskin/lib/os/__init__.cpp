@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <filesystem>
+#include <system_error>
 #include <thread>
 
 #ifdef _MSC_VER
@@ -141,9 +142,16 @@ void *rename(str *a, str *b) {
 }
 
 void *replace(str *a, str *b) {
-    /* on POSIX, rename() already atomically replaces an existing
-     * destination, which is exactly what os.replace() promises */
-    return rename(a, b);
+    /* std::rename() already atomically replaces an existing destination
+     * on POSIX, but on Windows it fails with EEXIST in that case instead.
+     * std::filesystem::rename() is specified to have POSIX-like overwrite
+     * semantics on every platform, so use that here instead to match what
+     * os.replace() promises. */
+    std::error_code ec;
+    std::filesystem::rename(a->c_str(), b->c_str(), ec);
+    if (ec)
+        throw new OSError(a);
+    return NULL;
 }
 
 __ss_int cpu_count() {
