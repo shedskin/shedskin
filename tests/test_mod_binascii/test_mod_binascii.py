@@ -72,6 +72,28 @@ def test_uu():
         output_bytes = binascii.b2a_uu(input_bytes)
         assert binascii.a2b_uu(output_bytes) == input_bytes
 
+
+def test_a2b_uu_short_input():
+    # regression test: a2b_uu read the declared length byte (and later
+    # data bytes) straight off the input buffer, with no guard for the
+    # buffer running out before that many bytes were actually supplied.
+    # CPython's buffers are always NUL-terminated so reading "past the
+    # end" harmlessly sees an implicit 0 there and CPython treats that
+    # like whitespace/padding; our storage has no such terminator, so
+    # this used to read past the end of the buffer.
+    assert binascii.a2b_uu(b'') == b'\x00' * 32
+
+    # length byte claims 45 bytes of output, but only one data
+    # character follows before the line ends.
+    assert binascii.a2b_uu(bytes.fromhex('4d4d0a')) == b'\xb4' + b'\x00' * 44
+
+    # the common case this code path exists for: a mail transport (or
+    # a human) strips the trailing whitespace from a uuencoded line.
+    encoded = binascii.b2a_uu(b'hoepa')
+    stripped = encoded.rstrip(b' \n') + b'\n'
+    assert binascii.a2b_uu(stripped) == b'hoepa'
+
+
 def test_base64():
     b2a = binascii.b2a_base64(s)
     assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
@@ -309,6 +331,7 @@ def test_all():
     test_qp()
     test_b2a_qp_leading_dot_at_end()
     test_uu()
+    test_a2b_uu_short_input()
     test_base64()
     test_base64_strict_mode()
     test_base64_padding_errors()
