@@ -452,6 +452,36 @@ def test_eof_mid_row():
     assert result3 == []
 
 
+def test_strict_illegal_quote():
+    # regression test: in strict mode, data trailing a closing quote before
+    # the delimiter/newline must raise csv.Error, not silently merge/drop
+    # characters.
+    result = list(csv.reader(['"a"b,c'], strict=False))
+    assert result == [['ab', 'c']]
+
+    error = ''
+    try:
+        list(csv.reader(['"a"b,c'], strict=True))
+    except csv.Error as e:
+        error = str(e)
+    assert error == "',' expected after '\"'"
+
+
+def test_stray_mid_line_cr():
+    # regression test: a bare \r that doesn't terminate the line (more data
+    # follows before the next \n) must raise csv.Error, not silently drop
+    # the rest of the row.
+    error = ''
+    try:
+        list(csv.reader(['a,b\rc,d']))
+    except csv.Error as e:
+        error = str(e)
+    assert error == (
+        "new-line character seen in unquoted field - "
+        "do you need to open the file with newline=''?"
+    )
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -467,6 +497,8 @@ def test_all():
     test_quote_strings_writer()
     test_quote_notnull_writer()
     test_eof_mid_row()
+    test_strict_illegal_quote()
+    test_stray_mid_line_cr()
 
 
 if __name__ == "__main__":
