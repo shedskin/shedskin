@@ -15,6 +15,7 @@ import fnmatch
 import getopt
 import glob
 import heapq
+import io
 import itertools
 import math
 import mmap

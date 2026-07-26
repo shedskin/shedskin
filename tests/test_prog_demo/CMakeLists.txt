@@ -13,6 +13,7 @@ add_shedskin_product(
         getopt
         glob
         heapq
+        io
         itertools
         math
         mmap
