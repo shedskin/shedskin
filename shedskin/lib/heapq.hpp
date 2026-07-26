@@ -316,6 +316,48 @@ template<class T, class Key, class ... Args> mergeiter<T, Key> *merge(__ss_int, 
 
 /* nlargest, nsmallest */
 
+/* Like Cmp/InvCmp, but operating on (sequence_index, value) pairs so that
+ * ties on value/key can be broken deterministically. CPython's nlargest and
+ * nsmallest decorate each element with its arrival index and, for equal
+ * keys, prefer the earliest-arriving element in the final result (see
+ * heapq.py: order counts down for nlargest and up for nsmallest, then the
+ * retained items are fully re-sorted on (key, order)). nheapiter instead
+ * produces its final order by draining a heap ascending (per Cmp) and
+ * serving it back-to-front, so - regardless of whether Cmp or InvCmp is in
+ * play - a tie must make the *later* index sort as the "smaller" element,
+ * so that after the reversal the earlier index comes out first. */
+template<class T, class Key> struct NCmpSecond {
+    Key key;
+    NCmpSecond(Key key) : key(key) {}
+
+    inline __ss_int operator()(T& first, T& second) const {
+        __ss_int c;
+        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+            c = __cmp(first.second, second.second);
+        else
+            c = __cmp(key(first.second), key(second.second));
+        if (c != 0)
+            return c;
+        return _cmp_index(second.first, first.first);
+    }
+};
+
+template<class T, class Key> struct InvNCmpSecond {
+    Key key;
+    InvNCmpSecond(Key key) : key(key) {}
+
+    inline __ss_int operator()(T& first, T& second) const {
+        __ss_int c;
+        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+            c = -__cmp(first.second, second.second);
+        else
+            c = -__cmp(key(first.second), key(second.second));
+        if (c != 0)
+            return c;
+        return _cmp_index(second.first, first.first);
+    }
+};
+
 template<class T, template <class Y, class Z> class Cmp, class Key> class nheapiter : public __iter<T> {
 public:
     size_t index;
@@ -341,17 +383,19 @@ template<class T, template <class Y, class Z> class Cmp, class Key> inline nheap
     }
 
     __iter<T> *iter = iterable->__iter__();
-    std::vector<T> heap;
+    typedef std::pair<size_t, T> item_t;
+    std::vector<item_t> heap;
+    size_t seq = 0;
 
     try {
       for (__ss_int i = 0; i < n; ++i)
-        heappush<Cmp>(heap, iter->__next__(), key);
+        heappush<Cmp>(heap, item_t(seq++, iter->__next__()), key);
       for (; ; ) {
-        heappushpop<Cmp>(heap, iter->__next__(), key);
+        heappushpop<Cmp>(heap, item_t(seq++, iter->__next__()), key);
       }
     } catch (StopIteration *) {
         while (!heap.empty())
-            this->values.push_back(heappop<Cmp>(heap, key));
+            this->values.push_back(heappop<Cmp>(heap, key).second);
     }
 
     this->index = values.size();
@@ -365,12 +409,12 @@ template<class T, template <class Y, class Z> class Cmp, class Key> T nheapiter<
     return this->values[--this->index];
 }
 
-template<class T, class Key> nheapiter<T, Cmp, Key> *nlargest(Key key, __ss_int n, pyiter<T> *iterable) {
-    return new nheapiter<T, Cmp, Key>(n, iterable, key);
+template<class T, class Key> nheapiter<T, NCmpSecond, Key> *nlargest(Key key, __ss_int n, pyiter<T> *iterable) {
+    return new nheapiter<T, NCmpSecond, Key>(n, iterable, key);
 }
 
-template<class T, class Key> nheapiter<T, InvCmp, Key> *nsmallest(Key key, __ss_int n, pyiter<T> *iterable) {
-    return new nheapiter<T, InvCmp, Key>(n, iterable, key);
+template<class T, class Key> nheapiter<T, InvNCmpSecond, Key> *nsmallest(Key key, __ss_int n, pyiter<T> *iterable) {
+    return new nheapiter<T, InvNCmpSecond, Key>(n, iterable, key);
 }
 
 void __init();
