@@ -159,6 +159,10 @@ class ConstVisitor(ast_utils.BaseNodeVisitor):
         if (isinstance(value, (str, bytes))
             and value not in self.value_name
         ):
+            # string (forward reference) annotations have no constraint
+            # graph node, and are never emitted
+            if (node, 0, 0) not in self.gx.cnode:
+                return None
             # skip inherited methods  TODO existing helper?
             parent: Optional[AllParent] = infer.inode(self.gx, node).parent
             parent = python.outer_func(parent)
