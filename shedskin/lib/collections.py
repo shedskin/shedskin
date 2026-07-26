@@ -89,7 +89,9 @@ class defaultdict(dict):
         return self.value
 
     def copy(self):
-        return {self.unit: self.value}  # TODO defaultdict
+        d = defaultdict()
+        d.__setunit__(self.unit, self.value)
+        return d
 
     def __delete__(self, k):  # TODO difference with delitem?
         self.__key__(k)
