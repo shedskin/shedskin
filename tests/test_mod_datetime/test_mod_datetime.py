@@ -53,12 +53,32 @@ def test_datetime_custom_tzinfo():
     assert dt.date() == datetime.date(2007, 4, 3)
 
 
+def test_timedelta_total_seconds():
+    tol = 1e-3  # generous enough to also pass under --float32
+
+    td = datetime.timedelta(days=2, hours=3, minutes=30, seconds=15, microseconds=500000)
+    assert abs(td.total_seconds() - 185415.5) < tol
+
+    td = datetime.timedelta(seconds=-5, microseconds=-500000)
+    assert abs(td.total_seconds() - (-5.5)) < tol
+
+    td = datetime.timedelta()
+    assert abs(td.total_seconds() - 0.0) < tol
+
+    td = datetime.timedelta(weeks=1)
+    assert abs(td.total_seconds() - 604800.0) < tol
+
+    # negative days, positive seconds/microseconds (internal normalization)
+    td = datetime.timedelta(days=-1, seconds=1, microseconds=1)
+    assert abs(td.total_seconds() - (-86398.999999)) < tol
+
 
 def test_all():
         test_date()
         test_date_day_out_of_range()
         test_datetime_basic()
         test_datetime_custom_tzinfo()
+        test_timedelta_total_seconds()
 
 if __name__ == "__main__":
     test_all()

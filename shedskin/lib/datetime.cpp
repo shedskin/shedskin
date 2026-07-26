@@ -951,6 +951,10 @@ timedelta *timedelta::__abs__() {
         return __neg__();
 }
 
+__ss_float timedelta::total_seconds() {
+    return ((__ss_float)days*24*3600 + seconds) + microseconds/(__ss_float)1000000.0;
+}
+
 __ss_int timedelta::__cmp__(timedelta *other) {
     if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds))
         return 0;
