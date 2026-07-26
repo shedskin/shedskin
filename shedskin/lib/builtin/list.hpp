@@ -1,10 +1,16 @@
 /* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#include "builtin/sitestats.hpp"
+
 #ifdef SS_DECL
 
 template <class T> class list : public pyseq<T> {
 public:
     __GC_VECTOR(T) units;
+#ifdef __SS_PREDICT
+    ListSiteStat *__ss_site = nullptr;
+    bool __ss_site_grow_recorded = false;
+#endif
 
     list();
     template <class ... Args> list(int count, Args ... args);
@@ -248,6 +254,13 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
 }
 
 template<class T> void *list<T>::append(T a) {
+#ifdef __SS_PREDICT
+    if (this->__ss_site && !this->__ss_site_grow_recorded
+            && this->units.size() == this->units.capacity()) {
+        this->__ss_site_grow_recorded = true;
+        __shedskin__::__list_site_grew(*this->__ss_site);
+    }
+#endif
     this->units.push_back(a);
     return NULL;
 }
