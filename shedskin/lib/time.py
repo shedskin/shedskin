@@ -1,6 +1,8 @@
 # Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
 timezone = 0
+altzone = 0
+daylight = 0
 tzname = ("str", "str")
 
 def clock():

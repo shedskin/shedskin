@@ -32,7 +32,30 @@ enum
   MMAP_PUSH(MAP_SHARED),
   MMAP_PUSH(MAP_PRIVATE),
   MMAP_PUSH(MAP_ANONYMOUS),
-  MMAP_PUSH(MAP_ANON)
+  MMAP_PUSH(MAP_ANON),
+
+  /* Linux-only flags; fall back to -1 where the platform (or libc) does
+     not define them, e.g. WIN32, macOS, or musl. */
+#ifdef MAP_DENYWRITE
+  MMAP_PUSH(MAP_DENYWRITE),
+#else
+  __MAP_DENYWRITE = -1,
+#endif
+#ifdef MAP_EXECUTABLE
+  MMAP_PUSH(MAP_EXECUTABLE),
+#else
+  __MAP_EXECUTABLE = -1,
+#endif
+#ifdef MAP_POPULATE
+  MMAP_PUSH(MAP_POPULATE),
+#else
+  __MAP_POPULATE = -1,
+#endif
+#ifdef MAP_STACK
+  MMAP_PUSH(MAP_STACK)
+#else
+  __MAP_STACK = -1
+#endif
 };
 } // __mmap__ namespace
 
@@ -46,6 +69,11 @@ enum
 #undef MAP_PRIVATE
 #undef MAP_ANONYMOUS
 #undef MAP_ANON
+
+#undef MAP_DENYWRITE
+#undef MAP_EXECUTABLE
+#undef MAP_POPULATE
+#undef MAP_STACK
 
 #include "mmap.hpp"
 
@@ -71,7 +99,12 @@ const __ss_int
     MAP_SHARED    = __MAP_SHARED,
     MAP_PRIVATE   = __MAP_PRIVATE,
     MAP_ANONYMOUS = __MAP_ANONYMOUS,
-    MAP_ANON      = __MAP_ANON;
+    MAP_ANON      = __MAP_ANON,
+
+    MAP_DENYWRITE  = __MAP_DENYWRITE,
+    MAP_EXECUTABLE = __MAP_EXECUTABLE,
+    MAP_POPULATE   = __MAP_POPULATE,
+    MAP_STACK      = __MAP_STACK;
 
 // Default parameters.
 #ifndef WIN32 /* UNIX */

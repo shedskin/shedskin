@@ -59,6 +59,13 @@ public:
 extern bytes *default_0;
 extern str *default_1;
 
+extern const __ss_int DEFAULT_BUFFER_SIZE;
+
+/* SEEK_SET/SEEK_CUR/SEEK_END are in shedskin's reserved-identifier list
+   (they collide with stdio.h macros), so the compiler emits __ss_-prefixed
+   references for them; declare them under those names accordingly. */
+extern const __ss_int __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
+
 void __init();
 
 } // module namespace
