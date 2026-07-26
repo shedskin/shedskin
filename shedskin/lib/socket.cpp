@@ -647,6 +647,17 @@ str *gethostname()
     return new str(name);
 }
 
+socket *create_connection(socket::inet_address address, double timeout, socket::inet_address source_address)
+{
+    socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
+    if (timeout >= 0)
+        s->settimeout(timeout);
+    if (source_address)
+        s->bind(source_address);
+    s->connect(address);
+    return s;
+}
+
 __ss_int _ss_htonl(__ss_int x) {
     return (__ss_int)htonl((uint32_t)x);
 }

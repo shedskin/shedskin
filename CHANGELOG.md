@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `base64.{b16encode, b16decode}`
   - Support `os.path.relpath`
   - Support `tuple.{index, count}`
+  - Support `socket.{getblocking, create_connection}`
 
 - Now raising ZeroDivisionError, can be disabled with `--nozero`
 
