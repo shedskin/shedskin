@@ -6,6 +6,11 @@
 #include "builtin.hpp"
 #include <ctime>
 #ifdef WIN32
+   #ifdef _MSC_VER
+      #ifndef NOMINMAX
+         #define NOMINMAX
+      #endif
+   #endif
    #include <windows.h>
    #include <time.h>
    #include <sys/timeb.h>
