@@ -600,7 +600,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
             (data[in] == '=') ||
             (header && data[in] == '_') ||
             ((data[in] == '.') && (linelen == 0) &&
-             (data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
+             (in+1 >= datalen || data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
             (!istext && ((data[in] == '\r') || (data[in] == '\n'))) ||
             ((data[in] == '\t' || data[in] == ' ') && (in + 1 == datalen)) ||
             ((data[in] < 33) &&
@@ -670,7 +670,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
             (data[in] == '=') ||
             (header && data[in] == '_') ||
             ((data[in] == '.') && (linelen == 0) &&
-             (data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
+             (in+1 >= datalen || data[in+1] == '\n' || data[in+1] == '\r' || data[in+1] == 0)) ||
             (!istext && ((data[in] == '\r') || (data[in] == '\n'))) ||
             ((data[in] == '\t' || data[in] == ' ') && (in + 1 == datalen)) ||
             ((data[in] < 33) &&
