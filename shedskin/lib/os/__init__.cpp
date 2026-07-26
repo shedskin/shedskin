@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <filesystem>
+#include <system_error>
+#include <thread>
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -137,6 +139,29 @@ void *rename(str *a, str *b) {
     if(std::rename(a->c_str(), b->c_str()) == -1)
         throw new OSError(a);
     return NULL;
+}
+
+void *replace(str *a, str *b) {
+    /* std::rename() already atomically replaces an existing destination
+     * on POSIX, but on Windows it fails with EEXIST in that case instead.
+     * std::filesystem::rename() is specified to have POSIX-like overwrite
+     * semantics on every platform, so use that here instead to match what
+     * os.replace() promises. */
+    std::error_code ec;
+    std::filesystem::rename(a->c_str(), b->c_str(), ec);
+    if (ec)
+        throw new OSError(a);
+    return NULL;
+}
+
+__ss_int cpu_count() {
+    /* CPython can return None here if the count can't be determined;
+     * shedskin doesn't allow mixing None with a scalar int return type
+     * (see docs/documentation.md), so we fall back to 1 instead */
+    unsigned int n = std::thread::hardware_concurrency();
+    if (n == 0)
+        n = 1;
+    return (__ss_int)n;
 }
 
 void *remove(str *path) {
