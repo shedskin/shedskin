@@ -94,6 +94,28 @@ def test_a2b_uu_short_input():
     assert binascii.a2b_uu(stripped) == b'hoepa'
 
 
+def test_a2b_uu_trailing_garbage_message():
+    # regression test: a2b_uu raised binascii.Error with no message
+    # (None) for illegal trailing characters, where CPython raises
+    # binascii.Error("Trailing garbage"). The exception type already
+    # matched CPython; only the message text was missing.
+    ok = False
+    try:
+        binascii.a2b_uu(b'!XXXXX!\n')
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Trailing garbage'
+    assert ok
+
+    ok = False
+    try:
+        binascii.a2b_uu(b'!AB!!\n')
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Trailing garbage'
+    assert ok
+
+
 def test_base64():
     b2a = binascii.b2a_base64(s)
     assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
@@ -377,6 +399,7 @@ def test_all():
     test_b2a_qp_leading_dot_at_end()
     test_uu()
     test_a2b_uu_short_input()
+    test_a2b_uu_trailing_garbage_message()
     test_base64()
     test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input()
     test_base64_strict_mode()
