@@ -279,22 +279,20 @@ template <class U, class V, class W> list<typename U::for_in_unit> *sorted(U *it
     U *__1;
     list<typename U::for_in_unit> *l = new list<typename U::for_in_unit>();
     FOR_IN(e,iter,1,2,3)
-        l->units.push_back(e);
+        l->append(e);
     END_FOR
     l->sort(cmp, key, reverse);
     return l;
 }
 
 template <class A, class V, class W> list<A> *sorted(list<A> *x, V cmp, W key, __ss_int reverse) {
-    list<A> *l = new list<A>();
-    l->units = x->units;
+    list<A> *l = new list<A>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
 
 template <class A, class V, class W> list<A> *sorted(tuple2<A,A> *x, V cmp, W key, __ss_int reverse) {
-    list<A> *l = new list<A>();
-    l->units = x->units;
+    list<A> *l = new list<A>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
