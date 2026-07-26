@@ -1,6 +1,7 @@
 # Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
 import re
+import io
 
 DEFAULTSECT = "DEFAULT"
 MAX_INTERPOLATION_DEPTH = 10
@@ -42,9 +43,11 @@ class RawConfigParser:
         return ['']
     def read(self, filenames):
         return ['']
-    def readfp(self, fp, filename=None):
+    def read_string(self, string, source=None):
         pass
-    def get(self, section, option, raw=False, vars=None): # XXX
+    def read_dict(self, dictionary, source=None):
+        pass
+    def get(self, section, option, raw=False, vars=None, fallback=None): # XXX
         return ''
     def items(self, section):
         yield ('', '')
@@ -70,7 +73,7 @@ class RawConfigParser:
         pass
 
 class ConfigParser(RawConfigParser):
-    def get(self, section, option, raw=False, vars=None):
+    def get(self, section, option, raw=False, vars=None, fallback=None):
         return ''
     def items(self, section, raw=False, vars=None):
         yield ('', '')
