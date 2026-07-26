@@ -86,8 +86,8 @@ bytes *unhexlify(bytes *hex) {
     // from python's implementation (2.7.1, if it matters), but way better :)
     while(curhex <= end-2) // must be two characters left
     {
-        top = table_a2b_hex[(int)*(curhex++)];
-        bot = table_a2b_hex[(int)*(curhex++)];
+        top = table_a2b_hex[(unsigned char)*(curhex++)];
+        bot = table_a2b_hex[(unsigned char)*(curhex++)];
         if (top==(char)-1 || bot==(char)-1)
             throw new Error(new str("Invalid hex"));
         *(curdata++) = (char)((top<<4) + bot);
