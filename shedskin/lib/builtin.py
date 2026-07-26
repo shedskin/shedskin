@@ -315,6 +315,13 @@ class tuple(pyseq):
     def __hash__(self):
         return 1
 
+    def index(self, u, start=0, stop=0):
+        u == self.unit
+        return 1
+    def count(self, u):
+        u == self.unit
+        return 1
+
 class tuple2(pyseq):
     def __len__(self):
         return 1

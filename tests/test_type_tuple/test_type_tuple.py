@@ -80,6 +80,40 @@ def test_mul():
     assert d == (1, 2, 1, 2)
 
 
+def test_index():
+    t = (1, 2, 3, 2, 2)
+    assert t.index(2) == 1
+    assert t.index(2, 2) == 3
+    assert t.index(2, 2, 4) == 3
+
+    s = ("a", "bb", "a", "ccc")
+    assert s.index("a") == 0
+    assert s.index("a", 1) == 2
+
+    try:
+        t.index(99)
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        t.index(2, 2, 3)
+        assert False
+    except ValueError:
+        pass
+
+
+def test_count():
+    t = (1, 2, 3, 2, 2)
+    assert t.count(2) == 3
+    assert t.count(1) == 1
+    assert t.count(9) == 0
+
+    s = ("a", "bb", "a", "ccc")
+    assert s.count("a") == 2
+    assert s.count("z") == 0
+
+
 def test_all():
     test_tuple()
     test_equivalence()
@@ -89,6 +123,8 @@ def test_all():
     test_iteration()
     test_add()
     test_mul()
+    test_index()
+    test_count()
 
 
 
