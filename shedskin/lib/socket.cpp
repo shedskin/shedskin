@@ -267,6 +267,8 @@ socket *socket::connect(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
+    if(__0->unit.size() >= sizeof(smup.sun_path))
+        throw new error(new str("AF_UNIX path too long"));
     strcpy(smup.sun_path, __0->c_str());
 
     return connect(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
@@ -611,6 +613,8 @@ socket *socket::bind(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
+    if(__0->unit.size() >= sizeof(smup.sun_path))
+        throw new error(new str("AF_UNIX path too long"));
     strcpy(smup.sun_path, __0->c_str());
 
     return bind(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
