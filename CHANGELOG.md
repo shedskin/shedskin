@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Several builtin arguments could not be passed by keyword (e.g. `sum(start=..)`)
 - Several `--int64`, `--float32` related fixes
 - About 100 minor bugs uncovered (and fixed) by Claude
+- Sorting is now stable
 - Fixed several C++ compilation warnings
 
 ### Optimized
