@@ -364,8 +364,7 @@ void *reader::parse_process_char(str *s) {
             }
             else {
                 /* illegal */
-                // TODO illegal error
-                return NULL;
+                throw new Error(__add_strs(5, new str("'"), dialect->delimiter, new str("' expected after '"), dialect->quotechar, new str("'")));
             }
             break;
 
@@ -375,8 +374,7 @@ void *reader::parse_process_char(str *s) {
             else if (c == EOL)
                 this->state = START_RECORD;
             else {
-                // TODO error
-                return NULL;
+                throw new Error(new str("new-line character seen in unquoted field - do you need to open the file with newline=''?"));
             }
             break;
     }
@@ -400,8 +398,20 @@ list<str *> *reader::__next__() {
     this->parse_reset();
 
     while (1) {
-        line = (this->input_iter)->__next__();
-        // TODO unexpected end of data
+        try {
+            line = (this->input_iter)->__next__();
+        } catch (StopIteration *) {
+            /* underlying iterator exhausted mid-row (e.g. an unterminated
+               quoted field on the last line); if we have no partial data,
+               this is a genuine end of iteration, otherwise flush what we
+               have, matching CPython's behavior of returning the row
+               collected so far rather than silently dropping it. */
+            if (this->state == START_RECORD && this->fields->__len__() == 0 && this->field_len == 0) {
+                throw;
+            }
+            this->parse_save_field();
+            break;
+        }
         this->line_num += 1;
         str *c;
         str::for_in_loop __3;
