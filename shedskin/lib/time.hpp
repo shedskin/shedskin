@@ -26,11 +26,11 @@ namespace __time__ {
 extern __ss_int timezone;
 extern tuple2<str *, str *> *tzname;
 
-double time();
-double perf_counter();
-double monotonic();
-double process_time();
-void *sleep(double s);
+__ss_float time();
+__ss_float perf_counter();
+__ss_float monotonic();
+__ss_float process_time();
+void *sleep(__ss_float s);
 
 extern str *const_0, *const_1;
 
@@ -63,20 +63,20 @@ public:
 };
 
 
-double mktime(struct_time *tuple);
-double mktime(tuple2<__ss_int, __ss_int> *tuple);
+__ss_float mktime(struct_time *tuple);
+__ss_float mktime(tuple2<__ss_int, __ss_int> *tuple);
 
 struct_time *localtime();
-struct_time *localtime(const double timep);
+struct_time *localtime(const __ss_float timep);
 
 struct_time *gmtime();
-struct_time *gmtime(const double seconds);
+struct_time *gmtime(const __ss_float seconds);
 
 str *asctime();
 str *asctime(struct_time *tuple);
 
 str *ctime();
-str *ctime(const double seconds);
+str *ctime(const __ss_float seconds);
 
 str *strftime(str *format, struct_time* tuple);
 str *strftime(str *format);
