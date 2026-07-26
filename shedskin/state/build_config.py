@@ -44,7 +44,7 @@ class BuildConfiguration:
     executable_product: bool = True
     pyextension_product: bool = False
     int32: bool = False
-    int64: bool = True
+    int64: bool = False
     int128: bool = False
     float32: bool = False
     float64: bool = False
