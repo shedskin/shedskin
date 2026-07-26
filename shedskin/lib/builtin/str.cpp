@@ -605,7 +605,7 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     size_t len = this->unit.size();
     slicenr(x, l, u, s, (__ss_int)len);
     if(s == 1)
-        return new str(unit.data()+l, (size_t)(u-l));
+        return new str(unit.data()+l, (u>l) ? (size_t)(u-l) : 0);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {

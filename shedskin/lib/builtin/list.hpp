@@ -331,7 +331,7 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
     list<T> *c = new list<T>();
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        if(u != l) {
+        if(u > l) {
             c->units.resize((size_t)(u-l));
             std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
         }
@@ -426,7 +426,8 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
 template<class T> void *list<T>::__delslice__(__ss_int a, __ss_int b) {
     if(a>this->__len__()) return NULL;
     if(b>this->__len__()) b = this->__len__();
-    units.erase(units.begin()+a,units.begin()+b);
+    if(a<b)
+        units.erase(units.begin()+a,units.begin()+b);
     return NULL;
 }
 
