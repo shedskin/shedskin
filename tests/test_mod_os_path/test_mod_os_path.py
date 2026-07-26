@@ -67,10 +67,39 @@ def test_os_path_relpath():
         pass
 
 
+def test_os_path_expanduser():
+    assert expanduser("relative/path") == "relative/path"
+    assert expanduser("") == ""
+
+    if os.name == "nt":
+        home_var, user_var = "USERPROFILE", "USERNAME"
+    else:
+        home_var, user_var = "HOME", None
+
+    home = os.getenv(home_var)
+    if not home:
+        assert expanduser("~") == "~"
+        return
+
+    home = home.rstrip("/\\")
+    assert expanduser("~") == home
+    assert expanduser("~/foo") == home + "/foo"
+
+    if user_var:
+        # on Windows, ~<current user> resolves directly (no guessing needed)
+        user = os.getenv(user_var)
+        if user:
+            assert expanduser("~" + user + "/bar") == home + "/bar"
+    else:
+        # posixpath has no pwd module here, so ~user forms are left alone
+        assert expanduser("~otheruser/bar") == "~otheruser/bar"
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
     test_os_path_relpath()
+    test_os_path_expanduser()
 
 if __name__ == '__main__':
     test_all()
