@@ -890,9 +890,9 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
 
 bytes *__mmapiter::__next__()
 {
-    if (map->__eof())
+    if (pos >= map->__size())
         throw new StopIteration();
-    return new bytes(__char_cache[(unsigned char)(map->read_byte())]->unit);
+    return new bytes(__char_cache[(unsigned char)(map->data()[pos++])]->unit);
 }
 
 void __init()
