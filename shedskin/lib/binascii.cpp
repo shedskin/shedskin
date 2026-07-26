@@ -207,6 +207,16 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
+            /* Without this mask, leftchar keeps every bit it has ever
+            ** accumulated (each iteration only ever adds bits, never
+            ** discards the ones already consumed above), so it grows
+            ** by 8 bits every byte with no bound -- for any input of
+            ** more than a handful of bytes this overflows __ss_int
+            ** (signed), which is undefined behavior, even though the
+            ** shift-and-mask above always happens to read out the
+            ** correct low-order bits regardless.
+            */
+            leftchar &= ((1 << leftbits) - 1);
             if(backtick && !this_ch)
                 *ascii_data++ = '`';
             else
@@ -492,6 +502,11 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
+            /* See the comment on the equivalent line in b2a_uu: without
+            ** this, leftchar grows unboundedly and overflows __ss_int
+            ** (signed) for any input longer than a handful of bytes.
+            */
+            leftchar &= ((1 << leftbits) - 1);
             *ascii_data++ = (char)table_b2a_base64[(unsigned char)this_ch];
         }
     }
