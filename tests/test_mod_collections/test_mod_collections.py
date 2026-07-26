@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections import deque
+import copy
 
 
 def test_defaultdict1():
@@ -55,6 +56,36 @@ def test_defaultdict_copy():
     assert e['b'] == 1
     assert d['a'] == 1
     assert 'b' not in d
+
+
+def test_defaultdict_copy_module():
+    # regression test: defaultdict had no __copy__/__deepcopy__ overrides,
+    # so copy.copy()/copy.deepcopy() fell back to plain dict's versions,
+    # silently downgrading the result to a dict and dropping default_factory
+    d = defaultdict(int, {'a': 1})
+
+    e = copy.copy(d)
+    assert e['a'] == 1
+    e['b'] += 1
+    assert e['b'] == 1
+    assert 'b' not in d
+
+    f = copy.deepcopy(d)
+    assert f['a'] == 1
+    f['c'] += 1
+    assert f['c'] == 1
+    assert 'c' not in d
+
+
+def test_defaultdict_from_pairs():
+    # regression test: the constructor backing defaultdict(factory, iterable)
+    # hardcoded the value type as __ss_int internally, so this only worked
+    # when the value type actually was int; any other value type (str here)
+    # failed to compile
+    d = defaultdict(str, [(1, "a"), (2, "b")])
+    assert d[1] == "a"
+    assert d[2] == "b"
+    assert d[99] == ""
 
 
 def test_deque1():
@@ -230,6 +261,8 @@ def test_all():
     test_defaultdict2()
     test_defaultdict3()
     test_defaultdict_copy()
+    test_defaultdict_copy_module()
+    test_defaultdict_from_pairs()
     test_deque1()
     test_deque2()
     test_deque3()

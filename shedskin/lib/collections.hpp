@@ -352,6 +352,23 @@ public:
         return c;
     }
 
+    defaultdict<K, V> *__copy__() {
+        return copy();
+    }
+
+    defaultdict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo) {
+        defaultdict<K,V> *c = new defaultdict<K,V>(func);
+        memo->__setitem__(this, c);
+        K e;
+        typename dict<K,V>::for_in_loop __3;
+        int __2;
+        dict<K,V> *__1;
+        FOR_IN(e,this,1,2,3)
+            c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
+        END_FOR
+        return c;
+    }
+
     defaultdict<K, V> *__or__(dict<K,V> *other) {
         defaultdict<K,V> *result = copy();
         result->update(other);
