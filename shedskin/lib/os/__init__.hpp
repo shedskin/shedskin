@@ -31,6 +31,15 @@ str *getcwd();
 void *chdir(str *dir);
 str *getenv(str *name_, str *alternative=0);
 void *rename(str *a, str *b);
+void *replace(str *a, str *b);
+__ss_int cpu_count();
+
+/* os.fspath() is the identity function for the str/bytes paths that
+ * shedskin supports (no os.PathLike protocol) */
+template <class T> T *fspath(T *path) {
+    return path;
+}
+
 void *remove(str *a);
 void *rmdir(str *a);
 void *removedirs(str *name_);
