@@ -347,7 +347,7 @@ public:
     }
 
     defaultdict<K, V> *copy() {
-        defaultdict<K,V> *c = new defaultdict<K,V>;
+        defaultdict<K,V> *c = new defaultdict<K,V>(func);
         c->gcd = this->gcd;
         return c;
     }

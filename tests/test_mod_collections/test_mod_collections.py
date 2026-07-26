@@ -41,6 +41,22 @@ def test_defaultdict3():
     assert keys == set([1,2])
 
 
+def test_defaultdict_copy():
+    # regression test: copy() used to drop the default_factory, so
+    # missing-key access on the copy raised KeyError instead of using
+    # the factory like the original does
+    d = defaultdict(int)
+    d['a'] = 1
+
+    e = d.copy()
+    assert e['a'] == 1
+
+    e['b'] += 1
+    assert e['b'] == 1
+    assert d['a'] == 1
+    assert 'b' not in d
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -213,6 +229,7 @@ def test_all():
     test_defaultdict1()
     test_defaultdict2()
     test_defaultdict3()
+    test_defaultdict_copy()
     test_deque1()
     test_deque2()
     test_deque3()
