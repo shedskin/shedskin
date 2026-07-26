@@ -418,8 +418,9 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
     array<T> *c = new array<T>(typecode);
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        c->units.resize((u-l)*itemsize);
-        memcpy(&(c->units[0]), &(this->units[l*itemsize]), (u-l)*itemsize);
+        size_t slen = (u>l) ? (size_t)(u-l)*itemsize : 0;
+        c->units.resize(slen);
+        if(slen) memcpy(&(c->units[0]), &(this->units[l*itemsize]), slen);
     } else if(s > 0)
         for(int i=l; i<u; i += s)
             for(size_t j=0; j<itemsize; j++)

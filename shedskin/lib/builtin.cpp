@@ -374,19 +374,20 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
     } else
         s = 1;
 
+    __ss_int neg_clamp = (s<0) ? -1 : 0; // out-of-range negative index: -1 sentinel for a reverse step, 0 otherwise
     if (l>=len)
-        l = len;
+        l = (s<0) ? len-1 : len; // last valid index for a reverse step, one-past-the-end otherwise
     else if (l<0) {
         l = len+l;
         if(l<0)
-            l = 0;
+            l = neg_clamp;
     }
     if (u>=len)
         u = len;
     else if (u<0) {
         u = len+u;
         if(u<0)
-            u = 0;
+            u = neg_clamp;
     }
 
     if(s<0) {
@@ -394,12 +395,16 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
             l = len-1;
         if (!(x&2))
             u = -1;
+        if(s < -(len+1))
+            s = -(len+1); // magnitude beyond len can only ever affect one iteration; clamp so i+=s can't overflow
     }
     else {
         if (!(x&1))
             l = 0;
         if (!(x&2))
             u = len;
+        if(s > len+1)
+            s = len+1; // ditto
     }
 }
 
