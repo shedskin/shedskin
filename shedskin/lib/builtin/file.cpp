@@ -180,10 +180,6 @@ list<str *> *file::readlines(__ss_int /*size_hint*/) {
     return lines;
 }
 
-__iter<str *> *file::xreadlines() {
-    return this;
-}
-
 void *file::close() {
     if(f and not closed) {
         flush();
@@ -202,7 +198,7 @@ void *file::flush() {
     return NULL;
 }
 
-int file::__ss_fileno() {
+__ss_int file::__ss_fileno() {
     __check_closed();
     if(f)
         return fileno(f);
@@ -413,10 +409,6 @@ list<bytes *> *file_binary::readlines(__ss_int /*size_hint*/) {
     return lines;
 }
 
-__iter<bytes *> *file_binary::xreadlines() {
-    return this->__iter__();
-}
-
 void *file_binary::close() {
     if(f and not closed) {
         flush();
@@ -435,7 +427,7 @@ void *file_binary::flush() {
     return NULL;
 }
 
-int file_binary::__ss_fileno() {
+__ss_int file_binary::__ss_fileno() {
     __check_closed();
     if(f)
         return fileno(f);

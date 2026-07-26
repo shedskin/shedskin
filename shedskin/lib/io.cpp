@@ -15,7 +15,7 @@ const __ss_int __ss_SEEK_SET = 0, __ss_SEEK_CUR = 1, __ss_SEEK_END = 2;
 
 /* BytesIO */
 
-bytes *BytesIO::read(int n) {
+bytes *BytesIO::read(__ss_int n) {
     __check_closed();
     bytes *result;
     if(n < 0) {
@@ -28,13 +28,13 @@ bytes *BytesIO::read(int n) {
     return result;
 }
 
-bytes *BytesIO::readline(int n) {
+bytes *BytesIO::readline(__ss_int n) {
     __check_closed();
     if(__eof())
         return new bytes("");
     size_t nl = s->unit.find('\n', (size_t)pos);
     if(nl != std::string::npos) {
-        int tbr = (int)(nl - (size_t)pos + 1);
+        __ss_int tbr = (__ss_int)(nl - (size_t)pos + 1);
         return read(n < 0 ? tbr : std::min(tbr, n));
     } else {
         return read(n);
@@ -63,7 +63,7 @@ __ss_int BytesIO::write(bytes *data) {
     if((size_t)pos > s->unit.size())
         s->unit.resize((size_t)pos, '\0');
     s->unit.insert((size_t)pos, data->unit);
-    pos += (int)size;
+    pos += (__ss_int)size;
     s->unit.erase((size_t)pos, size);
     return (__ss_int)size;
 }
@@ -74,7 +74,7 @@ bytes *BytesIO::getvalue() {
 
 /* StringIO */
 
-str *StringIO::read(int n) {
+str *StringIO::read(__ss_int n) {
     __check_closed();
     str *result;
     if(n < 0) {
@@ -87,13 +87,13 @@ str *StringIO::read(int n) {
     return result;
 }
 
-str *StringIO::readline(int n) {
+str *StringIO::readline(__ss_int n) {
     __check_closed();
     if(__eof())
         return new str("");
     size_t nl = s->unit.find('\n', (size_t)pos);
     if(nl != std::string::npos) {
-        int tbr = (int)(nl - (size_t)pos + 1);
+        __ss_int tbr = (__ss_int)(nl - (size_t)pos + 1);
         return read(n < 0 ? tbr : std::min(tbr, n));
     } else {
         return read(n);
@@ -122,7 +122,7 @@ __ss_int StringIO::write(str *data) {
     if((size_t)pos > s->unit.size())
         s->unit.resize((size_t)pos, '\0');
     s->unit.insert((size_t)pos, data->unit);
-    pos += (int)size;
+    pos += (__ss_int)size;
     s->unit.erase((size_t)pos, size);
     return (__ss_int)size;
 }
