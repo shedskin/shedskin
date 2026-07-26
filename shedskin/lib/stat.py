@@ -90,3 +90,5 @@ S_IROTH = 0o0004
 S_IWOTH = 0o0002
 S_IXOTH = 0o0001
 
+def filemode(mode):
+    return ''

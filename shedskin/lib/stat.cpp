@@ -115,5 +115,65 @@ __ss_int __ss_S_ISSOCK(__ss_int mode) {
 }
 #endif
 
+str *filemode(__ss_int mode) {
+    __GC_STRING perm;
+
+    /* Use the literal POSIX mode-bit values directly rather than the
+       __ss_S_* globals: those are only populated inside __init() under
+       '#ifndef WIN32' / '#if !defined(_MSC_VER)' guards, so on a Windows
+       build most of them (S_IFLNK, S_IFSOCK, S_IRGRP/IWGRP/IXGRP,
+       S_IROTH/IWOTH/IXOTH, S_ISUID/ISGID/ISVTX, and on MSVC also
+       S_IFBLK/IFIFO/IRUSR/IWUSR/IXUSR) stay at their default value of 0.
+       Comparing against those zeroed globals produces false-positive
+       matches (e.g. a plain permissions-only mode like 0644, which has
+       no type bits set, would spuriously equal a zeroed __ss_S_IFLNK and
+       be misreported as a symlink). The numeric values below are the
+       same ones stat.py itself hardcodes, and are portable across
+       platforms (see stat.py's own module docstring). */
+    const __ss_int SS_IFLNK  = 0120000, SS_IFSOCK = 0140000, SS_IFREG = 0100000,
+                   SS_IFBLK  = 0060000, SS_IFDIR  = 0040000, SS_IFCHR = 0020000,
+                   SS_IFIFO  = 0010000;
+    const __ss_int SS_ISUID = 04000, SS_ISGID = 02000, SS_ISVTX = 01000,
+                   SS_IRUSR = 0400,  SS_IWUSR = 0200,  SS_IXUSR = 0100,
+                   SS_IRGRP = 0040,  SS_IWGRP = 0020,  SS_IXGRP = 0010,
+                   SS_IROTH = 0004,  SS_IWOTH = 0002,  SS_IXOTH = 0001;
+
+    __ss_int ftype = mode & 0170000; /* S_IFMT */
+    if (ftype == SS_IFLNK) perm += 'l';
+    else if (ftype == SS_IFSOCK) perm += 's';
+    else if (ftype == SS_IFREG) perm += '-';
+    else if (ftype == SS_IFBLK) perm += 'b';
+    else if (ftype == SS_IFDIR) perm += 'd';
+    else if (ftype == SS_IFCHR) perm += 'c';
+    else if (ftype == SS_IFIFO) perm += 'p';
+    else perm += '?';
+
+    /* owner */
+    perm += (mode & SS_IRUSR) ? 'r' : '-';
+    perm += (mode & SS_IWUSR) ? 'w' : '-';
+    if ((mode & (SS_IXUSR|SS_ISUID)) == (SS_IXUSR|SS_ISUID)) perm += 's';
+    else if (mode & SS_ISUID) perm += 'S';
+    else if (mode & SS_IXUSR) perm += 'x';
+    else perm += '-';
+
+    /* group */
+    perm += (mode & SS_IRGRP) ? 'r' : '-';
+    perm += (mode & SS_IWGRP) ? 'w' : '-';
+    if ((mode & (SS_IXGRP|SS_ISGID)) == (SS_IXGRP|SS_ISGID)) perm += 's';
+    else if (mode & SS_ISGID) perm += 'S';
+    else if (mode & SS_IXGRP) perm += 'x';
+    else perm += '-';
+
+    /* other */
+    perm += (mode & SS_IROTH) ? 'r' : '-';
+    perm += (mode & SS_IWOTH) ? 'w' : '-';
+    if ((mode & (SS_IXOTH|SS_ISVTX)) == (SS_IXOTH|SS_ISVTX)) perm += 't';
+    else if (mode & SS_ISVTX) perm += 'T';
+    else if (mode & SS_IXOTH) perm += 'x';
+    else perm += '-';
+
+    return new str(perm);
+}
+
 } // module namespace
 
