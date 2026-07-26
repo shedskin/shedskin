@@ -90,19 +90,26 @@ def test_defaultdict_from_pairs():
 
 def test_defaultdict_type_identity():
     # regression test: defaultdict never got its own class object, so every
-    # defaultdict instance's __class__ silently stayed the base dict's,
-    # making type()/isinstance() misreport a defaultdict as a plain dict
-    items = []
-    items.append(dict())
-    items.append(defaultdict(int))
-    count_default = 0
-    for item in items:
-        if isinstance(item, defaultdict):
-            count_default += 1
-    assert count_default == 1
-
+    # defaultdict instance's __class__ silently stayed the base dict's. We
+    # can't check this with isinstance()/type(): shedskin always evaluates
+    # isinstance() to True and doesn't support type() at all. __repr__ is
+    # overridden specifically for defaultdict, so it's a usable observable
+    # proxy for whether an object is "really" a defaultdict.
     d = defaultdict(int)
-    assert type(d).__name__ == 'defaultdict'
+    d['a'] = 1
+    plain = dict()
+    plain['a'] = 1
+
+    assert repr(d) != repr(plain)
+    assert repr(d).startswith('defaultdict(')
+    assert not repr(plain).startswith('defaultdict(')
+
+    # copy() must preserve the type too, not just the runtime __class__:
+    # a prior version of this fix set __class__ correctly but copy()'s
+    # type-inference stub still returned a plain dict, so the copy silently
+    # lost the default_factory as far as the compiler was concerned
+    e = d.copy()
+    assert repr(e).startswith('defaultdict(')
 
 
 def test_deque1():
