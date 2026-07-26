@@ -88,6 +88,23 @@ def test_defaultdict_from_pairs():
     assert d[99] == ""
 
 
+def test_defaultdict_type_identity():
+    # regression test: defaultdict never got its own class object, so every
+    # defaultdict instance's __class__ silently stayed the base dict's,
+    # making type()/isinstance() misreport a defaultdict as a plain dict
+    items = []
+    items.append(dict())
+    items.append(defaultdict(int))
+    count_default = 0
+    for item in items:
+        if isinstance(item, defaultdict):
+            count_default += 1
+    assert count_default == 1
+
+    d = defaultdict(int)
+    assert type(d).__name__ == 'defaultdict'
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -263,6 +280,7 @@ def test_all():
     test_defaultdict_copy()
     test_defaultdict_copy_module()
     test_defaultdict_from_pairs()
+    test_defaultdict_type_identity()
     test_deque1()
     test_deque2()
     test_deque3()

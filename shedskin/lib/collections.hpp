@@ -14,6 +14,7 @@ template <class A> class deque;
 template <class T> class __dequeiter;
 
 extern class_ *cl_deque;
+extern class_ *cl_defaultdict;
 template <class A> class deque : public pyiter<A> {
 public:
 #ifdef __SS_NOGC
@@ -293,14 +294,17 @@ template <class K, class V> class defaultdict : public dict<K, V> {
 
 public:
     defaultdict(V (*func_)()=NULL) {
+        this->__class__ = cl_defaultdict;
         func = func_;
     }
 
     defaultdict(V (*func_)(), dict<K, V> *d) : dict<K,V>(d) {
+        this->__class__ = cl_defaultdict;
         func = func_;
     }
 
     defaultdict(V (*func_)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
+        this->__class__ = cl_defaultdict;
         func = func_;
         tuple2<K, V> *k;
         typename pyiter<tuple2<K, V> *>::for_in_loop __3;
@@ -385,7 +389,7 @@ public:
         if(!PyDict_Check(p))
             throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
 
-        this->__class__ = cl_dict;
+        this->__class__ = cl_defaultdict;
         PyObject *key, *value;
 
         PyObject *iter = PyObject_GetIter(p);
