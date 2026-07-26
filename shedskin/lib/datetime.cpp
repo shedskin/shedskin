@@ -141,7 +141,7 @@ timedelta *date::__sub__(date *other) {
 __ss_int date::__cmp__(date *other) {
     if(year==other->year && month==other->month && day==other->day)
         return 0;
-    if (year*366+month*31+day > other->year*366+other->month*31+other->day)
+    if (toordinal() > other->toordinal())
         return 1;
     return -1;
 }
@@ -545,9 +545,11 @@ __ss_int datetime::__cmp__(datetime *other) {
 
 	if(f->year==other->year && f->month==other->month && f->day==other->day && f->hour==other->hour && f->minute==other->minute && f->second==other->second && f->microsecond==other->microsecond)
 		return 0;
-	if(f->year*366+f->month*31+f->day > other->year*366+other->month*31+other->day)
+	__ss_int ford = f->toordinal();
+	__ss_int oord = other->toordinal();
+	if(ford > oord)
 		return 1;
-	if(f->year*366+f->month*31+f->day == other->year*366+other->month*31+other->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+	if(ford == oord && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
 		return 1;
     return -1;
 }
