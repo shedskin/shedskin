@@ -32,6 +32,22 @@ def test_qp():
     assert binascii.a2b_qp(b2a) == input_bytes
 
 
+def test_b2a_qp_leading_dot_at_end():
+    # regression test: b2a_qp checked whether a leading "." at the
+    # start of a line is followed by a newline/CR/NUL (the historical
+    # C-string-terminator check) by unconditionally reading data[in+1],
+    # which reads one byte past the buffer when "." is the very last
+    # byte of the input.
+    assert binascii.b2a_qp(b'.') == b'=2E'
+    assert binascii.b2a_qp(b'.\x00') == b'=2E=00'
+    assert binascii.b2a_qp(b'.\x00x') == b'=2E=00x'
+    assert binascii.b2a_qp(b'.\n') == b'=2E\n'
+    assert binascii.b2a_qp(b'.\r') == b'=2E\r'
+    assert binascii.b2a_qp(b'a.') == b'a.'
+    assert binascii.b2a_qp(b'test.') == b'test.'
+    assert binascii.b2a_qp(b'.A') == b'.A'
+
+
 def test_uu():
     b2a = binascii.b2a_uu(s)
     assert b2a == b'G;7D@9W5I=&%R(\'=A;G1S(\'1O(\'-T<G5M(&%L;"!N:6=H="!L;VYG\n'
@@ -291,6 +307,7 @@ def test_crc_hqx_high_bit_bytes():
 
 def test_all():
     test_qp()
+    test_b2a_qp_leading_dot_at_end()
     test_uu()
     test_base64()
     test_base64_strict_mode()
