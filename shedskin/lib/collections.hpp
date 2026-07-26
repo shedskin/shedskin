@@ -112,6 +112,10 @@ public:
         return True;
     }
 
+    __ss_int __hash__() {
+        throw new TypeError(new str("unhashable type: 'deque'"));
+    }
+
     __ss_bool __contains__(A value) {
         iter = units.begin();
         while(iter != units.end()) {
