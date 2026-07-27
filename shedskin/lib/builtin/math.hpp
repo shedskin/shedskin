@@ -382,7 +382,7 @@ namespace __int___ {
         __ss_int n = 0;
         __ss_int i = start_index;
         for(__ss_int j = 0; j < actual_size; j++) {
-            n |= ((unsigned char)(b->unit[i])) << (8*j);
+            n |= (__ss_int)((unsigned char)(b->unit[i])) << (8*j);
             i += inc;
         }
 
