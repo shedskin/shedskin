@@ -1,7 +1,7 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class deque(pyiter):
-    def __init__(self, iterable=None, maxlen=None):
+    def __init__(self, iterable=None, maxlen=-1):
         self.unit = iter(iterable).__next__()
         self.maxlen = 1
 
