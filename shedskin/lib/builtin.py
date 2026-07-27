@@ -1073,11 +1073,12 @@ class file_binary(pyiter):
     def __next__(self):
         return self.unit
 
-def open(name, mode=None):
-    return file(name, mode)
+__file = file('')
+def open(file, mode=None):
+    return __file
 
-def open_binary(name, mode=None):
-    return file_binary(name, mode)
+def open_binary(file, mode=None):
+    return file_binary('')
 
 def ord(c):
     return 1
