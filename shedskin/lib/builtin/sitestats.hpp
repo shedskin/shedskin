@@ -3,9 +3,6 @@
 #ifndef SS_SITESTATS_HPP
 #define SS_SITESTATS_HPP
 
-#include <algorithm>
-#include <cstddef>
-
 /* Per-call-site backing-buffer size class, adapted online from
  * list.append() grow events.
  *
