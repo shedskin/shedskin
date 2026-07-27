@@ -29,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support `glob.escape`
   - Support `base64.{b16encode, b16decode}`
   - Support `os.{cpu_count, fspath, replace}`
-  - Support `os.path.relpath`
   - Support `tuple.{index, count}`
   - Support `socket.{getblocking, create_connection}`
   - Support `datetime.timedelta.total_seconds`
