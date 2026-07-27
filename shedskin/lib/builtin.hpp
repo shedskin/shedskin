@@ -99,6 +99,8 @@ inline void operator delete[](void *, std::align_val_t,
 #include <stdint.h>
 #include <limits>
 #include <numeric>
+#include <cstddef>
+
 
 #ifndef WIN32
 #include <cxxabi.h>
