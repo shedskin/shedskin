@@ -389,7 +389,7 @@ namespace __int___ {
         /* extend sign bit */
         if(__ss_signed) {
             for(__ss_int j = actual_size; (size_t)j < sizeof(__ss_int); j++) {
-                n |= sign_ext << (8*j);
+                n |= ((__ss_int)sign_ext) << (8*j);
             }
         }
 
