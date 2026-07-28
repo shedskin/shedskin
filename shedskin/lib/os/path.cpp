@@ -994,7 +994,6 @@ str *expanduser(str *path) {
         homedrive = __os__::getenv(const_24, const_1); /* HOMEDRIVE, default '' */
         userhome = join(2, homedrive, homepath);
     }
-    userhome = userhome->rstrip(const_18);
 
     if (i != 1) { /* ~user */
         target_user = path->__slice__(3, 1, i, 0);
