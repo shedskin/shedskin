@@ -10,7 +10,7 @@ namespace __select__ {
 
 extern str *__name__;
 
-template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *select(A *rFDs, B *wFDs, C *xFDs, double timeout) {
+template<class A, class B, class C, class D> tuple2<list<__ss_int> *, list<__ss_int> *> *select(A *rFDs, B *wFDs, C *xFDs, D timeout_) {
     __ss_int __2, __6, __10;
     A *__0;
     typename A::for_in_unit FDa;
@@ -28,6 +28,17 @@ template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *
     fd_set lxFDs;
     int maxFD = 0;
     struct timeval ltimeout;
+    bool has_timeout;
+    double timeout;
+    if constexpr (std::is_same_v<D, __ss_void_struct>) {
+        has_timeout = false;                       // timeout omitted -> block indefinitely
+        timeout = 0.0;
+    } else {
+        has_timeout = true;
+        timeout = (double)timeout_;
+        if(timeout < 0)
+            throw new ValueError(new str("timeout must be non-negative"));
+    }
     FD_ZERO(&lrFDs);
     FD_ZERO(&lwFDs);
     FD_ZERO(&lxFDs);
@@ -64,7 +75,7 @@ template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *
     memset(&ltimeout, 0, sizeof(ltimeout));
     ltimeout.tv_sec = timeout;
     ltimeout.tv_usec = (timeout - floor(timeout))*1E6;
-    if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, (timeout < 0) ? NULL : &ltimeout) == -1) {
+    if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, has_timeout ? &ltimeout : NULL) == -1) {
         throw new OSError();
     }
     rrFDs = (new list<__ss_int>());
