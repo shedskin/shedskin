@@ -821,7 +821,7 @@ template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue_, py
     exhausted = 0;
     push_iter(iterable);
     push_iter(iterable2);
-    fillvalue = fillvalue;
+    fillvalue = fillvalue_;
 }
 
 template<class T> void zip_longestiter<T, T>::push_iter(pyiter<T> *iterable) {
