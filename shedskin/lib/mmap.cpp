@@ -205,6 +205,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
     flags = flags_;
     prot = prot_;
     access = access_;
+    offset = (off_t)offset_;
 
     return NULL;
 }
@@ -242,10 +243,29 @@ void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();
 #ifdef HAVE_MREMAP
+    /* If this mapping is backed by a file, the file itself must be grown
+       (or shrunk) to match, or else accessing the newly mapped region
+       will silently drop writes (if it lands in the tail of the same
+       page as the old EOF) or crash the process with SIGBUS/SIGSEGV
+       (if it lands in a wholly new page), since mremap() only adjusts
+       the virtual mapping and never touches the underlying file. */
+    if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
+    {
+        throw new OSError();
+    }
 #if defined(__NetBSD__)
     void *temp = ::mremap(m_begin, __size(),
                                     m_begin, size_t(new_size), 0);
-#else // !__NetBSD__
+#elif defined(MREMAP_MAYMOVE)
+    /* Without MREMAP_MAYMOVE, mremap() can only grow a mapping in place,
+       which fails with ENOMEM whenever the kernel hasn't left free address
+       space directly after it -- practically always, outside of a trivial
+       just-mapped case. Allowing the kernel to relocate the mapping (as
+       CPython does) is required for growing to work reliably; m_begin is
+       updated below to whatever address the kernel actually returns. */
+    void *temp = ::mremap(m_begin, __size(),
+                                    size_t(new_size), MREMAP_MAYMOVE);
+#else // !__NetBSD__ && !MREMAP_MAYMOVE
     void *temp = ::mremap(m_begin, __size(),
                                     size_t(new_size), 0);
 #endif // __NetBSD__
