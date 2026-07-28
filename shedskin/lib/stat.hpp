@@ -50,9 +50,14 @@ __ss_int __ss_S_ISREG(__ss_int mode);
 
 str *filemode(__ss_int mode);
 
-#if !defined (_MSC_VER)
+/* S_IMODE/S_IFMT use only literal bitmask constants, so they have no
+   dependency on the POSIX S_IS.. / S_IF.. macros that MSVC's
+   <sys/stat.h> lacks; they must stay available on every platform.
+   Only S_ISCHR, S_ISBLK and S_ISFIFO actually rely on those missing
+   macros and need the MSVC guard. */
 __ss_int __ss_S_IMODE(__ss_int mode);
 __ss_int __ss_S_IFMT(__ss_int mode);
+#if !defined (_MSC_VER)
 __ss_int __ss_S_ISCHR(__ss_int mode);
 __ss_int __ss_S_ISBLK(__ss_int mode);
 __ss_int __ss_S_ISFIFO(__ss_int mode);
