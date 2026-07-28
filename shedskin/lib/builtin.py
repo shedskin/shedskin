@@ -1013,7 +1013,7 @@ class file(pyiter):
         return False
 
     def truncate(self, size=-1):
-        pass
+        return 1
 
     def __next__(self):
         return self.unit
@@ -1064,7 +1064,7 @@ class file_binary(pyiter):
         return False
 
     def truncate(self, size=-1):
-        pass
+        return 1
 
     def __next__(self):
         return self.unit

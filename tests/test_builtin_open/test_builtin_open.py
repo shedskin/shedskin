@@ -73,6 +73,16 @@ def test_with_open_write():
          assert f.read() == 'hop\nhop\nhoppa!\n'
 
 
+def test_open_truncate():
+    f = open(outputfile, 'w')
+    f.write('hop\nhop\nhoppa!\n')
+    result = f.truncate(3)
+    assert result == 3
+    f.close()
+    with open(outputfile) as g:
+        assert g.read() == 'hop'
+
+
 def test_lineendings():
      cr_txt = os.path.join(testdata, 'cr.txt')
      lf_txt = os.path.join(testdata, 'lf.txt')
@@ -109,6 +119,7 @@ def test_all():
     test_with_open_read()
     test_with_open_write()
     test_open_write()
+    test_open_truncate()
     test_open_enter_exit()
     test_lineendings()
 
