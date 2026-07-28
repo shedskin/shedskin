@@ -11,6 +11,9 @@ class BytesIO(file_binary):
     def getvalue(self):
         return b''
 
+    def truncate(self, size=-1):
+        return 1
+
 
 class StringIO(file):
     def __init__(self, initial_value=None):
@@ -18,3 +21,6 @@ class StringIO(file):
 
     def getvalue(self):
         return ''
+
+    def truncate(self, size=-1):
+        return 1

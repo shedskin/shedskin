@@ -160,6 +160,58 @@ def test_stringio_write_past_end():
     assert s3.getvalue() == 'abXYef'
 
 
+def test_bytesio_truncate_return_value():
+    # truncate() must return the new size, not None (regression test)
+    b = io.BytesIO(b'abcdefgh')
+    b.seek(3)
+    assert b.truncate() == 3
+    assert b.getvalue() == b'abc'
+
+    b2 = io.BytesIO(b'abcdef')
+    assert b2.truncate(2) == 2
+    assert b2.getvalue() == b'ab'
+
+
+def test_stringio_truncate_return_value():
+    s = io.StringIO('abcdefgh')
+    s.seek(3)
+    assert s.truncate() == 3
+    assert s.getvalue() == 'abc'
+
+    s2 = io.StringIO('abcdef')
+    assert s2.truncate(2) == 2
+    assert s2.getvalue() == 'ab'
+
+
+def test_bytesio_does_not_alias_input():
+    # BytesIO must copy its initial_bytes, not alias it -- writing to the
+    # BytesIO must never mutate the object (or literal) that was passed in
+    # (regression test for a bug where write()/truncate() silently
+    # corrupted the caller's original bytes object, including any other
+    # occurrence of the same literal elsewhere in the program).
+    original = b'hello world'
+    buf = io.BytesIO(original)
+    buf.write(b'HELLO')
+    assert original == b'hello world'
+    assert buf.getvalue() == b'HELLO world'
+
+    buf2 = io.BytesIO(b'abc')
+    buf2.write(b'def')
+    assert b'abc' == b'abc'
+
+
+def test_stringio_does_not_alias_input():
+    original = 'hello world'
+    buf = io.StringIO(original)
+    buf.write('HELLO')
+    assert original == 'hello world'
+    assert buf.getvalue() == 'HELLO world'
+
+    buf2 = io.StringIO('abc')
+    buf2.write('def')
+    assert 'abc' == 'abc'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -170,6 +222,10 @@ def test_all():
     test_stringio_write_none()
     test_bytesio_write_past_end()
     test_stringio_write_past_end()
+    test_bytesio_truncate_return_value()
+    test_stringio_truncate_return_value()
+    test_bytesio_does_not_alias_input()
+    test_stringio_does_not_alias_input()
 
 
 if __name__ == '__main__':
