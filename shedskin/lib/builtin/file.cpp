@@ -214,7 +214,7 @@ __ss_bool file::isatty()
 #endif // WIN32
 }
 
-void *file::truncate(__ss_int size) {
+__ss_int file::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
@@ -223,7 +223,7 @@ void *file::truncate(__ss_int size) {
     if(ftruncate(__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
-    return NULL;
+    return size;
 }
 
 str *file::__repr__() {
@@ -443,7 +443,7 @@ __ss_bool file_binary::isatty()
 #endif // WIN32
 }
 
-void *file_binary::truncate(__ss_int size) {
+__ss_int file_binary::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
@@ -452,7 +452,7 @@ void *file_binary::truncate(__ss_int size) {
     if(ftruncate(__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
-    return NULL;
+    return size;
 }
 
 str *file_binary::__repr__() {
