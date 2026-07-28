@@ -218,6 +218,10 @@ def test_deque_maxlen():
     e = d.copy()
     assert e.maxlen == 4
 
+    f = deque(maxlen=5)
+    f.extend(range(10))
+    assert list(f) == [5,6,7,8,9]
+
 
 def test_deque_maxlen_on_init():
     # regression test: maxlen used to be applied *after* the initial

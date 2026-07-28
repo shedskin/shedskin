@@ -485,6 +485,7 @@ def connect_actual_formal(
     if parent_constr:
         actuals = actuals[1:]
 
+    # TODO replace all this with __ss_void approach?
     skip_defaults = (
         False  # XXX investigate and further narrow down cases where we want to skip
     )
@@ -524,7 +525,18 @@ def connect_actual_formal(
             )
         )
     ):
-        if not (func.mv.module.ident == "math" and func.ident == "isclose"):
+        if (
+            not (
+                func.mv.module.ident == "math"
+                and func.ident == "isclose"
+            )
+            and not (
+                func.mv.module.ident == "collections"
+                and func.ident == "__init__"
+                and isinstance(func.parent, python.Class)
+                and func.parent.ident == 'deque'
+            )
+        ):
             skip_defaults = True
 
     actuals, formals, _, extra, _error = analyze_args(
