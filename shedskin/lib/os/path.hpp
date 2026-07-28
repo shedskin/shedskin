@@ -55,65 +55,6 @@ __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
 str *_resolve_link(str *path);
 
-#ifndef WIN32
-template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
-    list<str *> *__21, *names;
-    list<str *>::for_in_loop __123;
-    str *name;
-    __ss_int __23;
-    __os__::__cstat *st;
-
-    try {
-        names = __os__::listdir(top);
-    } catch (__os__::error *) {
-        return NULL;
-    }
-    func(arg, top, names);
-
-    FOR_IN(name,names,21,23,123)
-        name = join(2, top, name);
-        try {
-            st = __os__::lstat(name);
-        } catch (__os__::error *) {
-            continue;
-        }
-        if (__stat__::__ss_S_ISDIR(st->st_mode)) {
-            walk(name, func, arg);
-        }
-    END_FOR
-
-    return NULL;
-}
-
-#else
-template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
-    list<str *> *__33, *names;
-    list<str *>::for_in_loop __123;
-    str *name;
-    tuple2<str *, str *> *exceptions;
-    __ss_int __35;
-
-    try {
-        names = __os__::listdir(top);
-    } catch (__os__::error *) {
-        return NULL;
-    }
-    func(arg, top, names);
-    exceptions = (new tuple2<str *, str *>(2, const_0, const_3));
-
-    FOR_IN(name,names,33,35,123)
-        if ((!exceptions->__contains__(name))) {
-            name = join(2, top, name);
-            if (isdir(name)) {
-                walk(name, func, arg);
-            }
-        }
-    END_FOR
-
-    return NULL;
-}
-#endif
-
 void __init();
 
 } // module namespace

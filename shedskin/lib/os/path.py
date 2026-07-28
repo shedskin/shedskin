@@ -85,6 +85,3 @@ def getmtime(s):
 
 def getctime(s):
     return 1.0
-
-def walk(top, func, arg):
-    func(arg, '', [''])
