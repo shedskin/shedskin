@@ -154,6 +154,25 @@ def test_match_pos_endpos():
     assert (m.pos, m.endpos) == (2, 5)
 
 
+def test_re_endpos_window():
+    # endpos must act as an exclusive upper bound on the search window
+    # (like a slice), not merely as an attribute stored on the match
+    # object: a pattern needing characters at or beyond endpos must not
+    # match, and end-of-window anchors ($) must anchor at endpos, not at
+    # the end of the whole string.
+    s = "aXb"
+    assert re.compile("Xb").search(s, 0, 2) is None
+    assert re.compile("X").search(s, 0, 2).span() == (1, 2)
+    assert re.compile("b$").search(s, 0, 2) is None
+    assert re.compile("b$").search(s, 0, 3) is not None
+
+    pat = re.compile("c")
+    assert pat.search("abc", 0, 100).span() == (2, 3)  # clamp beyond len
+
+    assert re.compile("abc").fullmatch("abcde", 0, 3) is not None
+    assert re.compile("abc").fullmatch("abcde", 0, 4) is None
+
+
 def test_flags():
     assert re.NOFLAG == 0
     assert re.IGNORECASE == 2
@@ -292,6 +311,7 @@ def test_all():
     test_re_example2()
     test_re_example3()
     test_match_pos_endpos()
+    test_re_endpos_window()
     test_flags()
     test_re_match_anchored()
     test_re_fullmatch_anchored()
