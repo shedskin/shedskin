@@ -76,7 +76,6 @@ public:
 extern int  UPPER;
 extern __ss_float  LOG4;
 extern __ss_float  SG_MAGICCONST;
-extern list<str *> * __all__;
 extern int  BPF;
 extern Random * _inst;
 extern int  MATRIX_A;

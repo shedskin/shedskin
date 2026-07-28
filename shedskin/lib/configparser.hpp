@@ -25,7 +25,6 @@ class MissingSectionHeaderError;
 class RawConfigParser;
 class ConfigParser;
 
-extern list<str *> *__all__;
 extern str *DEFAULTSECT, *__name__;
 extern __ss_int MAX_INTERPOLATION_DEPTH;
 
