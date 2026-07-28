@@ -95,6 +95,44 @@ def test_timedelta_total_seconds():
     assert abs(td.total_seconds() - (-86398.999999)) < tol
 
 
+def test_timedelta_floordiv():
+    # regression test: __floordiv__ used to compute days/seconds/microseconds
+    # independently as (double)/n, which is not equivalent to exact integer
+    # floor division of the total duration and produced off-by-one
+    # microsecond/second results for most non-trivial inputs.
+    td = datetime.timedelta(days=-5, seconds=1, microseconds=1)
+    r = td // 3
+    assert (r.days, r.seconds, r.microseconds) == (-2, 28800, 333333)
+
+    td = datetime.timedelta(days=-1)
+    r = td // 2
+    assert (r.days, r.seconds, r.microseconds) == (-1, 43200, 0)
+
+    td = datetime.timedelta(days=7, seconds=100)
+    r = td // 3
+    assert (r.days, r.seconds, r.microseconds) == (2, 28833, 333333)
+
+    # large day counts used to overflow the (day*86400+seconds)*1e6 style
+    # intermediate value when computed as a double
+    td = datetime.timedelta(days=999999999, seconds=86399, microseconds=999999)
+    r = td // 7
+    assert (r.days, r.seconds, r.microseconds) == (142857142, 74057, 142857)
+
+
+def test_timedelta_truediv():
+    # regression test: __truediv__ had the same floating-point precision
+    # issue as __floordiv__ (see test_timedelta_floordiv)
+    td = datetime.timedelta(days=-5, seconds=1, microseconds=1)
+    r = td / 3
+    assert (r.days, r.seconds, r.microseconds) == (-2, 28800, 333334)
+
+    # round-half-to-even tie-breaking, matching cpython
+    assert (datetime.timedelta(microseconds=1) / 2).microseconds == 0
+    assert (datetime.timedelta(microseconds=3) / 2).microseconds == 2
+    assert (datetime.timedelta(microseconds=5) / 2).microseconds == 2
+    assert (datetime.timedelta(microseconds=7) / 2).microseconds == 4
+
+
 def test_all():
         test_date()
         test_date_day_out_of_range()
@@ -103,6 +141,8 @@ def test_all():
         test_datetime_basic()
         test_datetime_custom_tzinfo()
         test_timedelta_total_seconds()
+        test_timedelta_floordiv()
+        test_timedelta_truediv()
 
 if __name__ == "__main__":
     test_all()
