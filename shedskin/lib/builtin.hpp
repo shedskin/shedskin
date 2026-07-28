@@ -122,14 +122,15 @@ namespace __shedskin__ {
 
 #if defined(__SS_INT32)
     typedef int32_t __ss_int;
-#elif defined(__SS_INT64)
-    typedef int64_t __ss_int;
-#define __SS_LONG
 #elif defined(__SS_INT128)
     typedef __int128 __ss_int;
 #define __SS_LONG
 #else
-    typedef int __ss_int;
+    typedef int64_t __ss_int;
+#ifndef __SS_INT64
+#define __SS_INT64
+#endif
+#define __SS_LONG
 #endif
 
 /* float type */
