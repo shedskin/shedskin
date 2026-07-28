@@ -13,7 +13,8 @@ void __init() {
 
     /* Not every constant below is defined on every platform (e.g. most
      * POSIX signals don't exist on Windows, and SIGCLD/SIGPOLL/SIGPWR/
-     * SIGRTMAX/SIGRTMIN don't exist on macOS). Whichever of these are
+     * SIGRTMAX/SIGRTMIN don't exist on macOS -- nor, for that matter,
+     * on several BSDs). Whichever of these are
      * left unassigned by the platform-specific blocks further down
      * must not be allowed to silently read back as 0, since 0 is the
      * real (and meaningful) null signal, not a "does not exist" marker.
@@ -39,11 +40,19 @@ void __init() {
 #ifdef WIN32
     __ss_SIGBREAK = SIGBREAK;
 #else
-#ifndef __APPLE__
+#ifdef SIGCLD
     __ss_SIGCLD = SIGCLD;
+#endif
+#ifdef SIGPOLL
     __ss_SIGPOLL = SIGPOLL;
+#endif
+#ifdef SIGPWR
     __ss_SIGPWR = SIGPWR;
+#endif
+#ifdef SIGRTMAX
     __ss_SIGRTMAX = SIGRTMAX;
+#endif
+#ifdef SIGRTMIN
     __ss_SIGRTMIN = SIGRTMIN;
 #endif
     __ss_SIGALRM = SIGALRM;
