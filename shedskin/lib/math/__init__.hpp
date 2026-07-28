@@ -42,7 +42,9 @@ inline __ss_float fmod(__ss_float x, __ss_float y) {
 }
 
 inline tuple2<__ss_float, __ss_float> *modf(__ss_float x) {
-    return (new tuple2<__ss_float, __ss_float>(2, x-(__ss_int)x, (__ss_float)(__ss_int)x));
+    __ss_float ipart;
+    __ss_float fpart = std::modf(x, &ipart);
+    return (new tuple2<__ss_float, __ss_float>(2, fpart, ipart));
 }
 
 inline __ss_float ldexp(__ss_float x, __ss_int i) {
