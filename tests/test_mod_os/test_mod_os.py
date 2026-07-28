@@ -22,6 +22,62 @@ def test_listdir():
     assert len(os.listdir()) > 0
 
 
+def test_scandir():
+    # relative paths (resolved against the test binary's cwd) rather than
+    # a hardcoded '/tmp', which doesn't exist on Windows
+    base = 'shedskin_test_scandir_dir'
+    subdir = os.path.join(base, 'subdir')
+    afile = os.path.join(base, 'afile.txt')
+
+    os.mkdir(base)
+    os.mkdir(subdir)
+    with open(afile, 'w') as f:
+        f.write('hi')
+
+    names = []
+    dirs = []
+    files = []
+    for entry in os.scandir(base):
+        names.append(entry.name)
+        if entry.is_dir():
+            dirs.append(entry.name)
+        if entry.is_file():
+            files.append(entry.name)
+
+    names.sort()
+    assert names == ['afile.txt', 'subdir']
+    assert dirs == ['subdir']
+    assert files == ['afile.txt']
+
+    os.remove(afile)
+    os.rmdir(subdir)
+    os.rmdir(base)
+
+
+def test_scandir_name_path():
+    base = 'shedskin_test_scandir_dir2'
+    afile = os.path.join(base, 'afile.txt')
+
+    os.mkdir(base)
+    with open(afile, 'w') as f:
+        f.write('hi')
+
+    entries = list(os.scandir(base))
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.name == 'afile.txt'
+    assert entry.path == afile
+    assert entry.is_file()
+    assert not entry.is_dir()
+    assert not entry.is_symlink()
+
+    st = entry.stat()
+    assert st.st_size == 2
+
+    os.remove(afile)
+    os.rmdir(base)
+
+
 # following currently only tested under posix
 
 def test_env():
@@ -147,6 +203,8 @@ def test_all():
     test_cpu_count()
     test_replace()
     test_fspath()
+    test_scandir()
+    test_scandir_name_path()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()

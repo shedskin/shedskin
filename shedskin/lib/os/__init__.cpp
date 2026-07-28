@@ -377,6 +377,63 @@ __cstat *fstat(__ss_int fd) {
     return new __cstat(fd);
 }
 
+/* class DirEntry */
+
+class_ *cl_DirEntry;
+
+DirEntry::DirEntry(const std::filesystem::directory_entry &entry) : __entry(entry) {
+    this->__class__ = cl_DirEntry;
+    this->name = new str(entry.path().filename().string().c_str());
+    this->path = new str(entry.path().string().c_str());
+}
+
+__ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
+    std::error_code ec;
+    if(follow_symlinks)
+        return __mbool(__entry.is_directory(ec));
+    return __mbool(std::filesystem::is_directory(__entry.symlink_status(ec)));
+}
+
+__ss_bool DirEntry::is_file(__ss_bool follow_symlinks) {
+    std::error_code ec;
+    if(follow_symlinks)
+        return __mbool(__entry.is_regular_file(ec));
+    return __mbool(std::filesystem::is_regular_file(__entry.symlink_status(ec)));
+}
+
+__ss_bool DirEntry::is_symlink() {
+    std::error_code ec;
+    return __mbool(__entry.is_symlink(ec));
+}
+
+__cstat *DirEntry::stat(__ss_bool follow_symlinks) {
+    if(follow_symlinks)
+        return __os__::stat(this->path);
+    return __os__::lstat(this->path);
+}
+
+str *DirEntry::__repr__() {
+    std::stringstream ss;
+    ss << "<DirEntry " << repr(this->name)->c_str() << ">";
+    return new str(ss.str().c_str());
+}
+
+list<DirEntry *> *scandir(str *path) {
+    if(!path)
+        path = new str(".");
+
+    list<DirEntry *> *r = new list<DirEntry *>();
+
+    try {
+        for (const auto & entry : std::filesystem::directory_iterator(path->unit))
+            r->append(new DirEntry(entry));
+    } catch (std::filesystem::filesystem_error const&) {
+        throw new OSError(path);
+    }
+
+    return r;
+}
+
 __ss_bool stat_float_times(__ss_int newvalue) {
     if(newvalue==0)
         throw new TypeError(new str("os.stat_float_times: cannot change type"));
@@ -1391,6 +1448,7 @@ void __init() {
     default_5 = const_1;
 
     cl___cstat = new class_("__cstat");
+    cl_DirEntry = new class_("DirEntry");
 
     linesep = new str("\n");
 #ifdef WIN32
