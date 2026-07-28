@@ -923,16 +923,77 @@ timedelta *timedelta::__mul__(__ss_int n) {
     return new timedelta(days*n, seconds*n, microseconds*n,0,0,0,0);
 }
 
+/* Exact-integer floor division of timedelta(days,seconds,microseconds) by n,
+ * without ever forming (days*86400+seconds)*1000000+microseconds as a single
+ * value (which overflows a 64-bit integer for large day counts, and which is
+ * why the old floating-point implementation below produced off-by-one
+ * microsecond/second errors in timedelta // n and timedelta / n).
+ * *out_remainder is the exact remainder of the division (Python divmod sign
+ * convention), used by __truediv__ below to implement round-half-to-even
+ * like cpython. */
+static __ss_int floordivmod(__ss_int a, __ss_int b, __ss_int *r) {
+    __ss_int q = a / b;
+    __ss_int rem = a - q * b;
+    if (rem != 0 && ((rem < 0) != (b < 0))) {
+        q -= 1;
+        rem += b;
+    }
+    *r = rem;
+    return q;
+}
+
+static void timedelta_floordivmod(__ss_int days, __ss_int seconds, __ss_int microseconds, __ss_int n,
+                                   __ss_int *out_days, __ss_int *out_seconds, __ss_int *out_microseconds,
+                                   __ss_int *out_remainder) {
+    __ss_int A = days * 86400 + seconds;          /* exact, fits comfortably in 64 bits */
+    __ss_int r1;
+    __ss_int qhigh = floordivmod(A, n, &r1);       /* |r1| < |n| */
+    __ss_int combined = r1 * 1000000 + microseconds;
+    __ss_int r2;
+    __ss_int qlow = floordivmod(combined, n, &r2); /* |qlow| stays small, no overflow */
+    __ss_int qlow_hi, qlow_lo;
+    qlow_hi = floordivmod(qlow, 1000000, &qlow_lo);
+    __ss_int total_seconds = qhigh + qlow_hi;
+    __ss_int seconds_final;
+    __ss_int days_final = floordivmod(total_seconds, 86400, &seconds_final);
+
+    *out_days = days_final;
+    *out_seconds = seconds_final;
+    *out_microseconds = qlow_lo;
+    *out_remainder = r2;
+}
+
 timedelta *timedelta::__truediv__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    double d,s;
-    long double us;
-    d = double(days)/n;
-    s = double(seconds)/n;
-    us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
-    return new timedelta(0,d*24*3600+s,(double)us,0,0,0,0);
+    __ss_int d, s, us, rem;
+    timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
+
+    /* round-half-to-even, matching cpython's _divide_and_round */
+    __ss_int rr = rem * 2;
+    bool greater_than_half = n > 0 ? rr > n : rr < n;
+    bool tie = (rr == n);
+    if(greater_than_half || (tie && (us % 2 != 0))) {
+        us += 1;
+        if(us == 1000000) {
+            us = 0;
+            s += 1;
+            if(s == 86400) {
+                s = 0;
+                d += 1;
+            }
+        }
+    }
+
+    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
+    result->days = d;
+    result->seconds = s;
+    result->microseconds = us;
+    if(result->days>999999999 || result->days<(-999999999)) {
+        throw new OverflowError();
+    }
+    return result;
 }
 
 timedelta *timedelta::__neg__() {
@@ -943,7 +1004,17 @@ timedelta *timedelta::__floordiv__(__ss_int n) {
     if(n==0) {
        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    return new timedelta(double(days)/n,double(seconds)/n,double(microseconds)/n,0,0,0,0);
+    __ss_int d, s, us, rem;
+    timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
+
+    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
+    result->days = d;
+    result->seconds = s;
+    result->microseconds = us;
+    if(result->days>999999999 || result->days<(-999999999)) {
+        throw new OverflowError();
+    }
+    return result;
 }
 
 timedelta *timedelta::__abs__() {
