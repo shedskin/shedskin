@@ -347,6 +347,33 @@ def test_ulp():
     assert math.ulp(largest) == largest - prev
 
 
+def test_modf():
+    assert math.modf(1.5) == (0.5, 1.0)
+    assert math.modf(-1.5) == (-0.5, -1.0)
+    assert math.modf(0.0) == (0.0, 0.0)
+
+    # values whose integer part overflows a 64-bit int must not wrap/UB
+    a, b = math.modf(1e20)
+    assert a == 0.0
+    assert b == 1e20
+
+    c, d = math.modf(-1e20)
+    assert c == -0.0
+    assert d == -1e20
+
+    e, f = math.modf(float("inf"))
+    assert e == 0.0
+    assert math.isinf(f) and f > 0
+
+    g, h = math.modf(float("-inf"))
+    assert g == -0.0
+    assert math.isinf(h) and h < 0
+
+    i, j = math.modf(float("nan"))
+    assert math.isnan(i)
+    assert math.isnan(j)
+
+
 def test_remainder():
     assert math.remainder(5.0, 3.0) == -1.0
     assert math.remainder(4.0, 2.0) == 0.0
@@ -387,6 +414,7 @@ def test_all():
     test_isclose()
     test_dist()
     test_sumprod()
+    test_modf()
     test_math_integer()
     test_fmax_fmin()
     test_classification()
