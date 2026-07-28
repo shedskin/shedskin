@@ -490,16 +490,20 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
 
     //sanity checking
-    if(endpos == -1) nendpos = (__ss_int)subj->unit.size() - 1;
+    //nendpos is the exclusive end of the search window (i.e. the number of
+    //bytes of subj that pcre2_match is allowed to look at), matching the
+    //semantics of Python's endpos (like a slice upper bound: subj[pos:endpos])
+    if(endpos == -1) nendpos = (__ss_int)subj->unit.size();
     else if(endpos < pos) throw new error(new str("end position less than initial"));
-    else nendpos = endpos;
+    //clamp, mirroring CPython's handling of an endpos beyond the string length
+    else nendpos = (endpos < (__ss_int)subj->unit.size()) ? endpos : (__ss_int)subj->unit.size();
 
     if(subj->unit.size()!=0 and (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     r = pcre2_match(
         compiled_pattern,
         (PCRE2_SPTR) subj->c_str(),
-        nendpos + 1,
+        nendpos,
         pos,
         flags_,
         match_data,
