@@ -17,7 +17,7 @@ template<class T, class Key> struct Cmp {
     Cmp(Key key) : key(key) {}
 
     inline __ss_int operator()(T& first, T& second) const {
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             return __cmp(first, second);
         else
             return __cmp(key(first), key(second));
@@ -29,7 +29,7 @@ template<class T, class Key> struct InvCmp {
     InvCmp(Key key) : key(key) {}
 
     inline __ss_int operator()(T& first, T& second) const {
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             return -__cmp(first, second);
         else
             return -__cmp(key(first), key(second));
@@ -48,7 +48,7 @@ template<class T, class Key> struct CmpSecond {
 
     inline __ss_int operator()(T& first, T& second) const {
         __ss_int c;
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             c = __cmp(first.second, second.second);
         else
             c = __cmp(key(first.second), key(second.second));
@@ -68,7 +68,7 @@ template<class T, class Key> struct InvCmpSecond {
 
     inline __ss_int operator()(T& first, T& second) const {
         __ss_int c;
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             c = -__cmp(first.second, second.second);
         else
             c = -__cmp(key(first.second), key(second.second));
@@ -332,7 +332,7 @@ template<class T, class Key> struct NCmpSecond {
 
     inline __ss_int operator()(T& first, T& second) const {
         __ss_int c;
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             c = __cmp(first.second, second.second);
         else
             c = __cmp(key(first.second), key(second.second));
@@ -348,7 +348,7 @@ template<class T, class Key> struct InvNCmpSecond {
 
     inline __ss_int operator()(T& first, T& second) const {
         __ss_int c;
-        if constexpr (std::is_same_v<Key, int> || std::is_same_v<Key, long int>)
+        if constexpr (std::is_same_v<Key, __ss_int> || std::is_same_v<Key, long int> || std::is_same_v<Key, int>)
             c = -__cmp(first.second, second.second);
         else
             c = -__cmp(key(first.second), key(second.second));

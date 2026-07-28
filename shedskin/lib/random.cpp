@@ -465,9 +465,11 @@ __ss_int Random::getrandbits(__ss_int k) {
     getrandbits(k) -> x.  Generates an int with k random bits.
     */
 
-    if ((k<=0)) {
+    if (k<0)
         throw (new ValueError(const_8));
-    }
+    if (k == 0)
+        return 0;
+
     if ((size_t)k > sizeof(__ss_int)*8 - 2) {
         throw (new ValueError(const_9));
     }
