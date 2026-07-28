@@ -142,6 +142,17 @@ __ss_float time() {
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
+__ss_int time_ns() {
+    timespec ts { 0, 0 };
+#ifdef _MSC_VER
+    if (clock_gettime(0, &ts) == -1)
+#else
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+#endif
+	    throw new Exception(new str("clock_gettime"));
+    return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
+}
+
 #ifdef WIN32
 __ss_float perf_counter() {
     static LARGE_INTEGER frequency;
@@ -168,6 +179,31 @@ __ss_float process_time() {
     /* FILETIME units are 100ns */
     return (__ss_float)(k.QuadPart + u.QuadPart) / 10000000.0;
 }
+__ss_int perf_counter_ns() {
+    static LARGE_INTEGER frequency;
+    static bool frequency_initialized = false;
+    if (!frequency_initialized) {
+        QueryPerformanceFrequency(&frequency);
+        frequency_initialized = true;
+    }
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    return (__ss_int)((counter.QuadPart * (int64_t)1000000000) / frequency.QuadPart);
+}
+__ss_int monotonic_ns() {
+    return perf_counter_ns();
+}
+__ss_int process_time_ns() {
+    FILETIME creation, exit, kernel, user;
+    GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user);
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime;
+    k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime;
+    u.HighPart = user.dwHighDateTime;
+    /* FILETIME units are 100ns */
+    return (__ss_int)((k.QuadPart + u.QuadPart) * (int64_t)100);
+}
 #else
 __ss_float perf_counter() {
     timespec ts { 0, 0 };
@@ -185,6 +221,24 @@ __ss_float process_time() {
     if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
+}
+
+__ss_int perf_counter_ns() {
+    timespec ts { 0, 0 };
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
+}
+
+__ss_int monotonic_ns() {
+    return perf_counter_ns();
+}
+
+__ss_int process_time_ns() {
+    timespec ts { 0, 0 };
+    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
 }
 #endif
 

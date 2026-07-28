@@ -62,6 +62,38 @@ def test_process_time():
     assert p2 >= p1
     print(x)
 
+def test_time_ns():
+    t1 = time.time_ns()
+    t2 = time.time()
+    # time_ns() must agree with time() to sub-second precision, and must
+    # not be derived by naively multiplying the float result by 1e9
+    # (which loses precision for seconds-since-epoch-sized values)
+    assert abs(t1 / 1e9 - t2) < 1.0
+
+def test_perf_counter_ns():
+    t1 = time.perf_counter_ns()
+    time.sleep(0.1)
+    t2 = time.perf_counter_ns()
+    assert t2 > t1
+    assert (t2 - t1) >= 90000000
+
+def test_monotonic_ns():
+    t1 = time.monotonic_ns()
+    time.sleep(0.1)
+    t2 = time.monotonic_ns()
+    assert t2 > t1
+    assert (t2 - t1) >= 90000000
+
+def test_process_time_ns():
+    p1 = time.process_time_ns()
+    x = 0
+    for i in range(1000000):
+        x += i * i
+    p2 = time.process_time_ns()
+    # cpu time should never go backwards
+    assert p2 >= p1
+    print(x)
+
 def test_isdst_attribute():
     t = time.localtime(0)
     # regression test: struct_time must expose tm_isdst (not "isdst")
@@ -105,6 +137,10 @@ def test_all():
     test_perf_counter()
     test_monotonic()
     test_process_time()
+    test_time_ns()
+    test_perf_counter_ns()
+    test_monotonic_ns()
+    test_process_time_ns()
     test_isdst_attribute()
     test_len()
     test_eq_and_ordering()

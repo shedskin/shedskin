@@ -37,6 +37,10 @@ __ss_float time();
 __ss_float perf_counter();
 __ss_float monotonic();
 __ss_float process_time();
+__ss_int time_ns();
+__ss_int perf_counter_ns();
+__ss_int monotonic_ns();
+__ss_int process_time_ns();
 void *sleep(__ss_float s);
 
 extern str *const_0, *const_1;
