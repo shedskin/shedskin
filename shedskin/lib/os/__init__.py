@@ -447,7 +447,7 @@ def unlink(path):
     pass
 
 def lseek(fd, pos, how):
-    pass
+    return 1
 
 def fsync(fd):
     pass

@@ -136,6 +136,7 @@ bytes *urandom(__ss_int n);
 __ss_bool isatty(__ss_int fd);
 
 void *unsetenv(str* var);
+__ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
@@ -308,7 +309,6 @@ tuple2<__ss_float, __ss_float> *getloadavg();
 void *mkfifo(str *path, __ss_int mode=438);
 
 void *fsync(__ss_int fd);
-void *lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
 __ss_bool access(str *path, __ss_int mode);
 tuple2<__ss_float, __ss_float> *times();
