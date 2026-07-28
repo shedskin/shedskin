@@ -221,6 +221,11 @@ def test_zip_longest():
     assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue=42)) ==  [(1, 42, 12), (3, 21, 21), (4, 42, 33), (42, 42, 55)]
     assert list(itertools.zip_longest(['a','b','c'], ['e'])) == [('a', 'e'), ('b', None), ('c', None)]
 
+    # regression: exactly two same-typed iterables with an explicit fillvalue
+    # used to silently discard the fillvalue (self-assignment bug)
+    assert list(itertools.zip_longest([1, 3, 4], [5, 6], fillvalue=99)) == [(1, 5), (3, 6), (4, 99)]
+    assert list(itertools.zip_longest([5, 6], [1, 3, 4], fillvalue=99)) == [(5, 1), (6, 3), (99, 4)]
+
 
 def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
