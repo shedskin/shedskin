@@ -5,6 +5,8 @@
 
 #include "builtin.hpp"
 
+#include <filesystem>
+
 using namespace __shedskin__;
 namespace __os__ {
 
@@ -75,6 +77,24 @@ public:
 __cstat *stat(str *path);
 __cstat *lstat(str *path);
 __cstat *fstat(__ss_int fd);
+
+extern class_ *cl_DirEntry;
+class DirEntry : public pyobj {
+public:
+    str *name, *path;
+    std::filesystem::directory_entry __entry; /* not exposed to Python side */
+
+    DirEntry() { __class__ = cl_DirEntry; }
+    DirEntry(const std::filesystem::directory_entry &entry);
+
+    __ss_bool is_dir(__ss_bool follow_symlinks=True);
+    __ss_bool is_file(__ss_bool follow_symlinks=True);
+    __ss_bool is_symlink();
+    __cstat *stat(__ss_bool follow_symlinks=True);
+    str *__repr__();
+};
+
+list<DirEntry *> *scandir(str *path=0);
 
 __ss_bool stat_float_times(__ss_int newvalue=-1);
 str *strerror(__ss_int i);
