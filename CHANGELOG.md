@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `--boost` option, to use boost containers.
   This can help when using dictionaries/sets or many very short lists.
-  The 'dijkstra2' example, for example, becomes twice as fast!
+  The 'dijkstra2' example, for example, becomes much faster.
 
 - Added `--predict` option, which tries to predict maximum list sizes before
   (re)allocating storage, based on run-time sampling per allocation site. This
