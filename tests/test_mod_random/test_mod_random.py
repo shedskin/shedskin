@@ -133,6 +133,17 @@ def test_getrandbits():
         ok = True
     assert ok
 
+    # regression test: getrandbits(k) for k > 53 used to derive its value
+    # via random()*width, but random() only has BPF=53 bits of mantissa
+    # precision. For k > 53 this made every result an exact multiple of
+    # 2**(k-53), i.e. the low (k-53) bits were always zero.
+    saw_nonzero_low_bits = False
+    for i in range(200):
+        if random.getrandbits(60) % 128 != 0:
+            saw_nonzero_low_bits = True
+            break
+    assert saw_nonzero_low_bits
+
 
 def test_randbytes():
     assert len(random.randbytes(4)) == 4

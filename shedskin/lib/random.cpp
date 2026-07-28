@@ -474,7 +474,23 @@ __ss_int Random::getrandbits(__ss_int k) {
         throw (new ValueError(const_9));
     }
 
-    return randrange((__ss_int)1<<k);
+    /* Build the result directly from raw 64-bit generator words (as
+       CPython does from its generator's native word size), rather than
+       going through random()*width. random() only has BPF=53 bits of
+       mantissa precision, so for k > 53 that approach always produced
+       a result whose low (k-53) bits were zero. */
+    unsigned __int128 acc = 0;
+    __ss_int remaining = k;
+    int shift = 0;
+    while (remaining > 0) {
+        uint64_t word = next();
+        int take = remaining < 64 ? (int)remaining : 64;
+        uint64_t mask = (take >= 64) ? ~UINT64_C(0) : ((UINT64_C(1) << take) - 1);
+        acc |= ((unsigned __int128)(word & mask)) << shift;
+        shift += take;
+        remaining -= take;
+    }
+    return (__ss_int)acc;
 }
 
 bytes *Random::randbytes(__ss_int n) {
