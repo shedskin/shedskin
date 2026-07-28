@@ -131,6 +131,24 @@ class popen_pipe(file):
 def listdir(path=None):
     return ['']
 
+class DirEntry:
+    def __init__(self):
+        self.name = ''
+        self.path = ''
+    def is_dir(self, follow_symlinks=True):
+        return True
+    def is_file(self, follow_symlinks=True):
+        return True
+    def is_symlink(self):
+        return True
+    def stat(self, follow_symlinks=True):
+        return __cstat()
+    def __repr__(self):
+        return ''
+
+def scandir(path=None):
+    return [DirEntry()]
+
 def getenv(name, alternative=''):
     return ''
 
