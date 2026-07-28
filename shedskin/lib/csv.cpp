@@ -536,7 +536,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
             }
             if (want_escape) {
                 if (!dialect->escapechar)
-                    ; // TODO raise error
+                    throw new Error(new str("need to escape, but no escapechar set"));
                 else {
                     rr->unit += dialect->escapechar->unit;
                 }
