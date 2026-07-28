@@ -430,6 +430,29 @@ def test_quote_notnull_writer():
     assert lines[0].strip() == '"hello",,"world"'
 
 
+def test_quote_none_no_escapechar():
+    # regression test: with QUOTE_NONE and a field that needs escaping
+    # (contains the delimiter, quotechar, or a newline) but no escapechar
+    # configured, the writer must raise csv.Error rather than silently
+    # writing ambiguous/corrupted data.
+    error = ''
+    with open('test_out.csv', 'w', newline='') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_NONE)
+        try:
+            writer.writerow(['a,b', 'c'])
+        except csv.Error as e:
+            error = str(e)
+    assert error == 'need to escape, but no escapechar set'
+    assert open('test_out.csv').read() == ''
+
+    # sanity check: providing an escapechar must still work correctly
+    with open('test_out.csv', 'w', newline='') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_NONE, escapechar='\\')
+        writer.writerow(['a,b', 'c"d', 'e'])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == 'a\\,b,c\\"d,e'
+
+
 def test_eof_mid_row():
     # regression test: if the underlying iterator runs out while a row is
     # still being parsed (e.g. an unterminated quoted field, or a trailing
@@ -496,6 +519,7 @@ def test_all():
     test_writerow_single_empty_field()
     test_quote_strings_writer()
     test_quote_notnull_writer()
+    test_quote_none_no_escapechar()
     test_eof_mid_row()
     test_strict_illegal_quote()
     test_stray_mid_line_cr()
