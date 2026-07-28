@@ -23,6 +23,18 @@ def sleep(s):
 def time():
     return 1.0
 
+def time_ns():
+    return 1
+
+def perf_counter_ns():
+    return 1
+
+def monotonic_ns():
+    return 1
+
+def process_time_ns():
+    return 1
+
 class struct_time:
     def __init__(self, tuple):
         self.tm_year = 0
