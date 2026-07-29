@@ -1385,6 +1385,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         iter: str,
         func: Optional["python.Function"],
         genexpr: bool,
+        fuse_reduce: bool,
     ) -> None:
         """Generate a fast for loop"""
         assert isinstance(qual.iter, ast.Call)
@@ -1395,7 +1396,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.visitm(self.mv.tempcount[arg], " = ", arg, func)
                     self.eol()
         self.fastfor(qual, iter, func)
-        self.forbody(node, quals, iter, func, False, genexpr)
+        self.forbody(node, quals, iter, func, False, genexpr, fuse_reduce)
 
     # XXX generalize?
     def impl_visit_temp(self, node: ast.AST, func: Optional["python.Function"]) -> None:
@@ -1503,28 +1504,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
         if ast_utils.is_fastfor(node):
-            self.do_fastfor(node, node, None, assname, func, False)
+            self.do_fastfor(node, node, None, assname, func, False, False)
         elif self.fastenumerate(node):
             self.do_fastenumerate(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
+            self.forbody(node, None, assname, func, True, False, False)
         elif self.fastzip2(node):
             self.do_fastzip2(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
+            self.forbody(node, None, assname, func, True, False, False)
         elif self.fastdictiter(node):
             self.do_fastdictiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
+            self.forbody(node, None, assname, func, True, False, False)
         elif self.fastfileiter(node):
             self.do_fastfileiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
+            self.forbody(node, None, assname, func, True, False, False)
         elif self.fastchoiceiter(node) and not (func and func.isGenerator):
             self.do_fastchoiceiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False)
+            self.forbody(node, None, assname, func, True, False, False)
         else:
             pref, tail = self.forin_preftail(node)
             self.start("FOR_IN{}({},".format(pref, assname))
             self.visit(node.iter, func)
             self.print(self.line + "," + tail + ")")
-            self.forbody(node, None, assname, func, False, False)
+            self.forbody(node, None, assname, func, False, False, False)
         self.print()
 
     def do_fastzip2(
@@ -1696,12 +1697,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         func: Optional["python.Function"],
         skip: bool,
         genexpr: bool,
+        fuse_reduce: bool,
     ) -> None:
         """Generate the body of a for loop"""
         if quals is not None:
             assert isinstance(node, ast.ListComp)
             assert func
-            self.listcompfor_body(node, quals, iter, func, False, genexpr)
+            self.listcompfor_body(node, quals, iter, func, False, genexpr, fuse_reduce)
             return
         assert isinstance(node, ast.For)
         if not skip:
@@ -2761,6 +2763,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         """Visit a call node"""
+
+        # sum/min/max(lc/genexpr)
+        if node in self.gx.fuse_reduce:
+            self.visit(node.args[0], func)
+            return
+
         (
             objexpr,
             ident,
@@ -3714,21 +3722,36 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 continue
 
             genexpr = listcomp in self.gx.genexp_to_lc.values()
+
+            # sum/min/max(lc/genexpr)
+            fuse_reduce = False
+            if genexpr:
+                for (a, b) in self.gx.genexp_to_lc.items():  # TODO reverse..
+                    if b is listcomp:
+                        fuse_reduce = a in self.gx.fuse_reduce_arg
+            else:
+                fuse_reduce = listcomp in self.gx.fuse_reduce_arg
+
             if declare:
-                self.listcomp_head(listcomp, True, genexpr)
-            elif genexpr:
+                self.listcomp_head(listcomp, True, genexpr, fuse_reduce)
+            elif genexpr and not fuse_reduce:
                 self.genexpr_class(listcomp, declare)
             else:
-                self.listcomp_func(listcomp)
+                self.listcomp_func(listcomp, fuse_reduce)
 
-    def listcomp_head(self, node: ast.ListComp, declare: bool, genexpr: bool) -> None:
+    def listcomp_head(self, node: ast.ListComp, declare: bool, genexpr: bool, fuse_reduce: bool) -> None:
         """Generate the header for a list comprehension"""
         lcfunc, func = self.listcomps[node]
         args = [a + b for a, b in self.lc_args(lcfunc, func)]
-        ts = typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
+        if fuse_reduce:
+            argtypes = self.gx.merged_inh[node]
+            subtypes = self.subtypes(argtypes, "unit")
+            ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
+        else:
+            ts = typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
         if not ts.endswith("*"):
             ts += " "
-        if genexpr:
+        if genexpr and not fuse_reduce:
             self.genexpr_class(node, declare)
         else:
             self.output(
@@ -3766,19 +3789,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
         return args
 
-    def listcomp_func(self, node: ast.ListComp) -> None:
+    def listcomp_func(self, node: ast.ListComp, fuse_reduce: bool) -> None:
         """Generate a list comprehension function"""
         lcfunc, func = self.listcomps[node]
-        self.listcomp_head(node, False, False)
+        self.listcomp_head(node, False, False, fuse_reduce)
         self.indent()
         self.local_defs(lcfunc)
-        self.output(
-            typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
-            + "__ss_result = new "
-            + typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)[:-2]
-            + "();\n"
-        )
-        self.listcomp_rec(node, node.generators, lcfunc, False)
+        if fuse_reduce:
+            argtypes = self.gx.merged_inh[node]
+            subtypes = self.subtypes(argtypes, "unit")
+            ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
+            self.output(
+                ts + "__ss_result = __zero<" + ts + ">();\n"
+            )
+        else:
+            self.output(
+                typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
+                + "__ss_result = new "
+                + typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)[:-2]
+                + "();\n"
+            )
+        self.listcomp_rec(node, node.generators, lcfunc, False, fuse_reduce)
         self.output("return __ss_result;")
         self.deindent()
         self.output("}\n")
@@ -3820,7 +3851,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.indent()
             self.output("if(!__last_yield) goto __after_yield_0;")
             self.output("__last_yield = 0;\n")
-            self.listcomp_rec(node, node.generators, lcfunc, True)
+            self.listcomp_rec(node, node.generators, lcfunc, True, False)
             self.output("__stop_iteration = true;")
             self.output("return __zero<%s>();" % func2)
             self.deindent()
@@ -3864,10 +3895,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         quals: list[ast.comprehension],
         lcfunc: "python.Function",
         genexpr: bool,
+        fuse_reduce: bool,
     ) -> None:
         """Generate nested for loops"""
+
+        # recursion ends when we processed all quals TODO this part to separate function?
         if not quals:
-            if genexpr:
+            if fuse_reduce:  # TODO max/min.. and what happens with an empty list, without default arg?
+                self.start("__ss_result = __add(__ss_result, ")
+                self.visit(node.elt, lcfunc)
+                self.append(")")
+            elif genexpr:
                 self.start("__result = ")
                 self.visit(node.elt, lcfunc)
                 self.eol()
@@ -3928,6 +3966,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # to avoid heap allocations (for 1 elem, 2 elems, 4 elems.. :S)
         try_reserve = (
             not genexpr
+            and not fuse_reduce
             and node not in self.gx.setcomp_to_lc.values()
             and node not in self.gx.dictcomp_to_lc.values()
         )
@@ -3958,16 +3997,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                     self.output("#endif")
 
-            self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
+            self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr, fuse_reduce)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
-            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
+            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         elif self.fastzip2(qual):
             self.do_fastzip2(qual, lcfunc, genexpr)
-            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
+            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         elif self.fastdictiter(qual):
             self.do_fastdictiter(qual, lcfunc, genexpr)
-            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
+            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         else:
             if not isinstance(qual.iter, ast.Name):
                 itervar = self.mv.tempcount[qual]
@@ -4004,7 +4043,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
-            self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr)
+            self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr, fuse_reduce)
 
     def listcompfor_body(
         self,
@@ -4014,6 +4053,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         lcfunc: "python.Function",
         skip: bool,
         genexpr: bool,
+        fuse_reduce: bool,
     ) -> None:
         """Generate the body of a for loop"""
         qual = quals[0]
@@ -4036,7 +4076,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print(self.line)
 
         # recurse
-        self.listcomp_rec(node, quals[1:], lcfunc, genexpr)
+        self.listcomp_rec(node, quals[1:], lcfunc, genexpr, fuse_reduce)
 
         # --- nested for loops: loop tails
         if qual.ifs:
@@ -4068,8 +4108,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     args.append(self.cpp_name(var))
 
         self.line = temp
-        if node in self.gx.genexp_to_lc.values():
+
+        # sum/max/min(lc/genexpr)
+        genexp = False
+        if node in self.gx.genexp_to_lc.values():  # TODO slow
+            genexp = True
+        for (a, b) in self.gx.genexp_to_lc.items():  # TODO reverse
+            if b is node and a in self.gx.fuse_reduce_arg:
+                genexp = False
+        if genexp:
             self.append("new ")
+
         self.append(lcfunc.ident + "(" + ", ".join(args) + ")")
 
     def visit_SetComp(
