@@ -470,7 +470,15 @@ __ss_int Random::getrandbits(__ss_int k) {
     if (k == 0)
         return 0;
 
-    if ((size_t)k > sizeof(__ss_int)*8 - 2) {
+    /* acc is a 64-bit accumulator (see below), so k must fit in it
+       regardless of __ss_int's own width. This also keeps things correct
+       if 128-bit int mode is ever revived: it's currently unreachable
+       (the --int128 flag is commented out in __init__.py, and was
+       already documented there as unsupported on Windows), but should
+       that change, k > 62 will cleanly raise here rather than silently
+       truncating. */
+    unsigned acc_bits = sizeof(uint64_t)*8 - 2;
+    if ((size_t)k > acc_bits) {
         throw (new ValueError(const_9));
     }
 
@@ -478,15 +486,18 @@ __ss_int Random::getrandbits(__ss_int k) {
        CPython does from its generator's native word size), rather than
        going through random()*width. random() only has BPF=53 bits of
        mantissa precision, so for k > 53 that approach always produced
-       a result whose low (k-53) bits were zero. */
-    unsigned __int128 acc = 0;
+       a result whose low (k-53) bits were zero.
+
+       A plain uint64_t accumulator is enough here (k is capped above at
+       62), and it keeps this portable to MSVC, which has no __int128. */
+    uint64_t acc = 0;
     __ss_int remaining = k;
     int shift = 0;
     while (remaining > 0) {
         uint64_t word = next();
         int take = remaining < 64 ? (int)remaining : 64;
         uint64_t mask = (take >= 64) ? ~UINT64_C(0) : ((UINT64_C(1) << take) - 1);
-        acc |= ((unsigned __int128)(word & mask)) << shift;
+        acc |= (word & mask) << shift;
         shift += take;
         remaining -= take;
     }
