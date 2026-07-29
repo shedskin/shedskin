@@ -441,7 +441,7 @@ template<class T, class K> T groupiter<T, K>::__next__() {
     this->iter->current_value = this->iter->iter->__next__();;
     const K& new_key = this->iter->key(this->iter->current_value);
 
-    if (new_key != this->iter->current_key) {
+    if (__ne(new_key, this->iter->current_key)) {
         this->iter->current_key = new_key;
         this->iter->skip = false;
         throw new StopIteration();
