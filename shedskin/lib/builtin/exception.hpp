@@ -304,7 +304,7 @@ public:
 
 class SystemExit : public BaseException {
 public:
-    int code;
+    __ss_int code;
     int show_message;
     SystemExit();
     SystemExit(__ss_int c);

@@ -11,7 +11,6 @@ copyright = ''
 platform = ''
 byteorder = ''
 hexversion = 0
-maxint = 0
 maxsize = 0
 maxunicode = 0
 executable = ''
