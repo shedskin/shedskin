@@ -345,7 +345,7 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 
 template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
-    int i = __len__();
+    __ss_int i = __len__();
 
     for (const auto& [key, value] : gcd) {
         *r += repr(key)->c_str();
