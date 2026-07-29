@@ -90,29 +90,29 @@ __ss_bool struct_time::__eq__(pyobj *p) {
 __ss_int struct_time::__cmp__(pyobj *p) {
     if (!p) return 1;
     struct_time *b = (struct_time *)p;
-    if(int c = __cmp(tm_year, b->tm_year)) return c;
-    if(int c = __cmp(tm_mon, b->tm_mon)) return c;
-    if(int c = __cmp(tm_mday, b->tm_mday)) return c;
-    if(int c = __cmp(tm_hour, b->tm_hour)) return c;
-    if(int c = __cmp(tm_min, b->tm_min)) return c;
-    if(int c = __cmp(tm_sec, b->tm_sec)) return c;
-    if(int c = __cmp(tm_wday, b->tm_wday)) return c;
-    if(int c = __cmp(tm_yday, b->tm_yday)) return c;
+    if(__ss_int c = __cmp(tm_year, b->tm_year)) return c;
+    if(__ss_int c = __cmp(tm_mon, b->tm_mon)) return c;
+    if(__ss_int c = __cmp(tm_mday, b->tm_mday)) return c;
+    if(__ss_int c = __cmp(tm_hour, b->tm_hour)) return c;
+    if(__ss_int c = __cmp(tm_min, b->tm_min)) return c;
+    if(__ss_int c = __cmp(tm_sec, b->tm_sec)) return c;
+    if(__ss_int c = __cmp(tm_wday, b->tm_wday)) return c;
+    if(__ss_int c = __cmp(tm_yday, b->tm_yday)) return c;
     return __cmp(tm_isdst, b->tm_isdst);
 }
 
 tm* tuple2tm(struct_time* tuple) {
     tm *time_tuple = new tm;
 
-    time_tuple->tm_sec = tuple->tm_sec;
-    time_tuple->tm_min = tuple->tm_min;
-    time_tuple->tm_hour = tuple->tm_hour;
-    time_tuple->tm_mday = tuple->tm_mday;
-    time_tuple->tm_mon = tuple->tm_mon - 1;
-    time_tuple->tm_year = tuple->tm_year - 1900;
-    time_tuple->tm_wday = tuple->tm_wday == 6 ? 0 : tuple->tm_wday + 1;
-    time_tuple->tm_yday = tuple->tm_yday - 1 ;
-    time_tuple->tm_isdst = tuple->tm_isdst;
+    time_tuple->tm_sec = (int)tuple->tm_sec;
+    time_tuple->tm_min = (int)tuple->tm_min;
+    time_tuple->tm_hour = (int)tuple->tm_hour;
+    time_tuple->tm_mday = (int)tuple->tm_mday;
+    time_tuple->tm_mon = (int)tuple->tm_mon - 1;
+    time_tuple->tm_year = (int)tuple->tm_year - 1900;
+    time_tuple->tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
+    time_tuple->tm_yday = (int)tuple->tm_yday - 1 ;
+    time_tuple->tm_isdst = (int)tuple->tm_isdst;
 
     return time_tuple;
 }
@@ -337,7 +337,10 @@ str *strftime(str *format, struct_time* tuple) {
     do {
         size *= 2;
         buf = new char[size];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
         n = ::strftime(buf, size, format->c_str(), time_tuple);
+#pragma GCC diagnostic pop
     } while(n == 0);
     return new str(buf);
 }

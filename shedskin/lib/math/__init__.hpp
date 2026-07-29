@@ -48,7 +48,7 @@ inline tuple2<__ss_float, __ss_float> *modf(__ss_float x) {
 }
 
 inline __ss_float ldexp(__ss_float x, __ss_int i) {
-    return std::ldexp(x, i);
+    return std::ldexp(x, (int)i);
 }
 
 inline __ss_float exp(__ss_float x) {
@@ -329,7 +329,7 @@ inline __ss_float prod(pyiter<__ss_float> *iterable, __ss_int start) {
 }
 
 inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
-    return prod(iterable) * start;
+    return (__ss_float)prod(iterable) * start;
 }
 
 template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {

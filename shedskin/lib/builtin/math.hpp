@@ -16,12 +16,12 @@ template<class A, class B> static inline void __check_pow_zero(A a, B b) {
 #define __SS_POW_ZERO_CHECK(a, b) ((void)0)
 #endif
 
-inline __ss_float __power(__ss_int a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow(a,b); }
+inline __ss_float __power(__ss_int a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow((__ss_float)a,b); }
 inline __ss_float __power(__ss_float a, __ss_int b) { 
     __SS_POW_ZERO_CHECK(a, b);
     if(b==2) return a*a;
     else if(b==3) return a*a*a;
-    else return pow(a,b); 
+    else return pow(a,(__ss_float)b); 
 }
 
 template<class A> A __power(A a, A b);
@@ -125,7 +125,7 @@ template<class A, class B> __ss_float __divs(A a, B b);
 template<> inline __ss_float __divs(__ss_int a, __ss_float b) { __SS_ZERO_CHECK(b, "float division by zero"); return (__ss_float)a/b; }
 template<> inline __ss_float __divs(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(b, "float division by zero"); return a/((__ss_float)b); }
 
-inline __ss_float __divs(__ss_int a, __ss_int b) { __SS_ZERO_CHECK(b, "division by zero"); return a/((__ss_float)b); }
+inline __ss_float __divs(__ss_int a, __ss_int b) { __SS_ZERO_CHECK(b, "division by zero"); return (__ss_float)a/((__ss_float)b); }
 
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor(a/b); }
@@ -163,7 +163,7 @@ template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
 #endif
 template<> inline int __mods(int a, int b) {
     __SS_ZERO_CHECK(b, "integer modulo by zero");
-    __ss_int m = a%b;
+    int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }

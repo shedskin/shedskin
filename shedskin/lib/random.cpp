@@ -107,7 +107,7 @@ static inline list<int> *list_comp_1(list<__ss_float> *__108) {
 
     result->resize(len(__108));
     FOR_IN(s,__108,108,28,123)
-        result->units[(size_t)__28] = __int(s);
+        result->units[(size_t)__28] = (int)__int(s);
     END_FOR
 
     return result;
@@ -155,7 +155,7 @@ __ss_int Random::randrange(__ss_int start, __ss_int stop, __ss_int step) {
     }
     width = (istop-istart);
     if ((step == 1) && (width > 0)) {
-        return __int((istart+__int((this->random()*width))));
+        return __int((istart+__int((this->random()*(__ss_float)width))));
     }
     if (step==1) {
         throw (new ValueError(const_2));
@@ -176,7 +176,7 @@ __ss_int Random::randrange(__ss_int start, __ss_int stop, __ss_int step) {
     if (n<=0) {
         throw (new ValueError(const_2));
     }
-    return (istart+(istep*__int((this->random()*n))));
+    return (istart+(istep*__int((this->random()*(__ss_float)n))));
 }
 
 __ss_float Random::betavariate(__ss_float alpha, __ss_float beta) {

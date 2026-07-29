@@ -328,7 +328,7 @@ template<class A, class B> __ss_bool tuple2<A, B>::__eq__(pyobj *p) {
 template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     if (!p) return 1;
     tuple2<A,B> *b = (tuple2<A,B> *)p;
-    if(int c = __cmp(first, b->first)) return c;
+    if(__ss_int c = __cmp(first, b->first)) return c;
     return __cmp(second, b->second);
 }
 

@@ -80,7 +80,7 @@ str *BaseException::__repr__() {
 
 SystemExit::SystemExit(__ss_int c) {
         this->__class__ = cl_systemexit;
-        this->code = c;
+        this->code = (int)c;
         this->message = __str(this->code);
         this->show_message = 0;
 }
