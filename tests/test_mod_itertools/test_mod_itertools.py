@@ -80,10 +80,13 @@ def key(x):
 def test_groupby():
     res = []
     for k, g in itertools.groupby([1, 4, 6, 4, 1], key):
-        for f in g:
-            res.append(f)
-        res.append(k)
-    assert res == [1, 4, 0, 6, 1, 4, 1, 0]
+        res.append((k, list(g)))
+    assert res == [(0, [1, 4]), (1, [6]), (0, [4, 1])]
+
+    res2 = []
+    for x, y in itertools.groupby([1,2,2,3,1,2], key=lambda x: str(-x)):
+        res2.append((x, list(y)))
+    assert res2 == [('-1', [1]), ('-2', [2, 2]), ('-3', [3]), ('-1', [1]), ('-2', [2])]
 
 
 def test_islice():
