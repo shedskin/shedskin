@@ -95,11 +95,35 @@ def test_os_path_expanduser():
         assert expanduser("~otheruser/bar") == "~otheruser/bar"
 
 
+def test_os_path_expanduser_windows_trailing_sep():
+    # Regression test: os.path.expanduser() on Windows must not strip a
+    # trailing separator from USERPROFILE, matching ntpath.expanduser.
+    # (A previous version accidentally reused the POSIX rstrip() call,
+    # which turned e.g. a drive root "C:\\" into the different path "C:".)
+    if os.name != "nt":
+        return
+
+    old_userprofile = os.getenv("USERPROFILE")
+
+    os.putenv("USERPROFILE", "C:\\Users\\shedskin\\")
+    assert expanduser("~") == "C:\\Users\\shedskin\\"
+    assert expanduser("~/foo") == "C:\\Users\\shedskin\\/foo"
+
+    os.putenv("USERPROFILE", "C:\\")
+    assert expanduser("~") == "C:\\"
+
+    if old_userprofile is None:
+        os.unsetenv("USERPROFILE")
+    else:
+        os.putenv("USERPROFILE", old_userprofile)
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
     test_os_path_relpath()
     test_os_path_expanduser()
+    test_os_path_expanduser_windows_trailing_sep()
 
 if __name__ == '__main__':
     test_all()
