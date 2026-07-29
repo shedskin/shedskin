@@ -24,6 +24,28 @@ def test_recursionlimit():
     sys.setrecursionlimit(old)
     assert sys.getrecursionlimit() == old
 
+def test_recursionlimit_invalid():
+    # CPython raises ValueError for limit < 1; make sure we match
+    # that instead of silently accepting a nonsensical limit
+    old = sys.getrecursionlimit()
+    for bad in (0, -1, -1000):
+        try:
+            sys.setrecursionlimit(bad)
+            assert False, 'setrecursionlimit(%d) should have raised ValueError' % bad
+        except ValueError:
+            pass
+    assert sys.getrecursionlimit() == old
+
+def test_systemexit_large_code():
+    # SystemExit.code should hold the full int, not truncate to 32 bits
+    big = 2**31 + 5
+    matched = False
+    try:
+        sys.exit(big)
+    except SystemExit as e:
+        matched = (e.code == big)
+    assert matched
+
 def test_intern():
     s = 'hello world'
     assert sys.intern(s) == s
@@ -52,6 +74,8 @@ def test_all():
     test_sys()
     test_version_consistency()
     test_recursionlimit()
+    test_recursionlimit_invalid()
+    test_systemexit_large_code()
     test_intern()
     test_is_finalizing()
     test_encodings()

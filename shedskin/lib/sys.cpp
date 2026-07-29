@@ -68,6 +68,8 @@ void __ss_exit() {
 __ss_int __recursionlimit = 1000; /* CPython's default */
 
 void *setrecursionlimit(__ss_int limit) {
+    if (limit < 1)
+        throw new ValueError(new str("recursion limit must be greater or equal than 1"));
     __recursionlimit = limit;
     return NULL;
 }
