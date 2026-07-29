@@ -2340,6 +2340,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     warning=True,
                 )
 
+            # optimize sum/max/min(listcomp-or-genexpr)
+            if ident == "sum" and not getmv().module.builtin:  # TODO support min/max
+                if (
+                    len(node.args) == 1
+                    and isinstance(node.args[0], (ast.ListComp, ast.GeneratorExp))
+                    and not node.keywords
+                ):
+                    self.gx.fuse_reduce.add(node)
+                    self.gx.fuse_reduce_arg.add(node.args[0])
+
             if python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
                 infer.inode(self.gx, node.func).callfuncs.append(

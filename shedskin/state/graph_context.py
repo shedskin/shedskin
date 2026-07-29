@@ -39,6 +39,8 @@ class GraphBuildingContext:
     genexp_to_lc: Dict[ast.GeneratorExp, ast.ListComp] = field(default_factory=dict)
     setcomp_to_lc: Dict[ast.SetComp, ast.ListComp] = field(default_factory=dict)
     dictcomp_to_lc: Dict[ast.DictComp, ast.ListComp] = field(default_factory=dict)
+    fuse_reduce: Set[ast.Call] = field(default_factory=set)
+    fuse_reduce_arg: Set[ast.AST] = field(default_factory=set)
     bool_test_only: Set[ast.AST] = field(default_factory=set)
     called: Set[ast.Attribute] = field(default_factory=set)
     item_rvalue: Dict[ast.AST, ast.AST] = field(default_factory=dict)
