@@ -577,6 +577,7 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
         throw new error(make_errstring("accept"));
     }
     socket *sock = new socket();
+    ::CLOSE(sock->_fd); // avoid leaking the fd opened by the default constructor
     sock->family = family;
     sock->proto = proto;
     sock->type = type;
