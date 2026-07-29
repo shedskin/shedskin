@@ -3,6 +3,7 @@
 #include "time.hpp"
 #include "time.h"
 #include <climits>
+#include <cmath>
 
 namespace __time__ {
 
@@ -278,13 +279,22 @@ __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
     return (__ss_float)::mktime(tuple2tm(st));
 }
 
+/* CPython floors the seconds-since-epoch value before converting to an
+   integer, so e.g. time.gmtime(-0.5) is 1969-12-31 23:59:59, one second
+   *before* the epoch. A plain static_cast<time_t> truncates towards zero
+   instead, which rounds negative fractional timestamps *up* to the wrong
+   second (time.gmtime(-0.5) would incorrectly land on the epoch itself). */
+static inline time_t __ss_seconds_to_time_t(const __ss_float seconds) {
+    return static_cast<time_t>(std::floor(seconds));
+}
+
 struct_time *localtime() {
     time_t time = ::time(NULL);
     return localtime((__ss_float)time);
 }
 
 struct_time *localtime(const __ss_float timep) {
-    time_t timet = static_cast<time_t>(timep);
+    time_t timet = __ss_seconds_to_time_t(timep);
     tm *tm_time = ::localtime(&timet);
     return tm2tuple(tm_time);
 }
@@ -295,7 +305,7 @@ struct_time *gmtime() {
 }
 
 struct_time *gmtime(const __ss_float seconds) {
-    time_t timet = static_cast<time_t>(seconds);
+    time_t timet = __ss_seconds_to_time_t(seconds);
     tm *tm_time = ::gmtime(&timet);
     return tm2tuple(tm_time);
 }
