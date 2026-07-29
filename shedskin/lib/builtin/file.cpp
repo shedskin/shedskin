@@ -84,7 +84,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
     int pos=-1;
     __check_closed();
     if(f) {
-        if((pos = fseek(f, i, w)) == -1)
+        if((pos = fseek(f, i, (int)w)) == -1)
             throw new OSError();
     }
     return pos;
@@ -317,7 +317,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
     int pos = -1;
     __check_closed();
     if(f) {
-        if((pos = fseek(f, i, w)) == -1)
+        if((pos = fseek(f, i, (int)w)) == -1)
             throw new OSError();
     }
     return pos;

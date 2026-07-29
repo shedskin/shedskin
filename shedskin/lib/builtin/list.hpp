@@ -361,19 +361,19 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
     slicenr(x, l, u, s, this->__len__());
 
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
-        int slicesize;
+        __ss_int slicesize;
         if(l == u) slicesize = 0; // XXX ugly
         else if(s > 0 && u < l) slicesize=0;
         else if(s < 0 && l < u) slicesize=0;
         else {
-            int slicelen = __abs(u-l);
-            int absstep = __abs(s);
+            __ss_int slicelen = __abs(u-l);
+            __ss_int absstep = __abs(s);
             slicesize = slicelen/absstep;
             if(slicelen%absstep) slicesize += 1;
         }
 
         if(slicesize != len(la))
-            throw new ValueError(__add_strs(0, new str("attempt to assign sequence of size "), __str(len(la)), new str(" to extended slice of size "), __str((__ss_int)slicesize)));
+            throw new ValueError(__add_strs(0, new str("attempt to assign sequence of size "), __str(len(la)), new str(" to extended slice of size "), __str(slicesize)));
     }
 
     if(s == 1) {

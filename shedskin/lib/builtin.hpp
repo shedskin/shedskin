@@ -65,6 +65,8 @@ inline void *operator new[](std::size_t sz, std::align_val_t,
  * allocator's free() on a GC_MALLOC'd pointer and aborts. */
 inline void operator delete(void *, std::size_t) noexcept {}
 inline void operator delete[](void *, std::size_t) noexcept {}
+inline void operator delete(void *) noexcept {}
+inline void operator delete[](void *) noexcept {}
 inline void operator delete(void *, std::align_val_t) noexcept {}
 inline void operator delete[](void *, std::align_val_t) noexcept {}
 inline void operator delete(void *, const std::nothrow_t &) noexcept {}
@@ -293,7 +295,7 @@ void __throw_zero_division(const char *msg);
 #define unlikely(x)    (x)
 #endif
 
-template<class T> static inline int __wrap(T a, __ss_int i) {
+template<class T> static inline __ss_int __wrap(T a, __ss_int i) {
     __ss_int l = len(a);
 #ifndef __SS_NOWRAP
     if(unlikely(i<0)) i += l;
@@ -467,8 +469,8 @@ template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
 template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     if (!p) return 1;
     pyseq<T> *b = (pyseq<T> *)p;
-    int i, cmp;
-    int mnm = ___min(2, __ss_void, 0, this->__len__(), b->__len__());
+    __ss_int i, cmp;
+    __ss_int mnm = ___min(2, __ss_void, 0, this->__len__(), b->__len__());
     for(i = 0; i < mnm; i++) {
         cmp = __cmp(this->__getitem__(i), b->__getitem__(i));
         if(cmp)
@@ -564,7 +566,7 @@ template<class T, int SiteId> list<T> *__ss_list() {
 
 inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
     list<__ss_int> *l = new list<__ss_int>();
-    __ss_int len = range_len(a, b, c);
+    __ss_int len = range_len((int)a, (int)b, (int)c);
     l->units.resize(len);
     __ss_int pos = 0;
     if(a <= b) {

@@ -21,16 +21,16 @@ __ss_int __int(str *s, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = (__ss_int)strtoll(s->c_str(), &cp, base);
+    i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
 #else
-    i = (__ss_int)strtol(s->c_str(), &cp, base);
+    i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
 #endif
     if(*cp != '\0') {
         s = s->rstrip();
         #ifdef __SS_LONG
-            i = (__ss_int)strtoll(s->c_str(), &cp, base);
+            i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
         #else
-            i = (__ss_int)strtol(s->c_str(), &cp, base);
+            i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
         #endif
         if(*cp != '\0')
             throw new ValueError(new str("invalid literal for int()"));
@@ -42,16 +42,16 @@ __ss_int __int(bytes *s, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = (__ss_int)strtoll(s->c_str(), &cp, base);
+    i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
 #else
-    i = (__ss_int)strtol(s->c_str(), &cp, base);
+    i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
 #endif
     if(*cp != '\0') {
         s = s->rstrip();
         #ifdef __SS_LONG
-            i = (__ss_int)strtoll(s->c_str(), &cp, base);
+            i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
         #else
-            i = (__ss_int)strtol(s->c_str(), &cp, base);
+            i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
         #endif
         if(*cp != '\0')
             throw new ValueError(new str("invalid literal for int()"));
@@ -156,7 +156,7 @@ __iter<__ss_int> *__xrange::__iter__() {
 }
 
 __ss_int __xrange::__len__() {
-    return range_len(a, b, s);
+    return range_len((int)a, (int)b, (int)s);
 }
 
 __ss_int __xrange::__getitem__(__ss_int i) {
@@ -230,7 +230,7 @@ __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s)
 __xrange *range(__ss_int n) { return new __xrange(0, n, 1); }
 
 __iter<__ss_int> *reversed(__xrange *x) {
-   return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
+   return new __rangeiter(x->a+(range_len((int)x->a,(int)x->b,(int)x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 
 /* repr */
