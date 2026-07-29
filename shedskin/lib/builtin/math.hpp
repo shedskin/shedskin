@@ -210,6 +210,8 @@ template<> inline __ss_int __add(__ss_int a, __ss_int b) { return a + b; }
 template<> inline int __add(int a, int b) { return a + b; }
 template<> inline __ss_float __add(__ss_float a, __ss_float b) { return a + b; }
 
+inline __ss_int __add(__ss_int a, __ss_bool b) { return a + b.value; }
+
 /* reverse */
 
 template<class U> U __add2(__ss_float a, U b) { return b->__add__(a); }
