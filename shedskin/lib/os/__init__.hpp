@@ -135,6 +135,8 @@ bytes *urandom(__ss_int n);
 
 __ss_bool isatty(__ss_int fd);
 
+void *unsetenv(str* var);
+
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
 __ss_int __ss_WEXITSTATUS(__ss_int status);
@@ -209,7 +211,6 @@ template <class ... Args> __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file
     return spawnvpe(mode, file, vals, env);
 }
 
-void *unsetenv(str* var);
 __ss_int getpid();
 
 tuple2<file*,file*>* popen2(str* cmd);
