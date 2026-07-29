@@ -3747,6 +3747,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             argtypes = self.gx.merged_inh[node]
             subtypes = self.subtypes(argtypes, "unit")
             ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
+            if ts == '__ss_bool ':
+                ts = '__ss_int '
         else:
             ts = typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
         if not ts.endswith("*"):
@@ -3799,6 +3801,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             argtypes = self.gx.merged_inh[node]
             subtypes = self.subtypes(argtypes, "unit")
             ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
+            if ts == '__ss_bool ':
+                ts = '__ss_int '
             self.output(
                 ts + "__ss_result = __zero<" + ts + ">();\n"
             )
