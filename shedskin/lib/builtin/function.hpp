@@ -28,7 +28,7 @@ template<> inline __ss_int __int(__ss_float d) {
 inline __ss_float __float() { return 0; }
 template<class T> inline __ss_float __float(T t) { return t->__float__(); }
 #ifdef __SS_LONG
-template<> inline __ss_float __float(__ss_int p) { return p; }
+template<> inline __ss_float __float(__ss_int p) { return (__ss_float)p; }
 #endif
 template<> inline __ss_float __float(int p) { return p; }
 template<> inline __ss_float __float(__ss_bool b) { return b.value; }
