@@ -271,6 +271,95 @@ def test_signed_narrow():
     assert a == 251
 
 
+def test_endian_byte_patterns():
+    # Known-byte regression coverage for explicit byte-order codes. The
+    # int pack/unpack path used to derive its byte layout from a
+    # host-relative "does this differ from native order" flag rather than
+    # the actual requested order, so '<'/'>' silently produced/consumed
+    # the *wrong* layout whenever compiled for a big-endian host (this
+    # cannot be observed on little-endian CI, but the fix keeps the
+    # explicit-order byte layout independent of host endianness, and this
+    # continues to check it stays correct here).
+    assert struct.pack('<h', 0x0102) == b'\x02\x01'
+    assert struct.pack('>h', 0x0102) == b'\x01\x02'
+    u, = struct.unpack('<h', b'\x02\x01')
+    assert u == 0x0102
+    u, = struct.unpack('>h', b'\x01\x02')
+    assert u == 0x0102
+
+    assert struct.pack('<i', 0x01020304) == b'\x04\x03\x02\x01'
+    assert struct.pack('>i', 0x01020304) == b'\x01\x02\x03\x04'
+    u, = struct.unpack('<i', b'\x04\x03\x02\x01')
+    assert u == 0x01020304
+    u, = struct.unpack('>i', b'\x01\x02\x03\x04')
+    assert u == 0x01020304
+
+    assert struct.pack('<q', 0x0102030405060708) == b'\x08\x07\x06\x05\x04\x03\x02\x01'
+    assert struct.pack('>q', 0x0102030405060708) == b'\x01\x02\x03\x04\x05\x06\x07\x08'
+    u, = struct.unpack('<q', b'\x08\x07\x06\x05\x04\x03\x02\x01')
+    assert u == 0x0102030405060708
+    u, = struct.unpack('>q', b'\x01\x02\x03\x04\x05\x06\x07\x08')
+    assert u == 0x0102030405060708
+
+    # '<' and '>' must always be byte-reversed relative to each other,
+    # for every integer width, not just the ones spot-checked above.
+    a = struct.pack('<b', 100)
+    b = struct.pack('>b', 100)
+    assert a == b[::-1]
+    ua, = struct.unpack('<b', a)
+    ub, = struct.unpack('>b', b)
+    assert (ua, ub) == (100, 100)
+
+    a = struct.pack('<B', 200)
+    b = struct.pack('>B', 200)
+    assert a == b[::-1]
+    ua, = struct.unpack('<B', a)
+    ub, = struct.unpack('>B', b)
+    assert (ua, ub) == (200, 200)
+
+    a = struct.pack('<h', 30000)
+    b = struct.pack('>h', 30000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<h', a)
+    ub, = struct.unpack('>h', b)
+    assert (ua, ub) == (30000, 30000)
+
+    a = struct.pack('<H', 60000)
+    b = struct.pack('>H', 60000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<H', a)
+    ub, = struct.unpack('>H', b)
+    assert (ua, ub) == (60000, 60000)
+
+    a = struct.pack('<i', 2000000000)
+    b = struct.pack('>i', 2000000000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<i', a)
+    ub, = struct.unpack('>i', b)
+    assert (ua, ub) == (2000000000, 2000000000)
+
+    a = struct.pack('<I', 4000000000)
+    b = struct.pack('>I', 4000000000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<I', a)
+    ub, = struct.unpack('>I', b)
+    assert (ua, ub) == (4000000000, 4000000000)
+
+    a = struct.pack('<q', 9000000000000000000)
+    b = struct.pack('>q', 9000000000000000000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<q', a)
+    ub, = struct.unpack('>q', b)
+    assert (ua, ub) == (9000000000000000000, 9000000000000000000)
+
+    a = struct.pack('<Q', 18000000000000000000)
+    b = struct.pack('>Q', 18000000000000000000)
+    assert a == b[::-1]
+    ua, = struct.unpack('<Q', a)
+    ub, = struct.unpack('>Q', b)
+    assert (ua, ub) == (18000000000000000000, 18000000000000000000)
+
+
 def test_repeat():
     packer = struct.pack("<3c", b'a', b'a', b'p')
     d, e, f, = struct.unpack("<3c", packer)
@@ -365,6 +454,61 @@ def test_multi_1():
     assert (g, h, i) == (949.0, 544.2, 444.3)
 
 
+def test_n_native_only():
+    # 'N' (size_t) is only valid with the native '@' byte order, matching
+    # CPython; an explicit non-native order must raise, not silently
+    # produce a zero-length/zero-size result.
+    error = ''
+    try:
+        struct.pack('<N', 5)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    error = ''
+    try:
+        struct.calcsize('<N')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    # native order still works fine
+    n = struct.calcsize('@N')
+    assert n > 0
+    p = struct.pack('@N', 5)
+    assert len(p) == n
+
+
+def test_mid_format_order_char():
+    # a byte-order character is only meaningful as the very first
+    # character of the format string, matching CPython; elsewhere it must
+    # raise rather than silently switch byte order mid-format.
+    error = ''
+    try:
+        struct.pack('h>h', 1, 2)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    error = ''
+    try:
+        struct.calcsize('h>h')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    error = ''
+    try:
+        struct.pack_into('h>h', bytearray(8), 0, 1, 2)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    # leading order char still works fine
+    p = struct.pack('<hh', 1, 2)
+    assert p == b'\x01\x00\x02\x00'
+
+
 def test_order():
     a = struct.pack('<H', 19)
     assert a[0] == 19
@@ -392,11 +536,14 @@ def test_all():
     test_x()
     test_nonzero()
     test_signed_narrow()
+    test_endian_byte_patterns()
     test_repeat()
     test_pack_into()
     test_calcsize()
     test_errors()
     test_multi_1()
+    test_n_native_only()
+    test_mid_format_order_char()
     test_order()
     test_ws()
 
