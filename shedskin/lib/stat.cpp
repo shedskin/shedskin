@@ -78,7 +78,11 @@ __ss_int __ss_S_ISREG(__ss_int mode) {
     return S_ISREG(mode);
 }
 
-#if !defined( _MSC_VER )
+/* S_IMODE/S_IFMT operate on literal bitmask constants only, with no
+   dependency on the POSIX macros that are missing from MSVC's
+   <sys/stat.h>, so they are compiled unconditionally. Only S_ISCHR,
+   S_ISBLK and S_ISFIFO below depend on those missing macros and stay
+   guarded for MSVC. */
 __ss_int __ss_S_IMODE(__ss_int mode) {
     return (mode&4095); /* XXX */
 }
@@ -87,6 +91,7 @@ __ss_int __ss_S_IFMT(__ss_int mode) {
     return (mode&61440); /* XXX */
 }
 
+#if !defined( _MSC_VER )
 __ss_int __ss_S_ISCHR(__ss_int mode) {
 
     return S_ISCHR(mode);
