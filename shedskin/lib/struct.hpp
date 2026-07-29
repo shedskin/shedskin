@@ -25,6 +25,26 @@ static inline bool swap_endian(char o) {
     return (little_endian and (o=='>' or o=='!')) or (not little_endian and o=='<');
 }
 
+/* Whether format order 'o' calls for a big-endian byte layout, independent
+   of the host's own endianness. Unlike swap_endian() (which answers "does
+   this order differ from the host's native order", and is only meaningful
+   when applied to bytes that started out in host-native layout, as with
+   the float pack/unpack helpers below), this is used by the pure bit-
+   arithmetic int pack/unpack helpers, which build/read byte sequences
+   directly from an integer value/register and therefore need the actual
+   target layout rather than a host-relative swap flag. Using swap_endian()
+   there would silently invert '<' and '>' on a big-endian host, since
+   swap_endian('<') and swap_endian('>') both flip their host-little-endian
+   answer once little_endian is false. */
+static inline bool is_big_endian_order(char o) {
+    if(o == '>' or o == '!')
+        return true;
+    if(o == '<')
+        return false;
+    /* '=' or '@': native order */
+    return not little_endian;
+}
+
 __ss_int calcsize(str *fmt);
 __ss_int calcitems(str *fmt);
 __ss_int padding(char o, __ss_int pos, unsigned int itemsize);
