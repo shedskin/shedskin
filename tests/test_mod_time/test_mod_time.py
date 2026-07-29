@@ -117,6 +117,23 @@ def test_eq_and_ordering():
     assert not (t3 < t1)
     assert t3 > t1
 
+def test_gmtime_negative_fraction():
+    # regression test: seconds must be floored, not truncated towards zero,
+    # so that e.g. -0.5 lands one second *before* the epoch (23:59:59 on
+    # 1969-12-31), matching CPython, instead of rounding up to the epoch.
+    t = time.gmtime(-0.5)
+    assert (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec) == \
+        (1969, 12, 31, 23, 59, 59)
+
+    t2 = time.gmtime(-1.5)
+    assert (t2.tm_year, t2.tm_mon, t2.tm_mday, t2.tm_hour, t2.tm_min, t2.tm_sec) == \
+        (1969, 12, 31, 23, 59, 58)
+
+    # sanity check: a positive fractional timestamp is unaffected
+    t3 = time.gmtime(0.5)
+    assert (t3.tm_year, t3.tm_mon, t3.tm_mday, t3.tm_hour, t3.tm_min, t3.tm_sec) == \
+        (1970, 1, 1, 0, 0, 0)
+
 def test_sleep():
     t1 = time.time()
     time.sleep(0.5)
@@ -131,6 +148,7 @@ def test_all():
     test_asctime()
     test_strftime()
     test_conversions()
+    test_gmtime_negative_fraction()
     test_sleep()
     # test_epoch()
     test_tzname()
