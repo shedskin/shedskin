@@ -390,6 +390,19 @@ void *putenv(str* varname, str* value) {
     return NULL;
 }
 
+void *unsetenv(str* var) {
+#ifdef WIN32
+    /* MSVC has no unsetenv(); passing "NAME=" to _putenv removes NAME
+       from the environment. */
+    std::stringstream ss;
+    ss << var->c_str() << '=';
+    _putenv(const_cast<char*>(ss.str().c_str()));
+#else
+    ::unsetenv(var->c_str());
+#endif
+    return NULL;
+}
+
 __ss_int umask(__ss_int newmask)  {
     return (__ss_int)::umask((unsigned)newmask);
 }
@@ -1237,11 +1250,6 @@ __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *
 __ss_int getpid() {
     //return GetCurrentProcessId();
     return ::getpid();
-}
-
-void *unsetenv (str* var) {
-    ::unsetenv(var->c_str());
-    return NULL;
 }
 
 tuple<file *> *popen2(str* cmd) {
