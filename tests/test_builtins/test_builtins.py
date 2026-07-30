@@ -417,6 +417,16 @@ def test_sum():
     a = []
     assert sum(a, start=7) == 7
 
+    xs = [1, 2, 3]
+    d = sum(xs)
+    assert d == 6
+
+    e = sum(xs, 100)
+    assert e == 106
+
+    f = sum(xs, start=100)
+    assert f == 106
+
 
 def test_tuple():
     assert tuple([1,2]) == (1,2)
