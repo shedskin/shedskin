@@ -60,15 +60,24 @@ def imageFromBlock(r, pixels):
     return Image.frombytes('RGB', (w, h), pixels)
 
 
-def main(q_in, q_out, test):
+def main(q_in, test):
     screen = (WIDTH, WIDTH)
     pygame.init()
     surface = pygame.display.set_mode(screen)
     drawsurf = pygame.Surface(screen).convert()
     drawsurf.set_colorkey((0, 0, 0))
 
+    # One output queue per worker rather than one shared queue: multiple
+    # processes writing to the same multiprocessing.Queue serialize on a
+    # single inter-process lock and a single OS pipe, which (especially
+    # combined with the small default Linux pipe buffer) causes writers to
+    # pile up and then flush in one big burst instead of trickling results
+    # in steadily. Separate queues give each worker its own uncontended
+    # pipe.
+    NUM_WORKERS = 8
+    q_outs = [multiprocessing.Queue() for _ in range(NUM_WORKERS)]
 
-    processes = [multiprocessing.Process(target=worker, args=(q_in, q_out)) for i in range(8)]
+    processes = [multiprocessing.Process(target=worker, args=(q_in, q_outs[i])) for i in range(NUM_WORKERS)]
     for p in processes:
         p.start()
 
@@ -96,24 +105,27 @@ def main(q_in, q_out, test):
             if event.type is pygame.QUIT:
                 ingame = False
 
-        while True:
-            try:
-                block = q_out.get(False)
-            except queue.Empty:
-                break
+        for q_out in q_outs:
+            while True:
+                try:
+                    block = q_out.get(False)
+                except queue.Empty:
+                    break
 
-            count -= 1
-            r, pixels = block
-            (x, _), (y, _) = r
+                count -= 1
+                r, pixels = block
+                (x, _), (y, _) = r
 
-            img = pygame.image.frombuffer(pixels, (WIDTH // BLOCKS_WIDE, WIDTH // BLOCKS_TALL), 'RGB')
-            surface.blit(img, (x, y))
-            pygame.display.flip()
+                img = pygame.image.frombuffer(pixels, (WIDTH // BLOCKS_WIDE, WIDTH // BLOCKS_TALL), 'RGB')
+                surface.blit(img, (x, y))
+                pygame.display.flip()
 
+                if count == 0:
+                    print("TIME %.2f" % (time.time() - startTime))
+                    if test:
+                        ingame = False
+                    break
             if count == 0:
-                print("TIME %.2f" % (time.time() - startTime))
-                if test:
-                    ingame = False
                 break
 
         clock.tick(60)
@@ -126,6 +138,5 @@ if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
 
     q_in = multiprocessing.Queue()
-    q_out = multiprocessing.Queue()
 
-    main(q_in, q_out, sys.argv[1:] == ['test'])
+    main(q_in, sys.argv[1:] == ['test'])
