@@ -2,6 +2,10 @@
 
 #include "os/path.hpp"
 
+#ifndef WIN32
+#include <pwd.h>
+#endif
+
 /* converted using Shed Skin from the CPython implementation */
 
 /**
@@ -496,12 +500,18 @@ str *expanduser(str *path) {
     if (i < 0)
         i = len(path);
 
-    if (i != 1)
-        return path; /* ~user lookups need pwd, which isn't supported */
-
-    userhome = __os__::getenv(const_21);
-    if (!userhome)
-        return path;
+    if (i != 1) {
+        /* ~user: look up the user's home directory via getpwnam() */
+        str *username = path->__slice__(3, 1, i, 0);
+        struct passwd *pw = getpwnam(username->c_str());
+        if (!pw)
+            return path;
+        userhome = new str(pw->pw_dir);
+    } else {
+        userhome = __os__::getenv(const_21);
+        if (!userhome)
+            return path;
+    }
 
     userhome = userhome->rstrip(const_4);
     result = userhome->__add__(path->__slice__(1, i, 0, 0));
