@@ -186,6 +186,27 @@ def test_p_oversized_length_byte():
     assert len(y) == 2
 
 
+def test_x_digit_then_other_fields():
+    # a digit-count before 'x' (or 's'/'p') must not leak into the parsing
+    # of later format characters: previously the leftover repeat count
+    # caused a later field to be packed with the wrong width, or caused a
+    # later distinct format char to never be reached at all.
+    packer = struct.pack("<3xhi", 7, 1234567)
+    assert packer == b'\x00\x00\x00\x07\x00\x87\xd6\x12\x00'
+
+    packer = struct.pack("<3xhii", 7, 1234567, 89)
+    assert packer == b'\x00\x00\x00\x07\x00\x87\xd6\x12\x00Y\x00\x00\x00'
+
+    packer = struct.pack("<5pi", b"abc", 99999)
+    assert packer == b'\x03abc\x00\x9f\x86\x01\x00'
+
+    packer = struct.pack("<5sii", b"abc", 111, 222)
+    assert packer == b'abc\x00\x00o\x00\x00\x00\xde\x00\x00\x00'
+
+    packer = struct.pack("<2x3sh", b"xyz", 42)
+    assert packer == b'\x00\x00xyz*\x00'
+
+
 def test_x():
     packed = struct.pack('!3xH', 19)
     assert packed == b'\x00\x00\x00\x00\x13'
@@ -533,6 +554,7 @@ def test_all():
     test_s()
     test_p()
     test_p_oversized_length_byte()
+    test_x_digit_then_other_fields()
     test_x()
     test_nonzero()
     test_signed_narrow()
