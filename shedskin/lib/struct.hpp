@@ -233,11 +233,13 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
             case 's':
                 __pack_str(c, arg, result, pos, ndigits);
+                ndigits = -1;
                 j++;
                 return;
 
             case 'p':
                 __pack_pascal(c, arg, result, pos, ndigits);
+                ndigits = -1;
                 j++;
                 return;
 
@@ -246,6 +248,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                     ndigits = 1;
                 for(__ss_int k=0; k<ndigits; k++)
                     result->unit[pos++] = '\x00';
+                ndigits = -1;
                 break;
 
             default:
