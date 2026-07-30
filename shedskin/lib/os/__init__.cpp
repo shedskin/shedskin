@@ -133,11 +133,11 @@ __ss_int system(str *c) {
     return std::system(c->c_str());
 }
 
-str *getenv(str *name_, str *alternative) {
+str *getenv(str *name_, str *default_) {
     const char *waba = name_->c_str();
     if(std::getenv(waba))
         return new str(std::getenv(waba));
-    return alternative;
+    return default_;
 }
 
 void *rename(str *a, str *b) {

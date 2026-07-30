@@ -87,6 +87,23 @@ def test_env():
     os.putenv('bert', 'value2') # does not change os.environ
 
 
+def test_getenv():
+    # HOME (POSIX) / USERPROFILE (Windows) is always set in practice, and is
+    # inherited from the real process environment at startup, so both
+    # CPython and compiled Shedskin agree on it.
+    home_var = "USERPROFILE" if os.name == "nt" else "HOME"
+    home = os.getenv(home_var)
+    if home:
+        assert home is not None
+        assert len(home) > 0
+
+    # a variable that is essentially guaranteed not to exist
+    missing = "SHEDSKIN_TEST_DEFINITELY_UNSET_VAR_12345"
+    assert os.getenv(missing) is None
+    assert os.getenv(missing, "fallback") == "fallback"
+    assert os.getenv(missing, default="fallback") == "fallback"
+
+
 def test_makedirs_exist_ok():
     path = '/tmp/shedskin_test_makedirs_exist_ok/a/b'
 
@@ -231,6 +248,7 @@ def test_all():
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
         test_env()
+        test_getenv()
         test_rdwr()
         test_lseek()
         test_isatty()
