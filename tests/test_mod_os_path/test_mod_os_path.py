@@ -91,8 +91,16 @@ def test_os_path_expanduser():
         if user:
             assert expanduser("~" + user + "/bar") == home + "/bar"
     else:
-        # posixpath has no pwd module here, so ~user forms are left alone
-        assert expanduser("~otheruser/bar") == "~otheruser/bar"
+        # posixpath now resolves ~user via a getpwnam()-based lookup
+        user = os.getenv("USER", "") or os.getenv("LOGNAME", "")
+        if user:
+            assert expanduser("~" + user + "/bar") == home + "/bar"
+        # on typical Linux systems, root's home is /root; guard this so the
+        # test stays portable on POSIX variants where that isn't true (e.g. macOS)
+        if os.path.isdir("/root"):
+            assert expanduser("~root/bar") == "/root/bar"
+        # unknown users are left alone
+        assert expanduser("~definitelynotarealuser12345/bar") == "~definitelynotarealuser12345/bar"
 
 
 def test_os_path_expanduser_windows_trailing_sep():
