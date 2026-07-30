@@ -1166,10 +1166,7 @@ def __min1(arg, __kw_key=0, __kw_default=__void):
     __kw_key(elem)
     return elem
 
-def sum(iterable, start):
-    return sum(iterable)
-    return start
-def __sum1(iterable):
+def sum(iterable, start=__void):  # TODO return start
     elem = iter(iterable).__next__()
     elem.__add__(elem)
     return elem
