@@ -183,6 +183,28 @@ def test_rdwr():
     os.close(fd)
 
 
+def test_lseek():
+    # Regression test: os.lseek used to always return None instead of
+    # the resulting file position that CPython's os.lseek promises.
+    path = 'shedskin_test_lseek.txt'
+    with open(path, 'wb') as f:
+        f.write(b'0123456789')
+
+    fd = os.open(path, os.O_RDWR)
+
+    pos = os.lseek(fd, 3, os.SEEK_SET)
+    assert pos == 3
+
+    pos = os.lseek(fd, 2, os.SEEK_CUR)
+    assert pos == 5
+
+    pos = os.lseek(fd, 0, os.SEEK_END)
+    assert pos == 10
+
+    os.close(fd)
+    os.remove(path)
+
+
 def test_isatty():
     fd = os.open('/dev/null', os.O_RDONLY)
     assert os.isatty(fd) == False
@@ -210,6 +232,7 @@ def test_all():
         test_posix()
         test_env()
         test_rdwr()
+        test_lseek()
         test_isatty()
         test_system()
         test_urandom()
