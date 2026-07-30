@@ -121,15 +121,15 @@ public:
     socket *setblocking(__ss_int flag);
     __ss_bool getblocking() { return __mbool(_blocking); }
     socket *shutdown(__ss_int how);
-    __ss_int send(str *string, __ss_int flags=0);
-    __ss_int sendall(str *string, __ss_int flags=0);
-    __ss_int sendto(str *string, __ss_int flags, inet_address addr);
-    __ss_int sendto(str *string, inet_address addr);
+    __ss_int send(bytes *string, __ss_int flags=0);
+    __ss_int sendall(bytes *string, __ss_int flags=0);
+    __ss_int sendto(bytes *string, __ss_int flags, inet_address addr);
+    __ss_int sendto(bytes *string, inet_address addr);
     socket *close();
     socket *settimeout(double value);
     double gettimeout() { return _timeout; }
-    str *recv(__ss_int bufsize, __ss_int flags=0);
-    tuple2<str *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
+    bytes *recv(__ss_int bufsize, __ss_int flags=0);
+    tuple2<bytes *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
     socket *listen(__ss_int backlog);
     inet_address getpeername();
     inet_address getsockname();
