@@ -154,8 +154,15 @@ void *replace(str *a, str *b) {
      * os.replace() promises. */
     std::error_code ec;
     std::filesystem::rename(a->c_str(), b->c_str(), ec);
-    if (ec)
+    if (ec) {
+        /* the error_code overload doesn't throw and isn't guaranteed to
+         * leave errno set, so set it explicitly from ec before constructing
+         * the exception, which reads the global errno */
+        errno = ec.value();
+        if (errno == ENOENT)
+            throw new FileNotFoundError(a);
         throw new OSError(a);
+    }
     return NULL;
 }
 
