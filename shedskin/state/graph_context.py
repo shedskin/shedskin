@@ -41,6 +41,7 @@ class GraphBuildingContext:
     dictcomp_to_lc: Dict[ast.DictComp, ast.ListComp] = field(default_factory=dict)
     fuse_reduce: Set[ast.Call] = field(default_factory=set)
     fuse_reduce_arg: Set[ast.AST] = field(default_factory=set)
+    fuse_reduce_op: Dict[ast.AST, str] = field(default_factory=dict)
     bool_test_only: Set[ast.AST] = field(default_factory=set)
     called: Set[ast.Attribute] = field(default_factory=set)
     item_rvalue: Dict[ast.AST, ast.AST] = field(default_factory=dict)
