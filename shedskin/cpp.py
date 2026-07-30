@@ -1340,7 +1340,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         "KeyboardInterrupt",
                         "FloatingPointError",
                         "OverflowError",
-                        "ZeroDivisionError",
                         "SystemExit",
                     ]:
                         error.error(
