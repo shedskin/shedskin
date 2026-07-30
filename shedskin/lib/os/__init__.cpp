@@ -1144,11 +1144,28 @@ void *fsync(__ss_int fd) {
     return NULL;
 }
 
-void *lseek(__ss_int fd, __ss_int pos, __ss_int how) {
-    if(::lseek(fd, pos, how) == -1)
+#endif /* WIN32 */
+
+/* lseek is declared unconditionally in __init__.hpp (it's cross-platform,
+   unlike the UNIX-only functionality above and below), so it must be
+   defined for both WIN32 and non-WIN32 builds. */
+#ifdef WIN32
+__ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
+    __int64 r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
+    if(r == -1)
         throw new OSError(new str("os.lseek"));
-    return NULL;
+    return (__ss_int)r;
 }
+#else
+__ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
+    off_t r = ::lseek(fd, pos, how);
+    if(r == -1)
+        throw new OSError(new str("os.lseek"));
+    return (__ss_int)r;
+}
+#endif
+
+#ifndef WIN32
 
 __ss_bool access(str *path, __ss_int mode) {
     return __mbool(::access(path->c_str(), mode) == 0);
