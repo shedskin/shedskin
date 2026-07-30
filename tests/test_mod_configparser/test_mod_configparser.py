@@ -113,9 +113,44 @@ def test_interpolation():
     ok = False
     try:
         config.get('paths', 'bad_ref')
-    except configparser.InterpolationMissingOptionError:
+    except configparser.InterpolationMissingOptionError as e:
         ok = True
+        # regression: reference used to be hardcoded to '' instead of the
+        # actual missing key, and str(e)/repr(e) used to print "None" (or
+        # segfault for repr) instead of the real message, because the
+        # Error hierarchy's __init__-based message never reached
+        # BaseException.args (see Error::__init__ in configparser.cpp).
+        assert 'does_not_exist' in e.reference
+        assert 'does_not_exist' in str(e)
+        assert 'does_not_exist' in repr(e)
     assert ok
+
+def test_error_str_and_repr():
+    # regression: str()/repr() on ConfigParser exceptions used to always
+    # print "None" (str) or segfault (repr) since BaseException.args was
+    # never populated by these exceptions' message-setting __init__ chain.
+    config = configparser.ConfigParser()
+
+    ok = False
+    try:
+        config.get('no_such_section', 'opt')
+    except configparser.NoSectionError as e:
+        ok = True
+        assert str(e) != 'None'
+        assert 'no_such_section' in str(e)
+        assert 'no_such_section' in repr(e)
+    assert ok
+
+    config.add_section('paths')
+    ok = False
+    try:
+        config.get('paths', 'no_such_option')
+    except configparser.NoOptionError as e:
+        ok = True
+        assert str(e) != 'None'
+        assert 'no_such_option' in str(e)
+    assert ok
+
 
 def test_all():
     test_minimal()
@@ -124,6 +159,7 @@ def test_all():
     test_rawconfigparser()
     test_defaults_section()
     test_interpolation()
+    test_error_str_and_repr()
 
 if __name__ == '__main__':
     test_all()
