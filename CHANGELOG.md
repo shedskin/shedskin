@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Optimized
 
-- Iteration over generator expressions is now much faster (though some work remains)
+- Iteration over generator expressions is now much faster
 - Optimized `sum(list-comprehension/generator-expression)`
 
 ### Changed
