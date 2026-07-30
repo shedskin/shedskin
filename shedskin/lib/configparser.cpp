@@ -172,8 +172,17 @@ class Error
 class_ *cl_Error;
 
 void *Error::__init__(str *msg) {
-
+    /* All subclasses funnel their formatted message through this
+       post-construction __init__() call rather than through the base
+       Exception(str*) constructor, so BaseException::args (a 1-tuple
+       of the message, normally set by that constructor) is left as
+       whatever the default-constructed base subobject had -- a
+       tuple(1, NULL). BaseException::__str__()/__repr__() read args[0],
+       so without this, str(e) prints "None" and repr(e) dereferences a
+       null str* and segfaults. Setting args here, the same way the real
+       constructor does, fixes both via the existing base implementations. */
     message = msg;
+    this->args = new tuple<str *>(1, msg);
     Exception::__init__(msg);
     return NULL;
 }
@@ -750,7 +759,7 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
             try {
                 value = __mod6(value, 1, vars);
             } catch (KeyError *e) {
-                throw ((new InterpolationMissingOptionError(option,section,rawval,const_17)));
+                throw ((new InterpolationMissingOptionError(option,section,rawval,e->message)));
             }
         }
         else {
