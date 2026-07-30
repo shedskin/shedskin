@@ -425,6 +425,10 @@ class GlobalInfo:
         return self._graph_context.fuse_reduce_arg
 
     @property
+    def fuse_reduce_op(self) -> dict["ast.AST", str]:
+        return self._graph_context.fuse_reduce_op
+
+    @property
     def bool_test_only(self) -> set["ast.AST"]:
         return self._graph_context.bool_test_only
 

@@ -3729,6 +3729,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 for (a, b) in self.gx.genexp_to_lc.items():  # TODO reverse..
                     if b is listcomp:
                         fuse_reduce = a in self.gx.fuse_reduce_arg
+                        if fuse_reduce and a in self.gx.fuse_reduce_op:
+                            self.gx.fuse_reduce_op[listcomp] = self.gx.fuse_reduce_op[a]
             else:
                 fuse_reduce = listcomp in self.gx.fuse_reduce_arg
 
@@ -3739,6 +3741,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.listcomp_func(listcomp, fuse_reduce)
 
+    def fuse_reduce_op(self, node: ast.ListComp) -> str:
+        """Which reduction ('sum', 'min', or 'max') is fused into this listcomp/genexpr"""
+        return self.gx.fuse_reduce_op.get(node, "sum")
+
     def listcomp_head(self, node: ast.ListComp, declare: bool, genexpr: bool, fuse_reduce: bool) -> None:
         """Generate the header for a list comprehension"""
         lcfunc, func = self.listcomps[node]
@@ -3747,7 +3753,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             argtypes = self.gx.merged_inh[node]
             subtypes = self.subtypes(argtypes, "unit")
             ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
-            if ts == '__ss_bool ':
+            if self.fuse_reduce_op(node) == "sum" and ts == '__ss_bool ':
                 ts = '__ss_int '
         else:
             ts = typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
@@ -3798,14 +3804,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.indent()
         self.local_defs(lcfunc)
         if fuse_reduce:
+            op = self.fuse_reduce_op(node)
             argtypes = self.gx.merged_inh[node]
             subtypes = self.subtypes(argtypes, "unit")
             ts = typestr.typestr(self.gx, subtypes, mv=self.mv)
-            if ts == '__ss_bool ':
+            if op == "sum" and ts == '__ss_bool ':
                 ts = '__ss_int '
-            self.output(
-                ts + "__ss_result = __zero<" + ts + ">();\n"
-            )
+            if op == "sum":
+                self.output(
+                    ts + "__ss_result = __zero<" + ts + ">();\n"
+                )
+            else:  # min/max: no universal identity element, track first element instead
+                self.output(ts + "__ss_result;\n")
+                self.output("bool __ss_first = true;\n")
         else:
             self.output(
                 typestr.nodetypestr(self.gx, node, lcfunc, mv=self.mv)
@@ -3814,6 +3825,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 + "();\n"
             )
         self.listcomp_rec(node, node.generators, lcfunc, False, fuse_reduce)
+        if fuse_reduce and op != "sum":
+            msg = "min() arg is an empty sequence" if op == "min" else "max() arg is an empty sequence"
+            self.output('if (__ss_first) throw new ValueError(new str("' + msg + '"));')
         self.output("return __ss_result;")
         self.deindent()
         self.output("}\n")
@@ -3905,10 +3919,31 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # recursion ends when we processed all quals TODO this part to separate function?
         if not quals:
-            if fuse_reduce:  # TODO max/min.. and what happens with an empty list, without default arg?
-                self.start("__ss_result = __add(__ss_result, ")
-                self.visit(node.elt, lcfunc)
-                self.append(")")
+            if fuse_reduce:  # TODO what happens with an empty list, without default arg?
+                op = self.fuse_reduce_op(node)
+                if op == "sum":
+                    self.start("__ss_result = __add(__ss_result, ")
+                    self.visit(node.elt, lcfunc)
+                    self.append(")")
+                    self.eol()
+                else:
+                    fn = "___max" if op == "max" else "___min"
+                    self.output("if (__ss_first) {")
+                    self.indent()
+                    self.start("__ss_result = ")
+                    self.visit(node.elt, lcfunc)
+                    self.eol()
+                    self.output("__ss_first = false;")
+                    self.deindent()
+                    self.output("} else {")
+                    self.indent()
+                    self.start("__ss_result = " + fn + "(2, __ss_void, 0, __ss_result, ")
+                    self.visit(node.elt, lcfunc)
+                    self.append(")")
+                    self.eol()
+                    self.deindent()
+                    self.output("}")
+                return
             elif genexpr:
                 self.start("__result = ")
                 self.visit(node.elt, lcfunc)
