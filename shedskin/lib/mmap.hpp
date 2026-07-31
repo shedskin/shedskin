@@ -156,6 +156,7 @@ class mmap: public pyiter<bytes *>
     int fd;
     __ss_int flags;
     __ss_int prot;
+    off_t offset;
 #else /* WIN32 */
     HANDLE map_handle;
     HANDLE file_handle;
