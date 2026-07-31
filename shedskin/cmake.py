@@ -737,6 +737,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     app_mods = set()
 
     compile_options = []
+    link_options = []
     if gx.int32:
         compile_options.append("-D__SS_INT32")
     if gx.int64:
@@ -754,11 +755,10 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     if not gx.zero_division_check:
         compile_options.append("-D__SS_NOZERO")
     if gx.backtrace:
-        compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
+        compile_options.append("-D__SS_BACKTRACE -fno-inline")
+        link_options.append("-rdynamic")
     if not gx.assertions:
         compile_options.append("-D__SS_NOASSERT")
-    if gx.backtrace:
-        compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
     if gx.predict:
@@ -766,6 +766,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     if gx.boost:
         compile_options.append("-D__SS_BOOST")
     compile_opts = " ".join(compile_options)
+    link_opts = " ".join(link_options)
 
     cmdline_options = []
     if gx.options.collect_stats:
@@ -812,6 +813,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                link_options=link_opts,
                 cmdline_options=cmdline_opts,
             ),
         )
@@ -833,6 +835,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                link_options=link_opts,
                 cmdline_options=cmdline_opts,
             )
         )
@@ -870,6 +873,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                link_options=link_opts,
                 cmdline_options=cmdline_opts,
             ),
         )

@@ -57,7 +57,6 @@ def test_no_retry_by_default(tmp_path, monkeypatch):
     cmakelists = _generate_cmakelists(tmp_path, monkeypatch, retry_maxiters=False)
     assert "--retry" not in cmakelists
 
-
 def test_silent_forwarded_to_cmdline_options(tmp_path, monkeypatch):
     """--silent must reach the internal 'translate' subprocess too, since
     that's where the per-module 'analyzing types'/'generating C++' progress
@@ -65,8 +64,25 @@ def test_silent_forwarded_to_cmdline_options(tmp_path, monkeypatch):
     cmakelists = _generate_cmakelists(tmp_path, monkeypatch, silent=True)
     assert "--silent" in cmakelists
 
-
 def test_no_silent_by_default(tmp_path, monkeypatch):
     """Without --silent, CMDLINE_OPTIONS must not mention it."""
     cmakelists = _generate_cmakelists(tmp_path, monkeypatch, silent=False)
     assert "--silent" not in cmakelists
+
+def test_backtrace_rdynamic_forwarded_to_link_options(tmp_path, monkeypatch):
+    """-rdynamic is a linker flag, not a compiler flag: target_compile_options()
+    never passes it to the actual link step, so backtrace_symbols() can't
+    resolve the program's own symbols at runtime and --traceback prints a
+    useless backtrace. It must be forwarded via LINK_OPTIONS instead."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, backtrace=True)
+    assert "LINK_OPTIONS -rdynamic" in cmakelists
+    assert "-rdynamic" not in cmakelists.split("COMPILE_OPTIONS")[1].split("\n")[0]
+    # guard against the flag block being accidentally duplicated again
+    assert cmakelists.count("-D__SS_BACKTRACE") == 1
+
+
+def test_no_backtrace_by_default(tmp_path, monkeypatch):
+    """Without --traceback, neither flag should be forwarded at all."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, backtrace=False)
+    assert "-rdynamic" not in cmakelists
+    assert "-D__SS_BACKTRACE" not in cmakelists
