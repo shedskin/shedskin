@@ -158,6 +158,25 @@ def test_replace():
     os.remove(dst)
 
 
+def test_replace_missing_source():
+    # os.replace() on a missing source must raise the more specific
+    # FileNotFoundError, not just a generic OSError, matching CPython.
+    dst = 'shedskin_test_replace_missing_dst.txt'
+    with open(dst, 'w') as f:
+        f.write('untouched')
+
+    try:
+        os.replace('shedskin_test_replace_does_not_exist.txt', dst)
+        assert False, "expected FileNotFoundError"
+    except FileNotFoundError as e:
+        assert e.errno == 2
+
+    with open(dst) as f:
+        assert f.read() == 'untouched'
+
+    os.remove(dst)
+
+
 def test_fspath():
     assert os.fspath('/tmp/somefile.txt') == '/tmp/somefile.txt'
     # don't hardcode '/' here: os.path.join uses '\\' on Windows
@@ -224,6 +243,7 @@ def test_all():
     test_makedirs_exist_ok()
     test_cpu_count()
     test_replace()
+    test_replace_missing_source()
     test_fspath()
     test_scandir()
     test_scandir_name_path()
