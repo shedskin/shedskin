@@ -56,3 +56,17 @@ def test_no_retry_by_default(tmp_path, monkeypatch):
     """Without --retry, CMDLINE_OPTIONS must not mention it."""
     cmakelists = _generate_cmakelists(tmp_path, monkeypatch, retry_maxiters=False)
     assert "--retry" not in cmakelists
+
+
+def test_silent_forwarded_to_cmdline_options(tmp_path, monkeypatch):
+    """--silent must reach the internal 'translate' subprocess too, since
+    that's where the per-module 'analyzing types'/'generating C++' progress
+    output actually gets printed -- not the outer 'build' process."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, silent=True)
+    assert "--silent" in cmakelists
+
+
+def test_no_silent_by_default(tmp_path, monkeypatch):
+    """Without --silent, CMDLINE_OPTIONS must not mention it."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, silent=False)
+    assert "--silent" not in cmakelists

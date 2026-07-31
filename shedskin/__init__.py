@@ -25,24 +25,25 @@ class Shedskin:
     """Main shedskin frontend class"""
 
     def __init__(self, options: argparse.Namespace):
-        self.configure_log()
+        self.configure_log(options)
         self.gx = self.configure(options)
         self.gx.options = options
         if "name" in options:
             self.module_name = self.get_name(options.name)
 
-    def configure_log(self) -> None:
+    def configure_log(self, options: argparse.Namespace) -> None:
         """Configure logging for shedskin"""
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
+        level = logging.WARNING if getattr(options, "silent", False) else logging.INFO
         console = logging.StreamHandler(stream=sys.stdout)
         console.setFormatter(log.ShedskinFormatter())
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
-        self.log.setLevel(logging.INFO)
+        self.log.setLevel(level)
         # debug=3 -> IFA (iterative flow analysis) debug logging enabled.
         self.infer_log = logging.getLogger("infer")
         self.infer_log.addHandler(console)
-        self.infer_log.setLevel(logging.INFO)
+        self.infer_log.setLevel(level)
 
     def get_name(self, module_path: str) -> str:
         """Returns name of module to be translated.
