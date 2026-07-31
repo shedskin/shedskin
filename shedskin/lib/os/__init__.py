@@ -149,7 +149,7 @@ class DirEntry:
 def scandir(path=None):
     return [DirEntry()]
 
-def getenv(name, alternative=''):
+def getenv(name, default=None):
     return ''
 
 def getcwd():
