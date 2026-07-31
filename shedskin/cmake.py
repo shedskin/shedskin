@@ -770,6 +770,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
     cmdline_options = []
     if gx.options.collect_stats:
         cmdline_options.append("--collect-stats")
+    if gx.retry_maxiters:
+        cmdline_options.append("--retry")
     cmdline_opts = " ".join(cmdline_options)
 
     for module in modules:
