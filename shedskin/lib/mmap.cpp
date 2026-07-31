@@ -205,6 +205,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
     flags = flags_;
     prot = prot_;
     access = access_;
+    offset = (off_t)offset_;
 
     return NULL;
 }
@@ -242,10 +243,29 @@ void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();
 #ifdef HAVE_MREMAP
+    /* If this mapping is backed by a file, the file itself must be grown
+       (or shrunk) to match, or else accessing the newly mapped region
+       will silently drop writes (if it lands in the tail of the same
+       page as the old EOF) or crash the process with SIGBUS/SIGSEGV
+       (if it lands in a wholly new page), since mremap() only adjusts
+       the virtual mapping and never touches the underlying file. */
+    if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
+    {
+        throw new OSError();
+    }
 #if defined(__NetBSD__)
     void *temp = ::mremap(m_begin, __size(),
                                     m_begin, size_t(new_size), 0);
-#else // !__NetBSD__
+#elif defined(MREMAP_MAYMOVE)
+    /* Without MREMAP_MAYMOVE, mremap() can only grow a mapping in place,
+       which fails with ENOMEM whenever the kernel hasn't left free address
+       space directly after it -- practically always, outside of a trivial
+       just-mapped case. Allowing the kernel to relocate the mapping (as
+       CPython does) is required for growing to work reliably; m_begin is
+       updated below to whatever address the kernel actually returns. */
+    void *temp = ::mremap(m_begin, __size(),
+                                    size_t(new_size), MREMAP_MAYMOVE);
+#else // !__NetBSD__ && !MREMAP_MAYMOVE
     void *temp = ::mremap(m_begin, __size(),
                                     size_t(new_size), 0);
 #endif // __NetBSD__
@@ -257,7 +277,28 @@ void *mmap::resize(__ss_int new_size)
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
 #else // !HAVE_MREMAP
-    throw new NotImplementedError(const_15);
+    /* No mremap() on this platform (e.g. macOS). CPython itself does not
+       require mremap() to support resize() here either: it falls back to
+       growing/shrinking the backing file (if any), unmapping the old
+       region, and creating a fresh mapping at the new size. As with the
+       MREMAP_MAYMOVE case above, the mapping may end up at a new address,
+       so m_begin/m_end/m_position are updated accordingly. */
+    if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
+    {
+        throw new OSError();
+    }
+    if (::munmap(m_begin, __size()) == -1)
+    {
+        throw new OSError();
+    }
+    void *temp = ::mmap(0, (size_t)new_size, prot, flags, fd, offset);
+    if (temp == MAP_FAILED)
+    {
+        throw new OSError();
+    }
+    m_begin = static_cast<iterator>(temp);
+    m_end = m_begin + size_t(new_size);
+    m_position = std::min(m_position, m_end);
 #endif // HAVE_MREMAP
     return NULL;
 }

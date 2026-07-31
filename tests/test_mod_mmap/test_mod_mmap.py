@@ -258,6 +258,64 @@ def test_ctx_mgr():
             assert f.read(8) == mm.read(8)
 
 
+def test_resize_grows_backing_file():
+    # regression test: resize() on a file-backed mmap must grow (or shrink)
+    # the underlying file to match, and the mapping must actually be usable
+    # (and persisted) past the original file size afterwards. Without this,
+    # writes into the newly-mapped region either get silently dropped or
+    # crash the process (SIGBUS/SIGSEGV), since mremap() alone never
+    # touches the backing file.
+    PAGESIZE = mmap.PAGESIZE
+    setUp()
+
+    f = open(TESTFILE_OUT, "w+b")
+    f.write(b"x" * PAGESIZE)
+    f.flush()
+    m = mmap.mmap(f.fileno(), PAGESIZE)
+    f.close()
+
+    m.resize(PAGESIZE * 3)
+    assert len(m) == PAGESIZE * 3
+
+    # write well into a page beyond the original file's last mapped page
+    m.seek(PAGESIZE * 2 + 10)
+    m.write_byte(65)
+    m.flush()
+    m.close()
+
+    assert os.path.getsize(TESTFILE_OUT) == PAGESIZE * 3
+    with open(TESTFILE_OUT, "rb") as f2:
+        f2.seek(PAGESIZE * 2 + 10)
+        assert f2.read(1) == b"A"
+
+    try:
+        os.remove(TESTFILE_OUT)
+    except OSError:
+        pass
+
+
+def test_resize_shrinks_backing_file():
+    # regression test: resize() to a smaller size must also shrink the
+    # underlying file to match (same code path as the grow case above).
+    PAGESIZE = mmap.PAGESIZE
+    setUp()
+
+    f = open(TESTFILE_OUT, "w+b")
+    f.write(b"x" * PAGESIZE * 3)
+    f.flush()
+    m = mmap.mmap(f.fileno(), PAGESIZE * 3)
+    f.close()
+
+    m.resize(PAGESIZE)
+    assert len(m) == PAGESIZE
+    m.close()
+
+    assert os.path.getsize(TESTFILE_OUT) == PAGESIZE
+
+    try:
+        os.remove(TESTFILE_OUT)
+    except OSError:
+        pass
 
 
 def test_all():
@@ -269,6 +327,8 @@ def test_all():
         test_tougher_find()
         test_explicit_iter()
         test_ctx_mgr()
+        test_resize_grows_backing_file()
+        test_resize_shrinks_backing_file()
 
 if __name__ == '__main__':
     test_all()
