@@ -218,8 +218,11 @@ __ss_int file::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
-        size = tell();  
-#if(_BSD_SOURCE || _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L)
+        size = tell();
+#ifdef WIN32
+    if(_chsize(__ss_fileno(), size) == -1)
+        throw new OSError();
+#else
     if(ftruncate(__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
@@ -447,8 +450,11 @@ __ss_int file_binary::truncate(__ss_int size) {
     __check_closed();
     flush();
     if(size == -1)
-        size = tell();  
-#if(_BSD_SOURCE || _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L)
+        size = tell();
+#ifdef WIN32
+    if(_chsize(__ss_fileno(), size) == -1)
+        throw new OSError();
+#else
     if(ftruncate(__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
