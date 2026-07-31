@@ -80,22 +80,6 @@ class WebServer:
             self.poll()
         self.server.close()
 
-    def hexval(self, b):
-        if b >= ord('0') and b <= ord('9'):
-            return b - ord('0')
-        elif b >= ord('a') and b <= ord('f'):
-            return b - ord('a') + 10
-        else:
-            return b - ord('A') + 10
-
-    def fromHexByte(self, hi, lo):
-        return (self.hexval(hi) << 4) | self.hexval(lo)
-
-    def ishex(self, b):
-        x = b
-        return (x >= ord('0') and x <= ord('9')) or (x >= ord('a') and x <= ord('f')) or (x >= ord('A') and x <= ord('F'))
-
-
     def urlDecode(self, s):
         res = bytearray()
         max = len(s)
@@ -104,9 +88,12 @@ class WebServer:
             if (skip > 0): skip=skip-1; continue
             cur = s[i]
             if (cur == ord('+')): res.append(ord(' '))
-            elif (cur == ord('%') and i <(max-2) and self.ishex(s[i+1]) and self.ishex(s[i+2])):
-                res.append(self.fromHexByte(s[i+1], s[i+2]))
-                skip=2
+            elif (cur == ord('%') and i <(max-2)):
+                try:
+                    res.append(int(s[i+1:i+3], 16))
+                    skip=2
+                except ValueError:
+                    res.append(cur)
             else:
                 res.append(cur)
 
@@ -145,9 +132,8 @@ class WebServer:
             if (getFormData):
                 formData=i
             elif (b":" in i):
-                headerSplit = i.split(b":")[0]
-                #print "headerSplit:", headerSplit
-                headerData[headerSplit] = i[len(headerSplit)+1:].strip()
+                headerSplit, sep, headerVal = i.partition(b":")
+                headerData[headerSplit] = headerVal.strip()
             elif (i == b""):
                 getFormData=True
         #print "headerData:", headerData
