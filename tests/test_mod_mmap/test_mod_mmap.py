@@ -294,6 +294,30 @@ def test_resize_grows_backing_file():
         pass
 
 
+def test_resize_shrinks_backing_file():
+    # regression test: resize() to a smaller size must also shrink the
+    # underlying file to match (same code path as the grow case above).
+    PAGESIZE = mmap.PAGESIZE
+    setUp()
+
+    f = open(TESTFILE_OUT, "w+b")
+    f.write(b"x" * PAGESIZE * 3)
+    f.flush()
+    m = mmap.mmap(f.fileno(), PAGESIZE * 3)
+    f.close()
+
+    m.resize(PAGESIZE)
+    assert len(m) == PAGESIZE
+    m.close()
+
+    assert os.path.getsize(TESTFILE_OUT) == PAGESIZE
+
+    try:
+        os.remove(TESTFILE_OUT)
+    except OSError:
+        pass
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -304,6 +328,7 @@ def test_all():
         test_explicit_iter()
         test_ctx_mgr()
         test_resize_grows_backing_file()
+        test_resize_shrinks_backing_file()
 
 if __name__ == '__main__':
     test_all()

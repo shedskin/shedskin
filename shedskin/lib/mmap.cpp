@@ -277,7 +277,28 @@ void *mmap::resize(__ss_int new_size)
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
 #else // !HAVE_MREMAP
-    throw new NotImplementedError(const_15);
+    /* No mremap() on this platform (e.g. macOS). CPython itself does not
+       require mremap() to support resize() here either: it falls back to
+       growing/shrinking the backing file (if any), unmapping the old
+       region, and creating a fresh mapping at the new size. As with the
+       MREMAP_MAYMOVE case above, the mapping may end up at a new address,
+       so m_begin/m_end/m_position are updated accordingly. */
+    if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
+    {
+        throw new OSError();
+    }
+    if (::munmap(m_begin, __size()) == -1)
+    {
+        throw new OSError();
+    }
+    void *temp = ::mmap(0, (size_t)new_size, prot, flags, fd, offset);
+    if (temp == MAP_FAILED)
+    {
+        throw new OSError();
+    }
+    m_begin = static_cast<iterator>(temp);
+    m_end = m_begin + size_t(new_size);
+    m_position = std::min(m_position, m_end);
 #endif // HAVE_MREMAP
     return NULL;
 }
