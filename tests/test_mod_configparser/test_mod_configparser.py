@@ -1,4 +1,4 @@
-# configparser # XXX readfp not covered yet
+# configparser
 
 import os
 import configparser
@@ -152,6 +152,83 @@ def test_error_str_and_repr():
     assert ok
 
 
+def test_read_string():
+    config = configparser.ConfigParser()
+    config.read_string("[book]\ntitle: Dune\npages: 412\n")
+    assert config.get('book', 'title') == 'Dune'
+    assert config.getint('book', 'pages') == 412
+
+def test_read_dict():
+    config = configparser.ConfigParser()
+    config.read_dict({'server': {'host': 'localhost', 'port': '8080'}})
+    assert config.get('server', 'host') == 'localhost'
+    assert config.getint('server', 'port') == 8080
+
+    # a second read_dict() call extends an already-existing section
+    # rather than clobbering it
+    config.read_dict({'server': {'timeout': '30'}})
+    assert config.getint('server', 'timeout') == 30
+    assert config.get('server', 'host') == 'localhost'
+
+def test_get_fallback():
+    config = configparser.ConfigParser()
+    config.add_section('a')
+    config.set('a', 'x', '1')
+
+    # missing option / missing section: fallback is returned instead of raising
+    assert config.get('a', 'missing', fallback='default_val') == 'default_val'
+    assert config.get('nosuch', 'x', fallback='default_val2') == 'default_val2'
+
+    # a present option is returned normally; fallback is ignored
+    assert config.get('a', 'x', fallback='unused') == '1'
+
+    # omitting fallback still raises, as before
+    ok = False
+    try:
+        config.get('a', 'missing')
+    except configparser.NoOptionError:
+        ok = True
+    assert ok
+
+def test_duplicate_section_error():
+    config = configparser.ConfigParser()
+    config.add_section('dup')
+    ok = False
+    try:
+        config.add_section('dup')
+    except configparser.DuplicateSectionError:
+        ok = True
+    assert ok
+
+def test_missing_section_header_error():
+    config = configparser.ConfigParser()
+    ok = False
+    try:
+        config.read_string('no_section_here: value\n')
+    except configparser.MissingSectionHeaderError:
+        ok = True
+    assert ok
+
+def test_parsing_error():
+    config = configparser.ConfigParser()
+    ok = False
+    try:
+        config.read_string('[a]\nthis is not valid\n')
+    except configparser.ParsingError:
+        ok = True
+    assert ok
+
+def test_getboolean_invalid():
+    config = configparser.ConfigParser()
+    config.add_section('b')
+    config.set('b', 'flag', 'not_a_bool')
+    ok = False
+    try:
+        config.getboolean('b', 'flag')
+    except ValueError:
+        ok = True
+    assert ok
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -160,6 +237,13 @@ def test_all():
     test_defaults_section()
     test_interpolation()
     test_error_str_and_repr()
+    test_read_string()
+    test_read_dict()
+    test_get_fallback()
+    test_duplicate_section_error()
+    test_missing_section_header_error()
+    test_parsing_error()
+    test_getboolean_invalid()
 
 if __name__ == '__main__':
     test_all()

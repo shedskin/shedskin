@@ -981,8 +981,6 @@ class file(pyiter):
         return self.unit
     def readlines(self, sizehint=-1):
         return [self.unit]
-    def xreadlines(self):
-        return iter(self)
 
     def write(self, s):
         return 1
@@ -1034,8 +1032,6 @@ class file_binary(pyiter):
         return self.unit
     def readlines(self, sizehint=-1):
         return [self.unit]
-    def xreadlines(self):
-        return iter(self)
 
     def write(self, s):
         return 1

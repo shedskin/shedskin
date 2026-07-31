@@ -15,12 +15,12 @@ public:
 
     BytesIO(bytes *initial_bytes=NULL) : file_binary(), pos(0), s(initial_bytes ? initial_bytes : new bytes()) {}
 
-    bytes *read(int n=-1);
-    bytes *readline(int n=-1);
+    bytes *read(__ss_int n=-1);
+    bytes *readline(__ss_int n=-1);
     list<bytes *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(int size=-1) {
+    void *truncate(__ss_int size=-1) {
         s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
@@ -39,12 +39,12 @@ public:
 
     StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? initial_value : new str()) {}
 
-    str *read(int n=-1);
-    str *readline(int n=-1);
+    str *read(__ss_int n=-1);
+    str *readline(__ss_int n=-1);
     list<str *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(int size=-1) {
+    void *truncate(__ss_int size=-1) {
         s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
