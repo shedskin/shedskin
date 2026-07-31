@@ -84,7 +84,7 @@ class socket(object):
         return self
 
     def recv(self, bufsize, flags=0):
-        return ''
+        return b''
 
     def send(self, string, flags=0):
         return 0
@@ -99,7 +99,7 @@ class socket(object):
         return ('', 0)
 
     def recvfrom(self, bufsize, flags=0):
-        return ('', ('', 0))
+        return (b'', ('', 0))
 
     def sendto(self, bufsize, flags=0, address=0):
         return 0
