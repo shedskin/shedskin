@@ -86,7 +86,7 @@ in cases where they can't.
 Shed Skin will only ever support a subset of all Python features. The following common features are currently not supported:
 
 * `eval`, `getattr`, `hasattr`, `isinstance`, anything really dynamic
-* arbitrary-size arithmetic (integers become 32-bit (signed) by default on most architectures, see [Command-line options](#command-line-options))
+* arbitrary-size arithmetic (integers become 64-bit (signed) by default, see [Command-line options](#command-line-options))
 * argument (un)packing (`*args` and `**kwargs`)
 * ordered dicts
 * multiple inheritance
