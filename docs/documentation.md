@@ -169,13 +169,13 @@ sudo apt-get install shedskin
 
 #### Manual Installation
 
-To manually install the UNIX tarball, take the following steps:
+To manually install shedskin, take the following steps:
 
-* download and unpack tarball
+* download and unpack the source, or clone the repository
 * run:
 
 ```bash
-sudo python setup.py install
+pip install .
 ```
 
 #### Dependencies
@@ -214,13 +214,13 @@ sudo make install
 
 #### Manual Installation
 
-To install the UNIX tarball on an **OSX** system, take the following steps:
+To install shedskin on an **OSX** system, take the following steps:
 
-* download and unpack tarball
+* download and unpack the source, or clone the repository
 * run:
 
 ```bash
-sudo python setup.py install
+pip install .
 ```
 
 #### Dependencies
@@ -255,7 +255,8 @@ Install the following dependencies:
 
 * Microsoft Visual Studio Build Tools (enable CMake in installation process)
 * CMake
-* Conan 1.62.0 (`pip install 'conan==1.62.0'`)
+
+`shedskin build`/`run`/`runtests` will fetch the remaining C++ dependencies automatically via CMake's `FetchContent` (or optionally via `--spm`); no separate package manager (e.g. Conan) is required anymore.
 
 ## Compiling a Standalone Program
 
@@ -458,7 +459,7 @@ shedskin has recently adopted a command-line api with subcommands:
 
 ```
 $ shedskin --help
-usage: shedskin [-h] {analyze,translate,build,run,test} ...
+usage: shedskin [-h] {analyze,translate,build,run,runtests} ...
 
 Restricted-Python-to-C++ Compiler
 
@@ -466,11 +467,12 @@ options:
   -h, --help            show this help message and exit
 
 subcommands:
-    analyze             analyze and validate python module
-    translate           translate python module to cpp
-    build               build translated module
-    run                 run built and translated module
-    test                run tests
+  {analyze,translate,build,run,runtests}
+    analyze             Analyze and validate python module
+    translate           Translate python module to cpp (Makefile)
+    build               Translate and build python module (CMake)
+    run                 Translate, build and run module (CMake)
+    runtests            Run tests
 ```
 
 The historical behaviour is provided by the `translate` subcommand, with the other commands except `analyze` requiring [cmake](https://cmake.org/) to work.
@@ -481,13 +483,14 @@ The `analyze` command is intended to provided analysis and validation of a sheds
 
 ```
 $ shedskin analyze --help
-usage: shedskin analyze [-h] name
+usage: shedskin analyze [-h] [--collect-stats] name
 
 positional arguments:
-  name        Python file or module to analyze
+  name             Python file or module to analyze
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help       show this help message and exit
+  --collect-stats  Collect and report shedskin stats
 ```
 
 ### translate
@@ -495,10 +498,13 @@ options:
 The shedskin translate command can be given the following options:
 
 ```
-usage: shedskin translate [-h] [-a] [-d DEBUG] [-e] [-f] [-F FLAGS]
-                          [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR]
-                          [-r] [-s] [-x] [--noassert] [-b] [--nogc]
-                          [--nomakefile] [--nowrap]
+usage: shedskin translate [-h] [--collect-stats] [--int32] [--int64]
+                          [--float32] [--float64] [--noassert] [-b] [--nogc]
+                          [-w] [-z] [--boost] [--predict] [-d DEBUG] [-e]
+                          [-I INCLUDE_DIRS] [-L LINK_DIRS] [-l LINK_LIBS]
+                          [-X EXTRA_LIB] [-o OUTPUTDIR] [--retry] [-s] [-t]
+                          [-x] [-c] [-F FLAGS] [-S] [-m MAKEFILE] [-r] [-D]
+                          [--nomakefile] [--nocleanup] [--local-deps]
                           name
 
 positional arguments:
@@ -506,31 +512,46 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -a, --ann             Output annotated source code (.ss.py)
-  -d DEBUG, --debug DEBUG
-                        Set debug level
-  -e, --extmod          Generate extension module
-  -F FLAGS, --flags FLAGS
-                        Provide alternate Makefile flags
-  -L [LIB ...], --lib [LIB ...]
-                        Add a library directory
+  --collect-stats       Collect and report shedskin stats
   --int32               Use 32-bit integers
-  --int64               Use 64-bit integers
-  --int128              Use 128-bit integers
+  --int64               Use 64-bit integers (this is the default)
   --float32             Use 32-bit floats
   --float64             Use 64-bit floats
-  -m MAKEFILE, --makefile MAKEFILE
-                        Specify alternate Makefile name
-  -o OUTPUTDIR, --outputdir OUTPUTDIR
-                        Specify output directory for generated files
-  -r, --random          Use fast random number generator (rand())
-  -s, --silent          Silent mode, only show warnings
-  -x, --traceback       Print traceback for uncaught exceptions
   --noassert            Disable assert statements
   -b, --nobounds        Disable bounds checking
   --nogc                Disable garbage collection
+  -w, --nowrap          Disable wrap-around checking
+  -z, --nozero          Disable zero-division checking
+  --boost               Use (builtin) boost containers
+  --predict             Try to predict list sizes
+  -d DEBUG, --debug DEBUG
+                        Set debug level
+  -e, --extmod          Generate extension module
+  -I INCLUDE_DIRS, --include-dirs INCLUDE_DIRS
+                        Add an include directory
+  -L LINK_DIRS, --link-dirs LINK_DIRS
+                        Add a link library directory
+  -l LINK_LIBS, --link-libs LINK_LIBS
+                        Add a link library
+  -X EXTRA_LIB, --extra-lib EXTRA_LIB
+                        Add an extra builtins library directory
+  -o OUTPUTDIR, --outputdir OUTPUTDIR
+                        Specify output directory for generated files
+  --retry               Retry analysis when hitting max iterations
+  -s, --silent          Silent mode, only show warnings
+  -t, --traceback       Print traceback for uncaught exceptions
+  -x, --executable      Generate executable
+  -c, --compile         Directly compile translated code
+  -F FLAGS, --flags FLAGS
+                        Provide alternate Makefile flags
+  -S, --static-libs     Use static compilation if possible
+  -m MAKEFILE, --makefile MAKEFILE
+                        Specify alternate Makefile name
+  -r, --run             Build and run executable
+  -D, --dry-run         Only print compilation command
   --nomakefile          Disable makefile generation
-  --nowrap              Disable wrap-around checking
+  --nocleanup           Disable cleanup of generated files
+  --local-deps          Use dependencies from bundled ext/ sources
 ```
 
 For example, to compile the file `test.py` as an extension module, type
@@ -552,17 +573,22 @@ a = [1, 2, 3]
 print(a[5]) # invalid index: out of bounds
 ```
 
+Note that as of 0.9.13, integers default to 64-bit (`--int64`); use `--int32` to restore the previous, narrower default.
+
 ### build
 
 The `build` command calls `shedskin translate` on a target via cmake, generates a suitable `CMakeLists.txt` file and then builds it, placing build artefacts in a `build` directory.
 
 ```
 $ shedskin build --help
-usage: shedskin build [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
-                      [--spm] [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]] [-a]
-                      [-d DEBUG] [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE]
-                      [-o OUTPUTDIR] [-r] [-s] [-x] [--noassert] [--nobounds] [--nogc]
-                      [--nomakefile] [--nowrap]
+usage: shedskin build [-h] [--collect-stats] [--int32] [--int64] [--float32]
+                      [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
+                      [--boost] [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+                      [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
+                      [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
+                      [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+                      [--fetchcontent] [--local-deps] [--ccache]
+                      [--target TARGET [TARGET ...]] [--nowarnings]
                       name
 
 positional arguments:
@@ -570,42 +596,47 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --generator G         specify a cmake build system generator
-  --jobs N              build and run in parallel using N jobs
-  --build-type T        set cmake build type (default: 'Debug')
-  --test                run ctest
-  --reset               reset cmake build
-  --conan               install cmake dependencies with conan
-  --spm                 install cmake dependencies with spm
-  --fetchcontent          install cmake dependencies with fetchcontent
-  --ccache              enable ccache with cmake
-  --target TARGET [TARGET ...]
-                        build only specified cmake targets
-  -a, --ann             Output annotated source code (.ss.py)
+  --collect-stats       Collect and report shedskin stats
+  --int32               Use 32-bit integers
+  --int64               Use 64-bit integers (this is the default)
+  --float32             Use 32-bit floats
+  --float64             Use 64-bit floats
+  --noassert            Disable assert statements
+  -b, --nobounds        Disable bounds checking
+  --nogc                Disable garbage collection
+  -w, --nowrap          Disable wrap-around checking
+  -z, --nozero          Disable zero-division checking
+  --boost               Use (builtin) boost containers
+  --predict             Try to predict list sizes
   -d DEBUG, --debug DEBUG
                         Set debug level
   -e, --extmod          Generate extension module
-  -F FLAGS, --flags FLAGS
-                        Provide alternate Makefile flags
-  -L [LIB ...], --lib [LIB ...]
-                        Add a library directory
-  --int32               Use 32-bit integers
-  --int64               Use 64-bit integers
-  --int128              Use 128-bit integers
-  --float32             Use 32-bit floats
-  --float64             Use 64-bit floats
-  -m MAKEFILE, --makefile MAKEFILE
-                        Specify alternate Makefile name
+  -I INCLUDE_DIRS, --include-dirs INCLUDE_DIRS
+                        Add an include directory
+  -L LINK_DIRS, --link-dirs LINK_DIRS
+                        Add a link library directory
+  -l LINK_LIBS, --link-libs LINK_LIBS
+                        Add a link library
+  -X EXTRA_LIB, --extra-lib EXTRA_LIB
+                        Add an extra builtins library directory
   -o OUTPUTDIR, --outputdir OUTPUTDIR
                         Specify output directory for generated files
-  -r, --random          Use fast random number generator (rand())
+  --retry               Retry analysis when hitting max iterations
   -s, --silent          Silent mode, only show warnings
-  -x, --traceback       Print traceback for uncaught exceptions
-  --noassert            Disable assert statements
-  --nobounds            Disable bounds checking
-  --nogc                Disable garbage collection
-  --nomakefile          Disable makefile generation
-  --nowrap              Disable wrap-around checking
+  -t, --traceback       Print traceback for uncaught exceptions
+  -x, --executable      Generate executable
+  --generator G         Specify a cmake build system generator
+  --jobs N              Build and run in parallel using N jobs
+  --build-type T        Set cmake build type (default: 'Debug')
+  --test                Run ctest
+  --reset               Reset cmake build
+  --spm                 Install cmake dependencies with spm
+  --fetchcontent        Install cmake dependencies with fetchcontent
+  --local-deps          Build dependencies from bundled ext/ sources
+  --ccache              Enable ccache with cmake
+  --target TARGET [TARGET ...]
+                        Build only specified cmake targets
+  --nowarnings          Disable '-Wall' compilation warnings
 ```
 
 ### run
@@ -614,10 +645,14 @@ The `run` command does everything the `build` command does and then runs the res
 
 ```
 $ shedskin run --help
-usage: shedskin run [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
-                    [--spm] [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]] [-a] [-d DEBUG]
-                    [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR] [-r] [-s]
-                    [-x] [--noassert] [--nobounds] [--nogc] [--nomakefile] [--nowrap]
+usage: shedskin run [-h] [--collect-stats] [--int32] [--int64] [--float32]
+                    [--float64] [--noassert] [-b] [--nogc] [-w] [-z] [--boost]
+                    [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+                    [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
+                    [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
+                    [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+                    [--fetchcontent] [--local-deps] [--ccache]
+                    [--target TARGET [TARGET ...]] [--nowarnings]
                     name
 
 positional arguments:
@@ -625,87 +660,105 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --generator G         specify a cmake build system generator
-  --jobs N              build and run in parallel using N jobs
-  --build-type T        set cmake build type (default: 'Debug')
-  --test                run ctest
-  --reset               reset cmake build
-  --conan               install cmake dependencies with conan
-  --spm                 install cmake dependencies with spm
-  --fetchcontent          install cmake dependencies with fetchcontent
-  --ccache              enable ccache with cmake
-  --target TARGET [TARGET ...]
-                        build only specified cmake targets
-  -a, --ann             Output annotated source code (.ss.py)
+  --collect-stats       Collect and report shedskin stats
+  --int32               Use 32-bit integers
+  --int64               Use 64-bit integers (this is the default)
+  --float32             Use 32-bit floats
+  --float64             Use 64-bit floats
+  --noassert            Disable assert statements
+  -b, --nobounds        Disable bounds checking
+  --nogc                Disable garbage collection
+  -w, --nowrap          Disable wrap-around checking
+  -z, --nozero          Disable zero-division checking
+  --boost               Use (builtin) boost containers
+  --predict             Try to predict list sizes
   -d DEBUG, --debug DEBUG
                         Set debug level
   -e, --extmod          Generate extension module
-  -F FLAGS, --flags FLAGS
-                        Provide alternate Makefile flags
-  -L [LIB ...], --lib [LIB ...]
-                        Add a library directory
-  --int32               Use 32-bit integers
-  --int64               Use 64-bit integers
-  --int128              Use 128-bit integers
-  --float32             Use 32-bit floats
-  --float64             Use 64-bit floats
-  -m MAKEFILE, --makefile MAKEFILE
-                        Specify alternate Makefile name
+  -I INCLUDE_DIRS, --include-dirs INCLUDE_DIRS
+                        Add an include directory
+  -L LINK_DIRS, --link-dirs LINK_DIRS
+                        Add a link library directory
+  -l LINK_LIBS, --link-libs LINK_LIBS
+                        Add a link library
+  -X EXTRA_LIB, --extra-lib EXTRA_LIB
+                        Add an extra builtins library directory
   -o OUTPUTDIR, --outputdir OUTPUTDIR
                         Specify output directory for generated files
-  -r, --random          Use fast random number generator (rand())
+  --retry               Retry analysis when hitting max iterations
   -s, --silent          Silent mode, only show warnings
-  -x, --traceback       Print traceback for uncaught exceptions
-  --noassert            Disable assert statements
-  --nobounds            Disable bounds checking
-  --nogc                Disable garbage collection
-  --nomakefile          Disable makefile generation
-  --nowrap              Disable wrap-around checking
+  -t, --traceback       Print traceback for uncaught exceptions
+  -x, --executable      Generate executable
+  --generator G         Specify a cmake build system generator
+  --jobs N              Build and run in parallel using N jobs
+  --build-type T        Set cmake build type (default: 'Debug')
+  --test                Run ctest
+  --reset               Reset cmake build
+  --spm                 Install cmake dependencies with spm
+  --fetchcontent        Install cmake dependencies with fetchcontent
+  --local-deps          Build dependencies from bundled ext/ sources
+  --ccache              Enable ccache with cmake
+  --target TARGET [TARGET ...]
+                        Build only specified cmake targets
+  --nowarnings          Disable '-Wall' compilation warnings
 ```
 
-### test
+### runtests
 
-The `test` command provides builtin test discovery and running.
+The `runtests` command provides builtin test discovery and running (this subcommand used to be named `test`).
 
 Basically `cd shedskin/tests` or `cd shedskin/examples` and then type the following:
 
 ```bash
-shedskin test
+shedskin runtests
 ```
 
 command-line options are extensive:
 
 ```
-$ shedskin test --help
-usage: shedskin test [-h] [-e] [--dryrun] [--include PATTERN] [--check] [--modified] [--nocleanup]
-                    [--pytest] [--run TEST] [--stoponfail] [--run-errs] [--progress] [--debug]
-                    [--generator G] [--jobs N] [--build-type T] [--reset] [--conan] [--spm]
-                    [--fetchcontent] [--ccache] [--target TARGET [TARGET ...]]
+$ shedskin runtests --help
+usage: shedskin runtests [-h] [--collect-stats] [--generator G] [--jobs N]
+                         [--build-type T] [--test] [--reset] [--spm]
+                         [--fetchcontent] [--local-deps] [--ccache]
+                         [--target TARGET [TARGET ...]] [--nowarnings] [-e]
+                         [-x] [--disable-exts] [--disable-exes] [--dryrun]
+                         [--include PATTERN] [--check] [--modified]
+                         [--nocleanup] [--pytest] [--run TEST] [--stoponfail]
+                         [--run-errs] [--progress] [--debug]
+                         [-c [CMAKE_OPT ...]]
 
 options:
   -h, --help            show this help message and exit
-  -e, --extmod          Generate extension module
-  --dryrun              dryrun without any changes
-  --include PATTERN     provide regex of tests to include with cmake
-  --check               check testfile py syntax before running
-  --modified            run only recently modified test
-  --nocleanup           do not cleanup built test
-  --pytest              run pytest before each test run
-  --run TEST            run single test
-  --stoponfail          stop when first failure happens in ctest
-  --run-errs            run error/warning message tests
-  --progress            enable short progress output from ctest
-  --debug               set cmake debug on
-  --generator G         specify a cmake build system generator
-  --jobs N              build and run in parallel using N jobs
-  --build-type T        set cmake build type (default: 'Debug')
-  --reset               reset cmake build
-  --conan               install cmake dependencies with conan
-  --spm                 install cmake dependencies with spm
-  --fetchcontent          install cmake dependencies with fetchcontent
-  --ccache              enable ccache with cmake
+  --collect-stats       Collect and report shedskin stats
+  --generator G         Specify a cmake build system generator
+  --jobs N              Build and run in parallel using N jobs
+  --build-type T        Set cmake build type (default: 'Debug')
+  --test                Run ctest
+  --reset               Reset cmake build
+  --spm                 Install cmake dependencies with spm
+  --fetchcontent        Install cmake dependencies with fetchcontent
+  --local-deps          Build dependencies from bundled ext/ sources
+  --ccache              Enable ccache with cmake
   --target TARGET [TARGET ...]
-                        build only specified cmake targets
+                        Build only specified cmake targets
+  --nowarnings          Disable '-Wall' compilation warnings
+  -e, --extmod          Generate extension module
+  -x, --executable      Generate executable
+  --disable-exts        Disable building extensions
+  --disable-exes        Disable building executables
+  --dryrun              Dryrun without any changes
+  --include PATTERN     Provide regex of tests to include with cmake
+  --check               Check testfile py syntax before running
+  --modified            Run only recently modified test
+  --nocleanup           Do not cleanup built test
+  --pytest              Run pytest before each test run
+  --run TEST            Run single test
+  --stoponfail          Stop when first failure happens in ctest
+  --run-errs            Run error/warning message tests
+  --progress            Enable short progress output from ctest
+  --debug               Set cmake debug on
+  -c [CMAKE_OPT ...], --cfg [CMAKE_OPT ...]
+                        Add a cmake option '-D' prefix not needed
 ```
 
 ## Performance Tips and Tricks
