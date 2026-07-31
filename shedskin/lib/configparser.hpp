@@ -5,12 +5,13 @@
 
 #include "builtin.hpp"
 #include "re.hpp"
+#include "io.hpp"
 
 using namespace __shedskin__;
 namespace __configparser__ {
 
 extern tuple2<str *, str *> *const_2;
-extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
+extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
 
 class Error;
 class NoSectionError;
@@ -204,7 +205,7 @@ public:
         this->__class__ = cl_RawConfigParser;
         __init__(defaults);
     }
-    virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
+    virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
     str *optionxform(str *optionstr);
     double getfloat(str *section, str *option);
     void *_set(str *section, str *option, str *value);
@@ -218,6 +219,8 @@ public:
     list<str *> *sections();
     list<str *> *read(str *filename);
     list<str *> *read(list<str *> *filenames);
+    void *read_string(str *string_, str *source=NULL);
+    void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
     __ss_bool getboolean(str *section, str *option);
     __iter<tuple2<str *, str *> *> *items(str *section);
     void *_read(file *fp, str *fpname);
@@ -238,7 +241,7 @@ public:
         __init__(defaults);
     }
     str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
-    str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
+    str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
     __iter<tuple2<str *, str *> *> *items(str *section, __ss_int raw, dict<str *, str *> *vars);
 };
 
@@ -248,12 +251,10 @@ extern str * default_11;
 extern __ss_int  default_10;
 extern __ss_int  default_13;
 extern __ss_int  default_23;
-extern __ss_int  default_2;
 extern __ss_int  default_25;
 extern __ss_int  default_28;
 extern __ss_int  default_1;
 extern __ss_int  default_5;
-extern __ss_int  default_3;
 extern __ss_int  default_19;
 extern __ss_int  default_29;
 extern __ss_int  default_12;

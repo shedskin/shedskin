@@ -30,17 +30,16 @@ public:
 
     virtual void * close();
     virtual void * flush();
-    virtual int  __ss_fileno();
+    virtual __ss_int  __ss_fileno();
     virtual __ss_bool isatty();
     virtual str *  read(__ss_int n=-1);
     virtual str *  readline(__ss_int n=-1);
-    list<str *> *  readlines(__ss_int size_hint=-1);
+    virtual list<str *> *  readlines(__ss_int size_hint=-1);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
     virtual void * truncate(__ss_int size);
     virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
-    __iter<str *> *xreadlines();
     virtual void __enter__();
     virtual void __exit__();
 
@@ -75,7 +74,7 @@ public:
 
     virtual void * close();
     virtual void * flush();
-    virtual int  __ss_fileno();
+    virtual __ss_int  __ss_fileno();
     virtual __ss_bool isatty();
     virtual bytes *  read(__ss_int n=-1);
     virtual bytes *  readline(__ss_int n=-1);
@@ -85,7 +84,6 @@ public:
     virtual void * truncate(__ss_int size);
     virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
-    __iter<bytes *> *xreadlines();
     virtual void __enter__();
     virtual void __exit__();
     virtual str *__repr__();
