@@ -13,16 +13,17 @@ public:
     __ss_int pos; // TODO size_t
     bytes *s;
 
-    BytesIO(bytes *initial_bytes=NULL) : file_binary(), pos(0), s(initial_bytes ? initial_bytes : new bytes()) {}
+    BytesIO(bytes *initial_bytes=NULL) : file_binary(), pos(0), s(initial_bytes ? new bytes(initial_bytes) : new bytes()) {}
 
     bytes *read(__ss_int n=-1);
     bytes *readline(__ss_int n=-1);
     list<bytes *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(__ss_int size=-1) {
-        s->unit.resize((size_t)(size == -1 ? pos : size));
-        return NULL;
+    __ss_int truncate(int size=-1) {
+        __ss_int newsize = (size == -1 ? pos : size);
+        s->unit.resize((size_t)newsize);
+        return newsize;
     }
     __ss_int write(bytes *data);
 
@@ -37,16 +38,17 @@ public:
     __ss_int pos; // TODO size_t
     str *s;
 
-    StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? initial_value : new str()) {}
+    StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? new str(initial_value->unit) : new str()) {}
 
     str *read(__ss_int n=-1);
     str *readline(__ss_int n=-1);
     list<str *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(__ss_int size=-1) {
-        s->unit.resize((size_t)(size == -1 ? pos : size));
-        return NULL;
+    __ss_int truncate(int size=-1) {
+        __ss_int newsize = (size == -1 ? pos : size);
+        s->unit.resize((size_t)newsize);
+        return newsize;
     }
     __ss_int write(str *data);
 
