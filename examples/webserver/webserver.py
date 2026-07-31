@@ -3,6 +3,15 @@
 import select
 import socket
 
+class Request:
+
+    def __init__(self, method, url, ver, headers, params):
+        self.method = method
+        self.url = url
+        self.ver = ver
+        self.headers = headers
+        self.params = params
+
 class WebServer:
 
     def __init__(self, port=50000):
@@ -38,20 +47,20 @@ class WebServer:
                 data = sock.recv(self.size)
                 if data:
                     #print "data detected", data
-                    responseParams = {"status":"HTTP/1.0 200 OK"}
-                    headers= {"Content-Type":"text/html"}
+                    responseParams = {b"status":b"HTTP/1.0 200 OK"}
+                    headers= {b"Content-Type":b"text/html"}
 
                     #responseParams["headers"] = {"Content-Type":"application/octet-stream"}                    
                     #responseHTML = "123123123";#self.handleRequest(self.parseRequest(data), responseParams)
 
                     responseHTML = self.handleRequest(self.parseRequest(data), responseParams, headers)
 
-                    response = responseParams["status"] + "\r\n"
+                    response = responseParams[b"status"] + b"\r\n"
 
                     for key in headers.keys():
-                        response += key + ": " + headers[key] +"\r\n"
-                    response += "\r\n"+responseHTML
-                    print("sending response:*" + response+"*")
+                        response += key + b": " + headers[key] + b"\r\n"
+                    response += b"\r\n"+responseHTML
+                    print("sending response:*", response, "*")
                     '''
                     #response = "HTTP/1.0 200 OK\nContent-Type: text/html\n\n"+responseHTML+"\n\n"
                     sock.send(response);
@@ -71,40 +80,36 @@ class WebServer:
             self.poll()
         self.server.close()
 
-    def fromHex(self, hexStr):
-        ret=chr(int(hexStr, 16))
-        return ret
-
-    def ishex(self, chr):
-        x = ord(chr)
-        return (x >= ord('0') and x <= ord('9')) or (x >= ord('a') and x <= ord('f')) or (x >= ord('A') and x <= ord('F'))
-
-
     def urlDecode(self, s):
-        res = ""
+        res = bytearray()
         max = len(s)
         skip=0
         for i in range(max):
             if (skip > 0): skip=skip-1; continue
             cur = s[i]
-            if (cur == '+'): cur = ' '
-            elif (cur == '%' and i <(max-2) and self.ishex(s[i+1]) and self.ishex(s[i+2])):
-                cur=self.fromHex(s[i+1:i+3])
-                skip=2
-            res += cur
+            if (cur == ord('+')): res.append(ord(' '))
+            elif (cur == ord('%') and i <(max-2)):
+                try:
+                    res.append(int(s[i+1:i+3], 16))
+                    skip=2
+                except ValueError:
+                    res.append(cur)
+            else:
+                res.append(cur)
 
-        return res
+        return bytes(res)
 
     def parseParams(self, params):
-        ret = {}
+        ret = {b"":b""}
+        del ret[b""]
 
         if (len(params)==0):
-            return
-        paramsCut = params.split("&")
+            return ret
+        paramsCut = params.split(b"&")
 
         for paramPair in paramsCut:
-            paramPairSplit = paramPair.split("=")
-            val=""
+            paramPairSplit = paramPair.split(b"=")
+            val=b""
             if (len(paramPairSplit) > 0):
                 val = self.urlDecode(paramPairSplit[1])
             ret[paramPairSplit[0]]=val
@@ -112,45 +117,43 @@ class WebServer:
         return ret
 
     def parseRequest(self, data):
-        print("got data:" + data)
-        data = data.replace("\r", "")
+        print("got data:", data)
+        data = data.replace(b"\r", b"")
         #print "got some data:" + data
-        lines = data.split("\n")
-        requestData = lines[0].split(" ")
+        lines = data.split(b"\n")
+        requestData = lines[0].split(b" ")
 
         #print "requestData:", requestData
-        headerData={}
+        headerData={b"":b""}
+        del headerData[b""]
         getFormData=False
-        formData=None
+        formData=b""
         for i in lines[1:]:
             if (getFormData):
                 formData=i
-            elif (":" in i):
-                headerSplit = i.split(":")[0]
-                #print "headerSplit:", headerSplit
-                headerData[headerSplit] = i[len(headerSplit)+1:].strip()
-            elif (i == ""):
+            elif (b":" in i):
+                headerSplit, sep, headerVal = i.partition(b":")
+                headerData[headerSplit] = headerVal.strip()
+            elif (i == b""):
                 getFormData=True
         #print "headerData:", headerData
         parsedParams = self.parseParams(formData)
-        if (parsedParams == None):parsedParams={}
 
         url = requestData[1]
-        urlParams = {}
-        if ("?" in url):
-            urlParamStr=url[url.find("?")+1:]
+        if (b"?" in url):
+            urlParamStr=url[url.find(b"?")+1:]
             urlParams = self.parseParams(urlParamStr)
             print("urlParams:", urlParams)
 
             parsedParams.update(urlParams)
 
-        request = {"method":requestData[0], "url":requestData[1], "ver":requestData[2], "headers":headerData, "params":parsedParams}
+        request = Request(requestData[0], requestData[1], requestData[2], headerData, parsedParams)
         #print "parsed:", request
         return request
 
     def handleRequest(self, request, responseParams, headers):
-        print("got request:", request)
+        print("got request method:", request.method, "url:", request.url)
         print("default responseParams:", responseParams)
-        return "<html>Hello, <B>world</b>!</html>"
+        return b"<html>Hello, <B>world</b>!</html>"
 
 WebServer().serve()

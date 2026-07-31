@@ -420,11 +420,11 @@ size_t socket::send(const char *s, size_t len, int flags)
     return (size_t)r;
 }
 
-__ss_int socket::send(str *string, __ss_int flags) {
+__ss_int socket::send(bytes *string, __ss_int flags) {
     return (__ss_int)send( string->unit.data(), string->unit.size(), flags );
 }
 
-__ss_int socket::sendall(str *string, __ss_int flags) {
+__ss_int socket::sendall(bytes *string, __ss_int flags) {
     const char *s = string->c_str();
     size_t offset = 0;
     size_t len = string->unit.size(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
@@ -434,7 +434,7 @@ __ss_int socket::sendall(str *string, __ss_int flags) {
     return (__ss_int)len;
 }
 
-__ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
+__ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 {
     write_wait();
 
@@ -458,7 +458,7 @@ __ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
     return (__ss_int)len;
 }
 
-__ss_int socket::sendto(str* msg, socket::inet_address addr)
+__ss_int socket::sendto(bytes* msg, socket::inet_address addr)
 {
     return sendto(msg, 0, addr);
 }
@@ -488,7 +488,7 @@ void socket::read_wait()
     }
 }
 
-str *socket::recv(__ss_int bufsize, __ss_int flags)
+bytes *socket::recv(__ss_int bufsize, __ss_int flags)
 {
     read_wait();
 
@@ -496,7 +496,7 @@ str *socket::recv(__ss_int bufsize, __ss_int flags)
     ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("recv"));
-    return new str(buf.data(), (size_t)len);
+    return new bytes(buf.data(), (size_t)len);
 }
 
 #ifdef WIN32
@@ -524,13 +524,13 @@ size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, sock
     return (size_t)len;
 }
 
-tuple2<str *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
+tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
     std::vector<char> buf((size_t)bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(buf.data(), (size_t)bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<str *, inet_address>(2, new str(buf.data(), len), sin_addr_to_tuple(&sin));
+    return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
 socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_) {
