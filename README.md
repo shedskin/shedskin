@@ -51,11 +51,11 @@ cpython 3.11.0:     11.4
 nuitka 0.6.16:      11.4
 pypy 3.9.12:        5.8
 numba 0.56.4:       2.5
-shedskin 0.9.9:     1.9
-shedskin 0.9.9:     1.8  (using --nowrap --nobounds)
+shedskin 0.9.9:     1.9  (--int32)
+shedskin 0.9.9:     1.8  (--int32 --nowrap --nobounds)
 ```
 
-Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --int64.
+Note that Numba defaults to int64 as integer type, or it would be just as fast; Shed Skin now also defaults to int64 (use `--int32` for the narrower, previously-default type).
 
 The following shows a comparison of speedups versus CPython 3.10 for Shed Skin and Pypy, for most of the Shed Skin examples.
 
