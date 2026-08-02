@@ -1,7 +1,7 @@
 default settings:
     0.716 seconds
 
-shedskin --nobounds --nawrap (accessing the board squares):
+shedskin --nobounds --nowrap (accessing the board squares):
     0.595 seconds
 
 shedskin --predict (mostly 8-len lists, possible_moves statistically around average):
