@@ -182,6 +182,40 @@ def test_frozenset_cmp():
     assert not a == b
     assert a != b
 
+def test_set_proper_subset_superset():
+    # equal sets: '<' and '>' must be False (only '<=' / '>=' hold)
+    a = set([1, 2])
+    b = set([1, 2])
+    assert not a < b
+    assert not a > b
+    assert a <= b
+    assert a >= b
+
+    # true proper subset/superset
+    c = set([1, 2, 3])
+    assert a < c
+    assert not c < a
+    assert c > a
+    assert not a > c
+
+    # disjoint sets
+    d = set([5, 6])
+    assert not a < d
+    assert not a > d
+    assert not a <= d
+    assert not a >= d
+
+    # same checks for frozenset
+    fa = frozenset([1, 2])
+    fb = frozenset([1, 2])
+    fc = frozenset([1, 2, 3])
+    assert not fa < fb
+    assert not fa > fb
+    assert fa < fc
+    assert not fc < fa
+    assert fc > fa
+    assert not fa > fc
+
 def test_set_binary_elem():
     a = set()
     a.add(b"foo")
@@ -232,6 +266,7 @@ def test_all():
     test_frozenset()
     test_frozenset_hash()
     test_frozenset_cmp()
+    test_set_proper_subset_superset()
     test_set_binary_elem()
     test_set_augmented_assign()
     test_set_syntax()
