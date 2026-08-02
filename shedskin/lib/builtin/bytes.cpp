@@ -867,7 +867,10 @@ void *bytes::remove(__ss_int i) {
 }
 
 void *bytes::insert(__ss_int index, __ss_int item) {
-    index = __wrap(this, index);
+    __ss_int len = __len__();
+    if(index < 0) index += len;
+    if(index < 0) index = 0;
+    if(index > len) index = len;
     unit.insert(unit.begin()+index, (char)item);
     return NULL;
 }
