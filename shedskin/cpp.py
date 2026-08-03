@@ -52,7 +52,7 @@ from typing import (
 )
 from collections.abc import Iterator
 
-from . import ast_utils, error, extmod, infer, python, typestr, virtual
+from . import ast_utils, error, extmod, infer, python, strbuild, typestr, virtual
 
 if TYPE_CHECKING:
     from . import config
@@ -200,6 +200,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.fusedreducer_calls: dict[ast.Call, ast.ListComp] = {}
         self.reducer_kind: Optional[str] = None
         self.reducer_acct = ""
+        # --- string-builder loops (see strbuild)
+        self.sb_loops: dict["python.Function", strbuild.Accumulators] = {}
+        self.sb_active: dict[ast.AugAssign, str] = {}
+        self.sb_count = 0
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -855,6 +859,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.While, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a while node"""
+        opened = self.sb_begin(node, func)
+        self.impl_visit_while(node, func)
+        self.sb_end(opened, func)
+
+    def impl_visit_while(
+        self, node: ast.While, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a while loop"""
         self.print()
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
@@ -1481,10 +1493,61 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
+    def sb_begin(
+        self, node: ast.stmt, func: Optional["python.Function"]
+    ) -> list[tuple[str, strbuild.Accumulator]]:
+        """Open a string-builder loop, if this loop qualifies (see strbuild)
+
+        Emits a buffer per accumulator, seeded with its current value, and
+        routes the loop's '+=' statements into it. Each buffer is a fresh str
+        that nothing else can reach until sb_end publishes it, so appending
+        into it in place is not observable.
+        """
+        if func is None:
+            return []
+        if func not in self.sb_loops:
+            self.sb_loops[func] = strbuild.loop_accumulators(
+                func, self.gx, self.mergeinh
+            )
+
+        opened = []
+        for acc in self.sb_loops[func].get(node, []):
+            name = "__ss_sb%d" % self.sb_count
+            self.sb_count += 1
+            var = self.cpp_name(acc.name)
+            # seeded by copy, so any pre-loop alias of the accumulator keeps
+            # pointing at the original, unmodified string
+            self.output(
+                "str *%s = %s?(new str(%s->unit)):(new str());" % (name, var, var)
+            )
+            for aug in acc.augassigns:
+                self.sb_active[aug] = name
+            opened.append((name, acc))
+        return opened
+
+    def sb_end(
+        self,
+        opened: list[tuple[str, strbuild.Accumulator]],
+        func: Optional["python.Function"],
+    ) -> None:
+        """Publish the string-builder results and stop routing their '+='"""
+        for name, acc in opened:
+            for aug in acc.augassigns:
+                del self.sb_active[aug]
+            self.output("%s = %s;" % (self.cpp_name(acc.name), name))
+
     def visit_For(
         self, node: ast.For, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a for loop node"""
+        opened = self.sb_begin(node, func)
+        self.impl_visit_for(node, func)
+        self.sb_end(opened, func)
+
+    def impl_visit_for(
+        self, node: ast.For, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a for loop"""
         if isinstance(node.target, ast.Name):
             assname = node.target.id
         elif ast_utils.is_assign_attribute(node.target):
@@ -2224,6 +2287,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AugAssign, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an augmented assignment"""
+        # inside a string-builder loop, append into the buffer instead of
+        # reallocating and copying the whole accumulator (see strbuild)
+        if node in self.sb_active:
+            self.start(self.sb_active[node] + "->unit.append((")
+            self.visitm(node.value, ")->unit)", func)
+            self.eol()
+            return
+
         if isinstance(node.target, ast.Subscript):
             self.start()
             if {

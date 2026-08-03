@@ -54,6 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Optimized
 
+- Loops that only append to a local string (`out += ..` inside a `for`/`while`)
+  now build into a single buffer instead of reallocating and copying the whole
+  string every iteration, turning a quadratic loop into a linear one. Appending
+  200k times went from 11.2s to 4.6ms. The rewrite only applies where the
+  accumulator provably cannot be observed mid-loop; see `shedskin/strbuild.py`
 - random number generation now uses Xoshiro engine (many times faster)
 - added cache for 2-len tuples containing small integers (-20..20)
 - cache 0-len string
