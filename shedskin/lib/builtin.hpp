@@ -102,6 +102,20 @@ inline void operator delete[](void *, std::align_val_t,
 #include <limits>
 #include <numeric>
 #include <cstddef>
+#include <type_traits>
+#include <bit>
+#include <charconv>
+#include <cstdio>
+#include <cstdlib>
+
+/* Floating-point std::to_chars is C++17, but shipped later than the rest of
+ * <charconv>: libstdc++ has it from release 11, while libc++ and MSVC have it
+ * but libc++ still does not advertise __cpp_lib_to_chars, so that macro cannot
+ * be used to detect it. Anything older falls back to probing printf
+ * precisions, which reaches the same answer more slowly. */
+#if !defined(__GLIBCXX__) || (_GLIBCXX_RELEASE >= 11)
+#define __SS_FP_TO_CHARS 1
+#endif
 
 
 #ifndef WIN32
@@ -134,6 +148,19 @@ namespace __shedskin__ {
 #endif
 #define __SS_LONG
 #endif
+
+/* Unsigned counterpart of __ss_int. Signed overflow is undefined behaviour,
+ * so anything that has to negate a possibly-most-negative value, count bits,
+ * or compute a difference that may exceed the signed range does the work in
+ * this type instead, where wrap-around is well defined. */
+typedef std::make_unsigned<__ss_int>::type __ss_uint;
+
+/* Magnitude of an __ss_int as __ss_uint. Written as a subtraction from zero
+ * rather than as -(__ss_uint)i so that the most negative value (whose
+ * negation is not representable as __ss_int) is handled correctly. */
+static inline __ss_uint __ss_magnitude(__ss_int i) {
+    return (i < 0) ? ((__ss_uint)0 - (__ss_uint)i) : (__ss_uint)i;
+}
 
 /* float type */
 
@@ -566,7 +593,7 @@ template<class T, int SiteId> list<T> *__ss_list() {
 
 inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
     list<__ss_int> *l = new list<__ss_int>();
-    __ss_int len = range_len((int)a, (int)b, (int)c);
+    __ss_int len = range_len(a, b, c);
     l->units.resize(len);
     __ss_int pos = 0;
     if(a <= b) {

@@ -360,6 +360,24 @@ def test_range():
     assert r.index(3) == 1
 
 
+def test_range_beyond_32_bits():
+    # range lengths used to be computed in 32-bit arithmetic, so anything past
+    # 2 ** 31 wrapped: len() returned 705032704 here and indexing raised
+    big = 5000000000
+
+    assert len(range(0, big)) == big
+    assert len(range(big, 0, -1)) == big
+    assert range(0, big)[3000000000] == 3000000000
+    assert range(0, big)[-1] == big - 1
+    assert len(range(0, big, 3)) == 1666666667
+
+    assert list(range(4000000000, 4000000003)) == [4000000000, 4000000001, 4000000002]
+    assert list(reversed(range(4000000000, 4000000003))) == [4000000002, 4000000001, 4000000000]
+
+    assert 4000000000 in range(0, big)
+    assert list(range(0, big)[3000000000:3000000003]) == [3000000000, 3000000001, 3000000002]
+
+
 def test_range_slicing():
     r = range(2,20,2)
     assert list(r[2:4:3]) == [6]
@@ -475,6 +493,7 @@ def test_all():
     test_property()
     test_print()
     test_range()
+    test_range_beyond_32_bits()
     test_range_slicing()
     test_repr()
     test_reversed()

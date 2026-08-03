@@ -82,12 +82,26 @@ def test_unterminated_mapping_key():
     assert ("%(aap)s" % d) == 'aapje'
 
 
+def test_none_argument():
+    # None used to be emitted as a bare NULL into the variadic formatting
+    # helper, where it was deduced as an integer type with no __str/repr
+    # overload rather than as a pointer, and the generated c++ did not compile
+    assert "%s" % None == 'None'
+    assert "%r" % None == 'None'
+    assert "[%s] [%s]" % (None, 3) == '[None] [3]'
+    assert "%s %s" % (None, None) == 'None None'
+
+    x = None
+    assert "%s" % x == 'None'
+
+
 def test_all():
     test_classic1()
     test_classic2()
     test_classic3()
     test_str_precision()
     test_unterminated_mapping_key()
+    test_none_argument()
 
 
 if __name__ == "__main__":
