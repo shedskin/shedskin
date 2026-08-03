@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Optimized
 
+- Loops that only append to a local string (`out += ..` inside a `for`/`while`)
+  now build into a single buffer instead of reallocating and copying the whole
+  string every iteration, turning a quadratic loop into a linear one. Appending
+  200k times went from 11.2s to 4.6ms. The rewrite only applies where the
+  accumulator provably cannot be observed mid-loop; see `shedskin/strbuild.py`
 - Iteration over generator expressions is now much faster
 - Optimized `sum/max/min(list-comprehension/generator-expression)`
 
