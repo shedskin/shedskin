@@ -220,7 +220,22 @@ class ExtensionModule:
     def do_reduce_setstate(
         self, cl: "python.Class", vars: list["python.Variable"]
     ) -> None:
-        """Generate a reduce and setstate method"""
+        """Generate a reduce and setstate method
+
+        The pickled state is a dict keyed by attribute name, not a tuple keyed
+        by position. Position ties a slot to a variable's index in `vars`, so
+        adding, removing or renaming any attribute renumbers every slot after
+        it, and a pickle written by one version of a module is silently
+        misread by the next. Worse, if the stored tuple is shorter than the
+        current variable count, PyTuple_GetItem returns NULL, __to_ss does not
+        guard against that (it only checks for Py_None), and the conversion
+        dereferences it.
+
+        Keying by name makes the state self-describing: unknown attributes are
+        ignored and missing ones keep their default, so a pickle survives the
+        class gaining or losing attributes. This is also what CPython's own
+        default __setstate__ does, and for the same reason.
+        """
         write = self.write
         if python.def_class(self.gx, "Exception") in cl.ancestors():  # XXX
             return
@@ -238,11 +253,11 @@ class ExtensionModule:
         write("    Py_INCREF((PyObject *)&%sObjectType);" % clname(cl))
         write("    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);" % clname(cl))
         write("    PyTuple_SetItem(t, 1, a);")
-        write("    PyObject *b = PyTuple_New(%d);" % len(vars))
-        for i, var in enumerate(vars):
+        write("    PyObject *b = PyDict_New();")
+        for var in vars:
             write(
-                "    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));"
-                % (i, clname(cl), self.gv.cpp_name(var))
+                '    __ss_dict_steal(b, "%s", __to_py(((%sObject *)self)->__ss_object->%s));'
+                % (var.name, clname(cl), self.gv.cpp_name(var))
             )
         write("    PyTuple_SetItem(t, 2, b);")
         write("    return t;")
@@ -253,11 +268,15 @@ class ExtensionModule:
         )
         write("    (void)kwargs;")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
-        for i, var in enumerate(vars):
+        write("    PyObject *value;")
+        for var in vars:
             vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            # a missing key leaves the attribute at its default rather than
+            # handing NULL to __to_ss, which would dereference it
+            write('    value = __ss_dict_lookup(state, "%s");' % var.name)
             write(
-                "    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));"
-                % (clname(cl), self.gv.cpp_name(var), vartype, i)
+                "    if (value) ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(value);"
+                % (clname(cl), self.gv.cpp_name(var), vartype)
             )
         write("    Py_INCREF(Py_None);")
         write("    return Py_None;")
