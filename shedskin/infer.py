@@ -1478,6 +1478,108 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
+# Plevyak and Chien's IFA bounds contour creation from recursive program
+# structures (Iterative Flow Analysis, section 6.1). Their third case,
+# "function-data recursion" -- a recursive function creating objects on which
+# it is later invoked -- is the one that bites here: the contours involved end
+# up defining each other, and splitting them peels the cycle a contour at a
+# time, forever. Their remedy is to find the strongly connected components of
+# the contour graph and refuse to let relationships inside an SCC drive a
+# split, while still permitting a cycle to be peeled to a constant depth so
+# that recursive structures with a short period are still analysed precisely.
+SCC_SPLIT_LEVELS = 2
+
+
+def ifa_contour_sccs(gx: "config.GlobalInfo") -> set[tuple["python.Class", int]]:
+    """contours that lie on a cycle of the 'is defined using' relation
+
+    Nodes are class contours. There is an edge from contour A to contour B when
+    B's contents flow into A's, i.e. A's type variable node is reachable
+    backwards along `in_` from B's. A cycle therefore means the contours help
+    define each other, which is exactly the situation the paper singles out.
+    """
+    tvar_contour: dict[CNode, tuple["python.Class", int]] = {}
+    for cl in gx.allclasses:
+        for dcpa in range(1, cl.dcpa):
+            for name in cl.tvar_names():
+                var = cl.vars.get(name)
+                if var is None:
+                    continue
+                node = gx.cnode.get((var, dcpa, 0))
+                if node is not None:
+                    tvar_contour[node] = (cl, dcpa)
+
+    succ: dict[tuple["python.Class", int], set[tuple["python.Class", int]]] = {}
+    for start, src in tvar_contour.items():
+        edges = succ.setdefault(src, set())
+        stack = [start]
+        seen = {start}
+        while stack:
+            node = stack.pop()
+            for other in node.in_:
+                if other in seen:
+                    continue
+                seen.add(other)
+                if other in tvar_contour:
+                    edges.add(tvar_contour[other])
+                else:
+                    stack.append(other)  # look through non-contour nodes
+
+    return _cyclic_nodes(set(tvar_contour.values()), succ)
+
+
+def _cyclic_nodes(
+    nodes: set[tuple["python.Class", int]],
+    succ: dict[tuple["python.Class", int], set[tuple["python.Class", int]]],
+) -> set[tuple["python.Class", int]]:
+    """members of a non-trivial strongly connected component (Tarjan)"""
+    index: dict[Any, int] = {}
+    low: dict[Any, int] = {}
+    onstack: dict[Any, bool] = {}
+    stack: list[Any] = []
+    cyclic: set[tuple["python.Class", int]] = set()
+    counter = [0]
+
+    for root in nodes:
+        if root in index:
+            continue
+        work = [(root, 0)]
+        while work:  # iterative: contour graphs can be deep
+            node, pos = work[-1]
+            if pos == 0:
+                index[node] = low[node] = counter[0]
+                counter[0] += 1
+                stack.append(node)
+                onstack[node] = True
+            descend = False
+            edges = sorted(succ.get(node, ()), key=lambda c: (c[0].ident, c[1]))
+            for i in range(pos, len(edges)):
+                other = edges[i]
+                if other not in index:
+                    work[-1] = (node, i + 1)
+                    work.append((other, 0))
+                    descend = True
+                    break
+                if onstack.get(other):
+                    low[node] = min(low[node], index[other])
+            if descend:
+                continue
+            if low[node] == index[node]:
+                component = []
+                while True:
+                    other = stack.pop()
+                    onstack[other] = False
+                    component.append(other)
+                    if other == node:
+                        break
+                if len(component) > 1 or node in succ.get(node, ()):
+                    cyclic.update(component)
+            work.pop()
+            if work:
+                low[work[-1][0]] = min(low[work[-1][0]], low[node])
+    return cyclic
+
+
 def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
@@ -1489,6 +1591,8 @@ def ifa(gx: "config.GlobalInfo") -> Split:
             for cl, dcpa in types:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
+    cyclic = ifa_contour_sccs(gx)
+
     for cl in ifa_classes_to_split(gx):
         logger.debug("IFA: --- class %s ---", cl.ident)
         cl.newdcpa = cl.dcpa
@@ -1497,7 +1601,8 @@ def ifa(gx: "config.GlobalInfo") -> Split:
         for dcpa in range(1, cl.dcpa):
             if (
                 ifa_split_vars(
-                    gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites
+                    gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites,
+                    cyclic,
                 )
                 is not None
             ):
@@ -1516,6 +1621,7 @@ def ifa_split_vars(
     classes_nr: ClassesNr,
     split: Split,
     allcsites: AllCSites,
+    cyclic: set[tuple["python.Class", int]],
 ) -> Optional[Split]:
     """Split variables in a class"""
 
@@ -1554,6 +1660,16 @@ def ifa_split_vars(
             )
         if split:
             break
+        # The three branches below split on dataflow provenance rather than on
+        # types, so they are speculative and, on a contour that lies on a
+        # cycle, self-perpetuating: each split peels the cycle and leaves a
+        # fresh contour to peel next round. Peel to a constant depth and stop
+        # (see SCC_SPLIT_LEVELS). ifa_split_no_confusion above is exempt: it
+        # splits on type signature and consults classes_nr, so the signature
+        # lattice already bounds it.
+        if (cl, dcpa) in cyclic and cl.scc_depth.get(dcpa, 0) >= SCC_SPLIT_LEVELS:
+            continue
+
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
                 continue
@@ -1567,7 +1683,7 @@ def ifa_split_vars(
             # --- if it exists, perform actual splitting
             logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
-                ifa_split_class(cl, dcpa, list(splitsites), split)
+                ifa_split_class(cl, dcpa, list(splitsites), split, cyclic)
             return split
 
         # --- try to partition csites across paths
@@ -1582,13 +1698,13 @@ def ifa_split_vars(
             prt[ts].append(c)
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
-            ifa_split_class(cl, dcpa, list(prt.values())[0], split)
+            ifa_split_class(cl, dcpa, list(prt.values())[0], split, cyclic)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
-                ifa_split_class(cl, dcpa, [csite], split)
+                ifa_split_class(cl, dcpa, [csite], split, cyclic)
             return split
 
     return None
@@ -1787,8 +1903,16 @@ def ifa_split_class(
     dcpa: int,
     things: list[CNode],
     split: Split,
+    cyclic: Optional[set[tuple["python.Class", int]]] = None,
 ) -> None:
-    """Split a class"""
+    """Split a class
+
+    `cyclic` is passed by the provenance-based callers so that a contour split
+    off one that lies on a cycle inherits its peeling depth, bounding how far
+    a recursive structure is unrolled (see ifa_contour_sccs).
+    """
+    if cyclic is not None and (cl, dcpa) in cyclic:
+        cl.scc_depth[cl.newdcpa] = cl.scc_depth.get(dcpa, 0) + 1
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
