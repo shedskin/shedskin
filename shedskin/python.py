@@ -168,6 +168,9 @@ class Class(PyObject):
         self.splits: dict[
             int, int
         ] = {}  # contour: old contour (used between iterations)
+        # how far a contour on a cycle has been peeled (infer.ifa_contour_sccs);
+        # never reset, so the depth survives ifa() calls and restore_network
+        self.scc_depth: dict[int, int] = {}
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
