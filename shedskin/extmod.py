@@ -69,8 +69,14 @@ class ExtensionModule:
     def supported_vars(
         self, variables: Iterable["python.Variable"]
     ) -> list["python.Variable"]:  # XXX virtuals?
-        """Supported variables
-        XXX currently only classs / instance variables"""
+        """Supported variables, in a stable order (see python.stable_vars)
+
+        XXX currently only classs / instance variables
+
+        Order matters here beyond tidiness: do_reduce_setstate assigns each
+        variable a pickle tuple slot by position, so an unstable order produces
+        extension modules whose pickles another build cannot read.
+        """
         supported = []
         for var in variables:
             if var not in self.gx.merged_inh or not self.gx.merged_inh[var]:
@@ -98,7 +104,7 @@ class ExtensionModule:
                     )
                 continue
             supported.append(var)
-        return supported
+        return python.stable_vars(supported)
 
     def supported_funcs(
         self, funcs: Iterable["python.Function"]
