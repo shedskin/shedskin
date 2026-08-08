@@ -353,6 +353,30 @@ def test_extend_typecode_mismatch():
     assert e.tolist() == [1.0, 2.0]
 
 
+def test_iadd_typecode_mismatch_message():
+    # 'a += b' on arrays is implemented by CPython as a plain extend()
+    # (array_inplace_concat() in CPython's arraymodule.c reuses the same
+    # ins1()-based path as extend()/fromlist()), so a typecode mismatch here
+    # must raise the same message as extend() -- "can only extend with array
+    # of same kind" -- not __add__()'s/__setslice__()'s message ("bad
+    # argument type for built-in operation"), which is a different, genuinely
+    # separate C-level operation (PyArray_Concat()) in CPython.
+    a = array.array('i', [1, 2, 3])
+    b = array.array('h', [9, 9])
+    try:
+        a += b
+        assert False, "expected TypeError"
+    except TypeError as e:
+        assert str(e) == "can only extend with array of same kind"
+    assert a.tolist() == [1, 2, 3]
+
+    # sanity check: matching typecodes still work
+    c = array.array('i', [1, 2, 3])
+    d = array.array('i', [4, 5])
+    c += d
+    assert c.tolist() == [1, 2, 3, 4, 5]
+
+
 def test_extend_overflow_no_corruption():
     # if a later element in the list is out of range for the typecode,
     # extend() must leave exactly the elements that were successfully
@@ -413,6 +437,7 @@ def test_all():
     test_fromfile_ragged_short_read()
     test_setslice_typecode_mismatch()
     test_extend_typecode_mismatch()
+    test_iadd_typecode_mismatch_message()
     test_extend_overflow_no_corruption()
 
 
