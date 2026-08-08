@@ -51,6 +51,7 @@ str *__str(int t, int base=10);
 str *__str(__ss_bool b);
 str *__str(void *);
 str *__str();
+str *__str_abs(__ss_int t, __ss_int base); /* digits of |t|, no sign */
 
 /* abs */
 
@@ -880,9 +881,9 @@ template<class T> str *bin(T t) {
 
 template<> inline str *bin(__ss_int i) {
     if(i<0)
-        return (new str("-0b"))->__add__(__str(-i, (__ss_int)2));
+        return (new str("-0b"))->__add__(__str_abs(i, (__ss_int)2));
     else
-        return (new str("0b"))->__add__(__str(i, (__ss_int)2));
+        return (new str("0b"))->__add__(__str_abs(i, (__ss_int)2));
 }
 
 template<>
@@ -920,9 +921,9 @@ template<class T> str *hex(T t) {
 
 template<> inline str *hex(__ss_int i) {
     if(i<0)
-        return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
+        return (new str("-0x"))->__add__(__str_abs(i, (__ss_int)16));
     else
-        return (new str("0x"))->__add__(__str(i, (__ss_int)16));
+        return (new str("0x"))->__add__(__str_abs(i, (__ss_int)16));
 }
 
 template<> inline str *hex(__ss_bool i) {
@@ -937,9 +938,9 @@ template<class T> str *oct(T t) {
 
 template<> inline str *oct(__ss_int i) {
     if(i<0)
-        return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));
+        return (new str("-0o"))->__add__(__str_abs(i, (__ss_int)8));
     else
-        return (new str("0o"))->__add__(__str(i, (__ss_int)8));
+        return (new str("0o"))->__add__(__str_abs(i, (__ss_int)8));
 }
 
 template<> inline str *oct(__ss_bool i) {
@@ -1050,7 +1051,7 @@ inline __ss_bool __ss_in_range(__ss_int i, __ss_int a) {
 
 /* range_len */
 
-int range_len(int lo, int hi, int step);
+__ss_int range_len(__ss_int lo, __ss_int hi, __ss_int step);
 
 #endif
 #endif

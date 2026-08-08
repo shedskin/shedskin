@@ -2,36 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
 
-- Added `--retry` option, that restarts the analysis when 'max iterations' occurs.
-  This can help a lot with larger programs (no need to manually retry).
+- Added `--retry` option, that restarts the analysis when 'max iterations' occurs. This can help a lot with larger programs (no need to manually retry).
 
-- Added `--boost` option, to use boost containers.
-  This can help when using dictionaries/sets or many very short lists.
-  The 'dijkstra2' example, for example, becomes much faster.
+- Added `--boost` option, to use boost containers. This can help when using dictionaries/sets or many very short lists. The 'dijkstra2' example, for example, becomes much faster.
 
-- Added `--predict` option, which tries to predict maximum list sizes before
-  (re)allocating storage, based on run-time sampling per allocation site. This
-  can greatly improve performance if reallocation is the bottleneck.
+- Added `--predict` option, which tries to predict maximum list sizes before (re)allocating storage, based on run-time sampling per allocation site. This can greatly improve performance if reallocation is the bottleneck.
 
 - Catching up with Python 3.x features:
+
   - Support `min/max(default)`
+
   - Support `time.{time_ns, perf_counter[_ns], monotonic[_ns], process_time[_ns]}`
+
   - Support `math.{ulp, nextafter, remainder}`
+
   - Support `str/bytes.startswith/endswith(tuple)`
+
   - Support `str/bytes.maketrans/translate`
+
   - Support `glob.escape`
+
   - Support `base64.{b16encode, b16decode}`
+
   - Support `os.{scandir, cpu_count, fspath, replace}`
+
   - Support `tuple.{index, count}`
+
   - Support `socket.{getblocking, create_connection}`
+
   - Support `datetime.timedelta.total_seconds`
+
   - Support `os.path.{relpath, expanduser}`
 
 - Now raising ZeroDivisionError, can be disabled with `--nozero`
@@ -39,25 +45,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Several builtin arguments could not be passed by keyword (e.g. `sum(start=..)`)
+
 - Several `--int64`, `--float32` related fixes
+
 - Over 100 minor bugs uncovered (and fixed) by Claude
+
 - Sorting is now stable
+
 - Fixed several C++ compilation warnings
+
+- `range` lengths were computed in 32-bit arithmetic, so `len`, indexing, slicing, `list` and `reversed` all wrapped past `2 ** 31` on the (default) 64-bit int build
+
+- `str`/`hex`/`oct`/`bin` of the most negative int negated it first, which is undefined: `str(-2 ** 63)` printed `-0` and read outside the digit cache
+
+- `repr`/`str` of a float now print the shortest string that reads back as the same value, as CPython does, instead of a fixed 16 significant digits (`repr(2 ** 0.5)` lost its last digit). This is also considerably faster
+
+- `int.bit_length` was computed as `floor(log2(x)) + 1` in floating point and so was off by one near powers of two, e.g. for `2 ** 62 - 1`
+
+- `int ** negative-int` returned 1 rather than the float CPython gives. A negative *literal* exponent is now retyped as a float, so `10 ** -1` and `pow(10, -1)` give `0.1` as in CPython, while `2 ** 3` stays an int. When the exponent is not a literal its sign is unknown at compile time, and there the existing warning still applies and a `ValueError` is raised at run time rather than silently answering wrongly
+
+- `'%s' % None` emitted a bare `NULL` whose deduced type had no formatting overload, so the generated C++ did not compile
 
 ### Optimized
 
 - Iteration over generator expressions is now much faster
+
 - Optimized `sum/max/min(list-comprehension/generator-expression)`
 
 ### Changed
 
 - The default int size is now 64-bit (override with `--int32`)
+
 - Hash values now have the same type as the shedskin int type
 
 ### Development
 
 - Modernized type annotations (while still compatible with Python 3.9)
+
 - Improved type inference logging
+
 - Added many tests for previously untested features
 
 
@@ -66,84 +92,147 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Preliminary support for Python 3.15
+
 - Catching up with Python 3.x:
+
     - Added support for `int.from_bytes/to_bytes` (3.2, 3.11)
+
     - Added support for `math.integer` module (3.15)
+
     - Support `collections.deque(maxlen)` (3.1)
+
     - Updated `re` module support with changes in 3.x
+
     - Updated `heapq` module support with changes in 3.x
+
     - Updated `csv` module support with changes in 3.x
+
     - Added support for `collections.defaultdict` | and |= operators (3.9)
+
     - Added support for frozendict (3.15)
+
     - Added support for `math.{fmax, fmin, isnormal, issubnormal}` (3.15)
+
     - Added support for `float.hex/fromhex` (3.0)
+
 - Added/improved support for `__iter__` and `__call__` methods
+
 - Added support for `__complex__` method
 
 ### Fixed
 
 - Avoid creating empty Makefile when using --nomakefile (Davide Gessa)
+
 - Fixed dict comprehension code generation crash (`TypeError: 'Tuple' object is not subscriptable`) in `cpp.py` by accessing `node.elt.elts[0]`/`node.elt.elts[1]` instead of `node.elt[0]`/`node.elt[1]`
+
 - Fixed dict comprehension type inference in `graph.py`: `isinstance(node.elt, tuple)` was always `False` for `ast.Tuple` nodes, so key/value type constraints were never set up. Changed to `node in self.gx.dictcomp_to_lc.values()`
+
 - Fixed `runtests --run` executing unbuilt ext tests by aligning ctest regex with the build target suffix in `cmake.py`
+
 - Added missing `WORKING_DIRECTORY` for non-Windows ext tests in CMake configuration
+
 - Much improved progress bar for larger/OO-heavy programs
+
 - Fixed exception messages for extension modules
+
 - Fixed escaping in string/bytes literals
+
 - Fix for -s/--silent
+
 - Exporting of methods called via inheritance in extension modules
+
 - Make `__ifloordiv__` fall back to `__floordiv__`
+
 - Allow magic methods to be virtualized
+
 - Fix for `for in defaultdict.items()`
+
 - Fix for set equality
+
 - Fix for set iteration
+
 - Fix for slice assignment with iterable
+
 - Remove module path from `__class__.__name__`
+
 - Fallback to `__index__` for ints/floats in some (but not all) cases
+
 - Support `array.array(q/Q)`
+
 - Fix for `copy.deepcopy` (forgot to pass memo dict)
+
 - Fix for virtual methods (base class method is called, but only via inheritance)
+
 - Fix round() tie-break
+
 - Fix `bytearray.__class__`
+
 - Many other minor fixes
+
 - Many GCC warnings
 
 ### Optimized
 
 - random number generation now uses Xoshiro engine (many times faster)
+
 - added cache for 2-len tuples containing small integers (-20..20)
+
 - cache 0-len string
+
 - str/bytes.startswith/endswith
+
 - str.strip
+
 - list(range)
+
 - reserve some space for empty lists (in the future this will be done by the STL)
+
 - avoid list creation when unpacking
+
 - list.index
+
 - list(sequence)
+
 - str/bytes.find
+
 - list(dict/bytes)
+
 - set.update
+
 - iterating over file
 
 ### Tests
 
 - Cleaned up unit tests: removed 46 duplicate/trivial tests across test files, consolidated GlobalInfo property tests into `test_config.py`
+
 - Replaced unnecessary mocks with real objects in `test_virtual.py` (MagicMock call nodes -> ast.Call, MagicMock modules -> python.Module)
+
 - Removed unused MagicMock import from `test_typestr.py`, unused `io` import from `test_cpp.py`
+
 - Added unit tests for graph.py helpers: `_const_str`, `register_node`, `slice_nums`, `get_arg_nodes`, `has_star_kwarg`, `make_arg_list`, `struct_faketuple`
+
 - Added unit tests for typestr.py: `nodetypestr` looper/wopper paths, `typestr` error fallback, `dynamic_variable_error`, `typestrnew` anonymous functions/templates/bytes+str mix/ExtmodError, `incompatible_assignment_rec` recursion
+
 - Added pipeline integration tests (`test_pipeline.py`) driven by a demo program (`tests/unit/fixtures/demo_program1.py`) that exercises parsing, type inference, virtual analysis, and C++ code generation end-to-end
+
 - Coverage improvements for core modules: infer.py 14%->84%, cpp.py 8%->53%, virtual.py 27%->90%, typestr.py 57%->88%, graph.py 45%->63%
 
 ### Changed
 
 - Converted build system to uv, replacing pip/setuptools workflow with `uv` commands in Makefile (`f97db27a`)
+
 - Applied mypy strict mode fixes across core modules (`__init__`, `cmake`, `config`, `cpp`, `graph`, `infer`, `makefile`, `stats`) (`635c2938`)
+
 - Converted documentation from Sphinx/RST to MkDocs with Markdown (`23c5c338`)
+
   - Replaced `README.rst` with `README.md`
+
   - Removed generated Sphinx HTML/JS/CSS assets from `docs/`
+
   - Added `mkdocs.yml` configuration
+
 - Updated `Makefile` test target to fix test invocation (`7cebb2ff`)
+
   - Refactored `graph.py` and `infer.py` to resolve type issues
 
 ### Removed
@@ -155,20 +244,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Local dependency management (`--local-deps` flag) with bundled zip archives:
+
   - Builds bdwgc and pcre2 from compressed sources in `shedskin/ext/`
+
   - Extracts to platform-specific cache on first use:
+
     - macOS: `~/Library/Caches/shedskin/`
+
     - Linux: `~/.cache/shedskin/`
+
     - Windows: `%LOCALAPPDATA%/shedskin/Cache/`
+
   - Caches built static libraries for subsequent compilations
+
   - Works completely offline (no network required)
+
   - Cross-platform support (Linux, macOS, Windows)
+
 - `LocalDependencyManager` class in `cmake.py` for zip-based dependency building
+
 - CLI option `--local-deps` for both `translate` (Makefile) and `build` (CMake) commands
+
 - Unit tests for core modules (`tests/unit/`, 74 tests total):
+
   - `test_config.py`: Tests for GlobalInfo and state objects
+
   - `test_graph.py`: Tests for constraint graph building
+
   - `test_infer.py`: Tests for type inference
+
   - `test_cpp.py`: Tests for C++ code generation config
 
 - Initial tracked release
@@ -176,56 +280,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Made `--local-deps` the default dependency manager for `build`, `run`, and `runtests` subcommands
+
   - Dependencies are now automatically built from bundled `ext/` sources
+
   - No external package manager required out of the box
+
 - Simplified CMake output directories to `${CMAKE_BINARY_DIR}` (executables in `build/`)
+
 - Bundled bdwgc (v8.2.10) and pcre2 (pcre2-10.47) sources as compressed zip archives in `ext/`:
+
   - Reduced from 25MB (full sources) to 1.2MB (trimmed and compressed)
+
   - Removed documentation, tests, CI/CD files, autotools, legacy platform support
+
   - Removed SLJIT (JIT compiler) from pcre2 as shedskin doesn't use JIT features
+
 - Refactored `GlobalInfo` class into focused state objects for better code organization:
+
   - `FileSystemPaths`: Immutable paths for shedskin installation, resources, and libraries
+
   - `BuildConfiguration`: Build flags (bounds_checking, int32/64, nogc, etc.)
+
   - `NamingContext`: C++ keywords, prefix, and builtin type names
+
   - `EntityRegistry`: Functions, classes, variables, modules, and inheritance tracking
+
   - `GraphBuildingContext`: Temporary graph building state (loops, comprehensions, etc.)
+
   - `TypeInferenceState`: Core type inference data (cnode, types, constraints, etc.)
+
 - Created new `shedskin/state/` package containing the focused state dataclasses
+
 - Maintained 100% backwards compatibility via property delegation in `GlobalInfo`
+
 - Consolidated CLI argument definitions using argparse parent parsers:
+
   - Created `_create_shared_parsers()` method with reusable argument groups
+
   - Shared parsers: `stats`, `types`, `disable`, `compiler`, `cmake`
+
   - Reduced code duplication across `translate`, `build`, `run`, `runtests` subcommands
 
 ### Security
 
 - Replaced `os.system()` with `subprocess.run()` across all modules:
+
   - `cmake.py`: shellcmd, cmake config/build/test, pytest
+
   - `makefile.py`: Command execution in `_execute()`
+
   - `__init__.py`: Executable running and Windows color output hack
 
 ### Documentation
 
 - Documented type inference tuning constants in `infer.py`:
+
   - `INCREMENTAL`: Enable incremental analysis mode
+
   - `INCREMENTAL_FUNCS`: Functions to add per round (default: 5)
+
   - `INCREMENTAL_DATA`: Enable incremental allocation tracking
+
   - `INCREMENTAL_ALLOCS`: Allocations before restart (default: 1)
+
   - `MAXITERS`: Maximum iterations per round (default: 30)
+
   - `CPA_LIMIT`: Initial cartesian product limit (default: 10)
+
 - Added `MAX_TYPE_DEPTH` constant in `typestr.py` for recursion limit (default: 10)
 
 ### Fixed
 
 - Fixed CMake build failure when source file path is absolute (e.g., building from a different directory with `../examples/foo.py`). The issue occurred because absolute parent paths were being concatenated with build directories, creating invalid paths like `build/exe/C:/Users/.../file.cpp`.
+
 - Resource leaks: Added context manager support to `MakefileWriter` class
+
 - File handling: Use context managers for file operations in `config.py`
 
 ### Removed
 
 - Removed Conan dependency manager support:
+
   - Removed `--conan` CLI option
+
   - Removed `ConanBDWGC`, `ConanPCRE`, and `ConanDependencyManager` classes
+
   - Removed `ENABLE_CONAN` CMake option
+
   - Removed `shedskin/resources/conan/` directory
+
   - Removed conan from `requirements.txt`

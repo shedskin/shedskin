@@ -4231,8 +4231,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- visit nodes, boxing scalars
         self.visitm("__mod6(", node.left, ", ", str(len(nodes)), func)
         for n in nodes:
-            self.visitm(", ", n, func)
+            self.append(", ")
+            # __mod6 is variadic, so a bare NULL argument would be deduced as
+            # whatever integer type NULL happens to be spelled as (long on
+            # some platforms, which has no __str/repr overload). Give the
+            # argument the pointer type those overloads are declared for.
+            if self.is_none_type(n):
+                self.append("((void *)0)")
+            else:
+                self.visit(n, func)
         self.append(")")
+
+    def is_none_type(self, node: ast.AST) -> bool:
+        """Whether a node's inferred type is exactly None"""
+        return self.mergeinh.get(node) == {(python.def_class(self.gx, "none"), 0)}
 
     def attr_var_ref(
         self, node: ast.Attribute, ident: str

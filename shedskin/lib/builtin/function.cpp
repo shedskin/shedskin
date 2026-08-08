@@ -76,21 +76,23 @@ template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called wit
 
 /* range */
 
-int range_len(int lo, int hi, int step) {
-    /* modified from CPython */
-    int n = 0;
+__ss_int range_len(__ss_int lo, __ss_int hi, __ss_int step) {
+    /* modified from CPython. The intermediate difference is computed in
+     * __ss_uint because hi-lo can exceed the signed range even when the
+     * resulting length does not. */
+    __ss_int n = 0;
     if ((lo < hi) && (step>0)) {
-        unsigned int uhi = (unsigned int)hi;
-        unsigned int ulo = (unsigned int)lo;
-        unsigned int diff = uhi - ulo - 1;
-        n = (int)(diff / (unsigned int)step + 1);
+        __ss_uint uhi = (__ss_uint)hi;
+        __ss_uint ulo = (__ss_uint)lo;
+        __ss_uint diff = uhi - ulo - 1;
+        n = (__ss_int)(diff / (__ss_uint)step + 1);
     }
     else {
         if ((lo > hi) && (step<0)) {
-            unsigned int uhi = (unsigned int)lo;
-            unsigned int ulo = (unsigned int)hi;
-            unsigned int diff = uhi - ulo - 1;
-            n = (int)(diff / (unsigned int)(-step) + 1);
+            __ss_uint uhi = (__ss_uint)lo;
+            __ss_uint ulo = (__ss_uint)hi;
+            __ss_uint diff = uhi - ulo - 1;
+            n = (__ss_int)(diff / __ss_magnitude(step) + 1);
         }
     }
     return n;
@@ -156,7 +158,7 @@ __iter<__ss_int> *__xrange::__iter__() {
 }
 
 __ss_int __xrange::__len__() {
-    return range_len((int)a, (int)b, (int)s);
+    return range_len(a, b, s);
 }
 
 __ss_int __xrange::__getitem__(__ss_int i) {
@@ -230,7 +232,7 @@ __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s)
 __xrange *range(__ss_int n) { return new __xrange(0, n, 1); }
 
 __iter<__ss_int> *reversed(__xrange *x) {
-   return new __rangeiter(x->a+(range_len((int)x->a,(int)x->b,(int)x->s)-1)*x->s, x->a-x->s, -x->s);
+   return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 
 /* repr */
