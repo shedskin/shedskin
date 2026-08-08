@@ -140,6 +140,17 @@ def test_bytearray_insert():
     assert ba == bytearray(b'buwla')
 
 
+def test_bytearray_insert_out_of_range():
+    # out-of-range indices should clamp, like list.insert, not raise
+    ba = bytearray(b'bla')
+    ba.insert(100, ord('x'))
+    assert ba == bytearray(b'blax')
+
+    ba2 = bytearray(b'bla')
+    ba2.insert(-100, ord('y'))
+    assert ba2 == bytearray(b'ybla')
+
+
 def test_bytearray_hash():
     try:
         h = hash(bytearray(b'bla'))
@@ -194,6 +205,7 @@ def test_all():
     test_bytearray_remove()
     test_bytearray_addition_assign()
     test_bytearray_insert()
+    test_bytearray_insert_out_of_range()
     test_bytearray_hash()
     test_bytearray_slice()
     test_bytearray_misc()
