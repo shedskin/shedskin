@@ -172,7 +172,7 @@ __ss_int bytes::__hash__() { // TODO check cpython, change -1 to const?
     if (hash != -1)
         return hash;
 
-    hash = (__ss_int)std::hash<std::string>{}(unit.c_str());
+    hash = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash;
 }

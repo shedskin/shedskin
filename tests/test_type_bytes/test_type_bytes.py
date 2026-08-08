@@ -303,6 +303,18 @@ def test_bytes_hash():
     assert list(sorted(bdict.items())) == [(b'bla', 18), (b'blup', 19)]
     assert set([b'blup'])
 
+def test_bytes_hash_embedded_null():
+    # bytes with an embedded null byte must hash based on their full
+    # contents, not just the part before the null byte.
+    a = bytes([0, 97, 98, 99])    # b'\x00abc'
+    b = bytes([0, 120, 121, 122]) # b'\x00xyz'
+    assert a != b
+    assert hash(a) != hash(b)
+    d = {a: 1, b: 2}
+    assert len(d) == 2
+    assert d[a] == 1
+    assert d[b] == 2
+
 
 def test_bytes_builtin():
     assert bytes() == b''
@@ -436,6 +448,7 @@ def test_all():
     test_zfill()
     test_iadd()
     test_bytes_hash()
+    test_bytes_hash_embedded_null()
     test_bytes_builtin()
     test_contains()
     test_iadd_imul()
