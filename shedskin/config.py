@@ -421,7 +421,7 @@ class GlobalInfo:
         return self._graph_context.fuse_reduce
 
     @property
-    def fuse_reduce_arg(self) -> set["ast.Call"]:
+    def fuse_reduce_arg(self) -> set["ast.AST"]:
         return self._graph_context.fuse_reduce_arg
 
     @property

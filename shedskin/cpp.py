@@ -199,6 +199,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
+        self._ss_list_site_ids: dict[int, int] = {}
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -1154,8 +1155,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts == "tuple<__ss_int> *" and isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
         elif isinstance(node, ast.List) and not node.elts:
-            if not hasattr(self, "_ss_list_site_ids"):
-                self._ss_list_site_ids = {}
             if id(node) not in self._ss_list_site_ids:
                 self._ss_list_site_ids[id(node)] = len(self._ss_list_site_ids)
             site_id = self._ss_list_site_ids[id(node)]
@@ -4043,18 +4042,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
-                    self.output("#ifdef __SS_PREDICT")
-                    self.output("static ListSiteStat __ss_lcstat;")
                     self.output(
-                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
                     )
-                    self.output("__ss_result->__ss_site = &__ss_lcstat;")
-                    self.output("__list_site_new(__ss_lcstat);")
-                    self.output("#else")
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
-                    self.output("#endif")
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr, fuse_reduce)
         elif self.fastenumerate(qual):  # TODO result->resize for all cases
@@ -4087,18 +4077,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
-                    self.output("#ifdef __SS_PREDICT")
-                    self.output("static ListSiteStat __ss_lcstat;")
                     self.output(
-                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
                     )
-                    self.output("__ss_result->__ss_site = &__ss_lcstat;")
-                    self.output("__list_site_new(__ss_lcstat);")
-                    self.output("#else")
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
-                    self.output("#endif")
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
