@@ -511,6 +511,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             "L": "i",
             "q": "i",
             "Q": "i",
+            "N": "i",
             "f": "f",
             "d": "f",
             "s": "s",

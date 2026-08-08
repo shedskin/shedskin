@@ -500,6 +500,17 @@ def test_n_native_only():
     assert len(p) == n
 
 
+def test_n_unpack():
+    # struct.unpack/unpack_from must accept 'N' just like pack/calcsize do
+    data = struct.pack('@iNq', 7, 123456789, -99)
+    (a, b, c) = struct.unpack('@iNq', data)
+    assert (a, b, c) == (7, 123456789, -99)
+
+    buf = struct.pack('@N', 42) + b'\x00\x00\x00\x00'
+    (v,) = struct.unpack_from('@N', buf, 0)
+    assert v == 42
+
+
 def test_mid_format_order_char():
     # a byte-order character is only meaningful as the very first
     # character of the format string, matching CPython; elsewhere it must
@@ -565,6 +576,7 @@ def test_all():
     test_errors()
     test_multi_1()
     test_n_native_only()
+    test_n_unpack()
     test_mid_format_order_char()
     test_order()
     test_ws()
