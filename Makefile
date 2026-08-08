@@ -1,7 +1,13 @@
 
-.PHONY: all sync build rebuild test lint format typecheck qa clean \
+.PHONY: all sync build rebuild test runtests runexamples lint format typecheck qa clean \
         distclean wheel sdist dist check publish-test publish upgrade \
         coverage coverage-html docs docs-serve docs-clean release help
+
+# Build type for the cmake-driven suites (Debug is shedskin's own default)
+BUILD_TYPE ?= Release
+
+# Extra flags forwarded to 'shedskin runtests', e.g. RUNTESTS_ARGS="-j 4 -gNinja"
+RUNTESTS_ARGS ?=
 
 # Default target
 all: build
@@ -20,6 +26,14 @@ rebuild: build
 # Run tests
 test:
 	@uv run pytest tests/unit -v
+
+# Translate, compile and run the tests/ suite via cmake + ctest
+runtests:
+	@cd tests && uv run shedskin runtests --build-type $(BUILD_TYPE) $(RUNTESTS_ARGS)
+
+# Translate, compile and run the examples/ suite via cmake + ctest
+runexamples:
+	@cd examples && uv run shedskin runtests --build-type $(BUILD_TYPE) $(RUNTESTS_ARGS)
 
 # Lint with ruff
 lint:
@@ -112,7 +126,9 @@ help:
 	@echo "  sync         - Sync environment (initial setup)"
 	@echo "  build        - Rebuild extension after code changes"
 	@echo "  rebuild      - Alias for build"
-	@echo "  test         - Run tests"
+	@echo "  test         - Run unit tests with pytest"
+	@echo "  runtests     - Build and run the tests/ suite (cmake + ctest)"
+	@echo "  runexamples  - Build and run the examples/ suite (cmake + ctest)"
 	@echo "  lint         - Lint with ruff"
 	@echo "  format       - Format with ruff"
 	@echo "  typecheck    - Type check with mypy"
