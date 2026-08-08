@@ -1415,6 +1415,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 func,
             )
         elif isinstance(node.op, ast.Pow):
+            if not getmv().module.builtin:
+                node.right = ast_utils.float_negative_exponent(node.right)
             self.fake_func(node, node.left, "__pow__", [node.right], func)
         elif isinstance(node.op, ast.Mod):
             if isinstance(node.right, ast.Tuple):
@@ -2339,6 +2341,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=getmv(),
                     warning=True,
                 )
+
+            # pow(10, -1) should agree with 10 ** -1, see visit_BinOp. Only the
+            # two-argument form: three-argument pow is modular exponentiation.
+            if ident == "pow" and not getmv().module.builtin:
+                if len(node.args) == 2 and not node.keywords:
+                    node.args[1] = ast_utils.float_negative_exponent(node.args[1])
 
             # optimize sum/max/min(listcomp-or-genexpr)
             if ident in ("sum", "min", "max") and not getmv().module.builtin:

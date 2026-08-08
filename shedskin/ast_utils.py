@@ -29,7 +29,7 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from . import config
 
@@ -77,6 +77,44 @@ def is_none(node: ast.AST) -> bool:
         if isinstance(node, ast.Constant) and node.value is None:
             return True
     return False
+
+
+def negative_num_value(node: ast.AST) -> Optional[Union[int, float]]:
+    """Value of a syntactically negative numeric literal, else None.
+
+    '-1' parses as UnaryOp(USub, Constant(1)) rather than Constant(-1), so both
+    spellings have to be recognized.
+    """
+    if isinstance(node, ast.Constant):
+        value = node.value
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if value < 0:
+                return value
+    elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        operand = node.operand
+        if isinstance(operand, ast.Constant):
+            negated = operand.value
+            if isinstance(negated, (int, float)) and not isinstance(negated, bool):
+                if negated > 0:
+                    return -negated
+    return None
+
+
+def float_negative_exponent(node: ast.expr) -> ast.expr:
+    """Retype a negative int literal exponent as the equivalent float.
+
+    'int ** int' is typed as int, but python returns a float when the exponent
+    is negative: 10 ** -1 is 0.1. That depends on the exponent's *value*, which
+    inference cannot see -- except for a literal, where the sign is right
+    there. Handing back a float literal gives exactly python's result via
+    'int_ ** float_', and matches how cpython itself defers to float pow here.
+    Anything else is returned unchanged, including an already-float literal, so
+    this is safe to apply more than once.
+    """
+    value = negative_num_value(node)
+    if isinstance(value, int):
+        return ast.copy_location(ast.Constant(value=float(value)), node)
+    return node
 
 
 def is_literal(node: ast.AST) -> bool:
