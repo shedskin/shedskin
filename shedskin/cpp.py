@@ -269,7 +269,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def fwd_class_refs(self) -> list[str]:
         """Forward declare classes from included modules"""
         lines = []
-        for _module in self.module.prop_includes:
+        # sorted: prop_includes is a set (see include_files)
+        for _module in sorted(
+            self.module.prop_includes, key=lambda module: module.include_path()
+        ):
             if _module.builtin:
                 continue
             for name in _module.name_list:
@@ -304,16 +307,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     module = cl.bases[0].mv.module
                     if module.ident != "builtin" and module != include:
                         include.deps.add(module)
-        includes1 = [i for i in includes if i.builtin]
-        includes2 = [i for i in includes if not i.builtin]
-        includes3 = includes1 + self.includes_rec(set(includes2))
+        # sorted, because 'includes' is a set of modules and so iterates in an
+        # order that varies between runs; that order reaches the emitted
+        # '#include' lines and makes builds of the same source differ
+        includes1 = sorted(
+            (i for i in includes if i.builtin), key=lambda m: m.include_path()
+        )
+        includes2 = sorted(
+            (i for i in includes if not i.builtin), key=lambda m: m.include_path()
+        )
+        includes3 = includes1 + self.includes_rec(includes2)
         return ['#include "%s"\n' % module.include_path() for module in includes3]
 
     def includes_rec(
-        self, includes: set["python.Module"]
+        self, includes: list["python.Module"]
     ) -> list["python.Module"]:  # XXX should be recursive!? ugh
-        """Find all (indirect) dependencies recursively"""
-        todo = includes.copy()
+        """Find all (indirect) dependencies recursively
+
+        Takes (and keeps) a list rather than a set: the dependency constraint
+        leaves ties, and breaking them by set iteration order made the emitted
+        include order differ between runs.
+        """
+        todo = list(includes)
         result: list["python.Module"] = []
         while todo:
             for include in todo:
@@ -322,7 +337,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     result.append(include)
                     break
             else:  # XXX circular dependency warning?
-                result.append(todo.pop())
+                result.append(todo.pop(0))
         return result
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
@@ -894,7 +909,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output(class_name + " *c = new " + class_name + "();")
             if name == "__deepcopy__":
                 self.output("memo->__setitem__(this, c);")
-            for var in cl.vars.values():
+            for var in python.stable_vars(cl.vars.values()):
                 if (
                     not var.invisible
                     and var in self.gx.merged_inh
@@ -1021,7 +1036,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- class variable declarations
         if cl.parent.vars:  # XXX merge with visit_Module
-            for var in cl.parent.vars.values():
+            for var in python.stable_vars(cl.parent.vars.values()):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.start(
                         typestr.nodetypestr(self.gx, var, cl.parent, mv=self.mv)
@@ -1045,7 +1060,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def class_variables(self, cl: "python.Class") -> None:
         """Generate class variable declarations"""
         if cl.parent.vars:
-            for var in cl.parent.vars.values():
+            for var in python.stable_vars(cl.parent.vars.values()):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.output(
                         "static "
@@ -1056,7 +1071,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print()
 
         # --- instance variables
-        for var in cl.vars.values():
+        for var in python.stable_vars(cl.vars.values()):
             if var.invisible:
                 continue  # var.name in cl.virtualvars: continue
             # var is masked by ancestor var
@@ -3774,9 +3789,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def lc_args(
         self, lcfunc: "python.Function", func: Optional["python.Function"]
     ) -> list[tuple[str, str]]:
-        """Generate the arguments for a list comprehension"""
+        """Generate the arguments for a list comprehension
+
+        'misses' is a set, so iterating it directly orders the generated
+        helper's parameters by string hash, which differs between runs. Sort
+        it, here and at the matching call site in visit_ListComp, so the two
+        agree and the emitted code depends only on the source.
+        """
         args = []
-        for name in lcfunc.misses:
+        for name in sorted(lcfunc.misses):
             var = python.lookup_var(name, func, self.mv)
             assert var
             if var.parent:
@@ -4137,7 +4158,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         args = []
         temp = self.line
 
-        for name in lcfunc.misses:
+        # must match the parameter order chosen by lc_args
+        for name in sorted(lcfunc.misses):
             var = python.lookup_var(name, func, self.mv)
             if var and var.parent:
                 if name == "self" and not (func and func.listcomp):

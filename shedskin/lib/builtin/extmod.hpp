@@ -13,6 +13,25 @@ template<> __ss_bool __to_ss(PyObject *p);
 template<> __ss_float __to_ss(PyObject *p);
 template<> void *__to_ss(PyObject *p);
 
+/* pickled state (see extmod.do_reduce_setstate) is a name-keyed dict.
+ * PyTuple_SetItem steals a reference but PyDict_SetItemString does not, so the
+ * value __to_py just produced has to be released once it is stored. */
+inline void __ss_dict_steal(PyObject *dict, const char *key, PyObject *value) {
+    if(value) {
+        PyDict_SetItemString(dict, key, value);
+        Py_DECREF(value);
+    }
+}
+
+/* Borrowed reference, or NULL when the key is absent -- which happens whenever
+ * a pickle predates the attribute. Callers must check before converting:
+ * __to_ss only special-cases Py_None and would dereference NULL. */
+inline PyObject *__ss_dict_lookup(PyObject *state, const char *key) {
+    if(!state || !PyDict_Check(state))
+        return 0;
+    return PyDict_GetItemString(state, key);
+}
+
 template<class T> PyObject *__to_py(T t) {
     if(!t) {
         Py_INCREF(Py_None);
