@@ -580,13 +580,8 @@ template<class T> T __seqiter<T>::__next__() {
 
 template<class T, int SiteId> list<T> *__ss_list() {
     list<T> *l = new list<T>();
-#ifdef __SS_PREDICT
-    static ListSiteStat __ss_stat;
-    l->units.reserve(__shedskin__::__list_site_hint(__ss_stat));
-    l->__ss_site = &__ss_stat;
-    __shedskin__::__list_site_new(__ss_stat);
-#elif !defined(__SS_BOOST)
-    l->units.reserve(4);
+#if defined(__SS_PREDICT) || !defined(__SS_BOOST)
+    __SS_LIST_RESERVE(l, 4);
 #endif
     return l;
 }

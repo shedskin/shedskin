@@ -358,8 +358,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         node,
                         mv=getmv(),
                     )
-                self.add_dynamic_constraint(node, key, "unit", func)
-                self.add_dynamic_constraint(node, value, "value", func)
+                else:
+                    self.add_dynamic_constraint(node, key, "unit", func)
+                    self.add_dynamic_constraint(node, value, "value", func)
         else:
             for child in node.elts:
                 self.visit(child, func)

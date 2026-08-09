@@ -131,4 +131,30 @@ inline std::size_t __list_site_hint(ListSiteStat &s) {
     return s.current_class;
 }
 
+/* Reserve backing-buffer space for a freshly constructed list, `lst`.
+ *
+ * With __SS_PREDICT, this also wires `lst` up to a per-call-site
+ * static ListSiteStat so that append() can report overflows back to
+ * it, letting future lists constructed at this site reserve a better
+ * size. Without it, `lst` just gets a fixed-size reserve() of
+ * `default_n`.
+ *
+ * A macro (rather than a function) because the __SS_PREDICT branch
+ * needs to declare a `static` variable scoped to -- and persisting
+ * across calls at -- this exact call site; a helper function would
+ * have only one such static shared by every caller.
+ */
+#ifdef __SS_PREDICT
+#define __SS_LIST_RESERVE(lst, default_n) \
+    do { \
+        static ListSiteStat __ss_site_stat; \
+        (lst)->units.reserve(__shedskin__::__list_site_hint(__ss_site_stat)); \
+        (lst)->__ss_site = &__ss_site_stat; \
+        __shedskin__::__list_site_new(__ss_site_stat); \
+    } while (0)
+#else
+#define __SS_LIST_RESERVE(lst, default_n) \
+    (lst)->units.reserve(default_n)
+#endif
+
 #endif
