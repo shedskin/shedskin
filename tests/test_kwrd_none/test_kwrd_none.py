@@ -38,8 +38,22 @@ def test_none():
     assert c[1] is not None
 
 
+def test_str_repr_none():
+    # str(None)/repr(None) used to collide with the int-formatting
+    # overloads of __str()/repr() at the C++ level (None compiles to a
+    # bare NULL, which is also a valid "integer 0"), silently returning
+    # "0" instead of "None".
+    n = None
+    assert str(None) == "None"
+    assert str(n) == "None"
+    assert repr(None) == "None"
+    assert repr(n) == "None"
+    assert "value: " + str(None) == "value: None"
+
+
 def test_all():
     test_none()
+    test_str_repr_none()
 
 if __name__ == '__main__':
     test_all() 
