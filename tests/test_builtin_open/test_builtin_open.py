@@ -111,6 +111,17 @@ def test_lineendings():
 #         assert list(f6) == ["hello world\r\n", "bye\r\n"]
 
 
+def test_open_directory_raises_oserror():
+    # opening a directory as a regular file must raise a catchable OSError
+    # (previously this segfaulted instead)
+    try:
+        f = open(".")
+        f.read()
+        assert False, "expected OSError"
+    except OSError:
+        pass
+
+
 def test_all():
     test_open_for()
     test_open_read()
@@ -122,6 +133,7 @@ def test_all():
     test_open_truncate()
     test_open_enter_exit()
     test_lineendings()
+    test_open_directory_raises_oserror()
 
 
 if __name__ == '__main__':

@@ -6,7 +6,26 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
+
+/* Reject directories opened as regular files: on POSIX, fopen() succeeds on
+ * a directory path, but subsequent reads/writes through the FILE* invoke
+ * undefined behavior (observed as a segfault) instead of failing cleanly.
+ * CPython's io layer proactively stat()s the path and raises
+ * IsADirectoryError; mirror that here using the existing OSError type. */
+static inline void __check_not_directory(FILE *f, str *file_name) {
+#ifndef WIN32
+    if (f) {
+        struct stat st;
+        if (fstat(fileno(f), &st) == 0 and S_ISDIR(st.st_mode)) {
+            fclose(f);
+            errno = EISDIR;
+            throw new OSError(file_name);
+        }
+    }
+#endif
+}
 
 #if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
 #define HAVE_STDIO_UNLOCKED
@@ -42,6 +61,7 @@ file::file(str *file_name, str *flags) {
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
         throw new FileNotFoundError(file_name);
+    __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
 
@@ -276,6 +296,7 @@ file_binary::file_binary(str *file_name, str *flags) {
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
         throw new FileNotFoundError(file_name);
+    __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
 }
