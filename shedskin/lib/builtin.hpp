@@ -587,16 +587,15 @@ template<class T, int SiteId> list<T> *__ss_list() {
 }
 
 inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
+    if(c == 0)
+        __throw_range_step_zero();
     list<__ss_int> *l = new list<__ss_int>();
     __ss_int len = range_len(a, b, c);
     l->units.resize(len);
-    __ss_int pos = 0;
-    if(a <= b) {
-        for(__ss_int i=a; i<b; i+=c)
-            l->units[pos++] = i;
-    } else {
-        for(__ss_int i=a; i>b; i+=c)
-            l->units[pos++] = i;
+    __ss_int i = a;
+    for(__ss_int pos = 0; pos < len; pos++) {
+        l->units[pos] = i;
+        i += c;
     }
     return l;
 }
