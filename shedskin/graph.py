@@ -2305,10 +2305,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(node.func, ast.Name):
             # direct call
             ident = node.func.id
-            if ident == "print":
+            # if 'ident' is shadowed by a local variable or parameter, none
+            # of the builtin-specific special-casing below applies: this is
+            # just a regular call through that variable, not a call to the
+            # builtin of the same name.
+            shadowed = python.lookup_var(ident, func, getmv()) is not None
+
+            if ident == "print" and not shadowed:
                 ident = node.func.id = "__print"  # XXX
 
-            if ident == "open" and len(node.args) > 1:
+            if ident == "open" and not shadowed and len(node.args) > 1:
                 if ast_utils.is_str(node.args[1]):
                     if "b" in _const_str(node.args[1]):
                         ident = node.func.id = "open_binary"
@@ -2321,21 +2327,24 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         mv=getmv(),
                     )
 
-            if ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]:
+            if (
+                not shadowed
+                and ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]
+            ):
                 error.error(
                     "'%s' function is not supported" % ident,
                     self.gx,
                     node.func,
                     mv=getmv(),
                 )
-            if ident == "dict" and node.keywords:
+            if not shadowed and ident == "dict" and node.keywords:
                 error.error(
                     "unsupported method of initializing dictionaries",
                     self.gx,
                     node,
                     mv=getmv(),
                 )
-            if ident == "isinstance":
+            if not shadowed and ident == "isinstance":
                 error.error(
                     "'isinstance' is not supported; always returns True",
                     self.gx,
@@ -2346,12 +2355,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             # pow(10, -1) should agree with 10 ** -1, see visit_BinOp. Only the
             # two-argument form: three-argument pow is modular exponentiation.
-            if ident == "pow" and not getmv().module.builtin:
+            if not shadowed and ident == "pow" and not getmv().module.builtin:
                 if len(node.args) == 2 and not node.keywords:
                     node.args[1] = ast_utils.float_negative_exponent(node.args[1])
 
             # optimize sum/max/min(listcomp-or-genexpr)
-            if ident in ("sum", "min", "max") and not getmv().module.builtin:
+            if not shadowed and ident in ("sum", "min", "max") and not getmv().module.builtin:
                 if (
                     len(node.args) == 1
                     and isinstance(node.args[0], (ast.ListComp, ast.GeneratorExp))
@@ -2361,7 +2370,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.gx.fuse_reduce_arg.add(node.args[0])
                     self.gx.fuse_reduce_op[node.args[0]] = ident
 
-            if python.lookup_var(ident, func, getmv()):
+            if shadowed or python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
