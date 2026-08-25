@@ -21,8 +21,8 @@ extern __ss_float nan;
 
 void __init();
 
-inline __ss_float ceil(__ss_float x) {
-    return std::ceil(x);
+inline __ss_int ceil(__ss_float x) {
+    return (__ss_int)std::ceil(x);
 }
 
 inline __ss_float fabs(__ss_float x) {
@@ -33,8 +33,8 @@ inline __ss_int factorial(__ss_int x) {
     return __math__::__integer__::factorial(x);
 }
 
-inline __ss_float floor(__ss_float x) {
-    return std::floor(x);
+inline __ss_int floor(__ss_float x) {
+    return (__ss_int)std::floor(x);
 }
 
 inline __ss_float fmod(__ss_float x, __ss_float y) {
