@@ -132,6 +132,7 @@ void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
 void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
 
 bytes *urandom(__ss_int n);
+bytes *getrandom(__ss_int size, __ss_int flags=0);
 
 __ss_bool isatty(__ss_int fd);
 
