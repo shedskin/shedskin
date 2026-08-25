@@ -110,7 +110,7 @@ template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int ar
     __mod_float(result, pos, c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, __ss_int f_precision) {
+template <class T> void __mod_str(int, str *result, size_t &, char c, T arg, __ss_int f_precision) {
     std::string s;
     if(c=='s')
         s = __str(arg)->unit;
@@ -122,7 +122,7 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
     else
         result->unit += s.substr(0, (size_t)f_precision);
 }
-template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, __ss_int f_precision) {
+template<> inline void __mod_str(int flag, str *result, size_t &, char, bytes *arg, __ss_int f_precision) {
     std::string s;
     if(flag) // bytes % bytes
         s = arg->unit;

@@ -178,7 +178,7 @@ template<class A, class B, class D> typename A::for_in_unit ___max(int, D defaul
 template<class A, class D> typename A::for_in_unit ___max(int nn, D default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___max(int, D default_, B (*key)(T), T a, T b) { return __gt(key(a), key(b))?a:b; }
-template<class T, class D> inline  T ___max(int, D default_, int, T a, T b) { return __gt(a, b)?a:b; }
+template<class T, class D> inline  T ___max(int, D, int, T a, T b) { return __gt(a, b)?a:b; }
 
 template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
     if(__gt(key(a),key(m)))
@@ -243,7 +243,7 @@ template<class A, class B, class D> typename A::for_in_unit ___min(int, D defaul
 template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { return __lt(key(a), key(b))?a:b; }
-template<class T, class D> inline  T ___min(int, D default_, int, T a, T b) { return __lt(a, b)?a:b; }
+template<class T, class D> inline  T ___min(int, D, int, T a, T b) { return __lt(a, b)?a:b; }
 
 template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
     if(__lt(key(a),key(m)))
@@ -974,6 +974,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
 template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
+    (void)count; // unused when Args is empty (e.g. print_() with no arguments)
     if(!separator)
         separator = sp;
 
