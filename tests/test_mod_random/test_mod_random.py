@@ -155,6 +155,54 @@ def test_choices():
     assert len(random.choices(list(range(100)), k=5)) == 5
 
 
+def test_systemrandom():
+    sr = random.SystemRandom()
+
+    x = sr.random()
+    assert 0.0 <= x < 1.0
+
+    assert 1 <= sr.randint(1, 6) <= 6
+
+    for k in (1, 8, 16, 30):
+        b = sr.getrandbits(k)
+        assert 0 <= b < (1 << k)
+    assert sr.getrandbits(0) == 0
+
+    assert len(sr.randbytes(9)) == 9
+
+    fibs = [0, 1, 1, 2, 3, 5, 8, 13, 21]
+    assert sr.choice(fibs) in fibs
+    assert len(sr.sample(fibs, 3)) == 3
+    sr.shuffle(fibs)
+    assert len(fibs) == 9
+
+    # seed() is a documented no-op for SystemRandom; must not raise
+    sr.seed(42)
+    sr.seed()
+
+    # getstate/setstate are unsupported for an OS-entropy generator
+    ok = False
+    try:
+        sr.getstate()
+    except NotImplementedError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        sr.setstate(b'')
+    except NotImplementedError:
+        ok = True
+    assert ok
+
+    # a plain Random instance must be unaffected by SystemRandom's use
+    random.seed(1)
+    first = random.random()
+    random.seed(1)
+    second = random.random()
+    assert first == second
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -163,6 +211,7 @@ def test_all():
     test_choices()
     test_getsetstate()
     test_getrandbits()
+    test_systemrandom()
 
 
 if __name__ == '__main__':
