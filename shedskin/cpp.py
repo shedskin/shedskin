@@ -3146,6 +3146,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", None, "triangular")
             or self.library_func(funcs, "random", "Random", "seed")
             or self.library_func(funcs, "random", "Random", "triangular")
+            # str(None)/repr(None) hit the same NULL-typed-as-a-plain-integer
+            # overload ambiguity as the %-formatting case below (see
+            # is_none_type's callers): a bare NULL argument binds to the
+            # int/long __str()/repr() overloads (which format it as "0")
+            # instead of the void* overloads (which correctly return "None").
+            or self.library_func(funcs, "builtin", None, "str")
+            or self.library_func(funcs, "builtin", None, "repr")
         ):
             castnull = True
         for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
