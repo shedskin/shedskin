@@ -4,6 +4,7 @@
 #define __CSV_HPP
 
 #include "builtin.hpp"
+#include "re.hpp"
 
 using namespace __shedskin__;
 namespace __csv__ {
@@ -26,6 +27,7 @@ extern class_ *cl_reader;
 extern class_ *cl_writer;
 extern class_ *cl_DictReader;
 extern class_ *cl_DictWriter;
+extern class_ *cl_Sniffer;
 
 class Error;
 
@@ -38,6 +40,7 @@ class reader;
 class writer;
 class DictReader;
 class DictWriter;
+class Sniffer;
 
 class Error : public Exception {
 public:
@@ -423,6 +426,25 @@ public:
 
     // internal
     list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
+};
+
+class Sniffer : public pyobj {
+public:
+    list<str *> *preferred;
+
+    Sniffer() {
+        this->__class__ = cl_Sniffer;
+        preferred = new list<str *>();
+        preferred->append(new str(","));
+        preferred->append(new str("\t"));
+        preferred->append(new str(";"));
+        preferred->append(new str(" "));
+        preferred->append(new str(":"));
+    }
+    void *__init__();
+
+    Dialect *sniff(str *sample, str *delimiters = 0);
+    __ss_bool has_header(str *sample);
 };
 
 list<str *> *list_dialects();
