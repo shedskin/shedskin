@@ -88,13 +88,20 @@ def test_lineendings():
      lf_txt = os.path.join(testdata, 'lf.txt')
      crlf_txt = os.path.join(testdata, 'crlf.txt')
 
-#     with open(cr_txt, "w") as f1:
-#         f1.write("hello world\r")
-#         f1.write("bye\r")
-#
-#     with open(cr_txt, "r") as f2:
-#         print('hum', list(f2))
-#         assert list(f2) == ["hello world\r", "bye\r"]
+     # regression test: file.read() bypassed universal-newline translation
+     # entirely (only readline()/readlines()/iteration did the \r, \r\n ->
+     # \n translation), so plain f.read() returned raw, untranslated bytes
+     # in text mode. Lone '\r' and '\r\n' line endings must both normalize
+     # to '\n' on read, matching CPython's universal newline handling.
+     with open(cr_txt, "w") as f1:
+         f1.write("hello world\r")
+         f1.write("bye\r")
+
+     with open(cr_txt, "r") as f2:
+         assert list(f2) == ["hello world\n", "bye\n"]
+
+     with open(cr_txt, "r") as f2b:
+         assert f2b.read() == "hello world\nbye\n"
 
      with open(lf_txt, "w") as f3:
          f3.write("hello world\n")
@@ -103,12 +110,18 @@ def test_lineendings():
      with open(lf_txt, "r") as f4:
          assert list(f4) == ["hello world\n", "bye\n"]
 
-#     with open(crlf_txt, "w") as f5:
-#         f5.write("hello world\r\n")
-#         f5.write("bye\r\n")
-#
-#     with open(crlf_txt, "r") as f6:
-#         assert list(f6) == ["hello world\r\n", "bye\r\n"]
+     with open(lf_txt, "r") as f4b:
+         assert f4b.read() == "hello world\nbye\n"
+
+     with open(crlf_txt, "w") as f5:
+         f5.write("hello world\r\n")
+         f5.write("bye\r\n")
+
+     with open(crlf_txt, "r") as f6:
+         assert list(f6) == ["hello world\n", "bye\n"]
+
+     with open(crlf_txt, "r") as f6b:
+         assert f6b.read() == "hello world\nbye\n"
 
 
 def test_open_directory_raises_oserror():
