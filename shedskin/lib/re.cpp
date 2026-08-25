@@ -46,6 +46,10 @@ str *match_object::__getitem__(__ss_int g) {
     return group(0, g);
 }
 
+str *match_object::__getitem__(str *mname) {
+    return group(0, mname);
+}
+
 //index functions
 __ss_int match_object::__index(__ss_int matchid, char isend)
 {
