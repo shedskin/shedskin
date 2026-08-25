@@ -74,6 +74,12 @@ def relpath(path, start=None):
 def expanduser(s):
     return s
 
+def expandvars(s):
+    return s
+
+def commonpath(paths):
+    return ''
+
 def getsize(s):
     return 1
 
