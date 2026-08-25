@@ -208,9 +208,9 @@ __ss_bool file::isatty()
 {
     __check_closed();
 #ifdef WIN32
-    return ___bool(_isatty(__ss_fileno()));
+    return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
-    return ___bool(::isatty(__ss_fileno()));
+    return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
 
@@ -220,10 +220,10 @@ __ss_int file::truncate(__ss_int size) {
     if(size == -1)
         size = tell();
 #ifdef WIN32
-    if(_chsize(__ss_fileno(), size) == -1)
+    if(_chsize((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #else
-    if(ftruncate(__ss_fileno(), size) == -1)
+    if(ftruncate((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
     return size;
@@ -440,9 +440,9 @@ __ss_bool file_binary::isatty()
 {
     __check_closed();
 #ifdef WIN32
-    return ___bool(_isatty(__ss_fileno()));
+    return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
-    return ___bool(::isatty(__ss_fileno()));
+    return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
 
@@ -452,10 +452,10 @@ __ss_int file_binary::truncate(__ss_int size) {
     if(size == -1)
         size = tell();
 #ifdef WIN32
-    if(_chsize(__ss_fileno(), size) == -1)
+    if(_chsize((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #else
-    if(ftruncate(__ss_fileno(), size) == -1)
+    if(ftruncate((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
     return size;
