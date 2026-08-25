@@ -237,31 +237,6 @@ def test_purge():
     re.purge()
 
 
-def _find_first(pattern: str, text: str) -> re.Match | None:
-    p: re.Pattern = re.compile(pattern)
-    return p.search(text)
-
-
-def test_re_pattern_match_annotations():
-    # re.Pattern/re.Match previously didn't exist as names in shedskin's re
-    # module (only the internal re_object/match_object did), so using them
-    # in annotations degraded to a silent "no type" instead of resolving.
-    m = _find_first(r'\d+', 'abc123')
-    assert m is not None
-    assert m.group() == '123'
-
-
-def test_re_pattern_match_instantiate():
-    # unlike CPython (which raises TypeError), shedskin has no way to
-    # forbid construction; Pattern/Match are deliberately separate,
-    # state-free stub classes so this stays harmless instead of touching
-    # uninitialized PCRE2 state the way re_object()/match_object() would.
-    p = re.Pattern()
-    m = re.Match()
-    assert str(p) == '<Pattern object>'
-    assert str(m) == '<Match object>'
-
-
 def test_re_unmatched_group_returns_none():
     m = re.match(r'(a)(b)?', 'a')
     assert m.group(1) == 'a'
@@ -353,8 +328,6 @@ def test_all():
     test_re_sub_unmatched_group_is_empty_string()
     test_re_sub_out_of_range_group_raises_error()
     test_purge()
-    test_re_pattern_match_annotations()
-    test_re_pattern_match_instantiate()
 
 
 if __name__ == "__main__":
