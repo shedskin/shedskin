@@ -65,7 +65,7 @@ def commonprefix(s):
 def abspath(s):
     return ''
 
-def realpath(s):
+def realpath(s, strict=False):
     return ''
 
 def normpath(s):
