@@ -35,7 +35,7 @@ def monotonic_ns():
 def process_time_ns():
     return 1
 
-class struct_time:
+class struct_time(pyseq):
     def __init__(self, tuple):
         self.tm_year = 0
         self.tm_mon = 0
@@ -46,8 +46,13 @@ class struct_time:
         self.tm_wday = 0
         self.tm_yday = 0
         self.tm_isdst = 0
+        self.unit = self.tm_year
     def __getitem__(self, n):
         return 1
+    def __len__(self):
+        return 9
+    def __iter__(self):
+        return __iter(self.tm_year)
     def __repr__(self):
         return "str"
 
