@@ -215,6 +215,8 @@ public:
 };
 
 template<class T> inline batchediter<T>::batchediter(pyiter<T> *iterable, __ss_int n, __ss_bool strict) {
+    if(n < 1)
+        throw new ValueError(new str("n must be at least one"));
     this->count = 0;
     this->exhausted = false;
     this->n = n;
