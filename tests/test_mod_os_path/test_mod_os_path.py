@@ -108,6 +108,26 @@ def test_os_path_relpath():
         pass
 
 
+def test_os_path_realpath_strict():
+    missing = "/tmp/shedskin_test_realpath_strict_missing/foo"
+
+    # non-strict (default): no error, just resolves as far as it can
+    assert realpath(missing) == missing
+
+    # strict=True: raise for a path that doesn't exist
+    try:
+        realpath(missing, strict=True)
+        assert False, "expected FileNotFoundError for missing path"
+    except FileNotFoundError:
+        pass
+
+    # strict=True: no error for a path that does exist
+    existing = "/tmp/shedskin_test_realpath_strict_exists"
+    os.system("mkdir -p " + existing)
+    assert realpath(existing, strict=True) == existing
+    os.system("rm -rf " + existing)
+
+
 def test_os_path_expanduser():
     assert expanduser("relative/path") == "relative/path"
     assert expanduser("") == ""
@@ -173,6 +193,7 @@ def test_all():
     test_os_path_samefile()
     test_os_path_ismount()
     test_os_path_relpath()
+    test_os_path_realpath_strict()
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
 
