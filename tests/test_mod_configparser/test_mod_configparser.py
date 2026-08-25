@@ -200,6 +200,51 @@ def test_duplicate_section_error():
         ok = True
     assert ok
 
+def test_duplicate_section_error_while_parsing():
+    config = configparser.ConfigParser()
+    ok = False
+    try:
+        config.read_string('[a]\nx = 1\n[a]\ny = 2\n')
+    except configparser.DuplicateSectionError as e:
+        ok = True
+        assert e.section == 'a'
+        assert e.source == '<string>'
+        assert e.lineno == 3
+    assert ok
+    # re-reading the same section across *separate* read_string() calls
+    # (rather than repeating the header within one source) is not an error
+    config2 = configparser.ConfigParser()
+    config2.read_string('[a]\nx = 1\n')
+    config2.read_string('[a]\ny = 2\n')
+    assert config2.get('a', 'x') == '1'
+    assert config2.get('a', 'y') == '2'
+
+def test_duplicate_option_error():
+    config = configparser.ConfigParser()
+    ok = False
+    try:
+        config.read_string('[a]\nx = 1\nx = 2\n')
+    except configparser.DuplicateOptionError as e:
+        ok = True
+        assert e.section == 'a'
+        assert e.option == 'x'
+        assert e.source == '<string>'
+        assert e.lineno == 3
+    assert ok
+
+def test_default_section_param():
+    config = configparser.ConfigParser(default_section='COMMON')
+    config.read_string('[COMMON]\nroot = /tmp\n[a]\nx = %(root)s/a\n')
+    assert config.get('a', 'x') == '/tmp/a'
+    assert 'COMMON' not in config.sections()
+
+def test_read_file():
+    config = configparser.ConfigParser()
+    f = open(datafile)
+    config.read_file(f)
+    f.close()
+    assert config.getint('ematter', 'pages') == 250
+
 def test_missing_section_header_error():
     config = configparser.ConfigParser()
     ok = False
@@ -241,6 +286,10 @@ def test_all():
     test_read_dict()
     test_get_fallback()
     test_duplicate_section_error()
+    test_duplicate_section_error_while_parsing()
+    test_duplicate_option_error()
+    test_default_section_param()
+    test_read_file()
     test_missing_section_header_error()
     test_parsing_error()
     test_getboolean_invalid()
