@@ -185,7 +185,7 @@ public:
        return NULL;
    }
 
-   void *rotate(__ss_int n) {
+   void *rotate(__ss_int n=1) {
        if(!units.empty()) {
            n = n % __len__();
            if(n<0)
