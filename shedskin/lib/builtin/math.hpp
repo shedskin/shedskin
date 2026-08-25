@@ -230,7 +230,7 @@ template<class T> T __div2(__ss_float n, T a) { return a->__rdiv__(n); }
 
 /* {int, float}.is_integer */
 
-inline __ss_bool __ss_is_integer(__ss_int i) {
+inline __ss_bool __ss_is_integer(__ss_int) {
     return True;
 }
 
@@ -285,7 +285,6 @@ inline __ss_int __ss_bit_length(__ss_int i) {
 inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
     __ss_int inc = 0;
     __ss_int start_index = 0;
-    __ss_int end_index = 0;
     __ss_int extension = 0;
     __ss_int actual_size = 0;
     unsigned char sign_ext = 0xff;
@@ -298,11 +297,9 @@ inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __s
     /* endianness */
     if(!byteorder || __eq(byteorder, byteorder_big)) {
         start_index = length-1;
-        end_index = 0;
         inc = -1;
     } else {
         start_index = 0;
-        end_index = length-1;
         inc = 1;
     }
 
@@ -448,7 +445,7 @@ namespace __bytes___ {
         __GC_STRING separator = " \n\r\t";
         bytes *result = new bytes();
         size_t count = 0;
-        unsigned char high, low;
+        unsigned char high;
         size_t i=0;
         for(; i < s->unit.size(); i++) {
             char c = s->unit[i];
