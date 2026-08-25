@@ -32,6 +32,9 @@ def samefile(a, b):
 def samestat(a, b):
     return True
 
+def ismount(path):
+    return True
+
 def split(p):
     return ('','')
 
