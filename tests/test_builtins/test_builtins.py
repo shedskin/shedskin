@@ -313,6 +313,23 @@ def test_range():
     assert list(range(1, 10, 2)) == [1, 3, 5, 7, 9]
     assert list(range(-17, -120, -17)) == [-17, -34, -51, -68, -85, -102, -119]
 
+    # list(range(a, b, c)) with a runtime step: direction/step mismatches
+    # must yield an empty list rather than looping forever or crashing
+    # (regression test for a bug in the __ss_list_range() fast path,
+    # which under -O2 could invoke undefined behavior via unbounded
+    # signed-integer increment and crash instead of terminating)
+    assert list(range(5, 0, a)) == []
+    assert list(range(0, 5, -a)) == []
+
+    # step=0 (only detectable at runtime here) must raise ValueError,
+    # matching plain for-loop iteration over range(), not hang/crash
+    zero = a - 1
+    try:
+        list(range(0, 5, zero))
+        assert False, "expected ValueError for step=0"
+    except ValueError:
+        pass
+
     r = range(4, 10, 2)
     assert r.start == 4
     assert r.stop == 10
