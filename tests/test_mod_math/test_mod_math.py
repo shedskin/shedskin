@@ -405,6 +405,35 @@ def test_remainder():
     assert error == 'math domain error'
 
 
+def test_atan2():
+    assert '%.8f' % math.atan2(1.0, 1.0) == '0.78539816'
+    assert '%.8f' % math.atan2(0.0, -1.0) == '3.14159265'
+    assert '%.8f' % math.atan2(-1.0, 0.0) == '-1.57079633'
+
+
+def test_degrees_radians():
+    assert '%.8f' % math.degrees(math.pi) == '180.00000000'
+    assert '%.8f' % math.degrees(math.pi / 2) == '90.00000000'
+    assert '%.8f' % math.radians(180.0) == '3.14159265'
+    assert '%.8f' % math.radians(90.0) == '1.57079633'
+
+
+def test_fabs():
+    assert math.fabs(-5.5) == 5.5
+    assert math.fabs(5.5) == 5.5
+    assert math.fabs(0.0) == 0.0
+
+
+def test_hypot():
+    assert math.hypot(3.0, 4.0) == 5.0
+
+
+def test_log10():
+    assert math.log10(100.0) == 2.0
+    assert math.log10(1.0) == 0.0
+    assert math.log10(1000.0) == 3.0
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -421,6 +450,11 @@ def test_all():
     test_nextafter()
     test_ulp()
     test_remainder()
+    test_atan2()
+    test_degrees_radians()
+    test_fabs()
+    test_hypot()
+    test_log10()
 
 
 if __name__ == '__main__':

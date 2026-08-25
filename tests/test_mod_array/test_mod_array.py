@@ -41,6 +41,22 @@ def test_bytes():
     assert arr2 == arr + arr
 
 
+def test_fromstring():
+    # fromstring() is a legacy alias for frombytes() (removed from
+    # CPython's array module in 3.9, but still supported here); it
+    # should behave identically to frombytes() when given bytes.
+    arr = array.array('i', range(10))
+    bs = arr.tobytes()
+
+    arr2 = array.array("i")
+    arr2.fromstring(bs)
+
+    assert arr == arr2
+
+    arr2.fromstring(bs)
+    assert arr2 == arr + arr
+
+
 def test_list():
     arr = array.array('i', [1, 2])
     arr.fromlist([3, 4, 5])
@@ -420,6 +436,7 @@ def test_all():
     test_typecodes()
     test_list()
     test_bytes()
+    test_fromstring()
     test_file()
     test_sequence_immutable()
     test_sequence_mutable()
