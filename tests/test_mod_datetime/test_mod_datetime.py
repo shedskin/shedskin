@@ -75,6 +75,86 @@ def test_datetime_custom_tzinfo():
     assert dt.date() == datetime.date(2007, 4, 3)
 
 
+def test_date_fromisoformat():
+    assert datetime.date.fromisoformat('2020-01-01') == datetime.date(2020, 1, 1)
+
+    error = ''
+    try:
+        datetime.date.fromisoformat('2020-1-1')  # not zero-padded
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '2020-1-1'"
+
+    error = ''
+    try:
+        datetime.date.fromisoformat('not-a-date')
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: 'not-a-date'"
+
+    # still goes through the normal range validation
+    error = ''
+    try:
+        datetime.date.fromisoformat('2020-02-30')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+
+def test_time_fromisoformat():
+    assert datetime.time.fromisoformat('12:30:15') == datetime.time(12, 30, 15)
+    assert datetime.time.fromisoformat('12:30:15.5') == datetime.time(12, 30, 15, 500000)
+    assert datetime.time.fromisoformat('12:30:15.123456') == datetime.time(12, 30, 15, 123456)
+
+    # fractional part longer than 6 digits is truncated, same as cpython
+    assert datetime.time.fromisoformat('12:30:15.1234567').microsecond == 123456
+
+    error = ''
+    try:
+        datetime.time.fromisoformat('1:30:15')  # hour not zero-padded
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '1:30:15'"
+
+    error = ''
+    try:
+        datetime.time.fromisoformat('12:30:15.')  # dot with no digits
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '12:30:15.'"
+
+
+def test_datetime_fromisoformat():
+    assert datetime.datetime.fromisoformat('2020-01-01T12:30:15.500000') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15, 500000)
+    assert datetime.datetime.fromisoformat('2020-01-01 12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    # any single character is accepted as date/time separator, same as
+    # cpython (>= 3.11)
+    assert datetime.datetime.fromisoformat('2020-01-01t12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    assert datetime.datetime.fromisoformat('2020-01-01X12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    # date-only is accepted, time defaults to midnight
+    assert datetime.datetime.fromisoformat('2020-01-01') == datetime.datetime(2020, 1, 1)
+
+    error = ''
+    try:
+        datetime.datetime.fromisoformat('2020-01-01  12:30:15')  # 2-char separator
+    except ValueError as e:
+        error = str(e)
+    assert error != ''
+
+    # range-check errors from the underlying constructor must still surface
+    # with their own specific message, not get overwritten
+    error = ''
+    try:
+        datetime.datetime.fromisoformat('2020-01-01T25:00:00')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'hour must be in 0..23'
+
+
 def test_timedelta_total_seconds():
     tol = 1e-3  # generous enough to also pass under --float32
 
@@ -137,9 +217,12 @@ def test_all():
         test_date()
         test_date_day_out_of_range()
         test_date_compare_year_boundary()
+        test_date_fromisoformat()
         test_datetime_compare_year_boundary()
         test_datetime_basic()
         test_datetime_custom_tzinfo()
+        test_time_fromisoformat()
+        test_datetime_fromisoformat()
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
