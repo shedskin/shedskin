@@ -261,7 +261,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
 /* pack multiple args */
 
-template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int n, str *fmt, Args ... args) {
+template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int, str *fmt, Args ... args) {
     char order = '@';
 
     unsigned int fmtlen = fmt->__len__();
