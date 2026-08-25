@@ -321,6 +321,17 @@ def test_classification():
     assert math.issubnormal(0.0) == False
 
 
+def test_signbit():
+    assert math.signbit(-1.0) == True
+    assert math.signbit(1.0) == False
+    assert math.signbit(0.0) == False
+    assert math.signbit(math.copysign(0.0, -1.0)) == True
+    assert math.signbit(float('inf')) == False
+    assert math.signbit(float('-inf')) == True
+    assert math.signbit(float('nan')) == False
+    assert math.signbit(math.copysign(float('nan'), -1.0)) == True
+
+
 def test_nextafter():
     assert math.nextafter(1.0, 1.0) == 1.0
     assert math.nextafter(0.0, math.inf) > 0.0
@@ -418,6 +429,7 @@ def test_all():
     test_math_integer()
     test_fmax_fmin()
     test_classification()
+    test_signbit()
     test_nextafter()
     test_ulp()
     test_remainder()
