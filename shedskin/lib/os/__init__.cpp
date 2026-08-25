@@ -726,6 +726,16 @@ bytes *urandom(__ss_int n) {
 #endif
 }
 
+/* os.getrandom() is a thin, Linux-specific wrapper around the getrandom(2)
+ * syscall in CPython, with flags (GRND_NONBLOCK, GRND_RANDOM) that have no
+ * portable meaning. Rather than special-case a raw syscall() on Linux only,
+ * we implement it on top of the same cross-platform source urandom() already
+ * uses (/dev/urandom on POSIX, NotImplementedError on Windows for now), so
+ * behavior is consistent across platforms; flags is accepted but ignored. */
+bytes *getrandom(__ss_int size, __ss_int flags) {
+    return urandom(size);
+}
+
 #ifdef WIN32
 __ss_bool isatty(__ss_int fd) {
     return __mbool(::_isatty(fd));
