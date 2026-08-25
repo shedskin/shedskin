@@ -1449,20 +1449,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(",{},{})".format(ivar[2:], evar[2:]))
         self.print(self.line)
 
-    def fastenumerate(self, node: Union[ast.For, ast.comprehension]) -> bool:
+    def fastenumerate(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"] = None,
+    ) -> bool:
         """Check if a node is a fast enumerate loop"""
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_enumerate(node)
+            and ast_utils.is_enumerate(node, func, self.mv)
             and self.only_classes(node.iter.args[0], ("tuple", "list", "str_"))
         )
 
-    def fastzip2(self, node: Union[ast.For, ast.comprehension]) -> bool:
+    def fastzip2(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"] = None,
+    ) -> bool:
         """Check if a node is a fast zip2 loop"""
         names = ("tuple", "list")
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_zip2(node)
+            and ast_utils.is_zip2(node, func, self.mv)
             and self.only_classes(node.iter.args[0], names)
             and self.only_classes(node.iter.args[1], names)
         )
@@ -1516,12 +1524,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
-        if ast_utils.is_fastfor(node):
+        if ast_utils.is_fastfor(node, func, self.mv):
             self.do_fastfor(node, node, None, assname, func, False, False)
-        elif self.fastenumerate(node):
+        elif self.fastenumerate(node, func):
             self.do_fastenumerate(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
-        elif self.fastzip2(node):
+        elif self.fastzip2(node, func):
             self.do_fastzip2(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
         elif self.fastdictiter(node):
@@ -3982,12 +3990,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             elif (
                 len(node.generators) == 1
-                and not self.fastenumerate(node.generators[0])
-                and not self.fastzip2(node.generators[0])
+                and not self.fastenumerate(node.generators[0], lcfunc)
+                and not self.fastzip2(node.generators[0], lcfunc)
                 and not node.generators[0].ifs
                 and (
                     (
-                        ast_utils.is_fastfor(node.generators[0])
+                        ast_utils.is_fastfor(node.generators[0], lcfunc, self.mv)
                         and isinstance(node.generators[0].iter, ast.Call)
                         and len(node.generators[0].iter.args) == 1
                         and isinstance(node.generators[0].iter.args[0], ast.Constant)
@@ -3998,7 +4006,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                 )
             ):
-                if ast_utils.is_fastfor(node.generators[0]):
+                if ast_utils.is_fastfor(node.generators[0], lcfunc, self.mv):
                     tv = self.mv.tempcount[node.generators[0].target]
                 else:
                     tv = self.mv.tempcount[node.generators[0].iter]
@@ -4029,7 +4037,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node not in self.gx.dictcomp_to_lc.values()
         )
 
-        if ast_utils.is_fastfor(qual):
+        if ast_utils.is_fastfor(qual, lcfunc, self.mv):
             if try_reserve:
                 if (
                     len(node.generators) == 1
@@ -4047,10 +4055,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr, fuse_reduce)
-        elif self.fastenumerate(qual):  # TODO result->resize for all cases
+        elif self.fastenumerate(qual, lcfunc):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
-        elif self.fastzip2(qual):
+        elif self.fastzip2(qual, lcfunc):
             self.do_fastzip2(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         elif self.fastdictiter(qual):
