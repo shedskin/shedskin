@@ -268,10 +268,43 @@ template<> PyObject *__to_py(__ss_float d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *) { Py_INCREF(Py_None); return Py_None; }
 
 void throw_exception() {
+    /* PyErr_Fetch hands back the *actual exception instance* (e.g. an
+     * OverflowError), never a bytes object, so treating pvalue as a
+     * PyBytesObject and reading it with PyBytes_AS_STRING is a type
+     * confusion: it reinterprets the exception instance's memory layout as
+     * if it were a bytes buffer, producing whatever garbage happens to be
+     * at that offset (confirmed: converting an out-of-range int raised
+     * TypeError('') -- wrong type, empty message -- instead of a proper
+     * OverflowError with its real text). PyErr_Fetch also transfers
+     * ownership of all three references to the caller; none of them were
+     * ever released, leaking one to three PyObjects per exception.
+     *
+     * Fetch, normalize (so pvalue is guaranteed to be an instance rather
+     * than sometimes a class/args tuple depending on how it was raised),
+     * stringify it the same way Python's own traceback machinery would,
+     * and release every reference before throwing onward. */
     PyObject *ptype, *pvalue, *ptraceback;
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    char *pStrErrorMessage = PyBytes_AS_STRING(pvalue);
-    throw new TypeError(new str(pStrErrorMessage));
+    PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+
+    str *message = new str("");
+    if (pvalue) {
+        PyObject *pystr = PyObject_Str(pvalue);
+        if (pystr) {
+            const char *msg = PyUnicode_AsUTF8(pystr);
+            if (msg)
+                message = new str(msg);
+            Py_DECREF(pystr);
+        } else {
+            PyErr_Clear();
+        }
+    }
+
+    Py_XDECREF(ptype);
+    Py_XDECREF(pvalue);
+    Py_XDECREF(ptraceback);
+
+    throw new TypeError(message);
 }
 
 template<> __ss_int __to_ss(PyObject *p) {
@@ -359,9 +392,16 @@ object::object() { this->__class__ = cl_object; }
 
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
+    /* used once per unpickled object (see extmod.do_reduce_setstate); the
+     * PyObject_GetAttrString result is a new reference that was never
+     * released, leaking the bound __new__ method every call. */
     PyObject *cls = PyTuple_GetItem(args, 0);
     PyObject *__new__ = PyObject_GetAttrString(cls, "__new__");
-    return PyObject_Call(__new__, args, kwargs);
+    if (!__new__)
+        return NULL;
+    PyObject *result = PyObject_Call(__new__, args, kwargs);
+    Py_DECREF(__new__);
+    return result;
 }
 #endif
 
