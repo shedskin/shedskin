@@ -44,6 +44,47 @@ def test_os_path():
     assert getmtime(abc) > 1 # dummy: cannot test for time
 
 
+def test_os_path_samefile():
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    abc = join(testdata, "abc.txt")
+
+    assert samefile(abc, abc)
+    assert samefile(abc, join(testdata, ".", "abc.txt"))
+    assert not samefile(abc, testdata)
+
+    try:
+        samefile(join(testdata, "does_not_exist.txt"), abc)
+        assert False, "expected an error for a missing file"
+    except OSError:
+        pass
+
+
+def test_os_path_ismount():
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    if os.name == "nt":
+        # the drive root is always a mount point on Windows
+        drive = os.environ.get("SYSTEMDRIVE", "C:") + "\\"
+        assert ismount(drive)
+    else:
+        # the filesystem root is always a mount point on POSIX
+        assert ismount("/")
+
+    assert not ismount(testdata)
+    assert not ismount(join(testdata, "abc.txt"))
+
+
 
 def test_os_path_relpath():
     base = abspath(join("testdir_a", "b"))
@@ -129,6 +170,8 @@ def test_os_path_expanduser_windows_trailing_sep():
 def test_all():
     test_os_path_join()
     test_os_path()
+    test_os_path_samefile()
+    test_os_path_ismount()
     test_os_path_relpath()
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
