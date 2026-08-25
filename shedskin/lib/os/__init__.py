@@ -455,6 +455,9 @@ def fsync(fd):
 def urandom(n):
     return b''
 
+def getrandom(size, flags=0):
+    return b''
+
 def utime(path, times):
     pass
 
