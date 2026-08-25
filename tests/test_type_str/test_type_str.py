@@ -16,6 +16,8 @@ def test_casefold():
     assert 'hello'.casefold() == 'hello'
     assert '123'.casefold() == '123'
     assert 'Hi 5! Bye.'.casefold() == 'hi 5! bye.'
+    assert ''.casefold() == ''
+    assert ('ABCDEFGHIJ' * 20).casefold() == ('abcdefghij' * 20)
 
 
 def test_center():
