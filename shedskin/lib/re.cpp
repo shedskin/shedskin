@@ -149,6 +149,14 @@ str *re_object::__repr__() {
     return new str("<Re object>");
 }
 
+str *Pattern::__repr__() {
+    return new str("<Pattern object>");
+}
+
+str *Match::__repr__() {
+    return new str("<Match object>");
+}
+
 //these are for internal use (used by expand()/sub() template backreference resolution)
 __GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int matchid)
 {
