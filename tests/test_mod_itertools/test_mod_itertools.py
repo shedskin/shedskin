@@ -118,6 +118,12 @@ def test_permutations():
         ('D', 'A'), ('D', 'B'), ('D', 'C'), 
         ('C', 'A'), ('C', 'B'), ('C', 'D')]
 
+    try:
+        list(itertools.permutations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_combinations():
     assert list(itertools.combinations('ABDC', 0)) == [()]
@@ -130,6 +136,26 @@ def test_combinations():
         ('B', 'C'), 
         ('D', 'C'),
     ]
+
+    try:
+        list(itertools.combinations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
+
+def test_combinations_with_replacement():
+    assert list(itertools.combinations_with_replacement('ABC', 2)) == [
+        ('A', 'A'), ('A', 'B'), ('A', 'C'),
+        ('B', 'B'), ('B', 'C'),
+        ('C', 'C'),
+    ]
+
+    try:
+        list(itertools.combinations_with_replacement('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
 
 
 def test_product():
@@ -264,6 +290,18 @@ def test_batched():
     batches = list(itertools.batched(range(10), 3))  #  TODO test strict kw arg
     assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
 
+    try:
+        list(itertools.batched(range(9), 0))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.batched(range(9), -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_all():
     test_count()
@@ -276,6 +314,7 @@ def test_all():
     test_islice()
     test_permutations()
     test_combinations()
+    test_combinations_with_replacement()
     test_product()
     test_product_repeat()
     test_compress()
