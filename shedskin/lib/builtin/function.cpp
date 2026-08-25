@@ -262,4 +262,7 @@ __ss_bool isinstance(pyobj *p, class_ *cl) {
 /* get class pointer */
 
 template<> class_ *__type(int) { return cl_int_; }
+#ifdef __SS_LONG
+template<> class_ *__type(__ss_int) { return cl_int_; }
+#endif
 template<> class_ *__type(__ss_float) { return cl_float_; }
