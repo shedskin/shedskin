@@ -6,7 +6,7 @@
 class str : public pyseq<str *> {
 protected:
 public:
-    __GC_STRING unit;
+    __GC_STR unit;
     __ss_int hash;
     bool charcache;
 

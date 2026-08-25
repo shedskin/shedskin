@@ -6,7 +6,7 @@
 class bytes : public pyseq<__ss_int> {
 protected:
 public:
-    __GC_STRING unit;
+    __GC_BYTES unit;
     __ss_int hash;
     int frozen;
 
