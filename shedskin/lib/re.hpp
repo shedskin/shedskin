@@ -76,20 +76,11 @@ public:
     str *group(__ss_int n, __ss_int m = 0);
     str *group(__ss_int n, str *m);
     str *__getitem__(__ss_int n);
+    str *__getitem__(str *mname);
 
-    template <class ... Args> tuple<str *> *group(__ss_int, __ss_int m, __ss_int o, Args ... args) {
+    template <class T1, class T2, class ... Args> tuple<str *> *group(__ss_int, T1 m, T2 o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
 
-        t->units.push_back(group(1, m));
-        t->units.push_back(group(1, o));
-
-        (t->units.push_back(group(1, args)), ...);
-
-        return t;
-    }
-
-    template <class ... Args> tuple<str *> *group(__ss_int, str *m, str *o, Args ... args) {
-        tuple<str *> *t = new tuple<str *>();
         t->units.push_back(group(1, m));
         t->units.push_back(group(1, o));
 
