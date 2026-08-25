@@ -167,6 +167,30 @@ static void __throw_io_error() {
 
 str *file::read(__ss_int n) {
     __check_closed();
+    if (options.universal_mode) {
+        __read_cache.clear();
+        for(size_t i = 0; i < size_t(n); ++i) {
+            int c = GETC(f);
+            if(c == EOF)
+                break;
+            if(options.cr) {
+                options.cr = false;
+                if(c == '\n') {
+                    c = GETC(f);
+                    if(c == EOF)
+                        break;
+                }
+            }
+            if(c == '\r') {
+                options.cr = true;
+                c = '\n';
+            }
+            __read_cache.push_back((char)c);
+        }
+        if(__error())
+            __throw_io_error();
+        return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    }
     if(n == 1) {
         const int c = GETC(f);
         if(FERROR(f) != 0) /* avoid virtual call */
