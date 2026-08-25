@@ -403,6 +403,13 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
+/* size an extended slice ('a[l:u:s]', s not 1) must have to be assigned to;
+ * shared by list<T>::__setslice__() and bytes::__setslice__() so their
+ * length-mismatch checks (and CPython-matching error wording) don't drift
+ * apart. l, u, s are normalized internally via slicenr(), so pass the raw,
+ * unnormalized slice bounds. */
+__ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_int len);
+
 #include "builtin/exception.hpp"
 #define SS_DECL
 #include "builtin/function.hpp"
