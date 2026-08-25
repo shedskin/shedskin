@@ -2022,6 +2022,24 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.targets:
+            mismatch = ast_utils.check_assign_arity(target_expr, node.value)
+            if mismatch:
+                expected, got = mismatch
+                if got > expected:
+                    error.error(
+                        "too many values to unpack (expected %d)" % expected,
+                        self.gx,
+                        node,
+                        mv=getmv(),
+                    )
+                else:
+                    error.error(
+                        "not enough values to unpack (expected %d, got %d)"
+                        % (expected, got),
+                        self.gx,
+                        node,
+                        mv=getmv(),
+                    )
             pairs = ast_utils.assign_rec(target_expr, node.value)
             for lvalue, rvalue in pairs:
                 # expr[expr] = expr
