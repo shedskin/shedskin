@@ -57,7 +57,7 @@ def floor(x): return 1
 def ceil(x): return 1
 
 def pow(x, y): return 1.0
-def hypot(x, y): return 1.0
+def hypot(*args): return 1.0
 
 def prod(iterable, start=1):
     elem = iter(iterable).__next__()
