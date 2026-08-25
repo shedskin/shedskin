@@ -562,3 +562,59 @@ class TestReduceSetstate:
             assert '__ss_dict_steal(b, "%s"' % name in after
             assert '__ss_dict_lookup(state, "%s")' % name in before
             assert '__ss_dict_lookup(state, "%s")' % name in after
+
+
+class TestDealloc:
+    """Tests for the generated tp_dealloc function.
+
+    self->__ss_object must be read (to remove the __ss_proxy entry) before
+    tp_free releases self's memory. Reading it afterwards is a use-after-free:
+    confirmed with valgrind, which flags an "Invalid read" inside the
+    generated Dealloc function once tp_free has already freed that block.
+    """
+
+    def _generate(self, gx):
+        builtin_mv = gx.modules["builtin"].mv
+
+        fake_module = python.Module(
+            "test_mod", "/fake/test_mod.py", "test_mod.py",
+            False, None, ast.parse(""),
+        )
+        fake_mv = MagicMock()
+        fake_mv.module = fake_module
+        fake_mv.classes = {}
+        fake_module.mv = fake_mv
+
+        node = ast.ClassDef(
+            name="Foo", bases=[], keywords=[],
+            body=[ast.Pass()], decorator_list=[],
+        )
+        cl = python.Class(gx, node, builtin_mv, fake_module)
+        cl.def_order = 0
+        cl.funcs = {}
+        cl.vars = {}
+        cl.bases = []
+
+        mock_gv = MagicMock()
+        mock_gv.module = fake_module
+        mock_gv.out = io.StringIO()
+        mock_gv.gx = gx
+
+        em = extmod.ExtensionModule(gx, mock_gv)
+        em.do_extmod_class(cl)
+        return mock_gv.out.getvalue()
+
+    def test_proxy_removed_before_tp_free(self, gx_with_builtin):
+        """__ss_proxy->__delitem__ must run before tp_free, not after."""
+        out = self._generate(gx_with_builtin)
+
+        start = out.index("Dealloc(")
+        body = out[start:out.index("}", start)]
+
+        delitem_pos = body.index("__ss_proxy->__delitem__")
+        tp_free_pos = body.index("tp_free")
+
+        assert delitem_pos < tp_free_pos, (
+            "self->__ss_object is read after tp_free has freed self "
+            "(use-after-free)"
+        )
