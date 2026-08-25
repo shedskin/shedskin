@@ -173,6 +173,10 @@ inline __ss_bool isnan(__ss_float x) {
     return __mbool(std::isnan(x));
 }
 
+inline __ss_bool signbit(__ss_float x) {
+    return __mbool(std::signbit(x));
+}
+
 inline __ss_float acosh(__ss_float x) {
     return ::acosh(x);
 }

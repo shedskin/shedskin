@@ -5,6 +5,7 @@ e = pi = tau = inf = nan = 1.0
 def isfinite(x): return True
 def isinf(x): return True
 def isnan(x): return True
+def signbit(x): return True
 
 def degrees(x): return 1.0
 def radians(x): return 1.0
