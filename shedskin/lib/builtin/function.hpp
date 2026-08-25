@@ -1019,13 +1019,108 @@ inline __ss_float ___round(__ss_float x) {
     return (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
 }
 
-static inline __ss_float __portableround(__ss_float x) {
-    if(x<0) return ceil(x-0.5);
-    return floor(x+0.5);
+/* round(a, n) needs to match CPython's semantics: it rounds the *exact*
+ * binary value of `a` to the nearest multiple of 10**-n, with ties going
+ * to even. Doing this via `pow(10, n) * a` (the previous implementation)
+ * first introduces its own floating point rounding error and then rounds
+ * *that* value, which gives wrong answers for very common inputs, e.g.
+ * round(2.675, 2) should be 2.67 (2.675 is actually stored as
+ * 2.67499999999999982...) but the multiply/divide approach produces 2.68.
+ * Similarly round(0.5, 0), round(1.25, 1), round(25.0, -1), etc. were
+ * rounding half-away-from-zero instead of half-to-even.
+ *
+ * To avoid reintroducing binary rounding error, we instead get a
+ * high-precision *decimal* expansion of the exact value of `a` (via
+ * snprintf, which glibc computes exactly) and round that decimal string
+ * at the requested digit, using round-half-to-even on exact ties only.
+ */
+static inline __ss_float __decimal_round(__ss_float a, int n) {
+    if (std::isnan(a) || std::isinf(a) || a == 0.0)
+        return a;
+
+    const int ndig = 60; /* far more than enough for any realistic n */
+    bool neg = std::signbit(a);
+    __ss_float x = std::fabs(a);
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%.*e", ndig - 1, (double)x);
+
+    std::string s(buf);
+    size_t epos = s.find('e');
+    std::string mant = s.substr(0, epos);
+    int e = atoi(s.c_str() + epos + 1);
+
+    std::string digits;
+    for (char c : mant)
+        if (c != '.')
+            digits.push_back(c);
+
+    int keep = e + n; /* index of the last digit to keep */
+    std::string result_digits;
+    int result_e;
+
+    if (keep < -1) {
+        return neg ? -0.0 : 0.0;
+    } else if (keep == -1) {
+        char d0 = digits[0];
+        bool rest_nonzero = false;
+        for (size_t i = 1; i < digits.size(); i++)
+            if (digits[i] != '0') { rest_nonzero = true; break; }
+
+        bool round_up = (d0 > '5') || (d0 == '5' && rest_nonzero);
+        /* exact tie (d0=='5', nothing after) rounds to even, i.e. down to 0 */
+        if (!round_up)
+            return neg ? -0.0 : 0.0;
+
+        __ss_float val = (__ss_float)std::pow(10.0, (double)(-n));
+        return neg ? -val : val;
+    } else {
+        if ((size_t)keep >= digits.size() - 1) {
+            result_digits = digits.substr(0, keep + 1);
+            result_e = e;
+        } else {
+            std::string kept = digits.substr(0, keep + 1);
+            char first_dropped = digits[keep + 1];
+            bool rest_nonzero = false;
+            for (size_t i = keep + 2; i < digits.size(); i++)
+                if (digits[i] != '0') { rest_nonzero = true; break; }
+
+            bool round_up;
+            if (first_dropped > '5')
+                round_up = true;
+            else if (first_dropped < '5')
+                round_up = false;
+            else if (rest_nonzero)
+                round_up = true;
+            else /* exact tie */
+                round_up = ((kept.back() - '0') % 2) != 0;
+
+            if (round_up) {
+                int i = (int)kept.size() - 1;
+                while (i >= 0) {
+                    if (kept[i] == '9') { kept[i] = '0'; i--; }
+                    else { kept[i]++; break; }
+                }
+                if (i < 0) { kept = "1" + kept; e++; }
+            }
+            result_digits = kept;
+            result_e = e;
+        }
+
+        std::string valstr;
+        valstr += result_digits[0];
+        valstr += '.';
+        valstr += (result_digits.size() > 1) ? result_digits.substr(1) : "0";
+        valstr += 'e';
+        valstr += std::to_string(result_e);
+
+        __ss_float val = (__ss_float)strtod(valstr.c_str(), NULL);
+        return neg ? -val : val;
+    }
 }
 
 inline __ss_float ___round(__ss_float a, int n) {
-    return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
+    return __decimal_round(a, n);
 }
 
 /* input */
