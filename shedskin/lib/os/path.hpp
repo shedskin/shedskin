@@ -53,6 +53,7 @@ str *expanduser(str *path);
 
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
+__ss_bool ismount(str *path);
 str *_resolve_link(str *path);
 
 void __init();
