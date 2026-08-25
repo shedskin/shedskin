@@ -1472,9 +1472,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_assign_list_or_tuple(node.target)
-            and self.only_classes(node.iter.func, ("dict",))
             and isinstance(node.iter.func, ast.Attribute)
             and node.iter.func.attr == "items"
+            and self.only_classes(node.iter.func.value, ("dict",))
         )
 
     def fastfileiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
