@@ -147,6 +147,15 @@ def test_urandom():
     assert bts.__class__.__name__ == 'bytes'
 
 
+def test_getrandom():
+    bts = os.getrandom(10)
+    assert len(bts) == 10
+    assert bts.__class__.__name__ == 'bytes'
+
+    bts = os.getrandom(10, 0)
+    assert len(bts) == 10
+
+
 def test_cpu_count():
     n = os.cpu_count()
     assert n >= 1
@@ -274,6 +283,7 @@ def test_all():
         test_isatty()
         test_system()
         test_urandom()
+        test_getrandom()
         # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
         # __os__ in lib/os/__init__.hpp, and shedskin translates this
         # function's body to C++ unconditionally (the `os.name == 'posix'`
