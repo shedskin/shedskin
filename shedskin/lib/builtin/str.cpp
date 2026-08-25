@@ -529,7 +529,13 @@ str *str::center(__ss_int w, str *fillchar) {
     if(!fillchar) fillchar = sp;
     str *r = fillchar->__mul__(w);
 
-    size_t j = (width-len)/2;
+    /* CPython puts the extra fill character on the right for even total
+       padding, but breaks ties on odd total padding based on the parity
+       of the requested width (see CPython's unicode_center /
+       stringlib_center); a plain floor-division split puts the extra
+       character on the wrong side whenever width is odd. */
+    size_t marg = width - len;
+    size_t j = marg/2 + (marg & width & 1);
     for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
