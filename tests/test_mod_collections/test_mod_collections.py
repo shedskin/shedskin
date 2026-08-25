@@ -112,6 +112,42 @@ def test_defaultdict_type_identity():
     assert repr(e).startswith('defaultdict(')
 
 
+def test_defaultdict_fromkeys():
+    d = defaultdict.fromkeys(['a', 'b', 'c'], 1)
+    assert list(sorted(d.items())) == [('a', 1), ('b', 1), ('c', 1)]
+
+    # a fromkeys() dict has no default_factory, so a missing key still
+    # raises KeyError like a plain defaultdict.fromkeys() would
+    raised = False
+    try:
+        d['zzz']
+    except KeyError:
+        raised = True
+    assert raised
+
+    # fromkeys() also works over a string (iterates characters)
+    d2 = defaultdict.fromkeys('ab', 5)
+    assert list(sorted(d2.items())) == [('a', 5), ('b', 5)]
+
+    # matching dict.fromkeys(), every key shares the exact same value
+    # object when a mutable value is given
+    d3 = defaultdict.fromkeys(['p', 'q'], [1, 2])
+    d3['p'].append(3)
+    assert d3['p'] == [1, 2, 3]
+    assert d3['q'] == [1, 2, 3]
+    assert d3['p'] is d3['q']
+
+
+def test_defaultdict_fromkeys_no_value():
+    # regression test: fromkeys() without an explicit value used to hardcode
+    # the value type as __ss_int with default 0, which both contradicted
+    # real defaultdict.fromkeys() (default value is None) and didn't match
+    # what the compiler's own type inference expected, causing a hard
+    # compile error for every value type
+    d = defaultdict.fromkeys(['x', 'y'])
+    assert list(sorted(d.items())) == [('x', None), ('y', None)]
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -324,6 +360,8 @@ def test_all():
     test_defaultdict_copy_module()
     test_defaultdict_from_pairs()
     test_defaultdict_type_identity()
+    test_defaultdict_fromkeys()
+    test_defaultdict_fromkeys_no_value()
     test_deque1()
     test_deque2()
     test_deque3()
