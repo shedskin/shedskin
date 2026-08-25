@@ -630,9 +630,12 @@ class ExtensionModule:
         write("}\n")
 
         # tp_dealloc
+        # __ss_object must be read (to remove the proxy entry) *before*
+        # tp_free releases self's memory, otherwise this is a use-after-free:
+        # self->__ss_object would be read from already-freed memory.
         write("void {}Dealloc({}Object *self) {{".format(clname(cl), clname(cl)))
-        write("    Py_TYPE(self)->tp_free((PyObject *)self);")
         write("    __ss_proxy->__delitem__(self->__ss_object);")
+        write("    Py_TYPE(self)->tp_free((PyObject *)self);")
         write("}\n")
 
         # getset
