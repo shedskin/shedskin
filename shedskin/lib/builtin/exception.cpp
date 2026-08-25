@@ -36,8 +36,8 @@ str *FileNotFoundError::__repr__() {
     return __add_strs(5, new str("FileNotFoundError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
-void __throw_index_out_of_range() {
-    throw new IndexError(new str("index out of range"));
+void __throw_index_out_of_range(const char *msg) {
+    throw new IndexError(new str(msg));
 }
 void __throw_range_step_zero() {
     throw new ValueError(new str("range() step argument must not be zero"));
