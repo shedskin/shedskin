@@ -597,6 +597,102 @@ __ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {
     return __math__::fmod((mean+(arc*(this->random()-0.5))), __math__::pi);
 }
 
+/**
+class SystemRandom
+*/
+
+class_ *cl_SystemRandom;
+
+/* Draw a uniformly random 64-bit word straight from the OS entropy
+   source, bypassing the deterministic xoshiro256 stream entirely (and
+   the shared state s[] it depends on). std::random_device typically
+   yields 32 bits per call, so two draws are combined. */
+static inline uint64_t system_random_word() {
+    static std::random_device rd;
+    uint64_t hi = rd();
+    uint64_t lo = rd();
+    return (hi << 32) | lo;
+}
+
+SystemRandom::SystemRandom() {
+    this->__class__ = cl_SystemRandom;
+    this->gauss_next = 0.0;
+    this->gauss_switch = 0;
+    this->seed((void *)NULL); /* no-op, see SystemRandom::seed() */
+    this->VERSION = 2;
+}
+
+SystemRandom::SystemRandom(int a) {
+    this->__class__ = cl_SystemRandom;
+    this->gauss_next = 0.0;
+    this->gauss_switch = 0;
+    this->seed(a); /* no-op, see SystemRandom::seed() */
+    this->VERSION = 2;
+}
+
+__ss_float SystemRandom::random() {
+    /**
+    Get the next random number in the range 0.0 <= X < 1.0, drawn from
+    an OS-provided source of randomness rather than a seeded PRNG stream.
+    */
+
+    return static_cast<__ss_float>(system_random_word() >> 11) * 0x1.0p-53;
+}
+
+__ss_int SystemRandom::getrandbits(__ss_int k) {
+    /**
+    getrandbits(k) -> x.  Generates an int with k random bits, drawn
+    directly from the OS entropy source.
+    */
+
+    if (k<0)
+        throw (new ValueError(const_8));
+    if (k == 0)
+        return 0;
+
+    unsigned acc_bits = sizeof(uint64_t)*8 - 2;
+    if ((size_t)k > acc_bits) {
+        throw (new ValueError(const_9));
+    }
+
+    uint64_t acc = 0;
+    __ss_int remaining = k;
+    int shift = 0;
+    while (remaining > 0) {
+        uint64_t word = system_random_word();
+        int take = remaining < 64 ? (int)remaining : 64;
+        uint64_t mask = (take >= 64) ? ~UINT64_C(0) : ((UINT64_C(1) << take) - 1);
+        acc |= (word & mask) << shift;
+        shift += take;
+        remaining -= take;
+    }
+    return (__ss_int)acc;
+}
+
+bytes *SystemRandom::randbytes(__ss_int n) {
+    /**
+    Generate n random bytes, drawn directly from the OS entropy source.
+    */
+    bytes *result = new bytes();
+    result->unit.resize(n);
+    __ss_int i = 0;
+    while (i < n) {
+        uint64_t word = system_random_word();
+        for (int b = 0; b < 8 && i < n; b++, i++) {
+            result->__setitem__(i, (__ss_int)((word >> (8*b)) & 0xff));
+        }
+    }
+    return result;
+}
+
+bytes *SystemRandom::getstate() {
+    throw (new NotImplementedError(new str("state of a system random number generator cannot be saved")));
+}
+
+void *SystemRandom::setstate(bytes *state) {
+    throw (new NotImplementedError(new str("state of a system random number generator cannot be restored")));
+}
+
 void __init() {
     const_0 = new str("non-integer arg 1 for randrange()");
     const_1 = new str("non-integer stop for randrange()");
@@ -650,6 +746,7 @@ void __init() {
     LOWER = 2147483647;
     mag01 = (new list<int>(2, 0, MATRIX_A));
     _inst = (new Random());
+    cl_SystemRandom = new class_("SystemRandom");
 }
 
 __ss_float random() {
