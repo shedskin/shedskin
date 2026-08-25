@@ -14,7 +14,7 @@ class deque(pyiter):
     def extendleft(self, b):
         self.unit = b.unit
 
-    def rotate(self, n):
+    def rotate(self, n=1):
         pass
 
     def pop(self):

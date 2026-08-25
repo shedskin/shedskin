@@ -162,6 +162,21 @@ def test_deque2():
     assert not list(d)
 
 
+def test_deque_rotate_default():
+    d = deque([1, 2, 3, 4, 5])
+    d.rotate()
+    assert list(d) == [5, 1, 2, 3, 4]
+
+    d.rotate(2)
+    assert list(d) == [3, 4, 5, 1, 2]
+
+    d.rotate(-3)
+    assert list(d) == [1, 2, 3, 4, 5]
+
+    d.rotate(0)
+    assert list(d) == [1, 2, 3, 4, 5]
+
+
 def test_deque3():
     d = deque([1,2,2,2,3,4])
     assert d.count(2) == 3
@@ -326,6 +341,7 @@ def test_all():
     test_defaultdict_type_identity()
     test_deque1()
     test_deque2()
+    test_deque_rotate_default()
     test_deque3()
     test_deque4()
     test_deque_maxlen()
