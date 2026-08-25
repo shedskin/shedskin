@@ -239,7 +239,7 @@ template<class T> __ss_int list<T>::__len__() {
 }
 
 template<class T> T list<T>::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list index out of range");
     return units[(size_t)i];
 }
 
@@ -307,18 +307,18 @@ template<class T> void *list<T>::extend(str *s) {
 }
 
 template<class T> inline T list<T>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list index out of range");
     return this->units[(size_t)i];
 }
 
 template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units[(size_t)i] = e;
     return NULL;
 }
 
 template<class T> void *list<T>::__delitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units.erase(units.begin()+i);
     return NULL;
 }
@@ -397,7 +397,7 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
 }
 
 template<class T> void *list<T>::__delete__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units.erase(units.begin()+i);
     return NULL;
 }
