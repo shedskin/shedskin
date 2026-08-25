@@ -1008,15 +1008,18 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* round */
 
-inline __ss_float ___round(__ss_float x) {
+inline __ss_int ___round(__ss_float x) {
     __ss_float f = std::floor(x);
     __ss_float diff = x - f;
+    __ss_float r;
 
-    if (diff < 0.5) return f;
-    if (diff > 0.5) return f + 1.0;
+    if (diff < 0.5) r = f;
+    else if (diff > 0.5) r = f + 1.0;
+    else
+        // Tie-break: round to the nearest EVEN integer
+        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
 
-    // Tie-break: round to the nearest EVEN integer
-    return (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+    return (__ss_int)r;
 }
 
 static inline __ss_float __portableround(__ss_float x) {
@@ -1026,6 +1029,24 @@ static inline __ss_float __portableround(__ss_float x) {
 
 inline __ss_float ___round(__ss_float a, int n) {
     return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
+}
+
+inline __ss_int ___round(__ss_int a, int n) {
+    if (n >= 0) return a;  // int has no fractional digits to round
+
+    __ss_float p = pow((__ss_float)10, -n);
+    __ss_float x = (__ss_float)a / p;
+    __ss_float f = std::floor(x);
+    __ss_float diff = x - f;
+    __ss_float r;
+
+    if (diff < 0.5) r = f;
+    else if (diff > 0.5) r = f + 1.0;
+    else
+        // Tie-break: round to the nearest EVEN integer
+        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+
+    return (__ss_int)(r * p);
 }
 
 /* input */

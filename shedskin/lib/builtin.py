@@ -60,6 +60,8 @@ class int_:
         return 1
     def __abs__(self):
         return 1
+    def __round__(self, ndigits=0):
+        return 1
 
     def __pow__(self, b):
         return b
@@ -179,6 +181,8 @@ class float_:
     def __pos__(self):
         return 1.0
     def __abs__(self):
+        return 1.0
+    def __round__(self, ndigits=0):
         return 1.0
 
     def __hash__(self):
@@ -1080,7 +1084,9 @@ def ord(c):
     return 1
 
 def round(number, ndigits=0):
-    return 1.0
+    return number.__round__(ndigits)
+def __round1(number):
+    return 1
 
 def divmod(a, b):
     return a.__divmod__(b)
