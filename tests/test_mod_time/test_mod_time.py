@@ -134,6 +134,24 @@ def test_gmtime_negative_fraction():
     assert (t3.tm_year, t3.tm_mon, t3.tm_mday, t3.tm_hour, t3.tm_min, t3.tm_sec) == \
         (1970, 1, 1, 0, 0, 0)
 
+def test_iteration():
+    # regression test: struct_time must support the sequence protocol
+    # beyond __getitem__/__len__ (previously derived from plain pyobj,
+    # so for-loops, list()/tuple() construction, and tuple-unpacking
+    # all failed to compile).
+    t = time.gmtime(1700000000)
+
+    collected = []
+    for x in t:
+        collected.append(x)
+    assert collected == [2023, 11, 14, 22, 13, 20, 1, 318, 0]
+
+    assert list(t) == [2023, 11, 14, 22, 13, 20, 1, 318, 0]
+    assert tuple(t) == (2023, 11, 14, 22, 13, 20, 1, 318, 0)
+
+    a, b, c, d, e, f, g, h, i = t
+    assert (a, b, c, d, e, f, g, h, i) == (2023, 11, 14, 22, 13, 20, 1, 318, 0)
+
 def test_sleep():
     t1 = time.time()
     time.sleep(0.5)
@@ -148,6 +166,7 @@ def test_all():
     test_asctime()
     test_strftime()
     test_conversions()
+    test_iteration()
     test_gmtime_negative_fraction()
     test_sleep()
     # test_epoch()
