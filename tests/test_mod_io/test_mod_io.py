@@ -212,6 +212,47 @@ def test_stringio_does_not_alias_input():
     assert 'abc' == 'abc'
 
 
+def test_bytesio_negative_seek():
+    # seek(negative, whence=0) must raise, matching CPython exactly, rather
+    # than silently storing a negative position (which corrupted later
+    # read()/write() calls, since they cast pos to size_t).
+    b = io.BytesIO(b"hello world")
+    err = False
+    try:
+        b.seek(-1)
+    except ValueError as e:
+        err = True
+        assert str(e) == "negative seek value -1"
+    assert err
+
+    # whence=1/2 that would land before the start must clamp to 0 instead,
+    # again matching CPython.
+    b2 = io.BytesIO(b"hello world")
+    b2.seek(3)
+    assert b2.seek(-100, 1) == 0
+    assert b2.tell() == 0
+
+    b3 = io.BytesIO(b"hello world")
+    assert b3.seek(-100, 2) == 0
+
+    # sanity: ordinary seeks still work as before
+    b4 = io.BytesIO(b"hello world")
+    assert b4.seek(0, 2) == 11
+    assert b4.seek(5) == 5
+    assert b4.read() == b" world"
+
+
+def test_stringio_negative_seek():
+    s = io.StringIO("hello world")
+    err = False
+    try:
+        s.seek(-1)
+    except ValueError as e:
+        err = True
+        assert str(e) == "Negative seek position -1"
+    assert err
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -226,6 +267,8 @@ def test_all():
     test_stringio_truncate_return_value()
     test_bytesio_does_not_alias_input()
     test_stringio_does_not_alias_input()
+    test_bytesio_negative_seek()
+    test_stringio_negative_seek()
 
 
 if __name__ == '__main__':
