@@ -128,7 +128,7 @@ public:
     __time__::struct_time *timetuple();
     __time__::struct_time *utctimetuple();
 
-    str *isoformat(str *sep = new str("T"));
+    str *isoformat(str *sep = NULL);
     str *__str__();
     str *ctime();
     str *strftime(str *format);

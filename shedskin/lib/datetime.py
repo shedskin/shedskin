@@ -173,7 +173,7 @@ class datetime(date):
     def isocalendar(self):
         return (1, 1, 1)
 
-    def isoformat(self, sep='T'):
+    def isoformat(self, sep=None):
         return ''
 
     def ctime(self):
