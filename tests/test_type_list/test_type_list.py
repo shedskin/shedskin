@@ -110,15 +110,39 @@ def test_list_slice_assign():
     data[2:] = s
     assert sorted(data) == [1, 2, 17, 18]
 
-    # TODO silly duplicate from literal set
-    #data = [1, 2, 3, 4]
-    #data[2:] = set([17, 18, 18])
-    #assert sorted(data) == [1, 2, 17, 18]
+    # literal set (see issue #829; now verified fixed)
+    data = [1, 2, 3, 4]
+    data[2:] = set([17, 18, 18])
+    assert sorted(data) == [1, 2, 17, 18]
 
     # empty list
     data = [1, 2, 3, 4]
     data[:] = []
     assert data == []
+
+
+def _extend_iterable_gen():
+    yield 100
+    yield 200
+
+
+def test_list_extend_iterable():
+    # list.extend() with various non-list iterables (see issue #828)
+    data = [1, 2, 3, 4]
+    data.extend(set([9, 10]))
+    assert sorted(data) == [1, 2, 3, 4, 9, 10]
+
+    data = [1, 2, 3, 4]
+    data.extend(iter([5, 6]))
+    assert data == [1, 2, 3, 4, 5, 6]
+
+    data = [1, 2, 3, 4]
+    data.extend((7, 8))
+    assert data == [1, 2, 3, 4, 7, 8]
+
+    data = [1, 2]
+    data.extend(_extend_iterable_gen())
+    assert data == [1, 2, 100, 200]
 
 
 def test_list_del():
@@ -239,6 +263,7 @@ def test_all():
     test_list_misc()
     test_list_nested()
     test_list_slice_assign()
+    test_list_extend_iterable()
     test_list_subsets()
     test_list_copy()
     test_tuple_in_list()
