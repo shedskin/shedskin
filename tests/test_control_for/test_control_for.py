@@ -70,6 +70,34 @@ def test_for_else():
 
 
 
+def test_for_choice_mixed_numeric():
+    # inline list literal for-loops ('fast choice iter') used to fail to
+    # compile when the elements had different concrete types, since the
+    # generated C++ relied on 'auto' initializer-list deduction
+    total = 0.0
+    for x in [1, 2.5, 3]:
+        total += x
+    assert total == 6.5
+
+
+class ChoiceBase:
+    def __init__(self, name):
+        self.name = name
+
+
+class ChoiceSub(ChoiceBase):
+    pass
+
+
+def test_for_choice_mixed_subclass():
+    base = ChoiceBase("base")
+    sub = ChoiceSub("sub")
+    names = []
+    for x in [base, sub]:
+        names.append(x.name)
+    assert names == ["base", "sub"]
+
+
 def test_all():
     test_for_range()
     test_for_chain()
@@ -79,6 +107,8 @@ def test_all():
     test_for_break()
     test_for_continue()
     test_for_else()
+    test_for_choice_mixed_numeric()
+    test_for_choice_mixed_subclass()
 
 if __name__ == '__main__':
     test_all() 
