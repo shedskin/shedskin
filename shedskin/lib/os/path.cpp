@@ -4,6 +4,13 @@
 
 #ifndef WIN32
 #include <pwd.h>
+#else
+#ifdef _MSC_VER
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+#include <windows.h>
 #endif
 
 /* converted using Shed Skin from the CPython implementation */
@@ -318,6 +325,43 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     */
     __ss_int __18;
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
+}
+
+__ss_bool ismount(str *path) {
+    /**
+    Test whether a path is a mount point
+    */
+    __os__::__cstat *s1, *s2;
+    str *parent;
+
+    try {
+        s1 = __os__::lstat(path);
+    } catch (__os__::error *) {
+        return False;
+    }
+    if (__stat__::__ss_S_ISLNK(s1->st_mode)) {
+        return False; /* A symlink can never be a mount point */
+    }
+
+    parent = join(2, path, pardir);
+    try {
+        parent = realpath(parent);
+    } catch (__os__::error *) {
+        return False;
+    }
+    try {
+        s2 = __os__::lstat(parent);
+    } catch (__os__::error *) {
+        return False;
+    }
+
+    if (s1->st_dev != s2->st_dev) {
+        return True; /* path/.. on a different device as path */
+    }
+    if (s1->st_ino == s2->st_ino) {
+        return True; /* path/.. is the same i-node as path */
+    }
+    return False;
 }
 
 str *normpath(str *path) {
@@ -841,6 +885,81 @@ __ss_bool isfile(str *path) {
         return False;
     }
     return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
+}
+
+__ss_bool samefile(str *f1, str *f2) {
+    /**
+    Test whether two pathnames reference the same actual file.
+
+    Windows' C runtime stat() does not reliably fill in st_ino/st_dev,
+    so identity is determined directly via the Win32 API instead of
+    going through samestat().
+    */
+    HANDLE h1, h2;
+    BY_HANDLE_FILE_INFORMATION info1, info2;
+    __ss_bool result;
+
+    h1 = CreateFileA(f1->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h1 == INVALID_HANDLE_VALUE) {
+        throw new OSError(f1);
+    }
+
+    h2 = CreateFileA(f2->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h2 == INVALID_HANDLE_VALUE) {
+        CloseHandle(h1);
+        throw new OSError(f2);
+    }
+
+    result = False;
+    if (GetFileInformationByHandle(h1, &info1) && GetFileInformationByHandle(h2, &info2)) {
+        result = __mbool((info1.dwVolumeSerialNumber == info2.dwVolumeSerialNumber) &&
+                          (info1.nFileIndexHigh == info2.nFileIndexHigh) &&
+                          (info1.nFileIndexLow == info2.nFileIndexLow));
+    }
+
+    CloseHandle(h1);
+    CloseHandle(h2);
+    return result;
+}
+
+__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
+    /**
+    Test whether two stat buffers reference the same file
+    */
+    __ss_int __18;
+    return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
+}
+
+__ss_bool ismount(str *path) {
+    /**
+    Test whether a path is a mount point (a drive root or a UNC share root)
+    */
+    tuple2<str *, str *> *__sd;
+    str *root, *rest, *x, *y;
+    char volpath[MAX_PATH];
+
+    path = abspath(path);
+    __sd = splitdrive(path);
+    root = __sd->__getfirst__();
+    rest = __sd->__getsecond__();
+
+    if (___bool(root) && (const_18)->__contains__(root->__slice__(2, 0, 1, 0))) {
+        /* UNC root, e.g. \\server\share */
+        return __mbool((!___bool(rest)) || ((len(rest)==1) && (const_18)->__contains__(rest)));
+    }
+    if ((len(rest)==1) && (const_18)->__contains__(rest)) {
+        /* drive root, e.g. C:\ */
+        return True;
+    }
+
+    if (!GetVolumePathNameA(path->c_str(), volpath, MAX_PATH)) {
+        return False;
+    }
+    x = path->rstrip(const_4);
+    y = (new str(volpath))->rstrip(const_4);
+    return __mbool(__eq(x, y));
 }
 
 str *normpath(str *path) {
