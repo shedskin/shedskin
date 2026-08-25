@@ -145,6 +145,20 @@ def test_list_extend_iterable():
     data.extend(_extend_iterable_gen())
     assert data == [1, 2, 100, 200]
 
+def test_list_extended_slice_size_mismatch_message():
+    # regression test: list's extended-slice-assignment size check moved
+    # into a shared helper (also used by bytearray); make sure list itself
+    # kept its own "sequence of size" wording (bytearray uses "bytes of
+    # size" instead -- see test_bytearray_extended_slice_size_mismatch_message).
+    a = [1, 2, 3, 4, 5, 6]
+    error = ''
+    try:
+        a[::2] = [1, 2]
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign sequence of size 2 to extended slice of size 3'
+    assert a == [1, 2, 3, 4, 5, 6]  # left untouched on error
+
 
 def test_list_del():
     a = list(range(10))
@@ -265,6 +279,7 @@ def test_all():
     test_list_nested()
     test_list_slice_assign()
     test_list_extend_iterable()
+    test_list_extended_slice_size_mismatch_message()
     test_list_subsets()
     test_list_copy()
     test_tuple_in_list()
