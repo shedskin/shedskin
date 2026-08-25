@@ -5,6 +5,15 @@ import datetime
 def test_date():
     assert datetime.date(2007, 4, 3).replace(month=11) == datetime.date(2007, 11, 3)
 
+def test_date_ctime():
+    # regression test: date.ctime() passed bare C++ int literals (0, 0, 0)
+    # for the hour/minute/second fields to the internal __mod6 formatting
+    # helper. __mod6 only has real %d handling specialized for __ss_int
+    # (long); a plain 'int' silently falls through to a no-op template
+    # specialization, so the hour/minute/second fields vanished entirely
+    # instead of printing as "00".
+    assert datetime.date(2023, 5, 17).ctime() == 'Wed May 17 00:00:00 2023'
+
 def test_date_day_out_of_range():
     # 2023 is not a leap year: Feb has 28 days, so day 29 must be rejected
     error = ''
@@ -135,6 +144,7 @@ def test_timedelta_truediv():
 
 def test_all():
         test_date()
+        test_date_ctime()
         test_date_day_out_of_range()
         test_date_compare_year_boundary()
         test_datetime_compare_year_boundary()
