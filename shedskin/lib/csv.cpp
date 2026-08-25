@@ -1,6 +1,11 @@
 /* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "csv.hpp"
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <utility>
 
 namespace __csv__ {
 
@@ -42,6 +47,7 @@ class_ *cl_reader;
 class_ *cl_writer;
 class_ *cl_DictReader;
 class_ *cl_DictWriter;
+class_ *cl_Sniffer;
 
 /* dialect */
 
@@ -768,6 +774,465 @@ void *DictWriter::writerows(pyiter<dict<str *, str *> *> *rowdicts) {
     return NULL;
 }
 
+/* Sniffer */
+
+/* small helper: a Counter-like structure that remembers first-insertion
+   order for its keys, so that tie-breaking in max(..., key=...) matches
+   CPython's dict-iteration-order semantics exactly. */
+struct __ordered_int_counter {
+    std::vector<int> order;
+    std::map<int, int> counts;
+
+    void add(int key, int amount = 1) {
+        if (counts.find(key) == counts.end()) {
+            order.push_back(key);
+            counts[key] = amount;
+        }
+        else {
+            counts[key] += amount;
+        }
+    }
+};
+
+/* count non-overlapping occurrences of `needle` in `hay`, matching
+   str.count() semantics (used for the skipinitialspace heuristic:
+   count(delim) vs count("%c " % delim)). */
+static __ss_int __count_substr(const std::string &hay, const std::string &needle) {
+    if (needle.empty()) return (__ss_int)(hay.size() + 1);
+    __ss_int n = 0;
+    size_t pos = 0;
+    while ((pos = hay.find(needle, pos)) != std::string::npos) {
+        n++;
+        pos += needle.size();
+    }
+    return n;
+}
+
+struct __qd_result {
+    std::string quotechar;   // '' if none found
+    bool doublequote;
+    std::string delimiter;   // '' if none found (single-column data)
+    __ss_int skipinitialspace;
+};
+
+/* Sniffer::_guess_quote_and_delimiter, ported from CPython's Lib/csv.py.
+   Looks for text enclosed between two identical quotes which are preceded
+   and followed by the same character (the probable delimiter). */
+static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
+    static const char *patterns[4] = {
+        "(?P<delim>[^\\w\\n\"'])(?P<space> ?)(?P<quote>[\"']).*?(?P=quote)(?P=delim)",
+        "(?:^|\\n)(?P<quote>[\"']).*?(?P=quote)(?P<delim>[^\\w\\n\"'])(?P<space> ?)",
+        "(?P<delim>[^\\w\\n\"'])(?P<space> ?)(?P<quote>[\"']).*?(?P=quote)(?:$|\\n)",
+        "(?:^|\\n)(?P<quote>[\"']).*?(?P=quote)(?:$|\\n)"
+    };
+
+    __re__::re_object *regexp = NULL;
+    std::vector<__re__::match_object *> matches;
+
+    __qd_result result;
+    result.doublequote = false;
+    result.skipinitialspace = 0;
+
+    if (data->unit.size() == 0) {
+        return result; // finditer() rejects an empty subject; nothing to find anyway
+    }
+
+    for (int p = 0; p < 4; p++) {
+        regexp = __re__::compile(new str(patterns[p]), __re__::DOTALL | __re__::MULTILINE);
+        matches.clear();
+        __iter<__re__::match_object *> *it = regexp->finditer(data);
+        while (1) {
+            try {
+                matches.push_back(it->__next__());
+            } catch (StopIteration *) {
+                break;
+            }
+        }
+        if (!matches.empty()) break;
+    }
+
+    __qd_result result2;
+    result2.doublequote = false;
+    result2.skipinitialspace = 0;
+
+    if (matches.empty() || regexp == NULL) {
+        return result2; // no matches -> quotechar='', delimiter=None-ish
+    }
+
+    bool has_delim_group = regexp->groupindex->has_key(new str("delim"));
+
+    std::vector<char> quote_order, delim_order;
+    std::map<char, int> quote_counts, delim_counts;
+    int spaces = 0;
+
+    for (size_t i = 0; i < matches.size(); i++) {
+        __re__::match_object *m = matches[i];
+
+        str *qstr = m->group(0, new str("quote"));
+        if (qstr != NULL && qstr->unit.size() > 0) {
+            char key = qstr->unit[0];
+            if (quote_counts.find(key) == quote_counts.end()) {
+                quote_order.push_back(key);
+                quote_counts[key] = 1;
+            }
+            else quote_counts[key]++;
+        }
+
+        if (!has_delim_group) continue;
+
+        str *dstr = m->group(0, new str("delim"));
+        if (dstr != NULL && dstr->unit.size() > 0) {
+            char key = dstr->unit[0];
+            if (delimiters == NULL || delimiters->unit.find(key) != __GC_STRING::npos) {
+                if (delim_counts.find(key) == delim_counts.end()) {
+                    delim_order.push_back(key);
+                    delim_counts[key] = 1;
+                }
+                else delim_counts[key]++;
+            }
+        }
+
+        str *sstr = m->group(0, new str("space"));
+        if (sstr != NULL && sstr->unit.size() > 0) spaces++;
+    }
+
+    // quotechar = max(quotes, key=quotes.get)  (first-seen wins ties)
+    char quotechar = 0;
+    int best = -1;
+    for (size_t i = 0; i < quote_order.size(); i++) {
+        char c = quote_order[i];
+        if (quote_counts[c] > best) {
+            best = quote_counts[c];
+            quotechar = c;
+        }
+    }
+    if (best >= 0) result.quotechar = std::string(1, quotechar);
+
+    std::string delim;
+    if (!delim_order.empty()) {
+        char delimchar = 0;
+        int dbest = -1;
+        for (size_t i = 0; i < delim_order.size(); i++) {
+            char c = delim_order[i];
+            if (delim_counts[c] > dbest) {
+                dbest = delim_counts[c];
+                delimchar = c;
+            }
+        }
+        result.skipinitialspace = (dbest == spaces) ? 1 : 0;
+        if (delimchar == '\n') delim = ""; // most likely a single-column file
+        else delim = std::string(1, delimchar);
+    }
+    else {
+        delim = "";
+        result.skipinitialspace = 0;
+    }
+    result.delimiter = delim;
+
+    if (best < 0) {
+        // no quotechar found at all -> we're done, no doublequote check possible
+        return result;
+    }
+
+    // check for an extra quote between delimiters -> doubled-quote format
+    std::string escaped_delim(delim.empty() ? "" :
+        std::string(__re__::escape(new str(delim.c_str(), delim.size()))->unit.c_str()));
+    std::string qc(1, quotechar);
+    std::string dq_pattern =
+        "((" + escaped_delim + ")|^)\\W*" + qc + "[^" + escaped_delim + "\\n]*" +
+        qc + "[^" + escaped_delim + "\\n]*" + qc + "\\W*((" + escaped_delim + ")|$)";
+
+    __re__::re_object *dq_regexp = __re__::compile(
+        new str(dq_pattern.c_str(), dq_pattern.size()), __re__::MULTILINE);
+    __re__::match_object *dqm = dq_regexp->search(data);
+    result.doublequote = (dqm != NULL);
+
+    return result;
+}
+
+/* Sniffer::_guess_delimiter, ported from CPython's Lib/csv.py.
+   Builds a per-character frequency table across lines and picks the
+   character whose per-line occurrence count is most consistent. */
+static void __guess_delimiter(str *data_str, str *delimiters, std::string &out_delim, __ss_int &out_skip) {
+    std::vector<std::string> data;
+    {
+        list<str *> *lines = data_str->split(new str("\n"));
+        for (__ss_int i = 0; i < lines->__len__(); i++) {
+            str *line = lines->__getitem__(i);
+            if (line->unit.size() > 0) data.push_back(std::string(line->unit.c_str(), line->unit.size()));
+        }
+    }
+
+    if (data.empty()) {
+        out_delim = "";
+        out_skip = 0;
+        return;
+    }
+
+    size_t chunkLength = std::min((size_t)10, data.size());
+    __ss_int iteration = 0;
+    __ss_int num_lines = 0;
+
+    std::map<char, __ordered_int_counter> char_frequency;
+    std::map<char, std::pair<int,int> > modes;      // char -> (count_key, adjusted_freq)
+    std::map<char, std::pair<int,int> > delims;     // char -> (count_key, adjusted_freq)
+
+    size_t start = 0, end = chunkLength;
+
+    while (start < data.size()) {
+        iteration++;
+
+        for (size_t li = start; li < end && li < data.size(); li++) {
+            num_lines++;
+            const std::string &line = data[li];
+
+            // per-line char -> count histogram (ascii chars only)
+            std::map<char, int> line_counts;
+            for (size_t ci = 0; ci < line.size(); ci++) {
+                unsigned char c = (unsigned char)line[ci];
+                if (c < 128) line_counts[(char)c]++;
+            }
+            for (std::map<char,int>::iterator it = line_counts.begin(); it != line_counts.end(); ++it) {
+                char_frequency[it->first].add(it->second, 1);
+            }
+        }
+
+        for (std::map<char, __ordered_int_counter>::iterator it = char_frequency.begin(); it != char_frequency.end(); ++it) {
+            char ch = it->first;
+            __ordered_int_counter &counts = it->second;
+
+            int total_seen = 0;
+            for (size_t i = 0; i < counts.order.size(); i++) total_seen += counts.counts[counts.order[i]];
+            int missed_lines = num_lines - total_seen;
+
+            // effective items = real (key,count) pairs, plus a synthetic
+            // (0, missed_lines) entry appended last if nonzero
+            std::vector<int> item_keys = counts.order;
+            std::vector<int> item_vals;
+            for (size_t i = 0; i < counts.order.size(); i++) item_vals.push_back(counts.counts[counts.order[i]]);
+            if (missed_lines != 0) {
+                item_keys.push_back(0);
+                item_vals.push_back(missed_lines);
+            }
+
+            if (item_keys.size() == 1 && item_keys[0] == 0) continue; // useless: char never appears
+
+            if (item_keys.size() > 1) {
+                // mode = max(items, key=lambda x: x[1]), first-seen wins ties
+                size_t best_idx = 0;
+                int best_val = -1;
+                for (size_t i = 0; i < item_keys.size(); i++) {
+                    if (item_vals[i] > best_val) {
+                        best_val = item_vals[i];
+                        best_idx = i;
+                    }
+                }
+                int sum_others = 0;
+                for (size_t i = 0; i < item_keys.size(); i++) {
+                    if (i != best_idx) sum_others += item_vals[i];
+                }
+                modes[ch] = std::make_pair(item_keys[best_idx], item_vals[best_idx] - sum_others);
+            }
+            else {
+                modes[ch] = std::make_pair(item_keys[0], item_vals[0]);
+            }
+        }
+
+        double total = (double)std::min(chunkLength * (size_t)iteration, data.size());
+        double consistency = 1.0;
+        const double threshold = 0.9;
+
+        delims.clear();
+        while (delims.empty() && consistency >= threshold) {
+            for (std::map<char, std::pair<int,int> >::iterator it = modes.begin(); it != modes.end(); ++it) {
+                char ch = it->first;
+                int key = it->second.first;
+                int val = it->second.second;
+                if (key > 0 && val > 0) {
+                    if (((double)val / total) >= consistency &&
+                        (delimiters == NULL || delimiters->unit.find(ch) != __GC_STRING::npos)) {
+                        delims[ch] = it->second;
+                    }
+                }
+            }
+            consistency -= 0.01;
+        }
+
+        if (delims.size() == 1) {
+            char delim = delims.begin()->first;
+            std::string delim_s(1, delim);
+            std::string pat = delim_s + " ";
+            out_skip = (__count_substr(data[0], delim_s) == __count_substr(data[0], pat)) ? 1 : 0;
+            out_delim = delim_s;
+            return;
+        }
+
+        start = end;
+        end += chunkLength;
+    }
+
+    if (delims.empty()) {
+        out_delim = "";
+        out_skip = 0;
+        return;
+    }
+
+    if (delims.size() > 1) {
+        // fall back to the 'preferred' list
+        static const char *preferred[5] = {",", "\t", ";", " ", ":"};
+        for (int p = 0; p < 5; p++) {
+            char d = preferred[p][0];
+            if (delims.find(d) != delims.end()) {
+                std::string delim_s(1, d);
+                std::string pat = delim_s + " ";
+                out_skip = (__count_substr(data[0], delim_s) == __count_substr(data[0], pat)) ? 1 : 0;
+                out_delim = delim_s;
+                return;
+            }
+        }
+    }
+
+    // nothing else indicates a preference: pick greatest (value, char) pair
+    // (Python: items = [(v,k) for (k,v) in delims.items()]; items.sort(); items[-1][1])
+    char best_char = 0;
+    std::pair<int,int> best_val = std::make_pair(-1, -1);
+    bool have_best = false;
+    for (std::map<char, std::pair<int,int> >::iterator it = delims.begin(); it != delims.end(); ++it) {
+        std::pair<int,int> v = it->second;
+        char k = it->first;
+        if (!have_best || v > best_val || (v == best_val && k > best_char)) {
+            best_val = v;
+            best_char = k;
+            have_best = true;
+        }
+    }
+    std::string delim_s(1, best_char);
+    std::string pat = delim_s + " ";
+    out_skip = (__count_substr(data[0], delim_s) == __count_substr(data[0], pat)) ? 1 : 0;
+    out_delim = delim_s;
+}
+
+/* helper for has_header(): does this field parse the way CPython's
+   complex(x) would accept it? (int/float/complex literal, whitespace ok) */
+static bool __is_complex_parseable(str *s) {
+    try {
+        __shedskin__::mcomplex(s);
+        return true;
+    } catch (ValueError *) {
+        return false;
+    }
+}
+
+void *Sniffer::__init__() {
+    return NULL;
+}
+
+Dialect *Sniffer::sniff(str *sample, str *delimiters) {
+    __qd_result qd = __guess_quote_and_delimiter(sample, delimiters);
+
+    std::string delimiter = qd.delimiter;
+    __ss_int skipinitialspace = qd.skipinitialspace;
+
+    if (delimiter.empty()) {
+        __guess_delimiter(sample, delimiters, delimiter, skipinitialspace);
+    }
+    if (delimiter.empty()) {
+        throw new Error(new str("Could not determine delimiter"));
+    }
+
+    Dialect *dialect = new Dialect();
+    dialect->lineterminator = new str("\r\n");
+    dialect->quoting = QUOTE_MINIMAL;
+    dialect->doublequote = qd.doublequote ? 1 : 0;
+    dialect->delimiter = new str(delimiter.c_str(), delimiter.size());
+    dialect->quotechar = qd.quotechar.empty() ? new str("\"") : new str(qd.quotechar.c_str(), qd.quotechar.size());
+    dialect->skipinitialspace = skipinitialspace;
+    dialect->escapechar = NULL;
+    dialect->strict = False;
+
+    return dialect;
+}
+
+__ss_bool Sniffer::has_header(str *sample) {
+    Dialect *dialect = sniff(sample);
+
+    list<str *> *sample_lines = sample->split(new str("\n"));
+    // pass the sniffed dialect as explicit overrides on top of "excel", since
+    // reader's constructor only resolves a *named*, registered dialect and
+    // otherwise silently falls back to excel defaults (see the `D dialect_`
+    // template dispatch above) -- an ad-hoc Dialect object isn't threaded
+    // through directly.
+    reader *rdr = new reader(
+        sample_lines, new str("excel"),
+        dialect->delimiter, dialect->quotechar,
+        dialect->doublequote, dialect->skipinitialspace,
+        NULL, -1, NULL, -1
+    );
+
+    list<str *> *header = rdr->__next__();
+    __ss_int columns = header->__len__();
+
+    // tag: 0 = unset, 1 = numeric ("complex"-parseable), 2 = fixed string
+    // length, -1 = disqualified/inconsistent
+    std::vector<int> col_kind(columns, 0);
+    std::vector<int> col_length(columns, 0);
+
+    int checked = 0;
+    while (1) {
+        list<str *> *row;
+        try {
+            row = rdr->__next__();
+        } catch (StopIteration *) {
+            break;
+        }
+        if (checked > 20) break;
+        checked++;
+
+        if (row->__len__() != columns) continue;
+
+        for (__ss_int col = 0; col < columns; col++) {
+            if (col_kind[col] == -1) continue;
+
+            str *field = row->__getitem__(col);
+            int this_kind, this_length;
+            if (__is_complex_parseable(field)) {
+                this_kind = 1;
+                this_length = 0;
+            }
+            else {
+                this_kind = 2;
+                this_length = (int)field->unit.size();
+            }
+
+            if (col_kind[col] == 0) {
+                col_kind[col] = this_kind;
+                col_length[col] = this_length;
+            }
+            else if (this_kind != col_kind[col] || this_length != col_length[col]) {
+                col_kind[col] = -1;
+            }
+        }
+    }
+
+    __ss_int hasHeader = 0;
+    for (__ss_int col = 0; col < columns; col++) {
+        int kind = col_kind[col];
+        if (kind == -1 || kind == 0) continue;
+
+        str *field = header->__getitem__(col);
+        if (kind == 2) {
+            if ((__ss_int)field->unit.size() != col_length[col]) hasHeader++;
+            else hasHeader--;
+        }
+        else { // kind == 1, numeric column: does the header value ALSO parse as a number?
+            if (__is_complex_parseable(field)) hasHeader--;
+            else hasHeader++;
+        }
+    }
+
+    return ___bool(hasHeader > 0);
+}
+
 /* field_size_limit */
 
 __ss_int field_size_limit(__ss_int new_limit) {
@@ -807,6 +1272,7 @@ void __init() {
     cl_reader = new class_("reader");
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
+    cl_Sniffer = new class_("Sniffer");
 
     _field_limit = 128*1024;
 }
