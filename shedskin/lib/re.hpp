@@ -161,15 +161,6 @@ public:
     str *__repr__();
 };
 
-//marker classes so `re.Pattern`/`re.Match` resolve to real C++ types for
-//annotations/isinstance; see the NOTE above class match_object in re.py.
-//Deliberately unrelated to re_object/match_object: compile()/search()/etc
-//still return re_object*/match_object*, never these. Constructing one of
-//these directly is harmless (unlike constructing a bare re_object/
-//match_object, which carries uninitialized PCRE2 state).
-class Pattern : public pyobj { public: str *__repr__(); };
-class Match : public pyobj { public: str *__repr__(); };
-
 class match_iter : public __iter<match_object *>
 {
 public:
