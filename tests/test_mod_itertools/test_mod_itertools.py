@@ -53,6 +53,14 @@ def test_repeat():
     assert list(itertools.repeat(42, -1)) == []
 
 
+def test_repeat_large_count():
+    # regression test: the repeat count used to be stored in a 32-bit
+    # int, silently wrapping modulo 2**32. 2**32 + 3 used to truncate
+    # down to 3, causing iteration to stop 2**32 items too early.
+    n = 2**32 + 3
+    assert list(itertools.islice(itertools.repeat(1, n), 5)) == [1, 1, 1, 1, 1]
+
+
 def test_chain():
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
@@ -269,6 +277,7 @@ def test_all():
     test_count()
     test_cycle()
     test_repeat()
+    test_repeat_large_count()
     test_chain()
     test_dropwhile()
     test_takewhile()
