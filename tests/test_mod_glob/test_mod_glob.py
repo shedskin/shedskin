@@ -14,8 +14,34 @@ def test_glob():
     mods = os.path.join(testdata, 'globdir', '*.mod')
     assert sorted([os.path.basename(f) for f in glob.glob(mods)]) == ['d.mod']
 
+def test_has_magic():
+    assert glob.has_magic('*.txt') == True
+    assert glob.has_magic('abc.txt') == False
+    assert glob.has_magic('a[bc].txt') == True
+    assert glob.has_magic('a?.txt') == True
+
+def test_escape():
+    assert glob.escape('a[bc]?*.txt') == 'a[[]bc][?][*].txt'
+    assert glob.escape('plain.txt') == 'plain.txt'
+
+def test_iglob():
+    path = '/tmp/shedskin_test_iglob'
+    os.makedirs(path, exist_ok=True)
+    open(os.path.join(path, 'x1.txt'), 'w').close()
+    open(os.path.join(path, 'x2.txt'), 'w').close()
+
+    res = sorted([os.path.basename(f) for f in glob.iglob(os.path.join(path, '*.txt'))])
+    assert res == ['x1.txt', 'x2.txt']
+
+    os.remove(os.path.join(path, 'x1.txt'))
+    os.remove(os.path.join(path, 'x2.txt'))
+    os.removedirs(path)
+
 def test_all():
     test_glob()
+    test_has_magic()
+    test_escape()
+    test_iglob()
 
 
 if __name__ == "__main__":
