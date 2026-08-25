@@ -580,6 +580,7 @@ def callfunc_targets(
             ("dict", 1),
             ("frozendict", 1),
             ("defaultdict", 2),
+            ("Counter", 1),
         ):  # XXX merge infer.redirect
             funcs = [constructor.funcs["__initdict__"]]  # XXX __inititer__?
         elif sys.platform == "win32" and "__win32__init__" in constructor.funcs:
@@ -940,6 +941,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
                             "dict",
                             "frozendict",
                             "defaultdict",
+                            "Counter",
                         ) and b.thing.name not in ["unit", "value"]:
                             continue
                         elif parent_ident == "tuple2" and b.thing.name not in [
@@ -1169,21 +1171,22 @@ def redirect(
         ("dict", 1),
         ("frozendict", 1),
         ("defaultdict", 2),
+        ("Counter", 1),
     ):
         clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if "dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames:
+        if "dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames:
             func = list(callnode.types())[0][0].funcs["__initdict__"]
         else:
             func = list(callnode.types())[0][0].funcs["__inititer__"]
 
-    # dict.{update, __ior__}
+    # dict.{update, __ior__}, Counter.{update, subtract}
     if (
-        func.ident in ("update", "__ior__")
+        func.ident in ("update", "__ior__", "subtract")
         and isinstance(func.parent, python.Class)
-        and func.parent.ident in ("dict", "frozendict", "defaultdict")
+        and func.parent.ident in ("dict", "frozendict", "defaultdict", "Counter")
     ):
         clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if not ("dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames):
+        if not ("dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames):
             func = func.parent.funcs[func.ident + "iter"]
 
     # list, tuple
@@ -1697,6 +1700,7 @@ def ifa_classes_to_split(gx: "config.GlobalInfo") -> list["python.Class"]:
         "dict",
         "frozendict",
         "defaultdict",
+        "Counter",
         "set",
         "frozenset",
         "deque",
