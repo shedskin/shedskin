@@ -169,6 +169,13 @@ def test_math():
     assert math.gcd() == 0
     assert math.lcm() == 1
 
+    assert math.hypot() == 0.0
+    assert math.hypot(3.0) == 3.0
+    assert math.hypot(-3.0) == 3.0
+    assert math.hypot(3.0, 4.0) == 5.0
+    assert math.hypot(3.0, 4.0, 12.0) == 13.0
+    assert math.hypot(1.0, 2.0, 3.0, 4.0) == math.sqrt(30.0)
+
     assert math.perm(0) == 1
     assert math.perm(0, 0) == 1
 
