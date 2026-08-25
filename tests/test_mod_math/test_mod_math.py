@@ -130,6 +130,10 @@ def test_math():
     assert math.floor(1.5) == 1
     assert math.ceil(1.5) == 2
 
+    # floor()/ceil() must return int, not float
+    assert str(math.floor(1.5)) == '1'
+    assert str(math.ceil(1.5)) == '2'
+
     assert math.e == 2.7182818284590451
     assert math.pi == 3.1415926535897931
     assert math.tau == 6.283185307179586
