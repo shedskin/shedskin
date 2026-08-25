@@ -32,6 +32,65 @@ def test_date_day_out_of_range():
         error = str(e)
     assert error == 'day is out of range for month'
 
+def test_date_replace_keeps_unchanged_day_out_of_range():
+    # replacing month/year only (day left alone) must still validate the
+    # resulting day against the new month/year
+    error = ''
+    try:
+        datetime.date(2024, 1, 31).replace(month=4)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+    error = ''
+    try:
+        datetime.date(2024, 2, 29).replace(year=2023)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+    # sanity: still works fine when the resulting day is valid
+    assert datetime.date(2024, 1, 15).replace(month=4) == datetime.date(2024, 4, 15)
+
+
+def test_datetime_replace_keywords():
+    # each single keyword argument must actually update that field, and
+    # leave every other field untouched
+    dt = datetime.datetime(2024, 1, 15, 10, 30, 20, 123)
+
+    assert dt.replace(year=2025) == datetime.datetime(2025, 1, 15, 10, 30, 20, 123)
+    assert dt.replace(month=6) == datetime.datetime(2024, 6, 15, 10, 30, 20, 123)
+    assert dt.replace(day=20) == datetime.datetime(2024, 1, 20, 10, 30, 20, 123)
+    assert dt.replace(hour=5) == datetime.datetime(2024, 1, 15, 5, 30, 20, 123)
+    assert dt.replace(minute=1) == datetime.datetime(2024, 1, 15, 10, 1, 20, 123)
+    assert dt.replace(second=2) == datetime.datetime(2024, 1, 15, 10, 30, 2, 123)
+    assert dt.replace(microsecond=9) == datetime.datetime(2024, 1, 15, 10, 30, 20, 9)
+
+    # multiple keywords at once
+    assert dt.replace(day=1, hour=0) == datetime.datetime(2024, 1, 1, 0, 30, 20, 123)
+
+    # positional args still work
+    assert dt.replace(2025, 6, 10) == datetime.datetime(2025, 6, 10, 10, 30, 20, 123)
+
+    # resulting invalid day must still raise, even though day wasn't itself
+    # a replace() keyword
+    error = ''
+    try:
+        datetime.datetime(2024, 1, 31, 10, 30).replace(month=4)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+
+def test_time_replace_keywords():
+    t = datetime.time(10, 30, 20, 123)
+    assert t.replace(hour=5) == datetime.time(5, 30, 20, 123)
+    assert t.replace(minute=1) == datetime.time(10, 1, 20, 123)
+    assert t.replace(second=2) == datetime.time(10, 30, 2, 123)
+    assert t.replace(microsecond=9) == datetime.time(10, 30, 20, 9)
+    assert t.replace(hour=1, second=2) == datetime.time(1, 30, 2, 123)
+
+
 def test_date_compare_year_boundary():
     # regression test: __cmp__ used to encode dates as year*366+month*31+day,
     # but month*31+day can reach 403, which is larger than the 366 weight
@@ -143,6 +202,9 @@ def test_all():
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
+        test_date_replace_keeps_unchanged_day_out_of_range()
+        test_datetime_replace_keywords()
+        test_time_replace_keywords()
 
 if __name__ == "__main__":
     test_all()

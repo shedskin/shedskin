@@ -164,7 +164,12 @@ date *date::replace(__ss_int year_, __ss_int month_, __ss_int day_) {
         t->month=month_;}
     if(day_!=0) {
         if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day_;}
+        t->day=day_;
+    } else if(t->day>days_in_month(t->year,t->month)) {
+        /* day itself was not replaced, but a new year/month can still make
+         * the existing day invalid (e.g. Jan 31 -> April) */
+        throw new ValueError(new str("day is out of range for month"));
+    }
     return t;
 }
 
@@ -584,7 +589,12 @@ datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __
         t->month=month_;}
     if((__args & 4)==4) {
         if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day_;}
+        t->day=day_;
+    } else if(t->day>days_in_month(t->year,t->month)) {
+        /* day itself was not replaced, but a new year/month can still make
+         * the existing day invalid (e.g. Jan 31 -> April) */
+        throw new ValueError(new str("day is out of range for month"));
+    }
     if((__args & 8)==8) {
         if(hour_<0 || hour_>=24)              throw new ValueError(new str("hour must be in 0..23"));
         t->hour=hour_;}
