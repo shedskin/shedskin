@@ -171,6 +171,32 @@ def assign_rec(left: ast.AST, right: ast.AST) -> list[tuple[ast.AST, ast.AST]]:
         return [(left, right)]
 
 
+def check_assign_arity(left: ast.AST, right: ast.AST) -> Optional[tuple[int, int]]:
+    """Recursively check that a literal (list/tuple) unpacking target and a
+    literal (list/tuple) right-hand side have matching arity.
+
+    `assign_rec` pairs up (lvalue, rvalue) elements with `zip()`, which
+    silently truncates to the shorter side, so e.g. `a, b = [1, 2, 3]` or
+    `a, b, c = [1, 2]` would otherwise be accepted without any check
+    (unlike CPython, which raises ValueError at runtime).
+
+    Returns (expected, got) for the first arity mismatch found, or None if
+    every literal-vs-literal pair matches. Only literal-vs-literal
+    unpacking is checked here (both sides need a known length); unpacking
+    from a non-literal iterable is still checked at runtime via
+    __SS_UNPACK_CHECK.
+    """
+    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+        assert isinstance(left, (ast.Tuple, ast.List))
+        if len(left.elts) != len(right.elts):
+            return (len(left.elts), len(right.elts))
+        for lvalue, rvalue in zip(left.elts, right.elts):
+            mismatch = check_assign_arity(lvalue, rvalue)
+            if mismatch:
+                return mismatch
+    return None
+
+
 def aug_msg(gx: "config.GlobalInfo", node: ast.BinOp, msg: str) -> str:
     """Generate an augmented assignment message"""
     if node in gx.augment:
