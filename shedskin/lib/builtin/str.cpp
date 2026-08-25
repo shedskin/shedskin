@@ -786,6 +786,7 @@ str *str::title() {
 str *str::casefold() {
     str *r = new str();
     size_t len = this->unit.size();
+    r->unit.reserve(len);
 
     for(size_t i=0; i<len; i++) {
         unsigned char c = (unsigned char)unit[i];
