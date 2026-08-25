@@ -289,6 +289,14 @@ def test_re_escape():
     assert re.escape("") == ""
     assert re.escape("1.2.3.4") == "1\\.2\\.3\\.4"
 
+def test_re_finditer_empty_string():
+    # finditer()/match_iter used to unconditionally reject pos >= len(subj),
+    # so pos=0 on an empty string incorrectly raised "starting position >=
+    # string length" instead of yielding matches for patterns that can match
+    # the empty string (or nothing, for patterns that can't).
+    assert [m.span() for m in re.finditer('a*', '')] == [(0, 0)]
+    assert [m.span() for m in re.finditer('a', '')] == []
+    assert [m.span() for m in re.compile('x*').finditer('')] == [(0, 0)]
 
 def test_re_unmatched_group_returns_none():
     m = re.match(r'(a)(b)?', 'a')
@@ -387,6 +395,7 @@ def test_all():
     test_re_pattern_match_annotations()
     test_re_pattern_match_instantiate()
     test_re_escape()
+    test_re_finditer_empty_string()
 
 
 if __name__ == "__main__":
