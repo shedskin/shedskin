@@ -310,6 +310,27 @@ def test_timedelta_truediv():
     assert (datetime.timedelta(microseconds=7) / 2).microseconds == 4
 
 
+def test_datetime_isoformat():
+    # regression test: isoformat()'s 'sep' parameter used to be given a
+    # non-empty string default ('T'), which the code generator could not
+    # resolve for this module (compile error: 'default_N' is not a member
+    # of '__datetime__') when the call site omitted the argument.
+    dt = datetime.datetime(2023, 5, 17, 10, 30, 0)
+    assert dt.isoformat() == '2023-05-17T10:30:00'
+    assert dt.isoformat(' ') == '2023-05-17 10:30:00'
+    assert dt.isoformat(sep='|') == '2023-05-17|10:30:00'
+
+    dt2 = datetime.datetime(2023, 5, 17, 10, 30, 0, 123456)
+    assert dt2.isoformat() == '2023-05-17T10:30:00.123456'
+
+    error = ''
+    try:
+        dt.isoformat('too long')
+    except TypeError:
+        error = 'TypeError'
+    assert error == 'TypeError'
+
+
 def test_all():
         test_date()
         test_date_ctime()
@@ -323,6 +344,7 @@ def test_all():
         test_datetime_fromisoformat()
         test_datetime_timestamp_aware()
         test_datetime_timestamp_naive_roundtrip()
+        test_datetime_isoformat()
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()

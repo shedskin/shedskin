@@ -39,7 +39,7 @@ int clock_gettime(int, struct timespec *tp)
 namespace __datetime__ {
 
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
-str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string;
+str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string,*t_string;
 
 __ss_int MINYEAR, MAXYEAR;
 
@@ -64,6 +64,7 @@ void __init() {
 	multiple_days_string = new str("%d days, %d:%02d:%02d");
 	point_string = new str("%s.%06d");
 	space_string = new str(" ");
+	t_string = new str("T");
 	none_string = new str("None");
 	empty_string = new str("");
 	z_string = new str("%z");
@@ -795,6 +796,8 @@ __time__::struct_time *datetime::utctimetuple() {
 }
 
 str *datetime::isoformat(str *sep) {
+    if(sep==NULL)
+        sep = t_string;
     if(sep->__len__()!=1) {
         throw new TypeError(new str("isoformat() argument 1 must be char, not str"));
     }
