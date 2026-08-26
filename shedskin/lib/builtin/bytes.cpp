@@ -384,7 +384,7 @@ tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
 {
     size_t i;
 
-    i = this->unit.find(separator->c_str());
+    i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
     else
@@ -500,7 +500,7 @@ __ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
 
     i = (size_t)start;
     count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-ssize) )
+    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
     {
         i += ssize;
         if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
