@@ -29,9 +29,12 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
-from . import config
+from . import config, python
+
+if TYPE_CHECKING:
+    from . import graph
 
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
@@ -126,33 +129,69 @@ def is_literal(node: ast.AST) -> bool:
     return is_num(node)
 
 
-def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
+def _is_shadowed(
+    name: str,
+    parent: Optional["python.AllParent"],
+    mv: Optional["graph.ModuleVisitor"],
+) -> bool:
+    """Check whether 'name' is bound to something other than the builtin of
+    that name in the current scope.
+
+    A parameter, local variable, or nested function/class named e.g.
+    'range', 'enumerate' or 'zip' shadows the builtin: calls to it must not
+    be special-cased as if they were calls to the builtin. Without 'parent'
+    (the enclosing function/class) and 'mv' (the module visitor) to look the
+    name up in, no shadowing information is available, so nothing is
+    reported as shadowed -- callers that can supply this context should
+    always do so.
+    """
+    if mv is None:
+        return False
+    return python.lookup_var(name, parent, mv) is not None
+
+
+def is_fastfor(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is a fast for loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id in ["range", "xrange"]
+        and not _is_shadowed(node.iter.func.id, parent, mv)
     )
 
 
-def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
+def is_enumerate(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is an enumerate loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id == "enumerate"
+        and not _is_shadowed("enumerate", parent, mv)
         and len(node.iter.args) == 1
         and not node.iter.keywords  # TODO start arg not supported
         and is_assign_list_or_tuple(node.target)
     )
 
 
-def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
+def is_zip2(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is a zip loop with two arguments"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id == "zip"
+        and not _is_shadowed("zip", parent, mv)
         and len(node.iter.args) == 2
         and is_assign_list_or_tuple(node.target)
     )
