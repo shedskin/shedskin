@@ -54,8 +54,10 @@ class RawConfigParser:
         pass
     def get(self, section, option, raw=False, vars=None, fallback=None): # XXX
         return ''
-    def items(self, section):
-        yield ('', '')
+    def items(self, section, __kw_raw=False, __kw_vars=None):
+        return [('', '')]
+    def __items0(self, __kw_raw=False, __kw_vars=None):
+        return [('', SectionProxy(self, ''))]
     def getint(self, section, option):
         return 1
     def getfloat(self, section, option):
@@ -76,11 +78,35 @@ class RawConfigParser:
         return True
     def _read(self, fp, fpname):
         pass
+    def __getitem__(self, section):
+        return SectionProxy(self, section)
+    def __setitem__(self, section, value):
+        pass
+    def __delitem__(self, section):
+        pass
+    def __contains__(self, section):
+        return True
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return iter([''])
+
+class SectionProxy:
+    def __init__(self, parser, name):
+        self._parser = parser
+        self._name = name
+    def __getitem__(self, key):
+        return ''
+    def __setitem__(self, key, value):
+        pass
+    def __delitem__(self, key):
+        pass
+    def __contains__(self, key):
+        return True
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return iter([''])
 
 class ConfigParser(RawConfigParser):
-    def get(self, section, option, raw=False, vars=None, fallback=None):
-        return ''
-    def items(self, section, raw=False, vars=None):
-        yield ('', '')
-    def _interpolate(self, section, option, rawval, vars):
-        return ''
+    pass
