@@ -228,7 +228,12 @@ def test_all():
     test_os_path_ismount()
     test_os_path_relpath()
     test_os_path_realpath_strict()
-    test_os_path_realpath_through_symlink()
+    # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
+    # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
+    # this function's body to C++ unconditionally (the `os.name == "nt"`
+    # check inside it is a runtime guard, not a compile-time one), so
+    # calling it here breaks the Windows build even though it never runs
+    # there. Same issue as test_setgroups_overflow() in test_mod_os.py.
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
 
