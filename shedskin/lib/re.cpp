@@ -471,7 +471,7 @@ match_object *match_iter::__next__(void)
     match_object *mobj;
     PCRE2_SIZE *captured;
 
-    if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->unit.size()) throw new StopIteration();
+    if((pos > endpos && endpos != -1) || (subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size())) throw new StopIteration();
 
     //get next match
     mobj = ro->__exec(subj, pos, endpos, flags);
@@ -488,7 +488,9 @@ match_object *match_iter::__next__(void)
 __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
-    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    //mirror __exec's handling of the empty-string case: pos==0 on an empty
+    //subject is a valid starting position, not an out-of-range one
+    if(subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     return new match_iter(this, subj, pos, endpos, flags);
 }
