@@ -1705,6 +1705,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
+    def visit_YieldFrom(self, node: ast.YieldFrom, func: "python.Function") -> None:
+        """Visit a 'yield from' expression"""
+        error.error("'yield from' is not supported", self.gx, node, mv=getmv())
+
     def visit_For(
         self, node: ast.For, func: Optional["python.Function"] = None
     ) -> None:
