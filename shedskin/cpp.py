@@ -1639,10 +1639,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a fast for-in-choice loop"""
         tempvar = self.mv.tempcount[node]
         self.start()
-        self.visitm("for(auto ", tempvar, " : {", func)
+        # use the inferred type of the loop variable instead of 'auto': the
+        # elements of the choice list may have different concrete C++ types
+        # (e.g. instances of different subclasses, or int/float literals)
+        # even though shedskin infers a single unified Python type for them,
+        # so 'auto' brace-init deduction can fail to compile
+        target_type = typestr.nodetypestr(self.gx, node.target, mv=self.mv).strip()
+        self.visitm("for(", target_type, " ", tempvar, " : {", func)
         assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
+        target_types = self.mergeinh[node.target]
         for elem in node.iter.elts:
-            self.visit(elem, func)
+            self.impl_visit_conv(elem, target_types, func)
             if elem is not node.iter.elts[-1]:
                 self.append(",")
         self.append("}) {")
