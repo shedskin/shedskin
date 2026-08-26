@@ -350,36 +350,19 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
 }
 
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b) {
-    list<T> *la = new list<T>(); /* XXX avoid intermediate list */
-    typename pyiter<T>::for_in_unit e;
-    typename pyiter<T>::for_in_loop __3;
-    int __2;
-    pyiter<T> *__1;
-    FOR_IN(e,b,1,2,3)
-        la->units.push_back(e);
-    END_FOR
+    list<T> *la = new list<T>(b);
     this->__setslice__(x, l, u, s, la);
     return NULL;
 }
 
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *la) {
-    slicenr(x, l, u, s, this->__len__());
-
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
-        __ss_int slicesize;
-        if(l == u) slicesize = 0; // XXX ugly
-        else if(s > 0 && u < l) slicesize=0;
-        else if(s < 0 && l < u) slicesize=0;
-        else {
-            __ss_int slicelen = __abs(u-l);
-            __ss_int absstep = __abs(s);
-            slicesize = slicelen/absstep;
-            if(slicelen%absstep) slicesize += 1;
-        }
-
+        __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
         if(slicesize != len(la))
             throw new ValueError(__add_strs(0, new str("attempt to assign sequence of size "), __str(len(la)), new str(" to extended slice of size "), __str(slicesize)));
     }
+
+    slicenr(x, l, u, s, this->__len__());
 
     if(s == 1) {
         if(l <= u) {

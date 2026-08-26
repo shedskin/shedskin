@@ -882,8 +882,24 @@ void *bytes::insert(__ss_int index, __ss_int item) {
 }
 
 void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b) {
+    /* materialize the iterable once, using the same generic constructor
+     * list<T>::__setslice__(pyiter...) itself uses to do so, so we can
+     * check its length before delegating */
+    list<__ss_int> *la = new list<__ss_int>(b);
+
+    /* CPython's bytearray raises "attempt to assign bytes of size N to
+     * extended slice of size M" for a length mismatch, not list's generic
+     * "...sequence of size...", so check with the same __extslice_size()
+     * helper list<T>::__setslice__() uses, but with bytearray's wording. */
+    if(x&4 && s != 1) {
+        __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
+        __ss_int blen = (__ss_int)la->units.size();
+        if(slicesize != blen)
+            throw new ValueError(__add_strs(0, new str("attempt to assign bytes of size "), __str(blen), new str(" to extended slice of size "), __str(slicesize)));
+    }
+
     list<__ss_int> *ll = new list<__ss_int>(this);
-    ll->__setslice__(x, l, u, s, b);
+    ll->__setslice__(x, l, u, s, la);
     __GC_STRING r;
     size_t len = ll->units.size();
     for(size_t i=0; i<len; i++)
