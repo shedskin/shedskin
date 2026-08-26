@@ -6,6 +6,7 @@
 #include <time.h>
 #include <cstdio>
 #include <cctype>
+#include <cstring>
 
 #ifdef _MSC_VER
 
@@ -709,6 +710,45 @@ str *datetime::tzname() {
         return none_string;
     else
 		return _tzinfo->tzname(this);
+}
+
+__ss_float datetime::timestamp() {
+	if(_tzinfo!=NULL) {
+		/* aware: compute seconds since the Unix epoch (1970-01-01 UTC)
+		 * directly from the calendar fields and subtract the utcoffset.
+		 * This avoids mktime()/timegm() altogether, so the result does
+		 * not depend on the platform (Windows/macOS/Linux) or on the
+		 * process' local timezone setting. */
+		static const __ss_int epoch_ordinal = 719163; //date(1970,1,1).toordinal()
+		__ss_float secs = (__ss_float)(toordinal()-epoch_ordinal)*86400.0 +
+			hour*3600.0 + minute*60.0 + second + microsecond/1e6;
+		timedelta *off = utcoffset();
+		if(off!=NULL)
+			secs -= (__ss_float)off->days*86400.0 + off->seconds + off->microseconds/1e6;
+		return secs;
+	}
+	else {
+		/* naive: interpret the wall-clock fields as local time, same as
+		 * cpython does (via mktime). tm_isdst=-1 lets the platform figure
+		 * out DST; tm_wday is used to distinguish a genuine mktime()
+		 * failure from a valid result that happens to encode as -1. */
+		struct tm t;
+		memset(&t, 0, sizeof(t));
+		t.tm_year = (int)year-1900;
+		t.tm_mon = (int)month-1;
+		t.tm_mday = (int)day;
+		t.tm_hour = (int)hour;
+		t.tm_min = (int)minute;
+		t.tm_sec = (int)second;
+		t.tm_isdst = -1;
+		t.tm_wday = -1;
+
+		time_t timet = mktime(&t);
+		if(timet==(time_t)(-1) && t.tm_wday==-1)
+			throw new OverflowError(new str("timestamp out of range"));
+
+		return (__ss_float)timet + microsecond/1e6;
+	}
 }
 
 

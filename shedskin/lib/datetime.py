@@ -182,6 +182,9 @@ class datetime(date):
     def strftime(self, format):
         return ''
 
+    def timestamp(self):
+        return 1.0
+
     def __str__(self):
         return ''
 

@@ -222,6 +222,35 @@ def test_datetime_fromisoformat():
         error = str(e)
     assert error == 'hour must be in 0..23'
 
+class UTC0(datetime.tzinfo):
+    def utcoffset(self, dt):
+        return datetime.timedelta(0)
+
+
+def test_datetime_timestamp_aware():
+    tol = 1e-6
+
+    # offset-aware: result is independent of the platform/local timezone
+    dt = datetime.datetime(2007, 4, 3, tzinfo=TZ2())
+    assert abs(dt.timestamp() - 1175578740.0) < tol
+
+    # a zero-offset ("UTC") tzinfo reproduces the epoch exactly
+    assert datetime.datetime(1970, 1, 1, tzinfo=UTC0()).timestamp() == 0.0
+
+    # fractional seconds and non-epoch dates
+    dt2 = datetime.datetime(2024, 2, 29, 23, 59, 59, 500000, tzinfo=UTC0())
+    assert abs(dt2.timestamp() - 1709251199.5) < tol
+
+
+def test_datetime_timestamp_naive_roundtrip():
+    # naive timestamp() interprets the wall-clock fields as local time,
+    # so it should be the exact inverse of fromtimestamp() regardless of
+    # which platform/timezone the test runs under. Pick a date well away
+    # from any DST transition to keep the round trip unambiguous.
+    dt = datetime.datetime(2023, 6, 15, 14, 30, 0)
+    ts = dt.timestamp()
+    assert datetime.datetime.fromtimestamp(ts) == dt
+
 
 def test_timedelta_total_seconds():
     tol = 1e-3  # generous enough to also pass under --float32
@@ -292,6 +321,8 @@ def test_all():
         test_datetime_custom_tzinfo()
         test_time_fromisoformat()
         test_datetime_fromisoformat()
+        test_datetime_timestamp_aware()
+        test_datetime_timestamp_naive_roundtrip()
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
