@@ -73,6 +73,36 @@ def test_rawconfigparser():
     assert items['pages'] == '250'
     assert items['hop'] == 'True'
 
+def test_items_all_sections():
+    rcp = configparser.RawConfigParser()
+    rcp.read([datafile])
+
+    all_items = dict(rcp.items())
+    assert sorted(all_items.keys()) == ['DEFAULT', 'book', 'ematter', 'hardcopy']
+    assert all_items['ematter']['pages'] == '250'
+    assert all_items['book']['author'] == 'Fredrik Lundh'
+
+    config = configparser.ConfigParser()
+    config.read([datafile])
+
+    all_items2 = dict(config.items())
+    assert sorted(all_items2.keys()) == ['DEFAULT', 'book', 'ematter', 'hardcopy']
+    assert all_items2['hardcopy']['pages'] == '350'
+
+def test_items_raw_and_vars():
+    config = configparser.ConfigParser(defaults={'root': '/tmp'})
+    config.add_section('a')
+    config.set('a', 'x', '%(root)s/a')
+
+    interpolated = dict(config.items('a'))
+    assert interpolated['x'] == '/tmp/a'
+
+    raw_items = dict(config.items('a', raw=True))
+    assert raw_items['x'] == '%(root)s/a'
+
+    var_items = dict(config.items('a', raw=False, vars={'root': '/override'}))
+    assert var_items['x'] == '/override/a'
+
 def test_defaults_section():
     config = configparser.ConfigParser(defaults={'shared': 'yes'})
     config.add_section('one')
@@ -263,6 +293,105 @@ def test_parsing_error():
         ok = True
     assert ok
 
+def test_mapping_section_access():
+    config = configparser.ConfigParser(defaults={'shared': 'yes'})
+    config.add_section('a')
+    config.set('a', 'x', '1')
+
+    # SectionProxy: config['section']['option']
+    section = config['a']
+    assert section['x'] == '1'
+    # falls back to DEFAULT, like get()/has_option() do
+    assert section['shared'] == 'yes'
+    assert 'x' in section
+    assert 'nope' not in section
+    assert sorted(section) == ['shared', 'x']
+    assert len(section) == 2
+
+    ok = False
+    try:
+        section['missing']
+    except KeyError:
+        ok = True
+    assert ok
+
+    # write-through: mutating via the proxy mutates the parser
+    section['y'] = '2'
+    assert config.get('a', 'y') == '2'
+
+    del section['y']
+    assert not config.has_option('a', 'y')
+    ok = False
+    try:
+        del section['y']
+    except KeyError:
+        ok = True
+    assert ok
+
+    # interpolation still applies through the proxy (get() is virtual)
+    config.set('a', 'z', '%(x)s-suffix')
+    assert config['a']['z'] == '1-suffix'
+
+    # DEFAULT section is itself accessible as a proxy
+    assert config[config.default_section]['shared'] == 'yes'
+
+def test_mapping_parser_access():
+    config = configparser.ConfigParser()
+    config.add_section('a')
+    config.add_section('b')
+
+    assert 'a' in config
+    assert 'nosuch' not in config
+    assert config.default_section in config
+    assert len(config) == 3  # a, b, DEFAULT
+    assert sorted(config) == sorted([config.default_section, 'a', 'b'])
+
+    ok = False
+    try:
+        config['nosuch']
+    except KeyError:
+        ok = True
+    assert ok
+
+    config['c'] = {'k': 'v'}
+    assert config.get('c', 'k') == 'v'
+
+    del config['c']
+    assert not config.has_section('c')
+    ok = False
+    try:
+        del config['nosuch']
+    except KeyError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        del config[config.default_section]
+    except ValueError:
+        ok = True
+    assert ok
+
+def test_items_interpolation_through_proxy():
+    # regression: items() (the no-section overload) used to hand back
+    # plain dicts straight from _defaults/_sections, so a ConfigParser's
+    # interpolation was silently skipped when reached via items(). Now
+    # it returns SectionProxy objects, which go through the (virtual)
+    # get() and interpolate correctly, same as config[section][option].
+    config = configparser.ConfigParser()
+    config.add_section('paths')
+    config.set('paths', 'home_dir', '/home/user')
+    config.set('paths', 'my_dir', '%(home_dir)s/mine')
+
+    all_items = dict(config.items())
+    assert all_items['paths']['my_dir'] == '/home/user/mine'
+    # raw access is unaffected
+    assert config.get('paths', 'my_dir', raw=True) == '%(home_dir)s/mine'
+
+    # write-through still holds via items() too, not just __getitem__
+    all_items['paths']['extra'] = 'added'
+    assert config.get('paths', 'extra') == 'added'
+
 def test_getboolean_invalid():
     config = configparser.ConfigParser()
     config.add_section('b')
@@ -279,6 +408,8 @@ def test_all():
     test_configparser()
     test_write_and_reread()
     test_rawconfigparser()
+    test_items_all_sections()
+    test_items_raw_and_vars()
     test_defaults_section()
     test_interpolation()
     test_error_str_and_repr()
@@ -289,6 +420,9 @@ def test_all():
     test_duplicate_section_error_while_parsing()
     test_duplicate_option_error()
     test_default_section_param()
+    test_mapping_section_access()
+    test_mapping_parser_access()
+    test_items_interpolation_through_proxy()
     test_read_file()
     test_missing_section_header_error()
     test_parsing_error()
