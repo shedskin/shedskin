@@ -355,5 +355,55 @@ class TestParseModule:
         assert "builtin" in gx.modules
 
 
+class TestListType:
+    """Tests for ModuleVisitor.list_type.
+
+    list_type recognizes a leaf call to the 'range' builtin (as opposed to
+    any other call) via 'func_id in (...)'. A stray missing comma once
+    turned that membership tuple into a bare string, so the check became a
+    *substring* test: any identifier that happens to be a substring of
+    'range' (e.g. 'ng', 'ra', 'an') was wrongly recognized as if it were a
+    call to the 'range' builtin.
+
+    (The check used to also mention 'xrange' in a comment, suggesting it
+    was once meant to recognize that too. But 'xrange' isn't actually a
+    working builtin in shedskin -- there's no 'def xrange' stub in
+    lib/builtin.py, and compiling a call to it fails outright -- so this
+    fix doesn't resurrect it; it just makes the 'range' check do what it
+    was clearly meant to do: an equality check, not a substring check.)
+    """
+
+    @pytest.fixture
+    def mv(self):
+        """A ModuleVisitor for the (fully visited) 'builtin' module, with
+        the module-level global mv set, as list_type expects via getmv().
+        """
+        options = argparse.Namespace()
+        gx = GlobalInfo(options)
+        module = graph.parse_module("builtin", gx)
+        graph.setmv(module.mv)
+        return module.mv
+
+    def _list_node(self, src):
+        return ast.parse(src).body[0].value
+
+    def test_recognizes_range_call(self, mv):
+        """[range(5)] is recognized as a leaf 'range' call."""
+        node = self._list_node("[range(5)]")
+        assert mv.list_type(node) is not None
+
+    @pytest.mark.parametrize("name", ["ng", "ra", "an", "ge", "ran", "ange"])
+    def test_does_not_confuse_substring_names_with_range(self, mv, name):
+        """A call to a function whose name merely happens to be a
+        substring of 'range' must not be treated as a call to 'range'."""
+        node = self._list_node(f"[{name}()]")
+        assert mv.list_type(node) is None
+
+    def test_unrelated_call_name_not_confused_with_range(self, mv):
+        """Sanity check: an ordinary, unrelated call name is unaffected."""
+        node = self._list_node("[foo()]")
+        assert mv.list_type(node) is None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
