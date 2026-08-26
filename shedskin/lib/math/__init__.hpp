@@ -121,8 +121,16 @@ inline __ss_float cos(__ss_float x) {
     return std::cos(x);
 }
 
-inline __ss_float hypot(__ss_float x, __ss_float y) {
-    return sqrt(x*x+y*y);
+template<class ... Args> __ss_float hypot(int, __ss_float x, Args ... args) {
+    __ss_float sumsq = x*x;
+    ((sumsq += args*args), ...);
+    return std::sqrt(sumsq);
+}
+inline __ss_float hypot(int, __ss_float x) {
+    return x < 0 ? -x : x;
+}
+inline __ss_float hypot(int) {
+    return 0.0;
 }
 
 inline __ss_float sin(__ss_float x) {
