@@ -233,6 +233,23 @@ def test_re_groups_count():
     assert re.compile('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)').groups == 12
 
 
+def test_re_group_no_args():
+    m = re.match(r'(a)(b)', 'ab')
+    assert m.group() == 'ab'
+
+
+def test_re_group_mixed_int_str():
+    m = re.match(r'(?P<x>a)(b)', 'ab')
+    assert m.group('x', 1) == ('a', 'a')
+    assert m.group(1, 'x', 0) == ('a', 'a', 'ab')
+
+
+def test_re_getitem_str():
+    m = re.match(r'(?P<x>a)(b)', 'ab')
+    assert m['x'] == 'a'
+    assert m[1] == 'a'
+
+
 def test_purge():
     re.purge()
 
@@ -354,6 +371,9 @@ def test_all():
     test_re_locale_rejected()
     test_re_compile_error_message()
     test_re_groups_count()
+    test_re_group_no_args()
+    test_re_group_mixed_int_str()
+    test_re_getitem_str()
     test_re_unmatched_group_returns_none()
     test_re_unmatched_named_group_returns_none()
     test_re_out_of_range_group_raises_indexerror()
