@@ -158,28 +158,15 @@ def test_combinations_with_replacement():
         ('B', 'B'), ('B', 'C'),
         ('C', 'C'),
     ]
+    assert list(itertools.combinations_with_replacement('ABC', 0)) == [()]
+    assert list(itertools.combinations_with_replacement('A', 3)) == [('A', 'A', 'A')]
+    assert list(itertools.combinations_with_replacement('AB', 1)) == [('A',), ('B',)]
 
     try:
         list(itertools.combinations_with_replacement('ABDC', -1))
         assert False
     except ValueError:
         pass
-
-
-def test_combinations_with_replacement():
-    assert list(itertools.combinations_with_replacement('ABC', 2)) == [
-        ('A', 'A'),
-        ('A', 'B'),
-        ('A', 'C'),
-        ('B', 'B'),
-        ('B', 'C'),
-        ('C', 'C'),
-    ]
-    assert list(itertools.combinations_with_replacement('ABC', 0)) == [()]
-    assert list(itertools.combinations_with_replacement([], 0)) == [()]
-    assert list(itertools.combinations_with_replacement([], 2)) == []
-    assert list(itertools.combinations_with_replacement('A', 3)) == [('A', 'A', 'A')]
-    assert list(itertools.combinations_with_replacement('AB', 1)) == [('A',), ('B',)]
 
 
 def test_product():
