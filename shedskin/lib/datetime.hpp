@@ -105,6 +105,7 @@ public:
 	static datetime *from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn);
     static datetime *fromtimestamp(double timestamp, tzinfo *tzinfo=NULL);
     static datetime *utcfromtimestamp(double timestamp);
+    __ss_float timestamp();
     static datetime *fromordinal(__ss_int o);
     static datetime *combine(date *d, time *t);
     static datetime *strptime(str *date_string, str *format);
