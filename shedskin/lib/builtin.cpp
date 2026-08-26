@@ -209,7 +209,7 @@ void terminate_handler() {
         __add_missing_newline(); /* XXX s->message -> stderr? */
         if(s->show_message)
             print_(0, False, __ss_stderr, NULL, NULL, s->message);
-        code = s->code;
+        code = (int)s->code;
 
     } catch (BaseException *e) {
         __add_missing_newline();
