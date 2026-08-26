@@ -263,7 +263,7 @@ str *date::ctime() {
     __ss_int wday = weekday();
 
     return __mod6(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
-                        day, 0, 0, 0, year);
+                        day, (__ss_int)0, (__ss_int)0, (__ss_int)0, year);
 }
 
 str *date::strftime(str *format) {
