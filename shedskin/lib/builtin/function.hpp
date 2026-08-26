@@ -960,6 +960,9 @@ template <> __ss_int id(__ss_bool);
 
 template<class T> class_ *__type(T t) { return t->__class__; }
 template<> class_ *__type(int i);
+#ifdef __SS_LONG
+template<> class_ *__type(__ss_int i);
+#endif
 template<> class_ *__type(__ss_float d);
 
 /* print .., */

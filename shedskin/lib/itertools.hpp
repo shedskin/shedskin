@@ -252,16 +252,16 @@ template<class T> inline batchediter<T> *batched(pyiter<T> *iterable, __ss_int n
 template<class T> class repeatiter : public __iter<T> {
 public:
     T object;
-    int times;
+    __ss_int times;
 
     repeatiter();
-    repeatiter(T object, int times);
+    repeatiter(T object, __ss_int times);
 
     T __next__();
 };
 
 template<class T> inline repeatiter<T>::repeatiter() {}
-template<class T> inline repeatiter<T>::repeatiter(T object_, int times_) {
+template<class T> inline repeatiter<T>::repeatiter(T object_, __ss_int times_) {
     object = object_;
     times = times_;
 }
@@ -280,7 +280,7 @@ template<class T, class D> inline repeatiter<T> *repeat(T object, D times_) {
     if constexpr (std::is_same_v<D, __ss_void_struct>)
         return new repeatiter<T>(object, -1);                          // times omitted -> infinite
     else
-        return new repeatiter<T>(object, times_ > 0 ? (int)times_ : 0); // explicit count: <=0 -> immediately empty
+        return new repeatiter<T>(object, times_ > 0 ? (__ss_int)times_ : 0); // explicit count: <=0 -> immediately empty
 }
 
 /* Iterators terminating on the shortest input sequence */

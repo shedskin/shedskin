@@ -298,7 +298,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         if(pcre2_match(
             compiled_pattern,
             (PCRE2_SPTR) c_subj,
-            (int)s->size(),
+            (PCRE2_SIZE)s->size(),
             i,
             0,
             match_data,
@@ -398,7 +398,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
         if(pcre2_match(
             compiled_pattern,
             c_subj,
-            (int)subjs->size(),
+            (PCRE2_SIZE)subjs->size(),
             i,
             flags_,
             match_data,
