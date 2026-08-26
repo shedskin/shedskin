@@ -264,6 +264,18 @@ def test_batched():
     batches = list(itertools.batched(range(10), 3))  #  TODO test strict kw arg
     assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
 
+    try:
+        list(itertools.batched(range(9), 0))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.batched(range(9), -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_all():
     test_count()
