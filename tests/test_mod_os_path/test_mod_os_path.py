@@ -86,6 +86,64 @@ def test_os_path_ismount():
 
 
 
+def test_os_path_isabs():
+    assert isabs('/a/b') is True
+    assert isabs('a/b') is False
+    assert isabs('') is False
+
+
+def test_os_path_normpath():
+    # expected results use forward slashes and are translated to the
+    # platform separator, matching the convention used elsewhere in this
+    # file (see test_os_path_join); normpath() itself returns paths using
+    # os.sep (e.g. backslashes on Windows), so a bare '/' literal here
+    # would fail there.
+    assert normpath('a/b/../c') == 'a/c'.replace('/', os.sep)
+    assert normpath('a//b') == 'a/b'.replace('/', os.sep)
+    assert normpath('./a/b/') == 'a/b'.replace('/', os.sep)
+    assert normpath('../a') == '../a'.replace('/', os.sep)
+    assert normpath('/a/./b/../c') == '/a/c'.replace('/', os.sep)
+    # also check an already-native-separator input round-trips correctly
+    assert normpath('a' + os.sep + 'b' + os.sep + '..' + os.sep + 'c') == 'a/c'.replace('/', os.sep)
+
+
+# TODO: os.symlink is not compiled on Windows (guarded out in
+# shedskin/lib/os/__init__.{hpp,cpp}), and os.path.islink()/realpath()
+# don't have real Windows implementations either (islink() is hard-stubbed
+# to False, realpath() doesn't resolve symlinks). Re-enable once Windows
+# symlink support lands.
+# def test_os_path_islink_samefile_samestat_realpath():
+#     if exists("testdata"):
+#         testdata = "testdata"
+#     elif exists("../testdata"):
+#         testdata = "../testdata"
+#     else:
+#         testdata = "../../testdata"
+#
+#     base = join(testdata, "ospathtest")
+#     os.makedirs(base, exist_ok=True)
+#
+#     target = join(base, "file.txt")
+#     with open(target, "w") as f:
+#         f.write("hi")
+#
+#     link = join(base, "link.txt")
+#     if not islink(link):
+#         os.symlink("file.txt", link)
+#
+#     assert islink(link) is True
+#     assert islink(target) is False
+#
+#     assert samefile(target, link) is True
+#     assert samefile(target, target) is True
+#
+#     s1 = os.stat(target)
+#     s2 = os.stat(link)
+#     assert samestat(s1, s2) is True
+#
+#     assert realpath(link) == realpath(target)
+
+
 def test_os_path_relpath():
     base = abspath(join("testdir_a", "b"))
     child = join(base, "c")
@@ -214,6 +272,9 @@ def test_all():
     test_os_path()
     test_os_path_samefile()
     test_os_path_ismount()
+    test_os_path_isabs()
+    test_os_path_normpath()
+    # test_os_path_islink_samefile_samestat_realpath()  # see comment above, disabled for now
     test_os_path_relpath()
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
