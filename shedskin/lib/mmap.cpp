@@ -117,7 +117,7 @@ str *default_2;
 // Error messages.
 str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
-    *const_13, *const_14, *const_15, *const_16, *const_17;
+    *const_13, *const_14, *const_15, *const_16, *const_17, *const_18;
 
 str *__name__;
 class_ *cl_mmap;
@@ -595,7 +595,7 @@ __ss_int mmap::read_byte()
     else
     {
         m_position = m_end;
-        return 0; // XXX ???
+        throw new ValueError(const_18);
     }
 }
 
@@ -998,6 +998,7 @@ void __init()
         const_15 = new str("mmap: resizing not available--no mremap()");
         const_16 = new str("mmap invalid file handle");
         const_17 = new str("mmap invalid file size");
+        const_18 = new str("read byte out of range");
 
         __name__ = new str("mmap");
 

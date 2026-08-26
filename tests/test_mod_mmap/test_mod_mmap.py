@@ -86,6 +86,30 @@ def test_anonymous():
     # print("%r" % map.readline())
     # print("%r" % map.read(3))
 
+    # print("# read_byte:")
+    map.seek(0)
+    assert map.read_byte() == ord("f")
+    assert map.read_byte() == ord("o")
+    assert map.tell() == 2
+
+    map.seek(0, 2)  # seek to end
+    assert map.tell() == PAGESIZE
+    error = False
+    try:
+        map.read_byte()
+    except ValueError as e:
+        error = True
+        assert str(e) == "read byte out of range"
+    assert error, "read_byte() at end of map should raise ValueError"
+
+    # reading again at end should keep raising, not silently succeed
+    error2 = False
+    try:
+        map.read_byte()
+    except ValueError:
+        error2 = True
+    assert error2
+
     # print("# move:")
     map.move(8, 4, 3)
 
