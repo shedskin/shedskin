@@ -167,6 +167,48 @@ def test_os_path_expanduser_windows_trailing_sep():
         os.putenv("USERPROFILE", old_userprofile)
 
 
+def test_os_path_expandvars():
+    old = os.getenv("SS_TEST_EXPANDVARS_VAR")
+
+    os.putenv("SS_TEST_EXPANDVARS_VAR", "value")
+    assert expandvars("$SS_TEST_EXPANDVARS_VAR/foo") == "value/foo"
+    assert expandvars("${SS_TEST_EXPANDVARS_VAR}/foo") == "value/foo"
+    # trailing alnum/underscore chars are absorbed into the var name (like
+    # CPython's \w+ matching), so this name isn't set and stays literal
+    assert expandvars("a$SS_TEST_EXPANDVARS_VARb") == "a$SS_TEST_EXPANDVARS_VARb"
+
+    if old is None:
+        os.unsetenv("SS_TEST_EXPANDVARS_VAR")
+    else:
+        os.putenv("SS_TEST_EXPANDVARS_VAR", old)
+
+    # unknown variables and edge cases are left unchanged
+    assert expandvars("$SS_TEST_DEFINITELY_NOT_SET/foo") == "$SS_TEST_DEFINITELY_NOT_SET/foo"
+    assert expandvars("no dollar here") == "no dollar here"
+    assert expandvars("") == ""
+    assert expandvars("$") == "$"
+    assert expandvars("$$") == "$$"
+    assert expandvars("${") == "${"
+    assert expandvars("${unterminated") == "${unterminated"
+
+
+def test_os_path_commonpath():
+    assert commonpath(["/a/b/c", "/a/b/d"]) == "/a/b"
+    assert commonpath(["/a/b/c", "/a/b/c"]) == "/a/b/c"
+    assert commonpath(["a/b", "a/c"]) == "a"
+    assert commonpath(["/a", "/a/b"]) == "/a"
+    assert commonpath(["/a/b/", "/a/b/c"]) == "/a/b"
+    assert commonpath(["/", "/a"]) == "/"
+    assert commonpath(["a"]) == "a"
+    assert commonpath(["/a"]) == "/a"
+
+    try:
+        commonpath(["/a/b", "a/b"])
+        assert False, "expected ValueError for mixed absolute/relative paths"
+    except ValueError:
+        pass
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -175,6 +217,8 @@ def test_all():
     test_os_path_relpath()
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
+    test_os_path_expandvars()
+    test_os_path_commonpath()
 
 if __name__ == '__main__':
     test_all()
