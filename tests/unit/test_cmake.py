@@ -86,3 +86,49 @@ def test_no_backtrace_by_default(tmp_path, monkeypatch):
     cmakelists = _generate_cmakelists(tmp_path, monkeypatch, backtrace=False)
     assert "-rdynamic" not in cmakelists
     assert "-D__SS_BACKTRACE" not in cmakelists
+
+
+def test_nogc_forwarded_to_compile_options(tmp_path, monkeypatch):
+    """--nogc must reach the compiler as -D__SS_NOGC so the generated C++
+    avoids libgc types/allocators."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, nogc=True)
+    assert "-D__SS_NOGC" in cmakelists
+
+
+def test_no_nogc_by_default(tmp_path, monkeypatch):
+    """Without --nogc, -D__SS_NOGC must not be forwarded."""
+    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, nogc=False)
+    assert "-D__SS_NOGC" not in cmakelists
+
+
+def test_static_gc_lib_order_gccpp_before_gc():
+    """Regression test for a static-link failure: gc_cpp.cc (bundled in
+    libgccpp) calls GC_malloc_uncollectable()/GC_free(), which are only
+    defined in libgc. Static archives are searched left-to-right by the
+    linker, so libgccpp must be listed *before* libgc in LIB_DEPS, or the
+    link fails with 'undefined reference to GC_malloc_uncollectable' (this
+    is exactly what 'shedskin build --nogc' hit with ENABLE_LOCAL_DEPS).
+    This only checks the raw-archive-path branches (ENABLE_SPM,
+    ENABLE_LOCAL_DEPS); ENABLE_FETCH_CONTENT links CMake targets, whose
+    inter-target dependency order CMake resolves itself.
+    """
+    cmake_module = (
+        Path(__file__).parents[2]
+        / "shedskin"
+        / "resources"
+        / "cmake"
+        / "fn_add_shedskin_product.cmake"
+    )
+    text = cmake_module.read_text()
+
+    for block_start in ("elseif(ENABLE_SPM)", "elseif(ENABLE_LOCAL_DEPS)"):
+        start = text.index(block_start)
+        # the LIB_DEPS assignment immediately follows within this branch
+        lib_deps_start = text.index("set(LIB_DEPS", start)
+        lib_deps_end = text.index(")", lib_deps_start)
+        block = text[lib_deps_start:lib_deps_end]
+        gccpp_pos = block.index("LIBGCCPP")
+        gc_pos = block.index("LIBGC}")
+        assert gccpp_pos < gc_pos, (
+            f"{block_start}: LIBGCCPP must be listed before LIBGC in LIB_DEPS"
+        )
