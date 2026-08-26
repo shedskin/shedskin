@@ -100,7 +100,7 @@ ConfigParser -- responsible for parsing a list of
 namespace __configparser__ {
 
 tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_6, *const_7, *const_8, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -634,7 +634,34 @@ __ss_bool RawConfigParser::getboolean(str *section, str *option) {
     return __mbool((RawConfigParser::_boolean_states)->__getitem__(v->lower()));
 }
 
-__iter<tuple<str *> *> *RawConfigParser::items(str *section) {
+list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int) {
+    /**
+    Return a list of (section_name, SectionProxy) pairs for every
+    section, including the default section. Each proxy is a live,
+    write-through view (calls through the virtual get()/has_option()/
+    etc.), so this also picks up interpolation correctly when called
+    on a ConfigParser.
+    */
+    list<tuple2<str *, SectionProxy *> *> *result;
+    str *name;
+    tuple2<str *, dict<str *, str *> *> *__1;
+    __iter<tuple2<str *, dict<str *, str *> *> *> *__2;
+    __ss_int __3;
+    __iter<tuple2<str *, dict<str *, str *> *> *>::for_in_loop __123;
+
+    result = (new list<tuple2<str *, SectionProxy *> *>());
+    result->append((new tuple2<str *, SectionProxy *>(2, this->default_section, (new SectionProxy(this, this->default_section)))));
+
+    FOR_IN(__1,(this->_sections)->items(),2,3,123)
+        __1 = __1;
+        name = __1->__getfirst__();
+        result->append((new tuple2<str *, SectionProxy *>(2, name, (new SectionProxy(this, name)))));
+    END_FOR
+
+    return result;
+}
+
+list<tuple<str *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int, str *section) {
     dict<str *, str *> *d, *d2;
 
     try {
@@ -650,7 +677,7 @@ __iter<tuple<str *> *> *RawConfigParser::items(str *section) {
     if (d->__contains__(const_15)) {
         d->__delitem__(const_15);
     }
-    return d->items();
+    return new list<tuple<str *> *>(d->items());
 }
 
 void *RawConfigParser::_read(file *fp, str *fpname) {
@@ -866,6 +893,68 @@ list<str *> *RawConfigParser::options(str *section) {
     return new list<str *>(opts->keys());
 }
 
+SectionProxy *RawConfigParser::__getitem__(str *section) {
+    /**
+    Return a SectionProxy for the given section, supporting
+    config[section][option]-style access. The DEFAULT section is
+    accessible too, mirroring __contains__/__iter__ below.
+    */
+
+    if (__ne(section, this->default_section) && (!(this->_sections)->__contains__(section))) {
+        throw ((new KeyError(section)));
+    }
+    return (new SectionProxy(this, section));
+}
+
+void *RawConfigParser::__setitem__(str *section, dict<str *, str *> *value) {
+    /**
+    Overwrite (or create) a whole section from a dict of option/value
+    pairs, e.g. config[section] = {'x': '1'}.
+    */
+
+    if (__eq(section, this->default_section)) {
+        (this->_defaults)->clear();
+    }
+    else if ((this->_sections)->__contains__(section)) {
+        ((this->_sections)->__getitem__(section))->clear();
+    }
+    this->read_dict((new dict<str *, dict<str *, str *> *>(1, new tuple2<str *, dict<str *, str *> *>(2, section, value))), NULL);
+    return NULL;
+}
+
+void *RawConfigParser::__delitem__(str *section) {
+
+    if (__eq(section, this->default_section)) {
+        throw ((new ValueError(const_58)));
+    }
+    if ((!(this->_sections)->__contains__(section))) {
+        throw ((new KeyError(section)));
+    }
+    this->remove_section(section);
+    return NULL;
+}
+
+__ss_bool RawConfigParser::__contains__(str *section) {
+
+    return __mbool(__eq(section, this->default_section) || (this->_sections)->__contains__(section));
+}
+
+__ss_int RawConfigParser::__len__() {
+
+    return (len(this->_sections)+1);
+}
+
+__iter<str *> *RawConfigParser::__iter__() {
+    /**
+    Iterate over section names, DEFAULT first (matching CPython).
+    */
+    list<str *> *names;
+
+    names = (new list<str *>(1, this->default_section));
+    names->extend((this->_sections)->keys());
+    return names->__iter__();
+}
+
 dict<str *, __ss_int> *RawConfigParser::_boolean_states;
 __re__::re_object *RawConfigParser::SECTCRE;
 __re__::re_object *RawConfigParser::OPTCRE;
@@ -967,7 +1056,17 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     return (str *)NULL;
 }
 
-__iter<tuple<str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str *, str *> *vars) {
+list<tuple2<str *, SectionProxy *> *> *ConfigParser::items(dict<str *, str *> *vars, __ss_int raw) {
+    /**
+    Return a list of (section_name, SectionProxy) pairs for every
+    section, including the default section. Delegates straight to
+    RawConfigParser::items(): SectionProxy calls through this->get(),
+    which is virtual, so values still come back interpolated here.
+    */
+    return RawConfigParser::items(vars, raw);
+}
+
+list<tuple<str *> *> *ConfigParser::items(dict<str *, str *> *vars, __ss_int raw, str *section) {
     /**
     Return a list of tuples with (name, value) for each option
     in the section.
@@ -992,19 +1091,96 @@ __iter<tuple<str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str
         }
     }
 
-    (void)vars; // unused since python 3.8
+    if (___bool(vars)) {
+        str *key, *value;
+        tuple<str *> *__62;
+        __iter<tuple<str *> *> *__63;
+        __ss_int __65;
+        __iter<tuple<str *> *>::for_in_loop __123;
+
+        FOR_IN(__62,vars->items(),63,65,123)
+            __62 = __62;
+            key = __62->__getfirst__();
+            value = __62->__getsecond__();
+            d->__setitem__(this->optionxform(key), value);
+        END_FOR
+    }
 
     options = new list<str *>(d->keys());
     if (options->__contains__(const_15)) {
         options->remove(const_15);
     }
     if (raw) {
-        return list_comp_0(options, d)->__iter__();
+        return list_comp_0(options, d);
     }
     else {
-        return list_comp_1(d, this, options, section)->__iter__();
+        return list_comp_1(d, this, options, section);
     }
-    return (__iter<tuple<str *> *> *)NULL;
+    return (list<tuple<str *> *> *)NULL;
+}
+
+/**
+class SectionProxy
+*/
+
+class_ *cl_SectionProxy;
+
+void *SectionProxy::__init__(RawConfigParser *parser_, str *name_) {
+
+    _parser = parser_;
+    _name = name_;
+    return NULL;
+}
+
+list<str *> *SectionProxy::_options() {
+    /**
+    The DEFAULT section has no entry of its own in _sections, so its
+    options come from defaults() instead of options(name) -- same
+    special-casing as get()/has_option() elsewhere in this file.
+    */
+
+    if (__eq(_name, _parser->default_section)) {
+        return new list<str *>((_parser->defaults())->keys());
+    }
+    return _parser->options(_name);
+}
+
+str *SectionProxy::__getitem__(str *key) {
+
+    if ((!_parser->has_option(_name, key))) {
+        throw ((new KeyError(key)));
+    }
+    return _parser->get(_name, key, default_5, NULL);
+}
+
+void *SectionProxy::__setitem__(str *key, str *value) {
+
+    _parser->_set(_name, key, value);
+    return NULL;
+}
+
+void *SectionProxy::__delitem__(str *key) {
+
+    if ((!_parser->has_option(_name, key))) {
+        throw ((new KeyError(key)));
+    }
+    _parser->remove_option(_name, key);
+    return NULL;
+}
+
+__ss_bool SectionProxy::__contains__(str *key) {
+
+    return _parser->has_option(_name, key);
+}
+
+__ss_int SectionProxy::__len__() {
+
+    return len(_options());
+}
+
+__iter<str *> *SectionProxy::__iter__() {
+
+    return (_options())->__iter__();
 }
 
 str *_interpolation_replace(__re__::match_object *match) {
@@ -1090,6 +1266,7 @@ void __init() {
     const_55 = new str("Option %r in section %r already exists");
     const_56 = new str("While reading from %r [line %2d]: option %r in section %r already exists");
     const_57 = new str("DuplicateOptionError");
+    const_58 = new str("Cannot remove the default section.");
 
     __name__ = new str("ConfigParser");
 
@@ -1110,6 +1287,7 @@ void __init() {
     cl_NoSectionError = new class_("NoSectionError");
     cl_ConfigParser = new class_("ConfigParser");
     ConfigParser::_KEYCRE = __re__::compile(const_39);
+    cl_SectionProxy = new class_("SectionProxy");
 
     DEFAULTSECT = const_53;
     MAX_INTERPOLATION_DEPTH = 10;
