@@ -164,13 +164,32 @@ def make_arg_list(argnames: list[str]) -> ast.arguments:
     return ast.arguments([], args, None, [], [], None, [])
 
 
-def is_property_setter(dec: ast.AST) -> bool:
-    """Check if a decorator is a property setter"""
-    return (
+def is_property_setter(dec: ast.AST, parent: Optional["python.Class"] = None) -> bool:
+    """Check if a decorator is a property setter.
+
+    Structurally, any '@X.setter'-shaped decorator matches this shape.
+    When 'parent' (the enclosing class) is given, we additionally verify
+    that 'X' was actually registered as a real '@property' earlier in
+    that same class -- otherwise an unrelated '@obj.setter' decorator
+    (where 'obj' just happens to have its own, unrelated 'setter' method)
+    gets misidentified as a property setter, leading to a KeyError later
+    when the (non-existent) property entry is looked up.
+
+    'parent' is omitted at the point (forward_references) where methods
+    get provisionally renamed to avoid setter/getter name clashes, since
+    properties haven't been registered yet at that stage; it is required
+    at the point (visit_FunctionDef) where the setter is actually wired
+    up to its property.
+    """
+    if not (
         isinstance(dec, ast.Attribute)
         and isinstance(dec.value, ast.Name)
         and dec.attr == "setter"
-    )
+    ):
+        return False
+    if parent is not None:
+        return dec.value.id in parent.properties
+    return True
 
 
 # --- module visitor; analyze program, build constraint graph
@@ -1035,7 +1054,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
-                elif parent and is_property_setter(dec):
+                elif parent and is_property_setter(dec, parent):
                     assert isinstance(dec, ast.Attribute)
                     assert isinstance(dec.value, ast.Name)
                     parent.properties[dec.value.id][1] = node.name
