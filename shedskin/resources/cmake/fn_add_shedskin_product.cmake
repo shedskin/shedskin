@@ -551,6 +551,15 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
             $<$<BOOL:${UNIX}>:-O2>
+            # hide all symbols by default so shedskin's Boehm-GC-backed
+            # operator new/delete (and other runtime internals) don't leak
+            # into the process-global symbol table and interpose over the
+            # same symbols in other C++ extensions (e.g. numpy) loaded into
+            # the same host process; PyMODINIT_FUNC forces the entry point
+            # back to default visibility via Py_EXPORTED_SYMBOL, so the
+            # module still loads correctly
+            $<$<BOOL:${UNIX}>:-fvisibility=hidden>
+            $<$<BOOL:${UNIX}>:-fvisibility-inlines-hidden>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
@@ -581,6 +590,15 @@ function(add_shedskin_product)
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
+            # keep symbols pulled in from static libs (libgc.a/libgccpp.a in
+            # particular) out of the extension's dynamic symbol table. Without
+            # this, the GC-backed operator new/delete overrides in gccpp are
+            # exported with default visibility and can interpose over the
+            # unrelated operator new/delete of other C++ extensions (e.g.
+            # numpy) loaded into the same host process, causing memory
+            # corruption / segfaults when those extensions free memory that
+            # was never allocated by the Boehm GC.
+            "$<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:-Wl,--exclude-libs,ALL>"
         )
 
         target_link_libraries(${EXT} PRIVATE
