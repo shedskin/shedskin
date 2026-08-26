@@ -98,6 +98,7 @@ def test_list_slice_assign():
     assert a[:3:] == [1, 2, 3]
     assert a[::-1] == [5, 4, 3, 2, 1]
     assert a[1::3] == [2, 5]
+    assert a[4:1:-1] == [5, 4, 3]
 
     # iterator
     data = [1, 2, 3, 4]
