@@ -2727,16 +2727,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.library_func(funcs, "datetime", "time", "replace") or self.library_func(
             funcs, "datetime", "datetime", "replace"
         ):
-            # formals = funcs[0].formals[1:]  # skip self UNUSED
-            # formal_pos = dict((v, k) for k, v in enumerate(formals)) # UNUSED
+            formals = funcs[0].formals[1:]  # skip self
+            formal_pos = dict((v, k) for k, v in enumerate(formals))
             positions = []
 
             for i, arg in enumerate(node.args):
-                if isinstance(arg, ast.keyword):
-                    assert False
-                #                    positions.append(formal_pos[arg.name])
-                else:
-                    positions.append(i)
+                positions.append(i)
+
+            for kw in node.keywords:
+                # keyword args (e.g. dt.replace(month=6)) live in node.keywords,
+                # not node.args; map each keyword name back to its formal
+                # position so the right bit ends up in the __args mask.
+                assert kw.arg is not None
+                positions.append(formal_pos[kw.arg])
 
             if positions:
                 self.append(
