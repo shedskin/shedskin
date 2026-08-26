@@ -15,21 +15,40 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     return d->__getitem__(key);
 }
 
+// Compose a signed/zero-precision-padded numeric string ('sign' + 'digits')
+// into 'result', honoring the field width and the '-' (left-justify) and
+// '0' (zero-fill) flags the way CPython's %-formatting does: zero-fill (and
+// the default right-justification) insert padding *between* the sign and
+// the digits, while '-' always left-justifies using space padding after the
+// digits, regardless of the '0' flag.
+static inline void __mod_pad_signed(str *result, const std::string &sign, const std::string &digits, char f_flag, __ss_int f_width, bool f_zero) {
+    __ss_int padlen = f_width - (__ss_int)(sign.size() + digits.size());
+    if (f_flag == '-') {
+        result->unit += sign + digits;
+        if (f_width != -1 && padlen > 0)
+            result->unit += std::string((size_t)padlen, ' ');
+    } else {
+        result->unit += sign;
+        if (f_width != -1 && padlen > 0)
+            result->unit += std::string((size_t)padlen, f_zero ? '0' : ' ');
+        result->unit += digits;
+    }
+}
+
 template <class T> void __mod_int(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_int(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::string sabs = std::to_string(__abs(arg));
+    std::string sign;
     if (arg < 0)
-        result->unit += "-";
+        sign = "-";
     else if (f_flag == '+')
-        result->unit += "+";
+        sign = "+";
     else if (f_flag == ' ')
-        result->unit += " ";
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
-    } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
-    }
-    result->unit += sabs;
+        sign = " ";
+    std::string digits = sabs;
+    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
+        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
+    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
 }
 template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
     __mod_int(result, pos, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
@@ -38,101 +57,102 @@ template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char 
 // TODO same as mod_int different base?
 template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __GC_STRING sabs = __str(__abs(arg), (__ss_int)8)->unit;
+    std::string sabs(__str(__abs(arg), (__ss_int)8)->unit.c_str());
+    std::string sign;
     if (arg < 0)
-        result->unit += "-";
+        sign = "-";
     else if (f_flag == '+')
-        result->unit += "+";
+        sign = "+";
     else if (f_flag == ' ')
-        result->unit += " ";
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
-    } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
-    }
-    result->unit += sabs;
+        sign = " ";
+    std::string digits = sabs;
+    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
+        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
+    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
 }
 
 // TODO same as mod_int different base? almost, upper/lower x different
 template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __GC_STRING sabs;
+    std::string sabs;
     if (c == 'x')
-       sabs = __str(__abs(arg), (__ss_int)16)->unit;
+       sabs = std::string(__str(__abs(arg), (__ss_int)16)->unit.c_str());
     else
-       sabs = __str(__abs(arg), (__ss_int)16)->upper()->unit;
+       sabs = std::string(__str(__abs(arg), (__ss_int)16)->upper()->unit.c_str());
+    std::string sign;
     if (arg < 0)
-        result->unit += "-";
+        sign = "-";
     else if (f_flag == '+')
-        result->unit += "+";
+        sign = "+";
     else if (f_flag == ' ')
-        result->unit += " ";
-
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_precision-sabs.size(), '0');
-    } else if (f_width != -1 && f_width-((__ss_int)sabs.size()) > 0) {
-        result->unit += std::string((size_t)f_width-sabs.size(), f_zero? '0' : ' ');
-    }
-    result->unit += sabs;
+        sign = " ";
+    std::string digits = sabs;
+    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
+        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
+    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
 }
 
 template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int, __ss_int f_precision, bool) {
+template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::stringstream t;
-    if (arg > 0) {
-        if (f_flag == '+')
-            result->unit += "+";
-        else if (f_flag == ' ')
-            result->unit += " ";
-    }
+    std::string sign;
+    __ss_float aarg = arg;
+    if (arg < 0) {
+        sign = "-";
+        aarg = -arg;
+    } else if (f_flag == '+')
+        sign = "+";
+    else if (f_flag == ' ')
+        sign = " ";
     if(c == 'f') {
         t.setf(std::ios::fixed);
         if (f_precision != -1)
             t.precision(f_precision);
         else
             t.precision(6);
-        t << arg;
+        t << aarg;
     } else if(c == 'g') {
         t.setf(std::ios::fixed);
         if (f_precision > 0)
             t.precision(f_precision-1);
         else
             t.precision(5);
-        t << arg;
+        t << aarg;
     } else if(c == 'e') {
         char num[64];
-        snprintf(num, 64, "%.6e", arg); // TODO use f_precision without generating warnings..
+        snprintf(num, 64, "%.6e", aarg); // TODO use f_precision without generating warnings..
         t << num;
     }
-    result->unit += t.str();
+    __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
 }
 template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_float(result, pos, c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_str(int, str *result, size_t &, char c, T arg, __ss_int f_precision) {
+template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
     std::string s;
     if(c=='s')
         s = __str(arg)->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
 
-    if (f_precision == -1)
-        result->unit += s;
-    else
-        result->unit += s.substr(0, (size_t)f_precision);
+    if (f_precision != -1)
+        s = s.substr(0, (size_t)f_precision);
+
+    // '0' (zero-fill) has no effect on '%s'/'%r': width padding always uses spaces.
+    __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
-template<> inline void __mod_str(int flag, str *result, size_t &, char, bytes *arg, __ss_int f_precision) {
+template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
     std::string s;
     if(flag) // bytes % bytes
         s = arg->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
 
-    if (f_precision == -1)
-        result->unit += s;
-    else
-        result->unit += s.substr(0, (size_t)f_precision);
+    if (f_precision != -1)
+        s = s.substr(0, (size_t)f_precision);
+
+    __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 
 template <class T> void __mod_char(str *, size_t &, char, T) {}
@@ -296,10 +316,10 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 's':
             case 'r':
                 if(name) {
-                    __mod_str(flag, result, pos, c, __mod_dict_arg(arg, name), f_precision);
+                    __mod_str(flag, result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision);
                     break;
                 } else {
-                    __mod_str(flag, result, pos, c, arg, f_precision);
+                    __mod_str(flag, result, pos, c, arg, f_flag, f_width, f_precision);
                     return;
                 }
 
