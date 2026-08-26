@@ -121,6 +121,11 @@ def test_list_slice_assign():
     data[:] = []
     assert data == []
 
+    # tuple (non-list rvalue into list lvalue)
+    data = [1, 2, 3, 4]
+    data[1:3] = (10, 20)
+    assert data == [1, 10, 20, 4]
+
 
 def _extend_iterable_gen():
     yield 100
