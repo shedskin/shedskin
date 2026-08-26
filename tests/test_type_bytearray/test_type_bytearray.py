@@ -1,3 +1,11 @@
+_gen_consumed = []
+
+def _gen_five():
+    for i in [1, 2, 3, 4, 5]:
+        _gen_consumed.append(i)
+        yield i
+
+
 def test_bytearray():
     BLA = bytearray(b'bla')
     BA = bytearray(b'-')
@@ -170,6 +178,58 @@ def test_bytearray_slice():
     assert ba == bytearray(b'baba')
 
 
+def test_bytearray_extended_slice_size_mismatch_message():
+    # regression test: bytearray's extended-slice assignment used to
+    # delegate straight to list's size-mismatch error, which says
+    # "attempt to assign sequence of size N ..."; CPython's bytearray says
+    # "attempt to assign bytes of size N ..." instead.
+    ba = bytearray(b'abcdef')
+    error = ''
+    try:
+        ba[::2] = [1, 2]
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign bytes of size 2 to extended slice of size 3'
+    assert ba == bytearray(b'abcdef')  # left untouched on error
+
+    error = ''
+    try:
+        ba[::2] = b'xy'
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign bytes of size 2 to extended slice of size 3'
+
+    # sanity check: matching sizes still work
+    ba[::2] = [10, 20, 30]
+    assert ba == bytearray(bytes([10, 98, 20, 100, 30, 102]))
+
+    # negative step must use the same wording too
+    ba3 = bytearray(b'abcdef')
+    error = ''
+    try:
+        ba3[5:1:-2] = [1, 2, 3]
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign bytes of size 3 to extended slice of size 2'
+    ba3[5:1:-2] = [1, 2]
+    assert ba3 == bytearray(b'abc\x02e\x01')
+
+    # the RHS iterable must be fully consumed (materialized) before the
+    # length check, matching CPython -- and the target left untouched if it
+    # raises, matching the pyiter overload's checked/rebuilt-then-assign
+    # cases above.
+    _gen_consumed.clear()
+    ba4 = bytearray(b'abcdef')
+    error = ''
+    try:
+        ba4[::2] = _gen_five()
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign bytes of size 5 to extended slice of size 3'
+    assert _gen_consumed == [1, 2, 3, 4, 5]
+    assert ba4 == bytearray(b'abcdef')
+
+
 def test_bytearray_misc():
     assert bytearray() == bytearray(b'')
     assert bytearray([1, 2, 3]) == bytearray(b'\x01\x02\x03')
@@ -208,6 +268,7 @@ def test_all():
     test_bytearray_insert_out_of_range()
     test_bytearray_hash()
     test_bytearray_slice()
+    test_bytearray_extended_slice_size_mismatch_message()
     test_bytearray_misc()
     test_hex()
 

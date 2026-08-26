@@ -448,6 +448,18 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
     }
 }
 
+__ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_int len) {
+    slicenr(x, l, u, s, len);
+    if(l == u) return 0;
+    if(s > 0 && u < l) return 0;
+    if(s < 0 && l < u) return 0;
+    __ss_int slicelen = __abs(u-l);
+    __ss_int absstep = __abs(s);
+    __ss_int slicesize = slicelen/absstep;
+    if(slicelen%absstep) slicesize += 1;
+    return slicesize;
+}
+
 /* tuple caching */
 
 tuple<__ss_int >*__ss_tuple_int(__ss_int, __ss_int a, __ss_int b) {
