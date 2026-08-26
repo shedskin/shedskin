@@ -79,7 +79,7 @@ class mmap: public pyiter<bytes *>
          __ss_int flags_ = MAP_SHARED,
          __ss_int prot_  = PROT_READ | PROT_WRITE,
          __ss_int access_ = 0,
-         __ss_int offset = 0) : closed(false), fd(-1)
+         __ss_int offset = 0) : closed(__mbool(false)), fd(-1)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
@@ -93,7 +93,7 @@ class mmap: public pyiter<bytes *>
          __ss_int length,
          str *tagname = 0,
          __ss_int access = 0,
-         __ss_int offset = 0) : closed(false), file_handle(INVALID_HANDLE_VALUE)
+         __ss_int offset = 0) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
@@ -146,12 +146,18 @@ class mmap: public pyiter<bytes *>
     inline bool for_in_has_next(size_t i) const { return i < __size(); }
     inline bytes *for_in_next(size_t &i) const { return new bytes(__char_cache[(unsigned char)(m_begin[i++])]->unit); }
 
+    // closed is a real, documented public attribute in CPython's mmap
+    // (https://docs.python.org/3/library/mmap.html), so it must be
+    // accessible from user code, e.g. `if not mm.closed: ...`. It has
+    // to be __ss_bool (not a plain C++ bool), since that's the type
+    // Shedskin's codegen expects for a Python-visible bool attribute.
+    __ss_bool closed;
+
   private:
     iterator m_begin;
     iterator m_end;
     iterator m_position;
 
-    bool closed;
 #ifndef WIN32
     int fd;
     __ss_int flags;
