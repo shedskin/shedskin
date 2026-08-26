@@ -43,7 +43,7 @@ class match_object:
 
     def group(self, *args):
         return ('',)
-    def __group0(self, arg):
+    def __group0(self):
         return ''
     def __group1(self, arg):
         return ''
