@@ -49,9 +49,19 @@ list<bytes *> *BytesIO::readlines(__ss_int hint) {
 
 __ss_int BytesIO::seek(__ss_int i, __ss_int w) {
     __check_closed();
-    if(w==0) pos = i;
-    else if(w==1) pos += i;
-    else pos = len(s)+i;
+    if(w==0) {
+        if(i < 0)
+            throw new ValueError(__add(new str("negative seek value "), __str(i)));
+        pos = i;
+    }
+    else if(w==1) {
+        pos += i;
+        if(pos < 0) pos = 0;
+    }
+    else {
+        pos = len(s)+i;
+        if(pos < 0) pos = 0;
+    }
     return pos; 
 }
 
@@ -108,9 +118,19 @@ list<str *> *StringIO::readlines(__ss_int hint) {
 
 __ss_int StringIO::seek(__ss_int i, __ss_int w) {
     __check_closed();
-    if(w==0) pos = i;
-    else if(w==1) pos += i;
-    else pos = len(s)+i;
+    if(w==0) {
+        if(i < 0)
+            throw new ValueError(__add(new str("Negative seek position "), __str(i)));
+        pos = i;
+    }
+    else if(w==1) {
+        pos += i;
+        if(pos < 0) pos = 0;
+    }
+    else {
+        pos = len(s)+i;
+        if(pos < 0) pos = 0;
+    }
     return pos;
 }
 
