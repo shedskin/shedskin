@@ -136,6 +136,7 @@ function(add_shedskin_product)
     # module-specific cases
     set(IMPORTS_OS_MODULE OFF)
     set(IMPORTS_RE_MODULE OFF)
+    set(IMPORTS_SOCKET_MODULE OFF)
 
     # if ${name} starts_with test_ then set IS_TEST to ON
     string(FIND "${name}" "test_" index)
@@ -214,6 +215,8 @@ function(add_shedskin_product)
         else()
             if(mod STREQUAL "re")
                 set(IMPORTS_RE_MODULE ON)
+            elseif(mod STREQUAL "socket")
+                set(IMPORTS_SOCKET_MODULE ON)
             endif()
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
@@ -241,6 +244,7 @@ function(add_shedskin_product)
             gccpp
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
             ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
         set(LIB_DIRS ${SHEDSKIN_LINK_DIRS})
         # Use the wrapper include dirs for gc/ structure and pcre2, plus any
@@ -259,6 +263,7 @@ function(add_shedskin_product)
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
@@ -270,6 +275,7 @@ function(add_shedskin_product)
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
         set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
         set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
@@ -296,6 +302,7 @@ function(add_shedskin_product)
             "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS
