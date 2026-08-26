@@ -211,7 +211,26 @@ using __ss_allocator = gc_allocator< T >;
 #endif
 
 #define __GC_DEQUE(T) std::deque< T, __ss_allocator< T > >
-#define __GC_STRING std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
+#define __GC_BYTES std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
+#define __GC_STRING __GC_BYTES /* compat alias, to be removed */
+
+#ifdef __SS_UNICODE
+/* Fixed-width internal representation for str: one code point per
+ * character instead of one raw byte. We use char32_t rather than wchar_t
+ * -- wchar_t's width is platform-defined (4 bytes on Linux/macOS, but
+ * only 2 on Windows, where it stores UTF-16 code units rather than code
+ * points), while char32_t is guaranteed (at least) 32 bits and behaves
+ * identically everywhere, matching the "wide"/UCS-4 representation
+ * CPython itself used pre-PEP 393.
+ *
+ * This is just the type plumbing for now -- nothing else has been
+ * touched. str's own methods (and everything else that reaches into
+ * str::unit) are still written against __GC_BYTES and will not compile
+ * with this defined; that's expected at this stage. */
+#define __GC_STR std::basic_string<char32_t, std::char_traits<char32_t>, __ss_allocator<char32_t> >
+#else
+#define __GC_STR __GC_BYTES
+#endif
 
 extern __ss_bool True;
 extern __ss_bool False;
