@@ -47,7 +47,7 @@ __ss_bool isdir(str *path);
 __ss_bool isfile(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
-str *realpath(str *filename);
+str *realpath(str *filename, __ss_bool strict=False);
 str *relpath(str *path, str *start=0);
 str *expanduser(str *path);
 str *expandvars(str *path);
