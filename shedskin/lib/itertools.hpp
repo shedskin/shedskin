@@ -1151,6 +1151,8 @@ template<class T> inline permutationsiter<T>::permutationsiter() {
     this->cycles = 0;
 }
 template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r_) {
+    if(r_ < 0)
+        throw new ValueError(new str("r must be non-negative"));
     this->r = r_;
     this->len = 0;
 
@@ -1259,6 +1261,8 @@ template<class T> inline combinationsiter<T>::combinationsiter() {
     this->indices = 0;
 }
 template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterable, __ss_int r_) {
+    if(r_ < 0)
+        throw new ValueError(new str("r must be non-negative"));
     this->r = r_;
     this->len = 0;
 
@@ -1361,6 +1365,8 @@ template<class T> inline combinations_with_replacementiter<T>::combinations_with
     this->indices = 0;
 }
 template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter(pyiter<T> *iterable, __ss_int r_) {
+    if(r_ < 0)
+        throw new ValueError(new str("r must be non-negative"));
     this->r = r_;
     this->len = 0;
 
