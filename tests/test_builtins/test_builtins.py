@@ -445,6 +445,12 @@ def test_round():
     assert round(15.0, -1) == 20.0
     assert round(-0.0, 2) == 0.0
 
+    # round(x) always returns int; round(x, ndigits) preserves the input's type
+    assert str(round(2.5)) == '2'
+    assert str(round(2.5, 1)) == '2.5'
+    assert str(round(5, 2)) == '5'
+    assert str(round(1234, -2)) == '1200'
+
 
 def test_set():
     assert list(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]
