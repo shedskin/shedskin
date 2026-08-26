@@ -33,6 +33,11 @@ def test_count():
     assert "hoooi".count("o", 2) == 2
     assert "hoooi".count("o", 0, -2) == 2
 
+    assert "abc".count("") == 4
+    assert "".count("") == 1
+    assert "abc".count("", 1) == 3
+    assert "abc".count("", 1, 2) == 2
+
 
 # def test_encode():
 #     assert 'astring'.encode('utf-8') == b'astring'

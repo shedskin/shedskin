@@ -671,13 +671,16 @@ __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__());
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     __ss_int count, one = 1;
     size_t i;
+    size_t ssize = s->unit.size();
     slicenr(7, start, end, one, __len__());
 
     i = (size_t)start;
     count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
+    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-ssize) )
     {
-        i += s->unit.size();
+        i += ssize;
+        if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
+            i++;
         count++;
     }
 

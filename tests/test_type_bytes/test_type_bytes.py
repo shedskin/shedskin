@@ -28,6 +28,11 @@ def test_count():
     assert b'blaabla'.count(b'aa', 1) == 1
     assert b'blaabla'.count(b'aa', -7) == 1
 
+    assert b'abc'.count(b'') == 4
+    assert b''.count(b'') == 1
+    assert b'abc'.count(b'', 1) == 3
+    assert b'abc'.count(b'', 1, 2) == 2
+
 def test_encode():
     pass
 
