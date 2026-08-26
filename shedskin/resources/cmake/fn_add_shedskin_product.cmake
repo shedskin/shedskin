@@ -246,9 +246,13 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
+        # NOTE: libgccpp must precede libgc: gc_cpp.cc (in libgccpp) references
+        # GC_malloc_uncollectable/GC_free which are only defined in libgc, and
+        # static archives are searched left-to-right, so libgc must come after
+        # the archive that needs its symbols.
         set(LIB_DEPS
-            ${SPM_LIB_DIRS}/${LIBGC}
             ${SPM_LIB_DIRS}/${LIBGCCPP}
+            ${SPM_LIB_DIRS}/${LIBGC}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
@@ -257,9 +261,10 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
     elseif(ENABLE_LOCAL_DEPS)
         set(USING_STATIC_GC ON)
+        # NOTE: see libgccpp/libgc ordering comment above (ENABLE_SPM branch).
         set(LIB_DEPS
-            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
