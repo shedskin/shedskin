@@ -412,7 +412,21 @@ def test_round():
     assert round(-3.5) == -4
     assert round(-4.5) == -4
 
-    assert round(1.15, 0) == 1.0  # TODO check cpython
+    assert round(1.15, 0) == 1.0
+
+    # round(x, n) must round the exact binary value of x, not a value
+    # that has already picked up its own floating point error from
+    # multiplying/dividing by 10**n, and ties must round to even.
+    assert round(2.675, 2) == 2.67
+    assert round(-2.675, 2) == -2.67
+    assert round(0.125, 2) == 0.12
+    assert round(2.5, 0) == 2.0
+    assert round(0.5, 0) == 0.0
+    assert round(1.25, 1) == 1.2
+    assert round(1234.5, -2) == 1200.0
+    assert round(25.0, -1) == 20.0
+    assert round(15.0, -1) == 20.0
+    assert round(-0.0, 2) == 0.0
 
 
 def test_set():

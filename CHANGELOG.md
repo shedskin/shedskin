@@ -66,6 +66,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `'%s' % None` emitted a bare `NULL` whose deduced type had no formatting overload, so the generated C++ did not compile
 
+- `round(x, n)` computed `portableround(10**n * x) / 10**n`, which rounds the binary error already introduced by the multiply/divide rather than the exact value of `x`, and broke ties away from zero instead of to even. `round(2.675, 2)` gave `2.68` instead of `2.67`, and `round(0.5, 0)` gave `1.0` instead of `0.0`; this affected both positive and negative `n`
+
 ### Optimized
 
 - Iteration over generator expressions is now much faster
