@@ -231,7 +231,7 @@ class Class(PyObject):
                 "array",
             ]:
                 return ["unit"]
-            elif self.ident in ["dict", "frozendict", "defaultdict"]:
+            elif self.ident in ["dict", "frozendict", "defaultdict", "Counter"]:
                 return ["unit", "value"]
             elif self.ident == "tuple2":
                 return ["first", "second"]

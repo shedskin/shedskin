@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections import deque
+from collections import Counter
 import copy
 
 
@@ -316,6 +317,191 @@ def test_deque_unhashable():
     assert raised
 
 
+def test_counter_construct_empty():
+    c = Counter()
+    c['a'] += 1
+    c['a'] += 1
+    c['b'] += 1
+    assert sorted(c.items()) == [('a', 2), ('b', 1)]
+
+
+def test_counter_construct_iterable():
+    c = Counter('mississippi')
+    assert sorted(c.items()) == [('i', 4), ('m', 1), ('p', 2), ('s', 4)]
+
+
+def test_counter_construct_mapping():
+    c = Counter({'x': 3, 'y': 1})
+    assert sorted(c.items()) == [('x', 3), ('y', 1)]
+
+
+def test_counter_missing_key():
+    # unlike defaultdict, a missing key returns 0 but is NOT inserted
+    c = Counter('aab')
+    assert c['z'] == 0
+    assert 'z' not in c
+    assert sorted(c.keys()) == ['a', 'b']
+
+
+def test_counter_most_common_all():
+    c = Counter('mississippi')
+    # counts, order-independent (ties aren't insertion-ordered in this
+    # module's dict; see test_counter_most_common_distinct_counts for an
+    # order-sensitive check)
+    assert sorted(c.most_common()) == sorted(c.items())
+    assert len(c.most_common()) == 4
+
+
+def test_counter_most_common_distinct_counts():
+    # all-distinct counts, so ordering is unambiguous even though this
+    # module's dict isn't insertion-ordered like a real Python dict
+    c = Counter()
+    c['a'] = 5
+    c['b'] = 3
+    c['c'] = 1
+    assert c.most_common() == [('a', 5), ('b', 3), ('c', 1)]
+    assert c.most_common(2) == [('a', 5), ('b', 3)]
+    assert c.most_common(0) == []
+
+
+def test_counter_elements():
+    c = Counter('mississippi')
+    assert sorted(c.elements()) == sorted('mississippi')
+
+
+def test_counter_elements_skips_nonpositive():
+    c = Counter()
+    c['a'] = 2
+    c['b'] = 0
+    c['c'] = -1
+    assert sorted(c.elements()) == ['a', 'a']
+
+
+def test_counter_update_iterable():
+    c = Counter('aab')
+    c.update('abc')
+    assert sorted(c.items()) == [('a', 3), ('b', 2), ('c', 1)]
+
+
+def test_counter_update_mapping():
+    c = Counter({'p': 1, 'q': 2})
+    c.update({'p': 5})
+    assert sorted(c.items()) == [('p', 6), ('q', 2)]
+
+
+def test_counter_subtract_iterable():
+    c = Counter('aab')
+    c.subtract('bb')
+    # subtract(), unlike the arithmetic operators, keeps zero/negative counts
+    assert sorted(c.items()) == [('a', 2), ('b', -1)]
+
+
+def test_counter_subtract_mapping():
+    c = Counter({'a': 3, 'b': 1})
+    c.subtract({'a': 1})
+    assert sorted(c.items()) == [('a', 2), ('b', 1)]
+
+
+def test_counter_add_operator():
+    a = Counter('abbccc')
+    b = Counter('bccd')
+    assert sorted((a + b).items()) == [('a', 1), ('b', 3), ('c', 5), ('d', 1)]
+
+
+def test_counter_sub_operator():
+    a = Counter('abbccc')
+    b = Counter('bccd')
+    # non-positive results are dropped, unlike subtract()
+    assert sorted((a - b).items()) == [('a', 1), ('b', 1), ('c', 1)]
+
+
+def test_counter_and_operator():
+    a = Counter('abbccc')
+    b = Counter('bccd')
+    assert sorted((a & b).items()) == [('b', 1), ('c', 2)]
+
+
+def test_counter_or_operator():
+    a = Counter('abbccc')
+    b = Counter('bccd')
+    assert sorted((a | b).items()) == [('a', 1), ('b', 2), ('c', 3), ('d', 1)]
+
+
+def test_counter_unary_pos():
+    c = Counter()
+    c['x'] = 3
+    c['y'] = -2
+    c['z'] = 0
+    assert sorted((+c).items()) == [('x', 3)]
+
+
+def test_counter_unary_neg():
+    c = Counter()
+    c['x'] = 3
+    c['y'] = -2
+    c['z'] = 0
+    assert sorted((-c).items()) == [('y', 2)]
+
+
+def test_counter_iadd():
+    c = Counter('aab')
+    c += Counter('a')
+    assert sorted(c.items()) == [('a', 3), ('b', 1)]
+
+
+def test_counter_isub_drops_nonpositive():
+    c = Counter('aab')
+    c -= Counter('aaaa')
+    # in-place operators drop non-positive results too, like their
+    # non-in-place counterparts (this differs from subtract())
+    assert sorted(c.items()) == [('b', 1)]
+
+
+def test_counter_ior():
+    c = Counter('aab')
+    c |= Counter('zzz')
+    assert sorted(c.items()) == [('a', 2), ('b', 1), ('z', 3)]
+
+
+def test_counter_iand():
+    c = Counter('aab')
+    c &= Counter('ab')
+    assert sorted(c.items()) == [('a', 1), ('b', 1)]
+
+
+def test_counter_copy():
+    a = Counter('abc')
+    b = a.copy()
+    b['a'] += 100
+    assert sorted(a.items()) == [('a', 1), ('b', 1), ('c', 1)]
+    assert sorted(b.items()) == [('a', 101), ('b', 1), ('c', 1)]
+
+
+def test_counter_copy_module():
+    a = Counter('abc')
+
+    b = copy.copy(a)
+    b['a'] += 100
+    assert sorted(a.items()) == [('a', 1), ('b', 1), ('c', 1)]
+    assert sorted(b.items()) == [('a', 101), ('b', 1), ('c', 1)]
+
+    d = copy.deepcopy(a)
+    d['a'] += 100
+    assert sorted(a.items()) == [('a', 1), ('b', 1), ('c', 1)]
+    assert sorted(d.items()) == [('a', 101), ('b', 1), ('c', 1)]
+
+
+def test_counter_type_identity():
+    # same rationale as test_defaultdict_type_identity: isinstance()/type()
+    # aren't usable here, so repr() is the observable proxy
+    c = Counter('a')
+    plain = dict()
+    plain['a'] = 1
+
+    assert repr(c).startswith('Counter(')
+    assert not repr(plain).startswith('Counter(')
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -335,6 +521,31 @@ def test_all():
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
     test_deque_unhashable()
+    test_counter_construct_empty()
+    test_counter_construct_iterable()
+    test_counter_construct_mapping()
+    test_counter_missing_key()
+    test_counter_most_common_all()
+    test_counter_most_common_distinct_counts()
+    test_counter_elements()
+    test_counter_elements_skips_nonpositive()
+    test_counter_update_iterable()
+    test_counter_update_mapping()
+    test_counter_subtract_iterable()
+    test_counter_subtract_mapping()
+    test_counter_add_operator()
+    test_counter_sub_operator()
+    test_counter_and_operator()
+    test_counter_or_operator()
+    test_counter_unary_pos()
+    test_counter_unary_neg()
+    test_counter_iadd()
+    test_counter_isub_drops_nonpositive()
+    test_counter_ior()
+    test_counter_iand()
+    test_counter_copy()
+    test_counter_copy_module()
+    test_counter_type_identity()
 
 
 if __name__ == '__main__':

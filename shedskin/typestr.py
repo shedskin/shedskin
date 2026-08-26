@@ -405,8 +405,8 @@ def typestrnew(
 
     cl = lcp.pop()
 
-    if check_ret and cl.mv.module.ident == "collections" and cl.ident == "defaultdict":
-        logger.warn("defaultdicts are returned as dicts")
+    if check_ret and cl.mv.module.ident == "collections" and cl.ident in ("defaultdict", "Counter"):
+        logger.warn(f"{cl.ident.lower()}s are returned as dicts")
     elif (
         check_extmod
         and cl.mv.module.builtin
@@ -430,7 +430,7 @@ def typestrnew(
                 "bool_",
             ]
         )
-        and not (cl.mv.module.ident == "collections" and cl.ident == "defaultdict")
+        and not (cl.mv.module.ident == "collections" and cl.ident in ("defaultdict", "Counter"))
     ):
         raise ExtmodError()
 
