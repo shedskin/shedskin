@@ -261,6 +261,17 @@ def test_re_pattern_match_instantiate():
     assert str(p) == '<Pattern object>'
     assert str(m) == '<Match object>'
 
+def test_re_escape():
+    # re.escape used to double-advance its index whenever it escaped a
+    # metacharacter, silently dropping the literal character right after
+    # it (e.g. escape("a..b") produced "a\\.\\." instead of "a\\.\\.b")
+    assert re.escape("a.b*c+d?") == "a\\.b\\*c\\+d\\?"
+    assert re.escape("a..b") == "a\\.\\.b"
+    assert re.escape("hello.world") == "hello\\.world"
+    assert re.escape("abc") == "abc"
+    assert re.escape("") == ""
+    assert re.escape("1.2.3.4") == "1\\.2\\.3\\.4"
+
 
 def test_re_unmatched_group_returns_none():
     m = re.match(r'(a)(b)?', 'a')
@@ -355,6 +366,7 @@ def test_all():
     test_purge()
     test_re_pattern_match_annotations()
     test_re_pattern_match_instantiate()
+    test_re_escape()
 
 
 if __name__ == "__main__":

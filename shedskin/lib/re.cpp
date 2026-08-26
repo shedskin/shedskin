@@ -677,10 +677,16 @@ str *escape(str *s)
     ps = &s->unit;
     len = ps->size();
     out = "";
-    for(i = 0; i < len; i++)
+    /* NOTE: 'i' is advanced manually within the loop body (once per
+       alphanumeric run, and once per metacharacter processed below), so
+       this loop must not also auto-increment 'i' in its own header --
+       doing so used to double-advance 'i' past a metacharacter and
+       silently drop the character right after it (e.g. escape("a..b")
+       produced "a\.\." instead of "a\.\.b"). */
+    for(i = 0; i < len; )
     {
         //skip alphanumerics
-        for(j = i; ::isalnum((int)(*ps)[j]) && j < len; j++) ;
+        for(j = i; j < len && ::isalnum((int)(*ps)[j]); j++) ;
 
         if(j != i)
         {
@@ -690,7 +696,7 @@ str *escape(str *s)
         }
 
         //now process potential metachars
-        while(!::isalnum((int)(*ps)[i]) && i < len)
+        while(i < len && !::isalnum((int)(*ps)[i]))
         {
             out += "\\";
             out += (*ps)[i];
