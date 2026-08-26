@@ -468,10 +468,15 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
-str *realpath(str *filename) {
+str *realpath(str *filename, __ss_bool strict) {
     /**
     Return the canonical path of the specified filename, eliminating any
-    symbolic links encountered in the path.
+    symbolic links encountered in the path. If strict is true, raise
+    FileNotFoundError for the first path component that does not exist.
+
+    Note: this is a lighter-weight approximation of CPython's strict mode:
+    a broken symlink's *target* is not specially detected as missing, only
+    path components that don't exist as a direct directory entry.
     */
     list<str *> *bits;
     str *component, *newpath, *resolved;
@@ -486,6 +491,9 @@ str *realpath(str *filename) {
 
     FAST_FOR(i,2,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
+        if (strict.value && (!lexists(component).value)) {
+            throw new FileNotFoundError(component);
+        }
         if (islink(component)) {
             resolved = _resolve_link(component);
             if (resolved==0) {
@@ -493,7 +501,7 @@ str *realpath(str *filename) {
             }
             else {
                 newpath = joinl(((new list<str *>(1, resolved)))->__add__(bits->__slice__(1, i, 0, 0)));
-                return realpath(newpath);
+                return realpath(newpath, strict);
             }
         }
     END_FOR
@@ -1094,8 +1102,11 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
-str *realpath(str *path) {
+str *realpath(str *path, __ss_bool strict) {
 
+    if (strict.value && (!exists(path).value)) {
+        throw new FileNotFoundError(path);
+    }
     return abspath(path);
 }
 

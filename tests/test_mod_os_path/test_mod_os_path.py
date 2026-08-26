@@ -166,6 +166,60 @@ def test_os_path_relpath():
         pass
 
 
+def test_os_path_realpath_strict():
+    if os.name == "nt":
+        # "/tmp/..." isn't an absolute path on Windows (no drive letter),
+        # and the os.system() "mkdir -p"/"rm -rf" calls below are POSIX
+        # shell syntax that cmd.exe doesn't understand. The strict-mode
+        # logic itself isn't platform-specific, so just skip here; it's
+        # exercised by the POSIX run below.
+        return
+
+    # resolve the tmp root itself first: on macOS, /tmp is a symlink to
+    # /private/tmp, so building test paths under the unresolved name
+    # would make the equality checks below fail even when realpath() is
+    # behaving correctly (it's supposed to follow that symlink).
+    tmpdir = realpath("/tmp")
+
+    missing = join(tmpdir, "shedskin_test_realpath_strict_missing", "foo")
+
+    # non-strict (default): no error, just resolves as far as it can
+    assert realpath(missing) == missing
+
+    # strict=True: raise for a path that doesn't exist
+    try:
+        realpath(missing, strict=True)
+        assert False, "expected FileNotFoundError for missing path"
+    except FileNotFoundError:
+        pass
+
+    # strict=True: no error for a path that does exist
+    existing = join(tmpdir, "shedskin_test_realpath_strict_exists")
+    os.system("mkdir -p " + existing)
+    assert realpath(existing, strict=True) == existing
+    os.system("rm -rf " + existing)
+
+
+def test_os_path_realpath_through_symlink():
+    if os.name == "nt":
+        return  # os.symlink often needs elevated privileges on Windows
+
+    base = "/tmp/shedskin_test_realpath_symlink_base"
+    target = join(base, "target")
+    link = join(base, "link")
+
+    os.system("rm -rf " + base)
+    os.system("mkdir -p " + target)
+    os.symlink(target, link)
+
+    # realpath() must follow the symlink component, not just report the
+    # path as its own (unresolved) name.
+    assert realpath(link) == realpath(target)
+    assert realpath(link) != link
+
+    os.system("rm -rf " + base)
+
+
 def test_os_path_expanduser():
     assert expanduser("relative/path") == "relative/path"
     assert expanduser("") == ""
@@ -276,6 +330,13 @@ def test_all():
     test_os_path_normpath()
     # test_os_path_islink_samefile_samestat_realpath()  # see comment above, disabled for now
     test_os_path_relpath()
+    test_os_path_realpath_strict()
+    # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
+    # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
+    # this function's body to C++ unconditionally (the `os.name == "nt"`
+    # check inside it is a runtime guard, not a compile-time one), so
+    # calling it here breaks the Windows build even though it never runs
+    # there. Same issue as test_setgroups_overflow() in test_mod_os.py.
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
     test_os_path_expandvars()

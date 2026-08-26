@@ -235,9 +235,17 @@ void _exit(__ss_int code) {
     ::exit(code);
 }
 
-void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok) {
+void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mode) {
+    /**
+    parent_mode controls the mode used for intermediate directories.
+    parent_mode==-1 (the "None" sentinel; shedskin has no Optional[int])
+    means intermediate directories are created with the default mode
+    0777, matching CPython's behaviour. Pass parent_mode=mode explicitly
+    to restore the pre-3.7 CPython behaviour of applying mode recursively.
+    */
     tuple<str *> *__0, *__1;
     str *head, *tail;
+    __ss_int recurse_mode;
 
     __0 = __path__::split(name_);
     head = __0->__getfirst__();
@@ -248,8 +256,9 @@ void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok) {
         tail = __1->__getsecond__();
     }
     if ((___bool(head) && ___bool(tail) && (!__path__::exists(head)))) {
+        recurse_mode = (parent_mode == -1) ? 0777 : parent_mode;
         try {
-            makedirs(head, mode, exist_ok);
+            makedirs(head, recurse_mode, exist_ok, parent_mode);
         } catch (OSError *e) {
             if (e->__ss_errno != EEXIST) {
                 throw (e);
