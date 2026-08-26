@@ -1099,6 +1099,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 "__del__",
                 "__copy__",
                 "__deepcopy__",
+                "__round__",
+                "__index__",
+                "__reversed__",
+                "__divmod__",
+                "__floor__",
+                "__ceil__",
+                "__trunc__",
             ]:
                 error.error(
                     "'%s' is not supported" % func.ident,
