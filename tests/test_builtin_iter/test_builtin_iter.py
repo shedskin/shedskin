@@ -135,12 +135,43 @@ def test_iter_correct():
     assert list(BertBoth()) == [4, 3, 2, 1]  # iterable is iterator
 
 
+# regression test: a user-defined class whose name coincides with a
+# builtin (Counter, defaultdict, ...) must not be mistaken for the
+# actual builtin when its constructor is called, even though the
+# builtin has a same-name/same-arity constructor
+class Counter:
+    def __init__(self, n):
+        self.x = n
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.x -= 1
+        if self.x == 0:
+            raise StopIteration
+        return self.x
+
+
+class defaultdict:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+
+def test_class_name_shadows_builtin():
+    assert list(Counter(5)) == [4, 3, 2, 1]
+    d = defaultdict(3, 4)
+    assert (d.a, d.b) == (3, 4)
+
+
 def test_all():
     test_iter1()
     test_iter2()
     test_file_iter()
     test_stop_iter()
     test_iter_correct()
+    test_class_name_shadows_builtin()
 
 
 if __name__ == '__main__':
