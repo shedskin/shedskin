@@ -11,7 +11,9 @@ class Error(Exception):
 class NoSectionError(Error):
     def __init__(self, section): pass
 class DuplicateSectionError(Error):
-    def __init__(self, section): pass
+    def __init__(self, section, source=None, lineno=-1): pass
+class DuplicateOptionError(Error):
+    def __init__(self, section, option, source=None, lineno=-1): pass
 class NoOptionError(Error):
     def __init__(self, option, section): pass
 class InterpolationError(Error):
@@ -28,9 +30,10 @@ class MissingSectionHeaderError(ParsingError):
     def __init__(self, filename, lineno, line): pass
 
 class RawConfigParser:
-    def __init__(self, defaults=None):
+    def __init__(self, defaults=None, default_section=None):
         self._sections = {'': ''}
         self._defaults = {'': ''}
+        self.default_section = ''
     def defaults(self):
         return self._defaults
     def sections(self):
@@ -46,6 +49,8 @@ class RawConfigParser:
     def read_string(self, string, source=None):
         pass
     def read_dict(self, dictionary, source=None):
+        pass
+    def read_file(self, f, source=None):
         pass
     def get(self, section, option, raw=False, vars=None, fallback=None): # XXX
         return ''
