@@ -719,8 +719,8 @@ namespace __defaultdict__ {
         return d;
     }
 
-    template<class A> defaultdict<A, __ss_int> *fromkeys(pyiter<A> *f) {
-        return fromkeys(f, 0);
+    template<class A> defaultdict<A, void *> *fromkeys(pyiter<A> *f) {
+        return fromkeys(f, (void *)0);
     }
 
 }
