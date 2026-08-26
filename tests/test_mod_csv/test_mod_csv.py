@@ -505,6 +505,65 @@ def test_stray_mid_line_cr():
     )
 
 
+def test_sniffer_sniff():
+    s = csv.Sniffer()
+
+    d = s.sniff("a,b,c\n1,2,3\n4,5,6\n")
+    assert d.delimiter == ','
+    assert d.quotechar == '"'
+    assert d.doublequote is False
+    assert d.skipinitialspace is False
+
+    d2 = s.sniff('name;age;score\n"Alice";34;88.5\n"Bob";29;91.2\n')
+    assert d2.delimiter == ';'
+    assert d2.quotechar == '"'
+
+    d3 = s.sniff("a\tb\tc\n1\t2\t3\n4\t5\t6\n")
+    assert d3.delimiter == '\t'
+
+
+def test_sniffer_doublequote_and_skipinitialspace():
+    s = csv.Sniffer()
+
+    # Excel-style "" escaping inside quoted fields
+    d = s.sniff('a,b\n"He said ""hi""",2\n"foo ""bar""",4\n')
+    assert d.doublequote is True
+
+    # a space consistently following the delimiter
+    d2 = s.sniff('a, b, c\n1, 2, 3\n4, 5, 6\n')
+    assert d2.delimiter == ','
+    assert d2.skipinitialspace is True
+
+
+def test_sniffer_delimiters_restriction():
+    s = csv.Sniffer()
+    sample = "a;b,c\n1;2,3\n4;5,6\n"
+
+    d1 = s.sniff(sample, delimiters=";")
+    assert d1.delimiter == ';'
+
+    d2 = s.sniff(sample, delimiters=",")
+    assert d2.delimiter == ','
+
+
+def test_sniffer_no_delimiter_error():
+    s = csv.Sniffer()
+    error = ''
+    try:
+        s.sniff('')
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'Could not determine delimiter'
+
+
+def test_sniffer_has_header():
+    s = csv.Sniffer()
+
+    assert s.has_header("id,name,score\n1,Alice,88.5\n2,Bob,91.2\n3,Carl,77.0\n") is True
+    assert s.has_header("x,y,z\na,b,c\nd,e,f\n") is False
+    assert s.has_header("1,2,3\n4,5,6\n7,8,9\n") is False
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -523,6 +582,11 @@ def test_all():
     test_eof_mid_row()
     test_strict_illegal_quote()
     test_stray_mid_line_cr()
+    test_sniffer_sniff()
+    test_sniffer_doublequote_and_skipinitialspace()
+    test_sniffer_delimiters_restriction()
+    test_sniffer_no_delimiter_error()
+    test_sniffer_has_header()
 
 
 if __name__ == "__main__":
