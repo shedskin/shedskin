@@ -1744,7 +1744,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Process a for statement"""
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
-        if ast_utils.is_fastfor(node):
+        if ast_utils.is_fastfor(node, func, self):
             assert isinstance(node.iter, ast.Call)
 
             self.temp_var2(node.target, assnode, func)
@@ -1767,10 +1767,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if ast_utils.is_enumerate(node) or ast_utils.is_zip2(node):
+            if ast_utils.is_enumerate(node, func, self) or ast_utils.is_zip2(
+                node, func, self
+            ):
                 assert isinstance(node.iter, ast.Call)
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
-                if ast_utils.is_zip2(node):
+                if ast_utils.is_zip2(node, func, self):
                     self.temp_var2(
                         (node, 3), infer.inode(self.gx, node.iter.args[1]), func
                     )
