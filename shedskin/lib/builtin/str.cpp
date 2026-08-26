@@ -262,7 +262,7 @@ tuple2<str *, str *> *str::partition(str *separator)
 {
     size_t i;
 
-    i = this->unit.find(separator->unit.c_str());
+    i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
@@ -676,7 +676,7 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
 
     i = (size_t)start;
     count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-ssize) )
+    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
     {
         i += ssize;
         if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
