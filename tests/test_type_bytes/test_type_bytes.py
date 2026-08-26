@@ -10,6 +10,11 @@ def test_capitalize():
 def test_center():
     assert b'bla'.center(10) == b'   bla    '
     assert b'bla'.center(10, b'-') == b'---bla----'
+    # odd total padding: extra fill char goes on the left here (same rule
+    # as str.center, see CPython's stringlib_center)
+    assert b'ab'.center(5, b'0') == b'00ab0'
+    assert b'ab'.center(7, b'*') == b'***ab**'
+    assert b'ab'.center(6, b'*') == b'**ab**'
 
 def test_count():
     assert b'blaa'.count(b'a') == 2

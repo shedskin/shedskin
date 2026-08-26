@@ -23,6 +23,12 @@ def test_casefold():
 def test_center():
     assert 'bla'.center(10) == '   bla    '
     assert 'bla'.center(10, '-') == '---bla----'
+    # odd total padding: extra fill char goes on the left here (CPython
+    # ties the side to the parity of the requested width, not a plain
+    # floor-division split)
+    assert 'ab'.center(5, '0') == '00ab0'
+    assert 'ab'.center(7, '*') == '***ab**'
+    assert 'ab'.center(6, '*') == '**ab**'
 
 
 def test_count():
