@@ -1,4 +1,5 @@
-print(pow(9,-2))
+minus2 = -2
+print(pow(9,minus2))
 a = 1
 a = lambda x: x
 
@@ -40,14 +41,14 @@ m.woeh(1,2)
 
 #*WARNING* function mixed with non-function
 #*WARNING* 26.py: Variable 'a' has dynamic (sub)type
-#*WARNING* 26.py:1: pow(int, int) returns int after compilation
-#*WARNING* 26.py:6: 'findall' does not work with groups (use 'finditer' instead)
-#*WARNING* 26.py:9: socket.set/gettimeout do not accept/return None
-#*WARNING* 26.py:14: default fillvalue for 'zip_longest' becomes 0 for integers
-#*WARNING* 26.py:18: non-constant or unsupported type code
+#*WARNING* 26.py:2: pow(int, int) returns int after compilation
+#*WARNING* 26.py:7: 'findall' does not work with groups (use 'finditer' instead)
+#*WARNING* 26.py:10: socket.set/gettimeout do not accept/return None
+#*WARNING* 26.py:15: default fillvalue for 'zip_longest' becomes 0 for integers
 #*WARNING* 26.py:19: non-constant or unsupported type code
-#*WARNING* 26.py:23: calling functions with different numbers of arguments
-#*WARNING* 26.py:27: assuming constant format string
-#*WARNING* 26.py:35: staticmethod/classmethod 'woeh' called without using class name
-#*WARNING* 26.py:39: staticmethod/classmethod 'woeh' called without using class name
+#*WARNING* 26.py:20: non-constant or unsupported type code
+#*WARNING* 26.py:24: calling functions with different numbers of arguments
+#*WARNING* 26.py:28: assuming constant format string
+#*WARNING* 26.py:36: staticmethod/classmethod 'woeh' called without using class name
+#*WARNING* 26.py:40: staticmethod/classmethod 'woeh' called without using class name
 
