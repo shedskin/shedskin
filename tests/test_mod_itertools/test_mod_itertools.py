@@ -140,6 +140,22 @@ def test_combinations():
     ]
 
 
+def test_combinations_with_replacement():
+    assert list(itertools.combinations_with_replacement('ABC', 2)) == [
+        ('A', 'A'),
+        ('A', 'B'),
+        ('A', 'C'),
+        ('B', 'B'),
+        ('B', 'C'),
+        ('C', 'C'),
+    ]
+    assert list(itertools.combinations_with_replacement('ABC', 0)) == [()]
+    assert list(itertools.combinations_with_replacement([], 0)) == [()]
+    assert list(itertools.combinations_with_replacement([], 2)) == []
+    assert list(itertools.combinations_with_replacement('A', 3)) == [('A', 'A', 'A')]
+    assert list(itertools.combinations_with_replacement('AB', 1)) == [('A',), ('B',)]
+
+
 def test_product():
     assert list(itertools.product()) == [()]
     assert list(itertools.product('A')) ==  [('A',)]
@@ -297,6 +313,7 @@ def test_all():
     test_islice()
     test_permutations()
     test_combinations()
+    test_combinations_with_replacement()
     test_product()
     test_product_repeat()
     test_compress()
