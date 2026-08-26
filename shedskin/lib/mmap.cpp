@@ -219,7 +219,7 @@ void *mmap::close()
 
         ::msync(m_begin, __size(), MS_SYNC);
         ::munmap(m_begin, __size());
-        closed = true;
+        closed = True;
     }
     return NULL;
 }
@@ -454,7 +454,7 @@ void *mmap::close()
         CloseHandle (map_handle);
         if (file_handle != INVALID_HANDLE_VALUE)
             CloseHandle (file_handle);
-        closed = true;
+        closed = True;
     }
     return NULL;
 }

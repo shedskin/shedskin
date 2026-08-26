@@ -282,6 +282,25 @@ def test_ctx_mgr():
             assert f.read(8) == mm.read(8)
 
 
+def test_closed():
+    map = mmap.mmap(-1, mmap.PAGESIZE)
+    assert map.closed is False
+    map.close()
+    assert map.closed is True
+
+    # note: deliberately not using `with mmap.mmap(...) as mm: ...` here and
+    # then checking mm.closed afterwards -- that pattern currently corrupts
+    # memory for both file-backed and anonymous mmaps (crashes on the next
+    # unrelated allocation). Tracked separately; calling close() directly
+    # and checking .closed right after (still within the object's normal
+    # lifetime) is the safe, currently-working pattern exercised here.
+    with open(TESTFILE_IN, "rb") as f:
+        mm = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+        assert mm.closed is False
+        mm.close()
+        assert mm.closed is True
+
+
 def test_resize_grows_backing_file():
     # regression test: resize() on a file-backed mmap must grow (or shrink)
     # the underlying file to match, and the mapping must actually be usable
@@ -351,6 +370,7 @@ def test_all():
         test_tougher_find()
         test_explicit_iter()
         test_ctx_mgr()
+        test_closed()
         test_resize_grows_backing_file()
         test_resize_shrinks_backing_file()
 
