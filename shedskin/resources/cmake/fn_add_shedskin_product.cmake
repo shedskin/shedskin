@@ -240,10 +240,12 @@ function(add_shedskin_product)
             gc
             gccpp
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
+            ${SHEDSKIN_LINK_LIBS}
         )
-        set(LIB_DIRS)
-        # Use the wrapper include dirs for gc/ structure and pcre2
-        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
+        set(LIB_DIRS ${SHEDSKIN_LINK_DIRS})
+        # Use the wrapper include dirs for gc/ structure and pcre2, plus any
+        # product-specific include dirs (e.g. a local headers-only shim lib)
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
         # NOTE: libgccpp must precede libgc: gc_cpp.cc (in libgccpp) references
@@ -256,9 +258,10 @@ function(add_shedskin_product)
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
+            ${SHEDSKIN_LINK_LIBS}
         )
-        set(LIB_DIRS ${SPM_LIB_DIRS})
-        set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+        set(LIB_DIRS ${SPM_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
+        set(LIB_INCLUDES ${SPM_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_LOCAL_DEPS)
         set(USING_STATIC_GC ON)
         # NOTE: see libgccpp/libgc ordering comment above (ENABLE_SPM branch).
@@ -266,9 +269,10 @@ function(add_shedskin_product)
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
+            ${SHEDSKIN_LINK_LIBS}
         )
-        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
-        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
+        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
+        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used
