@@ -214,10 +214,10 @@ template<class T> list<T>::list(PyObject *p) {
 }
 
 template<class T> PyObject *list<T>::__to_py__() {
-    int len = this->__len__();
+    Py_ssize_t len = (Py_ssize_t)this->__len__();
     PyObject *p = PyList_New(len);
-    for(int i=0; i<len; i++)
-        PyList_SetItem(p, i, __to_py(this->__getitem__(i)));
+    for(Py_ssize_t i=0; i<len; i++)
+        PyList_SetItem(p, i, __to_py(this->__getitem__((__ss_int)i)));
     return p;
 }
 #endif
@@ -597,7 +597,7 @@ template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
 }
 
 template<class T> void *list<T>::insert(__ss_int m, T e) {
-    int len = this->__len__();
+    __ss_int len = this->__len__();
     if (m<0) m = len+m;
     if (m<0) m = 0;
     if (m>=len) m = len;
