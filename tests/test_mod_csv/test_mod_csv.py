@@ -563,6 +563,33 @@ def test_sniffer_has_header():
     assert s.has_header("x,y,z\na,b,c\nd,e,f\n") is False
     assert s.has_header("1,2,3\n4,5,6\n7,8,9\n") is False
 
+def test_dictreader_dictwriter_roundtrip():
+    # regression test: this used to expose a file.read() bug (not a csv
+    # bug per se) where read() skipped universal-newline translation, so
+    # a DictWriter-written file with '\r\n' line endings came back out
+    # of a plain f.read() with the '\r' still attached instead of '\n'.
+    path = _csv_path('dictcsv.csv')
+    with open(path, 'w') as f:
+        f.write('name,age,city\nAlice,30,NYC\nBob,25,LA\n')
+
+    with open(path) as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames == ['name', 'age', 'city']
+        rows = list(reader)
+        assert rows == [
+            {'name': 'Alice', 'age': '30', 'city': 'NYC'},
+            {'name': 'Bob', 'age': '25', 'city': 'LA'},
+        ]
+
+    out_path = _csv_path('dictcsv_out.csv')
+    with open(out_path, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['name', 'age'])
+        writer.writeheader()
+        writer.writerow({'name': 'Carol', 'age': '40'})
+
+    with open(out_path) as f:
+        assert f.read() == 'name,age\nCarol,40\n'
+
 
 def test_all():
     test_program()  # TODO split up test
@@ -587,6 +614,7 @@ def test_all():
     test_sniffer_delimiters_restriction()
     test_sniffer_no_delimiter_error()
     test_sniffer_has_header()
+    test_dictreader_dictwriter_roundtrip()
 
 
 if __name__ == "__main__":
