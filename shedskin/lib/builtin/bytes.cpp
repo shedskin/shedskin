@@ -727,7 +727,10 @@ bytes *bytes::center(__ss_int w, bytes *fillchar) {
     if(!fillchar) fillchar = bsp;
     bytes *r = fillchar->__mul__(w);
 
-    size_t j = (width-len)/2;
+    /* see str::center for why a plain floor-division split is wrong when
+       width is odd */
+    size_t marg = width - len;
+    size_t j = marg/2 + (marg & width & 1);
     for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
