@@ -50,7 +50,7 @@ class struct_time;
 extern str *__name__;
 
 extern class_ *cl_struct_time;
-class struct_time : public pyobj {
+class struct_time : public pyseq<__ss_int> {
 public:
     __ss_int tm_sec;
     __ss_int tm_hour;
