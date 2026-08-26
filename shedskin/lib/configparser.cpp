@@ -100,7 +100,7 @@ ConfigParser -- responsible for parsing a list of
 namespace __configparser__ {
 
 tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_6, *const_7, *const_8, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -210,10 +210,38 @@ class DuplicateSectionError
 
 class_ *cl_DuplicateSectionError;
 
-void *DuplicateSectionError::__init__(str *section_) {
+void *DuplicateSectionError::__init__(str *section_, str *source_, __ss_int lineno_) {
 
-    Error::__init__(__mod6(const_4, 1, section_));
+    if (source_ != NULL && lineno_ != -1) {
+        Error::__init__(__mod6(const_54, 3, source_, lineno_, section_));
+    }
+    else {
+        Error::__init__(__mod6(const_4, 1, section_));
+    }
     section = section_;
+    source = source_;
+    lineno = lineno_;
+    return NULL;
+}
+
+/**
+class DuplicateOptionError
+*/
+
+class_ *cl_DuplicateOptionError;
+
+void *DuplicateOptionError::__init__(str *section_, str *option_, str *source_, __ss_int lineno_) {
+
+    if (source_ != NULL && lineno_ != -1) {
+        Error::__init__(__mod6(const_56, 4, source_, lineno_, option_, section_));
+    }
+    else {
+        Error::__init__(__mod6(const_55, 2, option_, section_));
+    }
+    section = section_;
+    option = option_;
+    source = source_;
+    lineno = lineno_;
     return NULL;
 }
 
@@ -340,7 +368,7 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
     __ss_int __16;
     dict<str *, str *> *sectdict;
 
-    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 16)) {
+    if (__OR((!___bool(section)), __eq(section, this->default_section), 16)) {
         sectdict = this->_defaults;
     }
     else {
@@ -372,7 +400,7 @@ __ss_bool RawConfigParser::remove_option(str *section, str *option) {
     __ss_bool existed;
     dict<str *, str *> *sectdict;
 
-    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 30)) {
+    if (__OR((!___bool(section)), __eq(section, this->default_section), 30)) {
         sectdict = this->_defaults;
     }
     else {
@@ -403,7 +431,7 @@ __ss_bool RawConfigParser::remove_section(str *section) {
     return existed;
 }
 
-void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
+void *RawConfigParser::__init__(dict<str *, str *> *defaults, str *default_section_) {
     __ss_int __3;
     tuple<str *> *__0;
     str *key, *value;
@@ -414,6 +442,7 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
 
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
+    this->default_section = (default_section_ != NULL) ? default_section_ : DEFAULTSECT;
     if (___bool(defaults)) {
 
         FOR_IN(__0,defaults->items(),1,3,123)
@@ -434,7 +463,7 @@ __ss_bool RawConfigParser::has_option(str *section, str *option) {
     __ss_int __12;
     __ss_bool __14;
 
-    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 12)) {
+    if (__OR((!___bool(section)), __eq(section, this->default_section), 12)) {
         option = this->optionxform(option);
         return (this->_defaults)->__contains__(option);
     }
@@ -462,7 +491,7 @@ void *RawConfigParser::write(file *fp) {
     __iter<tuple<str *> *>::for_in_loop __123;
 
     if (___bool(this->_defaults)) {
-        fp->write(__mod6(const_11, 1, DEFAULTSECT));
+        fp->write(__mod6(const_11, 1, this->default_section));
 
         FOR_IN(__19,(this->_defaults)->items(),20,22,123)
             __19 = __19;
@@ -526,7 +555,7 @@ str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *
     opt = this->optionxform(option);
     try {
         if ((!(this->_sections)->__contains__(section))) {
-            if (__ne(section, DEFAULTSECT)) {
+            if (__ne(section, this->default_section)) {
                 throw ((new NoSectionError(section)));
             }
             if ((this->_defaults)->__contains__(opt)) {
@@ -611,7 +640,7 @@ __iter<tuple<str *> *> *RawConfigParser::items(str *section) {
     try {
         d2 = (this->_sections)->__getitem__(section);
     } catch (KeyError *) {
-        if (__ne(section, DEFAULTSECT)) {
+        if (__ne(section, this->default_section)) {
             throw ((new NoSectionError(section)));
         }
         d2 = (new dict<str *, str *>());
@@ -639,13 +668,23 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     __ss_int __33, __41, __43, lineno, pos;
 
     ParsingError *e;
-    str *line, *optname, *optval, *sectname, *value, *vi;
+    str *line, *optname, *optval, *sectname, *value, *vi, *cursectname;
     dict<str *, str *> *cursect;
+    set<str *> *elements_added;
+    set<str *> *cur_options;
 
     cursect = 0;
+    cursectname = 0;
     optname = 0;
     lineno = 0;
     e = 0;
+    /* Tracks section names and "section\x01option" keys added while
+       parsing *this* source, mirroring CPython's strict=True default:
+       re-reading an already-existing section across multiple read()
+       calls is fine, but repeating a section header or an option
+       within a single file/string/dict is an error. */
+    elements_added = (new set<str *>());
+    cur_options = 0;
 
     while (1) {
         line = fp->readline();
@@ -666,16 +705,22 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
             mo = (RawConfigParser::SECTCRE)->match(line);
             if (___bool(mo)) {
                 sectname = mo->group(1, const_22);
+                if (elements_added->__contains__(sectname)) {
+                    throw ((new DuplicateSectionError(sectname, fpname, lineno)));
+                }
+                elements_added->add(sectname);
                 if ((this->_sections)->__contains__(sectname)) {
                     cursect = (this->_sections)->__getitem__(sectname);
                 }
-                else if (__eq(sectname, DEFAULTSECT)) {
+                else if (__eq(sectname, this->default_section)) {
                     cursect = this->_defaults;
                 }
                 else {
                     cursect = (new dict<str *, str *>(1, new tuple<str *>(2,const_15,sectname)));
                     this->_sections->__setitem__(sectname, cursect);
                 }
+                cursectname = sectname;
+                cur_options = (new set<str *>());
                 optname = 0;
             }
             else if (cursect==0) {
@@ -698,6 +743,12 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
                         optval = const_17;
                     }
                     optname = this->optionxform(optname->rstrip());
+                    if ((cur_options != 0) && cur_options->__contains__(optname)) {
+                        throw ((new DuplicateOptionError(cursectname, optname, fpname, lineno)));
+                    }
+                    if (cur_options != 0) {
+                        cur_options->add(optname);
+                    }
                     cursect->__setitem__(optname, optval);
                 }
                 else {
@@ -730,6 +781,25 @@ void *RawConfigParser::read_string(str *string_, str *source) {
     return NULL;
 }
 
+void *RawConfigParser::read_file(file *fp, str *source) {
+    /**
+    Like read() but the argument must be a file-like object.
+
+    The `source' argument is optional, and if not given, the `name'
+    attribute of the given `fp' is used instead. This is aimed at
+    non-string filenames such as pathlib.Path objects.
+    */
+
+    if (source == NULL) {
+        source = fp->name;
+        if (source == NULL) {
+            source = new str("<?\?>");
+        }
+    }
+    this->_read(fp, source);
+    return NULL;
+}
+
 void *RawConfigParser::read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source) {
     /**
     Read configuration from a dict of dicts (section name -> option name
@@ -737,7 +807,8 @@ void *RawConfigParser::read_dict(dict<str *, dict<str *, str *> *> *dictionary, 
 
     `source` is accepted for signature compatibility with CPython but is
     currently unused: this parser doesn't implement strict-mode duplicate
-    detection (DuplicateSectionError/DuplicateOptionError) for read_dict yet.
+    detection (DuplicateSectionError/DuplicateOptionError) for read_dict,
+    since duplicate keys can't occur within a single Python dict anyway.
     */
     dict<str *, dict<str *, str *> *> *__300;
     int __301;
@@ -752,7 +823,7 @@ void *RawConfigParser::read_dict(dict<str *, dict<str *, str *> *> *dictionary, 
     (void)source;
 
     FOR_IN(section,dictionary,300,301,302)
-        if (__ne(section, DEFAULTSECT) && (!(this->_sections)->__contains__(section))) {
+        if (__ne(section, this->default_section) && (!(this->_sections)->__contains__(section))) {
             this->add_section(section);
         }
         keys = dictionary->__getitem__(section);
@@ -860,7 +931,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
         try {
             d->update((this->_sections)->__getitem__(section));
         } catch (KeyError *) {
-            if (__ne(section, DEFAULTSECT)) {
+            if (__ne(section, this->default_section)) {
                 throw ((new NoSectionError(section)));
             }
         }
@@ -916,7 +987,7 @@ __iter<tuple<str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str
     try {
         d->update((this->_sections)->__getitem__(section));
     } catch (KeyError *) {
-        if (__ne(section, DEFAULTSECT)) {
+        if (__ne(section, this->default_section)) {
             throw ((new NoSectionError(section)));
         }
     }
@@ -1015,6 +1086,10 @@ void __init() {
     const_51 = new str("DEFAULTSECT");
     const_52 = new str("MAX_INTERPOLATION_DEPTH");
     const_53 = new str("DEFAULT");
+    const_54 = new str("While reading from %r [line %2d]: section %r already exists");
+    const_55 = new str("Option %r in section %r already exists");
+    const_56 = new str("While reading from %r [line %2d]: option %r in section %r already exists");
+    const_57 = new str("DuplicateOptionError");
 
     __name__ = new str("ConfigParser");
 
@@ -1030,6 +1105,7 @@ void __init() {
     RawConfigParser::OPTCRE = __re__::compile(const_38);
     cl_ParsingError = new class_("ParsingError");
     cl_DuplicateSectionError = new class_("DuplicateSectionError");
+    cl_DuplicateOptionError = new class_("DuplicateOptionError");
     cl_NoOptionError = new class_("NoOptionError");
     cl_NoSectionError = new class_("NoSectionError");
     cl_ConfigParser = new class_("ConfigParser");
