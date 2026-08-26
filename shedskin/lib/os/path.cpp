@@ -1116,12 +1116,18 @@ str *commonpath(list<str *> *paths) {
     */
     list<list<str *> *> *part_lists;
     list<str *> *parts, *common;
-    str *p, *part;
+    str *p, *part, *posix_sep;
     __ss_bool have_abs, this_abs, first, match;
     __ss_int i, num_paths, n, k, m;
 
     if (!___bool(paths))
         throw new ValueError(new str("commonpath() arg is an empty sequence"));
+
+    /* This function is intentionally posix-style on every platform (see
+       the file-level NOTE above), so split on '/' explicitly rather than
+       the platform's `sep` -- on Windows `sep` is '\\', which would leave
+       these forward-slash paths unsplit. */
+    posix_sep = new str("/");
 
     part_lists = new list<list<str *> *>();
     have_abs = False;
@@ -1140,7 +1146,7 @@ str *commonpath(list<str *> *paths) {
         }
 
         parts = new list<str *>();
-        list<str *> *raw = p->split(sep);
+        list<str *> *raw = p->split(posix_sep);
         for (k = 0; k < len(raw); k++) {
             part = raw->__getfast__(k);
             if (___bool(part) && !__eq(part, curdir))
@@ -1170,13 +1176,23 @@ str *commonpath(list<str *> *paths) {
         k++;
     }
 
+    /* Join with the hardcoded posix separator, not joinl()/sep -- joinl()
+       applies platform-specific (e.g. drive-letter) join rules via the
+       platform `sep`, which would reintroduce backslashes on Windows. */
+    str *joined = new str("");
+    for (i = 0; i < len(common); i++) {
+        if (i > 0)
+            joined = joined->__iadd__(posix_sep);
+        joined = joined->__iadd__(common->__getfast__(i));
+    }
+
     if (have_abs) {
         if (___bool(common))
-            return sep->__add__(joinl(common));
-        return sep;
+            return posix_sep->__add__(joined);
+        return posix_sep;
     }
     if (___bool(common))
-        return joinl(common);
+        return joined;
     return new str("");
 }
 
