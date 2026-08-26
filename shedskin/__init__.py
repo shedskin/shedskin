@@ -108,6 +108,10 @@ class Shedskin:
             if args.retry:
                 gx.retry_maxiters = True
 
+            if args.int32 and args.int64:
+                self.log.error("--int32 and --int64 are mutually exclusive")
+                sys.exit(1)
+
             if args.int32:
                 gx.int32 = True
 
@@ -119,6 +123,10 @@ class Shedskin:
 #                    self.log.error("--int128 not supported on windows")
 #                    sys.exit(1)
 #                gx.int128 = True
+
+            if args.float32 and args.float64:
+                self.log.error("--float32 and --float64 are mutually exclusive")
+                sys.exit(1)
 
             if args.float32:
                 gx.float32 = True
