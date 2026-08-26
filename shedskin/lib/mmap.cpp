@@ -581,7 +581,7 @@ bytes *mmap::read(__ss_int size)
             m_position = m_end;
         }
     }
-    bytes *b = new bytes(at, (int)(m_position - at), 1);
+    bytes *b = new bytes(at, (size_t)(m_position - at), 1);
     return b;
 }
 
@@ -617,7 +617,7 @@ bytes *mmap::readline(__ss_int size, const char eol)
     {
         m_position = at + size;
     }
-    return new bytes(at, (int)(m_position - at), 1);
+    return new bytes(at, (size_t)(m_position - at), 1);
 }
 
 __ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
@@ -806,7 +806,7 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    bytes *b = new bytes(start, (int)size, 1);
+    bytes *b = new bytes(start, size, 1);
     return b;
 }
 
