@@ -280,7 +280,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
             map = {"int": int, "str": str, "float": float}
             func_id = child.func.id
-            if func_id in ("range"):  # ,'xrange'):
+            if func_id == "range":
                 count, child = count + 1, int
             elif func_id in map:
                 child = map[func_id]
