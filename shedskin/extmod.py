@@ -30,11 +30,20 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__bool__"]
+# Order matters: these are written positionally into a PyNumberMethods
+# initializer in do_extmod_methoddef, so this list must match the real
+# CPython 3 struct layout exactly (nb_add, nb_subtract, nb_multiply,
+# nb_remainder, nb_divmod, nb_power, nb_negative, nb_positive, nb_absolute,
+# nb_bool, ...). There is no CPython 3 slot for '__div__' (that was Python
+# 2's nb_divide); including it here shifts every entry after it by one slot,
+# wiring __mod__/__divmod__/__pow__/__neg__/__pos__/__abs__/__bool__ to the
+# wrong C-API function pointer (confirmed: this either fails to compile due
+# to incompatible function-pointer types, or silently binds operators to the
+# wrong dunder).
 OVERLOAD = [
     "__add__",
     "__sub__",
     "__mul__",
-    "__div__",
     "__mod__",
     "__divmod__",
     "__pow__",
@@ -184,38 +193,32 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])  # TODO inhcpa?
         )
 
+    def _add_global(self, var: "python.Variable", ssmod: str) -> None:
+        """Emit a single PyModule_AddObject call with its return value checked.
+
+        Unlike class-type registration further down (which already checks
+        this), the unchecked call previously used here would leave a Python
+        exception silently set (PyModule_AddObject raises on failure) while
+        module init carried on as if nothing had gone wrong.
+        """
+        params = {
+            "name": var.name,
+            "var": "__" + self.gv.module.ident + "__::" + self.gv.cpp_name(var),
+            "ssmod": ssmod,
+        }
+        self.write(
+            '    if (PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s)) < 0) {'
+            % params
+        )
+        self.write("        Py_DECREF(%s);" % ssmod)
+        self.write("        return NULL;")
+        self.write("    }")
+
     def do_add_globals(self, classes: list["python.Class"], ssmod: str) -> None:
         """Add global variables to the module"""
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
-            if [
-                1
-                for t in self.gv.mergeinh[var]
-                if t[0].ident in ["int_", "float_", "bool_"]
-            ]:
-                self.write(
-                    '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));'
-                    % {
-                        "name": var.name,
-                        "var": "__"
-                        + self.gv.module.ident
-                        + "__::"
-                        + self.gv.cpp_name(var),
-                        "ssmod": ssmod,
-                    }
-                )
-            else:
-                self.write(
-                    '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));'
-                    % {
-                        "name": var.name,
-                        "var": "__"
-                        + self.gv.module.ident
-                        + "__::"
-                        + self.gv.cpp_name(var),
-                        "ssmod": ssmod,
-                    }
-                )
+            self._add_global(var, ssmod)
 
     def do_reduce_setstate(
         self, cl: "python.Class", vars: list["python.Variable"]
@@ -343,19 +346,54 @@ class ExtensionModule:
         write = self.write
         if cl:
             ident = clname(cl)
+
+        # nb_bool is `inquiry`: int (*)(PyObject *). The generated __bool__
+        # method itself returns PyObject * (so it can also be called
+        # directly as obj.__bool__() through the regular PyMethodDef entry
+        # below), so a plain cast into the number-methods slot would hand
+        # CPython a pointer value where it expects a real 0/1/-1 int --
+        # i.e. bool(obj) would come out true whenever the low bits of the
+        # returned object's address happen to be nonzero, which in
+        # practice is nearly always (confirmed: bool(Vec(0)) returned True
+        # before this fix). Bridge the two calling conventions with a
+        # small wrapper instead of reusing the function directly.
+        bool_funcs = [f for f in funcs if f.ident == "__bool__"]
+        if bool_funcs:
+            bf = bool_funcs[0]
+            assert isinstance(bf.parent, python.Class)
+            bool_target = "%s___bool__" % clname(bf.parent)
+            write("static int %s_nb_bool(PyObject *self) {" % bool_target)
+            write("    PyObject *__ss_r = %s(self, NULL, NULL);" % bool_target)
+            write("    if (!__ss_r)")
+            write("        return -1;")
+            write("    int __ss_truth = PyObject_IsTrue(__ss_r);")
+            write("    Py_DECREF(__ss_r);")
+            write("    return __ss_truth;")
+            write("}\n")
+
         write("static PyNumberMethods %s_as_number = {" % ident)
         for overload in OVERLOAD:
             fs = [f for f in funcs if f.ident == overload]
             if fs:
                 f = fs[0]
                 assert isinstance(f.parent, python.Class)
-                if overload == "__abs__":
-                    write(
-                        "    (int (*)(PyObject *)){}_{},".format(clname(f.parent), overload)
-                    )
+                if overload == "__bool__":
+                    write("    %s_nb_bool," % (clname(f.parent) + "___bool__"))
                 elif overload in OVERLOAD_SINGLE:
+                    # nb_negative/nb_positive/nb_absolute are `unaryfunc`:
+                    # PyObject *(*)(PyObject *)
                     write(
                         "    (PyObject *(*)(PyObject *))%s_%s,"
+                        % (clname(f.parent), overload)
+                    )
+                elif overload == "__pow__":
+                    # nb_power is `ternaryfunc` (self, other, modulo):
+                    # PyObject *(*)(PyObject *, PyObject *, PyObject *).
+                    # This matches the generated method's real (self, args,
+                    # kwargs) signature exactly, unlike the PyCFunction cast
+                    # used below for the binary operators.
+                    write(
+                        "    (PyObject *(*)(PyObject *, PyObject *, PyObject *))%s_%s,"
                         % (clname(f.parent), overload)
                     )
                 else:
@@ -655,13 +693,17 @@ class ExtensionModule:
             write("    (void)closure;")
             write("    try {")
             typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
-            if typ == "void *":  # XXX investigate
-                write("        self->__ss_object->%s = NULL;" % self.gv.cpp_name(var))
-            else:
-                write(
-                    "        self->__ss_object->%s = __to_ss<%s>(value);"
-                    % (self.gv.cpp_name(var), typ)
-                )
+            # A "void *" attribute (one whose merged type is only ever None)
+            # used to be special-cased to unconditionally set NULL, silently
+            # discarding whatever `value` the caller actually passed (no
+            # error, no assignment). __to_ss<void *> already exists and does
+            # the right thing: it accepts None and rejects anything else with
+            # a TypeError, so route it through the same path as every other
+            # type instead of hardcoding NULL.
+            write(
+                "        self->__ss_object->%s = __to_ss<%s>(value);"
+                % (self.gv.cpp_name(var), typ)
+            )
             write("    } catch (Exception *e) {")
             write(
                 '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));'
