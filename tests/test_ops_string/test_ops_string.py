@@ -95,6 +95,27 @@ def test_none_argument():
     assert "%s" % x == 'None'
 
 
+def test_width_and_justify():
+    assert "[%-5d]" % 42 == '[42   ]'
+    assert "[%5d]" % 42 == '[   42]'
+    assert "[%-05d]" % 42 == '[42   ]'
+    assert "[%05d]" % -42 == '[-0042]'
+    assert "[%-06d]" % -42 == '[-42   ]'
+    assert "[%-5s]" % "ab" == '[ab   ]'
+    assert "[%5s]" % "ab" == '[   ab]'
+    assert "[%-10.2s]" % "hello" == '[he        ]'
+    assert "[%-5x]" % 255 == '[ff   ]'
+    assert "[%05x]" % 255 == '[000ff]'
+    assert "[%-5o]" % 8 == '[10   ]'
+    assert "[%-10.2f]" % 3.14159 == '[3.14      ]'
+    assert "[%10.2f]" % 3.14159 == '[      3.14]'
+    assert "[%06.2f]" % -3.14159 == '[-03.14]'
+    assert "[%+06.2f]" % 3.14159 == '[+03.14]'
+    assert "[%8.3d]" % 5 == '[     005]'
+    assert "[%-8.3d]" % 5 == '[005     ]'
+    assert "[%08.3d]" % 5 == '[00000005]'
+
+
 def test_all():
     test_classic1()
     test_classic2()
@@ -102,6 +123,7 @@ def test_all():
     test_str_precision()
     test_unterminated_mapping_key()
     test_none_argument()
+    test_width_and_justify()
 
 
 if __name__ == "__main__":
