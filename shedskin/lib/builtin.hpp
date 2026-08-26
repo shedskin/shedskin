@@ -311,7 +311,7 @@ public:
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
-void __throw_index_out_of_range();
+void __throw_index_out_of_range(const char *msg="index out of range");
 void __throw_range_step_zero();
 void __throw_stop_iteration();
 void __throw_zero_division(const char *msg);
@@ -322,14 +322,14 @@ void __throw_zero_division(const char *msg);
 #define unlikely(x)    (x)
 #endif
 
-template<class T> static inline __ss_int __wrap(T a, __ss_int i) {
+template<class T> static inline __ss_int __wrap(T a, __ss_int i, const char *msg="index out of range") {
     __ss_int l = len(a);
 #ifndef __SS_NOWRAP
     if(unlikely(i<0)) i += l;
 #endif
 #ifndef __SS_NOBOUNDS
         if(unlikely(i<0 || i>= l))
-            __throw_index_out_of_range();
+            __throw_index_out_of_range(msg);
 #endif
     return i;
 }
