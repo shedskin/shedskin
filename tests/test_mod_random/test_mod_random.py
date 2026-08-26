@@ -203,12 +203,36 @@ def test_systemrandom():
     assert first == second
 
 
+def test_sample_errors():
+    # regression test: CPython raises the same message
+    # ("Sample larger than population or is negative") for both a
+    # negative k and a k that exceeds the population size.
+    expected = "Sample larger than population or is negative"
+
+    ok = False
+    try:
+        random.sample([1, 2, 3], -1)
+    except ValueError as e:
+        ok = True
+        assert str(e) == expected
+    assert ok
+
+    ok = False
+    try:
+        random.sample([1, 2, 3], 5)
+    except ValueError as e:
+        ok = True
+        assert str(e) == expected
+    assert ok
+
+
 def test_all():
     test_random1()
     test_random2()
     test_random3()
     test_randbytes()
     test_choices()
+    test_sample_errors()
     test_getsetstate()
     test_getrandbits()
     test_systemrandom()

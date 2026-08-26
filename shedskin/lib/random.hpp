@@ -207,7 +207,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, __ss_int k) {
             selection in the sample.
     */
     str *const_5, *const_6;
-    const_5 = new str("sample larger than population");
+    const_5 = new str("Sample larger than population or is negative");
     const_6 = new str("population to sample has no members");
     A __39;
     dict<int, A> *selected;
