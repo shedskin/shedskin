@@ -126,6 +126,12 @@ def test_permutations():
         ('D', 'A'), ('D', 'B'), ('D', 'C'), 
         ('C', 'A'), ('C', 'B'), ('C', 'D')]
 
+    try:
+        list(itertools.permutations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_combinations():
     assert list(itertools.combinations('ABDC', 0)) == [()]
@@ -138,6 +144,26 @@ def test_combinations():
         ('B', 'C'), 
         ('D', 'C'),
     ]
+
+    try:
+        list(itertools.combinations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
+
+def test_combinations_with_replacement():
+    assert list(itertools.combinations_with_replacement('ABC', 2)) == [
+        ('A', 'A'), ('A', 'B'), ('A', 'C'),
+        ('B', 'B'), ('B', 'C'),
+        ('C', 'C'),
+    ]
+
+    try:
+        list(itertools.combinations_with_replacement('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
 
 
 def test_combinations_with_replacement():
