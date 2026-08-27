@@ -1740,6 +1740,25 @@ def ifa_confluence_point(node: CNode, creation_points: CreationPoints) -> bool:
     return False
 
 
+def ifa_applicable_csite(gx: "config.GlobalInfo", node: CNode) -> bool:
+    """can a split involving this creation site actually be applied?
+
+    analyze() applies a split in one of two ways: module-level creation sites
+    are seeded directly into the restored network, and creation sites inside a
+    function are recorded in the alloc info table under the cartesian product
+    context of their parent. A node whose dcpa is not one of its parent's
+    contexts fits neither, so splitting it off changes nothing -- but it still
+    makes ifa() report a split, so the analysis loop runs again, rediscovers
+    the same imprecision, and proposes the same inapplicable split, until
+    MAXITERS. Leaving such sites out of the flow graph costs no precision,
+    since a split that could not be applied never bought any.
+    """
+    parent = parent_func(gx, node.thing)
+    if parent is None:
+        return True
+    return node.dcpa in parent.cp
+
+
 def ifa_flow_graph(
     gx: "config.GlobalInfo",
     cl: "python.Class",
@@ -1789,9 +1808,14 @@ def ifa_flow_graph(
             csites.append(n)
     flow_creation_sites(set(csites), allnodes, fout_dict)
 
+    # --- drop creation sites a split could never be applied to (see above)
+    csites = [n for n in csites if ifa_applicable_csite(gx, n)]
+
     # csites not flowing to any assignment
     allcsites2 = allcsites.get((cl, dcpa), set())
-    emptycsites = list(allcsites2 - set(csites))
+    emptycsites = [
+        n for n in allcsites2 - set(csites) if ifa_applicable_csite(gx, n)
+    ]
     for n in emptycsites:
         n.paths = []
 
