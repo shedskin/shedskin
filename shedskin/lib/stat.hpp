@@ -45,27 +45,22 @@ extern __ss_int __ss_S_IRWXO;
 extern __ss_int __ss_ST_DEV;
 extern __ss_int __ss_ST_SIZE;
 
-__ss_int __ss_S_ISDIR(__ss_int mode);
-__ss_int __ss_S_ISREG(__ss_int mode);
+__ss_bool __ss_S_ISDIR(__ss_int mode);
+__ss_bool __ss_S_ISREG(__ss_int mode);
 
 str *filemode(__ss_int mode);
 
-/* S_IMODE/S_IFMT use only literal bitmask constants, so they have no
+/* S_IMODE/S_IFMT/S_ISCHR/S_ISBLK/S_ISFIFO/S_ISLNK/S_ISSOCK use only
+   literal bitmask constants (see stat.cpp), so they have no
    dependency on the POSIX S_IS.. / S_IF.. macros that MSVC's
-   <sys/stat.h> lacks; they must stay available on every platform.
-   Only S_ISCHR, S_ISBLK and S_ISFIFO actually rely on those missing
-   macros and need the MSVC guard. */
+   <sys/stat.h> lacks, and are available on every platform. */
 __ss_int __ss_S_IMODE(__ss_int mode);
 __ss_int __ss_S_IFMT(__ss_int mode);
-#if !defined (_MSC_VER)
-__ss_int __ss_S_ISCHR(__ss_int mode);
-__ss_int __ss_S_ISBLK(__ss_int mode);
-__ss_int __ss_S_ISFIFO(__ss_int mode);
-#endif
-#ifndef WIN32
-__ss_int __ss_S_ISLNK(__ss_int mode);
-__ss_int __ss_S_ISSOCK(__ss_int mode);
-#endif
+__ss_bool __ss_S_ISCHR(__ss_int mode);
+__ss_bool __ss_S_ISBLK(__ss_int mode);
+__ss_bool __ss_S_ISFIFO(__ss_int mode);
+__ss_bool __ss_S_ISLNK(__ss_int mode);
+__ss_bool __ss_S_ISSOCK(__ss_int mode);
 
 void __init();
 
