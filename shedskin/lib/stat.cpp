@@ -68,14 +68,14 @@ void __init() {
 #endif
 }
 
-__ss_int __ss_S_ISDIR(__ss_int mode) {
+__ss_bool __ss_S_ISDIR(__ss_int mode) {
 
-    return S_ISDIR(mode);
+    return __mbool(S_ISDIR(mode));
 }
 
-__ss_int __ss_S_ISREG(__ss_int mode) {
+__ss_bool __ss_S_ISREG(__ss_int mode) {
 
-    return S_ISREG(mode);
+    return __mbool(S_ISREG(mode));
 }
 
 /* S_IMODE/S_IFMT operate on literal bitmask constants only, with no
@@ -92,31 +92,31 @@ __ss_int __ss_S_IFMT(__ss_int mode) {
 }
 
 #if !defined( _MSC_VER )
-__ss_int __ss_S_ISCHR(__ss_int mode) {
+__ss_bool __ss_S_ISCHR(__ss_int mode) {
 
-    return S_ISCHR(mode);
+    return __mbool(S_ISCHR(mode));
 }
 
-__ss_int __ss_S_ISBLK(__ss_int mode) {
+__ss_bool __ss_S_ISBLK(__ss_int mode) {
 
-    return S_ISBLK(mode);
+    return __mbool(S_ISBLK(mode));
 }
 
-__ss_int __ss_S_ISFIFO(__ss_int mode) {
+__ss_bool __ss_S_ISFIFO(__ss_int mode) {
 
-    return S_ISFIFO(mode);
+    return __mbool(S_ISFIFO(mode));
 }
 #endif
 
 #ifndef WIN32
-__ss_int __ss_S_ISLNK(__ss_int mode) {
+__ss_bool __ss_S_ISLNK(__ss_int mode) {
 
-    return S_ISLNK(mode);
+    return __mbool(S_ISLNK(mode));
 }
 
-__ss_int __ss_S_ISSOCK(__ss_int mode) {
+__ss_bool __ss_S_ISSOCK(__ss_int mode) {
 
-    return S_ISSOCK(mode);
+    return __mbool(S_ISSOCK(mode));
 }
 #endif
 
