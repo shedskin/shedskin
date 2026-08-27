@@ -217,6 +217,7 @@ class ShedskinDependencyManager:
             enable_docs=False,
             enable_gcj_support=False,
             enable_java_finalization=False,
+            enable_large_config=True,
         )
         self.cmake_build(bdwgc_build)
         self.cmake_install(bdwgc_build)
@@ -448,6 +449,7 @@ class LocalDependencyManager:
             enable_docs=False,
             enable_gcj_support=False,
             enable_java_finalization=False,
+            enable_large_config=True,
             CMAKE_POSITION_INDEPENDENT_CODE=True,
         )
 
