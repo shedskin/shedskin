@@ -6,7 +6,7 @@ Shed Skin is an experimental Python-to-C++ transpiler designed to speed up the e
 
 Shed Skin uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, Shed Skin requires Python code to be written such that all variables are (implicitly!) statically typed.
 
-Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 30 common modules are (partially) supported, such as `random` and `re` (see [Library limitations](#library-limitations)).
+Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although over 30 common modules are (partially) supported, such as `random` and `re` (see [Library limitations](#library-limitations)).
 
 Additionally, the type inference techniques employed by Shed Skin currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 6,000 lines (sloccount)). In all, this means that Shed Skin is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard or external libraries.
 
@@ -117,7 +117,7 @@ var = SomeClass # bad
 
 ## Library Limitations
 
-At the moment, the following 30 modules are (partially) supported.
+At the moment, the following 33 modules are (partially) supported.
 
 * `array`
 * `base64` (no 32, 85 variants)
@@ -143,9 +143,11 @@ At the moment, the following 30 modules are (partially) supported.
 * `os` (partial)
 * `os.path` (partial)
 * `random`
-* `re` (PCRE-compatible syntax)
+* `re` (PCRE2-compatible syntax)
 * `select` (not well tested)
+* `signal` (constants only)
 * `socket` (not well tested)
+* `stat`
 * `string` (no Format, Template)
 * `struct` (no Struct, iter_unpack)
 * `sys` (partial)
@@ -277,7 +279,7 @@ This will create a `build` directory, containing the generated C++ code and bina
 Under Windows (note that this will download dependencies), type:
 
 ```bash
-shedskin build --conan test
+shedskin build test
 ```
 
 If there is an error about `nmake` not being found, you may have to enter a "visual studio developer command prompt" first.
@@ -409,7 +411,8 @@ To use the generated extension module with the `multiprocessing` standard librar
 ```python
 from multiprocessing import Pool
 
-def part_sum((start, end)):
+def part_sum(start_end):
+    start, end = start_end
     import meuk
     return meuk.part_sum(start, end)
 
@@ -573,7 +576,21 @@ a = [1, 2, 3]
 print(a[5]) # invalid index: out of bounds
 ```
 
+As of 0.9.13, dividing by zero raises a `ZeroDivisionError`, as in CPython. Use `-z` or `--nozero` to disable this check, if you are sure it cannot happen:
+
+```python
+a = 1
+b = 0
+print(a / b) # ZeroDivisionError
+```
+
 Note that as of 0.9.13, integers default to 64-bit (`--int64`); use `--int32` to restore the previous, narrower default.
+
+Three options added in 0.9.13 are worth knowing about:
+
+* `--retry` restarts the analysis when it hits 'max iterations'. This often helps for larger programs, so there is no need to retry manually.
+* `--boost` switches the generated code over to (bundled) boost containers. This can help a lot for programs that lean on dictionaries or sets, or that create many very short lists.
+* `--predict` tries to predict maximum list sizes before (re)allocating storage, by sampling at run time per allocation site. This can greatly improve performance when reallocation is the bottleneck.
 
 ### build
 
@@ -766,8 +783,9 @@ options:
 ### Performance Tips
 
 * Small memory allocations (e.g. creating a new tuple, list or class instance..) typically do not slow down Python programs by much. However, after compilation to C++, they can quickly become a bottleneck. This is because for each allocation, memory has to be requested from the system, the memory has to be garbage-collected, and many memory allocations are further likely to cause cache misses. The key to getting very good performance is often to reduce the number of small allocations, for example by rewriting a small list comprehension by a for loop or by avoiding intermediate tuples in some calculation.
-* But note that for the idiomatic `for a, b in enumerate(..)`, `for a, b in enumerate(..)` and `for a, b in somedict.iteritems()`, the intermediate small objects are optimized away, and that 1-length strings are cached.
+* But note that for the idiomatic `for a, b in enumerate(..)`, `for a, b in zip(..)` and `for a, b in somedict.items()`, the intermediate small objects are optimized away, and that 1-length strings are cached.
 * Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section [Command-line options](#command-line-options) for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
+* Two options exist specifically to speed up allocation-heavy code: `--boost`, which uses boost containers for dictionaries, sets and short lists, and `--predict`, which samples list sizes at run time to avoid repeated reallocation. Both are worth trying before reaching for more invasive rewrites.
 * Attribute access is faster in the generated code than indexing. For example, `v.x * v.y * v.z` is faster than `v[0] * v[1] * v[2]`.
 * Shed Skin takes the flags it sends to the C++ compiler from the `FLAGS*` files in the Shed Skin installation directory. These flags can be modified, or overruled by creating a local file named `FLAGS`.
 * When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding -ffast-math can sometimes greatly improve performance.
@@ -810,7 +828,7 @@ s = statistics(); s.nodes = 28; s.solutions = set()
 * The evaluation order of arguments to a function or print changes with translation to C++, so it's better not to depend on this:
 
 ```python
-print('hoei', raw_input()) # raw_input is called before printing 'hoei'!
+print('hoei', input()) # input is called before printing 'hoei'!
 ```
 
 * Tuples with different types of elements and length > 2 are currently not supported. It can however be useful to 'simulate' them:
