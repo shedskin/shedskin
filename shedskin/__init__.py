@@ -593,7 +593,7 @@ class Shedskin:
 
         ss = cls(args)
 
-        ss.log.info("*** SHED SKIN Python-to-C++ Compiler 0.9.13 ***")
+        ss.log.info("*** SHED SKIN Python-to-C++ Compiler 0.9.13-pre1 ***")
         ss.log.info(
             "Copyright 2005-2026 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)"
         )
