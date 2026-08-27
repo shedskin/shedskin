@@ -123,11 +123,11 @@ At the moment, the following 30 modules are (partially) supported.
 * `base64` (no 32, 85 variants)
 * `binascii` (no 16, 32, 85 variants)
 * `bisect`
-* `collections` (defaultdict, deque)
+* `collections` (defaultdict, deque, Counter)
 * `colorsys`
-* `configparser` (no SafeConfigParser)
+* `configparser`
 * `copy` (no replace)
-* `csv` (no Sniffer, ASCII-only)
+* `csv` (ASCII-only)
 * `datetime` (not well tested)
 * `fnmatch`
 * `functools` (reduce)
@@ -141,7 +141,7 @@ At the moment, the following 30 modules are (partially) supported.
 * `math.integer`
 * `mmap` (not well tested)
 * `os` (partial)
-* `os.path`
+* `os.path` (partial)
 * `random`
 * `re` (PCRE-compatible syntax)
 * `select` (not well tested)
