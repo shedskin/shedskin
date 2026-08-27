@@ -1040,7 +1040,7 @@
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
 <p>Shed Skin is an experimental Python-to-C++ transpiler designed to speed up the execution of computation-intensive Python programs. It converts programs written in a restricted subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module that can be imported and used in larger Python programs.</p>
 <p>Shed Skin uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, Shed Skin requires Python code to be written such that all variables are (implicitly!) statically typed.</p>
-<p>Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 30 common modules are (partially) supported, such as <code>random</code> and <code>re</code> (see <a href="#library-limitations">Library limitations</a>).</p>
+<p>Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although over 30 common modules are (partially) supported, such as <code>random</code> and <code>re</code> (see <a href="#library-limitations">Library limitations</a>).</p>
 <p>Additionally, the type inference techniques employed by Shed Skin currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 6,000 lines (sloccount)). In all, this means that Shed Skin is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard or external libraries.</p>
 <p>Because Shed Skin is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!</p>
 <h2 id="typing-restrictions">Typing Restrictions<a class="headerlink" href="#typing-restrictions" title="Permanent link">&para;</a></h2>
@@ -1117,17 +1117,17 @@ in cases where they can't.</p>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="c1"># bad, contained</span>
 </code></pre></div>
 <h2 id="library-limitations">Library Limitations<a class="headerlink" href="#library-limitations" title="Permanent link">&para;</a></h2>
-<p>At the moment, the following 30 modules are (partially) supported.</p>
+<p>At the moment, the following 33 modules are (partially) supported.</p>
 <ul>
 <li><code>array</code></li>
 <li><code>base64</code> (no 32, 85 variants)</li>
 <li><code>binascii</code> (no 16, 32, 85 variants)</li>
 <li><code>bisect</code></li>
-<li><code>collections</code> (defaultdict, deque)</li>
+<li><code>collections</code> (defaultdict, deque, Counter)</li>
 <li><code>colorsys</code></li>
-<li><code>configparser</code> (no SafeConfigParser)</li>
+<li><code>configparser</code></li>
 <li><code>copy</code> (no replace)</li>
-<li><code>csv</code> (no Sniffer, ASCII-only)</li>
+<li><code>csv</code> (ASCII-only)</li>
 <li><code>datetime</code> (not well tested)</li>
 <li><code>fnmatch</code></li>
 <li><code>functools</code> (reduce)</li>
@@ -1141,11 +1141,13 @@ in cases where they can't.</p>
 <li><code>math.integer</code></li>
 <li><code>mmap</code> (not well tested)</li>
 <li><code>os</code> (partial)</li>
-<li><code>os.path</code></li>
+<li><code>os.path</code> (partial)</li>
 <li><code>random</code></li>
-<li><code>re</code> (PCRE-compatible syntax)</li>
+<li><code>re</code> (PCRE2-compatible syntax)</li>
 <li><code>select</code> (not well tested)</li>
+<li><code>signal</code> (constants only)</li>
 <li><code>socket</code> (not well tested)</li>
+<li><code>stat</code></li>
 <li><code>string</code> (no Format, Template)</li>
 <li><code>struct</code> (no Struct, iter_unpack)</li>
 <li><code>sys</code> (partial)</li>
@@ -1233,7 +1235,7 @@ in cases where they can't.</p>
 </code></pre></div>
 <p>This will create a <code>build</code> directory, containing the generated C++ code and binary.</p>
 <p>Under Windows (note that this will download dependencies), type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>shedskin<span class="w"> </span>build<span class="w"> </span>--conan<span class="w"> </span><span class="nb">test</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>shedskin<span class="w"> </span>build<span class="w"> </span><span class="nb">test</span>
 </code></pre></div>
 <p>If there is an error about <code>nmake</code> not being found, you may have to enter a "visual studio developer command prompt" first.</p>
 <p>Under Linux/macOS, the binary is named <code>build/test</code>. Under Windows, it is named <code>build/Debug/test.exe</code>.</p>
@@ -1328,12 +1330,13 @@ in cases where they can't.</p>
 <p>To use the generated extension module with the <code>multiprocessing</code> standard library module, simply add a pure-Python wrapper:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 <a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
-<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">part_sum</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)):</span>
-<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">meuk</span>
-<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="k">return</span> <span class="n">meuk</span><span class="o">.</span><span class="n">part_sum</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
-<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
-<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="nb">print</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">part_sum</span><span class="p">,</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10000000</span><span class="p">),</span> <span class="p">(</span><span class="mi">10000001</span><span class="p">,</span> <span class="mi">20000000</span><span class="p">)])))</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">part_sum</span><span class="p">(</span><span class="n">start_end</span><span class="p">):</span>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">start_end</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">meuk</span>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="k">return</span> <span class="n">meuk</span><span class="o">.</span><span class="n">part_sum</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="nb">print</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">part_sum</span><span class="p">,</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10000000</span><span class="p">),</span> <span class="p">(</span><span class="mi">10000001</span><span class="p">,</span> <span class="mi">20000000</span><span class="p">)])))</span>
 </code></pre></div>
 <h2 id="calling-cc-code">Calling C/C++ Code<a class="headerlink" href="#calling-cc-code" title="Permanent link">&para;</a></h2>
 <p>To call manually written C/C++ code, follow these steps:</p>
@@ -1460,82 +1463,33 @@ in cases where they can't.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
 <a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="c1"># invalid index: out of bounds</span>
 </code></pre></div>
+<p>As of 0.9.13, dividing by zero raises a <code>ZeroDivisionError</code>, as in CPython. Use <code>-z</code> or <code>--nozero</code> to disable this check, if you are sure it cannot happen:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="n">b</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span> <span class="c1"># ZeroDivisionError</span>
+</code></pre></div>
 <p>Note that as of 0.9.13, integers default to 64-bit (<code>--int64</code>); use <code>--int32</code> to restore the previous, narrower default.</p>
+<p>Three options added in 0.9.13 are worth knowing about:</p>
+<ul>
+<li><code>--retry</code> restarts the analysis when it hits 'max iterations'. This often helps for larger programs, so there is no need to retry manually.</li>
+<li><code>--boost</code> switches the generated code over to (bundled) boost containers. This can help a lot for programs that lean on dictionaries or sets, or that create many very short lists.</li>
+<li><code>--predict</code> tries to predict maximum list sizes before (re)allocating storage, by sampling at run time per allocation site. This can greatly improve performance when reallocation is the bottleneck.</li>
+</ul>
 <h3 id="build">build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h3>
 <p>The <code>build</code> command calls <code>shedskin translate</code> on a target via cmake, generates a suitable <code>CMakeLists.txt</code> file and then builds it, placing build artefacts in a <code>build</code> directory.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>$ shedskin build --help
-<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>usage: shedskin build [-h] [--collect-stats] [--int32] [--int64] [--float32]
-<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>                      [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
-<a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a>                      [--boost] [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
-<a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a>                      [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
-<a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a>                      [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
-<a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a>                      [--jobs N] [--build-type T] [--test] [--reset] [--spm]
-<a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a>                      [--fetchcontent] [--local-deps] [--ccache]
-<a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a>                      [--target TARGET [TARGET ...]] [--nowarnings]
-<a id="__codelineno-38-10" name="__codelineno-38-10" href="#__codelineno-38-10"></a>                      name
-<a id="__codelineno-38-11" name="__codelineno-38-11" href="#__codelineno-38-11"></a>
-<a id="__codelineno-38-12" name="__codelineno-38-12" href="#__codelineno-38-12"></a>positional arguments:
-<a id="__codelineno-38-13" name="__codelineno-38-13" href="#__codelineno-38-13"></a>  name                  Python file or module to compile
-<a id="__codelineno-38-14" name="__codelineno-38-14" href="#__codelineno-38-14"></a>
-<a id="__codelineno-38-15" name="__codelineno-38-15" href="#__codelineno-38-15"></a>options:
-<a id="__codelineno-38-16" name="__codelineno-38-16" href="#__codelineno-38-16"></a>  -h, --help            show this help message and exit
-<a id="__codelineno-38-17" name="__codelineno-38-17" href="#__codelineno-38-17"></a>  --collect-stats       Collect and report shedskin stats
-<a id="__codelineno-38-18" name="__codelineno-38-18" href="#__codelineno-38-18"></a>  --int32               Use 32-bit integers
-<a id="__codelineno-38-19" name="__codelineno-38-19" href="#__codelineno-38-19"></a>  --int64               Use 64-bit integers (this is the default)
-<a id="__codelineno-38-20" name="__codelineno-38-20" href="#__codelineno-38-20"></a>  --float32             Use 32-bit floats
-<a id="__codelineno-38-21" name="__codelineno-38-21" href="#__codelineno-38-21"></a>  --float64             Use 64-bit floats
-<a id="__codelineno-38-22" name="__codelineno-38-22" href="#__codelineno-38-22"></a>  --noassert            Disable assert statements
-<a id="__codelineno-38-23" name="__codelineno-38-23" href="#__codelineno-38-23"></a>  -b, --nobounds        Disable bounds checking
-<a id="__codelineno-38-24" name="__codelineno-38-24" href="#__codelineno-38-24"></a>  --nogc                Disable garbage collection
-<a id="__codelineno-38-25" name="__codelineno-38-25" href="#__codelineno-38-25"></a>  -w, --nowrap          Disable wrap-around checking
-<a id="__codelineno-38-26" name="__codelineno-38-26" href="#__codelineno-38-26"></a>  -z, --nozero          Disable zero-division checking
-<a id="__codelineno-38-27" name="__codelineno-38-27" href="#__codelineno-38-27"></a>  --boost               Use (builtin) boost containers
-<a id="__codelineno-38-28" name="__codelineno-38-28" href="#__codelineno-38-28"></a>  --predict             Try to predict list sizes
-<a id="__codelineno-38-29" name="__codelineno-38-29" href="#__codelineno-38-29"></a>  -d DEBUG, --debug DEBUG
-<a id="__codelineno-38-30" name="__codelineno-38-30" href="#__codelineno-38-30"></a>                        Set debug level
-<a id="__codelineno-38-31" name="__codelineno-38-31" href="#__codelineno-38-31"></a>  -e, --extmod          Generate extension module
-<a id="__codelineno-38-32" name="__codelineno-38-32" href="#__codelineno-38-32"></a>  -I INCLUDE_DIRS, --include-dirs INCLUDE_DIRS
-<a id="__codelineno-38-33" name="__codelineno-38-33" href="#__codelineno-38-33"></a>                        Add an include directory
-<a id="__codelineno-38-34" name="__codelineno-38-34" href="#__codelineno-38-34"></a>  -L LINK_DIRS, --link-dirs LINK_DIRS
-<a id="__codelineno-38-35" name="__codelineno-38-35" href="#__codelineno-38-35"></a>                        Add a link library directory
-<a id="__codelineno-38-36" name="__codelineno-38-36" href="#__codelineno-38-36"></a>  -l LINK_LIBS, --link-libs LINK_LIBS
-<a id="__codelineno-38-37" name="__codelineno-38-37" href="#__codelineno-38-37"></a>                        Add a link library
-<a id="__codelineno-38-38" name="__codelineno-38-38" href="#__codelineno-38-38"></a>  -X EXTRA_LIB, --extra-lib EXTRA_LIB
-<a id="__codelineno-38-39" name="__codelineno-38-39" href="#__codelineno-38-39"></a>                        Add an extra builtins library directory
-<a id="__codelineno-38-40" name="__codelineno-38-40" href="#__codelineno-38-40"></a>  -o OUTPUTDIR, --outputdir OUTPUTDIR
-<a id="__codelineno-38-41" name="__codelineno-38-41" href="#__codelineno-38-41"></a>                        Specify output directory for generated files
-<a id="__codelineno-38-42" name="__codelineno-38-42" href="#__codelineno-38-42"></a>  --retry               Retry analysis when hitting max iterations
-<a id="__codelineno-38-43" name="__codelineno-38-43" href="#__codelineno-38-43"></a>  -s, --silent          Silent mode, only show warnings
-<a id="__codelineno-38-44" name="__codelineno-38-44" href="#__codelineno-38-44"></a>  -t, --traceback       Print traceback for uncaught exceptions
-<a id="__codelineno-38-45" name="__codelineno-38-45" href="#__codelineno-38-45"></a>  -x, --executable      Generate executable
-<a id="__codelineno-38-46" name="__codelineno-38-46" href="#__codelineno-38-46"></a>  --generator G         Specify a cmake build system generator
-<a id="__codelineno-38-47" name="__codelineno-38-47" href="#__codelineno-38-47"></a>  --jobs N              Build and run in parallel using N jobs
-<a id="__codelineno-38-48" name="__codelineno-38-48" href="#__codelineno-38-48"></a>  --build-type T        Set cmake build type (default: &#39;Debug&#39;)
-<a id="__codelineno-38-49" name="__codelineno-38-49" href="#__codelineno-38-49"></a>  --test                Run ctest
-<a id="__codelineno-38-50" name="__codelineno-38-50" href="#__codelineno-38-50"></a>  --reset               Reset cmake build
-<a id="__codelineno-38-51" name="__codelineno-38-51" href="#__codelineno-38-51"></a>  --spm                 Install cmake dependencies with spm
-<a id="__codelineno-38-52" name="__codelineno-38-52" href="#__codelineno-38-52"></a>  --fetchcontent        Install cmake dependencies with fetchcontent
-<a id="__codelineno-38-53" name="__codelineno-38-53" href="#__codelineno-38-53"></a>  --local-deps          Build dependencies from bundled ext/ sources
-<a id="__codelineno-38-54" name="__codelineno-38-54" href="#__codelineno-38-54"></a>  --ccache              Enable ccache with cmake
-<a id="__codelineno-38-55" name="__codelineno-38-55" href="#__codelineno-38-55"></a>  --target TARGET [TARGET ...]
-<a id="__codelineno-38-56" name="__codelineno-38-56" href="#__codelineno-38-56"></a>                        Build only specified cmake targets
-<a id="__codelineno-38-57" name="__codelineno-38-57" href="#__codelineno-38-57"></a>  --nowarnings          Disable &#39;-Wall&#39; compilation warnings
-</code></pre></div>
-<h3 id="run">run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
-<p>The <code>run</code> command does everything the <code>build</code> command does and then runs the resultant executable.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$ shedskin run --help
-<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>usage: shedskin run [-h] [--collect-stats] [--int32] [--int64] [--float32]
-<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>                    [--float64] [--noassert] [-b] [--nogc] [-w] [-z] [--boost]
-<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>                    [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
-<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>                    [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
-<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>                    [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
-<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>                    [--jobs N] [--build-type T] [--test] [--reset] [--spm]
-<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>                    [--fetchcontent] [--local-deps] [--ccache]
-<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>                    [--target TARGET [TARGET ...]] [--nowarnings]
-<a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>                    name
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$ shedskin build --help
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>usage: shedskin build [-h] [--collect-stats] [--int32] [--int64] [--float32]
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>                      [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
+<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>                      [--boost] [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>                      [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
+<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>                      [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
+<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>                      [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>                      [--fetchcontent] [--local-deps] [--ccache]
+<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>                      [--target TARGET [TARGET ...]] [--nowarnings]
+<a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>                      name
 <a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>
 <a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>positional arguments:
-<a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>  name                  Python file or module to run
+<a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>  name                  Python file or module to compile
 <a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>
 <a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a>options:
 <a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>  -h, --help            show this help message and exit
@@ -1581,62 +1535,123 @@ in cases where they can't.</p>
 <a id="__codelineno-39-56" name="__codelineno-39-56" href="#__codelineno-39-56"></a>                        Build only specified cmake targets
 <a id="__codelineno-39-57" name="__codelineno-39-57" href="#__codelineno-39-57"></a>  --nowarnings          Disable &#39;-Wall&#39; compilation warnings
 </code></pre></div>
+<h3 id="run">run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
+<p>The <code>run</code> command does everything the <code>build</code> command does and then runs the resultant executable.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>$ shedskin run --help
+<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>usage: shedskin run [-h] [--collect-stats] [--int32] [--int64] [--float32]
+<a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>                    [--float64] [--noassert] [-b] [--nogc] [-w] [-z] [--boost]
+<a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>                    [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>                    [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
+<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>                    [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
+<a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>                    [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+<a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a>                    [--fetchcontent] [--local-deps] [--ccache]
+<a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>                    [--target TARGET [TARGET ...]] [--nowarnings]
+<a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a>                    name
+<a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a>
+<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>positional arguments:
+<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a>  name                  Python file or module to run
+<a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>
+<a id="__codelineno-40-15" name="__codelineno-40-15" href="#__codelineno-40-15"></a>options:
+<a id="__codelineno-40-16" name="__codelineno-40-16" href="#__codelineno-40-16"></a>  -h, --help            show this help message and exit
+<a id="__codelineno-40-17" name="__codelineno-40-17" href="#__codelineno-40-17"></a>  --collect-stats       Collect and report shedskin stats
+<a id="__codelineno-40-18" name="__codelineno-40-18" href="#__codelineno-40-18"></a>  --int32               Use 32-bit integers
+<a id="__codelineno-40-19" name="__codelineno-40-19" href="#__codelineno-40-19"></a>  --int64               Use 64-bit integers (this is the default)
+<a id="__codelineno-40-20" name="__codelineno-40-20" href="#__codelineno-40-20"></a>  --float32             Use 32-bit floats
+<a id="__codelineno-40-21" name="__codelineno-40-21" href="#__codelineno-40-21"></a>  --float64             Use 64-bit floats
+<a id="__codelineno-40-22" name="__codelineno-40-22" href="#__codelineno-40-22"></a>  --noassert            Disable assert statements
+<a id="__codelineno-40-23" name="__codelineno-40-23" href="#__codelineno-40-23"></a>  -b, --nobounds        Disable bounds checking
+<a id="__codelineno-40-24" name="__codelineno-40-24" href="#__codelineno-40-24"></a>  --nogc                Disable garbage collection
+<a id="__codelineno-40-25" name="__codelineno-40-25" href="#__codelineno-40-25"></a>  -w, --nowrap          Disable wrap-around checking
+<a id="__codelineno-40-26" name="__codelineno-40-26" href="#__codelineno-40-26"></a>  -z, --nozero          Disable zero-division checking
+<a id="__codelineno-40-27" name="__codelineno-40-27" href="#__codelineno-40-27"></a>  --boost               Use (builtin) boost containers
+<a id="__codelineno-40-28" name="__codelineno-40-28" href="#__codelineno-40-28"></a>  --predict             Try to predict list sizes
+<a id="__codelineno-40-29" name="__codelineno-40-29" href="#__codelineno-40-29"></a>  -d DEBUG, --debug DEBUG
+<a id="__codelineno-40-30" name="__codelineno-40-30" href="#__codelineno-40-30"></a>                        Set debug level
+<a id="__codelineno-40-31" name="__codelineno-40-31" href="#__codelineno-40-31"></a>  -e, --extmod          Generate extension module
+<a id="__codelineno-40-32" name="__codelineno-40-32" href="#__codelineno-40-32"></a>  -I INCLUDE_DIRS, --include-dirs INCLUDE_DIRS
+<a id="__codelineno-40-33" name="__codelineno-40-33" href="#__codelineno-40-33"></a>                        Add an include directory
+<a id="__codelineno-40-34" name="__codelineno-40-34" href="#__codelineno-40-34"></a>  -L LINK_DIRS, --link-dirs LINK_DIRS
+<a id="__codelineno-40-35" name="__codelineno-40-35" href="#__codelineno-40-35"></a>                        Add a link library directory
+<a id="__codelineno-40-36" name="__codelineno-40-36" href="#__codelineno-40-36"></a>  -l LINK_LIBS, --link-libs LINK_LIBS
+<a id="__codelineno-40-37" name="__codelineno-40-37" href="#__codelineno-40-37"></a>                        Add a link library
+<a id="__codelineno-40-38" name="__codelineno-40-38" href="#__codelineno-40-38"></a>  -X EXTRA_LIB, --extra-lib EXTRA_LIB
+<a id="__codelineno-40-39" name="__codelineno-40-39" href="#__codelineno-40-39"></a>                        Add an extra builtins library directory
+<a id="__codelineno-40-40" name="__codelineno-40-40" href="#__codelineno-40-40"></a>  -o OUTPUTDIR, --outputdir OUTPUTDIR
+<a id="__codelineno-40-41" name="__codelineno-40-41" href="#__codelineno-40-41"></a>                        Specify output directory for generated files
+<a id="__codelineno-40-42" name="__codelineno-40-42" href="#__codelineno-40-42"></a>  --retry               Retry analysis when hitting max iterations
+<a id="__codelineno-40-43" name="__codelineno-40-43" href="#__codelineno-40-43"></a>  -s, --silent          Silent mode, only show warnings
+<a id="__codelineno-40-44" name="__codelineno-40-44" href="#__codelineno-40-44"></a>  -t, --traceback       Print traceback for uncaught exceptions
+<a id="__codelineno-40-45" name="__codelineno-40-45" href="#__codelineno-40-45"></a>  -x, --executable      Generate executable
+<a id="__codelineno-40-46" name="__codelineno-40-46" href="#__codelineno-40-46"></a>  --generator G         Specify a cmake build system generator
+<a id="__codelineno-40-47" name="__codelineno-40-47" href="#__codelineno-40-47"></a>  --jobs N              Build and run in parallel using N jobs
+<a id="__codelineno-40-48" name="__codelineno-40-48" href="#__codelineno-40-48"></a>  --build-type T        Set cmake build type (default: &#39;Debug&#39;)
+<a id="__codelineno-40-49" name="__codelineno-40-49" href="#__codelineno-40-49"></a>  --test                Run ctest
+<a id="__codelineno-40-50" name="__codelineno-40-50" href="#__codelineno-40-50"></a>  --reset               Reset cmake build
+<a id="__codelineno-40-51" name="__codelineno-40-51" href="#__codelineno-40-51"></a>  --spm                 Install cmake dependencies with spm
+<a id="__codelineno-40-52" name="__codelineno-40-52" href="#__codelineno-40-52"></a>  --fetchcontent        Install cmake dependencies with fetchcontent
+<a id="__codelineno-40-53" name="__codelineno-40-53" href="#__codelineno-40-53"></a>  --local-deps          Build dependencies from bundled ext/ sources
+<a id="__codelineno-40-54" name="__codelineno-40-54" href="#__codelineno-40-54"></a>  --ccache              Enable ccache with cmake
+<a id="__codelineno-40-55" name="__codelineno-40-55" href="#__codelineno-40-55"></a>  --target TARGET [TARGET ...]
+<a id="__codelineno-40-56" name="__codelineno-40-56" href="#__codelineno-40-56"></a>                        Build only specified cmake targets
+<a id="__codelineno-40-57" name="__codelineno-40-57" href="#__codelineno-40-57"></a>  --nowarnings          Disable &#39;-Wall&#39; compilation warnings
+</code></pre></div>
 <h3 id="runtests">runtests<a class="headerlink" href="#runtests" title="Permanent link">&para;</a></h3>
 <p>The <code>runtests</code> command provides builtin test discovery and running (this subcommand used to be named <code>test</code>).</p>
 <p>Basically <code>cd shedskin/tests</code> or <code>cd shedskin/examples</code> and then type the following:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>shedskin<span class="w"> </span>runtests
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>shedskin<span class="w"> </span>runtests
 </code></pre></div>
 <p>command-line options are extensive:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>$ shedskin runtests --help
-<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>usage: shedskin runtests [-h] [--collect-stats] [--generator G] [--jobs N]
-<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>                         [--build-type T] [--test] [--reset] [--spm]
-<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>                         [--fetchcontent] [--local-deps] [--ccache]
-<a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>                         [--target TARGET [TARGET ...]] [--nowarnings] [-e]
-<a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a>                         [-x] [--disable-exts] [--disable-exes] [--dryrun]
-<a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a>                         [--include PATTERN] [--check] [--modified]
-<a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a>                         [--nocleanup] [--pytest] [--run TEST] [--stoponfail]
-<a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a>                         [--run-errs] [--progress] [--debug]
-<a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a>                         [-c [CMAKE_OPT ...]]
-<a id="__codelineno-41-11" name="__codelineno-41-11" href="#__codelineno-41-11"></a>
-<a id="__codelineno-41-12" name="__codelineno-41-12" href="#__codelineno-41-12"></a>options:
-<a id="__codelineno-41-13" name="__codelineno-41-13" href="#__codelineno-41-13"></a>  -h, --help            show this help message and exit
-<a id="__codelineno-41-14" name="__codelineno-41-14" href="#__codelineno-41-14"></a>  --collect-stats       Collect and report shedskin stats
-<a id="__codelineno-41-15" name="__codelineno-41-15" href="#__codelineno-41-15"></a>  --generator G         Specify a cmake build system generator
-<a id="__codelineno-41-16" name="__codelineno-41-16" href="#__codelineno-41-16"></a>  --jobs N              Build and run in parallel using N jobs
-<a id="__codelineno-41-17" name="__codelineno-41-17" href="#__codelineno-41-17"></a>  --build-type T        Set cmake build type (default: &#39;Debug&#39;)
-<a id="__codelineno-41-18" name="__codelineno-41-18" href="#__codelineno-41-18"></a>  --test                Run ctest
-<a id="__codelineno-41-19" name="__codelineno-41-19" href="#__codelineno-41-19"></a>  --reset               Reset cmake build
-<a id="__codelineno-41-20" name="__codelineno-41-20" href="#__codelineno-41-20"></a>  --spm                 Install cmake dependencies with spm
-<a id="__codelineno-41-21" name="__codelineno-41-21" href="#__codelineno-41-21"></a>  --fetchcontent        Install cmake dependencies with fetchcontent
-<a id="__codelineno-41-22" name="__codelineno-41-22" href="#__codelineno-41-22"></a>  --local-deps          Build dependencies from bundled ext/ sources
-<a id="__codelineno-41-23" name="__codelineno-41-23" href="#__codelineno-41-23"></a>  --ccache              Enable ccache with cmake
-<a id="__codelineno-41-24" name="__codelineno-41-24" href="#__codelineno-41-24"></a>  --target TARGET [TARGET ...]
-<a id="__codelineno-41-25" name="__codelineno-41-25" href="#__codelineno-41-25"></a>                        Build only specified cmake targets
-<a id="__codelineno-41-26" name="__codelineno-41-26" href="#__codelineno-41-26"></a>  --nowarnings          Disable &#39;-Wall&#39; compilation warnings
-<a id="__codelineno-41-27" name="__codelineno-41-27" href="#__codelineno-41-27"></a>  -e, --extmod          Generate extension module
-<a id="__codelineno-41-28" name="__codelineno-41-28" href="#__codelineno-41-28"></a>  -x, --executable      Generate executable
-<a id="__codelineno-41-29" name="__codelineno-41-29" href="#__codelineno-41-29"></a>  --disable-exts        Disable building extensions
-<a id="__codelineno-41-30" name="__codelineno-41-30" href="#__codelineno-41-30"></a>  --disable-exes        Disable building executables
-<a id="__codelineno-41-31" name="__codelineno-41-31" href="#__codelineno-41-31"></a>  --dryrun              Dryrun without any changes
-<a id="__codelineno-41-32" name="__codelineno-41-32" href="#__codelineno-41-32"></a>  --include PATTERN     Provide regex of tests to include with cmake
-<a id="__codelineno-41-33" name="__codelineno-41-33" href="#__codelineno-41-33"></a>  --check               Check testfile py syntax before running
-<a id="__codelineno-41-34" name="__codelineno-41-34" href="#__codelineno-41-34"></a>  --modified            Run only recently modified test
-<a id="__codelineno-41-35" name="__codelineno-41-35" href="#__codelineno-41-35"></a>  --nocleanup           Do not cleanup built test
-<a id="__codelineno-41-36" name="__codelineno-41-36" href="#__codelineno-41-36"></a>  --pytest              Run pytest before each test run
-<a id="__codelineno-41-37" name="__codelineno-41-37" href="#__codelineno-41-37"></a>  --run TEST            Run single test
-<a id="__codelineno-41-38" name="__codelineno-41-38" href="#__codelineno-41-38"></a>  --stoponfail          Stop when first failure happens in ctest
-<a id="__codelineno-41-39" name="__codelineno-41-39" href="#__codelineno-41-39"></a>  --run-errs            Run error/warning message tests
-<a id="__codelineno-41-40" name="__codelineno-41-40" href="#__codelineno-41-40"></a>  --progress            Enable short progress output from ctest
-<a id="__codelineno-41-41" name="__codelineno-41-41" href="#__codelineno-41-41"></a>  --debug               Set cmake debug on
-<a id="__codelineno-41-42" name="__codelineno-41-42" href="#__codelineno-41-42"></a>  -c [CMAKE_OPT ...], --cfg [CMAKE_OPT ...]
-<a id="__codelineno-41-43" name="__codelineno-41-43" href="#__codelineno-41-43"></a>                        Add a cmake option &#39;-D&#39; prefix not needed
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>$ shedskin runtests --help
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>usage: shedskin runtests [-h] [--collect-stats] [--generator G] [--jobs N]
+<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>                         [--build-type T] [--test] [--reset] [--spm]
+<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>                         [--fetchcontent] [--local-deps] [--ccache]
+<a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a>                         [--target TARGET [TARGET ...]] [--nowarnings] [-e]
+<a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>                         [-x] [--disable-exts] [--disable-exes] [--dryrun]
+<a id="__codelineno-42-7" name="__codelineno-42-7" href="#__codelineno-42-7"></a>                         [--include PATTERN] [--check] [--modified]
+<a id="__codelineno-42-8" name="__codelineno-42-8" href="#__codelineno-42-8"></a>                         [--nocleanup] [--pytest] [--run TEST] [--stoponfail]
+<a id="__codelineno-42-9" name="__codelineno-42-9" href="#__codelineno-42-9"></a>                         [--run-errs] [--progress] [--debug]
+<a id="__codelineno-42-10" name="__codelineno-42-10" href="#__codelineno-42-10"></a>                         [-c [CMAKE_OPT ...]]
+<a id="__codelineno-42-11" name="__codelineno-42-11" href="#__codelineno-42-11"></a>
+<a id="__codelineno-42-12" name="__codelineno-42-12" href="#__codelineno-42-12"></a>options:
+<a id="__codelineno-42-13" name="__codelineno-42-13" href="#__codelineno-42-13"></a>  -h, --help            show this help message and exit
+<a id="__codelineno-42-14" name="__codelineno-42-14" href="#__codelineno-42-14"></a>  --collect-stats       Collect and report shedskin stats
+<a id="__codelineno-42-15" name="__codelineno-42-15" href="#__codelineno-42-15"></a>  --generator G         Specify a cmake build system generator
+<a id="__codelineno-42-16" name="__codelineno-42-16" href="#__codelineno-42-16"></a>  --jobs N              Build and run in parallel using N jobs
+<a id="__codelineno-42-17" name="__codelineno-42-17" href="#__codelineno-42-17"></a>  --build-type T        Set cmake build type (default: &#39;Debug&#39;)
+<a id="__codelineno-42-18" name="__codelineno-42-18" href="#__codelineno-42-18"></a>  --test                Run ctest
+<a id="__codelineno-42-19" name="__codelineno-42-19" href="#__codelineno-42-19"></a>  --reset               Reset cmake build
+<a id="__codelineno-42-20" name="__codelineno-42-20" href="#__codelineno-42-20"></a>  --spm                 Install cmake dependencies with spm
+<a id="__codelineno-42-21" name="__codelineno-42-21" href="#__codelineno-42-21"></a>  --fetchcontent        Install cmake dependencies with fetchcontent
+<a id="__codelineno-42-22" name="__codelineno-42-22" href="#__codelineno-42-22"></a>  --local-deps          Build dependencies from bundled ext/ sources
+<a id="__codelineno-42-23" name="__codelineno-42-23" href="#__codelineno-42-23"></a>  --ccache              Enable ccache with cmake
+<a id="__codelineno-42-24" name="__codelineno-42-24" href="#__codelineno-42-24"></a>  --target TARGET [TARGET ...]
+<a id="__codelineno-42-25" name="__codelineno-42-25" href="#__codelineno-42-25"></a>                        Build only specified cmake targets
+<a id="__codelineno-42-26" name="__codelineno-42-26" href="#__codelineno-42-26"></a>  --nowarnings          Disable &#39;-Wall&#39; compilation warnings
+<a id="__codelineno-42-27" name="__codelineno-42-27" href="#__codelineno-42-27"></a>  -e, --extmod          Generate extension module
+<a id="__codelineno-42-28" name="__codelineno-42-28" href="#__codelineno-42-28"></a>  -x, --executable      Generate executable
+<a id="__codelineno-42-29" name="__codelineno-42-29" href="#__codelineno-42-29"></a>  --disable-exts        Disable building extensions
+<a id="__codelineno-42-30" name="__codelineno-42-30" href="#__codelineno-42-30"></a>  --disable-exes        Disable building executables
+<a id="__codelineno-42-31" name="__codelineno-42-31" href="#__codelineno-42-31"></a>  --dryrun              Dryrun without any changes
+<a id="__codelineno-42-32" name="__codelineno-42-32" href="#__codelineno-42-32"></a>  --include PATTERN     Provide regex of tests to include with cmake
+<a id="__codelineno-42-33" name="__codelineno-42-33" href="#__codelineno-42-33"></a>  --check               Check testfile py syntax before running
+<a id="__codelineno-42-34" name="__codelineno-42-34" href="#__codelineno-42-34"></a>  --modified            Run only recently modified test
+<a id="__codelineno-42-35" name="__codelineno-42-35" href="#__codelineno-42-35"></a>  --nocleanup           Do not cleanup built test
+<a id="__codelineno-42-36" name="__codelineno-42-36" href="#__codelineno-42-36"></a>  --pytest              Run pytest before each test run
+<a id="__codelineno-42-37" name="__codelineno-42-37" href="#__codelineno-42-37"></a>  --run TEST            Run single test
+<a id="__codelineno-42-38" name="__codelineno-42-38" href="#__codelineno-42-38"></a>  --stoponfail          Stop when first failure happens in ctest
+<a id="__codelineno-42-39" name="__codelineno-42-39" href="#__codelineno-42-39"></a>  --run-errs            Run error/warning message tests
+<a id="__codelineno-42-40" name="__codelineno-42-40" href="#__codelineno-42-40"></a>  --progress            Enable short progress output from ctest
+<a id="__codelineno-42-41" name="__codelineno-42-41" href="#__codelineno-42-41"></a>  --debug               Set cmake debug on
+<a id="__codelineno-42-42" name="__codelineno-42-42" href="#__codelineno-42-42"></a>  -c [CMAKE_OPT ...], --cfg [CMAKE_OPT ...]
+<a id="__codelineno-42-43" name="__codelineno-42-43" href="#__codelineno-42-43"></a>                        Add a cmake option &#39;-D&#39; prefix not needed
 </code></pre></div>
 <h2 id="performance-tips-and-tricks">Performance Tips and Tricks<a class="headerlink" href="#performance-tips-and-tricks" title="Permanent link">&para;</a></h2>
 <h3 id="performance-tips">Performance Tips<a class="headerlink" href="#performance-tips" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Small memory allocations (e.g. creating a new tuple, list or class instance..) typically do not slow down Python programs by much. However, after compilation to C++, they can quickly become a bottleneck. This is because for each allocation, memory has to be requested from the system, the memory has to be garbage-collected, and many memory allocations are further likely to cause cache misses. The key to getting very good performance is often to reduce the number of small allocations, for example by rewriting a small list comprehension by a for loop or by avoiding intermediate tuples in some calculation.</li>
-<li>But note that for the idiomatic <code>for a, b in enumerate(..)</code>, <code>for a, b in enumerate(..)</code> and <code>for a, b in somedict.iteritems()</code>, the intermediate small objects are optimized away, and that 1-length strings are cached.</li>
+<li>But note that for the idiomatic <code>for a, b in enumerate(..)</code>, <code>for a, b in zip(..)</code> and <code>for a, b in somedict.items()</code>, the intermediate small objects are optimized away, and that 1-length strings are cached.</li>
 <li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a href="#command-line-options">Command-line options</a> for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.</li>
+<li>Two options exist specifically to speed up allocation-heavy code: <code>--boost</code>, which uses boost containers for dictionaries, sets and short lists, and <code>--predict</code>, which samples list sizes at run time to avoid repeated reallocation. Both are worth trying before reaching for more invasive rewrites.</li>
 <li>Attribute access is faster in the generated code than indexing. For example, <code>v.x * v.y * v.z</code> is faster than <code>v[0] * v[1] * v[2]</code>.</li>
 <li>Shed Skin takes the flags it sends to the C++ compiler from the <code>FLAGS*</code> files in the Shed Skin installation directory. These flags can be modified, or overruled by creating a local file named <code>FLAGS</code>.</li>
 <li>When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding -ffast-math can sometimes greatly improve performance.</li>
@@ -1645,51 +1660,51 @@ in cases where they can't.</p>
 <li>When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a href="https://github.com/jrfonseca/gprof2dot">Gprof2Dot</a> can be used to generate beautiful graphs for a stand-alone program, as well as the original Python code. The program <a href="http://oprofile.sourceforge.net/news/">OProfile</a> can be used to profile an extension module.</li>
 </ul>
 <p>To use Gprof2dot, download <code>gprof2dot.py</code> from the website, and install Graphviz. Then:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>program
-<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>make<span class="w"> </span>program_prof
-<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>./program_prof
-<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>gprof<span class="w"> </span>program_prof<span class="w"> </span><span class="p">|</span><span class="w"> </span>gprof2dot.py<span class="w"> </span><span class="p">|</span><span class="w"> </span>dot<span class="w"> </span>-Tpng<span class="w"> </span>-ooutput.png
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>program
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>make<span class="w"> </span>program_prof
+<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>./program_prof
+<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>gprof<span class="w"> </span>program_prof<span class="w"> </span><span class="p">|</span><span class="w"> </span>gprof2dot.py<span class="w"> </span><span class="p">|</span><span class="w"> </span>dot<span class="w"> </span>-Tpng<span class="w"> </span>-ooutput.png
 </code></pre></div>
 <p>To use OProfile, install it and use it as follows.</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>-e<span class="w"> </span>extmod
-<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>make
-<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--start
-<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>python<span class="w"> </span>main_program_that_imports_extmod
-<a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--shutdown
-<a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>opreport<span class="w"> </span>-l<span class="w"> </span>extmod.so
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>shedskin<span class="w"> </span>translate<span class="w"> </span>-e<span class="w"> </span>extmod
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>make
+<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--start
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>python<span class="w"> </span>main_program_that_imports_extmod
+<a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a>sudo<span class="w"> </span>opcontrol<span class="w"> </span>--shutdown
+<a id="__codelineno-44-6" name="__codelineno-44-6" href="#__codelineno-44-6"></a>opreport<span class="w"> </span>-l<span class="w"> </span>extmod.so
 </code></pre></div>
 * A memory profiler, for example Massif (a Valgrind tool) can also be very useful. To use Massif, use the Shedskin --nogc option, then use Massif normally (valgrind --tool=massif binary).</p>
 <h3 id="tricks">Tricks<a class="headerlink" href="#tricks" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The following two code fragments work the same, but only the second one is supported:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="n">statistics</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nodes&#39;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s1">&#39;solutions&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">()}</span>
-<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>
-<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">statistics</span><span class="p">:</span> <span class="k">pass</span>
-<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="n">s</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="mi">28</span><span class="p">;</span> <span class="n">s</span><span class="o">.</span><span class="n">solutions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="n">statistics</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nodes&#39;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s1">&#39;solutions&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">()}</span>
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>
+<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">statistics</span><span class="p">:</span> <span class="k">pass</span>
+<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="n">s</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="mi">28</span><span class="p">;</span> <span class="n">s</span><span class="o">.</span><span class="n">solutions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 </code></pre></div>
 <ul>
 <li>The evaluation order of arguments to a function or print changes with translation to C++, so it's better not to depend on this:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;hoei&#39;</span><span class="p">,</span> <span class="n">raw_input</span><span class="p">())</span> <span class="c1"># raw_input is called before printing &#39;hoei&#39;!</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;hoei&#39;</span><span class="p">,</span> <span class="nb">input</span><span class="p">())</span> <span class="c1"># input is called before printing &#39;hoei&#39;!</span>
 </code></pre></div>
 <ul>
 <li>Tuples with different types of elements and length &gt; 2 are currently not supported. It can however be useful to 'simulate' them:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">mytuple</span><span class="p">:</span>
-<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
-<a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">mytuple</span><span class="p">:</span>
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
 </code></pre></div>
 <ul>
 <li>Block comments surrounded by <code>#{</code> and <code>#}</code> are ignored by Shed Skin. This can be used to comment out code that cannot be compiled. For example, the following will only produce a plot when run using CPython:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x =&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;y =&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a><span class="c1">#{</span>
-<a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
-<a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a><span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<a id="__codelineno-47-6" name="__codelineno-47-6" href="#__codelineno-47-6"></a><span class="n">pl</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<a id="__codelineno-47-7" name="__codelineno-47-7" href="#__codelineno-47-7"></a><span class="c1">#}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x =&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;y =&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a><span class="c1">#{</span>
+<a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+<a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a><span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a><span class="n">pl</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a><span class="c1">#}</span>
 </code></pre></div>
 <h2 id="how-to-help-out-in-development">How to Help Out in Development<a class="headerlink" href="#how-to-help-out-in-development" title="Permanent link">&para;</a></h2>
 <p>Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions. There is also <a href="https://github.com/shedskin/shedskin/issues?q=is%3Aissue+is%3Aopen+label%3Aeasytask">an "easytask" issue label</a> for possible tasks to start out with.</p>
