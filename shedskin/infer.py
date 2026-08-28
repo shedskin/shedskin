@@ -1493,6 +1493,70 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
+IFA_DIAG: dict[str, Any] = {
+    "rounds": [],      # per round: sorted split fingerprints
+    "branch": {},      # which split path produced them
+}
+
+
+def ifa_diag_branch(name: str, count: int = 1) -> None:
+    """record which split path fired, for the max-iterations summary"""
+    IFA_DIAG["branch"][name] = IFA_DIAG["branch"].get(name, 0) + count
+
+
+def ifa_diag_summary(gx: "config.GlobalInfo") -> str:
+    """a compact account of why the analysis would not settle
+
+    Reports the shape of the splitting rather than its content: repeated
+    identical split sets mean the same split is being proposed and having no
+    effect, while a new set every round means contours are genuinely growing.
+    """
+    rounds = [r for r in IFA_DIAG["rounds"] if r]
+    lines = ["", "--- max-iterations diagnostic ---"]
+    lines.append(
+        "rounds with splits: %d, distinct split sets: %d"
+        % (len(rounds), len(set(rounds)))
+    )
+    lines.append(
+        "splits by path: %s"
+        % sorted(IFA_DIAG["branch"].items(), key=lambda kv: -kv[1])
+    )
+
+    counts: dict[Any, int] = {}
+    for r in rounds:
+        counts[r] = counts.get(r, 0) + 1
+    lines.append("most repeated split sets (count, set):")
+    for fingerprint, n in sorted(counts.items(), key=lambda kv: -kv[1])[:5]:
+        lines.append("   x%-4d %s" % (n, fingerprint[:6]))
+
+    lines.append("last rounds:")
+    for r in rounds[-6:]:
+        lines.append("   %s" % (r[:6],))
+
+    lines.append("contours per class (contours / distinct signatures):")
+    rows = []
+    for cl in gx.allclasses:
+        if cl.dcpa <= 2:
+            continue
+        sigs = set()
+        for dcpa in range(1, cl.dcpa):
+            sig = []
+            for name in cl.tvar_names():
+                var = cl.vars.get(name)
+                node = gx.cnode.get((var, dcpa, 0)) if var else None
+                sig.append(
+                    frozenset(merge_simple_types(gx, node.types()))
+                    if node is not None
+                    else frozenset()
+                )
+            sigs.add(tuple(sig))
+        rows.append((cl.dcpa - 1, cl.ident, len(sigs)))
+    for n, ident, nsigs in sorted(rows, reverse=True)[:12]:
+        lines.append("   %-24s %5d contours %5d signatures" % (ident, n, nsigs))
+    lines.append("--- end diagnostic ---")
+    return "\n".join(lines)
+
+
 def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
@@ -1581,6 +1645,7 @@ def ifa_split_vars(
                 continue
             # --- if it exists, perform actual splitting
             logger.debug("IFA normal split, remaining: %d", len(remaining))
+            ifa_diag_branch("confluence", len(remaining) - 1)
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, list(splitsites), split)
             return split
@@ -1597,11 +1662,13 @@ def ifa_split_vars(
             prt[ts].append(c)
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
+            ifa_diag_branch("partition")
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
+            ifa_diag_branch("wholesale", len(csites) - 1)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
@@ -1643,11 +1710,13 @@ def ifa_split_no_confusion(
                 subtype_csites[subtype] = [node]
     for subtype, csites in subtype_csites.items():
         if subtype in classes_nr:  # reuse contour
+            ifa_diag_branch("no_confusion (reuse)")
             nr = classes_nr[subtype]
             split.append((cl, dcpa, csites, nr))
             cl.splits[nr] = dcpa
         else:  # create new contour
             classes_nr[subtype] = cl.newdcpa
+            ifa_diag_branch("no_confusion (new contour)")
             ifa_split_class(cl, dcpa, csites, split)
     if subtype_csites:
         if not TRACE:
@@ -1869,6 +1938,9 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
             logger.debug("%d splits", len(split))
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
+        IFA_DIAG["rounds"].append(
+            tuple(sorted((s[0].ident, s[1], len(s[2]), s[3]) for s in split))
+        )
 
         if not split or maxiter:
             if not maxiter:
@@ -1894,6 +1966,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
+                logger.warning("%s", ifa_diag_summary(gx))
                 if gx.retry_maxiters:
                     raise MaxIterationsException
                 gx.maxhits += 1
