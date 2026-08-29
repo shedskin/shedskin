@@ -192,6 +192,19 @@ SKIP_LOOPY_SPLITS = bool(int(os.environ.get("SKIP_LOOPY_SPLITS", "1")))
 # limit is unknown ('<cut>') and never compares equal to anything
 SHAPE_DEPTH = 6
 
+# set when a loopy split was refused in the current ifa() round. A refused
+# split means "nothing productive to do *right now*", not "the analysis has
+# converged": propagation may still have work to do, and the contours involved
+# may still diverge. Treating an empty round as convergence stops the analysis
+# before that can happen -- e.g. an empty dict that would later be filled with
+# a different value type than its twin never gets the chance, so the two share
+# a contour and the value type degrades to a union.
+skipped_loopy_split = [False]
+
+# total number of inferred types at the end of the previous round, used to
+# tell "propagation is still learning something" from "nothing is changing"
+last_type_count = [-1]
+
 
 class CNode:
     """A node in the constraint graph"""
@@ -1515,6 +1528,7 @@ def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
     split: Split = []  # [(set of creation nodes, new type number), ..]
+    skipped_loopy_split[0] = False
 
     allcsites: AllCSites = {}
     for n, types in gx.types.items():
@@ -2005,6 +2019,7 @@ def ifa_split_class(
             )
         ):
             logger.debug("IFA skipping loopy split of %s, %d", cl.ident, dcpa)
+            skipped_loopy_split[0] = True
             return
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
@@ -2030,6 +2045,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
     """Perform iterative dataflow analysis"""
     logger.info("[analyzing types..]")
     backup = backup_network(gx)
+    last_type_count[0] = -1
 
     gx.orig_types = {}
     for n, t in gx.types.items():
@@ -2070,6 +2086,18 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
             logger.debug("%d splits", len(split))
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
+
+        # a round whose only splits were refused as loopy has not converged:
+        # keep iterating so propagation can run and contours can diverge
+        if skipped_loopy_split[0] and not split and not maxiter:
+            # defer only while propagation is still adding types; once the
+            # type graph stops growing, nothing further can distinguish the
+            # contours and the refusal is final
+            count = sum(len(t) for t in gx.types.values())
+            if count != last_type_count[0]:
+                last_type_count[0] = count
+                gx.cpa_clean = False
+                continue
 
         if not split or maxiter:
             if not maxiter:
