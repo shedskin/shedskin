@@ -63,6 +63,7 @@ import ast
 import collections
 import itertools
 import logging
+import os
 import random
 import sys
 from typing import (
@@ -173,6 +174,109 @@ MAXITERS = 30
 # type combinations. If exceeded, the limit doubles and analysis restarts.
 # Higher values give more precise types but increase analysis time.
 CPA_LIMIT = 10
+
+# SKIP_LOOPY_SPLITS: refuse splits that cannot distinguish anything.
+#
+# Contours are identified by number, so a class that keeps splitting off
+# structurally identical copies of the same contour is never recognised as
+# repeating itself: (tuple2,1)+(tuple2,60) and (tuple2,1)+(tuple2,61) are
+# different keys, so the reuse path in ifa_split_no_confusion never fires and
+# a fresh contour is minted every round. That forms a contour-graph cycle:
+# splitting A mints A', the pair (A, A') is a confusion for B, splitting B
+# re-presents that confusion to A, and round it goes with the numbers
+# incrementing forever -- which is what non-convergence looks like here.
+#
+# Comparing contours by *shape* instead of by number breaks the cycle: if the
+# contour being split already has a structurally identical twin, splitting it
+# again only mints a third copy of a shape we cannot tell apart anyway, so the
+# split is refused. When every split a round proposes is loopy, nothing is
+# appended and the existing "no splits -> converged" path returns normally.
+SKIP_LOOPY_SPLITS = bool(int(os.environ.get("SKIP_LOOPY_SPLITS", "1")))
+
+# maximum recursion depth when rendering a contour's shape; a shape that hits
+# this limit is unknown ('<cut>') and never compares equal to anything
+SHAPE_DEPTH = 6
+
+
+def contour_shape(
+    gx: "config.GlobalInfo",
+    types: Types,
+    depth: int = 0,
+    path: frozenset = frozenset(),
+) -> str:
+    """Render (class, contour) pairs by structure rather than by number"""
+    if depth > SHAPE_DEPTH:
+        return "<cut>"
+    out = []
+    for cl, dcpa in sorted(types, key=lambda t: (t[0].ident, t[1])):
+        if (cl, dcpa) in path:
+            out.append(cl.ident + "<rec>")  # real recursion, not truncation
+            continue
+        names = list(cl.tvar_names())
+        if cl.ident == "tuple2" and "unit" not in names:
+            # tvar_names() omits 'unit' for tuple2 though func_copy treats it
+            # as meaningful; without it, different tuple2s can render alike
+            names = ["unit"] + names
+        if not names:
+            out.append(cl.ident)
+            continue
+        subs = []
+        for name in names:
+            var = cl.vars.get(name)
+            node = gx.cnode.get((var, dcpa, 0)) if var is not None else None
+            if node is None:
+                subs.append(name + "=?")
+            else:
+                subs.append(
+                    name
+                    + "="
+                    + contour_shape(
+                        gx,
+                        merge_simple_types(gx, node.types()),
+                        depth + 1,
+                        path | {(cl, dcpa)},
+                    )
+                )
+        out.append("%s[%s]" % (cl.ident, ",".join(subs)))
+    return "{%s}" % ",".join(out)
+
+
+def contour_self_shape(
+    gx: "config.GlobalInfo", cl: "python.Class", dcpa: int
+) -> Optional[tuple[str, ...]]:
+    """Shape of one contour of cl, or None when it cannot be determined"""
+    names = list(cl.tvar_names())
+    if cl.ident == "tuple2" and "unit" not in names:
+        names = ["unit"] + names
+    if not names:
+        return None
+    out = []
+    for name in names:
+        var = cl.vars.get(name)
+        node = gx.cnode.get((var, dcpa, 0)) if var is not None else None
+        if node is None:
+            return None  # not materialised: unknown, not empty
+        out.append(contour_shape(gx, merge_simple_types(gx, node.types())))
+    shape = tuple(out)
+    if "<cut>" in "".join(shape):
+        return None  # truncated: unknown, never equal to anything
+    return shape
+
+
+def ifa_split_is_loopy(cl: "python.Class", dcpa: int) -> bool:
+    """Does the contour being split already have a structurally identical twin?
+
+    If so the split cannot distinguish anything: it only mints a third copy of
+    a shape that is already indistinguishable. See SKIP_LOOPY_SPLITS.
+    """
+    gx = cl.mv.gx
+    mine = contour_self_shape(gx, cl, dcpa)
+    if mine is None:
+        return False
+    for d in range(1, cl.dcpa):
+        if d != dcpa and contour_self_shape(gx, cl, d) == mine:
+            return True
+    return False
 
 
 class CNode:
@@ -1805,6 +1909,9 @@ def ifa_split_class(
     split: Split,
 ) -> None:
     """Split a class"""
+    if SKIP_LOOPY_SPLITS and ifa_split_is_loopy(cl, dcpa):
+        logger.debug("IFA skipping loopy split of %s, %d", cl.ident, dcpa)
+        return
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
