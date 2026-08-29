@@ -63,6 +63,7 @@ import ast
 import collections
 import itertools
 import logging
+import os
 import random
 import sys
 from typing import (
@@ -173,6 +174,23 @@ MAXITERS = 30
 # type combinations. If exceeded, the limit doubles and analysis restarts.
 # Higher values give more precise types but increase analysis time.
 CPA_LIMIT = 10
+
+# SKIP_LOOPY_SPLITS: refuse splits that produce a contour we already have.
+#
+# Contours are identified by number, so a class that keeps re-deriving the
+# same shape under fresh numbers never looks like it is repeating itself.
+# That drives a cycle in the contour graph: splitting tuple2 contour 1 mints
+# a contentless copy, the copy lands in a list, the list then holds two
+# tuple2 contours, resolving *that* re-presents the confusion to tuple2, and
+# the numbers climb forever. Comparing contours by shape instead of by number
+# makes the repetition visible, so the split can be refused; once every split
+# a round proposes is loopy nothing is appended and the existing
+# "no splits -> converged" path returns normally.
+SKIP_LOOPY_SPLITS = bool(int(os.environ.get("SKIP_LOOPY_SPLITS", "1")))
+
+# recursion limit when rendering a contour's shape; a shape hitting this
+# limit is unknown ('<cut>') and never compares equal to anything
+SHAPE_DEPTH = 6
 
 
 class CNode:
@@ -1582,7 +1600,7 @@ def ifa_split_vars(
             # --- if it exists, perform actual splitting
             logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
-                ifa_split_class(cl, dcpa, list(splitsites), split)
+                ifa_split_class(cl, dcpa, list(splitsites), split, varnum)
             return split
 
         # --- try to partition csites across paths
@@ -1597,13 +1615,13 @@ def ifa_split_vars(
             prt[ts].append(c)
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
-            ifa_split_class(cl, dcpa, list(prt.values())[0], split)
+            ifa_split_class(cl, dcpa, list(prt.values())[0], split, varnum)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
-                ifa_split_class(cl, dcpa, [csite], split)
+                ifa_split_class(cl, dcpa, [csite], split, varnum)
             return split
 
     return None
@@ -1648,7 +1666,7 @@ def ifa_split_no_confusion(
             cl.splits[nr] = dcpa
         else:  # create new contour
             classes_nr[subtype] = cl.newdcpa
-            ifa_split_class(cl, dcpa, csites, split)
+            ifa_split_class(cl, dcpa, csites, split, varnum)
     if subtype_csites:
         if not TRACE:
             logger.debug("IFA found simple split for (%s, %s):", cl.ident, dcpa)
@@ -1798,13 +1816,196 @@ def ifa_flow_graph(
     return creation_points, paths, assignsets, allnodes, csites, emptycsites
 
 
+def contour_shape(
+    gx: "config.GlobalInfo",
+    types: Types,
+    depth: int = 0,
+    path: frozenset = frozenset(),
+) -> str:
+    """Render (class, contour) pairs by structure rather than by number"""
+    if depth > SHAPE_DEPTH:
+        return "<cut>"
+    out = []
+    for cl, dcpa in sorted(types, key=lambda t: (t[0].ident, t[1])):
+        if (cl, dcpa) in path:
+            out.append(cl.ident + "<rec>")  # real recursion, not truncation
+            continue
+        names = [n for n in cl.tvar_names() if n in cl.vars]
+        if not names:
+            out.append(cl.ident)
+            continue
+        subs = []
+        for name in names:
+            node = gx.cnode.get((cl.vars[name], dcpa, 0))
+            if node is None:
+                subs.append(name + "=?")
+            else:
+                subs.append(
+                    name
+                    + "="
+                    + contour_shape(
+                        gx,
+                        merge_simple_types(gx, node.types()),
+                        depth + 1,
+                        path | {(cl, dcpa)},
+                    )
+                )
+        out.append("%s[%s]" % (cl.ident, ",".join(subs)))
+    return "{%s}" % ",".join(out)
+
+
+def contour_var_shapes(
+    gx: "config.GlobalInfo", cl: "python.Class", dcpa: int
+) -> Optional[list[str]]:
+    """Per-type-variable shapes of one contour, or None if undeterminable"""
+    out = []
+    for name in cl.tvar_names():
+        if name not in cl.vars:
+            continue
+        node = gx.cnode.get((cl.vars[name], dcpa, 0))
+        if node is None:
+            return None  # not materialised: unknown, not empty
+        out.append(contour_shape(gx, merge_simple_types(gx, node.types())))
+    if not out or any("<cut>" in x for x in out):
+        return None
+    return out
+
+
+def ifa_confusion_is_pointless(
+    gx: "config.GlobalInfo", cl: "python.Class", dcpa: int, varnum: int
+) -> bool:
+    """Is the confusion this split resolves between indistinguishable contours?
+
+    A split is only pointless if what it separates cannot be told apart. When
+    a variable holds two contours of the same class that render identically,
+    separating them gains nothing. When it holds genuinely different classes
+    -- {Edge, Face, Vertex} -- the split is exactly what disentangles them and
+    must go ahead, even if the contour it creates happens to duplicate one
+    that already exists.
+
+    An empty contour counts as indistinguishable from a non-empty one of the
+    same class: nothing has reached it yet, so there is no evidence it differs.
+    """
+    names = [n for n in cl.tvar_names() if n in cl.vars]
+    if not 0 <= varnum < len(names):
+        return False
+    node = gx.cnode.get((cl.vars[names[varnum]], dcpa, 0))
+    if node is None:
+        return False
+    shapes: dict[str, list[str]] = {}
+    for c, d in merge_simple_types(gx, node.types()):
+        shapes.setdefault(c.ident, []).append(contour_shape(gx, {(c, d)}))
+    for ident, rendered in shapes.items():
+        if len(rendered) < 2:
+            continue
+        for i in range(len(rendered)):
+            for j in range(i + 1, len(rendered)):
+                a, b = rendered[i], rendered[j]
+                if a == b:
+                    return True
+    return False
+
+
+def ifa_var_is_single_class(
+    gx: "config.GlobalInfo", cl: "python.Class", dcpa: int, varnum: int
+) -> bool:
+    """Does the variable being split on hold contours of just one class?
+
+    When it holds several different classes -- {Edge, Face, Vertex} -- the
+    split is what disentangles them and must always go ahead, however much
+    the contour it produces resembles an existing one.
+    """
+    names = [n for n in cl.tvar_names() if n in cl.vars]
+    if not 0 <= varnum < len(names):
+        return False
+    node = gx.cnode.get((cl.vars[names[varnum]], dcpa, 0))
+    if node is None:
+        return False
+    idents = {c.ident for c, _ in merge_simple_types(gx, node.types())}
+    return len(idents) == 1
+
+
+def ifa_contour_has_twin(
+    gx: "config.GlobalInfo", cl: "python.Class", dcpa: int
+) -> bool:
+    """Does the contour being split already have a structurally identical twin?
+
+    If earlier splitting already produced copies of this very contour that
+    cannot be told apart, splitting it again is going round the same loop:
+    each pass mints another indistinguishable copy under a fresh number.
+    """
+    mine = contour_var_shapes(gx, cl, dcpa)
+    if mine is None:
+        return False
+    for d in range(1, cl.dcpa):
+        if d != dcpa and contour_var_shapes(gx, cl, d) == mine:
+            return True
+    return False
+
+
+def ifa_loopy_twin(
+    cl: "python.Class", dcpa: int, varnum: int, things: list[CNode]
+) -> Optional[int]:
+    """Which existing contour, if any, would this split merely duplicate?
+
+    See SKIP_LOOPY_SPLITS. The contour a split creates is the one being split
+    from, with the split variable narrowed to whatever reaches the sites being
+    split off -- so its shape is known before it exists. When those sites
+    carry nothing at all the child is contentless, which is determinate rather
+    than unknown and is compared like any other shape.
+    """
+    gx = cl.mv.gx
+    shapes = contour_var_shapes(gx, cl, dcpa)
+    if shapes is None:
+        return None
+
+    narrowed: Types = set()
+    for n in things:
+        for assign_set in n.paths:
+            narrowed.update(assign_set)
+
+    if not narrowed:
+        # contentless creation sites: every type variable of the child is empty
+        child = [contour_shape(gx, set())] * len(shapes)
+    else:
+        if not 0 <= varnum < len(shapes):
+            return None
+        child = shapes[:]
+        child[varnum] = contour_shape(gx, merge_simple_types(gx, narrowed))
+    if any("<cut>" in x for x in child):
+        return None  # unknown shape never matches
+
+    for d in range(1, cl.dcpa):
+        if d != dcpa and contour_var_shapes(gx, cl, d) == child:
+            return d
+    return None
+
+
 def ifa_split_class(
     cl: "python.Class",
     dcpa: int,
     things: list[CNode],
     split: Split,
+    varnum: int = -1,
 ) -> None:
     """Split a class"""
+    if SKIP_LOOPY_SPLITS:
+        _gxx = cl.mv.gx
+        _t = ifa_loopy_twin(cl, dcpa, varnum, things)
+        # a split off contentless sites resolves no confusion at all: there is
+        # nothing at those sites to tell apart, so if it would duplicate an
+        # existing contour it is pointless by construction
+        _contentless = not any(n.paths for n in things)
+        if _t is not None and (
+            _contentless
+            or ifa_confusion_is_pointless(_gxx, cl, dcpa, varnum)
+            or (
+                ifa_var_is_single_class(_gxx, cl, dcpa, varnum)
+                and ifa_contour_has_twin(_gxx, cl, dcpa)
+            )
+        ):
+            logger.debug("IFA skipping loopy split of %s, %d", cl.ident, dcpa)
+            return
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
