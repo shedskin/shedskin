@@ -201,6 +201,15 @@ SHAPE_DEPTH = 6
 # a contour and the value type degrades to a union.
 skipped_loopy_split = [False]
 
+# per-contour shape history: (class ident, contour) -> [shape, rounds unchanged]
+# A contour whose shape is still changing has not settled, so two contours that
+# currently render alike may simply not have diverged yet -- judging them
+# indistinguishable then is what merges an empty container with a populated one
+# and collapses its element type. Only contours whose shape has held still for
+# STABLE_ROUNDS rounds are eligible to be called loopy.
+shape_history: dict = {}
+STABLE_ROUNDS = 2
+
 # total number of inferred types at the end of the previous round, used to
 # tell "propagation is still learning something" from "nothing is changing"
 last_type_count = [-1]
@@ -1524,9 +1533,33 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
+def ifa_update_shape_history(gx: "config.GlobalInfo") -> None:
+    """Record, per contour, how many rounds its shape has been unchanged"""
+    for cl in gx.allclasses:
+        if not cl.mv.module.builtin or not cl.tvar_names():
+            continue
+        for dcpa in range(1, cl.dcpa):
+            shape = contour_var_shapes(gx, cl, dcpa)
+            if shape is None:
+                continue
+            key = (cl.ident, dcpa)
+            entry = shape_history.get(key)
+            if entry is not None and entry[0] == shape:
+                entry[1] += 1
+            else:
+                shape_history[key] = [shape, 0]
+
+
+def ifa_contour_settled(cl: "python.Class", dcpa: int) -> bool:
+    """Has this contour's shape held still long enough to judge it?"""
+    entry = shape_history.get((cl.ident, dcpa))
+    return entry is not None and entry[1] >= STABLE_ROUNDS
+
+
 def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
+    ifa_update_shape_history(gx)
     split: Split = []  # [(set of creation nodes, new type number), ..]
     skipped_loopy_split[0] = False
 
@@ -2005,7 +2038,11 @@ def ifa_split_class(
     """Split a class"""
     if SKIP_LOOPY_SPLITS:
         _gxx = cl.mv.gx
-        _t = ifa_loopy_twin(cl, dcpa, varnum, things)
+        _t = (
+            ifa_loopy_twin(cl, dcpa, varnum, things)
+            if ifa_contour_settled(cl, dcpa)
+            else None
+        )
         # a split off contentless sites resolves no confusion at all: there is
         # nothing at those sites to tell apart, so if it would duplicate an
         # existing contour it is pointless by construction
@@ -2045,6 +2082,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
     """Perform iterative dataflow analysis"""
     logger.info("[analyzing types..]")
     backup = backup_network(gx)
+    shape_history.clear()
     last_type_count[0] = -1
 
     gx.orig_types = {}
