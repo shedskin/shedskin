@@ -865,12 +865,14 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
             and func.ident == "__iter__"
         ):  # XXX hack for __iter__:__iter()
             itercl = python.def_class(gx, "__iter")
-            gx.alloc_info[func.ident, ((cl, dcpa),), func.returnexpr[0]] = (
-                itercl,
-                itercl.dcpa,
-            )
-            class_copy(gx, itercl, dcpa)
-            itercl.dcpa += 1
+            key = (func.ident, ((cl, dcpa),), func.returnexpr[0])
+            if key not in gx.alloc_info:
+                # two cl.funcs entries can match __iter__, and without this
+                # guard the second overwrites the first's alloc_info entry,
+                # orphaning the contour it just minted
+                gx.alloc_info[key] = (itercl, itercl.dcpa)
+                class_copy(gx, itercl, dcpa)
+                itercl.dcpa += 1
 
         func_copy(gx, func, dcpa, 0)
 
