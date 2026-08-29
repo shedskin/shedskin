@@ -1968,8 +1968,15 @@ def ifa_var_is_single_class(
     node = gx.cnode.get((cl.vars[names[varnum]], dcpa, 0))
     if node is None:
         return False
-    idents = {c.ident for c, _ in merge_simple_types(gx, node.types())}
-    return len(idents) == 1
+    classes = {c for c, _ in merge_simple_types(gx, node.types())}
+    if len({c.ident for c in classes}) == 1:
+        return True
+    # several classes: splitting them apart is what disentangles a
+    # polymorphic variable, so it must go ahead -- but only when the classes
+    # are actually distinguishable to the code generator. Unrelated *builtin*
+    # classes (int_ vs tuple2) share no base a contour could refine towards,
+    # so separating them buys nothing and can loop forever.
+    return all(c.mv.module.builtin for c in classes)
 
 
 def ifa_contour_has_twin(
