@@ -1493,6 +1493,74 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
+# Contour-split termination.
+#
+# A split is a "repeat" when the same set of cause classes already split this
+# contour, or an ancestor of it, in an earlier round. Repeats are performed
+# normally -- refusing them starves later rounds of candidates that only exist
+# because the repeat happened. Instead they are only tallied, and IFA converges
+# when a whole round consists of nothing but repeats.
+#
+# Splits with no cause at all (no container flows into them) are neutral: they
+# are evidence of neither progress nor repetition, and a round made up only of
+# those is not a reason to stop.
+
+LOOPY_PARENT: dict[tuple["python.Class", int], tuple["python.Class", int]] = {}
+LOOPY_SIG: dict[tuple["python.Class", int], dict[frozenset, int]] = {}
+LOOPY_ROUND = {"repeat": False, "progress": False, "quiet": 0}
+
+
+def loopy_slot(n: CNode) -> Optional[tuple["python.Class", int]]:
+    """the type-variable ('unit') node of a splittable contour, if n is one"""
+    thing = n.thing
+    if isinstance(thing, python.Variable) and isinstance(thing.parent, python.Class):
+        cl = thing.parent
+        if cl.mv.module.builtin and thing.name in cl.tvar_names():
+            return (cl, n.dcpa)
+    return None
+
+
+def loopy_repeat(
+    gx: "config.GlobalInfo",
+    cl: "python.Class",
+    dcpa: int,
+    node: CNode,
+    allnodes: set[CNode],
+) -> Optional[frozenset]:
+    """cause signature of this split, or None if it repeats an earlier one"""
+    srcs = set()
+    for subcl, subdcpa in gx.types[node]:
+        if subcl.mv.module.builtin and subcl.tvar_names():
+            srcs.add((subcl, subdcpa))
+    for seeds, attr in (
+        ([n for n in allnodes if not n.in_], "out"),
+        ([node], "out"),
+        ([node], "in_"),
+    ):
+        seen = set(allnodes) | {node}
+        frontier = list(seeds)
+        while frontier:
+            for m in getattr(frontier.pop(), attr):
+                if m in seen:
+                    continue
+                seen.add(m)
+                slot = loopy_slot(m)
+                if slot is None:
+                    frontier.append(m)
+                else:
+                    srcs.add(slot)
+    sig = frozenset([c for (c, d) in srcs])
+    if not sig:
+        return frozenset()
+    ancestor: Optional[tuple["python.Class", int]] = (cl, dcpa)
+    while ancestor is not None:
+        seen_in = LOOPY_SIG.get(ancestor, {}).get(sig)
+        if seen_in is not None and seen_in < gx.iterations:
+            return None
+        ancestor = LOOPY_PARENT.get(ancestor)
+    return sig
+
+
 def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
@@ -1504,20 +1572,24 @@ def ifa(gx: "config.GlobalInfo") -> Split:
             for cl, dcpa in types:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
+    LOOPY_ROUND["repeat"] = False
+    LOOPY_ROUND["progress"] = False
     for cl in ifa_classes_to_split(gx):
         logger.debug("IFA: --- class %s ---", cl.ident)
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
         for dcpa in range(1, cl.dcpa):
-            if (
-                ifa_split_vars(
-                    gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites
-                )
-                is not None
-            ):
-                logger.debug("IFA found splits, return")
-                return split
+            ifa_split_vars(
+                gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites
+            )
+    if split and LOOPY_ROUND["repeat"] and not LOOPY_ROUND["progress"]:
+        LOOPY_ROUND["quiet"] += 1
+        if LOOPY_ROUND["quiet"] > 1:
+            logger.debug("IFA only repeated splits left, converging")
+            return []
+    else:
+        LOOPY_ROUND["quiet"] = 0
     logger.debug("IFA final return")
     return split
 
@@ -1552,6 +1624,12 @@ def ifa_split_vars(
             )
         if len(csites) + len(emptycsites) == 1:
             continue
+        loopy_sig = loopy_repeat(gx, cl, dcpa, node, allnodes)
+        if loopy_sig is None:
+            LOOPY_ROUND["repeat"] = True
+            loopy_sig = frozenset()
+        elif loopy_sig:
+            LOOPY_ROUND["progress"] = True
         if (
             len(merge_simple_types(gx, gx.types[node])) > 1 and len(assignsets) > 1
         ) or (assignsets and emptycsites):  # XXX move to split_no_conf
@@ -1568,6 +1646,7 @@ def ifa_split_vars(
                 split,
             )
         if split:
+            LOOPY_SIG.setdefault((cl, dcpa), {}).setdefault(loopy_sig, gx.iterations)
             break
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
@@ -1583,6 +1662,7 @@ def ifa_split_vars(
             logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, list(splitsites), split)
+            LOOPY_SIG.setdefault((cl, dcpa), {}).setdefault(loopy_sig, gx.iterations)
             return split
 
         # --- try to partition csites across paths
@@ -1598,12 +1678,14 @@ def ifa_split_vars(
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)
+            LOOPY_SIG.setdefault((cl, dcpa), {}).setdefault(loopy_sig, gx.iterations)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
+            LOOPY_SIG.setdefault((cl, dcpa), {}).setdefault(loopy_sig, gx.iterations)
             return split
 
     return None
@@ -1805,6 +1887,7 @@ def ifa_split_class(
     split: Split,
 ) -> None:
     """Split a class"""
+    LOOPY_PARENT.setdefault((cl, cl.newdcpa), (cl, dcpa))
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
