@@ -1493,6 +1493,74 @@ def actuals_formals(
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 
 
+LOOPY_EDGES: dict[tuple["python.Class", int], set[tuple["python.Class", int]]] = {}
+
+
+def loopy_slot(n: CNode) -> Optional[tuple["python.Class", int]]:
+    thing = n.thing
+    if isinstance(thing, python.Variable) and isinstance(thing.parent, python.Class):
+        cl = thing.parent
+        if cl.mv.module.builtin and thing.name in cl.tvar_names():
+            return (cl, n.dcpa)
+    return None
+
+
+def loopy_record(
+    gx: "config.GlobalInfo",
+    cl: "python.Class",
+    dcpa: int,
+    node: CNode,
+    allnodes: set[CNode],
+) -> None:
+    dst = (cl, dcpa)
+    srcs = set()
+    for subcl, subdcpa in gx.types[node]:
+        if subcl.mv.module.builtin and subcl.tvar_names():
+            srcs.add((subcl, subdcpa))
+    for seeds, attr in (
+        ([n for n in allnodes if not n.in_], "out"),
+        ([node], "out"),
+        ([node], "in_"),
+    ):
+        seen = set(allnodes) | {node}
+        frontier = list(seeds)
+        while frontier:
+            for m in getattr(frontier.pop(), attr):
+                if m in seen:
+                    continue
+                seen.add(m)
+                slot = loopy_slot(m)
+                if slot is None:
+                    frontier.append(m)
+                else:
+                    srcs.add(slot)
+    for src in srcs:
+        LOOPY_EDGES.setdefault(src, set()).add(dst)
+
+
+def loopy_report() -> None:
+    name = lambda t: "%s,%d" % (t[0].ident, t[1])
+    nodes = set(LOOPY_EDGES)
+    for dsts in LOOPY_EDGES.values():
+        nodes.update(dsts)
+    found = set()
+    for start in sorted(nodes, key=name):
+        stack = [(start, [start])]
+        while stack:
+            cur, path = stack.pop()
+            for nxt in sorted(LOOPY_EDGES.get(cur, ()), key=name):
+                if nxt == start:
+                    key = frozenset(path)
+                    if key not in found:
+                        found.add(key)
+                        logger.warning(
+                            "contour split loop: %s",
+                            " -> ".join([name(p) for p in path] + [name(start)]),
+                        )
+                elif nxt not in path:
+                    stack.append((nxt, path + [nxt]))
+
+
 def ifa(gx: "config.GlobalInfo") -> Split:
     """Perform iterative flow analysis"""
     logger.debug("ifa")
@@ -1538,6 +1606,7 @@ def ifa_split_vars(
         if (var, dcpa, 0) not in gx.cnode:
             continue
         node = gx.cnode[var, dcpa, 0]
+        var_node = node
         (
             creation_points,
             paths,
@@ -1568,6 +1637,7 @@ def ifa_split_vars(
                 split,
             )
         if split:
+            loopy_record(gx, cl, dcpa, var_node, allnodes)
             break
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
@@ -1583,6 +1653,7 @@ def ifa_split_vars(
             logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, list(splitsites), split)
+            loopy_record(gx, cl, dcpa, var_node, allnodes)
             return split
 
         # --- try to partition csites across paths
@@ -1598,12 +1669,14 @@ def ifa_split_vars(
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
             ifa_split_class(cl, dcpa, list(prt.values())[0], split)
+            loopy_record(gx, cl, dcpa, var_node, allnodes)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
+            loopy_record(gx, cl, dcpa, var_node, allnodes)
             return split
 
     return None
@@ -1894,6 +1967,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
                 update_progressbar(gx, perc)
             if maxiter:
                 logger.warning("reached maximum number of iterations")
+                loopy_report()
                 if gx.retry_maxiters:
                     raise MaxIterationsException
                 gx.maxhits += 1
