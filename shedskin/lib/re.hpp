@@ -76,20 +76,11 @@ public:
     str *group(__ss_int n, __ss_int m = 0);
     str *group(__ss_int n, str *m);
     str *__getitem__(__ss_int n);
+    str *__getitem__(str *mname);
 
-    template <class ... Args> tuple<str *> *group(__ss_int, __ss_int m, __ss_int o, Args ... args) {
+    template <class T1, class T2, class ... Args> tuple<str *> *group(__ss_int, T1 m, T2 o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
 
-        t->units.push_back(group(1, m));
-        t->units.push_back(group(1, o));
-
-        (t->units.push_back(group(1, args)), ...);
-
-        return t;
-    }
-
-    template <class ... Args> tuple<str *> *group(__ss_int, str *m, str *o, Args ... args) {
-        tuple<str *> *t = new tuple<str *>();
         t->units.push_back(group(1, m));
         t->units.push_back(group(1, o));
 
@@ -160,6 +151,15 @@ public:
 
     str *__repr__();
 };
+
+//marker classes so `re.Pattern`/`re.Match` resolve to real C++ types for
+//annotations/isinstance; see the NOTE above class match_object in re.py.
+//Deliberately unrelated to re_object/match_object: compile()/search()/etc
+//still return re_object*/match_object*, never these. Constructing one of
+//these directly is harmless (unlike constructing a bare re_object/
+//match_object, which carries uninitialized PCRE2 state).
+class Pattern : public pyobj { public: str *__repr__(); };
+class Match : public pyobj { public: str *__repr__(); };
 
 class match_iter : public __iter<match_object *>
 {

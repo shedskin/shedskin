@@ -42,6 +42,7 @@ import re
 import sys
 
 # type-checking
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, NamedTuple, Optional, TypeAlias, Union
 
 if TYPE_CHECKING:
@@ -233,7 +234,7 @@ class Class(PyObject):
                 "array",
             ]:
                 return ["unit"]
-            elif self.ident in ["dict", "frozendict", "defaultdict"]:
+            elif self.ident in ["dict", "frozendict", "defaultdict", "Counter"]:
                 return ["unit", "value"]
             elif self.ident == "tuple2":
                 return ["first", "second"]
@@ -531,6 +532,21 @@ def lookup_module(node: ast.AST, mv: "graph.ModuleVisitor") -> Optional[Module]:
                 return None
 
     return module
+
+
+def stable_vars(variables: Iterable["Variable"]) -> list["Variable"]:
+    """Variables in a stable order, for anything that emits code
+
+    `Class.vars` and a module's globals are dicts, so they iterate in the order
+    analysis happened to discover each variable. That order is not stable
+    between runs, and it reaches the generated code: C++ member declarations
+    move around, and the extension module's pickle support assigns each
+    variable a tuple slot by position, so two builds of the same source can
+    produce modules whose pickles are not readable by each other. Sorting by
+    name at the emission points makes the output a function of the source
+    alone.
+    """
+    return sorted(variables, key=lambda var: var.name or "")
 
 
 def def_class(

@@ -136,7 +136,7 @@ template<class T> T tuple2<T, T>::__getsecond__() {
     return this->units[1];
 }
 template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "tuple index out of range");
     return this->units[(size_t)i];
 }
 
@@ -145,7 +145,7 @@ template<class T> __ss_int tuple2<T, T>::__len__() {
 }
 
 template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "tuple index out of range");
     return units[(size_t)i];
 }
 
@@ -246,12 +246,17 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
             c->units.resize(u-l);
             std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
         }
-    } else if(s > 0)
+    } else if(s > 0) {
+        if(u > l)
+            c->units.reserve((size_t)((u-l+s-1)/s));
         for(int i=l; i<u; i += s)
             c->units.push_back(units[i]);
-    else
+    } else {
+        if(l > u)
+            c->units.reserve((size_t)((l-u-s-1)/(-s)));
         for(int i=l; i>u; i += s)
             c->units.push_back(units[i]);
+    }
     return c;
 }
 

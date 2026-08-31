@@ -233,9 +233,70 @@ def test_re_groups_count():
     assert re.compile('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)').groups == 12
 
 
+def test_re_group_no_args():
+    m = re.match(r'(a)(b)', 'ab')
+    assert m.group() == 'ab'
+
+
+def test_re_group_mixed_int_str():
+    m = re.match(r'(?P<x>a)(b)', 'ab')
+    assert m.group('x', 1) == ('a', 'a')
+    assert m.group(1, 'x', 0) == ('a', 'a', 'ab')
+
+
+def test_re_getitem_str():
+    m = re.match(r'(?P<x>a)(b)', 'ab')
+    assert m['x'] == 'a'
+    assert m[1] == 'a'
+
+
 def test_purge():
     re.purge()
 
+
+def _find_first(pattern: str, text: str) -> re.Match | None:
+    p: re.Pattern = re.compile(pattern)
+    return p.search(text)
+
+
+def test_re_pattern_match_annotations():
+    # re.Pattern/re.Match previously didn't exist as names in shedskin's re
+    # module (only the internal re_object/match_object did), so using them
+    # in annotations degraded to a silent "no type" instead of resolving.
+    m = _find_first(r'\d+', 'abc123')
+    assert m is not None
+    assert m.group() == '123'
+
+
+def test_re_pattern_match_instantiate():
+    # unlike CPython (which raises TypeError), shedskin has no way to
+    # forbid construction; Pattern/Match are deliberately separate,
+    # state-free stub classes so this stays harmless instead of touching
+    # uninitialized PCRE2 state the way re_object()/match_object() would.
+    p = re.Pattern()
+    m = re.Match()
+    assert str(p) == '<Pattern object>'
+    assert str(m) == '<Match object>'
+
+def test_re_escape():
+    # re.escape used to double-advance its index whenever it escaped a
+    # metacharacter, silently dropping the literal character right after
+    # it (e.g. escape("a..b") produced "a\\.\\." instead of "a\\.\\.b")
+    assert re.escape("a.b*c+d?") == "a\\.b\\*c\\+d\\?"
+    assert re.escape("a..b") == "a\\.\\.b"
+    assert re.escape("hello.world") == "hello\\.world"
+    assert re.escape("abc") == "abc"
+    assert re.escape("") == ""
+    assert re.escape("1.2.3.4") == "1\\.2\\.3\\.4"
+
+def test_re_finditer_empty_string():
+    # finditer()/match_iter used to unconditionally reject pos >= len(subj),
+    # so pos=0 on an empty string incorrectly raised "starting position >=
+    # string length" instead of yielding matches for patterns that can match
+    # the empty string (or nothing, for patterns that can't).
+    assert [m.span() for m in re.finditer('a*', '')] == [(0, 0)]
+    assert [m.span() for m in re.finditer('a', '')] == []
+    assert [m.span() for m in re.compile('x*').finditer('')] == [(0, 0)]
 
 def test_re_unmatched_group_returns_none():
     m = re.match(r'(a)(b)?', 'a')
@@ -318,6 +379,9 @@ def test_all():
     test_re_locale_rejected()
     test_re_compile_error_message()
     test_re_groups_count()
+    test_re_group_no_args()
+    test_re_group_mixed_int_str()
+    test_re_getitem_str()
     test_re_unmatched_group_returns_none()
     test_re_unmatched_named_group_returns_none()
     test_re_out_of_range_group_raises_indexerror()
@@ -328,6 +392,10 @@ def test_all():
     test_re_sub_unmatched_group_is_empty_string()
     test_re_sub_out_of_range_group_raises_error()
     test_purge()
+    test_re_pattern_match_annotations()
+    test_re_pattern_match_instantiate()
+    test_re_escape()
+    test_re_finditer_empty_string()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,17 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
+# NOTE: re_object/match_object are shedskin's internal type-inference stubs
+# for compiled patterns and match results; the real logic lives in re.cpp.
+# CPython exposes these as re.Pattern/re.Match (since 3.8), but shedskin
+# can't just do `Pattern = re_object` (class aliasing isn't resolved by the
+# analyzer), so Pattern/Match below are separate marker classes purely so
+# that annotations and isinstance() checks using those public names resolve
+# instead of silently degrading to "no type". They are deliberately NOT
+# related to re_object/match_object: unlike those, they carry no internal
+# state, so instantiating them directly (which CPython itself disallows,
+# raising TypeError) is harmless here instead of touching uninitialized
+# PCRE2 state.
 # TODO fix re_object.groups, rename re_object to Pattern
 
 NOFLAG = 0
@@ -32,7 +43,7 @@ class match_object:
 
     def group(self, *args):
         return ('',)
-    def __group0(self, arg):
+    def __group0(self):
         return ''
     def __group1(self, arg):
         return ''
@@ -57,6 +68,14 @@ class match_object:
 
     def __repr__(self):
         return ''
+
+class Match:
+    """Marker class so `re.Match` resolves in annotations/isinstance checks.
+
+    Not the actual type of objects returned by match/search/etc (that's
+    match_object); see the note above class match_object.
+    """
+    pass
 
 class re_object:
     def __init__(self):  # TODO .groups
@@ -96,6 +115,14 @@ class re_object:
 
     def __repr__(self):
         return ''
+
+class Pattern:
+    """Marker class so `re.Pattern` resolves in annotations/isinstance checks.
+
+    Not the actual type of objects returned by compile() (that's
+    re_object); see the note above class match_object.
+    """
+    pass
 
 def compile(pattern, flags=0):
     return re_object()

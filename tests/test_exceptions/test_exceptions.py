@@ -100,6 +100,37 @@ def test_index_error():
         error = True
     assert error
 
+def test_index_error_messages():
+    try:
+        [1, 2, 3][4]
+        assert False
+    except IndexError as e:
+        assert str(e) == 'list index out of range'
+
+    try:
+        [1, 2, 3][4] = 1
+        assert False
+    except IndexError as e:
+        assert str(e) == 'list assignment index out of range'
+
+    try:
+        del [1, 2, 3][4]
+        assert False
+    except IndexError as e:
+        assert str(e) == 'list assignment index out of range'
+
+    try:
+        "abc"[4]
+        assert False
+    except IndexError as e:
+        assert str(e) == 'string index out of range'
+
+    try:
+        (1, 2, 3)[4]
+        assert False
+    except IndexError as e:
+        assert str(e) == 'tuple index out of range'
+
 def test_system_exit_error():
     error = False
     try:

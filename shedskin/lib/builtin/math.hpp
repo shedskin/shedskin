@@ -29,6 +29,12 @@ template<> inline __ss_float __power(__ss_float a, __ss_float b) { __SS_POW_ZERO
 
 template<> inline __ss_int __power(__ss_int a, __ss_int b) {
     __SS_POW_ZERO_CHECK(a, b);
+    /* CPython returns a float here (2 ** -1 == 0.5), but the result type has
+     * already been fixed to int by then. The loop below would silently return
+     * its seed value of 1, so refuse instead of answering wrongly. Translation
+     * already warns when the exponent is a negative constant. */
+    if(b < 0)
+        throw new ValueError(new str("pow(int, int) with a negative exponent returns a float in python; use a float base (e.g. 2.0 ** -1)"));
     switch(b) {
         case 2: return a*a;
         case 3: return a*a*a;
@@ -224,7 +230,7 @@ template<class T> T __div2(__ss_float n, T a) { return a->__rdiv__(n); }
 
 /* {int, float}.is_integer */
 
-inline __ss_bool __ss_is_integer(__ss_int i) {
+inline __ss_bool __ss_is_integer(__ss_int) {
     return True;
 }
 
@@ -235,6 +241,9 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
 /* int.{bit_count, bit_length */
 
 namespace __int___ {
+    /* Deliberately counts the two's complement bit pattern rather than the
+     * magnitude CPython uses, so that negative values keep working as 64-bit
+     * masks (see the othello2 example and test_type_int.test_bit_count). */
     inline __ss_int bit_count(__ss_int i) {
 #ifdef __SS_LONG
         return (__ss_int)std::bitset<std::numeric_limits<unsigned long long>::digits>((unsigned long long)i).count(); // TODO hard-coded types
@@ -243,11 +252,21 @@ namespace __int___ {
 #endif
     }
 
+    /* Deliberately not floor(log2(i))+1: converting a wide integer to double
+     * rounds, so 2**62-1 came out of log2 as exactly 62.0 and reported a bit
+     * length of 63 rather than 62. std::bit_width is exact at every width, and
+     * compiles to a single count-leading-zeros instruction. */
     inline __ss_int bit_length(__ss_int i) {
-        if(i == 0)
-            return 0;
-        return (__ss_int)(std::floor(std::log2(std::abs(i)))) + 1;
-        //return (__ss_int)std::bit_width(i); // TODO available from C++20
+        __ss_uint u = __ss_magnitude(i);
+#ifdef __SS_INT128
+        /* bit_width takes a standard unsigned type, which __int128 is not */
+        __ss_int n = 0;
+        for(; u; u >>= 1)
+            n++;
+        return n;
+#else
+        return (__ss_int)std::bit_width((unsigned long long)u);
+#endif
     }
 
 /*    inline tuple<__ss_int> *as_integer_ratio(__ss_int i) {
@@ -266,7 +285,6 @@ inline __ss_int __ss_bit_length(__ss_int i) {
 inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
     __ss_int inc = 0;
     __ss_int start_index = 0;
-    __ss_int end_index = 0;
     __ss_int extension = 0;
     __ss_int actual_size = 0;
     unsigned char sign_ext = 0xff;
@@ -279,11 +297,9 @@ inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __s
     /* endianness */
     if(!byteorder || __eq(byteorder, byteorder_big)) {
         start_index = length-1;
-        end_index = 0;
         inc = -1;
     } else {
         start_index = 0;
-        end_index = length-1;
         inc = 1;
     }
 
@@ -429,7 +445,7 @@ namespace __bytes___ {
         __GC_STRING separator = " \n\r\t";
         bytes *result = new bytes();
         size_t count = 0;
-        unsigned char high, low;
+        unsigned char high;
         size_t i=0;
         for(; i < s->unit.size(); i++) {
             char c = s->unit[i];

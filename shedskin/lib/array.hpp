@@ -281,8 +281,13 @@ template<class T> array<T> *array<T>::__add__(array<T> *b) {
 }
 
 template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
+    /* CPython implements 'a += b' for arrays as a plain extend() (see
+     * array_inplace_concat() in CPython's arraymodule.c), so a typecode
+     * mismatch here must raise the same message as extend()/fromlist() --
+     * "bad argument type for built-in operation" is __add__()'s message
+     * (a genuinely different C-level op, PyArray_Concat()), not this one. */
     if(this->typecode != b->typecode)
-        throw new TypeError(new str("bad argument type for built-in operation")); 
+        throw new TypeError(new str("can only extend with array of same kind"));
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
     this->units.resize(s1+s2);

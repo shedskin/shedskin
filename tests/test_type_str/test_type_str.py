@@ -16,11 +16,19 @@ def test_casefold():
     assert 'hello'.casefold() == 'hello'
     assert '123'.casefold() == '123'
     assert 'Hi 5! Bye.'.casefold() == 'hi 5! bye.'
+    assert ''.casefold() == ''
+    assert ('ABCDEFGHIJ' * 20).casefold() == ('abcdefghij' * 20)
 
 
 def test_center():
     assert 'bla'.center(10) == '   bla    '
     assert 'bla'.center(10, '-') == '---bla----'
+    # odd total padding: extra fill char goes on the left here (CPython
+    # ties the side to the parity of the requested width, not a plain
+    # floor-division split)
+    assert 'ab'.center(5, '0') == '00ab0'
+    assert 'ab'.center(7, '*') == '***ab**'
+    assert 'ab'.center(6, '*') == '**ab**'
 
 
 def test_count():
@@ -30,6 +38,21 @@ def test_count():
     assert "hoooi".count("o") == 3
     assert "hoooi".count("o", 2) == 2
     assert "hoooi".count("o", 0, -2) == 2
+
+    assert "abc".count("") == 4
+    assert "".count("") == 1
+    assert "abc".count("", 1) == 3
+    assert "abc".count("", 1, 2) == 2
+
+
+def test_count_embedded_null():
+    # regression test: count used to search for the target via a
+    # NUL-terminated C string, so a target containing an embedded NUL byte
+    # was silently truncated at the NUL, undercounting (or miscounting)
+    # matches.
+    assert ('a\x00b\x00c').count('\x00') == 2
+    assert 'abc\x00defXYZghi'.count('\x00def') == 1
+    assert 'abc\x00defXYZ\x00defghi'.count('\x00def') == 2
 
 
 # def test_encode():
@@ -174,6 +197,17 @@ def test_maketrans():
 def test_partition():
     assert "a and b and c".partition("and") == ('a ', 'and', ' b and c')
     assert 'aa-bb-cc'.partition('-') ==  ('aa', '-', 'bb-cc')
+
+
+def test_partition_embedded_null():
+    # regression test: partition used to search for the separator via a
+    # NUL-terminated C string, so a separator containing an embedded NUL
+    # byte was silently truncated at the NUL and the match could be found
+    # (or missed) in the wrong place.
+    s = 'abc\x00defXYZghi'
+    sep = '\x00def'
+    assert s.partition(sep) == ('abc', '\x00def', 'XYZghi')
+    assert s.partition('\x00zzz') == (s, '', '')
 
 
 def test_removeprefix():
@@ -535,6 +569,7 @@ def test_all():
     test_casefold()
     test_center()
     test_count()
+    test_count_embedded_null()
     # test_encode()
     test_endswith()
     test_expandtabs()
@@ -560,6 +595,7 @@ def test_all():
     test_lstrip()
     test_maketrans()
     test_partition()
+    test_partition_embedded_null()
     test_removeprefix()
     test_removesuffix()
     test_replace()

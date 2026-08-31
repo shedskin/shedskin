@@ -313,6 +313,23 @@ def test_range():
     assert list(range(1, 10, 2)) == [1, 3, 5, 7, 9]
     assert list(range(-17, -120, -17)) == [-17, -34, -51, -68, -85, -102, -119]
 
+    # list(range(a, b, c)) with a runtime step: direction/step mismatches
+    # must yield an empty list rather than looping forever or crashing
+    # (regression test for a bug in the __ss_list_range() fast path,
+    # which under -O2 could invoke undefined behavior via unbounded
+    # signed-integer increment and crash instead of terminating)
+    assert list(range(5, 0, a)) == []
+    assert list(range(0, 5, -a)) == []
+
+    # step=0 (only detectable at runtime here) must raise ValueError,
+    # matching plain for-loop iteration over range(), not hang/crash
+    zero = a - 1
+    try:
+        list(range(0, 5, zero))
+        assert False, "expected ValueError for step=0"
+    except ValueError:
+        pass
+
     r = range(4, 10, 2)
     assert r.start == 4
     assert r.stop == 10
@@ -360,6 +377,24 @@ def test_range():
     assert r.index(3) == 1
 
 
+def test_range_beyond_32_bits():
+    # range lengths used to be computed in 32-bit arithmetic, so anything past
+    # 2 ** 31 wrapped: len() returned 705032704 here and indexing raised
+    big = 5000000000
+
+    assert len(range(0, big)) == big
+    assert len(range(big, 0, -1)) == big
+    assert range(0, big)[3000000000] == 3000000000
+    assert range(0, big)[-1] == big - 1
+    assert len(range(0, big, 3)) == 1666666667
+
+    assert list(range(4000000000, 4000000003)) == [4000000000, 4000000001, 4000000002]
+    assert list(reversed(range(4000000000, 4000000003))) == [4000000002, 4000000001, 4000000000]
+
+    assert 4000000000 in range(0, big)
+    assert list(range(0, big)[3000000000:3000000003]) == [3000000000, 3000000001, 3000000002]
+
+
 def test_range_slicing():
     r = range(2,20,2)
     assert list(r[2:4:3]) == [6]
@@ -394,7 +429,27 @@ def test_round():
     assert round(-3.5) == -4
     assert round(-4.5) == -4
 
-    assert round(1.15, 0) == 1.0  # TODO check cpython
+    assert round(1.15, 0) == 1.0
+
+    # round(x, n) must round the exact binary value of x, not a value
+    # that has already picked up its own floating point error from
+    # multiplying/dividing by 10**n, and ties must round to even.
+    assert round(2.675, 2) == 2.67
+    assert round(-2.675, 2) == -2.67
+    assert round(0.125, 2) == 0.12
+    assert round(2.5, 0) == 2.0
+    assert round(0.5, 0) == 0.0
+    assert round(1.25, 1) == 1.2
+    assert round(1234.5, -2) == 1200.0
+    assert round(25.0, -1) == 20.0
+    assert round(15.0, -1) == 20.0
+    assert round(-0.0, 2) == 0.0
+
+    # round(x) always returns int; round(x, ndigits) preserves the input's type
+    assert str(round(2.5)) == '2'
+    assert str(round(2.5, 1)) == '2.5'
+    assert str(round(5, 2)) == '5'
+    assert str(round(1234, -2)) == '1200'
 
 
 def test_set():
@@ -475,6 +530,7 @@ def test_all():
     test_property()
     test_print()
     test_range()
+    test_range_beyond_32_bits()
     test_range_slicing()
     test_repr()
     test_reversed()

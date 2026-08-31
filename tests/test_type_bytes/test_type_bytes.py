@@ -10,6 +10,11 @@ def test_capitalize():
 def test_center():
     assert b'bla'.center(10) == b'   bla    '
     assert b'bla'.center(10, b'-') == b'---bla----'
+    # odd total padding: extra fill char goes on the left here (same rule
+    # as str.center, see CPython's stringlib_center)
+    assert b'ab'.center(5, b'0') == b'00ab0'
+    assert b'ab'.center(7, b'*') == b'***ab**'
+    assert b'ab'.center(6, b'*') == b'**ab**'
 
 def test_count():
     assert b'blaa'.count(b'a') == 2
@@ -27,6 +32,20 @@ def test_count():
     assert b'blaabla'.count(b'aa') == 1
     assert b'blaabla'.count(b'aa', 1) == 1
     assert b'blaabla'.count(b'aa', -7) == 1
+
+    assert b'abc'.count(b'') == 4
+    assert b''.count(b'') == 1
+    assert b'abc'.count(b'', 1) == 3
+    assert b'abc'.count(b'', 1, 2) == 2
+
+def test_count_embedded_null():
+    # regression test: count used to search for the target via a
+    # NUL-terminated C string, so a target containing an embedded NUL byte
+    # was silently truncated at the NUL, undercounting (or miscounting)
+    # matches.
+    assert (b'a\x00b\x00c').count(b'\x00') == 2
+    assert b'abc\x00defXYZghi'.count(b'\x00def') == 1
+    assert b'abc\x00defXYZ\x00defghi'.count(b'\x00def') == 2
 
 def test_encode():
     pass
@@ -137,6 +156,16 @@ def test_maketrans(): pass
 def test_partition():
     assert b"a and b and c".partition(b"and") == (b'a ', b'and', b' b and c')
     assert b'aa-bb-cc'.partition(b'-') ==  (b'aa', b'-', b'bb-cc')
+
+def test_partition_embedded_null():
+    # regression test: partition used to search for the separator via a
+    # NUL-terminated C string, so a separator containing an embedded NUL
+    # byte was silently truncated at the NUL and the match could be found
+    # (or missed) in the wrong place.
+    s = b'abc\x00defXYZghi'
+    sep = b'\x00def'
+    assert s.partition(sep) == (b'abc', b'\x00def', b'XYZghi')
+    assert s.partition(b'\x00zzz') == (s, b'', b'')
 
 def test_removeprefix():
     a = b'bla://hop'
@@ -303,6 +332,18 @@ def test_bytes_hash():
     assert list(sorted(bdict.items())) == [(b'bla', 18), (b'blup', 19)]
     assert set([b'blup'])
 
+def test_bytes_hash_embedded_null():
+    # bytes with an embedded null byte must hash based on their full
+    # contents, not just the part before the null byte.
+    a = bytes([0, 97, 98, 99])    # b'\x00abc'
+    b = bytes([0, 120, 121, 122]) # b'\x00xyz'
+    assert a != b
+    assert hash(a) != hash(b)
+    d = {a: 1, b: 2}
+    assert len(d) == 2
+    assert d[a] == 1
+    assert d[b] == 2
+
 
 def test_bytes_builtin():
     assert bytes() == b''
@@ -396,6 +437,7 @@ def test_all():
     test_capitalize()
     test_center()
     test_count()
+    test_count_embedded_null()
     test_encode()
     test_endswith()
     test_expandtabs()
@@ -416,6 +458,7 @@ def test_all():
     test_lstrip()
     test_maketrans()
     test_partition()
+    test_partition_embedded_null()
     test_removeprefix()
     test_removesuffix()
     test_replace()
@@ -436,6 +479,7 @@ def test_all():
     test_zfill()
     test_iadd()
     test_bytes_hash()
+    test_bytes_hash_embedded_null()
     test_bytes_builtin()
     test_contains()
     test_iadd_imul()

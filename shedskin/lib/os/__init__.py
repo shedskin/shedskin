@@ -185,7 +185,7 @@ def removedirs(name):
 def mkdir(a, mode=0o0777):
     pass
 
-def makedirs(name, mode=0o0777, exist_ok=False):
+def makedirs(name, mode=0o0777, exist_ok=False, parent_mode=-1):
     pass
 
 def fork():
@@ -453,6 +453,9 @@ def fsync(fd):
     pass
 
 def urandom(n):
+    return b''
+
+def getrandom(size, flags=0):
     return b''
 
 def utime(path, times):

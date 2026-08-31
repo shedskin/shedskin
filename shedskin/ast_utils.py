@@ -29,9 +29,12 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
-from . import config
+from . import config, python
+
+if TYPE_CHECKING:
+    from . import graph
 
 
 def is_assign_list_or_tuple(node: ast.AST) -> bool:
@@ -79,6 +82,44 @@ def is_none(node: ast.AST) -> bool:
     return False
 
 
+def negative_num_value(node: ast.AST) -> Optional[Union[int, float]]:
+    """Value of a syntactically negative numeric literal, else None.
+
+    '-1' parses as UnaryOp(USub, Constant(1)) rather than Constant(-1), so both
+    spellings have to be recognized.
+    """
+    if isinstance(node, ast.Constant):
+        value = node.value
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if value < 0:
+                return value
+    elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        operand = node.operand
+        if isinstance(operand, ast.Constant):
+            negated = operand.value
+            if isinstance(negated, (int, float)) and not isinstance(negated, bool):
+                if negated > 0:
+                    return -negated
+    return None
+
+
+def float_negative_exponent(node: ast.expr) -> ast.expr:
+    """Retype a negative int literal exponent as the equivalent float.
+
+    'int ** int' is typed as int, but python returns a float when the exponent
+    is negative: 10 ** -1 is 0.1. That depends on the exponent's *value*, which
+    inference cannot see -- except for a literal, where the sign is right
+    there. Handing back a float literal gives exactly python's result via
+    'int_ ** float_', and matches how cpython itself defers to float pow here.
+    Anything else is returned unchanged, including an already-float literal, so
+    this is safe to apply more than once.
+    """
+    value = negative_num_value(node)
+    if isinstance(value, int):
+        return ast.copy_location(ast.Constant(value=float(value)), node)
+    return node
+
+
 def is_literal(node: ast.AST) -> bool:
     """Check if a node is a literal"""
     # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
@@ -88,33 +129,69 @@ def is_literal(node: ast.AST) -> bool:
     return is_num(node)
 
 
-def is_fastfor(node: Union[ast.For, ast.comprehension]) -> bool:
+def _is_shadowed(
+    name: str,
+    parent: Optional["python.AllParent"],
+    mv: Optional["graph.ModuleVisitor"],
+) -> bool:
+    """Check whether 'name' is bound to something other than the builtin of
+    that name in the current scope.
+
+    A parameter, local variable, or nested function/class named e.g.
+    'range', 'enumerate' or 'zip' shadows the builtin: calls to it must not
+    be special-cased as if they were calls to the builtin. Without 'parent'
+    (the enclosing function/class) and 'mv' (the module visitor) to look the
+    name up in, no shadowing information is available, so nothing is
+    reported as shadowed -- callers that can supply this context should
+    always do so.
+    """
+    if mv is None:
+        return False
+    return python.lookup_var(name, parent, mv) is not None
+
+
+def is_fastfor(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is a fast for loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id in ["range", "xrange"]
+        and not _is_shadowed(node.iter.func.id, parent, mv)
     )
 
 
-def is_enumerate(node: Union[ast.For, ast.comprehension]) -> bool:
+def is_enumerate(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is an enumerate loop"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id == "enumerate"
+        and not _is_shadowed("enumerate", parent, mv)
         and len(node.iter.args) == 1
         and not node.iter.keywords  # TODO start arg not supported
         and is_assign_list_or_tuple(node.target)
     )
 
 
-def is_zip2(node: Union[ast.For, ast.comprehension]) -> bool:
+def is_zip2(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
     """Check if a node is a zip loop with two arguments"""
     return (
         isinstance(node.iter, ast.Call)
         and isinstance(node.iter.func, ast.Name)
         and node.iter.func.id == "zip"
+        and not _is_shadowed("zip", parent, mv)
         and len(node.iter.args) == 2
         and is_assign_list_or_tuple(node.target)
     )
@@ -131,6 +208,32 @@ def assign_rec(left: ast.AST, right: ast.AST) -> list[tuple[ast.AST, ast.AST]]:
         return pairs
     else:
         return [(left, right)]
+
+
+def check_assign_arity(left: ast.AST, right: ast.AST) -> Optional[tuple[int, int]]:
+    """Recursively check that a literal (list/tuple) unpacking target and a
+    literal (list/tuple) right-hand side have matching arity.
+
+    `assign_rec` pairs up (lvalue, rvalue) elements with `zip()`, which
+    silently truncates to the shorter side, so e.g. `a, b = [1, 2, 3]` or
+    `a, b, c = [1, 2]` would otherwise be accepted without any check
+    (unlike CPython, which raises ValueError at runtime).
+
+    Returns (expected, got) for the first arity mismatch found, or None if
+    every literal-vs-literal pair matches. Only literal-vs-literal
+    unpacking is checked here (both sides need a known length); unpacking
+    from a non-literal iterable is still checked at runtime via
+    __SS_UNPACK_CHECK.
+    """
+    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+        assert isinstance(left, (ast.Tuple, ast.List))
+        if len(left.elts) != len(right.elts):
+            return (len(left.elts), len(right.elts))
+        for lvalue, rvalue in zip(left.elts, right.elts):
+            mismatch = check_assign_arity(lvalue, rvalue)
+            if mismatch:
+                return mismatch
+    return None
 
 
 def aug_msg(gx: "config.GlobalInfo", node: ast.BinOp, msg: str) -> str:

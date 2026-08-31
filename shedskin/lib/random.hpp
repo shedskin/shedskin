@@ -58,8 +58,8 @@ public:
     __ss_float triangular(__ss_float low, __ss_float high, void *mode);
     __ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
     __ss_float expovariate(__ss_float lambd);
-    __ss_int getrandbits(__ss_int k);
-    bytes *randbytes(__ss_int n);
+    virtual __ss_int getrandbits(__ss_int k);
+    virtual bytes *randbytes(__ss_int n);
     virtual void *setstate(bytes *state);
     __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
@@ -71,6 +71,32 @@ public:
     template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
     virtual bytes *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
+};
+
+class SystemRandom;
+
+extern class_ *cl_SystemRandom;
+class SystemRandom : public Random {
+/**
+Alternate random number generator using sources provided by the operating
+system (such as /dev/urandom on Unix or CryptGenRandom on Windows).
+
+    Not available on all systems (see os.urandom() for details).
+*/
+public:
+    SystemRandom();
+    SystemRandom(int a);
+    virtual __ss_float random();
+    virtual __ss_int getrandbits(__ss_int k);
+    virtual bytes *randbytes(__ss_int n);
+    virtual bytes *getstate();
+    virtual void *setstate(bytes *state);
+    template <class A> void *seed(A a) {
+        /**
+        Stub method.  Not used for a system random number generator.
+        */
+        return NULL;
+    }
 };
 
 extern int  UPPER;
@@ -181,7 +207,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, __ss_int k) {
             selection in the sample.
     */
     str *const_5, *const_6;
-    const_5 = new str("sample larger than population");
+    const_5 = new str("Sample larger than population or is negative");
     const_6 = new str("population to sample has no members");
     A __39;
     dict<int, A> *selected;

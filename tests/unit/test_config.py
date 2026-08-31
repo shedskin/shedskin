@@ -58,6 +58,22 @@ class TestGlobalInfo:
         assert "virtual" in gx.cpp_keywords
         assert "template" in gx.cpp_keywords
 
+    def test_cpp_keywords_includes_previously_missing_reserved_words(self, gx):
+        """Regression test: these C++ reserved words used to be missing from
+        illegal.txt, so a Python variable with one of these names would be
+        emitted verbatim and fail to compile as C++."""
+        assert "nullptr" in gx.cpp_keywords
+        assert "decltype" in gx.cpp_keywords
+        assert "thread_local" in gx.cpp_keywords
+        assert "static_assert" in gx.cpp_keywords
+        assert "noexcept" in gx.cpp_keywords
+        assert "concept" in gx.cpp_keywords
+        assert "requires" in gx.cpp_keywords
+        assert "bitand" in gx.cpp_keywords
+        assert "bitor" in gx.cpp_keywords
+        assert "xor" in gx.cpp_keywords
+        assert "compl" in gx.cpp_keywords
+
     def test_builtins_list(self, gx):
         """Builtins list should contain all expected types in order."""
         expected = [

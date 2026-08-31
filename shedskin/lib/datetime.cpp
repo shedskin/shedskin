@@ -4,6 +4,9 @@
 #include "time.hpp"
 #include <iostream>
 #include <time.h>
+#include <cstdio>
+#include <cctype>
+#include <cstring>
 
 #ifdef _MSC_VER
 
@@ -36,7 +39,7 @@ int clock_gettime(int, struct timespec *tp)
 namespace __datetime__ {
 
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
-str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string;
+str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string,*t_string;
 
 __ss_int MINYEAR, MAXYEAR;
 
@@ -61,6 +64,7 @@ void __init() {
 	multiple_days_string = new str("%d days, %d:%02d:%02d");
 	point_string = new str("%s.%06d");
 	space_string = new str(" ");
+	t_string = new str("T");
 	none_string = new str("None");
 	empty_string = new str("");
 	z_string = new str("%z");
@@ -83,6 +87,33 @@ static __ss_int days_before_year(__ss_int year);
 static void ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day);
 static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
 static __ss_int iso_week1_monday(__ss_int year);
+
+/* Parse the (already-isolated) fractional-seconds digits of an ISO 8601
+ * time string into microseconds, e.g. "5" -> 500000, "123456" -> 123456,
+ * "1234567" -> 123456 (truncated, extra digits dropped). Non-digit/missing
+ * positions are treated as 0, so shorter fractions are implicitly
+ * right-padded with zeros. */
+static __ss_int iso_fraction_to_microseconds(const char *frac) {
+    __ss_int us = 0;
+    for (int i = 0; i < 6; i++) {
+        us *= 10;
+        if (frac[i] >= '0' && frac[i] <= '9')
+            us += frac[i] - '0';
+    }
+    return us;
+}
+
+/* true iff s[start..start+len) exists and consists only of ASCII digits;
+ * used to enforce the fixed zero-padded field widths cpython requires
+ * (e.g. rejects '2020-1-1', which sscanf's "%2d" would happily accept). */
+static bool iso_all_digits(const __GC_STRING &s, size_t start, size_t len) {
+    if (start + len > s.size())
+        return false;
+    for (size_t i = 0; i < len; i++)
+        if (!isdigit((unsigned char)s[start+i]))
+            return false;
+    return true;
+}
 
 //class date
 date::date(__ss_int year_, __ss_int month_, __ss_int day_){
@@ -126,6 +157,18 @@ date* date::fromordinal(__ss_int o) {
     return r;
 }
 
+date *date::fromisoformat(str *date_string) {
+    //supports the plain zero-padded 'YYYY-MM-DD' form (no timezone offsets)
+    const __GC_STRING &s = date_string->unit;
+    if (s.size() != 10 || s[4] != '-' || s[7] != '-' ||
+            !iso_all_digits(s, 0, 4) || !iso_all_digits(s, 5, 2) || !iso_all_digits(s, 8, 2))
+        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+
+    int y, m, d;
+    sscanf(s.c_str(), "%4d-%2d-%2d", &y, &m, &d);
+    return new date((__ss_int)y, (__ss_int)m, (__ss_int)d);
+}
+
 date *date::__add__(timedelta *other) {
     return fromordinal(toordinal()+(other->days));
 }
@@ -164,7 +207,12 @@ date *date::replace(__ss_int year_, __ss_int month_, __ss_int day_) {
         t->month=month_;}
     if(day_!=0) {
         if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day_;}
+        t->day=day_;
+    } else if(t->day>days_in_month(t->year,t->month)) {
+        /* day itself was not replaced, but a new year/month can still make
+         * the existing day invalid (e.g. Jan 31 -> April) */
+        throw new ValueError(new str("day is out of range for month"));
+    }
     return t;
 }
 
@@ -222,7 +270,7 @@ str *date::ctime() {
     __ss_int wday = weekday();
 
     return __mod6(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
-                        day, 0, 0, 0, year);
+                        day, (__ss_int)0, (__ss_int)0, (__ss_int)0, year);
 }
 
 str *date::strftime(str *format) {
@@ -456,6 +504,25 @@ datetime *datetime::strptime(str *date_string, str *format) {
         t.tm_sec);
 }
 
+datetime *datetime::fromisoformat(str *date_string) {
+    //supports 'YYYY-MM-DD[*HH:MM:SS[.ffffff]]' (no timezone offsets), where
+    //'*' is any single separator character, matching cpython (>=3.11)
+    const __GC_STRING &s = date_string->unit;
+    if (s.size() < 10)
+        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+
+    str *date_part = new str(s.substr(0, 10));
+    if (s.size() == 10) {
+        date *d = date::fromisoformat(date_part);
+        return new datetime(d->year, d->month, d->day);
+    }
+
+    str *time_part = new str(s.substr(11));
+    date *d = date::fromisoformat(date_part);
+    time *t = time::fromisoformat(time_part);
+    return combine(d, t);
+}
+
 datetime *datetime::__add__(timedelta *other) {
     __ss_int usec = this->microsecond + other->microseconds;
     __ss_int sec = this->second + other->seconds;
@@ -584,7 +651,12 @@ datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __
         t->month=month_;}
     if((__args & 4)==4) {
         if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day_;}
+        t->day=day_;
+    } else if(t->day>days_in_month(t->year,t->month)) {
+        /* day itself was not replaced, but a new year/month can still make
+         * the existing day invalid (e.g. Jan 31 -> April) */
+        throw new ValueError(new str("day is out of range for month"));
+    }
     if((__args & 8)==8) {
         if(hour_<0 || hour_>=24)              throw new ValueError(new str("hour must be in 0..23"));
         t->hour=hour_;}
@@ -641,6 +713,45 @@ str *datetime::tzname() {
 		return _tzinfo->tzname(this);
 }
 
+__ss_float datetime::timestamp() {
+	if(_tzinfo!=NULL) {
+		/* aware: compute seconds since the Unix epoch (1970-01-01 UTC)
+		 * directly from the calendar fields and subtract the utcoffset.
+		 * This avoids mktime()/timegm() altogether, so the result does
+		 * not depend on the platform (Windows/macOS/Linux) or on the
+		 * process' local timezone setting. */
+		static const __ss_int epoch_ordinal = 719163; //date(1970,1,1).toordinal()
+		__ss_float secs = (__ss_float)(toordinal()-epoch_ordinal)*86400.0 +
+			hour*3600.0 + minute*60.0 + second + microsecond/1e6;
+		timedelta *off = utcoffset();
+		if(off!=NULL)
+			secs -= (__ss_float)off->days*86400.0 + off->seconds + off->microseconds/1e6;
+		return secs;
+	}
+	else {
+		/* naive: interpret the wall-clock fields as local time, same as
+		 * cpython does (via mktime). tm_isdst=-1 lets the platform figure
+		 * out DST; tm_wday is used to distinguish a genuine mktime()
+		 * failure from a valid result that happens to encode as -1. */
+		struct tm t;
+		memset(&t, 0, sizeof(t));
+		t.tm_year = (int)year-1900;
+		t.tm_mon = (int)month-1;
+		t.tm_mday = (int)day;
+		t.tm_hour = (int)hour;
+		t.tm_min = (int)minute;
+		t.tm_sec = (int)second;
+		t.tm_isdst = -1;
+		t.tm_wday = -1;
+
+		time_t timet = mktime(&t);
+		if(timet==(time_t)(-1) && t.tm_wday==-1)
+			throw new OverflowError(new str("timestamp out of range"));
+
+		return (__ss_float)timet + microsecond/1e6;
+	}
+}
+
 
 __time__::struct_time *datetime::timetuple() {
     char dst=-1;
@@ -685,6 +796,8 @@ __time__::struct_time *datetime::utctimetuple() {
 }
 
 str *datetime::isoformat(str *sep) {
+    if(sep==NULL)
+        sep = t_string;
     if(sep->__len__()!=1) {
         throw new TypeError(new str("isoformat() argument 1 must be char, not str"));
     }
@@ -738,6 +851,27 @@ time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsec
     this->second = second_;
     this->microsecond = microsecond_;
     this->_tzinfo = tzinfo;
+}
+
+time *time::fromisoformat(str *time_string) {
+    //supports zero-padded 'HH:MM:SS' and 'HH:MM:SS.ffffff' (no timezone
+    //offsets); a fractional part longer than 6 digits is truncated, same
+    //as cpython
+    const __GC_STRING &s = time_string->unit;
+    if (s.size() < 8 || s[2] != ':' || s[5] != ':' ||
+            !iso_all_digits(s, 0, 2) || !iso_all_digits(s, 3, 2) || !iso_all_digits(s, 6, 2))
+        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+
+    int h, mi, sec;
+    sscanf(s.c_str(), "%2d:%2d:%2d", &h, &mi, &sec);
+
+    __ss_int us = 0;
+    if (s.size() > 8) {
+        if (s[8] != '.' || s.size() == 9 || !iso_all_digits(s, 9, s.size()-9))
+            throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+        us = iso_fraction_to_microseconds(s.c_str()+9);
+    }
+    return new time((__ss_int)h, (__ss_int)mi, (__ss_int)sec, us);
 }
 
 time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {

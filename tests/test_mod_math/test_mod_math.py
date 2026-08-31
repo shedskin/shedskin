@@ -130,6 +130,10 @@ def test_math():
     assert math.floor(1.5) == 1
     assert math.ceil(1.5) == 2
 
+    # floor()/ceil() must return int, not float
+    assert str(math.floor(1.5)) == '1'
+    assert str(math.ceil(1.5)) == '2'
+
     assert math.e == 2.7182818284590451
     assert math.pi == 3.1415926535897931
     assert math.tau == 6.283185307179586
@@ -168,6 +172,13 @@ def test_math():
 
     assert math.gcd() == 0
     assert math.lcm() == 1
+
+    assert math.hypot() == 0.0
+    assert math.hypot(3.0) == 3.0
+    assert math.hypot(-3.0) == 3.0
+    assert math.hypot(3.0, 4.0) == 5.0
+    assert math.hypot(3.0, 4.0, 12.0) == 13.0
+    assert math.hypot(1.0, 2.0, 3.0, 4.0) == math.sqrt(30.0)
 
     assert math.perm(0) == 1
     assert math.perm(0, 0) == 1
@@ -321,6 +332,17 @@ def test_classification():
     assert math.issubnormal(0.0) == False
 
 
+def test_signbit():
+    assert math.signbit(-1.0) == True
+    assert math.signbit(1.0) == False
+    assert math.signbit(0.0) == False
+    assert math.signbit(math.copysign(0.0, -1.0)) == True
+    assert math.signbit(float('inf')) == False
+    assert math.signbit(float('-inf')) == True
+    assert math.signbit(float('nan')) == False
+    assert math.signbit(math.copysign(float('nan'), -1.0)) == True
+
+
 def test_nextafter():
     assert math.nextafter(1.0, 1.0) == 1.0
     assert math.nextafter(0.0, math.inf) > 0.0
@@ -405,6 +427,35 @@ def test_remainder():
     assert error == 'math domain error'
 
 
+def test_atan2():
+    assert '%.8f' % math.atan2(1.0, 1.0) == '0.78539816'
+    assert '%.8f' % math.atan2(0.0, -1.0) == '3.14159265'
+    assert '%.8f' % math.atan2(-1.0, 0.0) == '-1.57079633'
+
+
+def test_degrees_radians():
+    assert '%.8f' % math.degrees(math.pi) == '180.00000000'
+    assert '%.8f' % math.degrees(math.pi / 2) == '90.00000000'
+    assert '%.8f' % math.radians(180.0) == '3.14159265'
+    assert '%.8f' % math.radians(90.0) == '1.57079633'
+
+
+def test_fabs():
+    assert math.fabs(-5.5) == 5.5
+    assert math.fabs(5.5) == 5.5
+    assert math.fabs(0.0) == 0.0
+
+
+def test_hypot():
+    assert math.hypot(3.0, 4.0) == 5.0
+
+
+def test_log10():
+    assert math.log10(100.0) == 2.0
+    assert math.log10(1.0) == 0.0
+    assert math.log10(1000.0) == 3.0
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -418,9 +469,15 @@ def test_all():
     test_math_integer()
     test_fmax_fmin()
     test_classification()
+    test_signbit()
     test_nextafter()
     test_ulp()
     test_remainder()
+    test_atan2()
+    test_degrees_radians()
+    test_fabs()
+    test_hypot()
+    test_log10()
 
 
 if __name__ == '__main__':

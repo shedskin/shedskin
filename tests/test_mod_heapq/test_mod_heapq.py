@@ -222,6 +222,21 @@ def test_nlargest_nsmallest_n_le_0():
     assert list(heapq.nsmallest(-2, [3, 1, 2])) == []
 
 
+def test_nlargest_nsmallest_returns_list():
+    # regression test: nlargest/nsmallest must return an actual list,
+    # not a lazy iterator, so it can be used directly without an
+    # explicit list(...) wrap (indexing, len(), equality with a list, etc).
+    r = heapq.nsmallest(2, [-15, -12, -10, -10, 14, -7, -3, 1])
+    assert r == [-15, -12]
+    assert r[0] == -15
+    assert len(r) == 2
+
+    r2 = heapq.nlargest(3, [5, 1, 9, 9, 2, 8, 8])
+    assert r2 == [9, 9, 8]
+    assert r2[-1] == 8
+    assert len(r2) == 3
+
+
 class Bert:
     def __init__(self, val, tag=0):
         self.val = val
@@ -307,6 +322,7 @@ def test_all():
     test_nlargest()
     test_nsmallest()
     test_nlargest_nsmallest_n_le_0()
+    test_nlargest_nsmallest_returns_list()
     test_nlargest_nsmallest_stable_ties()
 
     test_heapq_1()  # TODO split up/remove

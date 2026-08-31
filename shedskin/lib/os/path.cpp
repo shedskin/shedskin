@@ -4,6 +4,13 @@
 
 #ifndef WIN32
 #include <pwd.h>
+#else
+#ifdef _MSC_VER
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+#include <windows.h>
 #endif
 
 /* converted using Shed Skin from the CPython implementation */
@@ -320,6 +327,43 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
+__ss_bool ismount(str *path) {
+    /**
+    Test whether a path is a mount point
+    */
+    __os__::__cstat *s1, *s2;
+    str *parent;
+
+    try {
+        s1 = __os__::lstat(path);
+    } catch (__os__::error *) {
+        return False;
+    }
+    if (__stat__::__ss_S_ISLNK(s1->st_mode)) {
+        return False; /* A symlink can never be a mount point */
+    }
+
+    parent = join(2, path, pardir);
+    try {
+        parent = realpath(parent);
+    } catch (__os__::error *) {
+        return False;
+    }
+    try {
+        s2 = __os__::lstat(parent);
+    } catch (__os__::error *) {
+        return False;
+    }
+
+    if (s1->st_dev != s2->st_dev) {
+        return True; /* path/.. on a different device as path */
+    }
+    if (s1->st_ino == s2->st_ino) {
+        return True; /* path/.. is the same i-node as path */
+    }
+    return False;
+}
+
 str *normpath(str *path) {
     /**
     Normalize path, eliminating double slashes, etc.
@@ -424,10 +468,15 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
-str *realpath(str *filename) {
+str *realpath(str *filename, __ss_bool strict) {
     /**
     Return the canonical path of the specified filename, eliminating any
-    symbolic links encountered in the path.
+    symbolic links encountered in the path. If strict is true, raise
+    FileNotFoundError for the first path component that does not exist.
+
+    Note: this is a lighter-weight approximation of CPython's strict mode:
+    a broken symlink's *target* is not specially detected as missing, only
+    path components that don't exist as a direct directory entry.
     */
     list<str *> *bits;
     str *component, *newpath, *resolved;
@@ -442,6 +491,9 @@ str *realpath(str *filename) {
 
     FAST_FOR(i,2,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
+        if (strict.value && (!lexists(component).value)) {
+            throw new FileNotFoundError(component);
+        }
         if (islink(component)) {
             resolved = _resolve_link(component);
             if (resolved==0) {
@@ -449,7 +501,7 @@ str *realpath(str *filename) {
             }
             else {
                 newpath = joinl(((new list<str *>(1, resolved)))->__add__(bits->__slice__(1, i, 0, 0)));
-                return realpath(newpath);
+                return realpath(newpath, strict);
             }
         }
     END_FOR
@@ -843,6 +895,81 @@ __ss_bool isfile(str *path) {
     return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
 }
 
+__ss_bool samefile(str *f1, str *f2) {
+    /**
+    Test whether two pathnames reference the same actual file.
+
+    Windows' C runtime stat() does not reliably fill in st_ino/st_dev,
+    so identity is determined directly via the Win32 API instead of
+    going through samestat().
+    */
+    HANDLE h1, h2;
+    BY_HANDLE_FILE_INFORMATION info1, info2;
+    __ss_bool result;
+
+    h1 = CreateFileA(f1->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h1 == INVALID_HANDLE_VALUE) {
+        throw new OSError(f1);
+    }
+
+    h2 = CreateFileA(f2->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h2 == INVALID_HANDLE_VALUE) {
+        CloseHandle(h1);
+        throw new OSError(f2);
+    }
+
+    result = False;
+    if (GetFileInformationByHandle(h1, &info1) && GetFileInformationByHandle(h2, &info2)) {
+        result = __mbool((info1.dwVolumeSerialNumber == info2.dwVolumeSerialNumber) &&
+                          (info1.nFileIndexHigh == info2.nFileIndexHigh) &&
+                          (info1.nFileIndexLow == info2.nFileIndexLow));
+    }
+
+    CloseHandle(h1);
+    CloseHandle(h2);
+    return result;
+}
+
+__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
+    /**
+    Test whether two stat buffers reference the same file
+    */
+    __ss_int __18;
+    return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
+}
+
+__ss_bool ismount(str *path) {
+    /**
+    Test whether a path is a mount point (a drive root or a UNC share root)
+    */
+    tuple2<str *, str *> *__sd;
+    str *root, *rest, *x, *y;
+    char volpath[MAX_PATH];
+
+    path = abspath(path);
+    __sd = splitdrive(path);
+    root = __sd->__getfirst__();
+    rest = __sd->__getsecond__();
+
+    if (___bool(root) && (const_18)->__contains__(root->__slice__(2, 0, 1, 0))) {
+        /* UNC root, e.g. \\server\share */
+        return __mbool((!___bool(rest)) || ((len(rest)==1) && (const_18)->__contains__(rest)));
+    }
+    if ((len(rest)==1) && (const_18)->__contains__(rest)) {
+        /* drive root, e.g. C:\ */
+        return True;
+    }
+
+    if (!GetVolumePathNameA(path->c_str(), volpath, MAX_PATH)) {
+        return False;
+    }
+    x = path->rstrip(const_4);
+    y = (new str(volpath))->rstrip(const_4);
+    return __mbool(__eq(x, y));
+}
+
 str *normpath(str *path) {
     /**
     Normalize path, eliminating double slashes, etc.
@@ -975,8 +1102,11 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
-str *realpath(str *path) {
+str *realpath(str *path, __ss_bool strict) {
 
+    if (strict.value && (!exists(path).value)) {
+        throw new FileNotFoundError(path);
+    }
     return abspath(path);
 }
 
@@ -1026,6 +1156,175 @@ str *expanduser(str *path) {
 }
 
 #endif
+
+/* --------------------------------------------------------------------
+   The functions below are intentionally written without any
+   #ifdef WIN32 / #else split: they only use the shared, per-platform
+   sep/curdir/pardir variables set up in __init() above, so the same
+   source compiles correctly for every target.
+
+   NOTE: this means they currently only implement posix-style
+   semantics. Matching CPython's ntpath behavior exactly needs
+   follow-up work (see TODOs below) -- until then, on Windows targets
+   they behave like posixpath, not like ntpath.
+   -------------------------------------------------------------------- */
+
+str *expandvars(str *path) {
+    /**
+    Expand shell variables of form $var and ${var}.  Unknown variables
+    are left unchanged.
+
+    TODO: ntpath.expandvars also supports %var% syntax and quote
+    handling ('...' sections are left unexpanded) on Windows. Not
+    implemented here yet -- needs a platform-specific pass.
+    */
+    str *dollar, *lbrace, *rbrace, *underscore, *result, *name, *value, *ch;
+    __ss_int i, j, n, start;
+
+    dollar = new str("$");
+    if (path->find(dollar) == -1)
+        return path;
+
+    lbrace = new str("{");
+    rbrace = new str("}");
+    underscore = new str("_");
+
+    n = len(path);
+    result = new str("");
+    i = 0;
+    while (i < n) {
+        if (__eq(path->__getitem__(i), dollar) && i + 1 < n) {
+            if (__eq(path->__getitem__(i + 1), lbrace)) {
+                j = path->find(rbrace, i + 2);
+                if (j == -1) {
+                    /* no closing brace: leave the rest untouched */
+                    result = result->__add__(path->__slice__(1, i, 0, 0));
+                    i = n;
+                    continue;
+                }
+                name = path->__slice__(3, i + 2, j, 0);
+                start = j + 1;
+            } else {
+                j = i + 1;
+                while (j < n) {
+                    ch = path->__getitem__(j);
+                    if (!(::isalnum((unsigned char)ch->c_str()[0]) || __eq(ch, underscore)))
+                        break;
+                    j++;
+                }
+                if (j == i + 1) {
+                    /* bare '$' not followed by a name: keep literally */
+                    result = result->__add__(dollar);
+                    i++;
+                    continue;
+                }
+                name = path->__slice__(3, i + 1, j, 0);
+                start = j;
+            }
+            value = __os__::getenv(name);
+            if (value)
+                result = result->__add__(value);
+            else
+                result = result->__add__(path->__slice__(3, i, start, 0));
+            i = start;
+        } else {
+            result = result->__add__(path->__getitem__(i));
+            i++;
+        }
+    }
+    return result;
+}
+
+str *commonpath(list<str *> *paths) {
+    /**
+    Given a list of pathnames, returns the longest common sub-path.
+
+    TODO: ntpath.commonpath also enforces that all paths share the
+    same drive/UNC root (case-insensitively) and raises ValueError on
+    mismatch. Not implemented here yet -- needs a platform-specific
+    pass using splitdrive()/normcase().
+    */
+    list<list<str *> *> *part_lists;
+    list<str *> *parts, *common;
+    str *p, *part, *posix_sep;
+    __ss_bool have_abs, this_abs, first, match;
+    __ss_int i, num_paths, n, k, m;
+
+    if (!___bool(paths))
+        throw new ValueError(new str("commonpath() arg is an empty sequence"));
+
+    /* This function is intentionally posix-style on every platform (see
+       the file-level NOTE above), so split on '/' explicitly rather than
+       the platform's `sep` -- on Windows `sep` is '\\', which would leave
+       these forward-slash paths unsplit. */
+    posix_sep = new str("/");
+
+    part_lists = new list<list<str *> *>();
+    have_abs = False;
+    first = True;
+    n = -1;
+    num_paths = len(paths);
+
+    for (i = 0; i < num_paths; i++) {
+        p = paths->__getfast__(i);
+        this_abs = isabs(p);
+        if (first) {
+            have_abs = this_abs;
+            first = False;
+        } else if (!(this_abs == have_abs)) {
+            throw new ValueError(new str("Can't mix absolute and relative paths"));
+        }
+
+        parts = new list<str *>();
+        list<str *> *raw = p->split(posix_sep);
+        for (k = 0; k < len(raw); k++) {
+            part = raw->__getfast__(k);
+            if (___bool(part) && !__eq(part, curdir))
+                parts->append(part);
+        }
+        part_lists->append(parts);
+
+        m = len(parts);
+        if (n == -1 || m < n)
+            n = m;
+    }
+
+    common = new list<str *>();
+    k = 0;
+    while (k < n) {
+        part = part_lists->__getfast__(0)->__getfast__(k);
+        match = True;
+        for (i = 1; i < num_paths; i++) {
+            if (!__eq(part_lists->__getfast__(i)->__getfast__(k), part)) {
+                match = False;
+                break;
+            }
+        }
+        if (!match)
+            break;
+        common->append(part);
+        k++;
+    }
+
+    /* Join with the hardcoded posix separator, not joinl()/sep -- joinl()
+       applies platform-specific (e.g. drive-letter) join rules via the
+       platform `sep`, which would reintroduce backslashes on Windows. */
+    str *joined = new str("");
+    for (i = 0; i < len(common); i++) {
+        if (i > 0)
+            joined = joined->__iadd__(posix_sep);
+        joined = joined->__iadd__(common->__getfast__(i));
+    }
+
+    if (have_abs) {
+        if (___bool(common))
+            return posix_sep->__add__(joined);
+        return posix_sep;
+    }
+    if (___bool(common))
+        return joined;
+    return new str("");
+}
 
 } // module namespace
 } // module namespace

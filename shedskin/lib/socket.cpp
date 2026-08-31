@@ -25,6 +25,8 @@
 #define SOCKOPT_CAST (char*)
 typedef long tv_sec_type;
 typedef long tv_usec_type;
+typedef u_long in_addr_t;
+typedef u_short sa_family_t;
 
 
 #define ERRNO WSAGetLastError()

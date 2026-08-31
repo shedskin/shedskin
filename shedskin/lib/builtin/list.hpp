@@ -214,10 +214,10 @@ template<class T> list<T>::list(PyObject *p) {
 }
 
 template<class T> PyObject *list<T>::__to_py__() {
-    int len = this->__len__();
+    Py_ssize_t len = (Py_ssize_t)this->__len__();
     PyObject *p = PyList_New(len);
-    for(int i=0; i<len; i++)
-        PyList_SetItem(p, i, __to_py(this->__getitem__(i)));
+    for(Py_ssize_t i=0; i<len; i++)
+        PyList_SetItem(p, i, __to_py(this->__getitem__((__ss_int)i)));
     return p;
 }
 #endif
@@ -239,7 +239,7 @@ template<class T> __ss_int list<T>::__len__() {
 }
 
 template<class T> T list<T>::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list index out of range");
     return units[(size_t)i];
 }
 
@@ -307,18 +307,18 @@ template<class T> void *list<T>::extend(str *s) {
 }
 
 template<class T> inline T list<T>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list index out of range");
     return this->units[(size_t)i];
 }
 
 template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units[(size_t)i] = e;
     return NULL;
 }
 
 template<class T> void *list<T>::__delitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units.erase(units.begin()+i);
     return NULL;
 }
@@ -335,46 +335,34 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
             c->units.resize((size_t)(u-l));
             std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
         }
-    } else if(s > 0)
+    } else if(s > 0) {
+        if(u > l)
+            c->units.reserve((size_t)((u-l+s-1)/s));
         for(__ss_int i=l; i<u; i += s)
             c->units.push_back(units[(size_t)i]);
-    else
+    } else {
+        if(l > u)
+            c->units.reserve((size_t)((l-u-s-1)/(-s)));
         for(__ss_int i=l; i>u; i += s)
             c->units.push_back(units[(size_t)i]);
+    }
     return c;
 }
 
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b) {
-    list<T> *la = new list<T>(); /* XXX avoid intermediate list */
-    typename pyiter<T>::for_in_unit e;
-    typename pyiter<T>::for_in_loop __3;
-    int __2;
-    pyiter<T> *__1;
-    FOR_IN(e,b,1,2,3)
-        la->units.push_back(e);
-    END_FOR
+    list<T> *la = new list<T>(b);
     this->__setslice__(x, l, u, s, la);
     return NULL;
 }
 
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *la) {
-    slicenr(x, l, u, s, this->__len__());
-
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
-        __ss_int slicesize;
-        if(l == u) slicesize = 0; // XXX ugly
-        else if(s > 0 && u < l) slicesize=0;
-        else if(s < 0 && l < u) slicesize=0;
-        else {
-            __ss_int slicelen = __abs(u-l);
-            __ss_int absstep = __abs(s);
-            slicesize = slicelen/absstep;
-            if(slicelen%absstep) slicesize += 1;
-        }
-
+        __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
         if(slicesize != len(la))
             throw new ValueError(__add_strs(0, new str("attempt to assign sequence of size "), __str(len(la)), new str(" to extended slice of size "), __str(slicesize)));
     }
+
+    slicenr(x, l, u, s, this->__len__());
 
     if(s == 1) {
         if(l <= u) {
@@ -397,7 +385,7 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
 }
 
 template<class T> void *list<T>::__delete__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "list assignment index out of range");
     units.erase(units.begin()+i);
     return NULL;
 }
@@ -592,7 +580,7 @@ template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
 }
 
 template<class T> void *list<T>::insert(__ss_int m, T e) {
-    int len = this->__len__();
+    __ss_int len = this->__len__();
     if (m<0) m = len+m;
     if (m<0) m = 0;
     if (m>=len) m = len;

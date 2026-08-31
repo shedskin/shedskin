@@ -53,6 +53,14 @@ def test_repeat():
     assert list(itertools.repeat(42, -1)) == []
 
 
+def test_repeat_large_count():
+    # regression test: the repeat count used to be stored in a 32-bit
+    # int, silently wrapping modulo 2**32. 2**32 + 3 used to truncate
+    # down to 3, causing iteration to stop 2**32 items too early.
+    n = 2**32 + 3
+    assert list(itertools.islice(itertools.repeat(1, n), 5)) == [1, 1, 1, 1, 1]
+
+
 def test_chain():
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
@@ -118,6 +126,12 @@ def test_permutations():
         ('D', 'A'), ('D', 'B'), ('D', 'C'), 
         ('C', 'A'), ('C', 'B'), ('C', 'D')]
 
+    try:
+        list(itertools.permutations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_combinations():
     assert list(itertools.combinations('ABDC', 0)) == [()]
@@ -130,6 +144,29 @@ def test_combinations():
         ('B', 'C'), 
         ('D', 'C'),
     ]
+
+    try:
+        list(itertools.combinations('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
+
+
+def test_combinations_with_replacement():
+    assert list(itertools.combinations_with_replacement('ABC', 2)) == [
+        ('A', 'A'), ('A', 'B'), ('A', 'C'),
+        ('B', 'B'), ('B', 'C'),
+        ('C', 'C'),
+    ]
+    assert list(itertools.combinations_with_replacement('ABC', 0)) == [()]
+    assert list(itertools.combinations_with_replacement('A', 3)) == [('A', 'A', 'A')]
+    assert list(itertools.combinations_with_replacement('AB', 1)) == [('A',), ('B',)]
+
+    try:
+        list(itertools.combinations_with_replacement('ABDC', -1))
+        assert False
+    except ValueError:
+        pass
 
 
 def test_product():
@@ -264,11 +301,24 @@ def test_batched():
     batches = list(itertools.batched(range(10), 3))  #  TODO test strict kw arg
     assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
 
+    try:
+        list(itertools.batched(range(9), 0))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.batched(range(9), -1))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_all():
     test_count()
     test_cycle()
     test_repeat()
+    test_repeat_large_count()
     test_chain()
     test_dropwhile()
     test_takewhile()
@@ -276,6 +326,7 @@ def test_all():
     test_islice()
     test_permutations()
     test_combinations()
+    test_combinations_with_replacement()
     test_product()
     test_product_repeat()
     test_compress()

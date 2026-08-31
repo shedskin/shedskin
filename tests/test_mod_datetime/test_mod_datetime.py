@@ -5,6 +5,15 @@ import datetime
 def test_date():
     assert datetime.date(2007, 4, 3).replace(month=11) == datetime.date(2007, 11, 3)
 
+def test_date_ctime():
+    # regression test: date.ctime() passed bare C++ int literals (0, 0, 0)
+    # for the hour/minute/second fields to the internal __mod6 formatting
+    # helper. __mod6 only has real %d handling specialized for __ss_int
+    # (long); a plain 'int' silently falls through to a no-op template
+    # specialization, so the hour/minute/second fields vanished entirely
+    # instead of printing as "00".
+    assert datetime.date(2023, 5, 17).ctime() == 'Wed May 17 00:00:00 2023'
+
 def test_date_day_out_of_range():
     # 2023 is not a leap year: Feb has 28 days, so day 29 must be rejected
     error = ''
@@ -31,6 +40,65 @@ def test_date_day_out_of_range():
     except ValueError as e:
         error = str(e)
     assert error == 'day is out of range for month'
+
+def test_date_replace_keeps_unchanged_day_out_of_range():
+    # replacing month/year only (day left alone) must still validate the
+    # resulting day against the new month/year
+    error = ''
+    try:
+        datetime.date(2024, 1, 31).replace(month=4)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+    error = ''
+    try:
+        datetime.date(2024, 2, 29).replace(year=2023)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+    # sanity: still works fine when the resulting day is valid
+    assert datetime.date(2024, 1, 15).replace(month=4) == datetime.date(2024, 4, 15)
+
+
+def test_datetime_replace_keywords():
+    # each single keyword argument must actually update that field, and
+    # leave every other field untouched
+    dt = datetime.datetime(2024, 1, 15, 10, 30, 20, 123)
+
+    assert dt.replace(year=2025) == datetime.datetime(2025, 1, 15, 10, 30, 20, 123)
+    assert dt.replace(month=6) == datetime.datetime(2024, 6, 15, 10, 30, 20, 123)
+    assert dt.replace(day=20) == datetime.datetime(2024, 1, 20, 10, 30, 20, 123)
+    assert dt.replace(hour=5) == datetime.datetime(2024, 1, 15, 5, 30, 20, 123)
+    assert dt.replace(minute=1) == datetime.datetime(2024, 1, 15, 10, 1, 20, 123)
+    assert dt.replace(second=2) == datetime.datetime(2024, 1, 15, 10, 30, 2, 123)
+    assert dt.replace(microsecond=9) == datetime.datetime(2024, 1, 15, 10, 30, 20, 9)
+
+    # multiple keywords at once
+    assert dt.replace(day=1, hour=0) == datetime.datetime(2024, 1, 1, 0, 30, 20, 123)
+
+    # positional args still work
+    assert dt.replace(2025, 6, 10) == datetime.datetime(2025, 6, 10, 10, 30, 20, 123)
+
+    # resulting invalid day must still raise, even though day wasn't itself
+    # a replace() keyword
+    error = ''
+    try:
+        datetime.datetime(2024, 1, 31, 10, 30).replace(month=4)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+
+def test_time_replace_keywords():
+    t = datetime.time(10, 30, 20, 123)
+    assert t.replace(hour=5) == datetime.time(5, 30, 20, 123)
+    assert t.replace(minute=1) == datetime.time(10, 1, 20, 123)
+    assert t.replace(second=2) == datetime.time(10, 30, 2, 123)
+    assert t.replace(microsecond=9) == datetime.time(10, 30, 20, 9)
+    assert t.replace(hour=1, second=2) == datetime.time(1, 30, 2, 123)
+
 
 def test_date_compare_year_boundary():
     # regression test: __cmp__ used to encode dates as year*366+month*31+day,
@@ -73,6 +141,115 @@ class TZ2(datetime.tzinfo):
 def test_datetime_custom_tzinfo():
     dt = datetime.datetime(2007, 4, 3, tzinfo=TZ2())
     assert dt.date() == datetime.date(2007, 4, 3)
+
+
+def test_date_fromisoformat():
+    assert datetime.date.fromisoformat('2020-01-01') == datetime.date(2020, 1, 1)
+
+    error = ''
+    try:
+        datetime.date.fromisoformat('2020-1-1')  # not zero-padded
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '2020-1-1'"
+
+    error = ''
+    try:
+        datetime.date.fromisoformat('not-a-date')
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: 'not-a-date'"
+
+    # still goes through the normal range validation
+    error = ''
+    try:
+        datetime.date.fromisoformat('2020-02-30')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'day is out of range for month'
+
+
+def test_time_fromisoformat():
+    assert datetime.time.fromisoformat('12:30:15') == datetime.time(12, 30, 15)
+    assert datetime.time.fromisoformat('12:30:15.5') == datetime.time(12, 30, 15, 500000)
+    assert datetime.time.fromisoformat('12:30:15.123456') == datetime.time(12, 30, 15, 123456)
+
+    # fractional part longer than 6 digits is truncated, same as cpython
+    assert datetime.time.fromisoformat('12:30:15.1234567').microsecond == 123456
+
+    error = ''
+    try:
+        datetime.time.fromisoformat('1:30:15')  # hour not zero-padded
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '1:30:15'"
+
+    error = ''
+    try:
+        datetime.time.fromisoformat('12:30:15.')  # dot with no digits
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid isoformat string: '12:30:15.'"
+
+
+def test_datetime_fromisoformat():
+    assert datetime.datetime.fromisoformat('2020-01-01T12:30:15.500000') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15, 500000)
+    assert datetime.datetime.fromisoformat('2020-01-01 12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    # any single character is accepted as date/time separator, same as
+    # cpython (>= 3.11)
+    assert datetime.datetime.fromisoformat('2020-01-01t12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    assert datetime.datetime.fromisoformat('2020-01-01X12:30:15') == \
+        datetime.datetime(2020, 1, 1, 12, 30, 15)
+    # date-only is accepted, time defaults to midnight
+    assert datetime.datetime.fromisoformat('2020-01-01') == datetime.datetime(2020, 1, 1)
+
+    error = ''
+    try:
+        datetime.datetime.fromisoformat('2020-01-01  12:30:15')  # 2-char separator
+    except ValueError as e:
+        error = str(e)
+    assert error != ''
+
+    # range-check errors from the underlying constructor must still surface
+    # with their own specific message, not get overwritten
+    error = ''
+    try:
+        datetime.datetime.fromisoformat('2020-01-01T25:00:00')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'hour must be in 0..23'
+
+class UTC0(datetime.tzinfo):
+    def utcoffset(self, dt):
+        return datetime.timedelta(0)
+
+
+def test_datetime_timestamp_aware():
+    tol = 1e-6
+
+    # offset-aware: result is independent of the platform/local timezone
+    dt = datetime.datetime(2007, 4, 3, tzinfo=TZ2())
+    assert abs(dt.timestamp() - 1175578740.0) < tol
+
+    # a zero-offset ("UTC") tzinfo reproduces the epoch exactly
+    assert datetime.datetime(1970, 1, 1, tzinfo=UTC0()).timestamp() == 0.0
+
+    # fractional seconds and non-epoch dates
+    dt2 = datetime.datetime(2024, 2, 29, 23, 59, 59, 500000, tzinfo=UTC0())
+    assert abs(dt2.timestamp() - 1709251199.5) < tol
+
+
+def test_datetime_timestamp_naive_roundtrip():
+    # naive timestamp() interprets the wall-clock fields as local time,
+    # so it should be the exact inverse of fromtimestamp() regardless of
+    # which platform/timezone the test runs under. Pick a date well away
+    # from any DST transition to keep the round trip unambiguous.
+    dt = datetime.datetime(2023, 6, 15, 14, 30, 0)
+    ts = dt.timestamp()
+    assert datetime.datetime.fromtimestamp(ts) == dt
 
 
 def test_timedelta_total_seconds():
@@ -133,16 +310,47 @@ def test_timedelta_truediv():
     assert (datetime.timedelta(microseconds=7) / 2).microseconds == 4
 
 
+def test_datetime_isoformat():
+    # regression test: isoformat()'s 'sep' parameter used to be given a
+    # non-empty string default ('T'), which the code generator could not
+    # resolve for this module (compile error: 'default_N' is not a member
+    # of '__datetime__') when the call site omitted the argument.
+    dt = datetime.datetime(2023, 5, 17, 10, 30, 0)
+    assert dt.isoformat() == '2023-05-17T10:30:00'
+    assert dt.isoformat(' ') == '2023-05-17 10:30:00'
+    assert dt.isoformat(sep='|') == '2023-05-17|10:30:00'
+
+    dt2 = datetime.datetime(2023, 5, 17, 10, 30, 0, 123456)
+    assert dt2.isoformat() == '2023-05-17T10:30:00.123456'
+
+    error = ''
+    try:
+        dt.isoformat('too long')
+    except TypeError:
+        error = 'TypeError'
+    assert error == 'TypeError'
+
+
 def test_all():
         test_date()
+        test_date_ctime()
         test_date_day_out_of_range()
         test_date_compare_year_boundary()
+        test_date_fromisoformat()
         test_datetime_compare_year_boundary()
         test_datetime_basic()
         test_datetime_custom_tzinfo()
+        test_time_fromisoformat()
+        test_datetime_fromisoformat()
+        test_datetime_timestamp_aware()
+        test_datetime_timestamp_naive_roundtrip()
+        test_datetime_isoformat()
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
+        test_date_replace_keeps_unchanged_day_out_of_range()
+        test_datetime_replace_keywords()
+        test_time_replace_keywords()
 
 if __name__ == "__main__":
     test_all()
