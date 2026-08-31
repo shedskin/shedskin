@@ -46,6 +46,10 @@ str *match_object::__getitem__(__ss_int g) {
     return group(0, g);
 }
 
+str *match_object::__getitem__(str *mname) {
+    return group(0, mname);
+}
+
 //index functions
 __ss_int match_object::__index(__ss_int matchid, char isend)
 {
@@ -147,6 +151,14 @@ str *match_object::__repr__() {
 
 str *re_object::__repr__() {
     return new str("<Re object>");
+}
+
+str *Pattern::__repr__() {
+    return new str("<Pattern object>");
+}
+
+str *Match::__repr__() {
+    return new str("<Match object>");
 }
 
 //these are for internal use (used by expand()/sub() template backreference resolution)
@@ -286,7 +298,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         if(pcre2_match(
             compiled_pattern,
             (PCRE2_SPTR) c_subj,
-            (int)s->size(),
+            (PCRE2_SIZE)s->size(),
             i,
             0,
             match_data,
@@ -386,7 +398,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
         if(pcre2_match(
             compiled_pattern,
             c_subj,
-            (int)subjs->size(),
+            (PCRE2_SIZE)subjs->size(),
             i,
             flags_,
             match_data,
@@ -459,7 +471,7 @@ match_object *match_iter::__next__(void)
     match_object *mobj;
     PCRE2_SIZE *captured;
 
-    if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->unit.size()) throw new StopIteration();
+    if((pos > endpos && endpos != -1) || (subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size())) throw new StopIteration();
 
     //get next match
     mobj = ro->__exec(subj, pos, endpos, flags);
@@ -476,7 +488,9 @@ match_object *match_iter::__next__(void)
 __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
-    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    //mirror __exec's handling of the empty-string case: pos==0 on an empty
+    //subject is a valid starting position, not an out-of-range one
+    if(subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     return new match_iter(this, subj, pos, endpos, flags);
 }
@@ -669,10 +683,16 @@ str *escape(str *s)
     ps = &s->unit;
     len = ps->size();
     out = "";
-    for(i = 0; i < len; i++)
+    /* NOTE: 'i' is advanced manually within the loop body (once per
+       alphanumeric run, and once per metacharacter processed below), so
+       this loop must not also auto-increment 'i' in its own header --
+       doing so used to double-advance 'i' past a metacharacter and
+       silently drop the character right after it (e.g. escape("a..b")
+       produced "a\.\." instead of "a\.\.b"). */
+    for(i = 0; i < len; )
     {
         //skip alphanumerics
-        for(j = i; ::isalnum((int)(*ps)[j]) && j < len; j++) ;
+        for(j = i; j < len && ::isalnum((int)(*ps)[j]); j++) ;
 
         if(j != i)
         {
@@ -682,7 +702,7 @@ str *escape(str *s)
         }
 
         //now process potential metachars
-        while(!::isalnum((int)(*ps)[i]) && i < len)
+        while(i < len && !::isalnum((int)(*ps)[i]))
         {
             out += "\\";
             out += (*ps)[i];

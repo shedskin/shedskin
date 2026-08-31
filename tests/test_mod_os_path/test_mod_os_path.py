@@ -44,6 +44,105 @@ def test_os_path():
     assert getmtime(abc) > 1 # dummy: cannot test for time
 
 
+def test_os_path_samefile():
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    abc = join(testdata, "abc.txt")
+
+    assert samefile(abc, abc)
+    assert samefile(abc, join(testdata, ".", "abc.txt"))
+    assert not samefile(abc, testdata)
+
+    try:
+        samefile(join(testdata, "does_not_exist.txt"), abc)
+        assert False, "expected an error for a missing file"
+    except OSError:
+        pass
+
+
+def test_os_path_ismount():
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    if os.name == "nt":
+        # the drive root is always a mount point on Windows
+        drive = os.environ.get("SYSTEMDRIVE", "C:") + "\\"
+        assert ismount(drive)
+    else:
+        # the filesystem root is always a mount point on POSIX
+        assert ismount("/")
+
+    assert not ismount(testdata)
+    assert not ismount(join(testdata, "abc.txt"))
+
+
+
+def test_os_path_isabs():
+    assert isabs('/a/b') is True
+    assert isabs('a/b') is False
+    assert isabs('') is False
+
+
+def test_os_path_normpath():
+    # expected results use forward slashes and are translated to the
+    # platform separator, matching the convention used elsewhere in this
+    # file (see test_os_path_join); normpath() itself returns paths using
+    # os.sep (e.g. backslashes on Windows), so a bare '/' literal here
+    # would fail there.
+    assert normpath('a/b/../c') == 'a/c'.replace('/', os.sep)
+    assert normpath('a//b') == 'a/b'.replace('/', os.sep)
+    assert normpath('./a/b/') == 'a/b'.replace('/', os.sep)
+    assert normpath('../a') == '../a'.replace('/', os.sep)
+    assert normpath('/a/./b/../c') == '/a/c'.replace('/', os.sep)
+    # also check an already-native-separator input round-trips correctly
+    assert normpath('a' + os.sep + 'b' + os.sep + '..' + os.sep + 'c') == 'a/c'.replace('/', os.sep)
+
+
+# TODO: os.symlink is not compiled on Windows (guarded out in
+# shedskin/lib/os/__init__.{hpp,cpp}), and os.path.islink()/realpath()
+# don't have real Windows implementations either (islink() is hard-stubbed
+# to False, realpath() doesn't resolve symlinks). Re-enable once Windows
+# symlink support lands.
+# def test_os_path_islink_samefile_samestat_realpath():
+#     if exists("testdata"):
+#         testdata = "testdata"
+#     elif exists("../testdata"):
+#         testdata = "../testdata"
+#     else:
+#         testdata = "../../testdata"
+#
+#     base = join(testdata, "ospathtest")
+#     os.makedirs(base, exist_ok=True)
+#
+#     target = join(base, "file.txt")
+#     with open(target, "w") as f:
+#         f.write("hi")
+#
+#     link = join(base, "link.txt")
+#     if not islink(link):
+#         os.symlink("file.txt", link)
+#
+#     assert islink(link) is True
+#     assert islink(target) is False
+#
+#     assert samefile(target, link) is True
+#     assert samefile(target, target) is True
+#
+#     s1 = os.stat(target)
+#     s2 = os.stat(link)
+#     assert samestat(s1, s2) is True
+#
+#     assert realpath(link) == realpath(target)
+
 
 def test_os_path_relpath():
     base = abspath(join("testdir_a", "b"))
@@ -65,6 +164,60 @@ def test_os_path_relpath():
         assert False, "expected ValueError for empty path"
     except ValueError:
         pass
+
+
+def test_os_path_realpath_strict():
+    if os.name == "nt":
+        # "/tmp/..." isn't an absolute path on Windows (no drive letter),
+        # and the os.system() "mkdir -p"/"rm -rf" calls below are POSIX
+        # shell syntax that cmd.exe doesn't understand. The strict-mode
+        # logic itself isn't platform-specific, so just skip here; it's
+        # exercised by the POSIX run below.
+        return
+
+    # resolve the tmp root itself first: on macOS, /tmp is a symlink to
+    # /private/tmp, so building test paths under the unresolved name
+    # would make the equality checks below fail even when realpath() is
+    # behaving correctly (it's supposed to follow that symlink).
+    tmpdir = realpath("/tmp")
+
+    missing = join(tmpdir, "shedskin_test_realpath_strict_missing", "foo")
+
+    # non-strict (default): no error, just resolves as far as it can
+    assert realpath(missing) == missing
+
+    # strict=True: raise for a path that doesn't exist
+    try:
+        realpath(missing, strict=True)
+        assert False, "expected FileNotFoundError for missing path"
+    except FileNotFoundError:
+        pass
+
+    # strict=True: no error for a path that does exist
+    existing = join(tmpdir, "shedskin_test_realpath_strict_exists")
+    os.system("mkdir -p " + existing)
+    assert realpath(existing, strict=True) == existing
+    os.system("rm -rf " + existing)
+
+
+def test_os_path_realpath_through_symlink():
+    if os.name == "nt":
+        return  # os.symlink often needs elevated privileges on Windows
+
+    base = "/tmp/shedskin_test_realpath_symlink_base"
+    target = join(base, "target")
+    link = join(base, "link")
+
+    os.system("rm -rf " + base)
+    os.system("mkdir -p " + target)
+    os.symlink(target, link)
+
+    # realpath() must follow the symlink component, not just report the
+    # path as its own (unresolved) name.
+    assert realpath(link) == realpath(target)
+    assert realpath(link) != link
+
+    os.system("rm -rf " + base)
 
 
 def test_os_path_expanduser():
@@ -126,12 +279,68 @@ def test_os_path_expanduser_windows_trailing_sep():
         os.putenv("USERPROFILE", old_userprofile)
 
 
+def test_os_path_expandvars():
+    old = os.getenv("SS_TEST_EXPANDVARS_VAR")
+
+    os.putenv("SS_TEST_EXPANDVARS_VAR", "value")
+    assert expandvars("$SS_TEST_EXPANDVARS_VAR/foo") == "value/foo"
+    assert expandvars("${SS_TEST_EXPANDVARS_VAR}/foo") == "value/foo"
+    # trailing alnum/underscore chars are absorbed into the var name (like
+    # CPython's \w+ matching), so this name isn't set and stays literal
+    assert expandvars("a$SS_TEST_EXPANDVARS_VARb") == "a$SS_TEST_EXPANDVARS_VARb"
+
+    if old is None:
+        os.unsetenv("SS_TEST_EXPANDVARS_VAR")
+    else:
+        os.putenv("SS_TEST_EXPANDVARS_VAR", old)
+
+    # unknown variables and edge cases are left unchanged
+    assert expandvars("$SS_TEST_DEFINITELY_NOT_SET/foo") == "$SS_TEST_DEFINITELY_NOT_SET/foo"
+    assert expandvars("no dollar here") == "no dollar here"
+    assert expandvars("") == ""
+    assert expandvars("$") == "$"
+    assert expandvars("$$") == "$$"
+    assert expandvars("${") == "${"
+    assert expandvars("${unterminated") == "${unterminated"
+
+
+def test_os_path_commonpath():
+    assert commonpath(["/a/b/c", "/a/b/d"]) == "/a/b"
+    assert commonpath(["/a/b/c", "/a/b/c"]) == "/a/b/c"
+    assert commonpath(["a/b", "a/c"]) == "a"
+    assert commonpath(["/a", "/a/b"]) == "/a"
+    assert commonpath(["/a/b/", "/a/b/c"]) == "/a/b"
+    assert commonpath(["/", "/a"]) == "/"
+    assert commonpath(["a"]) == "a"
+    assert commonpath(["/a"]) == "/a"
+
+    try:
+        commonpath(["/a/b", "a/b"])
+        assert False, "expected ValueError for mixed absolute/relative paths"
+    except ValueError:
+        pass
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
+    test_os_path_samefile()
+    test_os_path_ismount()
+    test_os_path_isabs()
+    test_os_path_normpath()
+    # test_os_path_islink_samefile_samestat_realpath()  # see comment above, disabled for now
     test_os_path_relpath()
+    test_os_path_realpath_strict()
+    # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
+    # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
+    # this function's body to C++ unconditionally (the `os.name == "nt"`
+    # check inside it is a runtime guard, not a compile-time one), so
+    # calling it here breaks the Windows build even though it never runs
+    # there. Same issue as test_setgroups_overflow() in test_mod_os.py.
     test_os_path_expanduser()
     test_os_path_expanduser_windows_trailing_sep()
+    test_os_path_expandvars()
+    test_os_path_commonpath()
 
 if __name__ == '__main__':
     test_all()

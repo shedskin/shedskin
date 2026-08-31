@@ -21,8 +21,8 @@ extern __ss_float nan;
 
 void __init();
 
-inline __ss_float ceil(__ss_float x) {
-    return std::ceil(x);
+inline __ss_int ceil(__ss_float x) {
+    return (__ss_int)std::ceil(x);
 }
 
 inline __ss_float fabs(__ss_float x) {
@@ -33,8 +33,8 @@ inline __ss_int factorial(__ss_int x) {
     return __math__::__integer__::factorial(x);
 }
 
-inline __ss_float floor(__ss_float x) {
-    return std::floor(x);
+inline __ss_int floor(__ss_float x) {
+    return (__ss_int)std::floor(x);
 }
 
 inline __ss_float fmod(__ss_float x, __ss_float y) {
@@ -121,8 +121,16 @@ inline __ss_float cos(__ss_float x) {
     return std::cos(x);
 }
 
-inline __ss_float hypot(__ss_float x, __ss_float y) {
-    return sqrt(x*x+y*y);
+template<class ... Args> __ss_float hypot(int, __ss_float x, Args ... args) {
+    __ss_float sumsq = x*x;
+    ((sumsq += args*args), ...);
+    return std::sqrt(sumsq);
+}
+inline __ss_float hypot(int, __ss_float x) {
+    return x < 0 ? -x : x;
+}
+inline __ss_float hypot(int) {
+    return 0.0;
 }
 
 inline __ss_float sin(__ss_float x) {
@@ -171,6 +179,10 @@ inline __ss_bool isinf(__ss_float x) {
 
 inline __ss_bool isnan(__ss_float x) {
     return __mbool(std::isnan(x));
+}
+
+inline __ss_bool signbit(__ss_float x) {
+    return __mbool(std::signbit(x));
 }
 
 inline __ss_float acosh(__ss_float x) {

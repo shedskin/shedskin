@@ -51,6 +51,7 @@ str *__str(int t, int base=10);
 str *__str(__ss_bool b);
 str *__str(void *);
 str *__str();
+str *__str_abs(__ss_int t, __ss_int base); /* digits of |t|, no sign */
 
 /* abs */
 
@@ -177,7 +178,7 @@ template<class A, class B, class D> typename A::for_in_unit ___max(int, D defaul
 template<class A, class D> typename A::for_in_unit ___max(int nn, D default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___max(int, D default_, B (*key)(T), T a, T b) { return __gt(key(a), key(b))?a:b; }
-template<class T, class D> inline  T ___max(int, D default_, int, T a, T b) { return __gt(a, b)?a:b; }
+template<class T, class D> inline  T ___max(int, D, int, T a, T b) { return __gt(a, b)?a:b; }
 
 template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
     if(__gt(key(a),key(m)))
@@ -242,7 +243,7 @@ template<class A, class B, class D> typename A::for_in_unit ___min(int, D defaul
 template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { return __lt(key(a), key(b))?a:b; }
-template<class T, class D> inline  T ___min(int, D default_, int, T a, T b) { return __lt(a, b)?a:b; }
+template<class T, class D> inline  T ___min(int, D, int, T a, T b) { return __lt(a, b)?a:b; }
 
 template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
     if(__lt(key(a),key(m)))
@@ -880,9 +881,9 @@ template<class T> str *bin(T t) {
 
 template<> inline str *bin(__ss_int i) {
     if(i<0)
-        return (new str("-0b"))->__add__(__str(-i, (__ss_int)2));
+        return (new str("-0b"))->__add__(__str_abs(i, (__ss_int)2));
     else
-        return (new str("0b"))->__add__(__str(i, (__ss_int)2));
+        return (new str("0b"))->__add__(__str_abs(i, (__ss_int)2));
 }
 
 template<>
@@ -920,9 +921,9 @@ template<class T> str *hex(T t) {
 
 template<> inline str *hex(__ss_int i) {
     if(i<0)
-        return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
+        return (new str("-0x"))->__add__(__str_abs(i, (__ss_int)16));
     else
-        return (new str("0x"))->__add__(__str(i, (__ss_int)16));
+        return (new str("0x"))->__add__(__str_abs(i, (__ss_int)16));
 }
 
 template<> inline str *hex(__ss_bool i) {
@@ -937,9 +938,9 @@ template<class T> str *oct(T t) {
 
 template<> inline str *oct(__ss_int i) {
     if(i<0)
-        return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));
+        return (new str("-0o"))->__add__(__str_abs(i, (__ss_int)8));
     else
-        return (new str("0o"))->__add__(__str(i, (__ss_int)8));
+        return (new str("0o"))->__add__(__str_abs(i, (__ss_int)8));
 }
 
 template<> inline str *oct(__ss_bool i) {
@@ -959,6 +960,9 @@ template <> __ss_int id(__ss_bool);
 
 template<class T> class_ *__type(T t) { return t->__class__; }
 template<> class_ *__type(int i);
+#ifdef __SS_LONG
+template<> class_ *__type(__ss_int i);
+#endif
 template<> class_ *__type(__ss_float d);
 
 /* print .., */
@@ -973,6 +977,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
 template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
+    (void)count; // unused when Args is empty (e.g. print_() with no arguments)
     if(!separator)
         separator = sp;
 
@@ -1007,24 +1012,140 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* round */
 
-inline __ss_float ___round(__ss_float x) {
+inline __ss_int ___round(__ss_float x) {
     __ss_float f = std::floor(x);
     __ss_float diff = x - f;
+    __ss_float r;
 
-    if (diff < 0.5) return f;
-    if (diff > 0.5) return f + 1.0;
+    if (diff < 0.5) r = f;
+    else if (diff > 0.5) r = f + 1.0;
+    else
+        // Tie-break: round to the nearest EVEN integer
+        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
 
-    // Tie-break: round to the nearest EVEN integer
-    return (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+    return (__ss_int)r;
 }
 
-static inline __ss_float __portableround(__ss_float x) {
-    if(x<0) return ceil(x-0.5);
-    return floor(x+0.5);
+/* round(a, n) needs to match CPython's semantics: it rounds the *exact*
+ * binary value of `a` to the nearest multiple of 10**-n, with ties going
+ * to even. Doing this via `pow(10, n) * a` (the previous implementation)
+ * first introduces its own floating point rounding error and then rounds
+ * *that* value, which gives wrong answers for very common inputs, e.g.
+ * round(2.675, 2) should be 2.67 (2.675 is actually stored as
+ * 2.67499999999999982...) but the multiply/divide approach produces 2.68.
+ * Similarly round(0.5, 0), round(1.25, 1), round(25.0, -1), etc. were
+ * rounding half-away-from-zero instead of half-to-even.
+ *
+ * To avoid reintroducing binary rounding error, we instead get a
+ * high-precision *decimal* expansion of the exact value of `a` (via
+ * snprintf, which glibc computes exactly) and round that decimal string
+ * at the requested digit, using round-half-to-even on exact ties only.
+ */
+static inline __ss_float __decimal_round(__ss_float a, int n) {
+    if (std::isnan(a) || std::isinf(a) || a == 0.0)
+        return a;
+
+    const int ndig = 60; /* far more than enough for any realistic n */
+    bool neg = std::signbit(a);
+    __ss_float x = std::fabs(a);
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%.*e", ndig - 1, (double)x);
+
+    std::string s(buf);
+    size_t epos = s.find('e');
+    std::string mant = s.substr(0, epos);
+    int e = atoi(s.c_str() + epos + 1);
+
+    std::string digits;
+    for (char c : mant)
+        if (c != '.')
+            digits.push_back(c);
+
+    int keep = e + n; /* index of the last digit to keep */
+    std::string result_digits;
+    int result_e;
+
+    if (keep < -1) {
+        return neg ? -0.0 : 0.0;
+    } else if (keep == -1) {
+        char d0 = digits[0];
+        bool rest_nonzero = false;
+        for (size_t i = 1; i < digits.size(); i++)
+            if (digits[i] != '0') { rest_nonzero = true; break; }
+
+        bool round_up = (d0 > '5') || (d0 == '5' && rest_nonzero);
+        /* exact tie (d0=='5', nothing after) rounds to even, i.e. down to 0 */
+        if (!round_up)
+            return neg ? -0.0 : 0.0;
+
+        __ss_float val = (__ss_float)std::pow(10.0, (double)(-n));
+        return neg ? -val : val;
+    } else {
+        if ((size_t)keep >= digits.size() - 1) {
+            result_digits = digits.substr(0, keep + 1);
+            result_e = e;
+        } else {
+            std::string kept = digits.substr(0, keep + 1);
+            char first_dropped = digits[keep + 1];
+            bool rest_nonzero = false;
+            for (size_t i = keep + 2; i < digits.size(); i++)
+                if (digits[i] != '0') { rest_nonzero = true; break; }
+
+            bool round_up;
+            if (first_dropped > '5')
+                round_up = true;
+            else if (first_dropped < '5')
+                round_up = false;
+            else if (rest_nonzero)
+                round_up = true;
+            else /* exact tie */
+                round_up = ((kept.back() - '0') % 2) != 0;
+
+            if (round_up) {
+                int i = (int)kept.size() - 1;
+                while (i >= 0) {
+                    if (kept[i] == '9') { kept[i] = '0'; i--; }
+                    else { kept[i]++; break; }
+                }
+                if (i < 0) { kept = "1" + kept; e++; }
+            }
+            result_digits = kept;
+            result_e = e;
+        }
+
+        std::string valstr;
+        valstr += result_digits[0];
+        valstr += '.';
+        valstr += (result_digits.size() > 1) ? result_digits.substr(1) : "0";
+        valstr += 'e';
+        valstr += std::to_string(result_e);
+
+        __ss_float val = (__ss_float)strtod(valstr.c_str(), NULL);
+        return neg ? -val : val;
+    }
 }
 
 inline __ss_float ___round(__ss_float a, int n) {
-    return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
+    return __decimal_round(a, n);
+}
+
+inline __ss_int ___round(__ss_int a, int n) {
+    if (n >= 0) return a;  // int has no fractional digits to round
+
+    __ss_float p = pow((__ss_float)10, -n);
+    __ss_float x = (__ss_float)a / p;
+    __ss_float f = std::floor(x);
+    __ss_float diff = x - f;
+    __ss_float r;
+
+    if (diff < 0.5) r = f;
+    else if (diff > 0.5) r = f + 1.0;
+    else
+        // Tie-break: round to the nearest EVEN integer
+        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+
+    return (__ss_int)(r * p);
 }
 
 /* input */
@@ -1050,7 +1171,7 @@ inline __ss_bool __ss_in_range(__ss_int i, __ss_int a) {
 
 /* range_len */
 
-int range_len(int lo, int hi, int step);
+__ss_int range_len(__ss_int lo, __ss_int hi, __ss_int step);
 
 #endif
 #endif

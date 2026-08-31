@@ -117,7 +117,7 @@ str *default_2;
 // Error messages.
 str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
-    *const_13, *const_14, *const_15, *const_16, *const_17;
+    *const_13, *const_14, *const_15, *const_16, *const_17, *const_18;
 
 str *__name__;
 class_ *cl_mmap;
@@ -219,7 +219,7 @@ void *mmap::close()
 
         ::msync(m_begin, __size(), MS_SYNC);
         ::munmap(m_begin, __size());
-        closed = true;
+        closed = True;
     }
     return NULL;
 }
@@ -454,7 +454,7 @@ void *mmap::close()
         CloseHandle (map_handle);
         if (file_handle != INVALID_HANDLE_VALUE)
             CloseHandle (file_handle);
-        closed = true;
+        closed = True;
     }
     return NULL;
 }
@@ -581,7 +581,7 @@ bytes *mmap::read(__ss_int size)
             m_position = m_end;
         }
     }
-    bytes *b = new bytes(at, (int)(m_position - at), 1);
+    bytes *b = new bytes(at, (size_t)(m_position - at), 1);
     return b;
 }
 
@@ -595,7 +595,7 @@ __ss_int mmap::read_byte()
     else
     {
         m_position = m_end;
-        return 0; // XXX ???
+        throw new ValueError(const_18);
     }
 }
 
@@ -617,7 +617,7 @@ bytes *mmap::readline(__ss_int size, const char eol)
     {
         m_position = at + size;
     }
-    return new bytes(at, (int)(m_position - at), 1);
+    return new bytes(at, (size_t)(m_position - at), 1);
 }
 
 __ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
@@ -806,7 +806,7 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    bytes *b = new bytes(start, (int)size, 1);
+    bytes *b = new bytes(start, size, 1);
     return b;
 }
 
@@ -998,6 +998,7 @@ void __init()
         const_15 = new str("mmap: resizing not available--no mremap()");
         const_16 = new str("mmap invalid file handle");
         const_17 = new str("mmap invalid file size");
+        const_18 = new str("read byte out of range");
 
         __name__ = new str("mmap");
 

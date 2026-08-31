@@ -102,6 +102,20 @@ inline void operator delete[](void *, std::align_val_t,
 #include <limits>
 #include <numeric>
 #include <cstddef>
+#include <type_traits>
+#include <bit>
+#include <charconv>
+#include <cstdio>
+#include <cstdlib>
+
+/* Floating-point std::to_chars is C++17, but shipped later than the rest of
+ * <charconv>: libstdc++ has it from release 11, while libc++ and MSVC have it
+ * but libc++ still does not advertise __cpp_lib_to_chars, so that macro cannot
+ * be used to detect it. Anything older falls back to probing printf
+ * precisions, which reaches the same answer more slowly. */
+#if !defined(__GLIBCXX__) || (_GLIBCXX_RELEASE >= 11)
+#define __SS_FP_TO_CHARS 1
+#endif
 
 
 #ifndef WIN32
@@ -134,6 +148,19 @@ namespace __shedskin__ {
 #endif
 #define __SS_LONG
 #endif
+
+/* Unsigned counterpart of __ss_int. Signed overflow is undefined behaviour,
+ * so anything that has to negate a possibly-most-negative value, count bits,
+ * or compute a difference that may exceed the signed range does the work in
+ * this type instead, where wrap-around is well defined. */
+typedef std::make_unsigned<__ss_int>::type __ss_uint;
+
+/* Magnitude of an __ss_int as __ss_uint. Written as a subtraction from zero
+ * rather than as -(__ss_uint)i so that the most negative value (whose
+ * negation is not representable as __ss_int) is handled correctly. */
+static inline __ss_uint __ss_magnitude(__ss_int i) {
+    return (i < 0) ? ((__ss_uint)0 - (__ss_uint)i) : (__ss_uint)i;
+}
 
 /* float type */
 
@@ -184,7 +211,26 @@ using __ss_allocator = gc_allocator< T >;
 #endif
 
 #define __GC_DEQUE(T) std::deque< T, __ss_allocator< T > >
-#define __GC_STRING std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
+#define __GC_BYTES std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
+#define __GC_STRING __GC_BYTES /* compat alias, to be removed */
+
+#ifdef __SS_UNICODE
+/* Fixed-width internal representation for str: one code point per
+ * character instead of one raw byte. We use char32_t rather than wchar_t
+ * -- wchar_t's width is platform-defined (4 bytes on Linux/macOS, but
+ * only 2 on Windows, where it stores UTF-16 code units rather than code
+ * points), while char32_t is guaranteed (at least) 32 bits and behaves
+ * identically everywhere, matching the "wide"/UCS-4 representation
+ * CPython itself used pre-PEP 393.
+ *
+ * This is just the type plumbing for now -- nothing else has been
+ * touched. str's own methods (and everything else that reaches into
+ * str::unit) are still written against __GC_BYTES and will not compile
+ * with this defined; that's expected at this stage. */
+#define __GC_STR std::basic_string<char32_t, std::char_traits<char32_t>, __ss_allocator<char32_t> >
+#else
+#define __GC_STR __GC_BYTES
+#endif
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -284,7 +330,7 @@ public:
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
-void __throw_index_out_of_range();
+void __throw_index_out_of_range(const char *msg="index out of range");
 void __throw_range_step_zero();
 void __throw_stop_iteration();
 void __throw_zero_division(const char *msg);
@@ -295,14 +341,14 @@ void __throw_zero_division(const char *msg);
 #define unlikely(x)    (x)
 #endif
 
-template<class T> static inline __ss_int __wrap(T a, __ss_int i) {
+template<class T> static inline __ss_int __wrap(T a, __ss_int i, const char *msg="index out of range") {
     __ss_int l = len(a);
 #ifndef __SS_NOWRAP
     if(unlikely(i<0)) i += l;
 #endif
 #ifndef __SS_NOBOUNDS
         if(unlikely(i<0 || i>= l))
-            __throw_index_out_of_range();
+            __throw_index_out_of_range(msg);
 #endif
     return i;
 }
@@ -375,6 +421,13 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 /* slicing */
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
+
+/* size an extended slice ('a[l:u:s]', s not 1) must have to be assigned to;
+ * shared by list<T>::__setslice__() and bytes::__setslice__() so their
+ * length-mismatch checks (and CPython-matching error wording) don't drift
+ * apart. l, u, s are normalized internally via slicenr(), so pass the raw,
+ * unnormalized slice bounds. */
+__ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_int len);
 
 #include "builtin/exception.hpp"
 #define SS_DECL
@@ -553,28 +606,22 @@ template<class T> T __seqiter<T>::__next__() {
 
 template<class T, int SiteId> list<T> *__ss_list() {
     list<T> *l = new list<T>();
-#ifdef __SS_PREDICT
-    static ListSiteStat __ss_stat;
-    l->units.reserve(__shedskin__::__list_site_hint(__ss_stat));
-    l->__ss_site = &__ss_stat;
-    __shedskin__::__list_site_new(__ss_stat);
-#elif !defined(__SS_BOOST)
-    l->units.reserve(4);
+#if defined(__SS_PREDICT) || !defined(__SS_BOOST)
+    __SS_LIST_RESERVE(l, 4);
 #endif
     return l;
 }
 
 inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
+    if(c == 0)
+        __throw_range_step_zero();
     list<__ss_int> *l = new list<__ss_int>();
-    __ss_int len = range_len((int)a, (int)b, (int)c);
+    __ss_int len = range_len(a, b, c);
     l->units.resize(len);
-    __ss_int pos = 0;
-    if(a <= b) {
-        for(__ss_int i=a; i<b; i+=c)
-            l->units[pos++] = i;
-    } else {
-        for(__ss_int i=a; i>b; i+=c)
-            l->units[pos++] = i;
+    __ss_int i = a;
+    for(__ss_int pos = 0; pos < len; pos++) {
+        l->units[pos] = i;
+        i += c;
     }
     return l;
 }

@@ -136,6 +136,7 @@ function(add_shedskin_product)
     # module-specific cases
     set(IMPORTS_OS_MODULE OFF)
     set(IMPORTS_RE_MODULE OFF)
+    set(IMPORTS_SOCKET_MODULE OFF)
 
     # if ${name} starts_with test_ then set IS_TEST to ON
     string(FIND "${name}" "test_" index)
@@ -214,6 +215,8 @@ function(add_shedskin_product)
         else()
             if(mod STREQUAL "re")
                 set(IMPORTS_RE_MODULE ON)
+            elseif(mod STREQUAL "socket")
+                set(IMPORTS_SOCKET_MODULE ON)
             endif()
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
@@ -240,30 +243,42 @@ function(add_shedskin_product)
             gc
             gccpp
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
+            ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
-        set(LIB_DIRS)
-        # Use the wrapper include dirs for gc/ structure and pcre2
-        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
+        set(LIB_DIRS ${SHEDSKIN_LINK_DIRS})
+        # Use the wrapper include dirs for gc/ structure and pcre2, plus any
+        # product-specific include dirs (e.g. a local headers-only shim lib)
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
+        # NOTE: libgccpp must precede libgc: gc_cpp.cc (in libgccpp) references
+        # GC_malloc_uncollectable/GC_free which are only defined in libgc, and
+        # static archives are searched left-to-right, so libgc must come after
+        # the archive that needs its symbols.
         set(LIB_DEPS
-            ${SPM_LIB_DIRS}/${LIBGC}
             ${SPM_LIB_DIRS}/${LIBGCCPP}
+            ${SPM_LIB_DIRS}/${LIBGC}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
+            ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
-        set(LIB_DIRS ${SPM_LIB_DIRS})
-        set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+        set(LIB_DIRS ${SPM_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
+        set(LIB_INCLUDES ${SPM_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_LOCAL_DEPS)
         set(USING_STATIC_GC ON)
+        # NOTE: see libgccpp/libgc ordering comment above (ENABLE_SPM branch).
         set(LIB_DEPS
-            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
+            ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
+            ${SHEDSKIN_LINK_LIBS}
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
-        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS})
-        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
+        set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
+        set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
     else()
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used
@@ -287,6 +302,7 @@ function(add_shedskin_product)
             "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS
@@ -542,6 +558,15 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
             $<$<BOOL:${UNIX}>:-O2>
+            # hide all symbols by default so shedskin's Boehm-GC-backed
+            # operator new/delete (and other runtime internals) don't leak
+            # into the process-global symbol table and interpose over the
+            # same symbols in other C++ extensions (e.g. numpy) loaded into
+            # the same host process; PyMODINIT_FUNC forces the entry point
+            # back to default visibility via Py_EXPORTED_SYMBOL, so the
+            # module still loads correctly
+            $<$<BOOL:${UNIX}>:-fvisibility=hidden>
+            $<$<BOOL:${UNIX}>:-fvisibility-inlines-hidden>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
@@ -572,6 +597,15 @@ function(add_shedskin_product)
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
+            # keep symbols pulled in from static libs (libgc.a/libgccpp.a in
+            # particular) out of the extension's dynamic symbol table. Without
+            # this, the GC-backed operator new/delete overrides in gccpp are
+            # exported with default visibility and can interpose over the
+            # unrelated operator new/delete of other C++ extensions (e.g.
+            # numpy) loaded into the same host process, causing memory
+            # corruption / segfaults when those extensions free memory that
+            # was never allocated by the Boehm GC.
+            "$<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:-Wl,--exclude-libs,ALL>"
         )
 
         target_link_libraries(${EXT} PRIVATE

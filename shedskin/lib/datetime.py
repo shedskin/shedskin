@@ -20,9 +20,13 @@ class date:
     def fromordinal(ordinal):
         return date(0, 0, 0)
 
+    def fromisoformat(date_string):
+        return date(0, 0, 0)
+
     today         = staticmethod(today)
     fromtimestamp = staticmethod(fromtimestamp)
     fromordinal   = staticmethod(fromordinal)
+    fromisoformat = staticmethod(fromisoformat)
 
     def __add__(self, other):
         return self
@@ -104,6 +108,9 @@ class datetime(date):
     def strptime(date_string, format):
         return datetime(0, 0, 0)
 
+    def fromisoformat(date_string):
+        return datetime(0, 0, 0)
+
     today = staticmethod(today)
     now = staticmethod(now)
     utcnow = staticmethod(utcnow)
@@ -112,6 +119,7 @@ class datetime(date):
     fromordinal = staticmethod(fromordinal)
     combine = staticmethod(combine)
     strptime = staticmethod(strptime)
+    fromisoformat = staticmethod(fromisoformat)
 
     def __add__(self, delta):
         return self
@@ -165,7 +173,7 @@ class datetime(date):
     def isocalendar(self):
         return (1, 1, 1)
 
-    def isoformat(self, sep='T'):
+    def isoformat(self, sep=None):
         return ''
 
     def ctime(self):
@@ -173,6 +181,9 @@ class datetime(date):
 
     def strftime(self, format):
         return ''
+
+    def timestamp(self):
+        return 1.0
 
     def __str__(self):
         return ''
@@ -190,6 +201,11 @@ class time:
         tzinfo.utcoffset(dt)
         tzinfo.dst(dt)
         tzinfo.tzname(dt)
+
+    def fromisoformat(time_string):
+        return time(0, 0, 0)
+
+    fromisoformat = staticmethod(fromisoformat)
 
     def replace(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         return self

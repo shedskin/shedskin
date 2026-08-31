@@ -47,12 +47,15 @@ __ss_bool isdir(str *path);
 __ss_bool isfile(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
-str *realpath(str *filename);
+str *realpath(str *filename, __ss_bool strict=False);
 str *relpath(str *path, str *start=0);
 str *expanduser(str *path);
+str *expandvars(str *path);
+str *commonpath(list<str *> *paths);
 
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
+__ss_bool ismount(str *path);
 str *_resolve_link(str *path);
 
 void __init();

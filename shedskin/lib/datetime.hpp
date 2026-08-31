@@ -47,6 +47,7 @@ public:
     static date *today();
     static date *fromtimestamp(__ss_int timestamp);
     static date *fromordinal(__ss_int o);                    //copied from cpython
+    static date *fromisoformat(str *date_string);
     date *__add__(timedelta *other);
     date *__sub__(timedelta *other);
     timedelta *__sub__(date *other);
@@ -104,9 +105,11 @@ public:
 	static datetime *from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn);
     static datetime *fromtimestamp(double timestamp, tzinfo *tzinfo=NULL);
     static datetime *utcfromtimestamp(double timestamp);
+    __ss_float timestamp();
     static datetime *fromordinal(__ss_int o);
     static datetime *combine(date *d, time *t);
     static datetime *strptime(str *date_string, str *format);
+    static datetime *fromisoformat(str *date_string);
 
     datetime *__add__(timedelta *other);
     datetime *__sub__(timedelta *other);
@@ -125,7 +128,7 @@ public:
     __time__::struct_time *timetuple();
     __time__::struct_time *utctimetuple();
 
-    str *isoformat(str *sep = new str("T"));
+    str *isoformat(str *sep = NULL);
     str *__str__();
     str *ctime();
     str *strftime(str *format);
@@ -150,6 +153,8 @@ public:
     time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo)
                 {__class__=cl_time;};                                                       //copyconstructor
     time(__ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
+
+    static time *fromisoformat(str *time_string);
 
     time *replace(__ss_int __args, __ss_int hour=-1, __ss_int minute=-1, __ss_int second=-1, __ss_int microsecond=-1, tzinfo *tzinfo=NULL);
 

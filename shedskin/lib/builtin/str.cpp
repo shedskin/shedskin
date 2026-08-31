@@ -262,7 +262,7 @@ tuple2<str *, str *> *str::partition(str *separator)
 {
     size_t i;
 
-    i = this->unit.find(separator->unit.c_str());
+    i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
@@ -529,7 +529,13 @@ str *str::center(__ss_int w, str *fillchar) {
     if(!fillchar) fillchar = sp;
     str *r = fillchar->__mul__(w);
 
-    size_t j = (width-len)/2;
+    /* CPython puts the extra fill character on the right for even total
+       padding, but breaks ties on odd total padding based on the parity
+       of the requested width (see CPython's unicode_center /
+       stringlib_center); a plain floor-division split puts the extra
+       character on the wrong side whenever width is odd. */
+    size_t marg = width - len;
+    size_t j = marg/2 + (marg & width & 1);
     for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
@@ -671,13 +677,16 @@ __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__());
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     __ss_int count, one = 1;
     size_t i;
+    size_t ssize = s->unit.size();
     slicenr(7, start, end, one, __len__());
 
     i = (size_t)start;
     count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
+    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
     {
-        i += s->unit.size();
+        i += ssize;
+        if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
+            i++;
         count++;
     }
 
@@ -786,6 +795,7 @@ str *str::title() {
 str *str::casefold() {
     str *r = new str();
     size_t len = this->unit.size();
+    r->unit.reserve(len);
 
     for(size_t i=0; i<len; i++) {
         unsigned char c = (unsigned char)unit[i];
@@ -855,33 +865,33 @@ PyObject *str::__to_py__() {
 }
 #endif
 
-#ifdef __SS_LONG
-str *__str(__ss_int i, __ss_int base) {
-    if(i<10 && i>=0 && base==10)
-        return __char_cache[((unsigned char)('0'+i))];
-    char buf[70];
-    char *psz = buf+69;
-/*    if(i==INT_MIN)
-        return new str("-2147483648"); */
-    int neg = i<0;
+/* Digits are generated from the magnitude held in an unsigned type rather
+ * than by negating a signed one: the most negative value of any signed type
+ * has no representable negation, so "if(neg) i = -i;" left it negative and
+ * then indexed __str_cache out of bounds (str(-2**63) printed "-0"). The
+ * buffer is sized from the type so that even base 2 cannot overflow it. */
+template<class U> static str *__str_digits(U u, U ubase, bool neg) {
+    const size_t bufsize = 8*sizeof(U)+4;
+    char buf[bufsize];
+    char *psz = buf+bufsize-1;
     *psz = 0;
-    if(neg) i = -i;
-    if(base == 10) {
-        __ss_int pos;
-        while(i > 999) {
-            pos = 4*(i%1000);
-            i = i/1000;
+
+    if(ubase == 10) {
+        U pos;
+        while(u > 999) {
+            pos = 4*(u%1000);
+            u = u/1000;
             *(--psz) = __str_cache[pos];
             *(--psz) = __str_cache[pos+1];
             *(--psz) = __str_cache[pos+2];
         }
-        pos = 4*i;
-        if(i>99) {
+        pos = 4*u;
+        if(u>99) {
             *(--psz) = __str_cache[pos];
             *(--psz) = __str_cache[pos+1];
             *(--psz) = __str_cache[pos+2];
         }
-        else if(i>9) {
+        else if(u>9) {
             *(--psz) = __str_cache[pos];
             *(--psz) = __str_cache[pos+1];
         }
@@ -889,53 +899,37 @@ str *__str(__ss_int i, __ss_int base) {
             *(--psz) = __str_cache[pos];
     }
     else do {
-        *(--psz) = "0123456789abcdefghijklmnopqrstuvwxyz"[i%base];
-        i = i/base;
-    } while(i);
+        *(--psz) = "0123456789abcdefghijklmnopqrstuvwxyz"[u%ubase];
+        u = u/ubase;
+    } while(u);
     if(neg) *(--psz) = '-';
-    return new str(psz, buf+69-psz);
+    return new str(psz, (size_t)(buf+bufsize-1-psz));
+}
+
+template<class T> static str *__str_signed(T i, T base) {
+    typedef typename std::make_unsigned<T>::type U;
+    U u = (i < 0) ? ((U)0 - (U)i) : (U)i;
+    return __str_digits<U>(u, (U)base, i < 0);
+}
+
+#ifdef __SS_LONG
+str *__str(__ss_int i, __ss_int base) {
+    if(i<10 && i>=0 && base==10)
+        return __char_cache[((unsigned char)('0'+i))];
+    return __str_signed<__ss_int>(i, base);
 }
 #endif
 
 str *__str(int i, int base) {
     if(base==10 && i<10 && i>=0)
         return __char_cache[((unsigned char)('0'+i))];
+    return __str_signed<int>(i, base);
+}
 
-    char buf[70];
-    char *psz = buf+69;
-    if(base==10 and i==INT_MIN)
-        return new str("-2147483648");
-    int neg = i<0;
-    *psz = 0;
-    if(neg) i = -i;
-    if(base == 10) {
-        int pos;
-        while(i > 999) {
-            pos = 4*(i%1000);
-            i = i/1000;
-            *(--psz) = __str_cache[pos];
-            *(--psz) = __str_cache[pos+1];
-            *(--psz) = __str_cache[pos+2];
-        }
-        pos = 4*i;
-        if(i>99) {
-            *(--psz) = __str_cache[pos];
-            *(--psz) = __str_cache[pos+1];
-            *(--psz) = __str_cache[pos+2];
-        }
-        else if(i>9) {
-            *(--psz) = __str_cache[pos];
-            *(--psz) = __str_cache[pos+1];
-        }
-        else
-            *(--psz) = __str_cache[pos];
-    }
-    else do {
-        *(--psz) = "0123456789abcdefghijklmnopqrstuvwxyz"[i%base];
-        i = i/base;
-    } while(i);
-    if(neg) *(--psz) = '-';
-    return new str(psz, (size_t)(buf+69-psz));
+/* Unsigned digits of |i|, for bin/hex/oct: those prepend their own "-" and
+ * used to pass -i, which is undefined for the most negative value. */
+str *__str_abs(__ss_int i, __ss_int base) {
+    return __str_digits<__ss_uint>(__ss_magnitude(i), (__ss_uint)base, false);
 }
 
 str *__str(__ss_bool b) {
@@ -945,16 +939,81 @@ str *__str(__ss_bool b) {
 
 str *__str() { return new str(""); } /* XXX optimize */
 
+/* Shortest round-tripping decimal digits of a finite, non-negative t, written
+ * NUL-terminated into digits[] with no sign and no decimal point. Returns
+ * decpt: how many of those digits belong before the decimal point, so that
+ * the value is 0.<digits> * 10**decpt. */
+static int __float_digits(__ss_float t, char *digits) {
+    char sci[64];
+#ifdef __SS_FP_TO_CHARS
+    std::to_chars_result r =
+        std::to_chars(sci, sci+sizeof(sci)-1, t, std::chars_format::scientific);
+    *r.ptr = 0;
+#else
+    /* The first precision that reads back bit-identical is by construction
+     * the shortest round-tripping one. */
+    for(int prec = 0; ; prec++) {
+        snprintf(sci, sizeof(sci), "%.*e", prec, (double)t);
+        if(prec >= 17 || (__ss_float)strtod(sci, NULL) == t)
+            break;
+    }
+#endif
+    /* split "d[.ddd]e[+-]dd" into bare digits and a decimal exponent */
+    const char *e = strchr(sci, 'e');
+    if(!e) /* neither producer can omit the exponent; do not walk off the end */
+        e = sci + strlen(sci);
+    int exp10 = *e ? (int)strtol(e+1, NULL, 10) : 0;
+    size_t n = 0;
+    for(const char *p = sci; p < e; p++)
+        if(*p != '.')
+            digits[n++] = *p;
+    while(n > 1 && digits[n-1] == '0') /* only reachable via the fallback */
+        n--;
+    digits[n] = 0;
+    return exp10 + 1;
+}
+
+/* CPython's repr and str of a float are the same function, and both print the
+ * shortest decimal string that reads back as the identical double. The former
+ * implementation here asked a stringstream for 16 significant digits, which is
+ * neither shortest nor always sufficient -- 17 are needed in the worst case --
+ * so e.g. repr(2**0.5) came out as 1.414213562373095, a *different* double
+ * from the one being printed. */
 template<> str *__str(__ss_float t) {
-    std::stringstream ss;
-    ss.precision(16);
-    ss << std::showpoint << t;
-    __GC_STRING s = ss.str().c_str();
-    if(s.find('e') == std::string::npos)
-    {
-        size_t j = s.find_last_not_of("0");
-        if( s[j] == '.') j++;
-        s = s.substr(0, j+1);
+    if(std::isnan(t))
+        return new str("nan");
+    if(std::isinf(t))
+        return new str(t < 0 ? "-inf" : "inf");
+
+    char digits[40];
+    int decpt = __float_digits(std::fabs(t), digits);
+    int ndigits = (int)strlen(digits);
+
+    __GC_STRING s;
+    if(std::signbit(t)) /* not t < 0: -0.0 prints as -0.0 */
+        s += '-';
+
+    if(decpt <= -4 || decpt > 16) { /* CPython's fixed/scientific cutoffs */
+        s += digits[0];
+        if(ndigits > 1) {
+            s += '.';
+            s.append(digits+1, (size_t)(ndigits-1));
+        }
+        char ebuf[16];
+        snprintf(ebuf, sizeof(ebuf), "e%+03d", decpt-1);
+        s += ebuf;
+    } else if(decpt <= 0) {
+        s += "0.";
+        s.append((size_t)(-decpt), '0');
+        s += digits;
+    } else if(decpt >= ndigits) {
+        s += digits;
+        s.append((size_t)(decpt-ndigits), '0');
+        s += ".0";
+    } else {
+        s.append(digits, (size_t)decpt);
+        s += '.';
+        s += digits+decpt;
     }
     return new str(s);
 }

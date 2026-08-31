@@ -46,7 +46,7 @@ void *remove(str *a);
 void *rmdir(str *a);
 void *removedirs(str *name_);
 void *mkdir(str *path, __ss_int mode=0777);
-void *makedirs(str *name_, __ss_int mode=0777, __ss_bool exist_ok=False);
+void *makedirs(str *name_, __ss_int mode=0777, __ss_bool exist_ok=False, __ss_int parent_mode=-1);
 void *abort();
 __ss_int system(str *c);
 void *unlink(str *path);
@@ -132,6 +132,7 @@ void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
 void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
 
 bytes *urandom(__ss_int n);
+bytes *getrandom(__ss_int size, __ss_int flags=0);
 
 __ss_bool isatty(__ss_int fd);
 

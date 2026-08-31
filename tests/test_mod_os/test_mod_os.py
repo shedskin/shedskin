@@ -1,6 +1,7 @@
 # popen deprecated in favor of subprocess.. consider subprocess support?
 
 import os
+import stat
 
 def test_getcwd():
     assert len(os.getcwd()) > 1
@@ -124,6 +125,39 @@ def test_makedirs_exist_ok():
     os.removedirs(path)
 
 
+def test_makedirs_parent_mode():
+    base = '/tmp/shedskin_test_makedirs_parent_mode'
+    leaf = base + '/a/b/c'
+
+    os.system('rm -rf ' + base)
+    os.makedirs(leaf, mode=0o700, exist_ok=True, parent_mode=0o750)
+
+    leaf_mode = stat.S_IMODE(os.stat(leaf).st_mode)
+    parent_mode = stat.S_IMODE(os.stat(base + '/a').st_mode)
+    assert leaf_mode == 0o700
+    assert parent_mode == 0o750
+
+    os.system('rm -rf ' + base)
+
+
+def test_makedirs_default_parent_mode():
+    # without parent_mode, intermediate directories should get the
+    # default (umask-restricted) mode, not the leaf `mode` argument
+    # (matching CPython's default behavior since 3.7, bpo-42367).
+    base = '/tmp/shedskin_test_makedirs_default_parent_mode'
+    leaf = base + '/a/b/c'
+
+    os.system('rm -rf ' + base)
+    old_umask = os.umask(0o022)
+    os.makedirs(leaf, mode=0o700, exist_ok=True)
+    os.umask(old_umask)
+
+    parent_mode = stat.S_IMODE(os.stat(base + '/a').st_mode)
+    assert parent_mode == 0o755  # 0o777 & ~0o022
+
+    os.system('rm -rf ' + base)
+
+
 def test_setgroups_overflow():
     # Regression test: os.setgroups used to fill a fixed-size 4096-slot
     # gid_t stack buffer without checking the input length first, so
@@ -145,6 +179,15 @@ def test_urandom():
     bts = os.urandom(10)
     assert len(bts) == 10
     assert bts.__class__.__name__ == 'bytes'
+
+
+def test_getrandom():
+    bts = os.getrandom(10)
+    assert len(bts) == 10
+    assert bts.__class__.__name__ == 'bytes'
+
+    bts = os.getrandom(10, 0)
+    assert len(bts) == 10
 
 
 def test_cpu_count():
@@ -274,6 +317,9 @@ def test_all():
         test_isatty()
         test_system()
         test_urandom()
+        test_getrandom()
+        test_makedirs_parent_mode()
+        test_makedirs_default_parent_mode()
         # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
         # __os__ in lib/os/__init__.hpp, and shedskin translates this
         # function's body to C++ unconditionally (the `os.name == 'posix'`

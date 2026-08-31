@@ -257,11 +257,11 @@ template<class T> __ss_bool set<T>::__le__(set<T> *s) {
 }
 
 template<class T> __ss_bool set<T>::__lt__(set<T> *s) {
-    return issubset(s);
+    return __mbool(__len__() < s->__len__() && issubset(s).value);
 }
 
 template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
-    return issuperset(s);
+    return __mbool(__len__() > s->__len__() && issuperset(s).value);
 }
 
 template<class T> __ss_int set<T>::__hash__() {

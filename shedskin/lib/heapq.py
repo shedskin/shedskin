@@ -45,10 +45,10 @@ def nlargest(n, iterable, __kw_key=None):
     item = iter(iterable).__next__()
     __cmp(item, item)
     __cmp(__kw_key(item), __kw_key(item))
-    yield item
+    return [item]
 
 def nsmallest(n, iterable, __kw_key=None):
     item = iter(iterable).__next__()
     __cmp(item, item)
     __cmp(__kw_key(item), __kw_key(item))
-    yield item
+    return [item]

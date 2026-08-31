@@ -6,7 +6,26 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
+
+/* Reject directories opened as regular files: on POSIX, fopen() succeeds on
+ * a directory path, but subsequent reads/writes through the FILE* invoke
+ * undefined behavior (observed as a segfault) instead of failing cleanly.
+ * CPython's io layer proactively stat()s the path and raises
+ * IsADirectoryError; mirror that here using the existing OSError type. */
+static inline void __check_not_directory(FILE *f, str *file_name) {
+#ifndef WIN32
+    if (f) {
+        struct stat st;
+        if (fstat(fileno(f), &st) == 0 and S_ISDIR(st.st_mode)) {
+            fclose(f);
+            errno = EISDIR;
+            throw new OSError(file_name);
+        }
+    }
+#endif
+}
 
 #if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
 #define HAVE_STDIO_UNLOCKED
@@ -42,6 +61,7 @@ file::file(str *file_name, str *flags) {
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
         throw new FileNotFoundError(file_name);
+    __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
 
@@ -147,6 +167,30 @@ static void __throw_io_error() {
 
 str *file::read(__ss_int n) {
     __check_closed();
+    if (options.universal_mode) {
+        __read_cache.clear();
+        for(size_t i = 0; i < size_t(n); ++i) {
+            int c = GETC(f);
+            if(c == EOF)
+                break;
+            if(options.cr) {
+                options.cr = false;
+                if(c == '\n') {
+                    c = GETC(f);
+                    if(c == EOF)
+                        break;
+                }
+            }
+            if(c == '\r') {
+                options.cr = true;
+                c = '\n';
+            }
+            __read_cache.push_back((char)c);
+        }
+        if(__error())
+            __throw_io_error();
+        return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    }
     if(n == 1) {
         const int c = GETC(f);
         if(FERROR(f) != 0) /* avoid virtual call */
@@ -208,9 +252,9 @@ __ss_bool file::isatty()
 {
     __check_closed();
 #ifdef WIN32
-    return ___bool(_isatty(__ss_fileno()));
+    return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
-    return ___bool(::isatty(__ss_fileno()));
+    return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
 
@@ -220,10 +264,10 @@ __ss_int file::truncate(__ss_int size) {
     if(size == -1)
         size = tell();
 #ifdef WIN32
-    if(_chsize(__ss_fileno(), size) == -1)
+    if(_chsize((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #else
-    if(ftruncate(__ss_fileno(), size) == -1)
+    if(ftruncate((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
     return size;
@@ -276,6 +320,7 @@ file_binary::file_binary(str *file_name, str *flags) {
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
         throw new FileNotFoundError(file_name);
+    __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
 }
@@ -440,9 +485,9 @@ __ss_bool file_binary::isatty()
 {
     __check_closed();
 #ifdef WIN32
-    return ___bool(_isatty(__ss_fileno()));
+    return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
-    return ___bool(::isatty(__ss_fileno()));
+    return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
 
@@ -452,10 +497,10 @@ __ss_int file_binary::truncate(__ss_int size) {
     if(size == -1)
         size = tell();
 #ifdef WIN32
-    if(_chsize(__ss_fileno(), size) == -1)
+    if(_chsize((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #else
-    if(ftruncate(__ss_fileno(), size) == -1)
+    if(ftruncate((int)__ss_fileno(), size) == -1)
         throw new OSError();
 #endif
     return size;

@@ -34,7 +34,7 @@ PathLike: TypeAlias = Path | str
 
 # constanta
 CREATE_DB = """\
-CREATE TABLE pymodule (
+CREATE TABLE IF NOT EXISTS pymodule (
     name text not null,
     filename text not null,
     n_words int default 0,
@@ -79,6 +79,7 @@ CREATE TABLE pymodule (
     float64 bool default false,
     silent bool default false,
     nogc bool default false,
+    boost bool default false,
     backtrace bool default false,
 
     ran_at datetime default current_timestamp
@@ -99,6 +100,9 @@ class ShedskinStatsManager:
     def __init__(self, gx: config.GlobalInfo, db_path: Optional[PathLike] = None):
         self.gx = gx
         self.db_path = self.get_db_path(db_path)
+        # ensure the schema exists; the db file may be freshly created
+        # (e.g. first run, or a fresh user cache dir) and have no tables yet
+        self.create_db()
 
     @property
     def modules(self) -> list["python.Module"]:

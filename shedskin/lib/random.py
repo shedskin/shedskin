@@ -46,6 +46,16 @@ class Random:
     def binomialvariate(self, n=1, p=0.5): return 1
 
 
+class SystemRandom(Random):
+    def __init__(self, a=-1): return 1
+    def random(self): return 1.0
+    def getrandbits(self, k): return 1
+    def randbytes(self, n): return b''
+    def seed(self, a=None): pass
+    def getstate(self): return b''
+    def setstate(self, state): pass
+
+
 _inst = Random()
 def seed(a=None):
     _inst.seed(a)

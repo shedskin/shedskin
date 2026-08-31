@@ -155,14 +155,87 @@ def test_choices():
     assert len(random.choices(list(range(100)), k=5)) == 5
 
 
+def test_systemrandom():
+    sr = random.SystemRandom()
+
+    x = sr.random()
+    assert 0.0 <= x < 1.0
+
+    assert 1 <= sr.randint(1, 6) <= 6
+
+    for k in (1, 8, 16, 30):
+        b = sr.getrandbits(k)
+        assert 0 <= b < (1 << k)
+    assert sr.getrandbits(0) == 0
+
+    assert len(sr.randbytes(9)) == 9
+
+    fibs = [0, 1, 1, 2, 3, 5, 8, 13, 21]
+    assert sr.choice(fibs) in fibs
+    assert len(sr.sample(fibs, 3)) == 3
+    sr.shuffle(fibs)
+    assert len(fibs) == 9
+
+    # seed() is a documented no-op for SystemRandom; must not raise
+    sr.seed(42)
+    sr.seed()
+
+    # getstate/setstate are unsupported for an OS-entropy generator
+    ok = False
+    try:
+        sr.getstate()
+    except NotImplementedError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        sr.setstate(b'')
+    except NotImplementedError:
+        ok = True
+    assert ok
+
+    # a plain Random instance must be unaffected by SystemRandom's use
+    random.seed(1)
+    first = random.random()
+    random.seed(1)
+    second = random.random()
+    assert first == second
+
+
+def test_sample_errors():
+    # regression test: CPython raises the same message
+    # ("Sample larger than population or is negative") for both a
+    # negative k and a k that exceeds the population size.
+    expected = "Sample larger than population or is negative"
+
+    ok = False
+    try:
+        random.sample([1, 2, 3], -1)
+    except ValueError as e:
+        ok = True
+        assert str(e) == expected
+    assert ok
+
+    ok = False
+    try:
+        random.sample([1, 2, 3], 5)
+    except ValueError as e:
+        ok = True
+        assert str(e) == expected
+    assert ok
+
+
 def test_all():
     test_random1()
     test_random2()
     test_random3()
     test_randbytes()
     test_choices()
+    test_sample_errors()
     test_getsetstate()
     test_getrandbits()
+    test_systemrandom()
 
 
 if __name__ == '__main__':

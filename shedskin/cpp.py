@@ -199,6 +199,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
+        self._ss_list_site_ids: dict[int, int] = {}
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -269,7 +270,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def fwd_class_refs(self) -> list[str]:
         """Forward declare classes from included modules"""
         lines = []
-        for _module in self.module.prop_includes:
+        # sorted: prop_includes is a set (see include_files)
+        for _module in sorted(
+            self.module.prop_includes, key=lambda module: module.include_path()
+        ):
             if _module.builtin:
                 continue
             for name in _module.name_list:
@@ -304,16 +308,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     module = cl.bases[0].mv.module
                     if module.ident != "builtin" and module != include:
                         include.deps.add(module)
-        includes1 = [i for i in includes if i.builtin]
-        includes2 = [i for i in includes if not i.builtin]
-        includes3 = includes1 + self.includes_rec(set(includes2))
+        # sorted, because 'includes' is a set of modules and so iterates in an
+        # order that varies between runs; that order reaches the emitted
+        # '#include' lines and makes builds of the same source differ
+        includes1 = sorted(
+            (i for i in includes if i.builtin), key=lambda m: m.include_path()
+        )
+        includes2 = sorted(
+            (i for i in includes if not i.builtin), key=lambda m: m.include_path()
+        )
+        includes3 = includes1 + self.includes_rec(includes2)
         return ['#include "%s"\n' % module.include_path() for module in includes3]
 
     def includes_rec(
-        self, includes: set["python.Module"]
+        self, includes: list["python.Module"]
     ) -> list["python.Module"]:  # XXX should be recursive!? ugh
-        """Find all (indirect) dependencies recursively"""
-        todo = includes.copy()
+        """Find all (indirect) dependencies recursively
+
+        Takes (and keeps) a list rather than a set: the dependency constraint
+        leaves ties, and breaking them by set iteration order made the emitted
+        include order differ between runs.
+        """
+        todo = list(includes)
         result: list["python.Module"] = []
         while todo:
             for include in todo:
@@ -322,7 +338,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     result.append(include)
                     break
             else:  # XXX circular dependency warning?
-                result.append(todo.pop())
+                result.append(todo.pop(0))
         return result
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
@@ -894,7 +910,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output(class_name + " *c = new " + class_name + "();")
             if name == "__deepcopy__":
                 self.output("memo->__setitem__(this, c);")
-            for var in cl.vars.values():
+            for var in python.stable_vars(cl.vars.values()):
                 if (
                     not var.invisible
                     and var in self.gx.merged_inh
@@ -1021,7 +1037,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- class variable declarations
         if cl.parent.vars:  # XXX merge with visit_Module
-            for var in cl.parent.vars.values():
+            for var in python.stable_vars(cl.parent.vars.values()):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.start(
                         typestr.nodetypestr(self.gx, var, cl.parent, mv=self.mv)
@@ -1045,7 +1061,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def class_variables(self, cl: "python.Class") -> None:
         """Generate class variable declarations"""
         if cl.parent.vars:
-            for var in cl.parent.vars.values():
+            for var in python.stable_vars(cl.parent.vars.values()):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.output(
                         "static "
@@ -1056,7 +1072,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print()
 
         # --- instance variables
-        for var in cl.vars.values():
+        for var in python.stable_vars(cl.vars.values()):
             if var.invisible:
                 continue  # var.name in cl.virtualvars: continue
             # var is masked by ancestor var
@@ -1139,8 +1155,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts == "tuple<__ss_int> *" and isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
         elif isinstance(node, ast.List) and not node.elts:
-            if not hasattr(self, "_ss_list_site_ids"):
-                self._ss_list_site_ids = {}
             if id(node) not in self._ss_list_site_ids:
                 self._ss_list_site_ids[id(node)] = len(self._ss_list_site_ids)
             site_id = self._ss_list_site_ids[id(node)]
@@ -1435,20 +1449,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(",{},{})".format(ivar[2:], evar[2:]))
         self.print(self.line)
 
-    def fastenumerate(self, node: Union[ast.For, ast.comprehension]) -> bool:
+    def fastenumerate(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"] = None,
+    ) -> bool:
         """Check if a node is a fast enumerate loop"""
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_enumerate(node)
+            and ast_utils.is_enumerate(node, func, self.mv)
             and self.only_classes(node.iter.args[0], ("tuple", "list", "str_"))
         )
 
-    def fastzip2(self, node: Union[ast.For, ast.comprehension]) -> bool:
+    def fastzip2(
+        self,
+        node: Union[ast.For, ast.comprehension],
+        func: Optional["python.Function"] = None,
+    ) -> bool:
         """Check if a node is a fast zip2 loop"""
         names = ("tuple", "list")
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_zip2(node)
+            and ast_utils.is_zip2(node, func, self.mv)
             and self.only_classes(node.iter.args[0], names)
             and self.only_classes(node.iter.args[1], names)
         )
@@ -1458,9 +1480,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_assign_list_or_tuple(node.target)
-            and self.only_classes(node.iter.func, ("dict",))
             and isinstance(node.iter.func, ast.Attribute)
             and node.iter.func.attr == "items"
+            and self.only_classes(node.iter.func.value, ("dict",))
         )
 
     def fastfileiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
@@ -1502,12 +1524,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
-        if ast_utils.is_fastfor(node):
+        if ast_utils.is_fastfor(node, func, self.mv):
             self.do_fastfor(node, node, None, assname, func, False, False)
-        elif self.fastenumerate(node):
+        elif self.fastenumerate(node, func):
             self.do_fastenumerate(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
-        elif self.fastzip2(node):
+        elif self.fastzip2(node, func):
             self.do_fastzip2(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
         elif self.fastdictiter(node):
@@ -1617,10 +1639,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a fast for-in-choice loop"""
         tempvar = self.mv.tempcount[node]
         self.start()
-        self.visitm("for(auto ", tempvar, " : {", func)
+        # use the inferred type of the loop variable instead of 'auto': the
+        # elements of the choice list may have different concrete C++ types
+        # (e.g. instances of different subclasses, or int/float literals)
+        # even though shedskin infers a single unified Python type for them,
+        # so 'auto' brace-init deduction can fail to compile
+        target_type = typestr.nodetypestr(self.gx, node.target, mv=self.mv).strip()
+        self.visitm("for(", target_type, " ", tempvar, " : {", func)
         assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
+        target_types = self.mergeinh[node.target]
         for elem in node.iter.elts:
-            self.visit(elem, func)
+            self.impl_visit_conv(elem, target_types, func)
             if elem is not node.iter.elts[-1]:
                 self.append(",")
         self.append("}) {")
@@ -2235,7 +2264,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     t[0].ident
                     for t in self.mergeinh[node.target.value]
                     if isinstance(t[0], python.Class)
-            } in [{"dict"}, {"frozendict"}, {"defaultdict"}] and isinstance(node.op, ast.Add):
+            } in [{"dict"}, {"frozendict"}, {"defaultdict"}, {"Counter"}] and isinstance(node.op, ast.Add):
                 self.visitm(
                     node.target.value,
                     "->__addtoitem__(",
@@ -2713,16 +2742,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.library_func(funcs, "datetime", "time", "replace") or self.library_func(
             funcs, "datetime", "datetime", "replace"
         ):
-            # formals = funcs[0].formals[1:]  # skip self UNUSED
-            # formal_pos = dict((v, k) for k, v in enumerate(formals)) # UNUSED
+            formals = funcs[0].formals[1:]  # skip self
+            formal_pos = dict((v, k) for k, v in enumerate(formals))
             positions = []
 
             for i, arg in enumerate(node.args):
-                if isinstance(arg, ast.keyword):
-                    assert False
-                #                    positions.append(formal_pos[arg.name])
-                else:
-                    positions.append(i)
+                positions.append(i)
+
+            for kw in node.keywords:
+                # keyword args (e.g. dt.replace(month=6)) live in node.keywords,
+                # not node.args; map each keyword name back to its formal
+                # position so the right bit ends up in the __args mask.
+                assert kw.arg is not None
+                positions.append(formal_pos[kw.arg])
 
             if positions:
                 self.append(
@@ -3132,6 +3164,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", None, "triangular")
             or self.library_func(funcs, "random", "Random", "seed")
             or self.library_func(funcs, "random", "Random", "triangular")
+            # str(None)/repr(None) hit the same NULL-typed-as-a-plain-integer
+            # overload ambiguity as the %-formatting case below (see
+            # is_none_type's callers): a bare NULL argument binds to the
+            # int/long __str()/repr() overloads (which format it as "0")
+            # instead of the void* overloads (which correctly return "None").
+            or self.library_func(funcs, "builtin", None, "str")
+            or self.library_func(funcs, "builtin", None, "repr")
         ):
             castnull = True
         for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
@@ -3648,15 +3687,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         ",",
                         func,
                     )
-                    if [
+                    lvalue_is_list = [
                         t for t in self.mergeinh[lvalue.value] if t[0].ident == "list"
-                        and t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "list"
-                    ]:
-                        self.visit(fakefunc.args[4], func)
-                    elif [
+                    ]
+                    rvalue_not_list = [
+                        t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "list"
+                    ]
+                    lvalue_is_bytes = [
                         t for t in self.mergeinh[lvalue.value] if t[0].ident == "bytes_"
-                        and t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "bytes_"
-                    ]:
+                    ]
+                    rvalue_not_bytes = [
+                        t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident != "bytes_"
+                    ]
+                    if lvalue_is_list and rvalue_not_list:
+                        self.visit(fakefunc.args[4], func)
+                    elif lvalue_is_bytes and rvalue_not_bytes:
                         self.visit(fakefunc.args[4], func)
                     else:
                         self.impl_visit_conv(
@@ -3774,9 +3819,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def lc_args(
         self, lcfunc: "python.Function", func: Optional["python.Function"]
     ) -> list[tuple[str, str]]:
-        """Generate the arguments for a list comprehension"""
+        """Generate the arguments for a list comprehension
+
+        'misses' is a set, so iterating it directly orders the generated
+        helper's parameters by string hash, which differs between runs. Sort
+        it, here and at the matching call site in visit_ListComp, so the two
+        agree and the emitted code depends only on the source.
+        """
         args = []
-        for name in lcfunc.misses:
+        for name in sorted(lcfunc.misses):
             var = python.lookup_var(name, func, self.mv)
             assert var
             if var.parent:
@@ -3962,12 +4013,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             elif (
                 len(node.generators) == 1
-                and not self.fastenumerate(node.generators[0])
-                and not self.fastzip2(node.generators[0])
+                and not self.fastenumerate(node.generators[0], lcfunc)
+                and not self.fastzip2(node.generators[0], lcfunc)
                 and not node.generators[0].ifs
                 and (
                     (
-                        ast_utils.is_fastfor(node.generators[0])
+                        ast_utils.is_fastfor(node.generators[0], lcfunc, self.mv)
                         and isinstance(node.generators[0].iter, ast.Call)
                         and len(node.generators[0].iter.args) == 1
                         and isinstance(node.generators[0].iter.args[0], ast.Constant)
@@ -3978,7 +4029,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                 )
             ):
-                if ast_utils.is_fastfor(node.generators[0]):
+                if ast_utils.is_fastfor(node.generators[0], lcfunc, self.mv):
                     tv = self.mv.tempcount[node.generators[0].target]
                 else:
                     tv = self.mv.tempcount[node.generators[0].iter]
@@ -4009,7 +4060,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node not in self.gx.dictcomp_to_lc.values()
         )
 
-        if ast_utils.is_fastfor(qual):
+        if ast_utils.is_fastfor(qual, lcfunc, self.mv):
             if try_reserve:
                 if (
                     len(node.generators) == 1
@@ -4022,24 +4073,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
-                    self.output("#ifdef __SS_PREDICT")
-                    self.output("static ListSiteStat __ss_lcstat;")
                     self.output(
-                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
                     )
-                    self.output("__ss_result->__ss_site = &__ss_lcstat;")
-                    self.output("__list_site_new(__ss_lcstat);")
-                    self.output("#else")
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
-                    self.output("#endif")
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr, fuse_reduce)
-        elif self.fastenumerate(qual):  # TODO result->resize for all cases
+        elif self.fastenumerate(qual, lcfunc):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
-        elif self.fastzip2(qual):
+        elif self.fastzip2(qual, lcfunc):
             self.do_fastzip2(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         elif self.fastdictiter(qual):
@@ -4066,18 +4108,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
-                    self.output("#ifdef __SS_PREDICT")
-                    self.output("static ListSiteStat __ss_lcstat;")
                     self.output(
-                        "__ss_result->units.reserve(__list_site_hint(__ss_lcstat));"
+                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
                     )
-                    self.output("__ss_result->__ss_site = &__ss_lcstat;")
-                    self.output("__list_site_new(__ss_lcstat);")
-                    self.output("#else")
-                    self.output(
-                        f"__ss_result->units.reserve({4 * len(node.generators)});"
-                    )
-                    self.output("#endif")
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
@@ -4137,7 +4170,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         args = []
         temp = self.line
 
-        for name in lcfunc.misses:
+        # must match the parameter order chosen by lc_args
+        for name in sorted(lcfunc.misses):
             var = python.lookup_var(name, func, self.mv)
             if var and var.parent:
                 if name == "self" and not (func and func.listcomp):
@@ -4231,8 +4265,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- visit nodes, boxing scalars
         self.visitm("__mod6(", node.left, ", ", str(len(nodes)), func)
         for n in nodes:
-            self.visitm(", ", n, func)
+            self.append(", ")
+            # __mod6 is variadic, so a bare NULL argument would be deduced as
+            # whatever integer type NULL happens to be spelled as (long on
+            # some platforms, which has no __str/repr overload). Give the
+            # argument the pointer type those overloads are declared for.
+            if self.is_none_type(n):
+                self.append("((void *)0)")
+            else:
+                self.visit(n, func)
         self.append(")")
+
+    def is_none_type(self, node: ast.AST) -> bool:
+        """Whether a node's inferred type is exactly None"""
+        return self.mergeinh.get(node) == {(python.def_class(self.gx, "none"), 0)}
 
     def attr_var_ref(
         self, node: ast.Attribute, ident: str

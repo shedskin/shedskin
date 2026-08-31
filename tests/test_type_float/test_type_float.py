@@ -77,6 +77,43 @@ def test_hex_fromhex():
     assert float.fromhex(s) == 17.123
 
 
+def test_repr_roundtrip():
+    # repr must print the shortest decimal string that reads back as the very
+    # same double; a fixed 16 significant digits is neither shortest nor always
+    # enough, and dropped the last digit of e.g. 2 ** 0.5
+    for x in [0.1, 1 / 3, 2 ** 0.5, 0.1 + 0.2, 1e300, 5e-324, 1e-320,
+              1.2345678901234568e+17, -2.5, 100.0, 0.0, -0.0]:
+        assert float(repr(x)) == x
+
+    assert repr(2 ** 0.5) == '1.4142135623730951'
+    assert repr(0.1) == '0.1'
+    assert repr(0.1 + 0.2) == '0.30000000000000004'
+    assert repr(1.2345678901234568e+17) == '1.2345678901234568e+17'
+
+
+def test_repr_formatting():
+    # str and repr of a float are the same function, and the switch between
+    # fixed and scientific notation happens at these exact points
+    assert repr(1e15) == '1000000000000000.0'
+    assert repr(1e16) == '1e+16'
+    assert repr(0.0001) == '0.0001'
+    assert repr(1e-05) == '1e-05'
+
+    assert repr(0.0) == '0.0'
+    assert repr(-0.0) == '-0.0'
+    assert repr(1.0) == '1.0'
+    assert repr(-2.5) == '-2.5'
+    assert repr(1e100) == '1e+100'
+    assert repr(1e-320) == '1e-320'
+
+    assert str(1.0) == repr(1.0)
+    assert str(1e16) == repr(1e16)
+
+    assert repr(float('inf')) == 'inf'
+    assert repr(float('-inf')) == '-inf'
+    assert repr(float('nan')) == 'nan'
+
+
 def test_all():
     test_float()
     test_inf()
@@ -85,6 +122,8 @@ def test_all():
     test_division()
     test_multiplication()
     test_hex_fromhex()
+    test_repr_roundtrip()
+    test_repr_formatting()
 
 
 if __name__ == "__main__":

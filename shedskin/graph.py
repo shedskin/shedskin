@@ -164,13 +164,32 @@ def make_arg_list(argnames: list[str]) -> ast.arguments:
     return ast.arguments([], args, None, [], [], None, [])
 
 
-def is_property_setter(dec: ast.AST) -> bool:
-    """Check if a decorator is a property setter"""
-    return (
+def is_property_setter(dec: ast.AST, parent: Optional["python.Class"] = None) -> bool:
+    """Check if a decorator is a property setter.
+
+    Structurally, any '@X.setter'-shaped decorator matches this shape.
+    When 'parent' (the enclosing class) is given, we additionally verify
+    that 'X' was actually registered as a real '@property' earlier in
+    that same class -- otherwise an unrelated '@obj.setter' decorator
+    (where 'obj' just happens to have its own, unrelated 'setter' method)
+    gets misidentified as a property setter, leading to a KeyError later
+    when the (non-existent) property entry is looked up.
+
+    'parent' is omitted at the point (forward_references) where methods
+    get provisionally renamed to avoid setter/getter name clashes, since
+    properties haven't been registered yet at that stage; it is required
+    at the point (visit_FunctionDef) where the setter is actually wired
+    up to its property.
+    """
+    if not (
         isinstance(dec, ast.Attribute)
         and isinstance(dec.value, ast.Name)
         and dec.attr == "setter"
-    )
+    ):
+        return False
+    if parent is not None:
+        return dec.value.id in parent.properties
+    return True
 
 
 # --- module visitor; analyze program, build constraint graph
@@ -261,7 +280,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
             map = {"int": int, "str": str, "float": float}
             func_id = child.func.id
-            if func_id in ("range"):  # ,'xrange'):
+            if func_id == "range":
                 count, child = count + 1, int
             elif func_id in map:
                 child = map[func_id]
@@ -358,8 +377,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         node,
                         mv=getmv(),
                     )
-                self.add_dynamic_constraint(node, key, "unit", func)
-                self.add_dynamic_constraint(node, value, "value", func)
+                else:
+                    self.add_dynamic_constraint(node, key, "unit", func)
+                    self.add_dynamic_constraint(node, value, "value", func)
         else:
             for child in node.elts:
                 self.visit(child, func)
@@ -511,6 +531,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             "L": "i",
             "q": "i",
             "Q": "i",
+            "N": "i",
             "f": "f",
             "d": "f",
             "s": "s",
@@ -1033,7 +1054,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     parent.classmethods.append(node.name)
                 elif parent and isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, ""]
-                elif parent and is_property_setter(dec):
+                elif parent and is_property_setter(dec, parent):
                     assert isinstance(dec, ast.Attribute)
                     assert isinstance(dec.value, ast.Name)
                     parent.properties[dec.value.id][1] = node.name
@@ -1078,6 +1099,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 "__del__",
                 "__copy__",
                 "__deepcopy__",
+                "__round__",
+                "__index__",
+                "__reversed__",
+                "__divmod__",
+                "__floor__",
+                "__ceil__",
+                "__trunc__",
             ]:
                 error.error(
                     "'%s' is not supported" % func.ident,
@@ -1415,6 +1443,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 func,
             )
         elif isinstance(node.op, ast.Pow):
+            if not getmv().module.builtin:
+                node.right = ast_utils.float_negative_exponent(node.right)
             self.fake_func(node, node.left, "__pow__", [node.right], func)
         elif isinstance(node.op, ast.Mod):
             if isinstance(node.right, ast.Tuple):
@@ -1675,6 +1705,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
+    def visit_YieldFrom(self, node: ast.YieldFrom, func: "python.Function") -> None:
+        """Visit a 'yield from' expression"""
+        error.error("'yield from' is not supported", self.gx, node, mv=getmv())
+
     def visit_For(
         self, node: ast.For, func: Optional["python.Function"] = None
     ) -> None:
@@ -1740,7 +1774,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Process a for statement"""
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
-        if ast_utils.is_fastfor(node):
+        if ast_utils.is_fastfor(node, func, self):
             assert isinstance(node.iter, ast.Call)
 
             self.temp_var2(node.target, assnode, func)
@@ -1763,10 +1797,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if ast_utils.is_enumerate(node) or ast_utils.is_zip2(node):
+            if ast_utils.is_enumerate(node, func, self) or ast_utils.is_zip2(
+                node, func, self
+            ):
                 assert isinstance(node.iter, ast.Call)
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
-                if ast_utils.is_zip2(node):
+                if ast_utils.is_zip2(node, func, self):
                     self.temp_var2(
                         (node, 3), infer.inode(self.gx, node.iter.args[1]), func
                     )
@@ -2018,6 +2054,24 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.targets:
+            mismatch = ast_utils.check_assign_arity(target_expr, node.value)
+            if mismatch:
+                expected, got = mismatch
+                if got > expected:
+                    error.error(
+                        "too many values to unpack (expected %d)" % expected,
+                        self.gx,
+                        node,
+                        mv=getmv(),
+                    )
+                else:
+                    error.error(
+                        "not enough values to unpack (expected %d, got %d)"
+                        % (expected, got),
+                        self.gx,
+                        node,
+                        mv=getmv(),
+                    )
             pairs = ast_utils.assign_rec(target_expr, node.value)
             for lvalue, rvalue in pairs:
                 # expr[expr] = expr
@@ -2301,10 +2355,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(node.func, ast.Name):
             # direct call
             ident = node.func.id
-            if ident == "print":
+            # if 'ident' is shadowed by a local variable or parameter, none
+            # of the builtin-specific special-casing below applies: this is
+            # just a regular call through that variable, not a call to the
+            # builtin of the same name.
+            shadowed = python.lookup_var(ident, func, getmv()) is not None
+
+            if ident == "print" and not shadowed:
                 ident = node.func.id = "__print"  # XXX
 
-            if ident == "open" and len(node.args) > 1:
+            if ident == "open" and not shadowed and len(node.args) > 1:
                 if ast_utils.is_str(node.args[1]):
                     if "b" in _const_str(node.args[1]):
                         ident = node.func.id = "open_binary"
@@ -2317,21 +2377,24 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         mv=getmv(),
                     )
 
-            if ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]:
+            if (
+                not shadowed
+                and ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]
+            ):
                 error.error(
                     "'%s' function is not supported" % ident,
                     self.gx,
                     node.func,
                     mv=getmv(),
                 )
-            if ident == "dict" and node.keywords:
+            if not shadowed and ident == "dict" and node.keywords:
                 error.error(
                     "unsupported method of initializing dictionaries",
                     self.gx,
                     node,
                     mv=getmv(),
                 )
-            if ident == "isinstance":
+            if not shadowed and ident == "isinstance":
                 error.error(
                     "'isinstance' is not supported; always returns True",
                     self.gx,
@@ -2340,8 +2403,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     warning=True,
                 )
 
+            # pow(10, -1) should agree with 10 ** -1, see visit_BinOp. Only the
+            # two-argument form: three-argument pow is modular exponentiation.
+            if not shadowed and ident == "pow" and not getmv().module.builtin:
+                if len(node.args) == 2 and not node.keywords:
+                    node.args[1] = ast_utils.float_negative_exponent(node.args[1])
+
             # optimize sum/max/min(listcomp-or-genexpr)
-            if ident in ("sum", "min", "max") and not getmv().module.builtin:
+            if not shadowed and ident in ("sum", "min", "max") and not getmv().module.builtin:
                 if (
                     len(node.args) == 1
                     and isinstance(node.args[0], (ast.ListComp, ast.GeneratorExp))
@@ -2351,7 +2420,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.gx.fuse_reduce_arg.add(node.args[0])
                     self.gx.fuse_reduce_op[node.args[0]] = ident
 
-            if python.lookup_var(ident, func, getmv()):
+            if shadowed or python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node

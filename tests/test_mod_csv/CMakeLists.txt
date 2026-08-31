@@ -4,5 +4,6 @@ add_shedskin_product(
         csv
         os
         os.path
+        re
         stat
 )

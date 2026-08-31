@@ -172,7 +172,7 @@ __ss_int bytes::__hash__() { // TODO check cpython, change -1 to const?
     if (hash != -1)
         return hash;
 
-    hash = (__ss_int)std::hash<std::string>{}(unit.c_str());
+    hash = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash;
 }
@@ -384,7 +384,7 @@ tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
 {
     size_t i;
 
-    i = this->unit.find(separator->c_str());
+    i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
     else
@@ -495,13 +495,16 @@ __ss_int bytes::count(bytes *s, __ss_int start) { return count(s, start, __len__
 __ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
     __ss_int count, one = 1;
     size_t i;
+    size_t ssize = s->unit.size();
     slicenr(7, start, end, one, __len__());
 
     i = (size_t)start;
     count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
+    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
     {
-        i += s->unit.size();
+        i += ssize;
+        if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
+            i++;
         count++;
     }
 
@@ -724,7 +727,10 @@ bytes *bytes::center(__ss_int w, bytes *fillchar) {
     if(!fillchar) fillchar = bsp;
     bytes *r = fillchar->__mul__(w);
 
-    size_t j = (width-len)/2;
+    /* see str::center for why a plain floor-division split is wrong when
+       width is odd */
+    size_t marg = width - len;
+    size_t j = marg/2 + (marg & width & 1);
     for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
@@ -867,14 +873,33 @@ void *bytes::remove(__ss_int i) {
 }
 
 void *bytes::insert(__ss_int index, __ss_int item) {
-    index = __wrap(this, index);
+    __ss_int len = __len__();
+    if(index < 0) index += len;
+    if(index < 0) index = 0;
+    if(index > len) index = len;
     unit.insert(unit.begin()+index, (char)item);
     return NULL;
 }
 
 void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b) {
+    /* materialize the iterable once, using the same generic constructor
+     * list<T>::__setslice__(pyiter...) itself uses to do so, so we can
+     * check its length before delegating */
+    list<__ss_int> *la = new list<__ss_int>(b);
+
+    /* CPython's bytearray raises "attempt to assign bytes of size N to
+     * extended slice of size M" for a length mismatch, not list's generic
+     * "...sequence of size...", so check with the same __extslice_size()
+     * helper list<T>::__setslice__() uses, but with bytearray's wording. */
+    if(x&4 && s != 1) {
+        __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
+        __ss_int blen = (__ss_int)la->units.size();
+        if(slicesize != blen)
+            throw new ValueError(__add_strs(0, new str("attempt to assign bytes of size "), __str(blen), new str(" to extended slice of size "), __str(slicesize)));
+    }
+
     list<__ss_int> *ll = new list<__ss_int>(this);
-    ll->__setslice__(x, l, u, s, b);
+    ll->__setslice__(x, l, u, s, la);
     __GC_STRING r;
     size_t len = ll->units.size();
     for(size_t i=0; i<len; i++)

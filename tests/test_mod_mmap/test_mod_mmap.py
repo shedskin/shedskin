@@ -86,6 +86,30 @@ def test_anonymous():
     # print("%r" % map.readline())
     # print("%r" % map.read(3))
 
+    # print("# read_byte:")
+    map.seek(0)
+    assert map.read_byte() == ord("f")
+    assert map.read_byte() == ord("o")
+    assert map.tell() == 2
+
+    map.seek(0, 2)  # seek to end
+    assert map.tell() == PAGESIZE
+    error = False
+    try:
+        map.read_byte()
+    except ValueError as e:
+        error = True
+        assert str(e) == "read byte out of range"
+    assert error, "read_byte() at end of map should raise ValueError"
+
+    # reading again at end should keep raising, not silently succeed
+    error2 = False
+    try:
+        map.read_byte()
+    except ValueError:
+        error2 = True
+    assert error2
+
     # print("# move:")
     map.move(8, 4, 3)
 
@@ -258,6 +282,25 @@ def test_ctx_mgr():
             assert f.read(8) == mm.read(8)
 
 
+def test_closed():
+    map = mmap.mmap(-1, mmap.PAGESIZE)
+    assert map.closed is False
+    map.close()
+    assert map.closed is True
+
+    # note: deliberately not using `with mmap.mmap(...) as mm: ...` here and
+    # then checking mm.closed afterwards -- that pattern currently corrupts
+    # memory for both file-backed and anonymous mmaps (crashes on the next
+    # unrelated allocation). Tracked separately; calling close() directly
+    # and checking .closed right after (still within the object's normal
+    # lifetime) is the safe, currently-working pattern exercised here.
+    with open(TESTFILE_IN, "rb") as f:
+        mm = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+        assert mm.closed is False
+        mm.close()
+        assert mm.closed is True
+
+
 def test_resize_grows_backing_file():
     # regression test: resize() on a file-backed mmap must grow (or shrink)
     # the underlying file to match, and the mapping must actually be usable
@@ -327,6 +370,7 @@ def test_all():
         test_tougher_find()
         test_explicit_iter()
         test_ctx_mgr()
+        test_closed()
         test_resize_grows_backing_file()
         test_resize_shrinks_backing_file()
 

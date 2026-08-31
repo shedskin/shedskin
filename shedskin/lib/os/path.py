@@ -32,6 +32,9 @@ def samefile(a, b):
 def samestat(a, b):
     return True
 
+def ismount(path):
+    return True
+
 def split(p):
     return ('','')
 
@@ -62,7 +65,7 @@ def commonprefix(s):
 def abspath(s):
     return ''
 
-def realpath(s):
+def realpath(s, strict=False):
     return ''
 
 def normpath(s):
@@ -73,6 +76,12 @@ def relpath(path, start=None):
 
 def expanduser(s):
     return s
+
+def expandvars(s):
+    return s
+
+def commonpath(paths):
+    return ''
 
 def getsize(s):
     return 1

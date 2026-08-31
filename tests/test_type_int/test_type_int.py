@@ -63,10 +63,57 @@ def test_bit_length():
     assert (8).bit_length() == 4
     assert (123456).bit_length() == 17
 
+    # a float-based floor(log2(x))+1 rounds the argument on the way in and
+    # reports 63 for the first of these, and 64 for the last
+    assert (4611686018427387903).bit_length() == 62
+    assert (4611686018427387904).bit_length() == 63
+    assert (9223372036854775807).bit_length() == 63
+    assert (-9223372036854775807 - 1).bit_length() == 64
+
 
 def test_bit_count():
     assert (15).bit_count() == 4
 #    assert (-15).bit_count() == 4  # in shedskin, we assume unsigned, otherwise hard to use for bitmasking..? (othelloN example) # TODO add warning
+
+
+def test_power():
+    assert 2 ** 3 == 8
+    assert 2 ** 0 == 1
+    assert 10 ** 2 == 100
+    assert pow(2, 10) == 1024
+
+    # a negative exponent makes python return a float, so shedskin retypes a
+    # negative *literal* exponent to keep the result (and its type) the same;
+    # 2 ** 3 must stay an int, so this cannot simply always be a float
+    assert 10 ** -1 == 0.1
+    assert 2 ** -1 == 0.5
+    assert 2 ** -3 == 0.125
+    assert pow(10, -1) == 0.1
+    assert (2 ** -1) + 0.25 == 0.75
+
+    assert 2.0 ** -1 == 0.5
+    assert 2.0 ** 2 == 4.0
+
+    # exponents that are not literals stay int ** int, where shedskin has no
+    # value to inspect; it raises rather than returning a wrong int
+    e = 3
+    assert 2 ** e == 8
+
+
+def test_str_extremes():
+    # the most negative int has no representable negation, so formatting it by
+    # negating first used to walk off the front of the digit cache: str()
+    # produced "-0" and the bin/hex/oct prefixes came out doubly signed
+    assert str(-9223372036854775807 - 1) == '-9223372036854775808'
+    assert str(9223372036854775807) == '9223372036854775807'
+    assert hex(-9223372036854775807 - 1) == '-0x8000000000000000'
+    assert oct(-9223372036854775807 - 1) == '-0o1000000000000000000000'
+    assert bin(-9223372036854775807 - 1) == '-0b' + '1' + '0' * 63
+
+    assert str(-1) == '-1'
+    assert hex(-255) == '-0xff'
+    assert oct(-8) == '-0o10'
+    assert bin(-10) == '-0b1010'
 
 
 def test_to_bytes():
@@ -149,6 +196,8 @@ def test_all():
     test_is_integer()
     test_bit_length()
     test_bit_count()
+    test_power()
+    test_str_extremes()
     test_to_bytes()
     test_from_bytes()
 

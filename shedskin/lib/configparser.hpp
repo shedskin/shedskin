@@ -11,11 +11,12 @@ using namespace __shedskin__;
 namespace __configparser__ {
 
 extern tuple2<str *, str *> *const_2;
-extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_6, *const_7, *const_8, *const_9;
+extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_6, *const_7, *const_8, *const_9;
 
 class Error;
 class NoSectionError;
 class DuplicateSectionError;
+class DuplicateOptionError;
 class NoOptionError;
 class InterpolationError;
 class InterpolationMissingOptionError;
@@ -25,6 +26,7 @@ class ParsingError;
 class MissingSectionHeaderError;
 class RawConfigParser;
 class ConfigParser;
+class SectionProxy;
 
 extern str *DEFAULTSECT, *__name__;
 extern __ss_int MAX_INTERPOLATION_DEPTH;
@@ -66,16 +68,42 @@ extern class_ *cl_DuplicateSectionError;
 class DuplicateSectionError : public Error {
 /**
 Raised when a section is multiply-created.
+
+Possible repetitions that raise this exception are: multiple creation
+using the API, or (when `source` is given) a section found more than
+once while parsing a single file, string or dict.
 */
 public:
     str *section;
+    str *source;
+    __ss_int lineno;
 
     DuplicateSectionError() {}
-    DuplicateSectionError(str *section_) {
+    DuplicateSectionError(str *section_, str *source_=NULL, __ss_int lineno_=-1) {
         this->__class__ = cl_DuplicateSectionError;
-        __init__(section_);
+        __init__(section_, source_, lineno_);
     }
-    void *__init__(str *section_);
+    void *__init__(str *section_, str *source_=NULL, __ss_int lineno_=-1);
+};
+
+extern class_ *cl_DuplicateOptionError;
+class DuplicateOptionError : public Error {
+/**
+Raised when an option is found more than once in a single file,
+string or dict while parsing.
+*/
+public:
+    str *section;
+    str *option;
+    str *source;
+    __ss_int lineno;
+
+    DuplicateOptionError() {}
+    DuplicateOptionError(str *section_, str *option_, str *source_=NULL, __ss_int lineno_=-1) {
+        this->__class__ = cl_DuplicateOptionError;
+        __init__(section_, option_, source_, lineno_);
+    }
+    void *__init__(str *section_, str *option_, str *source_=NULL, __ss_int lineno_=-1);
 };
 
 extern class_ *cl_NoOptionError;
@@ -191,7 +219,7 @@ public:
 };
 
 extern class_ *cl_RawConfigParser;
-class RawConfigParser : public pyobj {
+class RawConfigParser : public pyiter<str *> {
 public:
     static dict<str *, __ss_int> *_boolean_states;
     static __re__::re_object *SECTCRE;
@@ -199,11 +227,12 @@ public:
 
     dict<str *, str *> *_defaults;
     dict<str *, dict<str *, str *> *> *_sections;
+    str *default_section;
 
     RawConfigParser() {}
-    RawConfigParser(dict<str *, str *> *defaults) {
+    RawConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL) {
         this->__class__ = cl_RawConfigParser;
-        __init__(defaults);
+        __init__(defaults, default_section_);
     }
     virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
     str *optionxform(str *optionstr);
@@ -212,7 +241,7 @@ public:
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
     __ss_bool remove_section(str *section);
-    void *__init__(dict<str *, str *> *defaults);
+    void *__init__(dict<str *, str *> *defaults, str *default_section_=NULL);
     __ss_bool has_option(str *section, str *option);
     void *write(file *fp);
     void *add_section(str *section);
@@ -221,12 +250,25 @@ public:
     list<str *> *read(list<str *> *filenames);
     void *read_string(str *string_, str *source=NULL);
     void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
+    void *read_file(file *fp, str *source=NULL);
     __ss_bool getboolean(str *section, str *option);
-    __iter<tuple2<str *, str *> *> *items(str *section);
+    list<tuple2<str *, SectionProxy *> *> *items(dict<str *, str *> *vars, __ss_int raw);
+    list<tuple<str *> *> *items(dict<str *, str *> *vars, __ss_int raw, str *section);
     void *_read(file *fp, str *fpname);
     __ss_int getint(str *section, str *option);
     dict<str *, str *> *defaults();
     list<str *> *options(str *section);
+
+    /* Mapping-protocol access: config['section'] / config['section']['option'].
+       Lives on RawConfigParser (matching CPython) so ConfigParser inherits it
+       for free -- SectionProxy calls the (virtual) get(), so interpolation
+       still happens correctly for a wrapped ConfigParser instance. */
+    SectionProxy *__getitem__(str *section);
+    void *__setitem__(str *section, dict<str *, str *> *value);
+    void *__delitem__(str *section);
+    __ss_bool __contains__(str *section);
+    __ss_int __len__();
+    __iter<str *> *__iter__();
 };
 
 extern class_ *cl_ConfigParser;
@@ -236,13 +278,43 @@ public:
 
 
     ConfigParser() {}
-    ConfigParser(dict<str *, str *> *defaults) {
+    ConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL) {
         this->__class__ = cl_ConfigParser;
-        __init__(defaults);
+        __init__(defaults, default_section_);
     }
     str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
     str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
-    __iter<tuple2<str *, str *> *> *items(str *section, __ss_int raw, dict<str *, str *> *vars);
+    list<tuple2<str *, SectionProxy *> *> *items(dict<str *, str *> *vars, __ss_int raw);
+    list<tuple<str *> *> *items(dict<str *, str *> *vars, __ss_int raw, str *section);
+};
+
+extern class_ *cl_SectionProxy;
+class SectionProxy : public pyiter<str *> {
+/**
+A dict-like, write-through view onto a single section of a
+RawConfigParser (or ConfigParser) instance, as returned by
+config[section]. Falls back to the DEFAULT section/defaults() the
+same way get()/has_option() do, and -- since it calls through the
+(virtual) get() -- still interpolates correctly when wrapping a
+ConfigParser.
+*/
+public:
+    RawConfigParser *_parser;
+    str *_name;
+
+    SectionProxy() {}
+    SectionProxy(RawConfigParser *parser_, str *name_) {
+        this->__class__ = cl_SectionProxy;
+        __init__(parser_, name_);
+    }
+    void *__init__(RawConfigParser *parser_, str *name_);
+    list<str *> *_options();
+    str *__getitem__(str *key);
+    void *__setitem__(str *key, str *value);
+    void *__delitem__(str *key);
+    __ss_bool __contains__(str *key);
+    __ss_int __len__();
+    __iter<str *> *__iter__();
 };
 
 str *_interpolation_replace(__re__::match_object *match);
