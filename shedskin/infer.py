@@ -1698,7 +1698,7 @@ def ifa_split_vars(
             # --- if it exists, perform actual splitting
             logger.debug("IFA normal split, remaining: %d", len(remaining))
             for splitsites in remaining[1:]:
-                ifa_split_class(cl, dcpa, list(splitsites), split, cyclic)
+                ifa_split_class(gx, cl, dcpa, list(splitsites), split, cyclic)
             return split
 
         # --- try to partition csites across paths
@@ -1713,13 +1713,13 @@ def ifa_split_vars(
             prt[ts].append(c)
         if len(prt) > 1:
             logger.debug("IFA partition csites: %s", list(prt.values())[0])
-            ifa_split_class(cl, dcpa, list(prt.values())[0], split, cyclic)
+            ifa_split_class(gx, cl, dcpa, list(prt.values())[0], split, cyclic)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
             logger.debug("IFA wholesale splitting, csites: %d", len(csites))
             for csite in csites[1:]:
-                ifa_split_class(cl, dcpa, [csite], split, cyclic)
+                ifa_split_class(gx, cl, dcpa, [csite], split, cyclic)
             return split
 
     return None
@@ -1764,7 +1764,7 @@ def ifa_split_no_confusion(
             cl.splits[nr] = dcpa
         else:  # create new contour
             classes_nr[subtype] = cl.newdcpa
-            ifa_split_class(cl, dcpa, csites, split)
+            ifa_split_class(gx, cl, dcpa, csites, split)
     if subtype_csites:
         if not TRACE:
             logger.debug("IFA found simple split for (%s, %s):", cl.ident, dcpa)
@@ -1914,7 +1914,56 @@ def ifa_flow_graph(
     return creation_points, paths, assignsets, allnodes, csites, emptycsites
 
 
+def contour_is_empty(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> bool:
+    """does this contour carry no types in any of its type variables?"""
+    if not dcpa:
+        return False
+    names = cl.tvar_names()
+    if not names:
+        return False
+    for name in names:
+        var = cl.vars.get(name)
+        if var is None:
+            continue
+        node = gx.cnode.get((var, dcpa, 0))
+        if node is not None and node.types():
+            return False
+    return True
+
+
+def alloc_is_contentless(gx: "config.GlobalInfo", node: CNode) -> bool:
+    """will this creation site produce something with nothing in it?
+
+    A display takes its contents from sub-expressions evaluated right where
+    it is allocated. If none of those carries a type, the object it makes
+    carries nothing either.
+    """
+    thing = node.thing
+    if isinstance(thing, (ast.Tuple, ast.List, ast.Set)):
+        elements = list(thing.elts)
+    elif isinstance(thing, ast.Dict):
+        elements = list(thing.values)
+    else:
+        return False
+    if not elements:
+        return False
+    for elt in elements:
+        other = gx.cnode.get((elt, node.dcpa, node.cpa))
+        if other is not None and other.types():
+            return False
+    return True
+
+
+def empty_contour(gx: "config.GlobalInfo", cl: "python.Class") -> Optional[int]:
+    """an existing contentless contour of this class, if there is one"""
+    for dcpa in range(1, cl.dcpa):
+        if contour_is_empty(gx, cl, dcpa):
+            return dcpa
+    return None
+
+
 def ifa_split_class(
+    gx: "config.GlobalInfo",
     cl: "python.Class",
     dcpa: int,
     things: list[CNode],
@@ -1923,12 +1972,28 @@ def ifa_split_class(
 ) -> None:
     """Split a class
 
+    A contour with nothing in it says nothing about the values it stands for,
+    so a second one describes exactly what the first already does. Creating it
+    anyway makes a new type appear, which IFA reads as a new confusion to
+    split on -- and that split creates another contentless contour, so the
+    confusion renews itself indefinitely. Reuse the one that exists: there are
+    no types in either to tell apart.
+
     `cyclic` is passed by the provenance-based callers so that a contour split
     off one that lies on a cycle inherits its peeling depth, bounding how far
-    a recursive structure is unrolled (see ifa_contour_sccs).
+    a recursive structure is unrolled (see ifa_contour_sccs). Reusing an
+    existing empty contour peels nothing, so it does not count towards depth.
     """
+    if things and all(alloc_is_contentless(gx, n) for n in things):
+        existing = empty_contour(gx, cl)
+        if existing is not None and existing != dcpa:
+            split.append((cl, dcpa, things, existing))
+            cl.splits[existing] = dcpa
+            return
+
     if cyclic is not None and (cl, dcpa) in cyclic:
         cl.scc_depth[cl.newdcpa] = cl.scc_depth.get(dcpa, 0) + 1
+
     split.append((cl, dcpa, things, cl.newdcpa))
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
