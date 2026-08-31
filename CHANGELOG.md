@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Type inference no longer fails to converge on 'function-data recursion' (a
+  recursive function creating objects it is later invoked on). Contours that
+  define each other are now detected and only unrolled to a constant depth, as
+  described in section 6.1 of the paper the analysis is based on. The `life`
+  example dropped from 18.3s and two 'maximum iterations' warnings to 3.1s and
+  none.
+
+## [0.9.13]
+
 ### Added
 
 - Added `--retry` option, that restarts the analysis when 'max iterations' occurs. This can help a lot with larger programs (no need to manually retry).
