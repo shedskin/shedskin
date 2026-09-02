@@ -17,7 +17,7 @@ MAP_STACK = 131072
 
 class mmap(pyiter):
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
-        pass
+        self.closed = False
 
     def __win32__init__(self, fileno, length, tagname='', access=0, offset=0):
         pass
@@ -70,7 +70,7 @@ class mmap(pyiter):
     def write_byte(self, string):
         pass
 
-    def __contains(self, string):
+    def __contains__(self, string):
         return False
 
     def __iter__(self):
