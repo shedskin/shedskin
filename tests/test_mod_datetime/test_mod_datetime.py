@@ -310,6 +310,57 @@ def test_timedelta_truediv():
     assert (datetime.timedelta(microseconds=7) / 2).microseconds == 4
 
 
+def test_date_arithmetic():
+    # regression test: for __add__, both operands used to be converted to
+    # the union of their types, so that element types get unified (e.g.
+    # [1] + [1.0] -> list<double>). for unrelated operand classes such as
+    # date and timedelta there is no such common type, so both sides were
+    # cast to 'pyobj *' -- which has no __add__ at all (compile error).
+    # __sub__ never went through that conversion, and always worked.
+    d = datetime.date(2024, 1, 1)
+    td = datetime.timedelta(days=30)
+
+    assert d + td == datetime.date(2024, 1, 31)
+    assert d - td == datetime.date(2023, 12, 2)
+
+    # across a leap day
+    assert datetime.date(2024, 2, 28) + datetime.timedelta(days=1) == \
+        datetime.date(2024, 2, 29)
+    # across a year boundary
+    assert datetime.date(2023, 12, 31) + datetime.timedelta(days=1) == \
+        datetime.date(2024, 1, 1)
+    # negative timedelta
+    assert d + datetime.timedelta(days=-1) == datetime.date(2023, 12, 31)
+
+    # date - date still yields a timedelta
+    assert (datetime.date(2024, 3, 1) - d).days == 60
+
+
+def test_datetime_arithmetic():
+    dt = datetime.datetime(2024, 1, 1, 10, 30, 0)
+
+    assert dt + datetime.timedelta(days=1) == datetime.datetime(2024, 1, 2, 10, 30, 0)
+    assert dt + datetime.timedelta(hours=2) == datetime.datetime(2024, 1, 1, 12, 30, 0)
+    # carry over midnight
+    assert dt + datetime.timedelta(hours=14) == datetime.datetime(2024, 1, 2, 0, 30, 0)
+    assert dt - datetime.timedelta(minutes=45) == datetime.datetime(2024, 1, 1, 9, 45, 0)
+
+    # datetime - datetime still yields a timedelta
+    delta = datetime.datetime(2024, 1, 2, 10, 30, 0) - dt
+    assert delta.days == 1
+    assert delta.seconds == 0
+
+
+def test_timedelta_arithmetic():
+    a = datetime.timedelta(days=1, seconds=30)
+    b = datetime.timedelta(hours=12)
+
+    assert a + b == datetime.timedelta(days=1, seconds=43230)
+    assert a - b == datetime.timedelta(seconds=43230)
+    assert a + a == datetime.timedelta(days=2, seconds=60)
+    assert a - a == datetime.timedelta()
+
+
 def test_datetime_isoformat():
     # regression test: isoformat()'s 'sep' parameter used to be given a
     # non-empty string default ('T'), which the code generator could not
@@ -345,6 +396,9 @@ def test_all():
         test_datetime_timestamp_aware()
         test_datetime_timestamp_naive_roundtrip()
         test_datetime_isoformat()
+        test_date_arithmetic()
+        test_datetime_arithmetic()
+        test_timedelta_arithmetic()
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
