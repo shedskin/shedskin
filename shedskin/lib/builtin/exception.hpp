@@ -102,9 +102,7 @@ public:
 
     BaseException(str *msg=0);
 
-    void __init__(str *msg) {
-        this->message = msg;
-    }
+    void __init__(str *msg);
     void __init__(void *) {
         this->message = 0;
     }

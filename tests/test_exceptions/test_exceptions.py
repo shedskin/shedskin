@@ -54,6 +54,21 @@ def test_custom_error():
         error = True
     assert error
 
+def test_custom_error_message():
+    # regression test: a subclass of Exception with no __init__ override
+    # must properly propagate the constructor arg into args/str/repr,
+    # instead of shadowing the inherited (uninitialized) args field.
+    error = False
+    try:
+        raise CustomError("mine")
+    except CustomError as e:
+        assert e.args == ("mine",)
+        assert str(e) == "mine"
+        assert repr(e) == "CustomError('mine')"
+        error = True
+    assert error
+
+
 def test_custom_error2():
     error = False
     try:
@@ -193,6 +208,7 @@ def test_all():
     test_value_error()
     test_os_error()
     test_custom_error()
+    test_custom_error_message()
     test_custom_error2()
     test_custom_error3()
     test_system_exit_error()

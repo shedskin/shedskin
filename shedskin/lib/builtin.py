@@ -917,6 +917,7 @@ class RuntimeError(Exception): pass
 class NotImplementedError(RuntimeError): pass
 class PythonFinalizationError(RuntimeError): pass
 
+__exception = Exception('') # XXX remove
 __exception = OSError('') # XXX remove
 __exception = FileNotFoundError('')
 __exception.errno = 0
