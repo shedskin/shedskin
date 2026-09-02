@@ -2541,14 +2541,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- default: left, connector, middle, right
         argtypes = ltypes | rtypes
+
+        # for __add__, operands are converted to their common type, to unify
+        # element types (e.g. [1] + [1.0] -> list<double>). when the operand
+        # classes are unrelated (e.g. date + timedelta), there is no such
+        # common type, and converting would cast both sides to 'pyobj *'
+        convert = middle == "__add__" and (
+            typestr.typestr(self.gx, argtypes, mv=self.mv).strip() != "pyobj *"
+        )
+
         self.append("(")
-        if middle == "__add__":
+        if convert:
             self.impl_visit_conv(left, argtypes, func)
         else:
             self.visit(left, func)
         self.append(")")
         self.append(self.connector(left, func) + middle + "(")
-        if middle == "__add__":
+        if convert:
             self.impl_visit_conv(right, argtypes, func)
         else:
             self.visit(right, func)
