@@ -347,6 +347,7 @@ template<> void * __to_ss(PyObject *p) {
 
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> __ss_float __none() { throw new TypeError(new str("mixing None with float")); }
+template<> __ss_bool __none() { throw new TypeError(new str("mixing None with bool")); }
 
 /* pyobj */
 
