@@ -67,15 +67,23 @@ BaseException::BaseException(str *msg) {
 
 void BaseException::__init__(str *msg) {
     this->message = msg;
-    this->args = new tuple<str *>(1, msg);
+    this->args = new tuple<str *>();
+    if(msg)
+        this->args->units.push_back(msg);
 }
 
 str *BaseException::__str__() {
-    return args->__getitem__(0);
+    if(len(this->args) > 0)
+        return args->__getitem__(0);
+    else
+        return __ss_empty_str;
 }
 
 str *BaseException::__repr__() {
-    return __add_strs(4, this->__class__->__name__, new str("('"), args->__getitem__(0), new str("')"));
+    if(len(this->args) > 0)
+        return __add_strs(4, this->__class__->__name__, new str("('"), args->__getitem__(0), new str("')"));
+    else
+        return __add_strs(2, this->__class__->__name__, new str("()"));
 }
 
 /* SystemExit */

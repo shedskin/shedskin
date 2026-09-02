@@ -160,12 +160,34 @@ def test_instance_str():
     assert len(e) == 2
 
 
+class Reprable:
+    def __repr__(self):
+        return 'Reprable()'
+
+class ReprableChild(Reprable):
+    pass
+
+
+def test_instance_repr():
+    # repr() of an instance must be a usable str, whether the class
+    # defines __repr__ or falls back to the default.
+    r = repr(Blah())
+    assert 'object at 0x' in r
+    assert len(r) > 12
+
+    assert repr(Reprable()) == 'Reprable()'
+    assert str(Reprable()) == 'Reprable()'
+    assert repr(ReprableChild()) == 'Reprable()'
+    assert str(ReprableChild()) == 'Reprable()'
+
+
 def test_all():
     test_class_person()
     test_class_edge()
     test_class_attrs()
     test_class_instance_attrs()
     test_instance_str()
+    test_instance_repr()
 
 
 

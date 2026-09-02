@@ -1098,7 +1098,8 @@ def bool(x):
     return True
 
 def repr(x):
-    return x.__repr__()
+    x.__repr__()
+    return ''
 
 def hash(x):
     return x.__hash__()
