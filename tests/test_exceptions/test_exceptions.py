@@ -162,6 +162,42 @@ def test_args():
     assert repr(e) == "Exception('bert')"
 
 
+def test_args_empty():
+    # regression test: an exception raised without arguments has an empty
+    # args tuple. it used to be (NULL,), so str()/repr() indexed straight
+    # into a null str * and segfaulted.
+    e = Exception()
+    assert e.args == ()
+    assert len(e.args) == 0
+    assert str(e) == ''
+    assert repr(e) == 'Exception()'
+
+    error = False
+    try:
+        raise ValueError()
+    except ValueError as e2:
+        assert e2.args == ()
+        assert str(e2) == ''
+        assert repr(e2) == 'ValueError()'
+        # assigning the result is the case that regressed: repr() was
+        # modelled as returning x.__repr__(), which had no type for
+        # exceptions, so 'r' came out untyped and printed None.
+        r = repr(e2)
+        assert r == 'ValueError()'
+        assert len(r) == 12
+        error = True
+    assert error
+
+
+def test_repr_result_is_str():
+    # repr() must yield a str for every argument, so the result can be
+    # assigned, concatenated and measured.
+    a = repr(Exception('bert'))
+    b = repr(None)
+    assert a + ' ' + b == "Exception('bert') None"
+    assert len(a) == 17
+
+
 def test_else():
     a = 5
     try:
@@ -214,6 +250,8 @@ def test_all():
     test_system_exit_error()
     test_custom_salary_error()
     test_args()
+    test_args_empty()
+    test_repr_result_is_str()
     test_else()
 
 
