@@ -2350,6 +2350,38 @@ def get_classes(gx: "config.GlobalInfo", var: "python.Variable") -> set["python.
     }
 
 
+def nested_classes(
+    gx: "config.GlobalInfo", var: "python.Variable"
+) -> set["python.Class"]:
+    """Get the classes of a variable, descending into builtin containers
+
+    A user-defined class may only be reachable through a builtin container, as in
+    'self.items = [Item()]'. Such classes are not returned by get_classes, so we
+    walk the type variables of builtin classes (list.unit, dict.value, ..) as well.
+    """
+    from .typestr import types_var_types
+
+    result = set()
+    todo = list(gx.merged_inh[var])
+    seen = set()
+
+    while todo:
+        t = todo.pop()
+        if t in seen:
+            continue
+        seen.add(t)
+        cl = t[0]
+        if not isinstance(cl, python.Class):
+            continue
+        if not cl.mv.module.builtin:
+            result.add(cl)
+            continue
+        for tvar in cl.tvar_names():
+            todo.extend(types_var_types(gx, {t}, tvar))
+
+    return result
+
+
 def deepcopy_classes(
     gx: "config.GlobalInfo", classes: set["python.Class"]
 ) -> set["python.Class"]:
@@ -2361,7 +2393,7 @@ def deepcopy_classes(
             for var in cl.vars.values():
                 if var not in gx.merged_inh:
                     continue
-                newcl = get_classes(gx, var)
+                newcl = nested_classes(gx, var)
                 if newcl - classes:
                     changed = True
                     classes.update(newcl)
@@ -2378,7 +2410,7 @@ def determine_classes(gx: "config.GlobalInfo") -> None:  # XXX modeling..?
         cl.has_copy = True
     func = gx.modules["copy"].mv.funcs["deepcopy"]
     var = func.vars[func.formals[0]]
-    for cl in deepcopy_classes(gx, get_classes(gx, var)):
+    for cl in deepcopy_classes(gx, nested_classes(gx, var)):
         cl.has_deepcopy = True
 
 
