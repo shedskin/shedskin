@@ -11,6 +11,14 @@ class Foo:
 class Baz:
     pass
 
+class Item:
+    def __init__(self, v):
+        self.v = v
+
+class Container:
+    def __init__(self):
+        self.items = []
+
 
 def test_deepcopy_nested():
     a = [[1], [2, 3]]
@@ -52,6 +60,37 @@ def test_copy_obj3():
     baz_dc = copy.deepcopy(baz)
     assert baz_dc.a == [1,2,3]
 
+
+
+def test_deepcopy_obj_in_container():
+    it = Item(5)
+    c = Container()
+    c.items.append(it)
+
+    c2 = copy.deepcopy(c)
+    c2.items[0].v = 99
+
+    assert it.v == 5
+    assert c2.items[0].v == 99
+    assert it is not c2.items[0]
+
+    l = [Item(7)]
+    l2 = copy.deepcopy(l)
+    l2[0].v = 42
+    assert l[0].v == 7
+    assert l2[0].v == 42
+
+    d = {'a': Item(8)}
+    d2 = copy.deepcopy(d)
+    d2['a'].v = 42
+    assert d['a'].v == 8
+    assert d2['a'].v == 42
+
+    t = (Item(9), 'x')
+    t2 = copy.deepcopy(t)
+    t2[0].v = 42
+    assert t[0].v == 9
+    assert t2[0].v == 42
 
 
 def test_copy1():
@@ -96,6 +135,7 @@ def test_all():
     test_copy1()
     test_copy2()
     test_deepcopy_nested()
+    test_deepcopy_obj_in_container()
     test_copy_deque()
     test_copy_obj1()
     test_copy_obj2()
