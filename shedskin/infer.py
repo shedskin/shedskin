@@ -2128,7 +2128,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
             func = parent_func(gx, node.thing)
             if isinstance(func, python.Function):
                 if node.constructor and isinstance(
-                    node.thing, (ast.List, ast.Dict, ast.Tuple, ast.ListComp, ast.Call)
+                    node.thing, (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call)
                 ):
                     beforetypes[node] = set()
 
@@ -2169,7 +2169,7 @@ def ifa_seed_template(
 
         for node in func.nodes_ordered:
             if node.constructor and isinstance(
-                node.thing, (ast.List, ast.Dict, ast.Tuple, ast.ListComp, ast.Call)
+                node.thing, (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call)
             ):
                 if node.thing not in added:
                     if INCREMENTAL_DATA and not func.mv.module.builtin:

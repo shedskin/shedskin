@@ -256,6 +256,24 @@ def test_eq():
     assert {1, 2, 3} != {1, 2}
 
 
+class SetInMethod:
+    """set literals allocated inside a method (dcpa > 0)"""
+
+    def __init__(self, x):
+        self.s = {x}
+
+    def build(self, x):
+        return {x}
+
+
+def test_set_literal_in_method():
+    h = SetInMethod(1)
+    assert list(sorted(h.s)) == [1]
+    assert list(sorted(h.build(2))) == [2]
+    h.s.add(3)
+    assert list(sorted(h.s)) == [1, 3]
+
+
 def test_all():
     test_set1()
     test_set2()
@@ -271,6 +289,7 @@ def test_all():
     test_set_augmented_assign()
     test_set_syntax()
     test_eq()
+    test_set_literal_in_method()
 
 if __name__ == "__main__":
     test_all()
