@@ -35,6 +35,38 @@ def test_start_keyword_forloop():
     assert result == [(1, 'a'), (2, 'b'), (3, 'c')]
 
 
+def test_str_forloop():
+    result = []
+    for i, c in enumerate('xyz'):
+        result.append((i, c))
+    assert result == [(0, 'x'), (1, 'y'), (2, 'z')]
+
+
+def test_bytes_forloop():
+    result = []
+    for i, b in enumerate(b'abc'):
+        result.append((i, b))
+    assert result == [(0, 97), (1, 98), (2, 99)]
+
+    empty = []
+    for i, b in enumerate(b''):
+        empty.append((i, b))
+    assert empty == []
+
+
+def test_bytes_listcomp():
+    assert [(i, b) for i, b in enumerate(b'ab')] == [(0, 97), (1, 98)]
+    assert [b for _, b in enumerate(b'ab')] == [97, 98]
+
+
+def test_bytearray_forloop():
+    ba = bytearray(b'abc')
+    result = []
+    for i, b in enumerate(ba):
+        result.append((i, b))
+    assert result == [(0, 97), (1, 98), (2, 99)]
+
+
 def test_all():
     test_list()
     test_iter()
@@ -43,6 +75,10 @@ def test_all():
     test_start_negative()
     test_start_with_iterator()
     test_start_keyword_forloop()
+    test_str_forloop()
+    test_bytes_forloop()
+    test_bytes_listcomp()
+    test_bytearray_forloop()
 
 
 if __name__ == '__main__':
