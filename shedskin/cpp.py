@@ -1458,7 +1458,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_enumerate(node, func, self.mv)
-            and self.only_classes(node.iter.args[0], ("tuple", "list", "str_"))
+            and self.only_classes(node.iter.args[0], ("tuple", "list", "str_", "bytes_"))
         )
 
     def fastzip2(
