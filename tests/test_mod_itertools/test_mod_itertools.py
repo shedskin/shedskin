@@ -97,6 +97,23 @@ def test_groupby():
     assert res2 == [('-1', [1]), ('-2', [2, 2]), ('-3', [3]), ('-1', [1]), ('-2', [2])]
 
 
+def test_groupby_no_key():
+    res = []
+    for k, g in itertools.groupby([1, 1, 2, 2, 3, 1]):
+        res.append((k, list(g)))
+    assert res == [(1, [1, 1]), (2, [2, 2]), (3, [3]), (1, [1])]
+
+    res2 = []
+    for k2, g2 in itertools.groupby('aabbbca'):
+        res2.append((k2, list(g2)))
+    assert res2 == [('a', ['a', 'a']), ('b', ['b', 'b', 'b']), ('c', ['c']), ('a', ['a'])]
+
+    res3 = []
+    for k3, g3 in itertools.groupby([7]):
+        res3.append((k3, list(g3)))
+    assert res3 == [(7, [7])]
+
+
 def test_islice():
     assert list(itertools.islice('ABCDEFG', 2)) == ['A', 'B']
     assert list(itertools.islice('ABCDEFG', 2, None)) == ['C', 'D', 'E', 'F', 'G']
@@ -323,6 +340,7 @@ def test_all():
     test_dropwhile()
     test_takewhile()
     test_groupby()
+    test_groupby_no_key()
     test_islice()
     test_permutations()
     test_combinations()

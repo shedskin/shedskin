@@ -36,7 +36,7 @@ def __pred_elem(predicate, iterable):
 def dropwhile(predicate, iterable):
     yield __pred_elem(predicate, iterable)
 
-def groupby(iterable, key):  # TODO different types when key is given vs not.. specialize!
+def groupby(iterable, key=lambda x: x):
     it = iter(iterable)
     yield key(it.__next__()), it
 

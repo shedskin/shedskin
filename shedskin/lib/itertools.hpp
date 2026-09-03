@@ -486,6 +486,24 @@ template<class T, class K> inline groupbyiter<T, K> *groupby(pyiter<T> *iterable
     return new groupbyiter<T, K>(iterable, key);
 }
 
+/* groupby without a 'key' argument. The stub in itertools.py defaults 'key' to an
+   identity lambda, which the compiler passes along as __itertools__::default_1 (as
+   in configparser). We give that default a tag type rather than a real function, so
+   that the overload below can pick an identity key of the right element type for
+   each call site -- a plain function template would leave K undeducible here. */
+
+class __identity_key_t {};
+
+extern __identity_key_t default_1;
+
+template<class T> T _identity_key(T value) {
+    return value;
+}
+
+template<class T> inline groupbyiter<T, T> *groupby(pyiter<T> *iterable, __identity_key_t) {
+    return new groupbyiter<T, T>(iterable, _identity_key<T>);
+}
+
 // filterfalse
 
 template<class T, class B> class filterfalseiter : public __iter<T> {

@@ -4,6 +4,8 @@
 
 namespace __itertools__ {
 
+__identity_key_t default_1;
+
 void __init() {
 
 }
