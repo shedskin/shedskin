@@ -982,7 +982,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 os.path.join(path, name, "__init__.py")
             ):
                 modname = ".".join(module.name_list + [name])
-                self.import_module(modname, name, node, False)
+                self.import_module(modname, pseudonym, node, False)
             else:
                 error.error(
                     "no identifier '{}' in module '{}'".format(name, node.module),

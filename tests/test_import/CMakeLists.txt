@@ -1,6 +1,9 @@
 add_shedskin_product(
     SYS_MODULES
         itertools
+        os
+        os.path
+        stat
     APP_MODULES
         bar
         boo/__init__
