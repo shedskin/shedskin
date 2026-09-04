@@ -11,6 +11,10 @@ from itertools import product
 
 from pak.sub import subsub # contains relative imports
 
+from boo import quotes as bq # aliased submodule ('from x import y as z')
+from pak import hier as ph
+import os.path as op # aliased dotted module ('import x.y as z')
+
 
 
 class Eggs:
@@ -42,11 +46,20 @@ def test_import_from_nested():
     assert get_quote() == 'quote here'
 
 
+def test_import_submodule_as():
+    '''submodule imported under an alias'''
+
+    assert bq.get_quote() == 'quote here'
+    assert ph.inhier() == 25
+    assert op.splitext('meuk.txt')[1] == '.txt'
+
+
 def test_all():
     test_imports()
     test_relative_imports()
     test_product()
     test_import_from_nested()
+    test_import_submodule_as()
 
 
 if __name__ == "__main__":
