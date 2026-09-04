@@ -120,6 +120,46 @@ def test_filter():
 
 def test_float():
     assert float(100) == 100.0
+    assert float('1.5') == 1.5
+    assert float(' 2.5 ') == 2.5
+    assert float('\t3.5\n') == 3.5
+    assert float('-1.5') == -1.5
+    assert float('+1.5') == 1.5
+    assert float('.5') == 0.5
+    assert float('5.') == 5.0
+    assert float('1e2') == 100.0
+    assert float('1E2') == 100.0
+    assert float('1e+2') == 100.0
+    assert float('1e-2') == 0.01
+    assert float('1_000.5') == 1000.5
+    assert float('1.5e1_0') == 15000000000.0
+    assert float('inf') > 0
+    assert float('-inf') < 0
+    assert float('Infinity') > 0
+    assert float('nan') != float('nan')
+
+
+def test_float_invalid():
+    # regression test: strtod is far more permissive than CPython's float(),
+    # stopping at the first character it cannot use and accepting hex
+    # literals, so trailing garbage and empty strings used to convert
+    # silently ('1.5x' gave 1.5, '' gave 0.0, '0x10' gave 16.0)
+    error = ''
+    try:
+        float('1.5x')
+    except ValueError as e:
+        error = str(e)
+    assert error == "could not convert string to float: '1.5x'"
+
+    for bad in ['', '  ', 'abc', '0x10', '1_', '_1', '1__0', '1_.5', '1._5',
+                '1.5e', 'e5', '+', '-', '1 2', '1.5 x', '1e5.5', 'infin',
+                'nano', '9.5.']:
+        caught = False
+        try:
+            float(bad)
+        except ValueError:
+            caught = True
+        assert caught
 
 
 def test_hash():
@@ -514,6 +554,7 @@ def test_all():
     test_enumerate()
     test_filter()
     test_float()
+    test_float_invalid()
     # test_getattr()
     # test_hasattr()
     test_hash()
