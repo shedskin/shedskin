@@ -61,8 +61,83 @@ __ss_int __int(bytes *s, __ss_int base) {
 
 /* float */
 
+/* strtod is much more permissive than CPython's float(): it stops at the
+ * first character it cannot use (so 'inf', '1.5x' and '' all convert
+ * happily) and it also accepts hexadecimal literals such as '0x10'. so
+ * scan the string ourselves first, copying out a strtod-digestible version
+ * along the way (underscores between digits are dropped, as in CPython). */
+
+static bool __float_word(const char *p, const char *word) {
+    while(*word) {
+        if(tolower((unsigned char)*p) != *word)
+            return false;
+        p++;
+        word++;
+    }
+    return true;
+}
+
+/* one run of decimal digits, with underscores allowed between digits */
+static bool __float_scan_digits(const char *&p, __GC_STRING &clean) {
+    bool any = false;
+    while(true) {
+        if(*p >= '0' and *p <= '9') {
+            clean += *p++;
+            any = true;
+        } else if(*p == '_' and any and p[1] >= '0' and p[1] <= '9') {
+            p++;
+        } else
+            break;
+    }
+    return any;
+}
+
+static bool __float_scan(const char *p, __GC_STRING &clean) {
+    while(*p and isspace((unsigned char)*p))
+        p++;
+
+    if(*p == '+' or *p == '-')
+        clean += *p++;
+
+    if(__float_word(p, "infinity")) {
+        clean += "inf";
+        p += 8;
+    } else if(__float_word(p, "inf")) {
+        clean += "inf";
+        p += 3;
+    } else if(__float_word(p, "nan")) {
+        clean += "nan";
+        p += 3;
+    } else {
+        bool digits = __float_scan_digits(p, clean);
+        if(*p == '.') {
+            clean += *p++;
+            if(__float_scan_digits(p, clean))
+                digits = true;
+        }
+        if(not digits)
+            return false;
+        if(*p == 'e' or *p == 'E') {
+            clean += 'e';
+            p++;
+            if(*p == '+' or *p == '-')
+                clean += *p++;
+            if(not __float_scan_digits(p, clean))
+                return false;
+        }
+    }
+
+    while(*p and isspace((unsigned char)*p))
+        p++;
+
+    return *p == '\0';
+}
+
 template<> __ss_float __float(str *s) {
-    __ss_float d = strtod(s->c_str(), NULL);
+    __GC_STRING clean;
+    if(not __float_scan(s->c_str(), clean))
+        throw new ValueError(__add_strs(0, new str("could not convert string to float: "), repr(s)));
+    __ss_float d = strtod(clean.c_str(), NULL);
     if(std::isnan(d))
         d = NAN; // avoid "-nan" (test 194)
     return d;
