@@ -258,7 +258,7 @@ inline __ss_float fsum(pyiter<__ss_float> *iterable) {
     FOR_IN(x,iterable,1,2,3)
         i = 0;
         for(__ss_int j=0; j<partials->__len__(); j++) {
-            y = partials->__getitem__(i);
+            y = partials->__getitem__(j);
             if ((__abs(x)<__abs(y))) {
                 __ss_float swap = y;
                 y = x;
