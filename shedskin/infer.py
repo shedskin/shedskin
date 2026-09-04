@@ -829,7 +829,7 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
                 itercl,
                 itercl.dcpa,
             )
-            class_copy(gx, itercl, dcpa)
+            class_copy(gx, itercl, itercl.dcpa)
             itercl.dcpa += 1
 
         func_copy(gx, func, dcpa, 0)
