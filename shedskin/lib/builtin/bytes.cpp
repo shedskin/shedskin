@@ -267,6 +267,8 @@ bytes *__bytes(bytes *b) {
 }
 
 bytes *__bytes(__ss_int t) {
+    if(t < 0)
+        throw new ValueError(new str("negative count"));
     bytes *b = new bytes();
     for(int i=0; i<t; i++)
         b->unit += '\x00';
