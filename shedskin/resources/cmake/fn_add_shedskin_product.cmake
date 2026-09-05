@@ -463,6 +463,10 @@ function(add_shedskin_product)
             else()
                 add_test(NAME ${EXE} COMMAND ${EXE})
             endif()
+            # the -exe and -ext variants of a test run the same code against
+            # the same files under tests/testdata, so they must not run
+            # concurrently (see test_mod_mmap)
+            set_tests_properties(${EXE} PROPERTIES RESOURCE_LOCK ${name})
         endif()
     endif()
 
@@ -630,6 +634,7 @@ function(add_shedskin_product)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		    )
 	    endif()
+            set_tests_properties(${EXT} PROPERTIES RESOURCE_LOCK ${name})
         endif()
 
     endif()
