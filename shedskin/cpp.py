@@ -2781,11 +2781,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.JoinedStr, func: Optional["python.Function"] = None
     ) -> None:
         """Generate a joined string"""
+        # an empty f-string has no values at all, and __add_strs(0, ) would
+        # not even be valid C++
+        if not node.values:
+            self.append("new str()")
+            return
+
         self.append("__add_strs(%d, " % len(node.values))
         for i, value in enumerate(node.values):
+            convert = "__str"
             if isinstance(value, ast.FormattedValue):
+                if value.conversion == ord("r"):
+                    convert = "repr"
                 value = value.value
-            self.visitm("__str(", value, ")", func)
+            # __add_strs is variadic, so a bare NULL argument would be deduced
+            # as whatever integer type NULL happens to be spelled as, and bind
+            # to the int __str()/repr() overload (formatting it as "0") instead
+            # of the void* one (which correctly returns "None").
+            if self.is_none_type(value):
+                self.append("%s(((void *)0))" % convert)
+            else:
+                self.visitm("%s(" % convert, value, ")", func)
             if i != len(node.values) - 1:
                 self.append(", ")
         self.append(")")

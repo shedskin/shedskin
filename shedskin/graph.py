@@ -610,6 +610,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit a joined string"""
         for value in node.values:
+            method = "__str__"
             if isinstance(value, ast.FormattedValue):
                 if value.format_spec:
                     error.error(
@@ -619,9 +620,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=getmv(),
                     )
+                # '!s' is just the default str conversion; '!r' maps onto
+                # __repr__ (note '{x=}' desugars to a '!r' conversion as
+                # well). '!a' would need ascii(), which we do not have.
+                if value.conversion == ord("r"):
+                    method = "__repr__"
+                elif value.conversion not in (None, -1, ord("s")):
+                    error.error(
+                        "f-string conversion '!%s' is not supported"
+                        % chr(value.conversion),
+                        self.gx,
+                        node,
+                        warning=True,
+                        mv=getmv(),
+                    )
                 value = value.value
             self.visit(value, func)
-            self.fake_func(infer.inode(self.gx, value), value, "__str__", [], func)
+            self.fake_func(infer.inode(self.gx, value), value, method, [], func)
         self.instance(node, python.def_class(self.gx, "str_"), func)
 
     def visit_Expr(
