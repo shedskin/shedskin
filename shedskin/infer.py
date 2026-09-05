@@ -2021,7 +2021,7 @@ def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
 
     gx.orig_types = {}
     for n, t in gx.types.items():
-        gx.orig_types[n] = t
+        gx.orig_types[n] = t.copy()
 
     if INCREMENTAL:
         update_progressbar(gx, 0)
