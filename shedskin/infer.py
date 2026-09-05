@@ -2308,9 +2308,17 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
     """Restore the constraint network"""
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
 
-    gx.types = {}
-    for node, typeset in beforetypes.items():
-        gx.types[node] = typeset.copy()
+    cur = gx.types
+    for node in list(cur):
+        before = beforetypes.get(node)
+        if before is None:
+            del cur[node]
+        elif cur[node] != before:
+            cur[node] = before.copy()
+    if len(cur) != len(beforetypes):
+        for node, typeset in beforetypes.items():
+            if node not in cur:
+                cur[node] = typeset.copy()
 
     gx.constraints = beforeconstr.copy()
     gx.cnode = beforecnode.copy()
@@ -2323,6 +2331,13 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
 
     for func in gx.allfuncs:
         func.cp = {}
+        # drop nodes created during the iteration that this restore just
+        # dropped from gx.cnode (default-argument notification nodes are
+        # remade every iteration, see possible_argtypes)
+        stale = {n for n in func.nodes if gx.cnode.get((n.thing, n.dcpa, n.cpa)) is not n}
+        if stale:
+            func.nodes -= stale
+            func.nodes_ordered = [n for n in func.nodes_ordered if n not in stale]
 
 
 def merge_simple_types(
