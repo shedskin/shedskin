@@ -245,6 +245,15 @@ template <class U> bytes *bytes::join(U *iter) {
 
 /* bytes */
 
+/* check an integer is a valid byte value, as bytes/bytearray do when
+   constructed from an iterable of ints (CPython uses a slightly different
+   message for each) */
+inline char __byte_value(__ss_int e, bool bytearray_) {
+    if(e < 0 or e > 255)
+        throw new ValueError(new str(bytearray_ ? "byte must be in range(0, 256)" : "bytes must be in range(0, 256)"));
+    return (char)e;
+}
+
 template<class T> bytes *__bytes(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
         bytes *b = new bytes();
@@ -253,7 +262,7 @@ template<class T> bytes *__bytes(T *t) {
         __ss_int __2;
         T *__1;
         FOR_IN(e,t,1,2,3)
-            b->unit += (char)e;
+            b->unit += __byte_value(e, false);
         END_FOR
         return b;
     } else {
@@ -278,7 +287,7 @@ template<class T> bytes *__bytearray(T *t) {
         int __2;
         pyiter<__ss_int> *__1;
         FOR_IN(e,t,1,2,3)
-            b->unit += (char)e;
+            b->unit += __byte_value(e, true);
         END_FOR
         return b;
     } else {

@@ -360,6 +360,40 @@ def test_bytes_builtin():
     assert int(b"123") == 123
 
 
+def test_bytes_builtin_out_of_range():
+    # bytes(<iterable of ints>) only accepts values in range(0, 256);
+    # out-of-range values used to be silently truncated to a single byte
+    assert bytes([0, 255]) == b'\x00\xff'
+
+    error = ''
+    try:
+        bytes([300])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bytes must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytes([-1])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bytes must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytes([0, 255, 256])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bytes must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytes(-1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'negative count'
+
+
 def test_format():
     t = (18, b'waf')
     assert (b'%d hup %s!' % t) == b'18 hup waf!'
@@ -481,6 +515,7 @@ def test_all():
     test_bytes_hash()
     test_bytes_hash_embedded_null()
     test_bytes_builtin()
+    test_bytes_builtin_out_of_range()
     test_contains()
     test_iadd_imul()
     test_hex()
