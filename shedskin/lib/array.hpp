@@ -47,6 +47,7 @@ public:
 
     list<T> *tolist();
     bytes *tobytes();
+    tuple2<__ss_int, __ss_int> *buffer_info();
 
     T __getitem__(__ss_int i);
     T __getfast__(__ss_int i);
@@ -200,6 +201,19 @@ template<class T> bytes *array<T>::tobytes() {
 template<class T> void *array<T>::fromstring(bytes *s) {
     frombytes(s);
     return NULL;
+}
+
+/* Address of the backing buffer plus its length in *elements* (not bytes --
+ * multiply by itemsize for the byte size, same convention as CPython). Kept
+ * as a plain (__ss_int, __ss_int) tuple for consistency with the rest of
+ * this module's API (e.g. tolist()/tobytes()) rather than widening the
+ * address field, so under --int32 the address silently truncates exactly
+ * like id() does; see the matching warning emitted in cpp.py. */
+template<class T> tuple2<__ss_int, __ss_int> *array<T>::buffer_info() {
+    void *addr = this->units.empty() ? NULL : (void *)&(this->units[0]);
+    __ss_int address = (__ss_int)(intptr_t)addr;
+    __ss_int length = (__ss_int)(this->units.size() / itemsize);
+    return new tuple2<__ss_int, __ss_int>(2, address, length);
 }
 
 template<class T> void *array<T>::frombytes(bytes *s) {

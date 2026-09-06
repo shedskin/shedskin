@@ -2746,6 +2746,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return func.ident == funcname
         return False
 
+    def pointer_may_overflow_int32(self) -> bool:
+        """Whether a pointer value cast to __ss_int (as id() and
+        array.buffer_info() both do) can lose bits under --int32.
+
+        Under --int32, __ss_int is typedef'd to int32_t, a fixed-width
+        4-byte type -- unlike C's plain 'int', its size does not depend on
+        the host/target platform at all, so there is nothing to measure
+        there. The only real unknown is how wide a pointer is on the
+        platform doing the (default same-machine) build; check that
+        directly, and use '>' rather than pinning it to exactly 8 so a
+        platform with even wider pointers is still caught.
+        """
+        return self.gx.int32 and struct.calcsize("P") > 4
+
     def add_args_arg(self, node: ast.Call, funcs: list["python.Function"]) -> None:
         """append argument that describes which formals are actually filled in"""
         if self.library_func(funcs, "datetime", "time", "replace") or self.library_func(
@@ -2896,13 +2910,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     mv=self.mv,
                 )
         if self.library_func(funcs, "builtin", None, "id"):
-            if (
-                struct.calcsize("P") == 8
-                and struct.calcsize("i") == 4
-                and self.gx.int32
-            ):
+            if self.pointer_may_overflow_int32():
                 error.error(
                     "return value of 'id' does not fit in 32-bit integer (try shedskin --int64)",
+                    self.gx,
+                    node,
+                    warning=True,
+                    mv=self.mv,
+                )
+        if self.library_func(funcs, "array", "array", "buffer_info"):
+            if self.pointer_may_overflow_int32():
+                error.error(
+                    "'buffer_info' address does not fit in 32-bit integer (try shedskin --int64)",
                     self.gx,
                     node,
                     warning=True,

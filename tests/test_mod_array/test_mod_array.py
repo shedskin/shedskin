@@ -10,6 +10,17 @@ def test_typecodes():
     assert arr.itemsize == 4
 
 
+def test_buffer_info():
+    arr = array.array('i', range(10))
+    address, length = arr.buffer_info()
+    assert length == 10
+    assert address != 0
+
+    empty = array.array('i')
+    _, length = empty.buffer_info()
+    assert length == 0
+
+
 def test_file():
     testdir = os.curdir
     while not os.path.exists(os.path.join(testdir, "testdata")) and os.path.exists(os.pardir):
@@ -434,6 +445,7 @@ def test_extend_overflow_no_corruption():
 
 def test_all():
     test_typecodes()
+    test_buffer_info()
     test_list()
     test_bytes()
     test_fromstring()
