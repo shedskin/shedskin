@@ -289,6 +289,31 @@ def test_re_escape():
     assert re.escape("") == ""
     assert re.escape("1.2.3.4") == "1\\.2\\.3\\.4"
 
+def test_re_pattern_findall():
+    # re_object.findall was declared as findall(string, pos=0, endpos=-1) in
+    # re.py, but implemented as findall(subj, flags_=0) in re.cpp, so every
+    # call on a compiled pattern failed to compile ("no matching function for
+    # call to re_object::findall(str*&, __ss_int, __ss_int)").
+    p = re.compile('[0-9]+')
+    assert p.findall('one 12 two 345 three 6') == ['12', '345', '6']
+    assert p.findall('abc') == []
+    assert p.findall('') == []
+
+    # pos/endpos select the search window, like subj[pos:endpos]
+    assert p.findall('one 12 two 345 three 6', 5) == ['2', '345', '6']
+    assert p.findall('one 12 two 345 three 6', 6) == ['345', '6']
+    assert p.findall('one 12 two 345 three 6', 6, 16) == ['345']
+    assert p.findall('one 12 two 345 three 6', 0, 0) == []
+    assert p.findall('one 12 two 345 three 6', 100) == []
+
+    # zero-length matches are kept (unlike split)
+    assert re.compile('o*').findall('foo') == ['', 'oo', '']
+    assert re.compile('o*').findall('foo', 1) == ['oo', '']
+
+    # the module-level function is unaffected
+    assert re.findall('[0-9]+', 'a1b22') == ['1', '22']
+
+
 def test_re_finditer_empty_string():
     # finditer()/match_iter used to unconditionally reject pos >= len(subj),
     # so pos=0 on an empty string incorrectly raised "starting position >=
@@ -396,6 +421,7 @@ def test_all():
     test_re_pattern_match_instantiate()
     test_re_escape()
     test_re_finditer_empty_string()
+    test_re_pattern_findall()
 
 
 if __name__ == "__main__":

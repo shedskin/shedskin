@@ -378,11 +378,11 @@ tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, __ss_int maxn)
     return new tuple2<str *, __ss_int>(2, r, n);
 }
 
-list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_)
+list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos, __ss_int endpos)
 {
     __GC_STRING *subjs;
     list<str *> *r;
-    PCRE2_SIZE i, j, cur;
+    PCRE2_SIZE i, j, cur, nendpos;
     PCRE2_SPTR c_subj;
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
     PCRE2_SIZE *captured;
@@ -392,13 +392,23 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
 
     subjs = &subj->unit;
     c_subj = (PCRE2_SPTR) subjs->c_str();
-    for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
+
+    //search window subj[pos:endpos], mirroring __exec's handling of the same
+    //arguments (endpos == -1 means 'to the end of the string')
+    if(pos < 0) pos = 0;
+    if(endpos == -1) nendpos = subjs->size();
+    else if(endpos < pos) throw new error(new str("end position less than initial"));
+    else nendpos = ((PCRE2_SIZE)endpos < subjs->size()) ? (PCRE2_SIZE)endpos : subjs->size();
+    if((PCRE2_SIZE)pos > nendpos) pos = (__ss_int)nendpos;
+
+    i = (PCRE2_SIZE)pos;
+    for(cur = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
         //get a match
         if(pcre2_match(
             compiled_pattern,
             c_subj,
-            (PCRE2_SIZE)subjs->size(),
+            nendpos,
             i,
             flags_,
             match_data,
@@ -452,9 +462,9 @@ list<str *> *re_object::split(str *subj, __ss_int maxn)
     return __splitfind(subj, maxn, 0, 0);
 }
 
-list<str *> *re_object::findall(str *subj, __ss_int flags_)
+list<str *> *re_object::findall(str *subj, __ss_int pos, __ss_int endpos)
 {
-    return __splitfind(subj, -1, 1, flags_);
+    return __splitfind(subj, -1, 1, 0, pos, endpos);
 }
 
 match_iter::match_iter(re_object *ro_, str *subj_, __ss_int pos_, __ss_int endpos_, __ss_int flags_)
