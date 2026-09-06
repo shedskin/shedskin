@@ -360,6 +360,37 @@ def test_bytes_builtin():
     assert int(b"123") == 123
 
 
+def test_fillbyte():
+    # see test_type_str.test_fillchar
+    error = ''
+    try:
+        b'abc'.center(9, b'--')
+    except TypeError as e:
+        error = str(e)
+    assert error == 'center() argument 2 must be a byte string of length 1, not bytes'
+
+    error = ''
+    try:
+        b'abc'.center(9, b'')
+    except TypeError as e:
+        error = str(e)
+    assert error == 'center() argument 2 must be a byte string of length 1, not bytes'
+
+    error = ''
+    try:
+        b'abc'.ljust(9, b'--')
+    except TypeError as e:
+        error = str(e)
+    assert error == 'ljust() argument 2 must be a byte string of length 1, not bytes'
+
+    error = ''
+    try:
+        b'abc'.rjust(9, b'')
+    except TypeError as e:
+        error = str(e)
+    assert error == 'rjust() argument 2 must be a byte string of length 1, not bytes'
+
+
 def test_format():
     t = (18, b'waf')
     assert (b'%d hup %s!' % t) == b'18 hup waf!'
@@ -481,6 +512,7 @@ def test_all():
     test_bytes_hash()
     test_bytes_hash_embedded_null()
     test_bytes_builtin()
+    test_fillbyte()
     test_contains()
     test_iadd_imul()
     test_hex()
