@@ -173,13 +173,30 @@ __ss_bool str::isnumeric() {
   return True;
 }
 
+/* CPython requires the fill character of center/ljust/rjust to be exactly
+   one character long, and rejects anything else before it even looks at the
+   width. an unchecked fill character of length != 1 silently produced a
+   result of the wrong length here, and an empty one made center() write
+   past the end of its result buffer. the throw lives in its own function so
+   that the check itself inlines down to a well-predicted branch. */
+[[noreturn]] static void __fillchar_error() {
+    throw new TypeError(new str("The fill character must be exactly one character long"));
+}
+
+static inline void __fillchar_check(str *fillchar) {
+    if(fillchar and fillchar->unit.size() != 1)
+        __fillchar_error();
+}
+
 str *str::ljust(__ss_int width, str *s) {
+    __fillchar_check(s);
     if(width<=__len__()) return this;
     if(!s) s = sp;
     return __add__(s->__mul__(width-__len__()));
 }
 
 str *str::rjust(__ss_int width, str *s) {
+    __fillchar_check(s);
     if(width<=__len__()) return this;
     if(!s) s = sp;
     return s->__mul__(width-__len__())->__add__(this);
@@ -521,6 +538,8 @@ str *str::swapcase() {
 }
 
 str *str::center(__ss_int w, str *fillchar) {
+    __fillchar_check(fillchar);
+
     size_t width = (size_t)w;
     size_t len = unit.size();
     if(width<=len)
