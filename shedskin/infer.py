@@ -848,6 +848,7 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
             cl.mv.module.ident == "builtin"
             and cl.ident != "__iter"
             and func.ident == "__iter__"
+            and not gx.infer_v2
         ):  # XXX hack for __iter__:__iter()
             itercl = python.def_class(gx, "__iter")
             gx.alloc_info[func.ident, ((cl, dcpa),), func.returnexpr[0]] = (

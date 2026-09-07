@@ -459,6 +459,25 @@ def site_allocated(
     return False
 
 
+def render_signature(signature: tuple) -> str:
+    """Render a signature compactly, for diagnosing what grew."""
+    parts = []
+    for name, types in signature:
+        if not types:
+            continue
+        rendered = []
+        for item in sorted(types, key=str):
+            if isinstance(item, tuple) and len(item) == 3 and item[1] == "sig":
+                rendered.append("%s#%s" % (item[0].ident, item[2]))
+            elif isinstance(item, tuple) and len(item) == 2:
+                ident = getattr(item[0], "ident", item[0])
+                rendered.append("%s(%s)" % (ident, item[1]))
+            else:
+                rendered.append(str(item))
+        parts.append("%s=%s" % (name, "|".join(rendered)))
+    return "{" + " ".join(parts) + "}" if parts else "{}"
+
+
 def empty_contents(cl: "python.Class") -> dict[str, infer.Types]:
     """The contents of a contour that has not received anything yet."""
     return {
@@ -538,6 +557,7 @@ class FrozenCore:
         self.signature_ids: dict[tuple[Any, tuple], int] = {}
         self.contour_signature: dict[tuple["python.Class", int], int] = {}
         self.upgrades = 0
+        self.misses = 0
 
     # --- contour allocation
 
@@ -644,6 +664,19 @@ class FrozenCore:
             scratch: dict[tuple["python.Class", int], int] = {}
             for binding in subjects:
                 held = contents.get(binding)
+                if held is not None:
+                    # normalise the variable set. contour_variables returns
+                    # whichever nodes the network happens to have built for
+                    # this contour, and that differs between contours of one
+                    # class, so two contours holding nothing can still get
+                    # different signatures purely from one having a
+                    # __getitem__ node and the other not. A signature has to
+                    # depend on contents alone.
+                    held = {
+                        name: held.get(name, set())
+                        for name in getattr(binding[0], "vars", {})
+                        if name not in CONTOUR_SIGNATURE_SKIP
+                    }
                 if held is None:
                     # a contour minted since the sweep ran holds nothing yet.
                     # It still needs a signature, and the right one is the
@@ -658,14 +691,28 @@ class FrozenCore:
                 break
             self.contour_signature = scratch
 
-        upgrades = sum(
-            1
+        changed = [
+            binding
             for binding in subjects
             if binding in previous
             and previous[binding] != self.contour_signature.get(binding)
-        )
-        self.upgrades = upgrades
-        return upgrades
+        ]
+        if os.environ.get("SS_V2_UPGRADES"):
+            by_id = {v: k for k, v in self.signature_ids.items()}
+            for binding in changed[:12]:
+                was = by_id.get(previous[binding], (None, ()))[1]
+                now = by_id.get(self.contour_signature[binding], (None, ()))[1]
+                logger.info(
+                    "    upgrade %s(%d): %s  ->  %s",
+                    binding[0].ident,
+                    binding[1],
+                    render_signature(was),
+                    render_signature(now),
+                )
+            if len(changed) > 12:
+                logger.info("    ... %d more upgrade(s)", len(changed) - 12)
+        self.upgrades = len(changed)
+        return len(changed)
 
     # --- stage 4: in-function sites, discovered as their templates appear
 
@@ -712,6 +759,7 @@ class FrozenCore:
             return None
 
         self.discovered[key] = cl
+        self.misses += 1
         return None
 
     def mint_batch(
@@ -861,10 +909,16 @@ def apply_core(
     for alloc_id, binding in core.provisional.items():
         gx.alloc_info[alloc_id] = binding
 
-    for (cl, contour, name), types in core.contents.items():
-        node = contour_variables(gx, cl, contour).get(name)
-        if node is not None:
-            gx.types.setdefault(node, set()).update(types)
+    # Contents are deliberately not seeded back. They are an *observation* of
+    # a world that is still being built: while sites are still being
+    # discovered, an unbound site allocates into a shared gx.list_types
+    # bucket, and a contour observed in that round can pick up a type that
+    # belongs to somebody else. Accumulating those observations makes the
+    # mistake permanent — on amaze, readFile's `lines` was observed once, in
+    # the round after it was bound, holding int as well as str, and no later
+    # round could take it back. Each sweep re-derives contents from the
+    # constraints instead, so what the core holds is always what the current
+    # set of bindings actually implies.
 
 
 CONTOUR_SIGNATURE_SKIP = frozenset(["__class__"])
@@ -983,6 +1037,14 @@ def commit_round(
         if fresh:
             probe_fresh[site] = fresh
 
+    # what every contour was observed to hold this round, replacing what it
+    # was observed to hold last round
+    observed: dict[tuple["python.Class", int, str], infer.Types] = {}
+    for (cl, contour), held in result.contour_contents.items():
+        for name, types in held.items():
+            if types:
+                observed[(cl, contour, name)] = set(types)
+
     bound: dict[Any, tuple["python.Class", int]] = {}
     for key, binding in core.provisional.items():
         core.alloc_bindings[key] = binding
@@ -1003,6 +1065,7 @@ def commit_round(
             mold_fresh[key] = fresh
 
     core.provisional = {}
+    core.contents = observed
     return CommitResult(bound, 0, len(bound), probe_fresh, mold_fresh)
 
 
@@ -1712,7 +1775,14 @@ def probe_allocation_sites(
     )
 
     core = FrozenCore()
-    baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
+    # Never mint below 2. A class whose dcpa is 1 has no contour 1 nodes,
+    # because analyze() only class_copies range(1, dcpa) — but the graph
+    # still types every mold constructor of that class as contour 1. Minting
+    # contour 1 for a site gives that contour real variable nodes, and every
+    # mold in the builtins starts flowing into it: dict.items' tuple2, zip's
+    # tuple, and so on, straight into a user variable. Leaving contour 1
+    # node-less keeps the molds inert, which is what they are for.
+    baseline_dcpa = {cl: max(cl.dcpa, 2) for cl in gx.allclasses}
     core.baseline_dcpa = dict(baseline_dcpa)
     for site in probes:
         core.contour_for(site, baseline_dcpa)
@@ -1799,6 +1869,85 @@ def report_signature_table(core: FrozenCore) -> None:
             logger.info("        %-8s = %s", name, sorted(str(t) for t in types))
 
 
+def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
+    """Final overview: every allocation site and the signature deduced for it.
+
+    Module-level sites are listed one per line. In-function sites are grouped
+    by the mold they came from — one source line can become many sites, one
+    per template — and a mold whose sites all settled on the same signature
+    is reported once, since that is the interesting fact about it. A mold
+    whose sites differ is reported per signature, because that difference is
+    the polymorphism the contours exist to keep apart.
+    """
+    by_id = {v: k for k, v in core.signature_ids.items()}
+
+    def rendered(binding: tuple["python.Class", int]) -> str:
+        sid = core.contour_signature.get(binding)
+        if sid is None:
+            return "(no signature)"
+        return render_signature(by_id.get(sid, (None, ()))[1]) or "{}"
+
+    logger.info("[infer v2: deduced signature per allocation site]")
+
+    if core.bindings:
+        logger.info("  module-level sites (%d):", len(core.bindings))
+        for node, binding in sorted(
+            core.bindings.items(),
+            key=lambda kv: (getattr(kv[0], "lineno", 0), kv[1][1]),
+        ):
+            logger.info(
+                "    %-4s %-10s contour %-4d %s",
+                getattr(node, "lineno", "-"),
+                binding[0].ident,
+                binding[1],
+                rendered(binding),
+            )
+
+    molds: dict[tuple, dict[str, list[tuple["python.Class", int]]]] = {}
+    for key, binding in core.alloc_bindings.items():
+        mold = (key[0], key[2])
+        molds.setdefault(mold, {}).setdefault(rendered(binding), []).append(
+            binding
+        )
+    if not molds:
+        return
+    sites = sum(len(v) for groups in molds.values() for v in groups.values())
+    logger.info(
+        "  in-function sites (%d, from %d mold(s)):", sites, len(molds)
+    )
+    for mold in sorted(molds, key=lambda m: (str(m[0]), getattr(m[1], "lineno", 0))):
+        groups = molds[mold]
+        node = mold[1]
+        where = "%s:%s" % (mold[0], getattr(node, "lineno", "-"))
+        source = alloc_id_source((mold[0], (), node))
+        count = sum(len(v) for v in groups.values())
+        if len(groups) == 1:
+            signature, bindings = next(iter(groups.items()))
+            logger.info(
+                "    %-24s %-10s %d site(s), 1 signature  %s",
+                where,
+                bindings[0][0].ident,
+                count,
+                signature,
+            )
+        else:
+            logger.info(
+                "    %-24s %d site(s), %d signatures",
+                where,
+                count,
+                len(groups),
+            )
+            for signature in sorted(groups):
+                bindings = groups[signature]
+                logger.info(
+                    "        %-10s x%-3d %s",
+                    bindings[0][0].ident,
+                    len(bindings),
+                    signature,
+                )
+        logger.info("        %s", source)
+
+
 def report_core(core: FrozenCore, rounds: int) -> None:
     report_signature_table(core)
     """Summarise what the rounds established."""
@@ -1841,7 +1990,56 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     sites = [site for site in all_sites if not site.builtin]
     builtin_count = len(all_sites) - len(sites)
     report_allocation_sites(gx, sites, builtin_count)
-    probe_allocation_sites(gx, sites)
+    core = probe_allocation_sites(gx, sites)
+    report_site_signatures(gx, core)
 
-    logger.info("[infer v2: stopping after inspection; no C++ is generated]")
-    sys.exit(0)
+    if not gx.infer_v2_codegen:
+        logger.info("[infer v2: stopping after inspection; no C++ is generated]")
+        sys.exit(0)
+
+    materialize(gx, core)
+
+
+def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
+    """Leave the analyzed network standing, for code generation.
+
+    Every sweep restores the network when it is done, so once the rounds
+    finish the analysis exists only in the core and gx is back at its
+    pristine state. Code generation reads gx.types and func.cp, so the
+    result has to be put back: apply the core, propagate once with nothing
+    frozen, and this time do not restore.
+
+    Frozen, with every committed contour open. The freeze exists to keep
+    sites that do not own a contour from merging into each other, and by now
+    every site the rounds found does own one, so the open set is everything
+    that matters and the freeze dissolves on its own — which is what §4.3 of
+    the design notes predicted.
+
+    Propagating unfrozen here instead throws the whole analysis away. The
+    rounds run frozen, so their cartesian products are built from the
+    contours the core owns; an unfrozen pass produces different products,
+    every site's canonical key misses, and every one of them falls back to
+    the mother-contour heuristic. Measured on test_prog_nqueens: 12 of 12
+    sites missed, and the generated C++ widened to list<pyseq<int>*> where
+    the unpatched compiler gives list<list<int>*>.
+    """
+    baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
+    apply_core(gx, core, baseline_dcpa)
+    gx.orig_types = {node: types.copy() for node, types in gx.types.items()}
+    gx.infer_v2_open_contours = core.open_contours()
+    core.open_set = gx.infer_v2_open_contours
+    gx.infer_v2_core = core
+    core.misses = 0
+    try:
+        rounds = v2_propagate(gx)
+    finally:
+        gx.infer_v2_core = None
+        gx.infer_v2_open_contours = None
+        core.open_set = None
+    logger.info(
+        "[infer v2: materialised in %d propagation round(s); %d contour(s);"
+        " %d site(s) fell back to the old heuristic]",
+        rounds,
+        len(core.owned_contours()),
+        core.misses,
+    )

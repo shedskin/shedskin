@@ -74,3 +74,4 @@ class TypeInferenceState:
     infer_v2: bool = False
     infer_v2_open_contours: Optional[Set[Tuple[Any, int]]] = None
     infer_v2_core: Optional[Any] = None
+    infer_v2_codegen: bool = False

@@ -659,6 +659,14 @@ class GlobalInfo:
     def infer_v2_core(self, value: Optional[Any]) -> None:
         self._type_inference.infer_v2_core = value
 
+    @property
+    def infer_v2_codegen(self) -> bool:
+        return self._type_inference.infer_v2_codegen
+
+    @infer_v2_codegen.setter
+    def infer_v2_codegen(self, value: bool) -> None:
+        self._type_inference.infer_v2_codegen = value
+
     def get_stats(self) -> dict[str, Any]:
         assert self.module_path is not None
         pyfile = Path(self.module_path)
