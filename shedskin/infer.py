@@ -174,6 +174,31 @@ MAXITERS = 30
 # Higher values give more precise types but increase analysis time.
 CPA_LIMIT = 10
 
+# SPLIT_CLASS_IDENTS: builtin classes that carry contours, i.e. the classes
+# that are duplicated per allocation site so that (say) a list of ints and a
+# list of strings can be told apart. These are the only classes IFA splits.
+SPLIT_CLASS_IDENTS = (
+    "list",
+    "tuple",
+    "tuple2",
+    "dict",
+    "frozendict",
+    "defaultdict",
+    "Counter",
+    "set",
+    "frozenset",
+    "deque",
+    "__iter",
+    "array",
+)
+
+# SCALAR_CLASS_IDENTS: builtin classes that are never duplicated per allocation
+# site. Allocation sites of these classes always live at dcpa 0 and so can
+# never gain contours.
+SCALAR_CLASS_IDENTS = frozenset(
+    ["int_", "float_", "str_", "bytes_", "none", "class_", "bool_"]
+)
+
 
 class CNode:
     """A node in the constraint graph"""
@@ -901,6 +926,14 @@ def propagate(gx: "config.GlobalInfo") -> None:
     builtins = set(gx.builtins)
     types = gx.types
 
+    # --- infer v2: while probing, contours outside the open set are frozen.
+    # --- They still propagate what they already hold, they just cannot
+    # --- receive anything new, so whatever arrives in an open contour came
+    # --- from a site that owns one rather than from the rest of the program
+    # --- merging into itself. The open set is the committed sites plus the
+    # --- one under test; it grows as the frozen core fills in.
+    open_contours = gx.infer_v2_open_contours
+
     # --- iterative dataflow analysis
     while worklist:
         callnodes = set()
@@ -918,6 +951,12 @@ def propagate(gx: "config.GlobalInfo") -> None:
                 if isinstance(b.thing, python.Variable) and isinstance(
                     b.thing.parent, python.Class
                 ):
+                    if (
+                        open_contours is not None
+                        and (b.thing.parent, b.dcpa) not in open_contours
+                    ):
+                        continue
+
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in [
@@ -1821,20 +1860,7 @@ def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> list[set[CNode]]:
 def ifa_classes_to_split(gx: "config.GlobalInfo") -> list["python.Class"]:
     """setup classes to perform splitting on"""
     classes = []
-    for ident in [
-        "list",
-        "tuple",
-        "tuple2",
-        "dict",
-        "frozendict",
-        "defaultdict",
-        "Counter",
-        "set",
-        "frozenset",
-        "deque",
-        "__iter",
-        "array",
-    ]:
+    for ident in SPLIT_CLASS_IDENTS:
         for cl in gx.allclasses:
             if cl.mv.module.builtin and cl.ident == ident:
                 cl.splits = {}
@@ -2446,7 +2472,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
 
     # --- non-ifa: copy classes for each allocation site
     for cl in gx.allclasses:
-        if cl.ident in ["int_", "float_", "none", "class_", "str_", "bool_", "bytes_"]:
+        if cl.ident in SCALAR_CLASS_IDENTS:
             continue
         if cl.ident == "list":
             cl.dcpa = len(gx.list_types) + 2
@@ -2466,7 +2492,12 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     gx.types[inode(gx, var)] = {(python.def_class(gx, "int_"), 0)}
 
     # --- cartesian product algorithm & iterative flow analysis
-    iterative_dataflow_analysis(gx)
+    if gx.infer_v2:
+        from . import infer2
+
+        infer2.infer_v2_analysis(gx)
+    else:
+        iterative_dataflow_analysis(gx)
 
     logger.info("[generating c++ code..]")
 
