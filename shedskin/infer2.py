@@ -185,8 +185,22 @@ class AllocationSite:
         """Whether this node is a real allocation site already.
 
         False for nodes inside functions, which are molds until templated.
+
+        A list comprehension is compiled as a function, but a comprehension
+        written at module level runs exactly once and is never templated, so
+        an allocation inside one is a real site and not a mold. Left as a
+        mold it would wait forever for a template that never comes: it keeps
+        the shared bucket contour, which is frozen and so stays empty, and
+        whatever reads it gets nothing. That is what
+        `board = [[0 for x in range(3)] for y in range(3)]` at module level
+        did — `board`'s unit held an empty contour and iterating a row gave
+        "variable has no type", while the identical expression inside a
+        function was fine. python.outer_func skips comprehensions for
+        exactly this reason.
         """
-        return not isinstance(self.parent, python.Function)
+        if not isinstance(self.parent, python.Function):
+            return True
+        return python.outer_func(self.parent) is None
 
     @property
     def builtin(self) -> bool:
@@ -2069,7 +2083,17 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     to compile.
     """
     all_sites = collect_allocation_sites(gx, builtins=True)
-    sites = [site for site in all_sites if not site.builtin]
+    # Module-level allocations in builtin modules — sys.argv and friends —
+    # are real sites too. They are few, and excluding them leaves them on a
+    # shared bucket contour that the freeze keeps empty, so `for arg in
+    # sys.argv` yields nothing and arg "has no type". This is only about
+    # module-level ones: builtin *molds* must stay out, since builtin methods
+    # are analysed through them.
+    sites = [
+        site
+        for site in all_sites
+        if not site.builtin or site.module_level
+    ]
     builtin_count = len(all_sites) - len(sites)
     report_allocation_sites(gx, sites, builtin_count)
     core = probe_allocation_sites(gx, sites)
