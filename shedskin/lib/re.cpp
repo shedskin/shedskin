@@ -798,8 +798,19 @@ list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind,
     re_object *ro;
     list<str *> *r;
 
+    //'flags' here is a bitmask of Python-level re.* flags (IGNORECASE=0x02,
+    //MULTILINE=0x08, DOTALL=0x10, ...), already applied at compile time
+    //above. __splitfind's flags_ parameter, in contrast, is passed straight
+    //through to pcre2_match() as its *match-time* options bitmask, which
+    //uses an entirely different encoding (PCRE2_NOTBOL=0x01,
+    //PCRE2_NOTEOL=0x02, PCRE2_NOTEMPTY_ATSTART=0x08, ...). Forwarding the
+    //Python flags here made e.g. re.IGNORECASE (0x02) collide with
+    //PCRE2_NOTEOL, which forbids '$' from matching at the end of the
+    //subject, so IGNORECASE searches anchored on '$' spuriously failed;
+    //similarly re.MULTILINE (0x08) collided with PCRE2_NOTEMPTY_ATSTART.
+    //There are no match-time options to set here, so pass 0.
     ro = compile(pat, flags);
-    r = ro->__splitfind(subj, maxn, onlyfind, flags);
+    r = ro->__splitfind(subj, maxn, onlyfind, 0);
 
     //return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
     return r;
