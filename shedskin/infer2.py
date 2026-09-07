@@ -557,6 +557,11 @@ class FrozenCore:
         self.signature_ids: dict[tuple[Any, tuple], int] = {}
         self.contour_signature: dict[tuple["python.Class", int], int] = {}
         self.upgrades = 0
+        # the cartesian product each binding was actually created for. A key
+        # is a *name* derived from signatures, and signatures move; the raw
+        # product does not, so it is what lets a site keep its contour when
+        # its name changes.
+        self.raw_ids: dict[Any, Any] = {}
         self.misses = 0
 
     # --- contour allocation
@@ -620,6 +625,80 @@ class FrozenCore:
         if isinstance(cart, tuple):
             cart = tuple(self.canonical(item) for item in cart)
         return (function, cart, node)
+
+    def rekey(self) -> int:
+        """Rename every binding under the current signatures.
+
+        A site is named by the signatures of the contours in its cartesian
+        product, and signatures grow, so the same allocation presents under a
+        different name as the analysis learns. Left alone, the binding stays
+        filed under the old name: the site is rediscovered, minted a second
+        contour, and the old one is stranded — empty, unreachable, and still
+        served to whoever happens to look it up under the stale name. That
+        stranding is what "variable has no type" was.
+
+        Dropping the stale entry instead does not work either. The contour
+        goes with it, so the site has to be found again from scratch, which
+        changes signatures, which changes names, which strands more entries:
+        on a three-line program that cycles forever, four sites discovered
+        and pruned every round without end.
+
+        So neither keep nor drop — rename. The contour is what the site owns
+        and it never moves; only the name it is filed under changes. Nothing
+        is rediscovered, nothing is re-minted, and nothing is stranded. Two
+        products that now canonicalise together are one site, and keep the
+        older contour.
+        """
+        renamed: dict[Any, tuple["python.Class", int]] = {}
+        raw: dict[Any, Any] = {}
+        moved = 0
+        for key, binding in self.alloc_bindings.items():
+            product = self.raw_ids.get(key)
+            fresh = self.canonical_key(product) if product is not None else key
+            if fresh != key:
+                moved += 1
+            current = renamed.get(fresh)
+            if current is None or self.prefer(binding, current):
+                renamed[fresh] = binding
+                if product is not None:
+                    raw[fresh] = product
+        self.alloc_bindings = renamed
+        self.raw_ids = raw
+        return moved
+
+    def prefer(
+        self,
+        candidate: tuple["python.Class", int],
+        current: tuple["python.Class", int],
+    ) -> bool:
+        """Which of two contours survives when their sites turn out to be one.
+
+        A contour that holds something beats one that holds nothing. Taking
+        the lower number instead can keep an empty contour over the filled
+        one it just merged with, and then the site is served a contour with
+        nothing in it — which reads downstream as "variable has no type".
+        Between two that both hold something, or two that hold nothing, the
+        older one wins, so the choice does not depend on iteration order.
+        """
+        candidate_filled = self.contour_signature.get(candidate) not in (
+            None,
+            *self.empty_signature_ids(),
+        )
+        current_filled = self.contour_signature.get(current) not in (
+            None,
+            *self.empty_signature_ids(),
+        )
+        if candidate_filled != current_filled:
+            return candidate_filled
+        return candidate[1] < current[1]
+
+    def empty_signature_ids(self) -> set[int]:
+        """Signature ids whose every variable is still empty."""
+        return {
+            sid
+            for (cl, signature), sid in self.signature_ids.items()
+            if signature_is_empty(signature)
+        }
 
     def resignature(
         self,
@@ -738,6 +817,7 @@ class FrozenCore:
         of distinctions that do not exist.
         """
         key = self.canonical_key(alloc_id)
+        self.raw_ids.setdefault(key, alloc_id)
         binding = self.alloc_bindings.get(key)
         if binding is None:
             binding = self.provisional.get(key)
@@ -1809,6 +1889,8 @@ def probe_allocation_sites(
         # back to its own number in every cart that mentions it, which is a
         # distinction the next round would mint yet another contour for
         upgrades = core.resignature(result.contour_contents)
+        # signatures just moved, so the names built from them have moved too
+        core.rekey()
 
         report_round_learning(core, commit, round_no)
         for entry in batch:
