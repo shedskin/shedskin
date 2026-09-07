@@ -204,6 +204,19 @@ def test_re_fullmatch_anchored():
     assert re.fullmatch('nomatch', 'ab') is None
 
 
+def test_re_findall_flags_not_passed_as_match_options():
+    # Regression test: the module-level findall()/split() forwarded the
+    # Python-level re.* flags (e.g. IGNORECASE=0x02) straight into
+    # pcre2_match()'s match-time options bitmask, where they collided with
+    # unrelated PCRE2 match-time option bits (e.g. PCRE2_NOTEOL=0x02),
+    # silently breaking anchored end-of-string ('$') matches whenever
+    # IGNORECASE was combined with findall()/split().
+    assert re.findall(r"A$", "ba", re.I) == ['a']
+    assert re.findall(r"A$", "bA", re.I) == ['A']
+    assert re.findall(r"a$", "ba") == ['a']
+    assert re.split(r"a$", "ba", flags=re.I) == ['b', '']
+
+
 def test_re_locale_rejected():
     error = ''
     try:
@@ -374,6 +387,7 @@ def test_all():
     test_match_pos_endpos()
     test_re_endpos_window()
     test_flags()
+    test_re_findall_flags_not_passed_as_match_options()
     test_re_match_anchored()
     test_re_fullmatch_anchored()
     test_re_locale_rejected()
