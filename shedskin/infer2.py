@@ -82,6 +82,11 @@ V2_CPA_LIMIT = 1000
 # symptom a contour-creation cycle would produce.
 V2_MAX_SWEEPS = 20
 
+# V2_MAX_TEMPLATE_LINES: cap on how many templates are listed individually.
+# A large program creates thousands; the counts stay exact, only the listing
+# is truncated.
+V2_MAX_TEMPLATE_LINES = 200
+
 
 class AllocationSite:
     """A constructor node: an AST expression that creates an object.
@@ -327,35 +332,6 @@ def report_allocation_sites(
             )
 
 
-def report_allocation_census(
-    gx: "config.GlobalInfo", sites: list[AllocationSite]
-) -> None:
-    """Log how many instances each allocation site gained during analysis."""
-    instances = allocation_site_instances(gx)
-
-    counted = [
-        (len(instances.get(site.node, set())), site)
-        for site in sites
-        if site.kind != ALLOC_SCALAR
-    ]
-    counted.sort(key=lambda pair: (-pair[0], pair[1].location()))
-
-    total = sum(count for count, _ in counted)
-    logger.info("[infer v2: contour census after analysis]")
-    logger.info(
-        "  contour-bearing sites: %d, instances: %d", len(counted), total
-    )
-    for count, site in counted:
-        logger.info(
-            "    %-20s %-10s %4d inst  %-22s %s",
-            site.location(),
-            site.cl.ident,
-            count,
-            site.scope(),
-            site.source(),
-        )
-
-
 def format_types(types: infer.Types) -> str:
     """Render a type set as 'cls(contour), cls(contour)'."""
     return ", ".join(
@@ -575,12 +551,153 @@ def probe_allocation_site(
     return ProbeResult(contour, inflow, rounds, reached)
 
 
+class TemplateRecord(NamedTuple):
+    """One CPA template, and the molds it turns into allocation sites.
+
+    A template is a copy of a function made for one point in the cartesian
+    product of its argument types. `dcpa` is the contour of the receiver for a
+    method, `cart` the argument types, `cpa` the template number within dcpa.
+
+    `molds` are the constructor nodes written inside the function. Each one
+    becomes a real allocation site in this template, at (node, dcpa, cpa), and
+    those are the sites the sweep does not yet own: they still take whatever
+    contour the shape-keyed guess in gx.list_types gave them.
+    """
+
+    func: "python.Function"
+    dcpa: int
+    cpa: int
+    cart: tuple
+    molds: list[tuple[AllocationSite, Optional[tuple["python.Class", int]]]]
+
+    @property
+    def builtin(self) -> bool:
+        return bool(self.func.mv.module.builtin)
+
+    def name(self) -> str:
+        func = self.func
+        if isinstance(func.parent, (python.Class, python.StaticClass)):
+            base = "%s.%s" % (func.parent.ident, func.ident)
+        else:
+            base = func.ident
+        return "%s.%s" % (func.mv.module.ident, base)
+
+    def signature(self) -> str:
+        parts = []
+        if self.dcpa:
+            parent = getattr(self.func.parent, "ident", "?")
+            parts.append("self=%s(%d)" % (parent, self.dcpa))
+        parts.extend(format_type(item) for item in self.cart)
+        return "(%s)" % ", ".join(parts)
+
+
+def format_type(item: tuple["python.Class", int]) -> str:
+    """Render one (class, contour) pair."""
+    cl, dcpa = item
+    return "%s(%d)" % (cl.ident, dcpa)
+
+
+def molds_by_function(
+    sites: list[AllocationSite],
+) -> dict["python.Function", list[AllocationSite]]:
+    """Group in-function constructor nodes by the function they live in."""
+    grouped: dict["python.Function", list[AllocationSite]] = {}
+    for site in sites:
+        if site.kind == ALLOC_SCALAR or site.module_level:
+            continue
+        assert isinstance(site.parent, python.Function)
+        grouped.setdefault(site.parent, []).append(site)
+    return grouped
+
+
+def collect_templates(
+    gx: "config.GlobalInfo", sites: list[AllocationSite]
+) -> list[TemplateRecord]:
+    """Every template that exists in the current network, with its molds."""
+    grouped = molds_by_function(sites)
+    records = []
+    for func in gx.allfuncs:
+        for dcpa, carts in func.cp.items():
+            for cart, cpa in carts.items():
+                molds = []
+                for mold in grouped.get(func, []):
+                    node = gx.cnode.get((mold.node, dcpa, cpa))
+                    if node is None:
+                        continue
+                    types = node.types()
+                    alloc = next(iter(types)) if len(types) == 1 else None
+                    molds.append((mold, alloc))
+                records.append(
+                    TemplateRecord(func, dcpa, cpa, cart, molds)
+                )
+    records.sort(key=lambda r: (r.builtin, r.name(), r.dcpa, r.cpa))
+    return records
+
+
+def report_templates(records: list[TemplateRecord]) -> None:
+    """Log the templates and the allocation sites they enable."""
+    program = [r for r in records if not r.builtin]
+    builtin = [r for r in records if r.builtin]
+    enabling = [r for r in program if r.molds]
+    new_sites = sum(len(r.molds) for r in program)
+
+    logger.info("[infer v2: templates created during propagation]")
+    logger.info(
+        "  templates: %d (program: %d, builtin: %d)",
+        len(records),
+        len(program),
+        len(builtin),
+    )
+    logger.info(
+        "  %d program template(s) enable %d new allocation site(s)",
+        len(enabling),
+        new_sites,
+    )
+
+    shown = 0
+    for record in enabling:
+        if shown >= V2_MAX_TEMPLATE_LINES:
+            logger.info(
+                "  ... %d more template(s) not listed",
+                len(enabling) - shown,
+            )
+            break
+        shown += 1
+        logger.info("  %s%s", record.name(), record.signature())
+        for mold, alloc in record.molds:
+            logger.info(
+                "      %-20s %-10s %-14s %s",
+                mold.location(),
+                mold.cl.ident,
+                format_type(alloc) if alloc else "?",
+                mold.source(),
+            )
+
+    per_builtin: dict[str, int] = {}
+    for record in builtin:
+        per_builtin[record.name()] = per_builtin.get(record.name(), 0) + 1
+    if per_builtin:
+        logger.info("  builtin templates by function:")
+        for name in sorted(
+            per_builtin, key=lambda n: (-per_builtin[n], n)
+        )[:V2_MAX_TEMPLATE_LINES]:
+            logger.info("    %-40s %d", name, per_builtin[name])
+
+
 def sweep_once(
     gx: "config.GlobalInfo",
     probes: list[AllocationSite],
     core: FrozenCore,
     baseline_dcpa: dict["python.Class", int],
-) -> tuple[dict[AllocationSite, dict[str, infer.Types]], int, int]:
+    probes_and_molds: Optional[list[AllocationSite]] = None,
+    collect: bool = False,
+    freeze: bool = True,
+) -> tuple[
+    dict[AllocationSite, dict[str, infer.Types]],
+    int,
+    int,
+    list[TemplateRecord],
+]:
     """One propagation with every bound contour open; read them all.
 
     Each site owns a contour nothing else uses, so what lands in a contour is
@@ -615,7 +732,12 @@ def sweep_once(
             for name, node in contour_variables(gx, site.cl, contour).items()
         }
 
-    gx.infer_v2_open_contours = core.open_contours()
+    # Freezing keeps unowned sites from merging into each other, which is
+    # what a sweep needs. A pass that only wants to see which templates the
+    # program creates must not freeze: blocking writes into object attributes
+    # starves calls of their argument types, and a call with no argument types
+    # forms no cartesian product and so no template.
+    gx.infer_v2_open_contours = core.open_contours() if freeze else None
     try:
         rounds = v2_propagate(gx)
         results: dict[AllocationSite, dict[str, infer.Types]] = {}
@@ -631,6 +753,7 @@ def sweep_once(
                 if arrived:
                     inflow[name] = arrived
             results[site] = inflow
+        templates = collect_templates(gx, probes_and_molds) if collect else []
     finally:
         gx.infer_v2_open_contours = None
         infer.restore_network(gx, backup)
@@ -639,7 +762,7 @@ def sweep_once(
         for klass, dcpa in saved_dcpa.items():
             klass.dcpa = dcpa
 
-    return results, rounds, unreached
+    return results, rounds, unreached, templates
 
 
 def probe_allocation_sites(
@@ -683,7 +806,7 @@ def probe_allocation_sites(
     sweep = 0
     while sweep < V2_MAX_SWEEPS:
         sweep += 1
-        results, rounds, unreached = sweep_once(
+        results, rounds, unreached, _templates = sweep_once(
             gx, probes, core, baseline_dcpa
         )
 
@@ -725,6 +848,19 @@ def probe_allocation_sites(
         )
 
     report_core(core, sweep)
+
+    # one more propagation, this time keeping the templates it creates, so the
+    # molds that become allocation sites inside them can be listed
+    _results, _rounds, _unreached, templates = sweep_once(
+        gx,
+        probes,
+        core,
+        baseline_dcpa,
+        probes_and_molds=sites,
+        collect=True,
+        freeze=False,
+    )
+    report_templates(templates)
     return core
 
 
@@ -747,14 +883,17 @@ def report_core(core: FrozenCore, sweeps: int) -> None:
 def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     """Experimental alternative entry point to iterative_dataflow_analysis.
 
-    Stage 1: inventory the allocation sites.
-    Stage 2: probe each of them in turn, giving it a contour of its own and
-        reporting what flows in. Each probe restores the network afterwards,
-        so the probes are independent and observational only.
+    Stage 1: inventory the constructor nodes, separating module-level
+        allocation sites from in-function molds.
+    Stage 2: sweep the module-level sites, each owning a contour of its own,
+        committing what flows in to an append-only core until a whole sweep
+        learns nothing.
+    Stage 3: propagate once more and keep the templates, so the molds that
+        become allocation sites inside them can be listed.
 
-    The actual inference is still delegated to the existing analysis, which is
-    what makes this runnable on real programs today; that delegation is the
-    line later stages replace.
+    There is no stage that infers enough to generate code, so this stops here
+    rather than falling back to the existing analysis. Run without --infer-v2
+    to compile.
     """
     all_sites = collect_allocation_sites(gx, builtins=True)
     sites = [site for site in all_sites if not site.builtin]
@@ -762,10 +901,5 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     report_allocation_sites(gx, sites, builtin_count)
     probe_allocation_sites(gx, sites)
 
-    try:
-        # TODO replace with the v2 fixpoint itself
-        infer.iterative_dataflow_analysis(gx)
-    finally:
-        # report even when the existing analysis gives up, since the census of
-        # a run that did not converge is the interesting one
-        report_allocation_census(gx, sites)
+    logger.info("[infer v2: stopping after inspection; no C++ is generated]")
+    sys.exit(0)

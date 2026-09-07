@@ -28,7 +28,7 @@ def analyzed_alloc_sites():
     gx.silent = True
     gx.source_root = path.parent
     gx.module_path = path
-    gx.infer_v2 = True
+    # not gx.infer_v2: analyze() would run v2 and stop instead of returning
 
     module_name = path.stem
     gx.main_module = graph.parse_module(module_name, gx)
@@ -47,7 +47,7 @@ def analyzed_global_sites():
     gx.silent = True
     gx.source_root = path.parent
     gx.module_path = path
-    gx.infer_v2 = True
+    # not gx.infer_v2: analyze() would run v2 and stop instead of returning
 
     module_name = path.stem
     gx.main_module = graph.parse_module(module_name, gx)
@@ -540,3 +540,72 @@ class TestFrozenCoreAccumulation:
         assert len(gx.cnode) == before_cnodes
         assert {cl: cl.dcpa for cl in gx.allclasses} == before_dcpa
         assert gx.infer_v2_open_contours is None
+
+
+class TestTemplates:
+    """Stage 3: templates created by propagation, and the molds inside them."""
+
+    def _records(self, gx):
+        sites = infer2.collect_allocation_sites(gx, builtins=False)
+        core = infer2.FrozenCore()
+        baseline = {cl: cl.dcpa for cl in gx.allclasses}
+        _r, _n, _u, templates = infer2.sweep_once(
+            gx, [], core, baseline, probes_and_molds=sites,
+            collect=True, freeze=False,
+        )
+        return templates
+
+    def test_templates_are_created(self, analyzed_alloc_sites):
+        records = self._records(analyzed_alloc_sites)
+        assert records
+        assert any(not r.builtin for r in records)
+        assert any(r.builtin for r in records)
+
+    def test_polymorphic_call_gets_one_template_per_argument_type(
+        self, analyzed_alloc_sites
+    ):
+        """neighbours() is called with a tuple2 and with None: two templates."""
+        records = self._records(analyzed_alloc_sites)
+        neighbours = [
+            r for r in records if r.name().endswith("Solver.neighbours")
+        ]
+        argsets = {r.signature() for r in neighbours}
+        assert len(argsets) >= 2
+        assert any("none(" in sig for sig in argsets)
+        assert any("tuple2(" in sig for sig in argsets)
+
+    def test_molds_become_sites_in_each_template(self, analyzed_alloc_sites):
+        """Each neighbours template holds its own copy of both molds."""
+        records = self._records(analyzed_alloc_sites)
+        for record in records:
+            if not record.name().endswith("Solver.neighbours"):
+                continue
+            sources = sorted(mold.source() for mold, _a in record.molds)
+            assert sources == ["(x - 1, y)", "[(x - 1, y)]"]
+
+    def test_molds_get_a_contour_in_every_template(self, analyzed_alloc_sites):
+        """A mold allocates a single class in each template it appears in."""
+        records = self._records(analyzed_alloc_sites)
+        found = False
+        for record in records:
+            for mold, alloc in record.molds:
+                assert alloc is not None, mold
+                cl, dcpa = alloc
+                assert cl is mold.cl
+                assert dcpa >= 0
+                found = True
+        assert found
+
+    def test_module_level_sites_are_not_molds(self, analyzed_alloc_sites):
+        gx = analyzed_alloc_sites
+        sites = infer2.collect_allocation_sites(gx, builtins=False)
+        grouped = infer2.molds_by_function(sites)
+        for molds in grouped.values():
+            assert all(not m.module_level for m in molds)
+            assert all(m.kind != infer2.ALLOC_SCALAR for m in molds)
+
+    def test_signature_renders_receiver_and_arguments(self, analyzed_alloc_sites):
+        records = self._records(analyzed_alloc_sites)
+        init = [r for r in records if r.name().endswith("Solver.__init__")]
+        assert init
+        assert init[0].signature().startswith("(self=Solver(")
