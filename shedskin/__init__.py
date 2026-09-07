@@ -85,8 +85,9 @@ class Shedskin:
         gx = config.GlobalInfo(args)
 
         if args.subcmd in ["analyze", "translate", "build", "run"]:
-            if args.infer_v2:
-                gx.infer_v2 = True
+            # v2 is the analysis now, and it generates code
+            gx.infer_v2 = True
+            gx.infer_v2_codegen = True
 
         if args.subcmd in ["build", "run", "runtests"]:
             # ensure cmake is available and installed.
@@ -326,11 +327,6 @@ class Shedskin:
 
         # Type inference options
         parsers["inference"] = argparse.ArgumentParser(add_help=False)
-        parsers["inference"].add_argument(
-            "--infer-v2",
-            help="Use the experimental v2 type analysis",
-            action="store_true",
-        )
 
         # Type options (int32/64/128, float32/64)
         parsers["types"] = argparse.ArgumentParser(add_help=False)
