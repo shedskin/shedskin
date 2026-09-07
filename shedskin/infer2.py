@@ -672,47 +672,13 @@ class FrozenCore:
             if fresh != key:
                 moved += 1
             current = renamed.get(fresh)
-            if current is None or self.prefer(binding, current):
+            if current is None or binding[1] < current[1]:
                 renamed[fresh] = binding
                 if product is not None:
                     raw[fresh] = product
         self.alloc_bindings = renamed
         self.raw_ids = raw
         return moved
-
-    def prefer(
-        self,
-        candidate: tuple["python.Class", int],
-        current: tuple["python.Class", int],
-    ) -> bool:
-        """Which of two contours survives when their sites turn out to be one.
-
-        A contour that holds something beats one that holds nothing. Taking
-        the lower number instead can keep an empty contour over the filled
-        one it just merged with, and then the site is served a contour with
-        nothing in it — which reads downstream as "variable has no type".
-        Between two that both hold something, or two that hold nothing, the
-        older one wins, so the choice does not depend on iteration order.
-        """
-        candidate_filled = self.contour_signature.get(candidate) not in (
-            None,
-            *self.empty_signature_ids(),
-        )
-        current_filled = self.contour_signature.get(current) not in (
-            None,
-            *self.empty_signature_ids(),
-        )
-        if candidate_filled != current_filled:
-            return candidate_filled
-        return candidate[1] < current[1]
-
-    def empty_signature_ids(self) -> set[int]:
-        """Signature ids whose every variable is still empty."""
-        return {
-            sid
-            for (cl, signature), sid in self.signature_ids.items()
-            if signature_is_empty(signature)
-        }
 
     def resignature(
         self,
