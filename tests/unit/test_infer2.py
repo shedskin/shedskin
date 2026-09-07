@@ -549,10 +549,11 @@ class TestTemplates:
         sites = infer2.collect_allocation_sites(gx, builtins=False)
         core = infer2.FrozenCore()
         baseline = {cl: cl.dcpa for cl in gx.allclasses}
-        _r, _n, _u, templates = infer2.sweep_once(
+        result = infer2.sweep_once(
             gx, [], core, baseline, probes_and_molds=sites,
             collect=True, freeze=False,
         )
+        templates = result.templates
         return templates
 
     def test_templates_are_created(self, analyzed_alloc_sites):

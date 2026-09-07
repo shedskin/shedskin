@@ -926,13 +926,21 @@ def propagate(gx: "config.GlobalInfo") -> None:
     builtins = set(gx.builtins)
     types = gx.types
 
-    # --- infer v2: while probing, contours outside the open set are frozen.
-    # --- They still propagate what they already hold, they just cannot
-    # --- receive anything new, so whatever arrives in an open contour came
-    # --- from a site that owns one rather than from the rest of the program
-    # --- merging into itself. The open set is the committed sites plus the
-    # --- one under test; it grows as the frozen core fills in.
+    # --- infer v2: while sweeping, container contours outside the open set
+    # --- are frozen. They still propagate what they already hold, they just
+    # --- cannot receive anything new, so whatever arrives in an open contour
+    # --- came from a site that owns one rather than from the rest of the
+    # --- program merging into itself. The open set is the committed sites
+    # --- plus the ones minted during this sweep; it grows as the frozen core
+    # --- fills in.
+    # ---
+    # --- Only classes that carry contours are frozen. Freezing user class
+    # --- attributes as well starves template creation: a call whose argument
+    # --- comes out of an object attribute gets no argument types, so it
+    # --- forms no cartesian product and creates no template, and the molds
+    # --- inside it are never discovered.
     open_contours = gx.infer_v2_open_contours
+    split_idents = SPLIT_CLASS_IDENTS
 
     # --- iterative dataflow analysis
     while worklist:
@@ -951,13 +959,16 @@ def propagate(gx: "config.GlobalInfo") -> None:
                 if isinstance(b.thing, python.Variable) and isinstance(
                     b.thing.parent, python.Class
                 ):
+                    parent_ident = b.thing.parent.ident
+
                     if (
                         open_contours is not None
+                        and parent_ident in split_idents
+                        and b.thing.parent.mv.module.builtin
                         and (b.thing.parent, b.dcpa) not in open_contours
                     ):
                         continue
 
-                    parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in [
                             "int_",
@@ -2223,6 +2234,18 @@ def ifa_seed_template(
                 if alloc_id in gx.alloc_info:
                     pass
                 #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
+                # --- infer v2: the frozen core owns allocation site contours.
+                # --- A mold in a newly created template becomes a real site
+                # --- here, so this is where it is given its contour: an
+                # --- existing one if the core already knows this (function,
+                # --- cart, node), a fresh provisional one otherwise. v2
+                # --- replaces the mother-contour search below rather than
+                # --- adding to it; that search exists to carry a contour
+                # --- across an IFA split, and v2 does not split.
+                elif gx.infer_v2_core is not None and gx.infer_v2_core.note_mold(
+                    gx, alloc_id, node
+                ):
+                    pass
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id

@@ -651,6 +651,14 @@ class GlobalInfo:
     ) -> None:
         self._type_inference.infer_v2_open_contours = value
 
+    @property
+    def infer_v2_core(self) -> Optional[Any]:
+        return self._type_inference.infer_v2_core
+
+    @infer_v2_core.setter
+    def infer_v2_core(self, value: Optional[Any]) -> None:
+        self._type_inference.infer_v2_core = value
+
     def get_stats(self) -> dict[str, Any]:
         assert self.module_path is not None
         pyfile = Path(self.module_path)
