@@ -671,11 +671,22 @@ class FrozenCore:
             fresh = self.canonical_key(product) if product is not None else key
             if fresh != key:
                 moved += 1
-            current = renamed.get(fresh)
-            if current is None or binding[1] < current[1]:
-                renamed[fresh] = binding
+            if fresh in renamed and renamed[fresh] != binding:
+                # Two products that now canonicalise together. Do not merge
+                # them: dropping one contour means its site is discovered
+                # again next round and minted afresh, which changes contents,
+                # which changes signatures, which makes the two products
+                # canonicalise apart again — life cycled between 29 and 68
+                # rediscovered sites forever on exactly this. Leave this
+                # binding under the name it already has; renaming is only
+                # ever an improvement, never a loss.
+                renamed[key] = binding
                 if product is not None:
-                    raw[fresh] = product
+                    raw[key] = product
+                continue
+            renamed[fresh] = binding
+            if product is not None:
+                raw[fresh] = product
         self.alloc_bindings = renamed
         self.raw_ids = raw
         return moved
