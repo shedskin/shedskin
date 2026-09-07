@@ -633,6 +633,24 @@ class GlobalInfo:
     def retry_maxiters(self, value: bool) -> None:
         self._type_inference.retry_maxiters = value
 
+    @property
+    def infer_v2(self) -> bool:
+        return self._type_inference.infer_v2
+
+    @infer_v2.setter
+    def infer_v2(self, value: bool) -> None:
+        self._type_inference.infer_v2 = value
+
+    @property
+    def infer_v2_open_contours(self) -> Optional[set[tuple[Any, int]]]:
+        return self._type_inference.infer_v2_open_contours
+
+    @infer_v2_open_contours.setter
+    def infer_v2_open_contours(
+        self, value: Optional[set[tuple[Any, int]]]
+    ) -> None:
+        self._type_inference.infer_v2_open_contours = value
+
     def get_stats(self) -> dict[str, Any]:
         assert self.module_path is not None
         pyfile = Path(self.module_path)

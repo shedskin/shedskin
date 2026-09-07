@@ -775,6 +775,8 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         cmdline_options.append("--collect-stats")
     if gx.retry_maxiters:
         cmdline_options.append("--retry")
+    if gx.infer_v2:
+        cmdline_options.append("--infer-v2")
     if gx.silent:
         cmdline_options.append("--silent")
     cmdline_opts = " ".join(cmdline_options)

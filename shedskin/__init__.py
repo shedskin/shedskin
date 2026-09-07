@@ -84,6 +84,10 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo(args)
 
+        if args.subcmd in ["analyze", "translate", "build", "run"]:
+            if args.infer_v2:
+                gx.infer_v2 = True
+
         if args.subcmd in ["build", "run", "runtests"]:
             # ensure cmake is available and installed.
             cmake.check_cmake_availability()
@@ -320,6 +324,14 @@ class Shedskin:
             action="store_true",
         )
 
+        # Type inference options
+        parsers["inference"] = argparse.ArgumentParser(add_help=False)
+        parsers["inference"].add_argument(
+            "--infer-v2",
+            help="Use the experimental v2 type analysis",
+            action="store_true",
+        )
+
         # Type options (int32/64/128, float32/64)
         parsers["types"] = argparse.ArgumentParser(add_help=False)
         grp = parsers["types"].add_argument
@@ -436,7 +448,7 @@ class Shedskin:
         parser_analyze = subparsers.add_parser(
             "analyze",
             help="Analyze and validate python module",
-            parents=[shared["stats"]],
+            parents=[shared["stats"], shared["inference"]],
         )
         parser_analyze.add_argument("name", help="Python file or module to analyze")
 
@@ -450,6 +462,7 @@ class Shedskin:
                 shared["types"],
                 shared["disable"],
                 shared["compiler"],
+                shared["inference"],
             ],
         )
         opt = parser_translate.add_argument
@@ -498,6 +511,7 @@ class Shedskin:
                 shared["disable"],
                 shared["compiler"],
                 shared["cmake"],
+                shared["inference"],
             ],
         )
         parser_build.add_argument("name", help="Python file or module to compile")
@@ -513,6 +527,7 @@ class Shedskin:
                 shared["disable"],
                 shared["compiler"],
                 shared["cmake"],
+                shared["inference"],
             ],
         )
         parser_run.add_argument("name", help="Python file or module to run")
