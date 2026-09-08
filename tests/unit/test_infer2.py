@@ -688,7 +688,7 @@ def lambda_sites():
 class TestBatchMinting:
     """Regressions found on c64 once every discovered site is minted per
     round (SS_V2_SITES_PER_ROUND unlimited): naming must survive signatures
-    moving, and nothing minted on the way to the fixpoint may outlive it."""
+    moving, and a copied method must not leak the bucket contour."""
 
     def test_lambda_only_receives_its_argument(self, lambda_sites):
         # the iterator over `self.entries` and the one over `self.offsets`
