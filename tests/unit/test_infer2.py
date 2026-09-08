@@ -640,3 +640,84 @@ class TestSitesPerRound:
         # the one INFO line is the progress message shown to every user
         assert source.count("logger.info(") == 1
         assert 'logger.info("[analyzing types..]")' in source
+
+
+def _analyze_v2(name):
+    """Run the whole v2 pipeline, materialisation included, on a fixture."""
+    path = Path(__file__).parent / "fixtures" / name
+    options = argparse.Namespace()
+    gx = GlobalInfo(options)
+    gx.silent = True
+    gx.source_root = path.parent
+    gx.module_path = path
+    gx.infer_v2 = True
+    gx.infer_v2_codegen = True
+    module_name = path.stem
+    gx.main_module = graph.parse_module(module_name, gx)
+    cores = []
+    probe = infer2.probe_allocation_sites
+
+    def capture(*args, **kwargs):
+        core = probe(*args, **kwargs)
+        cores.append(core)
+        return core
+
+    infer2.probe_allocation_sites = capture
+    try:
+        infer.analyze(gx, module_name)
+    finally:
+        infer2.probe_allocation_sites = probe
+    gx.v2_core = cores[-1]
+    return gx
+
+
+def _types_at(gx, thing):
+    """Union of the types of every template copy of an AST node."""
+    found = set()
+    for (node, _dcpa, _cpa), cnode in gx.cnode.items():
+        if node is thing:
+            found |= cnode.types()
+    return found
+
+
+@pytest.fixture(scope="module")
+def lambda_sites():
+    return _analyze_v2("lambda_sites.py")
+
+
+class TestBatchMinting:
+    """Regressions found on c64 once every discovered site is minted per
+    round (SS_V2_SITES_PER_ROUND unlimited): naming must survive signatures
+    moving, and nothing minted on the way to the fixpoint may outlive it."""
+
+    def test_lambda_only_receives_its_argument(self, lambda_sites):
+        # the iterator over `self.entries` and the one over `self.offsets`
+        # were merged while both were still empty, so map() fed the lambda
+        # its own tuples and `entry` became {Entry, tuple2}
+        gx = lambda_sites
+        lam = gx.main_module.mv.lambdas["__lambda0__"]
+        entry = lam.vars["entry"]
+        idents = {cl.ident for cl, _ in gx.merged_inh[entry]}
+        assert idents == {"Entry"}
+
+    def test_rounds_converge_quickly(self, lambda_sites):
+        # the stale-name cycle re-minted four sites every three rounds and
+        # never converged; the fixpoint is reached in a handful of rounds
+        assert lambda_sites.v2_core.rounds <= 12
+
+    def test_iter_result_has_one_contour(self):
+        # class_copy handed every copied method's allocation site the types
+        # of the base copy, so `iter([1, 2, 3])` also returned the shared
+        # bucket iterator and __product2 got half-filled tuple2 contours
+        gx = _analyze_v2("product_sites.py")
+        calls = [
+            node
+            for node in ast.walk(gx.main_module.ast)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "iter"
+        ]
+        assert len(calls) == 2
+        for call in calls:
+            types = _types_at(gx, call)
+            assert len(types) == 1, sorted((cl.ident, d) for cl, d in types)

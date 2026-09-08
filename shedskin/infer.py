@@ -860,6 +860,26 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
 
         func_copy(gx, func, dcpa, 0)
 
+        if gx.infer_v2:
+            # --- infer v2: a method copied here is not a template yet, so
+            # --- its allocation sites are not seeded (cart is None), and
+            # --- CNode.copy has given each constructor node the types of
+            # --- the base copy: the shared bucket contour. Propagation
+            # --- reads that before the template is created for real and
+            # --- seeded from the core, and a bucket iterator is already
+            # --- flowing out of list.__iter__(7) by the time the site gets
+            # --- its own contour. The old analysis special-cased __iter__
+            # --- for the same reason; v2 owns every site, so nothing is
+            # --- known here and the node holds nothing.
+            for node in func.nodes:
+                if node.constructor and isinstance(
+                    node.thing,
+                    (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call),
+                ):
+                    copied = gx.cnode.get((node.thing, dcpa, 0))
+                    if copied is not None and copied is not node:
+                        gx.types[copied] = set()
+
 
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
 
@@ -2233,7 +2253,9 @@ def ifa_seed_template(
                 alloc_node = gx.cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in gx.alloc_info:
-                    pass
+                    if gx.infer_v2_core is not None:
+                        # infer v2: the site reached its contour directly
+                        gx.infer_v2_core.served.add(alloc_id)
                 #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
                 # --- infer v2: the frozen core owns allocation site contours.
                 # --- A mold in a newly created template becomes a real site
