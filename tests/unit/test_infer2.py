@@ -751,3 +751,15 @@ class TestBatchMinting:
         best = gx.main_module.mv.funcs["best"]
         idents = {cl.ident for cl, _ in gx.merged_inh[best.vars["play"]]}
         assert idents == {"tuple2"}
+
+    def test_static_method_receiver_is_not_a_bucket(self):
+        # a static or class method is analysed at its class's dcpa 1, so its
+        # product starts with (cls, 1): that is the class, not a container
+        # in a bucket, and the mold inside is a site like any other
+        gx = _analyze_v2("staticmethod_sites.py")
+        assert gx.v2_core.misses == 0
+        mv = gx.main_module.mv
+        d3 = mv.globals["d3"]
+        (binding,) = gx.merged_inh[d3]
+        assert binding[0].ident == "defaultdict"
+        assert binding in gx.v2_core.owners.values()
