@@ -860,7 +860,7 @@ class FrozenCore:
             # user classes get one contour each and are never split, scalars
             # never get one at all
             return None
-        if self.mentions_bucket(alloc_id):
+        if self.mentions_bucket(alloc_id, node.parent):
             # not a site yet: see mentions_bucket
             self.unnameable += 1
             return None
@@ -869,7 +869,7 @@ class FrozenCore:
         self.misses += 1
         return None
 
-    def mentions_bucket(self, product: Any) -> bool:
+    def mentions_bucket(self, product: Any, func: Any = None) -> bool:
         """Does a product mention a container contour nobody owns?
 
         A site the core has not bound yet allocates into its class's shared
@@ -886,6 +886,19 @@ class FrozenCore:
         cart = product[1]
         if not isinstance(cart, tuple):
             return False
+        while isinstance(func, python.Function) and isinstance(
+            func.parent, python.Function
+        ):
+            func = func.parent
+        if (
+            isinstance(func, python.Function)
+            and isinstance(func.parent, python.Class)
+            and func.ident in func.parent.staticmethods + func.parent.classmethods
+        ):
+            # a static or class method is analysed at its class's dcpa 1,
+            # and that class slot leads its product: it is the receiver,
+            # the class itself, not a container anybody allocated
+            cart = cart[1:]
         owned = None
         for item in cart:
             if not (isinstance(item, tuple) and len(item) == 2):
