@@ -2081,6 +2081,7 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     rather than falling back to the existing analysis. Run without --infer-v2
     to compile.
     """
+    logger.info("[analyzing types..]")
     all_sites = collect_allocation_sites(gx, builtins=True)
     # Module-level allocations in builtin modules — sys.argv and friends —
     # are real sites too. They are few, and excluding them leaves them on a
