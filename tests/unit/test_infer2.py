@@ -637,4 +637,6 @@ class TestSitesPerRound:
         # v2 reporting must stay quiet without -d3
         import inspect
         source = inspect.getsource(infer2)
-        assert "logger.info(" not in source
+        # the one INFO line is the progress message shown to every user
+        assert source.count("logger.info(") == 1
+        assert 'logger.info("[analyzing types..]")' in source
