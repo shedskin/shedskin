@@ -592,18 +592,20 @@ class FrozenCore:
         self.signature_ids: dict[tuple[Any, tuple], int] = {}
         self.contour_signature: dict[tuple["python.Class", int], int] = {}
         self.upgrades = 0
-        # the cartesian product each binding was actually created for. A key
-        # is a *name* derived from signatures, and signatures move; the raw
-        # product does not, so it is what lets a site keep its contour when
-        # its name changes.
-        self.raw_ids: dict[Any, Any] = {}
-        # the contour each raw product was bound to, by product. The name
-        # a product is filed under is derived from signatures and can be
-        # renamed out from under a lookup — in particular when two products
-        # come to canonicalise together and only one can hold the name —
-        # but the product itself never changes, so this is the lookup that
-        # cannot miss a site the core has already given a contour.
-        self.raw_bindings: dict[Any, tuple["python.Class", int]] = {}
+        # the contour each product owns, by product, in minting order. A
+        # product is a (function, raw cartesian product, node) triple; the
+        # *name* a product is filed under in `alloc_bindings` is derived from
+        # signatures and moves as they do, but the product does not, so
+        # ownership is what a site keeps across every rename. Two products
+        # that are named alike share the older owner's contour for exactly
+        # as long as they are named alike; the moment their names come
+        # apart, the one that does not own the contour is a site again.
+        self.owners: dict[Any, tuple["python.Class", int]] = {}
+        # contours minted by the last mint, not propagated yet; and how
+        # many discovered products the last mint held back for mentioning
+        # one (see mentions_fresh)
+        self.fresh_contours: set[tuple["python.Class", int]] = set()
+        self.deferred = 0
         self.misses = 0
         self.rounds = 0
 
@@ -692,32 +694,23 @@ class FrozenCore:
         products that now canonicalise together are one site, and keep the
         older contour.
         """
+        # rebuild both name indexes from ownership, so that no name outlives
+        # the signatures it was derived from. Two products that now
+        # canonicalise together keep their own contours — the older owner
+        # holds the name, and the younger is still served its own through
+        # `owners` (see note_mold) — so nothing is merged, dropped, or
+        # stranded, and the index is a pure function of the fixpoint.
+        minted = set(self.provisional.values())
+        before = dict(self.alloc_bindings)
         renamed: dict[Any, tuple["python.Class", int]] = {}
-        raw: dict[Any, Any] = {}
-        moved = 0
-        for key, binding in self.alloc_bindings.items():
-            product = self.raw_ids.get(key)
-            fresh = self.canonical_key(product) if product is not None else key
-            if fresh != key:
-                moved += 1
-            if fresh in renamed and renamed[fresh] != binding:
-                # Two products that now canonicalise together. Do not merge
-                # them: dropping one contour means its site is discovered
-                # again next round and minted afresh, which changes contents,
-                # which changes signatures, which makes the two products
-                # canonicalise apart again — life cycled between 29 and 68
-                # rediscovered sites forever on exactly this. Leave this
-                # binding under the name it already has; renaming is only
-                # ever an improvement, never a loss.
-                renamed[key] = binding
-                if product is not None:
-                    raw[key] = product
-                continue
-            renamed[fresh] = binding
-            if product is not None:
-                raw[fresh] = product
+        provisional: dict[Any, tuple["python.Class", int]] = {}
+        for product, binding in self.owners.items():
+            fresh = self.canonical_key(product)
+            index = provisional if binding in minted else renamed
+            index.setdefault(fresh, binding)
+        moved = sum(1 for key, binding in renamed.items() if before.get(key) != binding)
         self.alloc_bindings = renamed
-        self.raw_ids = raw
+        self.provisional = provisional
         return moved
 
     def resignature(
@@ -839,19 +832,15 @@ class FrozenCore:
         settled signatures keeps the next round from building products out
         of distinctions that do not exist.
         """
-        key = self.canonical_key(alloc_id)
-        self.raw_ids.setdefault(key, alloc_id)
-        binding = self.alloc_bindings.get(key)
+        # its own contour first: a product that owns one keeps it whatever
+        # its name is now. Only then by name, which is how a product that
+        # owns nothing shares the contour of one it is named alike to.
+        binding = self.owners.get(alloc_id)
         if binding is None:
-            binding = self.provisional.get(key)
-        if binding is None:
-            # the product was bound under a name it no longer canonicalises
-            # to (see rekey): the contour is still its own, so re-file it
-            # under the current name rather than discovering it afresh
-            binding = self.raw_bindings.get(alloc_id)
-            if binding is not None:
-                self.alloc_bindings[key] = binding
-                self.raw_ids[key] = alloc_id
+            key = self.canonical_key(alloc_id)
+            binding = self.alloc_bindings.get(key)
+            if binding is None:
+                binding = self.provisional.get(key)
         if binding is not None:
             gx.alloc_info[alloc_id] = binding
             return binding
@@ -869,7 +858,7 @@ class FrozenCore:
             # never get one at all
             return None
 
-        self.discovered[key] = cl
+        self.discovered[alloc_id] = cl
         self.misses += 1
         return None
 
@@ -893,18 +882,59 @@ class FrozenCore:
         lively — set SS_V2_SITES_PER_ROUND=1.
         """
         added = []
-        for key in sorted(self.discovered, key=canonical_key_sort):
+        self.deferred = 0
+        for product in sorted(self.discovered, key=canonical_key_sort):
             if len(added) >= limit:
                 break
-            if key in self.alloc_bindings or key in self.provisional:
+            if self.pending(product) is None:
                 continue
-            cl = self.discovered[key]
-            contour = self.new_contour(cl)
-            binding = (cl, contour)
-            self.provisional[key] = binding
-            self.raw_bindings[self.raw_ids.get(key, key)] = binding
-            added.append((key, binding))
+            added.append(self.mint(product))
         return added
+
+    def pending(self, product: Any) -> Optional[Any]:
+        """The name a discovered product would be minted under, or None.
+
+        None when it needs no contour of its own: it owns one already, or
+        the name it has come to canonicalise to is bound, in which case the
+        next sweep serves it that contour by name.
+        """
+        if product in self.owners:
+            return None
+        fresh = self.canonical_key(product)
+        if fresh in self.alloc_bindings or fresh in self.provisional:
+            return None
+        if self.mentions_fresh(product):
+            self.deferred += 1
+            return None
+        return fresh
+
+    def mentions_fresh(self, product: Any) -> bool:
+        """Does a product mention a contour minted last round?
+
+        Such a contour has not been propagated yet, so its signature says
+        "empty" for no better reason than that nothing has had the chance
+        to flow into it; a name built from it is not a fact. A recursive
+        function that creates a container and passes it to itself shows
+        why it matters: its template for the newest container always has
+        an empty-named mold, that mold is minted, the container fills, and
+        the next template is again the newest. Waiting one round lets the
+        container show what it holds, and the mold is then found to be the
+        site that already exists.
+        """
+        cart = product[1]
+        if not self.fresh_contours or not isinstance(cart, tuple):
+            return False
+        return any(item in self.fresh_contours for item in cart)
+
+    def mint(self, product: Any) -> tuple[Any, tuple["python.Class", int]]:
+        """Give one discovered product a contour of its own."""
+        fresh = self.canonical_key(product)
+        cl = self.discovered[product]
+        contour = self.new_contour(cl)
+        binding = (cl, contour)
+        self.provisional[fresh] = binding
+        self.owners[product] = binding
+        return fresh, binding
 
     def mint_one(self) -> Optional[tuple[Any, tuple["python.Class", int]]]:
         """Give a contour to exactly one discovered site, and stop.
@@ -922,29 +952,40 @@ class FrozenCore:
         first is a property of the source rather than of dictionary
         iteration.
         """
-        for key in sorted(self.discovered, key=canonical_key_sort):
-            if key in self.alloc_bindings or key in self.provisional:
-                continue
-            cl = self.discovered[key]
-            contour = self.new_contour(cl)
-            binding = (cl, contour)
-            self.provisional[key] = binding
-            self.raw_bindings[self.raw_ids.get(key, key)] = binding
-            return key, binding
+        self.deferred = 0
+        for product in sorted(self.discovered, key=canonical_key_sort):
+            if self.pending(product) is not None:
+                return self.mint(product)
         return None
 
     def pending_count(self) -> int:
         """How many discovered sites are still waiting for a contour."""
-        return sum(
-            1
-            for key in self.discovered
-            if key not in self.alloc_bindings and key not in self.provisional
-        )
+        saved = self.deferred
+        count = sum(1 for product in self.discovered if self.pending(product))
+        self.deferred = saved
+        return count
+
+    def every_mold(self) -> dict[Any, tuple["python.Class", int]]:
+        """Every in-function binding there is, by name where it has one and
+        by product where it is owned but not named (see rekey)."""
+        molds: dict[Any, tuple["python.Class", int]] = dict(self.alloc_bindings)
+        molds.update(self.provisional)
+        named = set(molds.values())
+        for product, binding in self.owners.items():
+            if binding not in named:
+                molds[product] = binding
+        return molds
 
     def owned_contours(self) -> set[tuple["python.Class", int]]:
-        """Every contour any site owns, committed or provisional."""
+        """Every contour any site owns, committed or provisional.
+
+        Ownership is the source: a product named alike to an older one is
+        not in the name index but still owns its contour, and that contour
+        has to be open and observed like any other.
+        """
         return (
             set(self.bindings.values())
+            | set(self.owners.values())
             | set(self.alloc_bindings.values())
             | set(self.provisional.values())
         )
@@ -1166,7 +1207,7 @@ def commit_round(
 
     mold_fresh: dict[Any, dict[str, infer.Types]] = {}
     for key, inflow in result.mold_inflow.items():
-        binding = core.alloc_bindings.get(key)
+        binding = core.alloc_bindings.get(key) or core.owners.get(key)
         if binding is None:
             continue
         cl, contour = binding
@@ -1467,9 +1508,7 @@ def sweep_once(
             for name, node in contour_variables(gx, site.cl, contour).items()
         }
     seeded_molds = {}
-    for alloc_id, (cl, contour) in list(core.alloc_bindings.items()) + list(
-        core.provisional.items()
-    ):
+    for alloc_id, (cl, contour) in core.every_mold().items():
         seeded_molds[alloc_id] = {
             name: node.types().copy()
             for name, node in contour_variables(gx, cl, contour).items()
@@ -1505,12 +1544,7 @@ def sweep_once(
             results[site] = inflow
 
         mold_results: dict[Any, dict[str, infer.Types]] = {}
-        every_mold = dict(core.alloc_bindings)
-        every_mold.update(core.provisional)
-        every_mold.update(
-            {k: v for k, v in core.provisional.items()}
-        )
-        for alloc_id, (cl, contour) in every_mold.items():
+        for alloc_id, (cl, contour) in core.every_mold().items():
             inflow = {}
             before = seeded_molds.get(alloc_id, {})
             for name, node in contour_variables(gx, cl, contour).items():
@@ -1916,15 +1950,18 @@ def probe_allocation_sites(
         # it. Only now, with nothing in flight and every signature settled,
         # is a name for a new site meaningful.
         commit = commit_round(gx, core, result)
+        # signatures first, then names, then the mint: a site is named by
+        # what this round learned, not by what last round's names said.
+        # The contours the mint creates have no signature until the next
+        # resignature; nothing is named under them in the meantime (see
+        # mentions_fresh), so their standing as raw identities for one
+        # round names nothing.
+        upgrades = core.resignature(result.contour_contents)
+        core.rekey()
         pending = core.pending_count()
         batch = core.mint_batch(V2_SITES_PER_ROUND)
         added = batch[0] if batch else None
-        # after the mint, never before: a contour with no signature falls
-        # back to its own number in every cart that mentions it, which is a
-        # distinction the next round would mint yet another contour for
-        upgrades = core.resignature(result.contour_contents)
-        # signatures just moved, so the names built from them have moved too
-        core.rekey()
+        core.fresh_contours = {binding for _key, binding in batch}
 
         report_round_learning(core, commit, round_no)
         for entry in batch:
@@ -1947,7 +1984,7 @@ def probe_allocation_sites(
         history.append(stats)
         report_round(stats)
 
-        if not batch and not commit.learned and not upgrades:
+        if not batch and not commit.learned and not upgrades and not core.deferred:
             break
     else:
         logger.warning(
