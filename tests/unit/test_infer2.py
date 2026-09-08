@@ -721,3 +721,20 @@ class TestBatchMinting:
         for call in calls:
             types = _types_at(gx, call)
             assert len(types) == 1, sorted((cl.ident, d) for cl, d in types)
+
+    def test_recursion_through_a_fresh_container_settles(self):
+        # a method that creates a list and passes it to itself gave every
+        # template a newly minted, still empty list, whose mold was named
+        # afresh each round: one more contour per round, forever
+        gx = _analyze_v2("recursive_sites.py")
+        assert gx.v2_core.rounds <= 12
+
+    def test_products_named_alike_come_apart(self):
+        # two list comprehensions whose inputs were both empty for a round
+        # shared one iterator contour by name; when their names came apart
+        # the sharing had to end, or `z` stays {int, list}
+        gx = _analyze_v2("shared_iter_sites.py")
+        comps = [lc for _node, lc, _parent in gx.main_module.mv.listcomps]
+        (z,) = [lc.vars["z"] for lc in comps if "z" in lc.vars]
+        idents = {cl.ident for cl, _ in gx.merged_inh[z]}
+        assert idents == {"list"}
