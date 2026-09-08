@@ -2253,9 +2253,7 @@ def ifa_seed_template(
                 alloc_node = gx.cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in gx.alloc_info:
-                    if gx.infer_v2_core is not None:
-                        # infer v2: the site reached its contour directly
-                        gx.infer_v2_core.served.add(alloc_id)
+                    pass
                 #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
                 # --- infer v2: the frozen core owns allocation site contours.
                 # --- A mold in a newly created template becomes a real site
