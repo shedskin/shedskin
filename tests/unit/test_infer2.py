@@ -738,3 +738,16 @@ class TestBatchMinting:
         (z,) = [lc.vars["z"] for lc in comps if "z" in lc.vars]
         idents = {cl.ident for cl, _ in gx.merged_inh[z]}
         assert idents == {"list"}
+
+    def test_bucket_products_are_not_sites(self):
+        # a template keyed on the shared bucket contour of a not-yet-bound
+        # site is an artefact of the analysis being half-done; minting its
+        # molds made which sites exist depend on propagation order, and on
+        # mastermind2 one run in a few ended with {float, int, tuple2}
+        gx = _analyze_v2("bucket_sites.py")
+        core = gx.v2_core
+        for product in core.owners:
+            assert not core.mentions_bucket(product), infer2.repr_cart(product[1])
+        best = gx.main_module.mv.funcs["best"]
+        idents = {cl.ident for cl, _ in gx.merged_inh[best.vars["play"]]}
+        assert idents == {"tuple2"}
