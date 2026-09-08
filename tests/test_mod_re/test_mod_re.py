@@ -204,6 +204,39 @@ def test_re_fullmatch_anchored():
     assert re.fullmatch('nomatch', 'ab') is None
 
 
+def test_re_findall_flags_not_passed_as_match_options():
+    # Regression test: the module-level findall()/split() forwarded the
+    # Python-level re.* flags (e.g. IGNORECASE=0x02) straight into
+    # pcre2_match()'s match-time options bitmask, where they collided with
+    # unrelated PCRE2 match-time option bits (e.g. PCRE2_NOTEOL=0x02),
+    # silently breaking anchored end-of-string ('$') matches whenever
+    # IGNORECASE was combined with findall()/split().
+    assert re.findall(r"A$", "ba", re.I) == ['a']
+    assert re.findall(r"A$", "bA", re.I) == ['A']
+    assert re.findall(r"a$", "ba") == ['a']
+    assert re.split(r"a$", "ba", flags=re.I) == ['b', '']
+
+
+def test_re_split_zero_width_matches():
+    # Regression test: __splitfind() used to "skip" a zero-length match by
+    # bumping its single index one position forward, which silently dropped
+    # the character sitting at that position, and could advance the index
+    # past the end of the subject -- making the final substr() throw and
+    # abort the program. Zero-length matches do split in CPython 3.7+; they
+    # just produce empty segments.
+    assert re.split(r"x*", "abc") == ['', 'a', 'b', 'c', '']
+    assert re.split(r"", "abc") == ['', 'a', 'b', 'c', '']
+    assert re.split(r"(?=b)", "abc") == ['a', 'bc']
+    assert re.split(r"^", "a\nb", flags=re.M) == ['', 'a\n', 'b']
+    assert re.split(r"\b", "ab cd") == ['', 'ab', ' ', 'cd', '']
+    assert re.split(r"a*", "ba") == ['', 'b', '', '']
+    assert re.split(r"x*", "") == ['', '']
+    # zero-length matches with a capturing group emit the group too
+    assert re.split(r"(x*)", "abc") == ['', '', 'a', '', 'b', '', 'c', '', '']
+    # findall shares this code path and must keep reporting empty matches
+    assert re.findall(r"x*", "abc") == ['', '', '', '']
+
+
 def test_re_locale_rejected():
     error = ''
     try:
@@ -374,6 +407,8 @@ def test_all():
     test_match_pos_endpos()
     test_re_endpos_window()
     test_flags()
+    test_re_findall_flags_not_passed_as_match_options()
+    test_re_split_zero_width_matches()
     test_re_match_anchored()
     test_re_fullmatch_anchored()
     test_re_locale_rejected()
