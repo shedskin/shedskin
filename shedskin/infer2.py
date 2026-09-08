@@ -136,11 +136,32 @@ V2_MAX_SITE_LINES = 60
 V2_SIGNATURE_ROUNDS = 12
 
 # V2_SITES_PER_ROUND: how many newly discovered allocation sites are given a
-# contour per round. One is the schedule the design rests on — see
-# FrozenCore.mint_batch. Raising it is a speed/safety trade, since each round
-# costs a propagation to convergence; the growth table says whether it cost
-# anything.
-V2_SITES_PER_ROUND = int(os.environ.get("SS_V2_SITES_PER_ROUND", 1))
+# contour per round. Unlimited by default: every site discovered in a round
+# is minted at its end. One per round is the conservative schedule the design
+# was written against — see FrozenCore.mint_batch — and SS_V2_SITES_PER_ROUND
+# sets a finite batch size to fall back to it when a program churns. Each
+# round costs a propagation to convergence; the growth table says whether the
+# batch size cost anything.
+
+
+def sites_per_round(value: Optional[str] = None) -> int:
+    """Batch size for FrozenCore.mint_batch from SS_V2_SITES_PER_ROUND.
+
+    Unset or empty means unlimited (sys.maxsize); otherwise a positive
+    integer.
+    """
+    if value is None:
+        value = os.environ.get("SS_V2_SITES_PER_ROUND", "")
+    value = value.strip()
+    if not value:
+        return sys.maxsize
+    limit = int(value)
+    if limit < 1:
+        raise ValueError("SS_V2_SITES_PER_ROUND must be a positive integer")
+    return limit
+
+
+V2_SITES_PER_ROUND = sites_per_round()
 
 
 class AllocationSite:
@@ -353,14 +374,14 @@ def report_allocation_sites(
     for site in sites:
         by_kind.setdefault(site.kind, []).append(site)
 
-    logger.info("[infer v2: allocation site inventory]")
-    logger.info(
+    logger.debug("[infer v2: allocation site inventory]")
+    logger.debug(
         "  program constructor nodes: %d (builtin scanned: %d)",
         len(sites),
         builtin_count,
     )
     for kind in (ALLOC_CONTAINER, ALLOC_INSTANCE, ALLOC_SCALAR):
-        logger.info("    %-10s %d", kind, len(by_kind.get(kind, [])))
+        logger.debug("    %-10s %d", kind, len(by_kind.get(kind, [])))
 
     contoured = by_kind.get(ALLOC_CONTAINER, []) + by_kind.get(ALLOC_INSTANCE, [])
     contoured.sort(
@@ -370,9 +391,9 @@ def report_allocation_sites(
     def log_group(header: str, group: list[AllocationSite]) -> None:
         if not group:
             return
-        logger.info(header, len(group))
+        logger.debug(header, len(group))
         for site in group:
-            logger.info(
+            logger.debug(
                 "    %-20s %-10s dcpa %-4d %-22s %s",
                 site.location(),
                 site.cl.ident,
@@ -772,7 +793,7 @@ class FrozenCore:
             for binding in changed[:12]:
                 was = by_id.get(previous[binding], (None, ()))[1]
                 now = by_id.get(self.contour_signature[binding], (None, ()))[1]
-                logger.info(
+                logger.debug(
                     "    upgrade %s(%d): %s  ->  %s",
                     binding[0].ident,
                     binding[1],
@@ -780,7 +801,7 @@ class FrozenCore:
                     render_signature(now),
                 )
             if len(changed) > 12:
-                logger.info("    ... %d more upgrade(s)", len(changed) - 12)
+                logger.debug("    ... %d more upgrade(s)", len(changed) - 12)
         self.upgrades = len(changed)
         return len(changed)
 
@@ -838,18 +859,19 @@ class FrozenCore:
     ) -> list[tuple[Any, tuple["python.Class", int]]]:
         """Give contours to up to `limit` discovered sites.
 
-        `limit` is 1 by default, which is the safe schedule: a site is named
-        by the signatures of the contours in its argument product, so naming
-        it while those signatures are still moving gives it a name that will
-        not mean the same thing next round. Adding several at once means
-        each one shifts the signatures the others were named under.
+        `limit` is unlimited by default (see V2_SITES_PER_ROUND). One is the
+        safe schedule: a site is named by the signatures of the contours in
+        its argument product, so naming it while those signatures are still
+        moving gives it a name that will not mean the same thing next round.
+        Adding several at once means each one shifts the signatures the
+        others were named under.
 
-        Raising it trades that guarantee for speed, since each round costs a
-        full propagation to convergence. Worth trying on a large program:
-        if the growth table still shows `found` falling to zero, the larger
-        batch happened not to disturb anything and the answer is the same
-        for far fewer rounds. If it churns instead — `found` refusing to
-        settle, `upgrade` staying lively — drop back to 1.
+        Minting more per round trades that guarantee for speed, since each
+        round costs a full propagation to convergence. If the growth table
+        still shows `found` falling to zero, the larger batch happened not
+        to disturb anything and the answer is the same for far fewer rounds.
+        If it churns instead — `found` refusing to settle, `upgrade` staying
+        lively — set SS_V2_SITES_PER_ROUND=1.
         """
         added = []
         for key in sorted(self.discovered, key=canonical_key_sort):
@@ -1313,14 +1335,14 @@ def report_templates(records: list[TemplateRecord]) -> None:
     enabling = [r for r in program if r.molds]
     new_sites = sum(len(r.molds) for r in program)
 
-    logger.info("[infer v2: templates created during propagation]")
-    logger.info(
+    logger.debug("[infer v2: templates created during propagation]")
+    logger.debug(
         "  templates: %d (program: %d, builtin: %d)",
         len(records),
         len(program),
         len(builtin),
     )
-    logger.info(
+    logger.debug(
         "  %d program template(s) enable %d new allocation site(s)",
         len(enabling),
         new_sites,
@@ -1329,15 +1351,15 @@ def report_templates(records: list[TemplateRecord]) -> None:
     shown = 0
     for record in enabling:
         if shown >= V2_MAX_TEMPLATE_LINES:
-            logger.info(
+            logger.debug(
                 "  ... %d more template(s) not listed",
                 len(enabling) - shown,
             )
             break
         shown += 1
-        logger.info("  %s%s", record.name(), record.signature())
+        logger.debug("  %s%s", record.name(), record.signature())
         for mold, alloc in record.molds:
-            logger.info(
+            logger.debug(
                 "      %-20s %-10s %-14s %s",
                 mold.location(),
                 mold.cl.ident,
@@ -1349,11 +1371,11 @@ def report_templates(records: list[TemplateRecord]) -> None:
     for record in builtin:
         per_builtin[record.name()] = per_builtin.get(record.name(), 0) + 1
     if per_builtin:
-        logger.info("  builtin templates by function:")
+        logger.debug("  builtin templates by function:")
         for name in sorted(
             per_builtin, key=lambda n: (-per_builtin[n], n)
         )[:V2_MAX_TEMPLATE_LINES]:
-            logger.info("    %-40s %d", name, per_builtin[name])
+            logger.debug("    %-40s %d", name, per_builtin[name])
 
 
 class SweepResult(NamedTuple):
@@ -1594,7 +1616,7 @@ def sweep_to_convergence(
                     seen.setdefault(key, set()).update(types)
                     fresh += 1
 
-        logger.info(
+        logger.debug(
             "  round %d sweep %d: %d contour variable(s) grew,"
             " %d provisional site(s)%s (%d propagation round(s))",
             round_no,
@@ -1631,7 +1653,7 @@ def report_round_learning(
         commit.probe_fresh.items(), key=lambda kv: kv[0].location()
     ):
         cl, contour = core.bindings[site.node]
-        logger.info(
+        logger.debug(
             "  round %d  %-20s %-10s contour %-4d %s",
             round_no,
             site.location(),
@@ -1642,7 +1664,7 @@ def report_round_learning(
         for name in sorted(fresh):
             if name in CONTOUR_SIGNATURE_SKIP:
                 continue
-            logger.info("      %-8s <- %s", name, format_types(fresh[name]))
+            logger.debug("      %-8s <- %s", name, format_types(fresh[name]))
 
 
 def alloc_id_source(alloc_id: Any) -> str:
@@ -1678,13 +1700,13 @@ def report_new_sites(
     bound = commit.bound
     if not bound:
         return
-    logger.info(
+    logger.debug(
         "  round %d: %d new in-function allocation site(s)", round_no, len(bound)
     )
     shown = 0
     for alloc_id in sorted(bound, key=alloc_id_location):
         if shown >= V2_MAX_SITE_LINES:
-            logger.info(
+            logger.debug(
                 "  ... %d more new site(s) not listed", len(bound) - shown
             )
             break
@@ -1694,7 +1716,7 @@ def report_new_sites(
         note = ""
         if provisional is not None and provisional != (cl, contour):
             note = "  (merged from %d)" % provisional[1]
-        logger.info(
+        logger.debug(
             "    %-24s %-10s contour %-4d %s%s",
             alloc_id_location(alloc_id),
             cl.ident,
@@ -1706,7 +1728,7 @@ def report_new_sites(
         for name in sorted(inflow):
             if name in CONTOUR_SIGNATURE_SKIP:
                 continue
-            logger.info("        %-8s <- %s", name, format_types(inflow[name]))
+            logger.debug("        %-8s <- %s", name, format_types(inflow[name]))
 
 
 def report_widest_signatures(core: FrozenCore, round_no: int) -> None:
@@ -1725,9 +1747,9 @@ def report_widest_signatures(core: FrozenCore, round_no: int) -> None:
     widest = sorted(per_function.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
     if widest[0][1] < 2:
         return
-    logger.info("  round %d: functions owning the most sites:", round_no)
+    logger.debug("  round %d: functions owning the most sites:", round_no)
     for function, count in widest:
-        logger.info("    %-32s %d site(s)", function, count)
+        logger.debug("    %-32s %d site(s)", function, count)
 
 
 def report_added_site(
@@ -1738,7 +1760,7 @@ def report_added_site(
 ) -> None:
     """Log the single site this round gave a contour to."""
     key, (cl, contour) = added
-    logger.info(
+    logger.debug(
         "  round %d: +1 site %s  %s  contour %d  (%d still waiting)",
         round_no,
         alloc_id_location(key),
@@ -1746,12 +1768,12 @@ def report_added_site(
         contour,
         pending - 1,
     )
-    logger.info("      %s   cart %s", alloc_id_source(key), repr_cart(key[1]))
+    logger.debug("      %s   cart %s", alloc_id_source(key), repr_cart(key[1]))
 
 
 def report_round(stats: RoundStats) -> None:
     """One line summarising a round, and the numbers a hang would show in."""
-    logger.info(
+    logger.debug(
         "[infer v2: round %d done: %d sweep(s), %d site(s) discovered"
         " (%d merged, %d minted), %d learned, %d template(s),"
         " %d contour(s) total]",
@@ -1765,7 +1787,7 @@ def report_round(stats: RoundStats) -> None:
         stats.contours,
     )
     if stats.upgrades:
-        logger.info(
+        logger.debug(
             "  round %d: %d contour(s) moved to a larger signature",
             stats.round,
             stats.upgrades,
@@ -1779,8 +1801,8 @@ def report_growth(history: list[RoundStats]) -> None:
     without the discovered count falling off. Convergence shows up as both
     flattening and the last round discovering nothing.
     """
-    logger.info("[infer v2: growth per round]")
-    logger.info(
+    logger.debug("[infer v2: growth per round]")
+    logger.debug(
         "    %-6s %-7s %-7s %-7s %-8s %-9s %-10s %-7s %-5s",
         "round",
         "sweeps",
@@ -1793,7 +1815,7 @@ def report_growth(history: list[RoundStats]) -> None:
         "sigs",
     )
     for stats in history:
-        logger.info(
+        logger.debug(
             "    %-6d %-7d %-7d %-7d %-8d %-9d %-10d %-7d %-5d",
             stats.round,
             stats.sweeps,
@@ -1838,7 +1860,7 @@ def probe_allocation_sites(
     containers = [site for site in sites if site.kind == ALLOC_CONTAINER]
     probes = [site for site in containers if site.module_level]
     molds = len(containers) - len(probes)
-    logger.info(
+    logger.debug(
         "[infer v2: %d module-level container site(s);"
         " %d in-function mold(s) to be discovered per template]",
         len(probes),
@@ -1863,7 +1885,7 @@ def probe_allocation_sites(
     last_templates: list[TemplateRecord] = []
     while round_no < V2_MAX_ROUNDS:
         round_no += 1
-        logger.info("[infer v2: round %d]", round_no)
+        logger.debug("[infer v2: round %d]", round_no)
 
         result, sweeps = sweep_to_convergence(
             gx, probes, core, baseline_dcpa, sites, round_no, collect=True
@@ -1927,11 +1949,11 @@ def report_signature_table(core: FrozenCore) -> None:
     for binding, sid in core.contour_signature.items():
         holders.setdefault(sid, []).append(binding)
     by_id = {v: k for k, v in core.signature_ids.items()}
-    logger.info("[infer v2: signature table: %d signature(s)]", len(by_id))
+    logger.debug("[infer v2: signature table: %d signature(s)]", len(by_id))
     for sid in sorted(by_id):
         cl, signature = by_id[sid]
         owners = sorted(holders.get(sid, []), key=lambda cc: cc[1])
-        logger.info(
+        logger.debug(
             "  sig %-4d %-10s held by %d contour(s): %s",
             sid,
             cl.ident,
@@ -1939,7 +1961,7 @@ def report_signature_table(core: FrozenCore) -> None:
             ",".join(str(c) for _cl, c in owners[:12]),
         )
         for name, types in signature:
-            logger.info("        %-8s = %s", name, sorted(str(t) for t in types))
+            logger.debug("        %-8s = %s", name, sorted(str(t) for t in types))
 
 
 def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
@@ -1960,15 +1982,15 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
             return "(no signature)"
         return render_signature(by_id.get(sid, (None, ()))[1]) or "{}"
 
-    logger.info("[infer v2: deduced signature per allocation site]")
+    logger.debug("[infer v2: deduced signature per allocation site]")
 
     if core.bindings:
-        logger.info("  module-level sites (%d):", len(core.bindings))
+        logger.debug("  module-level sites (%d):", len(core.bindings))
         for node, binding in sorted(
             core.bindings.items(),
             key=lambda kv: (getattr(kv[0], "lineno", 0), kv[1][1]),
         ):
-            logger.info(
+            logger.debug(
                 "    %-4s %-10s contour %-4d %s",
                 getattr(node, "lineno", "-"),
                 binding[0].ident,
@@ -1985,7 +2007,7 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     if not molds:
         return
     sites = sum(len(v) for groups in molds.values() for v in groups.values())
-    logger.info(
+    logger.debug(
         "  in-function sites (%d, from %d mold(s)):", sites, len(molds)
     )
     for mold in sorted(molds, key=lambda m: (str(m[0]), getattr(m[1], "lineno", 0))):
@@ -1996,7 +2018,7 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
         count = sum(len(v) for v in groups.values())
         if len(groups) == 1:
             signature, bindings = next(iter(groups.items()))
-            logger.info(
+            logger.debug(
                 "    %-24s %-10s %d site(s), 1 signature  %s",
                 where,
                 bindings[0][0].ident,
@@ -2004,7 +2026,7 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
                 signature,
             )
         else:
-            logger.info(
+            logger.debug(
                 "    %-24s %d site(s), %d signatures",
                 where,
                 count,
@@ -2012,19 +2034,19 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
             )
             for signature in sorted(groups):
                 bindings = groups[signature]
-                logger.info(
+                logger.debug(
                     "        %-10s x%-3d %s",
                     bindings[0][0].ident,
                     len(bindings),
                     signature,
                 )
-        logger.info("        %s", source)
+        logger.debug("        %s", source)
 
 
 def report_core(core: FrozenCore, rounds: int) -> None:
     report_signature_table(core)
     """Summarise what the rounds established."""
-    logger.info(
+    logger.debug(
         "[infer v2: frozen core after %d round(s): %d module-level site(s),"
         " %d in-function site(s), %d contour(s), %d contour variable(s)]",
         rounds,
@@ -2037,7 +2059,7 @@ def report_core(core: FrozenCore, rounds: int) -> None:
     for cl, _contour in core.committed_contours():
         per_class[cl.ident] = per_class.get(cl.ident, 0) + 1
     for ident in sorted(per_class):
-        logger.info("    %-10s %d contour(s)", ident, per_class[ident])
+        logger.debug("    %-10s %d contour(s)", ident, per_class[ident])
 
 
 def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
@@ -2077,7 +2099,7 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     report_site_signatures(gx, core)
 
     if not gx.infer_v2_codegen:
-        logger.info("[infer v2: stopping after inspection; no C++ is generated]")
+        logger.debug("[infer v2: stopping after inspection; no C++ is generated]")
         sys.exit(0)
 
     materialize(gx, core)
@@ -2119,7 +2141,7 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
         gx.infer_v2_core = None
         gx.infer_v2_open_contours = None
         core.open_set = None
-    logger.info(
+    logger.debug(
         "[infer v2: materialised in %d propagation round(s); %d contour(s);"
         " %d site(s) fell back to the old heuristic]",
         rounds,

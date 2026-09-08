@@ -40,7 +40,7 @@ class Shedskin:
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(level)
-        # debug=3 -> IFA (iterative flow analysis) debug logging enabled.
+        # debug=3 -> type analysis (infer v2 rounds/growth reports) logging enabled.
         self.infer_log = logging.getLogger("infer")
         self.infer_log.addHandler(console)
         self.infer_log.setLevel(level)

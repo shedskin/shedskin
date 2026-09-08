@@ -10,6 +10,7 @@ contour-bearing allocation sites, which makes it easy to assert on.
 
 import argparse
 import ast
+import sys
 from pathlib import Path
 
 import pytest
@@ -610,3 +611,30 @@ class TestTemplates:
         init = [r for r in records if r.name().endswith("Solver.__init__")]
         assert init
         assert init[0].signature().startswith("(self=Solver(")
+
+
+class TestSitesPerRound:
+    def test_default_is_unlimited(self, monkeypatch):
+        monkeypatch.delenv("SS_V2_SITES_PER_ROUND", raising=False)
+        assert infer2.sites_per_round() == sys.maxsize
+
+    def test_empty_is_unlimited(self):
+        assert infer2.sites_per_round("") == sys.maxsize
+        assert infer2.sites_per_round("  ") == sys.maxsize
+
+    def test_explicit_limit(self, monkeypatch):
+        monkeypatch.setenv("SS_V2_SITES_PER_ROUND", "3")
+        assert infer2.sites_per_round() == 3
+        assert infer2.sites_per_round("1") == 1
+
+    def test_rejects_nonpositive(self):
+        with pytest.raises(ValueError):
+            infer2.sites_per_round("0")
+        with pytest.raises(ValueError):
+            infer2.sites_per_round("-2")
+
+    def test_reports_are_debug_level(self):
+        # v2 reporting must stay quiet without -d3
+        import inspect
+        source = inspect.getsource(infer2)
+        assert "logger.info(" not in source
