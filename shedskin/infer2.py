@@ -1,11 +1,12 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.infer2: experimental alternative type analysis ("infer v2")
+"""shedskin.infer2: the type analysis ("infer v2")
 
-Enabled with --infer-v2. This is a separate analysis from the CPA/IFA one in
-`shedskin.infer`, kept in its own module so the two do not get tangled while
-v2 is built up. It reuses infer's constraint graph, propagation and network
-backup/restore; everything specific to v2 lives here.
+The analysis run by `shedskin translate` on this branch. It replaces the
+iterative flow analysis (IFA) in `shedskin.infer`, which is kept for the
+CPA machinery — constraint graph, templates, propagation, network
+backup/restore — that v2 reuses. Everything specific to v2 lives here; the
+design is described in the header comment below.
 """
 
 import ast
@@ -26,47 +27,72 @@ logger = logging.getLogger("infer")
 # --- infer v2: experimental alternative analysis (enabled with --infer-v2)
 # ---------------------------------------------------------------------------
 #
-# An alternative to iterative_dataflow_analysis() in shedskin.infer, based on a
-# idea about where termination comes from.
+# An alternative to iterative_dataflow_analysis() in shedskin.infer, based on
+# a different idea about where termination comes from.
 #
 # IFA reaches a fixpoint by *splitting* contours in response to observed
 # imprecision. A split may be undone and redone across rounds, which makes the
 # analysis order-dependent and leaves it with no bound other than MAXITERS.
 #
-# Infer v2 instead treats inference as an append-only accumulation of
-# knowledge (a "frozen core" of facts):
+# Infer v2 rests on three ideas. Everything else in this module is
+# bookkeeping for them, and every bug found so far was a bookkeeping bug.
 #
-#   - An allocation site is an AST node. Its identity is fixed by the program
-#     text and never changes during analysis.
-#   - What accumulates is the set of *instances* of that site: the CNodes
-#     (node, dcpa, cpa) created for it, one per template it is analyzed under.
-#     A site's signature is never rewritten; a new one is created or an
-#     existing one reused.
-#   - Facts are only added, never retracted. The fixpoint is then unique and
-#     independent of the order in which sites are visited, which also makes a
-#     failing program reproducible and therefore reducible.
+#   1. A site is named by what its arguments hold. An in-function allocation
+#      ("mold") is one *product*: the (function, cartesian product, node)
+#      triple of the template it sits in. Its *name* replaces each contour
+#      in that product by the signature of the contour's contents (see
+#      contour_signature). Two products named alike hold the same thing and
+#      are one site. This is CPA's cartesian product applied to allocations,
+#      with contours standing in for types, and the naming solved as its own
+#      fixpoint: name, propagate, observe, rename.
 #
-# Termination does not follow from the append-only property by itself. A site
-# can keep gaining instances forever if a contour created inside a template of
-# f flows back into f's own argument product; that is a cycle in the
-# contour-creation graph, and it is what tests like amaze_min.py hit. Every
-# type involved can be non-recursive and one level deep: what is unbounded is
-# the supply of distinct *contour identities* for one shape, since each
-# template is entitled to mint its own and a signature is keyed by contour
-# rather than by shape. Memoization only helps once a signature repeats, and
-# such a cycle never produces the same signature twice.
+#   2. Ownership decides who keeps a contour when names come apart. Names
+#      move as signatures grow; products do not. `FrozenCore.owners` maps
+#      each minted product to its contour and is the source of truth; the
+#      name indexes (`alloc_bindings`, `provisional`) are rebuilt from it on
+#      every rekey, so no name outlives the signatures it was derived from.
+#      A product that owns nothing shares by name for exactly as long as the
+#      names are equal, then is a site again. Nothing is ever merged into
+#      another contour, dropped, or stranded.
 #
-# The rule that cuts it is to merge contours whose settled signatures are
-# equal ("pre-merging"). That is safe only because of *when* it is done. A
-# merge is a binding decision, and bindings are append-only like everything
-# else, so committing one against a contour that is still mid-propagation
-# risks locking in a comparison made on incomplete information. So a contour
-# minted for a newly discovered site is *provisional*: it is scratch for the
-# duration of one sweep, it is committed only once that sweep has stopped
-# learning, and only then is it compared against the settled core. Contents
-# are different and may grow freely at any time; every site pointing at a
-# contour sees the richer contents automatically, because it references the
-# contour rather than holding a copy.
+#   3. Nothing keyed on a bucket is a site yet. A site the core has not
+#      bound allocates into its class's shared bucket contour (dcpa 1). The
+#      freeze keeps the bucket from receiving anything, but its identity
+#      still flows, and a template keyed on it describes the analysis being
+#      half-done, not the program; which such templates form depends on
+#      propagation order. So a product mentioning a bucket is passed over;
+#      the site upstream is bound instead, and next round the product
+#      mentions a real contour (see FrozenCore.mentions_bucket).
+#
+# Two timing rules make (1) sound. Signatures are recomputed and names
+# rebuilt *before* each round's mint, so a site is named by what this round
+# learned. And a product mentioning a contour minted last round waits one
+# round (mentions_fresh): that contour has no signature only because nothing
+# has had the chance to flow into it, and naming a site "empty" on that basis
+# is what turned a recursive function creating a container into one new
+# contour per round.
+#
+# Contents are *observed*, not accumulated: commit_round replaces each
+# contour's contents with what the round's sweep saw flow into it. Each sweep
+# restores the pristine network and propagates from scratch, so this is the
+# fixpoint of the current bindings, and a type a contour picked up from an
+# earlier, less-bound state does not persist. Signatures can therefore move
+# down as well as up, which is why names are rebuilt rather than patched.
+# This is the one place the "append-only" description of the core is not
+# literally true; see the header of `FrozenCore`.
+#
+# Invariants worth checking when something looks wrong:
+#
+#   - every binding value in alloc_bindings/provisional is owned by some
+#     product (owners is the source, the indexes are derived);
+#   - the signature fixpoint settles well inside V2_SIGNATURE_ROUNDS.
+#     Recursive containers are unsupported, so hitting the bound means the
+#     analysis *created* a cycle by merging something it should not have;
+#   - materialise reports 0 sites falling back to the old heuristic. A
+#     fallback is a product that stayed bucket-keyed to the end;
+#   - two runs give the same contour count. Propagation order is not
+#     deterministic (objects hash by id), so a varying count means a
+#     decision depends on order, which (3) is meant to rule out.
 #
 # The stages:
 #
@@ -76,12 +102,22 @@ logger = logging.getLogger("infer")
 #      learns nothing.
 #   3. Propagate unfrozen and keep the templates, so the molds that become
 #      allocation sites inside them can be seen.
-#   4. Let those molds become sites: give each one a contour of its own when
-#      its template is created, sweep again so they learn, and merge the ones
-#      whose settled signatures agree. Repeat, because new sites feed argument
-#      products and products key new templates. This is the feedback loop the
-#      earlier stages deliberately cut, so growth per round is logged from the
-#      start: a hang should be diagnosable rather than mysterious.
+#   4. Rounds: sweep to convergence with every owned contour open, observe
+#      contents, resignature and rekey, then mint every discovered product
+#      that has a name of its own (all of them per round by default; see
+#      V2_SITES_PER_ROUND). Stop when a round mints nothing, learns nothing,
+#      moves no signature and defers nothing.
+#   5. Materialise: apply the core to the network and propagate once more
+#      for code generation.
+#
+# Reading a -d3 log: each round prints "+N site <fn>:<line> <class> contour
+# <n>" with the product it was named under, "upgrade" lines when
+# SS_V2_UPGRADES=1 (signature before and after), the growth table at the end,
+# and SS_V2_SIGDUMP=1 lists every interned signature. The "(N still waiting)"
+# count is products discovered but not yet minted, deferred ones included.
+#
+# Knobs: SS_V2_SITES_PER_ROUND (unset: unlimited), SS_V2_ROUNDS,
+# SS_V2_UPGRADES, SS_V2_SIGDUMP.
 
 ALLOC_CONTAINER = "container"  # builtin container: carries contours
 ALLOC_INSTANCE = "instance"  # class instance: one contour per class
@@ -107,13 +143,11 @@ V2_CPA_LIMIT = 1000
 # symptom a contour-creation cycle would produce.
 V2_MAX_SWEEPS = 20
 
-# V2_MAX_ROUNDS: safety bound on the outer loop. A round is one sweep to
-# convergence plus at most one new allocation site, so this is really a
-# budget on how many in-function sites may be added; the loop should stop on
-# its own well before it, by running out of sites to add. It is large
-# because one site per round is the point: a site is named by the signatures
-# of the contours around it, and adding several at once shifts the very
-# signatures the others were named under.
+# V2_MAX_ROUNDS: safety bound on the outer loop. The loop stops on its own
+# when a round mints nothing, learns nothing, moves no signature and defers
+# nothing; real programs take a handful to a few dozen rounds. Reaching this
+# bound means names are churning: look for a signature that moves every
+# round in the SS_V2_UPGRADES output.
 V2_MAX_ROUNDS = int(os.environ.get("SS_V2_ROUNDS", 20000))
 
 
@@ -554,23 +588,25 @@ def repr_cart(cart: Any) -> str:
 
 
 class FrozenCore:
-    """Append-only knowledge accumulated across sweeps.
+    """The knowledge accumulated across sweeps.
 
-    Three tables. `bindings` says which contour a module-level site owns.
-    `alloc_bindings` says the same for an in-function site, keyed by the
-    (function, cartesian product, node) triple that identifies one mold
-    inside one template — the same key `ifa_seed_template` looks up, so a
-    committed binding is simply handed to it. `contents` says what has been
-    learned to flow into each contour's variables. All three only ever grow;
-    nothing committed is retracted, which is what makes the fixpoint
-    independent of the order sites are visited in.
+    `bindings` says which contour a module-level site owns, keyed by node.
+    `owners` says which contour an in-function product owns, keyed by the
+    (function, cartesian product, node) triple that identifies one mold in
+    one template, in minting order; it is the source of truth for in-function
+    sites and only ever grows. `alloc_bindings` and `provisional` are name
+    indexes derived from it (see rekey): the same product under the name its
+    signatures currently give it, committed and minted-this-round
+    respectively. `ifa_seed_template` looks a mold up by product first, then
+    by name. `contents` is what the last round observed flowing into each
+    contour's variables, and is replaced each round (see the module header).
 
-    `provisional` is not one of them. It holds the contours minted for sites
-    discovered during the sweep that is currently running, and it is scratch:
-    those contours have not been compared against anything yet, because
-    nothing has settled while a sweep is still in progress. `commit_round`
-    empties it, either by merging a contour into one whose settled signature
-    it matches or by promoting it to a binding of its own.
+    `discovered` holds products seen during a sweep that own nothing and
+    were not found by name; they are minted between rounds, never during
+    one. `contour_signature` and `signature_ids` intern the settled
+    signatures that names are built from. `fresh_contours` is the last
+    mint's output, which nothing is named under until it has been propagated
+    once.
     """
 
     def __init__(self) -> None:
@@ -691,11 +727,14 @@ class FrozenCore:
         on a three-line program that cycles forever, four sites discovered
         and pruned every round without end.
 
-        So neither keep nor drop — rename. The contour is what the site owns
-        and it never moves; only the name it is filed under changes. Nothing
-        is rediscovered, nothing is re-minted, and nothing is stranded. Two
-        products that now canonicalise together are one site, and keep the
-        older contour.
+        So neither keep nor drop — rename. The contour is what the product
+        owns and it never moves; only the name it is filed under changes.
+        Nothing is rediscovered, nothing is re-minted, and nothing is
+        stranded. Two owners that now canonicalise together each keep their
+        own contour: the older holds the name, the younger is still served
+        by ownership (see note_mold). Signatures can also move *down*, since
+        contents are observed rather than accumulated, which is why the
+        indexes are rebuilt from scratch rather than patched.
         """
         # rebuild both name indexes from ownership, so that no name outlives
         # the signatures it was derived from. Two products that now
@@ -919,19 +958,17 @@ class FrozenCore:
     ) -> list[tuple[Any, tuple["python.Class", int]]]:
         """Give contours to up to `limit` discovered sites.
 
-        `limit` is unlimited by default (see V2_SITES_PER_ROUND). One is the
-        safe schedule: a site is named by the signatures of the contours in
-        its argument product, so naming it while those signatures are still
-        moving gives it a name that will not mean the same thing next round.
-        Adding several at once means each one shifts the signatures the
-        others were named under.
-
-        Minting more per round trades that guarantee for speed, since each
-        round costs a full propagation to convergence. If the growth table
-        still shows `found` falling to zero, the larger batch happened not
-        to disturb anything and the answer is the same for far fewer rounds.
-        If it churns instead — `found` refusing to settle, `upgrade` staying
-        lively — set SS_V2_SITES_PER_ROUND=1.
+        `limit` is unlimited by default (see V2_SITES_PER_ROUND). One per
+        round was the original schedule, on the theory that naming several
+        sites at once shifts the signatures the others were named under.
+        What actually made batches unsafe was bookkeeping — names outliving
+        signatures, products keyed on buckets — and with that fixed, every
+        product that has a name of its own can be minted together: a site's
+        name depends only on its argument contours, which are settled. The
+        products that are not settled are held back one round instead
+        (`pending`). SS_V2_SITES_PER_ROUND=1 remains available as a
+        diagnostic: if it changes the answer, a naming decision depended on
+        order, which is a bug.
         """
         added = []
         self.deferred = 0
@@ -1175,9 +1212,9 @@ class RoundStats(NamedTuple):
     """What one outer round of stage 4 did.
 
     `discovered` is how many in-function sites the round found that the core
-    had never seen. `merged` is how many of those turned out to have the
-    signature of a contour that already existed, and `minted` how many got a
-    contour of their own. `learned` counts sites whose contour gained a type
+    had never seen. `merged` is always 0 now — sites that hold the same thing
+    share by name rather than by merging contours — and is kept for the
+    growth table's layout. `minted` is how many got a contour of their own. `learned` counts sites whose contour gained a type
     it did not have before. A round that discovers nothing and learns nothing
     is the fixpoint.
 
@@ -1227,11 +1264,12 @@ def commit_round(
 ) -> CommitResult:
     """Turn one settled round into committed facts.
 
-    What is committed: the contents each contour was learned to hold, and
+    What is committed: the contents each contour was observed to hold this
+    round (replacing last round's observation, see the module header), and
     the promotion of the round's provisional bindings to real ones. No
     contour is merged into any other, so no site's inflow is ever mixed with
     another's; sites that hold the same thing are brought together by the
-    key they are looked up under, not by sharing a contour.
+    name they are looked up under, not by sharing a contour.
     """
     probe_fresh: dict[AllocationSite, dict[str, infer.Types]] = {}
     for site, inflow in result.probe_inflow.items():
