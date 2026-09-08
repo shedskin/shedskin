@@ -606,6 +606,9 @@ class FrozenCore:
         # one (see mentions_fresh)
         self.fresh_contours: set[tuple["python.Class", int]] = set()
         self.deferred = 0
+        # molds passed over for mentioning a bucket contour (see
+        # mentions_bucket), per sweep
+        self.unnameable = 0
         self.misses = 0
         self.rounds = 0
 
@@ -857,10 +860,46 @@ class FrozenCore:
             # user classes get one contour each and are never split, scalars
             # never get one at all
             return None
+        if self.mentions_bucket(alloc_id):
+            # not a site yet: see mentions_bucket
+            self.unnameable += 1
+            return None
 
         self.discovered[alloc_id] = cl
         self.misses += 1
         return None
+
+    def mentions_bucket(self, product: Any) -> bool:
+        """Does a product mention a container contour nobody owns?
+
+        A site the core has not bound yet allocates into its class's shared
+        bucket contour. The freeze keeps the bucket from receiving anything,
+        but its identity still flows, and a template keyed on it is not a
+        template of the program: it is a template of the analysis being
+        half-done. A mold found in such a template describes nothing that
+        will exist once the site upstream is bound, and which such molds
+        appear depends on the order propagation happened to take. So a
+        product that mentions a bucket is not a site yet. Its upstream site
+        is one, and gets bound; the next round's product then mentions a
+        contour with an owner, and is named by what that contour holds.
+        """
+        cart = product[1]
+        if not isinstance(cart, tuple):
+            return False
+        owned = None
+        for item in cart:
+            if not (isinstance(item, tuple) and len(item) == 2):
+                continue
+            cl, _contour = item
+            if not isinstance(cl, python.Class):
+                continue
+            if allocation_site_kind(cl) != ALLOC_CONTAINER:
+                continue
+            if owned is None:
+                owned = self.owned_contours()
+            if item not in owned:
+                return True
+        return False
 
     def mint_batch(
         self, limit: int
