@@ -597,7 +597,19 @@ class FrozenCore:
         # product does not, so it is what lets a site keep its contour when
         # its name changes.
         self.raw_ids: dict[Any, Any] = {}
+        # the contour each raw product was bound to, by product. The name
+        # a product is filed under is derived from signatures and can be
+        # renamed out from under a lookup — in particular when two products
+        # come to canonicalise together and only one can hold the name —
+        # but the product itself never changes, so this is the lookup that
+        # cannot miss a site the core has already given a contour.
+        self.raw_bindings: dict[Any, tuple["python.Class", int]] = {}
+        # the products served a contour during the sweep now running; reset
+        # by every sweep, so after the last one it says which bindings the
+        # settled program actually reaches (see retire_unreached)
+        self.served: set[Any] = set()
         self.misses = 0
+        self.rounds = 0
 
     # --- contour allocation
 
@@ -769,14 +781,20 @@ class FrozenCore:
                         if name not in CONTOUR_SIGNATURE_SKIP
                     }
                 if held is None:
-                    # a contour minted since the sweep ran holds nothing yet.
-                    # It still needs a signature, and the right one is the
-                    # empty signature for its class, so that it interns
-                    # together with every other empty contour of that class
-                    # instead of standing as its own raw identity in every
-                    # cart that mentions it.
                     held = empty_contents(binding[0])
                 signature = contour_signature(held, canonical)
+                if signature == contour_signature(empty_contents(binding[0])):
+                    # holding nothing is not a fact about a site, it is the
+                    # absence of one: nothing has flowed in *yet*. Naming
+                    # every empty contour of a class alike merges sites that
+                    # have not yet shown what they hold, and when they do,
+                    # the merged contour has already served both — an
+                    # iterator over the entries and one over the offsets
+                    # share a contour, map hands the lambda a tuple, and the
+                    # lambda builds a tuple that holds itself. An empty
+                    # contour stays its own raw identity in every cart until
+                    # it has contents to be named by.
+                    continue
                 scratch[binding] = self.signature_id(binding[0], signature)
             if scratch == snapshot:
                 break
@@ -833,8 +851,17 @@ class FrozenCore:
         binding = self.alloc_bindings.get(key)
         if binding is None:
             binding = self.provisional.get(key)
+        if binding is None:
+            # the product was bound under a name it no longer canonicalises
+            # to (see rekey): the contour is still its own, so re-file it
+            # under the current name rather than discovering it afresh
+            binding = self.raw_bindings.get(alloc_id)
+            if binding is not None:
+                self.alloc_bindings[key] = binding
+                self.raw_ids[key] = alloc_id
         if binding is not None:
             gx.alloc_info[alloc_id] = binding
+            self.served.add(alloc_id)
             return binding
 
         types = gx.orig_types.get(node) or gx.types.get(node) or set()
@@ -883,6 +910,7 @@ class FrozenCore:
             contour = self.new_contour(cl)
             binding = (cl, contour)
             self.provisional[key] = binding
+            self.raw_bindings[self.raw_ids.get(key, key)] = binding
             added.append((key, binding))
         return added
 
@@ -909,8 +937,44 @@ class FrozenCore:
             contour = self.new_contour(cl)
             binding = (cl, contour)
             self.provisional[key] = binding
+            self.raw_bindings[self.raw_ids.get(key, key)] = binding
             return key, binding
         return None
+
+    def retire_unreached(self) -> int:
+        """Drop the bindings the last sweep never reached.
+
+        A site is bound the moment its template first appears, and while
+        sites are still being discovered a template can appear for a reason
+        that later goes away: an unbound iterator site allocates into the
+        shared bucket, the bucket briefly holds somebody else's element
+        type, and `map` hands that to a lambda that never receives it once
+        everything is bound. The template is gone by the time the rounds
+        settle, but its binding and contour are not, and every container
+        that ever held the contour keeps it in its element type. Retiring
+        what the settled program does not reach is what makes the result
+        depend on the fixpoint alone and not on the road to it.
+        """
+        served_keys = {self.canonical_key(product) for product in self.served}
+        stale = [
+            key
+            for key, binding in self.alloc_bindings.items()
+            if key not in served_keys
+            and self.raw_ids.get(key, key) not in self.served
+        ]
+        for key in stale:
+            product = self.raw_ids.pop(key, key)
+            logger.debug(
+                "    retire %s(%d) %s  cart %s",
+                self.alloc_bindings[key][0].ident,
+                self.alloc_bindings[key][1],
+                alloc_id_source(key),
+                repr_cart(key[1]),
+            )
+            self.raw_bindings.pop(product, None)
+            del self.alloc_bindings[key]
+            self.discovered.pop(key, None)
+        return len(stale)
 
     def pending_count(self) -> int:
         """How many discovered sites are still waiting for a contour."""
@@ -1467,6 +1531,7 @@ def sweep_once(
     core.open_set = open_set
     gx.infer_v2_open_contours = open_set
     gx.infer_v2_core = core if discover else None
+    core.served = set()
     try:
         rounds = v2_propagate(gx)
         results: dict[AllocationSite, dict[str, infer.Types]] = {}
@@ -1935,9 +2000,17 @@ def probe_allocation_sites(
             V2_MAX_ROUNDS,
         )
 
+    retired = core.retire_unreached()
+    if retired:
+        logger.debug(
+            "[infer v2: retired %d binding(s) the settled program does not"
+            " reach]",
+            retired,
+        )
     report_growth(history)
     report_core(core, round_no)
     report_templates(last_templates)
+    core.rounds = round_no
     return core
 
 
