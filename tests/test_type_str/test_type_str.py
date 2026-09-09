@@ -31,6 +31,49 @@ def test_center():
     assert 'ab'.center(6, '*') == '**ab**'
 
 
+def test_fillchar():
+    # the fill character must be exactly one character long; a longer one
+    # used to give a result of the wrong length, an empty one made center()
+    # write past the end of its result buffer
+    msg = 'The fill character must be exactly one character long'
+
+    error = ''
+    try:
+        'abc'.center(9, '--')
+    except TypeError as e:
+        error = str(e)
+    assert error == msg
+
+    error = ''
+    try:
+        'abc'.center(9, '')
+    except TypeError as e:
+        error = str(e)
+    assert error == msg
+
+    error = ''
+    try:
+        'abc'.ljust(9, '--')
+    except TypeError as e:
+        error = str(e)
+    assert error == msg
+
+    error = ''
+    try:
+        'abc'.rjust(9, '')
+    except TypeError as e:
+        error = str(e)
+    assert error == msg
+
+    # checked before the width, so this raises too
+    error = ''
+    try:
+        'abc'.center(2, '')
+    except TypeError as e:
+        error = str(e)
+    assert error == msg
+
+
 def test_count():
     assert 'blaa'.count('a') == 2
     assert 'blaabla'.count('aa') == 1
@@ -568,6 +611,7 @@ def test_all():
     test_capitalize()
     test_casefold()
     test_center()
+    test_fillchar()
     test_count()
     test_count_embedded_null()
     # test_encode()

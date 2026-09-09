@@ -718,7 +718,20 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
 }
 
 
+/* see str::center: the fill byte has to be exactly one byte long, and
+   CPython checks that before looking at the width */
+[[noreturn]] static void __fillbyte_error(const char *name) {
+    throw new TypeError(new str(__GC_STRING(name) + "() argument 2 must be a byte string of length 1, not bytes"));
+}
+
+static inline void __fillbyte_check(bytes *fillchar, const char *name) {
+    if(fillchar and fillchar->unit.size() != 1)
+        __fillbyte_error(name);
+}
+
 bytes *bytes::center(__ss_int w, bytes *fillchar) {
+    __fillbyte_check(fillchar, "center");
+
     size_t width = (size_t)w;
     size_t len = unit.size();
     if(width<=len)
@@ -753,6 +766,7 @@ bytes *bytes::zfill(__ss_int width) {
 }
 
 bytes *bytes::ljust(__ss_int width, bytes *s) {
+    __fillbyte_check(s, "ljust");
     if(width<=__len__()) return this;
     if(!s) s = bsp;
     bytes *r = __add__(s->__mul__(width-__len__()));
@@ -761,6 +775,7 @@ bytes *bytes::ljust(__ss_int width, bytes *s) {
 }
 
 bytes *bytes::rjust(__ss_int width, bytes *s) {
+    __fillbyte_check(s, "rjust");
     if(width<=__len__()) return this;
     if(!s) s = bsp;
     bytes *r = s->__mul__(width-__len__())->__add__(this);
