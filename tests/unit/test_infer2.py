@@ -522,12 +522,27 @@ class TestFrozenCoreAccumulation:
         core = infer2.probe_allocation_sites(gx, sites)
         assert core.bindings
         assert core.contents
-        idents = {
-            cl.ident
-            for key in core.contents
-            for cl in [key[0]]
-        }
-        assert idents <= {"list", "dict"}
+        # the fixture's own module-level sites are a list and a dict; the
+        # builtin module contributes container molds of its own (a tuple
+        # site in a builtin __init__ among them), so only check inclusion
+        bound = {cl.ident for cl, _contour in core.bindings.values()}
+        assert bound == {"list", "dict"}
+        observed = {key[0].ident for key in core.contents}
+        assert {"list", "dict"} <= observed
+
+    def test_reprobing_does_not_depend_on_leftover_alloc_info(
+        self, analyzed_global_sites
+    ):
+        # the answer ifa_seed_template gets for a mold comes from the core,
+        # not from a memo in gx.alloc_info: probing with whatever a previous
+        # run left there and probing with it cleared give the same core
+        gx = analyzed_global_sites
+        sites = infer2.collect_allocation_sites(gx, builtins=False)
+        with_leftovers = infer2.probe_allocation_sites(gx, sites)
+        gx.alloc_info = {}
+        cleared = infer2.probe_allocation_sites(gx, sites)
+        assert set(with_leftovers.contents) == set(cleared.contents)
+        assert with_leftovers.bindings == cleared.bindings
 
     def test_sweeping_leaves_the_network_restored(self, analyzed_global_sites):
         gx = analyzed_global_sites
@@ -613,6 +628,19 @@ class TestTemplates:
         init = [r for r in records if r.name().endswith("Solver.__init__")]
         assert init
         assert init[0].signature().startswith("(self=Solver(")
+
+
+class TestNoteMoldLeavesAllocInfoAlone:
+    """note_mold answers from the core; gx.alloc_info is not a v2 memo."""
+
+    def test_known_site_is_served_without_writing_alloc_info(self):
+        core = infer2.FrozenCore()
+        cl = type("FakeClass", (), {"ident": "list", "dcpa": 2})()
+        product = ("f", (), ast.parse("[]", mode="eval").body)
+        core.owners[product] = (cl, 5)
+        gx = type("FakeGx", (), {"alloc_info": {}})()
+        assert core.note_mold(gx, product, None) == (cl, 5)
+        assert gx.alloc_info == {}
 
 
 class TestFrozenCoreBookkeeping:
