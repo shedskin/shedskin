@@ -615,6 +615,47 @@ class TestTemplates:
         assert init[0].signature().startswith("(self=Solver(")
 
 
+class TestFrozenCoreBookkeeping:
+    """The invariants the ownership indexes rest on (no gx needed)."""
+
+    def _core_with_owner(self):
+        core = infer2.FrozenCore()
+        cl = type("FakeClass", (), {"ident": "fake", "dcpa": 2})()
+        product = ("f", ((cl, 1),), "node")
+        core.discovered[product] = cl
+        core.next_contour[cl] = 5
+        return core, cl, product
+
+    def test_minted_contour_is_owned(self):
+        core, cl, product = self._core_with_owner()
+        _key, binding = core.mint(product)
+        assert binding in core.owned_contours()
+        assert core.owners[product] == binding
+        assert binding in core.provisional.values()
+
+    def test_pending_is_pure(self):
+        core, cl, product = self._core_with_owner()
+        core.fresh_contours = {(cl, 1)}  # product mentions a fresh contour
+        before = core.deferred
+        assert core.pending(product) is not None  # deferral is mint_batch's call
+        assert core.deferred == before
+
+    def test_pending_none_after_mint(self):
+        core, cl, product = self._core_with_owner()
+        core.mint(product)
+        assert core.pending(product) is None
+        assert core.pending_count() == 0
+
+    def test_mint_batch_defers_fresh_mentions(self):
+        core, cl, product = self._core_with_owner()
+        core.fresh_contours = {(cl, 1)}
+        assert core.mint_batch(sys.maxsize) == []
+        assert core.deferred == 1
+        assert core.pending_count() == 1  # waiting includes deferred
+        core.fresh_contours = set()
+        assert len(core.mint_batch(sys.maxsize)) == 1
+
+
 class TestSitesPerRound:
     def test_default_is_unlimited(self, monkeypatch):
         monkeypatch.delenv("SS_V2_SITES_PER_ROUND", raising=False)

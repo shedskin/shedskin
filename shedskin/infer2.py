@@ -111,10 +111,10 @@ logger = logging.getLogger("infer")
 #   5. Materialise: apply the core to the network and propagate once more
 #      for code generation.
 #
-# Reading a -d3 log: each round prints "+N site <fn>:<line> <class> contour
-# <n>" with the product it was named under, "upgrade" lines when
-# SS_V2_UPGRADES=1 (signature before and after), the growth table at the end,
-# and SS_V2_SIGDUMP=1 lists every interned signature. The "(N still waiting)"
+# Reading a -d3 log: each round prints "+1 site <fn>:<line> <class> contour
+# <n>" per minted site with the product it was named under, "upgrade" lines
+# when SS_V2_UPGRADES=1 (signature before and after), the growth table at the
+# end, and SS_V2_SIGDUMP=1 lists every interned signature. The "waiting"
 # count is products discovered but not yet minted, deferred ones included.
 #
 # Knobs: SS_V2_SITES_PER_ROUND (unset: unlimited), SS_V2_ROUNDS,
@@ -531,32 +531,24 @@ def site_allocated(
     return False
 
 
+def render_item(item: Any) -> str:
+    """Render one signature or cartesian product entry compactly."""
+    if isinstance(item, tuple) and len(item) == 3 and item[1] == "sig":
+        return "%s#%s" % (getattr(item[0], "ident", item[0]), item[2])
+    if isinstance(item, tuple) and len(item) == 2:
+        return "%s(%s)" % (getattr(item[0], "ident", item[0]), item[1])
+    return str(item)
+
+
 def render_signature(signature: tuple) -> str:
     """Render a signature compactly, for diagnosing what grew."""
     parts = []
     for name, types in signature:
         if not types:
             continue
-        rendered = []
-        for item in sorted(types, key=str):
-            if isinstance(item, tuple) and len(item) == 3 and item[1] == "sig":
-                rendered.append("%s#%s" % (item[0].ident, item[2]))
-            elif isinstance(item, tuple) and len(item) == 2:
-                ident = getattr(item[0], "ident", item[0])
-                rendered.append("%s(%s)" % (ident, item[1]))
-            else:
-                rendered.append(str(item))
+        rendered = [render_item(item) for item in sorted(types, key=str)]
         parts.append("%s=%s" % (name, "|".join(rendered)))
     return "{" + " ".join(parts) + "}" if parts else "{}"
-
-
-def empty_contents(cl: "python.Class") -> dict[str, infer.Types]:
-    """The contents of a contour that has not received anything yet."""
-    return {
-        name: set()
-        for name in getattr(cl, "vars", {})
-        if name not in CONTOUR_SIGNATURE_SKIP
-    }
 
 
 def canonical_key_sort(key: Any) -> tuple:
@@ -579,15 +571,7 @@ def repr_cart(cart: Any) -> str:
     """Render a cartesian product for ordering and logging."""
     if not isinstance(cart, tuple):
         return str(cart)
-    parts = []
-    for item in cart:
-        if isinstance(item, tuple) and len(item) == 3 and item[1] == "sig":
-            parts.append("%s#%s" % (getattr(item[0], "ident", item[0]), item[2]))
-        elif isinstance(item, tuple) and len(item) == 2:
-            parts.append("%s(%s)" % (getattr(item[0], "ident", item[0]), item[1]))
-        else:
-            parts.append(str(item))
-    return ",".join(parts)
+    return ",".join(render_item(item) for item in cart)
 
 
 class FrozenCore:
@@ -619,7 +603,6 @@ class FrozenCore:
         self.next_contour: dict["python.Class", int] = {}
         self.provisional: dict[Any, tuple["python.Class", int]] = {}
         self.baseline_dcpa: dict["python.Class", int] = {}
-        self.open_set: Optional[set[tuple["python.Class", int]]] = None
         # sites seen during the round's propagation that the core has no
         # contour for yet; minted between rounds, never during one
         self.discovered: dict[Any, "python.Class"] = {}
@@ -647,7 +630,6 @@ class FrozenCore:
         self.deferred = 0
         # molds passed over for mentioning a bucket contour (see
         # mentions_bucket), per sweep
-        self.unnameable = 0
         self.misses = 0
         self.rounds = 0
 
@@ -800,31 +782,27 @@ class FrozenCore:
 
             scratch: dict[tuple["python.Class", int], int] = {}
             for binding in subjects:
-                held = contents.get(binding)
-                if held is not None:
-                    # normalise the variable set. contour_variables returns
-                    # whichever nodes the network happens to have built for
-                    # this contour, and that differs between contours of one
-                    # class, so two contours holding nothing can still get
-                    # different signatures purely from one having a
-                    # __getitem__ node and the other not. A signature has to
-                    # depend on contents alone.
-                    held = {
-                        name: held.get(name, set())
-                        for name in getattr(binding[0], "vars", {})
-                        if name not in CONTOUR_SIGNATURE_SKIP
-                    }
-                if held is None:
-                    # a contour minted since the sweep ran holds nothing yet.
-                    # It still needs a signature, and the right one is the
-                    # empty signature for its class, so that it interns
-                    # together with every other empty contour of that class
-                    # instead of standing as its own raw identity in every
-                    # cart that mentions it. This is also what lets a
-                    # recursive function that creates a container and passes
-                    # it to itself settle: every template in the chain names
-                    # its container alike, and the chain closes on itself.
-                    held = empty_contents(binding[0])
+                # normalise the variable set. contour_variables returns
+                # whichever nodes the network happens to have built for
+                # this contour, and that differs between contours of one
+                # class, so two contours holding nothing can still get
+                # different signatures purely from one having a
+                # __getitem__ node and the other not. A signature has to
+                # depend on contents alone. A contour minted since the
+                # sweep ran has no contents at all and normalises to the
+                # all-empty signature of its class, so it interns together
+                # with every other empty contour of that class instead of
+                # standing as its own raw identity in every cart that
+                # mentions it — which is also what lets a recursive
+                # function that creates a container and passes it to
+                # itself settle: every template in the chain names its
+                # container alike, and the chain closes on itself.
+                held = contents.get(binding) or {}
+                held = {
+                    name: held.get(name, set())
+                    for name in getattr(binding[0], "vars", {})
+                    if name not in CONTOUR_SIGNATURE_SKIP
+                }
                 signature = contour_signature(held, canonical)
                 scratch[binding] = self.signature_id(binding[0], signature)
             if scratch == snapshot:
@@ -904,7 +882,6 @@ class FrozenCore:
             return None
         if self.mentions_bucket(alloc_id, node.parent):
             # not a site yet: see mentions_bucket
-            self.unnameable += 1
             return None
 
         self.discovered[alloc_id] = cl
@@ -980,6 +957,9 @@ class FrozenCore:
                 break
             if self.pending(product) is None:
                 continue
+            if self.mentions_fresh(product):
+                self.deferred += 1
+                continue
             added.append(self.mint(product))
         return added
 
@@ -988,15 +968,14 @@ class FrozenCore:
 
         None when it needs no contour of its own: it owns one already, or
         the name it has come to canonicalise to is bound, in which case the
-        next sweep serves it that contour by name.
+        next sweep serves it that contour by name. Whether the product must
+        *wait* another round is a separate question (mentions_fresh),
+        answered by mint_batch.
         """
         if product in self.owners:
             return None
         fresh = self.canonical_key(product)
         if fresh in self.alloc_bindings or fresh in self.provisional:
-            return None
-        if self.mentions_fresh(product):
-            self.deferred += 1
             return None
         return fresh
 
@@ -1028,34 +1007,12 @@ class FrozenCore:
         self.owners[product] = binding
         return fresh, binding
 
-    def mint_one(self) -> Optional[tuple[Any, tuple["python.Class", int]]]:
-        """Give a contour to exactly one discovered site, and stop.
-
-        One at a time, against a core that has settled. That is the
-        condition the whole scheme rests on: a site is named by the
-        signatures of the contours in its argument product, so naming it
-        while those signatures are still moving gives it a name that will
-        not mean the same thing next round. Minting a batch breaks it,
-        because every contour in the batch shifts the signatures the rest of
-        the batch was named under, and the site set churns instead of
-        settling.
-
-        The site chosen is the first in program order, so which one is added
-        first is a property of the source rather than of dictionary
-        iteration.
-        """
-        self.deferred = 0
-        for product in sorted(self.discovered, key=canonical_key_sort):
-            if self.pending(product) is not None:
-                return self.mint(product)
-        return None
-
     def pending_count(self) -> int:
-        """How many discovered sites are still waiting for a contour."""
-        saved = self.deferred
-        count = sum(1 for product in self.discovered if self.pending(product))
-        self.deferred = saved
-        return count
+        """How many discovered sites are still waiting for a contour,
+        deferred ones included."""
+        return sum(
+            1 for product in self.discovered if self.pending(product) is not None
+        )
 
     def every_mold(self) -> dict[Any, tuple["python.Class", int]]:
         """Every in-function binding there is, by name where it has one and
@@ -1073,22 +1030,12 @@ class FrozenCore:
 
         Ownership is the source: a product named alike to an older one is
         not in the name index but still owns its contour, and that contour
-        has to be open and observed like any other.
+        has to be open and observed like any other. The name indexes
+        (`alloc_bindings`, `provisional`) are derived from `owners` and so
+        never hold a contour it does not; module-level sites live in
+        `bindings` only.
         """
-        return (
-            set(self.bindings.values())
-            | set(self.owners.values())
-            | set(self.alloc_bindings.values())
-            | set(self.provisional.values())
-        )
-
-    def open_contours(self) -> set[tuple["python.Class", int]]:
-        """Contours that may receive inflow: every site's own."""
-        return self.owned_contours()
-
-    def committed_contours(self) -> set[tuple["python.Class", int]]:
-        """Every contour bound to a site."""
-        return self.owned_contours()
+        return set(self.bindings.values()) | set(self.owners.values())
 
     def learn(
         self, cl: "python.Class", contour: int, name: str, types: infer.Types
@@ -1099,22 +1046,6 @@ class FrozenCore:
         new = types - known
         known |= new
         return new
-
-    def compact(self) -> None:
-        """Reclaim contour numbers minted for provisionals that got merged.
-
-        A provisional contour that merged into another was never committed,
-        so its number was never a fact about anything and can be handed out
-        again. Without this the numbering climbs by the number of sites
-        discovered rather than the number kept, and cl.dcpa with it.
-        """
-        highest: dict["python.Class", int] = {}
-        for cl, contour in self.committed_contours():
-            highest[cl] = max(highest.get(cl, -1), contour)
-        for cl in list(self.next_contour):
-            baseline = self.baseline_dcpa.get(cl, 0)
-            self.next_contour[cl] = max(baseline, highest.get(cl, -1) + 1)
-
 
 def apply_core(
     gx: "config.GlobalInfo",
@@ -1135,15 +1066,10 @@ def apply_core(
     for cl, nxt in core.next_contour.items():
         cl.dcpa = max(cl.dcpa, nxt)
 
-    for cl, contour in core.committed_contours():
+    # owned_contours includes a round's provisional contours, so repeating a
+    # sweep re-reads the same contours instead of minting a parallel set
+    for cl, contour in core.owned_contours():
         infer.class_copy(gx, cl, contour)
-
-    for binding in set(core.provisional.values()):
-        # a round's provisional contours are carried across its sweeps, so
-        # that repeating a sweep re-reads the same contours instead of
-        # minting a parallel set of them each time
-        infer.class_copy(gx, binding[0], binding[1])
-        binding[0].dcpa = max(binding[0].dcpa, binding[1] + 1)
 
     for cnode_thing, (cl, contour) in core.bindings.items():
         cnode = gx.cnode.get((cnode_thing, 0, 0))
@@ -1206,20 +1132,14 @@ def contour_signature(
     return tuple(parts)
 
 
-def signature_is_empty(signature: tuple) -> bool:
-    """Whether a signature says nothing: every variable still empty."""
-    return all(not types for _name, types in signature)
-
-
 class RoundStats(NamedTuple):
     """What one outer round of stage 4 did.
 
-    `discovered` is how many in-function sites the round found that the core
-    had never seen. `merged` is always 0 now — sites that hold the same thing
-    share by name rather than by merging contours — and is kept for the
-    growth table's layout. `minted` is how many got a contour of their own. `learned` counts sites whose contour gained a type
-    it did not have before. A round that discovers nothing and learns nothing
-    is the fixpoint.
+    `minted` is how many discovered in-function sites got a contour of their
+    own this round; `waiting` is how many were still without one after the
+    mint, deferred ones included. `learned` counts sites whose contour
+    gained a type it did not have before. A round that mints nothing and
+    learns nothing is the fixpoint.
 
     `upgrades` is how many contours moved to a larger signature this round,
     which is how a site whose contour was empty comes to be looked up under
@@ -1230,9 +1150,8 @@ class RoundStats(NamedTuple):
 
     round: int
     sweeps: int
-    discovered: int
-    merged: int
     minted: int
+    waiting: int
     learned: int
     templates: int
     contours: int
@@ -1250,8 +1169,6 @@ class CommitResult(NamedTuple):
     """
 
     bound: dict[Any, tuple["python.Class", int]]
-    merged: int
-    minted: int
     probe_fresh: dict[AllocationSite, dict[str, infer.Types]]
     mold_fresh: dict[Any, dict[str, infer.Types]]
 
@@ -1314,7 +1231,7 @@ def commit_round(
 
     core.provisional = {}
     core.contents = observed
-    return CommitResult(bound, 0, len(bound), probe_fresh, mold_fresh)
+    return CommitResult(bound, probe_fresh, mold_fresh)
 
 
 def probe_allocation_site(
@@ -1375,7 +1292,7 @@ def probe_allocation_site(
         for name, node in contour_variables(gx, cl, contour).items()
     }
 
-    gx.infer_v2_open_contours = core.open_contours() | {(cl, contour)}
+    gx.infer_v2_open_contours = core.owned_contours() | {(cl, contour)}
     try:
         rounds = v2_propagate(gx)
         reached = site_allocated(gx, site, contour)
@@ -1561,7 +1478,6 @@ def sweep_once(
     probes_and_molds: Optional[list[AllocationSite]] = None,
     collect: bool = False,
     freeze: bool = True,
-    discover: bool = True,
 ) -> SweepResult:
     """One propagation with every bound contour open; read them all.
 
@@ -1570,9 +1486,9 @@ def sweep_once(
     Opening them together means one propagation per sweep instead of one per
     site, and it costs nothing in attribution.
 
-    With `discover` on, a mold whose template is created during this
-    propagation becomes a site and is minted a contour of its own on the
-    spot (see FrozenCore.mold_contour). That contour is provisional: it is
+    A mold whose template is created during this propagation becomes a site
+    and is minted a contour of its own on the
+    spot (see FrozenCore.note_mold). That contour is provisional: it is
     open for the rest of the sweep so that what flows into it is
     attributable, but it is not a binding until the caller commits it. A
     sweep never commits anything; that is what keeps a merge from being
@@ -1583,7 +1499,6 @@ def sweep_once(
     saved_orig_types = gx.orig_types
     backup = infer.backup_network(gx)
 
-    core.open_set = None
     apply_core(gx, core, baseline_dcpa)
     for site in probes:
         contour = core.contour_for(site, baseline_dcpa)
@@ -1612,14 +1527,8 @@ def sweep_once(
     # a sweep needs. It applies to contour-carrying classes only; freezing
     # user class attributes as well would starve template creation and so
     # stop the sweep from discovering any new sites at all.
-    open_set = core.open_contours() if freeze else None
-    if open_set is not None:
-        # contours minted by an earlier sweep of this round are still
-        # provisional, but they exist and have to stay readable
-        open_set |= set(core.provisional.values())
-    core.open_set = open_set
-    gx.infer_v2_open_contours = open_set
-    gx.infer_v2_core = core if discover else None
+    gx.infer_v2_open_contours = core.owned_contours() if freeze else None
+    gx.infer_v2_core = core
     try:
         rounds = v2_propagate(gx)
         results: dict[AllocationSite, dict[str, infer.Types]] = {}
@@ -1692,7 +1601,6 @@ def sweep_once(
     finally:
         gx.infer_v2_open_contours = None
         gx.infer_v2_core = None
-        core.open_set = None
         infer.restore_network(gx, backup)
         gx.alloc_info = saved_alloc_info
         gx.orig_types = saved_orig_types
@@ -1834,87 +1742,19 @@ def alloc_id_location(alloc_id: Any) -> str:
     return "%s:%s" % (alloc_id[0], lineno if lineno is not None else "-")
 
 
-def report_new_sites(
-    result: "SweepResult",
-    commit: CommitResult,
-    round_no: int,
-) -> None:
-    """Log the in-function sites this round discovered and what they hold.
-
-    A site whose provisional contour merged into another is shown with the
-    number it was minted as, so the listing says which decision was made
-    rather than only its outcome.
-    """
-    bound = commit.bound
-    if not bound:
-        return
-    logger.debug(
-        "  round %d: %d new in-function allocation site(s)", round_no, len(bound)
-    )
-    shown = 0
-    for alloc_id in sorted(bound, key=alloc_id_location):
-        if shown >= V2_MAX_SITE_LINES:
-            logger.debug(
-                "  ... %d more new site(s) not listed", len(bound) - shown
-            )
-            break
-        shown += 1
-        cl, contour = bound[alloc_id]
-        provisional = result.provisional.get(alloc_id)
-        note = ""
-        if provisional is not None and provisional != (cl, contour):
-            note = "  (merged from %d)" % provisional[1]
-        logger.debug(
-            "    %-24s %-10s contour %-4d %s%s",
-            alloc_id_location(alloc_id),
-            cl.ident,
-            contour,
-            alloc_id_source(alloc_id),
-            note,
-        )
-        inflow = result.mold_inflow.get(alloc_id, {})
-        for name in sorted(inflow):
-            if name in CONTOUR_SIGNATURE_SKIP:
-                continue
-            logger.debug("        %-8s <- %s", name, format_types(inflow[name]))
-
-
-def report_widest_signatures(core: FrozenCore, round_no: int) -> None:
-    """Log which functions own the most contours, and how many keys exist.
-
-    This is the per-site contour count. If a function's contour count keeps
-    climbing round on round while its signature count does not, contours are
-    multiplying without holding anything new, which is the shape a runaway
-    would have.
-    """
-    per_function: dict[str, int] = {}
-    for key in core.alloc_bindings:
-        per_function[key[0]] = per_function.get(key[0], 0) + 1
-    if not per_function:
-        return
-    widest = sorted(per_function.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
-    if widest[0][1] < 2:
-        return
-    logger.debug("  round %d: functions owning the most sites:", round_no)
-    for function, count in widest:
-        logger.debug("    %-32s %d site(s)", function, count)
-
-
 def report_added_site(
     core: FrozenCore,
     added: tuple[Any, tuple["python.Class", int]],
     round_no: int,
-    pending: int,
 ) -> None:
-    """Log the single site this round gave a contour to."""
+    """Log one site this round gave a contour to."""
     key, (cl, contour) = added
     logger.debug(
-        "  round %d: +1 site %s  %s  contour %d  (%d still waiting)",
+        "  round %d: +1 site %s  %s  contour %d",
         round_no,
         alloc_id_location(key),
         cl.ident,
         contour,
-        pending - 1,
     )
     logger.debug("      %s   cart %s", alloc_id_source(key), repr_cart(key[1]))
 
@@ -1922,14 +1762,13 @@ def report_added_site(
 def report_round(stats: RoundStats) -> None:
     """One line summarising a round, and the numbers a hang would show in."""
     logger.debug(
-        "[infer v2: round %d done: %d sweep(s), %d site(s) discovered"
-        " (%d merged, %d minted), %d learned, %d template(s),"
+        "[infer v2: round %d done: %d sweep(s), %d site(s) minted"
+        " (%d waiting), %d learned, %d template(s),"
         " %d contour(s) total]",
         stats.round,
         stats.sweeps,
-        stats.discovered,
-        stats.merged,
         stats.minted,
+        stats.waiting,
         stats.learned,
         stats.templates,
         stats.contours,
@@ -1946,16 +1785,16 @@ def report_growth(history: list[RoundStats]) -> None:
     """The growth curve, which is what tells convergence from a creation cycle.
 
     A creation cycle shows up as contours and sites climbing round on round
-    without the discovered count falling off. Convergence shows up as both
-    flattening and the last round discovering nothing.
+    without the minted count falling off. Convergence shows up as both
+    flattening and the last round minting nothing.
     """
     logger.debug("[infer v2: growth per round]")
     logger.debug(
-        "    %-6s %-7s %-7s %-7s %-8s %-9s %-10s %-7s %-5s",
+        "    %-6s %-7s %-7s %-8s %-8s %-9s %-10s %-7s %-5s",
         "round",
         "sweeps",
-        "found",
-        "merged",
+        "minted",
+        "waiting",
         "learned",
         "contours",
         "templates",
@@ -1964,11 +1803,11 @@ def report_growth(history: list[RoundStats]) -> None:
     )
     for stats in history:
         logger.debug(
-            "    %-6d %-7d %-7d %-7d %-8d %-9d %-10d %-7d %-5d",
+            "    %-6d %-7d %-7d %-8d %-8d %-9d %-10d %-7d %-5d",
             stats.round,
             stats.sweeps,
-            stats.discovered,
-            stats.merged,
+            stats.minted,
+            stats.waiting,
             stats.learned,
             stats.contours,
             stats.templates,
@@ -2051,23 +1890,21 @@ def probe_allocation_sites(
         # round names nothing.
         upgrades = core.resignature(result.contour_contents)
         core.rekey()
-        pending = core.pending_count()
         batch = core.mint_batch(V2_SITES_PER_ROUND)
-        added = batch[0] if batch else None
         core.fresh_contours = {binding for _key, binding in batch}
+        waiting = core.pending_count()
 
         report_round_learning(core, commit, round_no)
         for entry in batch:
-            report_added_site(core, entry, round_no, pending)
+            report_added_site(core, entry, round_no)
         if result.templates:
             last_templates = result.templates
 
         stats = RoundStats(
             round=round_no,
             sweeps=sweeps,
-            discovered=len(batch),
-            merged=0,
-            minted=pending,
+            minted=len(batch),
+            waiting=waiting,
             learned=commit.learned,
             templates=len(result.templates),
             contours=len(core.owned_contours()),
@@ -2196,19 +2033,19 @@ def report_site_signatures(gx: "config.GlobalInfo", core: FrozenCore) -> None:
 
 
 def report_core(core: FrozenCore, rounds: int) -> None:
-    report_signature_table(core)
     """Summarise what the rounds established."""
+    report_signature_table(core)
     logger.debug(
         "[infer v2: frozen core after %d round(s): %d module-level site(s),"
         " %d in-function site(s), %d contour(s), %d contour variable(s)]",
         rounds,
         len(core.bindings),
         len(core.alloc_bindings),
-        len(core.committed_contours()),
+        len(core.owned_contours()),
         len(core.contents),
     )
     per_class: dict[str, int] = {}
-    for cl, _contour in core.committed_contours():
+    for cl, _contour in core.owned_contours():
         per_class[cl.ident] = per_class.get(cl.ident, 0) + 1
     for ident in sorted(per_class):
         logger.debug("    %-10s %d contour(s)", ident, per_class[ident])
@@ -2284,8 +2121,7 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
     apply_core(gx, core, baseline_dcpa)
     gx.orig_types = {node: types.copy() for node, types in gx.types.items()}
-    gx.infer_v2_open_contours = core.open_contours()
-    core.open_set = gx.infer_v2_open_contours
+    gx.infer_v2_open_contours = core.owned_contours()
     gx.infer_v2_core = core
     core.misses = 0
     try:
@@ -2293,7 +2129,6 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     finally:
         gx.infer_v2_core = None
         gx.infer_v2_open_contours = None
-        core.open_set = None
     logger.debug(
         "[infer v2: materialised in %d propagation round(s); %d contour(s);"
         " %d site(s) fell back to the old heuristic]",
