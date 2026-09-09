@@ -382,28 +382,54 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
 {
     __GC_STRING *subjs;
     list<str *> *r;
-    PCRE2_SIZE i, j, cur;
+    PCRE2_SIZE i, j, cur, start;
     PCRE2_SPTR c_subj;
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
     PCRE2_SIZE *captured;
+    uint32_t extra;
 
     //'permanent' (in respect to the lifetime of this function)
     r = new list<str *>();
 
     subjs = &subj->unit;
     c_subj = (PCRE2_SPTR) subjs->c_str();
-    for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
+
+    //'i' is the start of the segment still pending output (the end of the
+    //previous match); 'start' is where the next match attempt begins. These
+    //are usually the same, but diverge while stepping over a zero-length
+    //match -- which is exactly the case the old code got wrong: it bumped a
+    //single index past the empty match, silently swallowing the character
+    //that sat there, and could walk the index past the end of the subject
+    //(making the final substr() below throw).
+    //
+    //'extra' implements the standard PCRE2 global-matching idiom: after a
+    //zero-length match we retry at the same offset forbidding another empty
+    //match there, and only if that fails do we advance one position and
+    //resume searching normally.
+    start = i = 0;
+    extra = 0;
+    for(cur = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; )
     {
+        if(start > (PCRE2_SIZE) subjs->size()) break;
+
         //get a match
         if(pcre2_match(
             compiled_pattern,
             c_subj,
             (PCRE2_SIZE)subjs->size(),
-            i,
-            flags_,
+            start,
+            (uint32_t) flags_ | extra,
             match_data,
             NULL
-        ) <= 0) break;
+        ) <= 0)
+        {
+            //no match here; if we were only forbidding an empty match at
+            //this offset, step over it and keep searching, else we're done
+            if(extra == 0) break;
+            start++;
+            extra = 0;
+            continue;
+        }
 
         captured = pcre2_get_ovector_pointer(match_data);
 
@@ -411,21 +437,11 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
         if(onlyfind)
         {
             r->append(new str(subjs->substr((size_t)captured[0], (size_t)(captured[1] - captured[0]))));
-
-            //for split we ignore zero-length matches, but findall dosn't
-            if(captured[1] == captured[0]) captured[1]++;
         }
         else
         {
-            //is it worth it?
-            if(captured[1] == i)
-            {
-                cur--;
-                i++;
-                continue;
-            }
-
-            //append block of text
+            //append block of text preceding the match; zero-length matches
+            //split too (CPython 3.7+), they just yield empty segments
             r->append(new str(subjs->substr((size_t)i, (size_t)(captured[0] - i))));
 
             //append all the submatches to list
@@ -436,8 +452,16 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
             }
         }
 
-        //move our index
+        cur++;
+
+        //move our indices
         i = captured[1];
+        start = captured[1];
+
+        //a zero-length match would otherwise be found again at the same
+        //offset forever, so make the next attempt reject one here
+        if(captured[1] == captured[0]) extra = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
+        else extra = 0;
     }
 
     if(!onlyfind) r->append(new str(subjs->substr((size_t)i)));
@@ -798,8 +822,19 @@ list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind,
     re_object *ro;
     list<str *> *r;
 
+    //'flags' here is a bitmask of Python-level re.* flags (IGNORECASE=0x02,
+    //MULTILINE=0x08, DOTALL=0x10, ...), already applied at compile time
+    //above. __splitfind's flags_ parameter, in contrast, is passed straight
+    //through to pcre2_match() as its *match-time* options bitmask, which
+    //uses an entirely different encoding (PCRE2_NOTBOL=0x01,
+    //PCRE2_NOTEOL=0x02, PCRE2_NOTEMPTY_ATSTART=0x08, ...). Forwarding the
+    //Python flags here made e.g. re.IGNORECASE (0x02) collide with
+    //PCRE2_NOTEOL, which forbids '$' from matching at the end of the
+    //subject, so IGNORECASE searches anchored on '$' spuriously failed;
+    //similarly re.MULTILINE (0x08) collided with PCRE2_NOTEMPTY_ATSTART.
+    //There are no match-time options to set here, so pass 0.
     ro = compile(pat, flags);
-    r = ro->__splitfind(subj, maxn, onlyfind, flags);
+    r = ro->__splitfind(subj, maxn, onlyfind, 0);
 
     //return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
     return r;
