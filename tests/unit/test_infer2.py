@@ -29,7 +29,8 @@ def analyzed_alloc_sites():
     gx.silent = True
     gx.source_root = path.parent
     gx.module_path = path
-    # not gx.infer_v2: analyze() would run v2 and stop instead of returning
+    gx.infer_v2 = True
+    gx.infer_v2_codegen = True
 
     module_name = path.stem
     gx.main_module = graph.parse_module(module_name, gx)
@@ -48,7 +49,8 @@ def analyzed_global_sites():
     gx.silent = True
     gx.source_root = path.parent
     gx.module_path = path
-    # not gx.infer_v2: analyze() would run v2 and stop instead of returning
+    gx.infer_v2 = True
+    gx.infer_v2_codegen = True
 
     module_name = path.stem
     gx.main_module = graph.parse_module(module_name, gx)

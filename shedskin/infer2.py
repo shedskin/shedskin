@@ -24,15 +24,16 @@ logger = logging.getLogger("infer")
 
 
 # ---------------------------------------------------------------------------
-# --- infer v2: experimental alternative analysis (enabled with --infer-v2)
+# --- infer v2: the type analysis
 # ---------------------------------------------------------------------------
 #
-# An alternative to iterative_dataflow_analysis() in shedskin.infer, based on
-# a different idea about where termination comes from.
+# Replaces the iterative dataflow analysis that used to drive shedskin.infer,
+# based on a different idea about where termination comes from.
 #
 # IFA reaches a fixpoint by *splitting* contours in response to observed
 # imprecision. A split may be undone and redone across rounds, which makes the
-# analysis order-dependent and leaves it with no bound other than MAXITERS.
+# analysis order-dependent and leaves it with no bound other than a hard
+# iteration cap.
 #
 # Infer v2 rests on three ideas. Everything else in this module is
 # bookkeeping for them, and every bug found so far was a bookkeeping bug.
@@ -133,7 +134,8 @@ ALLOC_SOURCE_MAXLEN = 40
 V2_PROBE_ROUNDS = 20
 
 # V2_CPA_LIMIT: cartesian product limit used while probing. Deliberately far
-# above CPA_LIMIT, since a probe wants the fullest picture of what reaches a
+# above the limit the old analysis started from, since a probe wants the
+# fullest picture of what reaches a
 # contour rather than the fastest route to a fixpoint. Still bounded, and a
 # probe that hits it is reported as truncated.
 V2_CPA_LIMIT = 1000
@@ -327,8 +329,8 @@ def allocation_site_type(
 ) -> Optional[tuple["python.Class", int]]:
     """The (class, dcpa) a constructor node allocates, or None.
 
-    iterative_dataflow_analysis() clears the types of container constructor
-    nodes inside functions between rounds, so after analysis gx.types no
+    The old iterative dataflow analysis cleared the types of container
+    constructor nodes inside functions between rounds, so after analysis gx.types no
     longer answers this for every site. gx.orig_types holds the pre-analysis
     snapshot and does, which lets the inventory be taken at either point.
     """
@@ -466,8 +468,9 @@ def format_types(types: infer.Types) -> str:
 def v2_propagate(gx: "config.GlobalInfo") -> int:
     """Propagate to a fixpoint, with the incremental heuristics switched off.
 
-    iterative_dataflow_analysis() only lets a few new functions and allocation
-    sites into the analysis per round, to keep CPA from exploding early. A
+    The old iterative dataflow analysis only let a few new functions and
+    allocation sites into the analysis per round, to keep CPA from exploding
+    early. A
     probe wants the whole program instead, so the counters are pushed out of
     range rather than reset each round.
     """
@@ -2212,7 +2215,7 @@ def report_core(core: FrozenCore, rounds: int) -> None:
 
 
 def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
-    """Experimental alternative entry point to iterative_dataflow_analysis.
+    """Entry point for the type analysis.
 
     Stage 1: inventory the constructor nodes, separating module-level
         allocation sites from in-function molds.

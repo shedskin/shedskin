@@ -38,6 +38,8 @@ def analyzed_demo():
     gx.silent = True
     gx.source_root = demo_path.parent
     gx.module_path = demo_path
+    gx.infer_v2 = True
+    gx.infer_v2_codegen = True
 
     module_name = demo_path.stem
     gx.main_module = graph.parse_module(module_name, gx)
