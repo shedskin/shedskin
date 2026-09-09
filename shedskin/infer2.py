@@ -483,10 +483,8 @@ def v2_propagate(gx: "config.GlobalInfo") -> int:
         gx.cpa_limit = V2_CPA_LIMIT
         gx.added_funcs = -sys.maxsize
         gx.added_allocs = -sys.maxsize
-        gx.new_alloc_info = {}
         before = sum(len(types) for types in gx.types.values())
         infer.propagate(gx)
-        gx.alloc_info.update(gx.new_alloc_info)
         if sum(len(types) for types in gx.types.values()) == before:
             break
     return rounds
@@ -865,7 +863,6 @@ class FrozenCore:
             if binding is None:
                 binding = self.provisional.get(key)
         if binding is not None:
-            gx.alloc_info[alloc_id] = binding
             return binding
 
         types = gx.orig_types.get(node) or gx.types.get(node) or set()
@@ -1056,10 +1053,10 @@ def apply_core(
 
     Module-level sites have their contour written straight onto their
     constructor node. In-function sites cannot: the node they allocate at
-    does not exist until its template does. Their contours go into
-    gx.alloc_info instead, keyed exactly as ifa_seed_template will look them
-    up, so that when the template is created the site is given the contour
-    the core already committed to rather than a fresh one.
+    does not exist until its template does. They are not seeded here at
+    all: when the template is created, ifa_seed_template asks the core
+    (note_mold) for the contour it already committed to for that
+    (function, cart, node), so nothing needs to be copied out in advance.
     """
     for cl, dcpa in baseline_dcpa.items():
         cl.dcpa = dcpa
@@ -1075,12 +1072,6 @@ def apply_core(
         cnode = gx.cnode.get((cnode_thing, 0, 0))
         if cnode is not None:
             gx.types[cnode] = {(cl, contour)}
-
-    for alloc_id, binding in core.alloc_bindings.items():
-        gx.alloc_info[alloc_id] = binding
-
-    for alloc_id, binding in core.provisional.items():
-        gx.alloc_info[alloc_id] = binding
 
     # Contents are deliberately not seeded back. They are an *observation* of
     # a world that is still being built: while sites are still being
@@ -1255,9 +1246,9 @@ def probe_allocation_site(
     fills in and the freeze dissolves as coverage grows.
 
     Only module-level sites can be probed this way. A node inside a function
-    has no site until a template exists, and its contour belongs in
-    gx.alloc_info keyed by (function, cartesian product, node) rather than by
-    the node alone.
+    has no site until a template exists, and its contour is keyed by
+    (function, cartesian product, node) in the core rather than by the node
+    alone.
 
     The network is restored afterwards. Only the core survives a probe, so
     what one probe passes to the next is exactly what it committed.
@@ -1273,7 +1264,6 @@ def probe_allocation_site(
 
     cl = site.cl
     saved_dcpa = dict(baseline_dcpa)
-    saved_alloc_info = gx.alloc_info.copy()
     saved_orig_types = gx.orig_types
     backup = infer.backup_network(gx)
 
@@ -1304,7 +1294,6 @@ def probe_allocation_site(
     finally:
         gx.infer_v2_open_contours = None
         infer.restore_network(gx, backup)
-        gx.alloc_info = saved_alloc_info
         gx.orig_types = saved_orig_types
         for klass, dcpa in saved_dcpa.items():
             klass.dcpa = dcpa
@@ -1495,7 +1484,6 @@ def sweep_once(
     decided against a signature that has not settled.
     """
     saved_dcpa = dict(baseline_dcpa)
-    saved_alloc_info = gx.alloc_info.copy()
     saved_orig_types = gx.orig_types
     backup = infer.backup_network(gx)
 
@@ -1602,7 +1590,6 @@ def sweep_once(
         gx.infer_v2_open_contours = None
         gx.infer_v2_core = None
         infer.restore_network(gx, backup)
-        gx.alloc_info = saved_alloc_info
         gx.orig_types = saved_orig_types
         for klass, dcpa in saved_dcpa.items():
             klass.dcpa = dcpa
