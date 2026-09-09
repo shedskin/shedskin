@@ -1470,6 +1470,42 @@ class SweepResult(NamedTuple):
     templates: list[TemplateRecord]
 
 
+def baseline_network(gx: "config.GlobalInfo") -> infer.Backup:
+    """Snapshot the pristine network once, for every sweep to restore to.
+
+    A sweep applies the core, propagates, reads the contours and puts the
+    network back exactly as it found it; the round loop between two sweeps
+    only touches the core. So the state a sweep would snapshot is the same
+    state on every sweep of every round, and one copy serves them all.
+
+    Restoring is not the same as re-snapshotting: restore_network writes
+    back copies of what the snapshot holds and never hands the snapshot's
+    own sets to the live network, so a shared snapshot cannot be scribbled
+    on by the sweep that uses it.
+    """
+    return infer.backup_network(gx)
+
+
+def check_baseline(gx: "config.GlobalInfo", baseline: infer.Backup) -> None:
+    """Assert the network came back to the snapshot (SS_V2_CHECK_BASELINE=1).
+
+    Sharing one snapshot is sound exactly as long as a sweep's restore is
+    exact. It is, but sharing would turn a future leak into a silent one
+    instead of a self-correcting one, so this makes it loud on demand.
+    """
+    if not os.environ.get("SS_V2_CHECK_BASELINE"):
+        return
+    beforetypes, beforeconstr, beforeinout, beforecnode = baseline
+    assert set(gx.types) == set(beforetypes), "sweep left nodes behind"
+    for node, typeset in beforetypes.items():
+        assert gx.types[node] == typeset, "sweep left types behind: %s" % node
+        assert (node.in_, node.out) == beforeinout[node], (
+            "sweep left edges behind: %s" % node
+        )
+    assert gx.constraints == beforeconstr, "sweep left constraints behind"
+    assert gx.cnode == beforecnode, "sweep left cnodes behind"
+
+
 def sweep_once(
     gx: "config.GlobalInfo",
     probes: list[AllocationSite],
@@ -1478,6 +1514,7 @@ def sweep_once(
     probes_and_molds: Optional[list[AllocationSite]] = None,
     collect: bool = False,
     freeze: bool = True,
+    baseline: Optional[infer.Backup] = None,
 ) -> SweepResult:
     """One propagation with every bound contour open; read them all.
 
@@ -1493,11 +1530,18 @@ def sweep_once(
     attributable, but it is not a binding until the caller commits it. A
     sweep never commits anything; that is what keeps a merge from being
     decided against a signature that has not settled.
+
+    `baseline` is a network snapshot the caller has already taken. A sweep
+    ends by restoring the network to exactly the state it started in, and
+    nothing between two sweeps touches it, so every snapshot the sweep loop
+    would take is a copy of the same thing. The caller takes one and passes
+    it in (see baseline_network); left out, the sweep takes its own, which
+    is what a standalone caller wants.
     """
     saved_dcpa = dict(baseline_dcpa)
     saved_alloc_info = gx.alloc_info.copy()
     saved_orig_types = gx.orig_types
-    backup = infer.backup_network(gx)
+    backup = infer.backup_network(gx) if baseline is None else baseline
 
     apply_core(gx, core, baseline_dcpa)
     for site in probes:
@@ -1606,6 +1650,8 @@ def sweep_once(
         gx.orig_types = saved_orig_types
         for klass, dcpa in saved_dcpa.items():
             klass.dcpa = dcpa
+        if baseline is not None:
+            check_baseline(gx, baseline)
 
     return SweepResult(
         results,
@@ -1626,6 +1672,7 @@ def sweep_to_convergence(
     sites: list[AllocationSite],
     round_no: int,
     collect: bool,
+    baseline: Optional[infer.Backup] = None,
 ) -> tuple[SweepResult, int]:
     """Sweep until a whole sweep learns nothing, then return the last one.
 
@@ -1651,6 +1698,7 @@ def sweep_to_convergence(
             baseline_dcpa,
             probes_and_molds=sites,
             collect=collect,
+            baseline=baseline,
         )
         last = result
 
@@ -1867,6 +1915,11 @@ def probe_allocation_sites(
     for site in probes:
         core.contour_for(site, baseline_dcpa)
 
+    # one snapshot for the whole sweep phase: every sweep restores to it and
+    # nothing in between changes it, so re-taking it per sweep copies the
+    # same network over again
+    baseline = baseline_network(gx)
+
     history: list[RoundStats] = []
     round_no = 0
     last_templates: list[TemplateRecord] = []
@@ -1875,7 +1928,14 @@ def probe_allocation_sites(
         logger.debug("[infer v2: round %d]", round_no)
 
         result, sweeps = sweep_to_convergence(
-            gx, probes, core, baseline_dcpa, sites, round_no, collect=True
+            gx,
+            probes,
+            core,
+            baseline_dcpa,
+            sites,
+            round_no,
+            collect=True,
+            baseline=baseline,
         )
 
         # commit what settled, then re-derive every contour's signature from

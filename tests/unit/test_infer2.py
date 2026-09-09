@@ -615,6 +615,78 @@ class TestTemplates:
         assert init[0].signature().startswith("(self=Solver(")
 
 
+class TestSharedBaseline:
+    """One snapshot serves every sweep, because a sweep restores exactly."""
+
+    def _probes(self, gx):
+        return [
+            site
+            for site in infer2.collect_allocation_sites(gx, builtins=False)
+            if site.kind == infer2.ALLOC_CONTAINER and site.module_level
+        ]
+
+    def _sweep(self, gx, baseline=None):
+        core = infer2.FrozenCore()
+        baseline_dcpa = {cl: max(cl.dcpa, 2) for cl in gx.allclasses}
+        probes = self._probes(gx)
+        for site in probes:
+            core.contour_for(site, baseline_dcpa)
+        return infer2.sweep_once(
+            gx, probes, core, baseline_dcpa, baseline=baseline
+        )
+
+    def test_sweep_leaves_the_network_at_the_baseline(
+        self, analyzed_global_sites
+    ):
+        """What a second snapshot would hold, the first one already holds."""
+        gx = analyzed_global_sites
+        baseline = infer2.baseline_network(gx)
+        self._sweep(gx, baseline)
+        after = infer2.baseline_network(gx)
+
+        assert after[0] == baseline[0]  # types
+        assert after[1] == baseline[1]  # constraints
+        assert after[2] == baseline[2]  # in_/out
+        assert after[3] == baseline[3]  # cnode
+
+    def test_shared_baseline_sweeps_the_same(self, analyzed_global_sites):
+        """Passing a snapshot in must not change what the sweep sees."""
+        gx = analyzed_global_sites
+        own = self._sweep(gx)
+        shared = self._sweep(gx, infer2.baseline_network(gx))
+
+        assert shared.rounds == own.rounds
+        assert shared.unreached == own.unreached
+        assert {
+            site.source(): inflow
+            for site, inflow in shared.probe_inflow.items()
+        } == {
+            site.source(): inflow for site, inflow in own.probe_inflow.items()
+        }
+        assert shared.contour_contents == own.contour_contents
+
+    def test_baseline_is_not_written_through(self, analyzed_global_sites):
+        """A shared snapshot outlives its sweep, so it must stay pristine."""
+        gx = analyzed_global_sites
+        baseline = infer2.baseline_network(gx)
+        frozen = {node: types.copy() for node, types in baseline[0].items()}
+        self._sweep(gx, baseline)
+        assert baseline[0] == frozen
+
+    def test_check_baseline_is_off_by_default(
+        self, analyzed_global_sites, monkeypatch
+    ):
+        """The verification costs a full walk over the network; it is opt-in."""
+        gx = analyzed_global_sites
+        monkeypatch.delenv("SS_V2_CHECK_BASELINE", raising=False)
+        bogus = ({}, set(), {}, {})
+        infer2.check_baseline(gx, bogus)  # no walk, so no complaint
+
+        monkeypatch.setenv("SS_V2_CHECK_BASELINE", "1")
+        with pytest.raises(AssertionError):
+            infer2.check_baseline(gx, bogus)
+
+
 class TestFrozenCoreBookkeeping:
     """The invariants the ownership indexes rest on (no gx needed)."""
 
