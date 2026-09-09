@@ -4,7 +4,7 @@
 
 import ast
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple
 
 if TYPE_CHECKING:
     from shedskin import infer, python
@@ -37,6 +37,15 @@ class TypeInferenceState:
         cpa_limited: Whether CPA limit was reached.
         merged_inh: Merged inheritance type information.
         maxhits: Maximum hits counter (for termination).
+        retry_maxiters: Whether to raise on hitting the iteration limit.
+        infer_v2: Use the experimental v2 type analysis.
+        infer_v2_open_contours: While v2 probes, the set of (class, contour)
+            pairs allowed to receive inflow. Every other contour is frozen:
+            readable, but not writable. None disables the mechanism.
+        infer_v2_core: While v2 sweeps, the FrozenCore that owns allocation
+            site contours. ifa_seed_template asks it for the contour of a
+            mold in a newly created template, instead of falling back to the
+            "mother contour" search. None disables the mechanism.
     """
 
     constraints: Set[Tuple["infer.CNode", "infer.CNode"]] = field(default_factory=set)
@@ -62,3 +71,7 @@ class TypeInferenceState:
     merged_inh: Dict[Any, Set[Tuple[Any, int]]] = field(default_factory=dict)
     maxhits: int = 0
     retry_maxiters: bool = False
+    infer_v2: bool = False
+    infer_v2_open_contours: Optional[Set[Tuple[Any, int]]] = None
+    infer_v2_core: Optional[Any] = None
+    infer_v2_codegen: bool = False

@@ -40,7 +40,7 @@ class Shedskin:
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(level)
-        # debug=3 -> IFA (iterative flow analysis) debug logging enabled.
+        # debug=3 -> type analysis (infer v2 rounds/growth reports) logging enabled.
         self.infer_log = logging.getLogger("infer")
         self.infer_log.addHandler(console)
         self.infer_log.setLevel(level)
@@ -83,6 +83,11 @@ class Shedskin:
         """Configure global information for shedskin"""
         # print(args)
         gx = config.GlobalInfo(args)
+
+        if args.subcmd in ["analyze", "translate", "build", "run"]:
+            # v2 is the analysis now, and it generates code
+            gx.infer_v2 = True
+            gx.infer_v2_codegen = True
 
         if args.subcmd in ["build", "run", "runtests"]:
             # ensure cmake is available and installed.
@@ -320,6 +325,9 @@ class Shedskin:
             action="store_true",
         )
 
+        # Type inference options
+        parsers["inference"] = argparse.ArgumentParser(add_help=False)
+
         # Type options (int32/64/128, float32/64)
         parsers["types"] = argparse.ArgumentParser(add_help=False)
         grp = parsers["types"].add_argument
@@ -436,7 +444,7 @@ class Shedskin:
         parser_analyze = subparsers.add_parser(
             "analyze",
             help="Analyze and validate python module",
-            parents=[shared["stats"]],
+            parents=[shared["stats"], shared["inference"]],
         )
         parser_analyze.add_argument("name", help="Python file or module to analyze")
 
@@ -450,6 +458,7 @@ class Shedskin:
                 shared["types"],
                 shared["disable"],
                 shared["compiler"],
+                shared["inference"],
             ],
         )
         opt = parser_translate.add_argument
@@ -498,6 +507,7 @@ class Shedskin:
                 shared["disable"],
                 shared["compiler"],
                 shared["cmake"],
+                shared["inference"],
             ],
         )
         parser_build.add_argument("name", help="Python file or module to compile")
@@ -513,6 +523,7 @@ class Shedskin:
                 shared["disable"],
                 shared["compiler"],
                 shared["cmake"],
+                shared["inference"],
             ],
         )
         parser_run.add_argument("name", help="Python file or module to run")

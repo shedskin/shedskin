@@ -19,51 +19,38 @@ To maintain precision, Shed Skin duplicates parts of the constraint graph during
 analysis. This allows different uses of functions (parametric polymorphism) and
 containers (data polymorphism) to be analyzed separately.
 
-The implementation combines two key algorithms:
+Function polymorphism is handled by Agesen's Cartesian Product Algorithm (CPA),
+in `cpa()`: a function is duplicated per point in the cartesian product of its
+argument types, so a return type that depends on the argument types stays
+precise.
 
-1. Agesen's Cartesian Product Algorithm (CPA) for handling function polymorphism,
-   where the return type of a method may depend on the actual types of the method
-   arguments.
+Data polymorphism is handled by `shedskin.infer2`, which owns the driver loop.
+This module provides the constraint graph itself and the machinery the driver
+calls into:
 
-2. Plevyak's Iterative Flow Analysis (IFA) for handling data polymorphism, where
-   the type of a variable may depend on the control flow.
+- `propagate()`, which moves types along the constraint graph
+- `cpa()`, which creates function templates from cartesian products
+- `ifa_seed_template()`, which seeds the allocation sites in a new template
+- `class_copy()` / `func_copy()`, which duplicate parts of the graph
+- `backup_network()` / `restore_network()`, which the driver uses to reset
+  the graph between sweeps
 
-The analysis, in `iterative_dataflow_analysis()`, proceeds in phases:
-
-FORWARD PHASE
-- Propagate types through the constraint graph via `propagate()`
-- Create function duplicates using CPA via `cpa()`
-- Seed allocation points with correct types via `ifa_seed_template()`
-
-BACKWARD PHASE
-- Find imprecision points and determine classes to duplicate via `ifa()`
-- Trace backwards through graph to find related allocation points
-- Duplicate classes and distribute them across allocation points
-
-CLEANUP
-- Exit if no imprecision points found
-- Otherwise reset graph and restart analysis
-- Maintain allocation point types in `gx.alloc_info`
-
-The analysis runs incrementally, analyzing a limited set of functions and
-allocation sites before re-running. This helps prevent CPA explosion early
-in the process.
+Allocation point types are maintained in `gx.alloc_info`.
 
 In each node of `shedskin.graph`, two integers are used by `shedskin.infer`
 to represent duplicate parts of the constraint graph along two dimensions
 (class duplicate, function duplicate).
 
 For more details, see:
+- The docstring of `shedskin.infer2`
 - The docstring of `shedskin.graph`
 - Ole Agesen's PhD thesis on the CPA algorithm
 - Mark Dufour's MSc thesis on Shed Skin's implementation
 """
 
 import ast
-import collections
 import itertools
 import logging
-import random
 import sys
 from typing import (
     TYPE_CHECKING,
@@ -74,7 +61,7 @@ from typing import (
 )
 from collections.abc import Iterable
 
-from . import ast_utils, error, python, utils
+from . import ast_utils, error, python
 
 if TYPE_CHECKING:
     from . import config, graph
@@ -86,14 +73,8 @@ FTypes: TypeAlias = frozenset[tuple["python.Class", int]]
 CartesianProduct: TypeAlias = tuple[
     tuple["python.Class", int], ...
 ]  # TODO wrong name!!
-Parent: TypeAlias = Union["python.Class", "python.Function"]
 AllParent: TypeAlias = Union["python.Class", "python.Function", "python.StaticClass"]
 Merged: TypeAlias = dict[Any, set[tuple[Any, int]]]
-Split: TypeAlias = list[tuple["python.Class", int, list["CNode"], int]]
-ClassesNr: TypeAlias = dict[tuple[FTypes, ...], int]
-NrClasses: TypeAlias = dict[int, tuple[FTypes, ...]]
-AllCSites: TypeAlias = dict[tuple["python.Class", int], set["CNode"]]
-CreationPoints: TypeAlias = dict[FTypes, list["CNode"]]
 Analysis: TypeAlias = tuple[
     Optional[ast.AST],
     Optional[str],
@@ -114,7 +95,6 @@ PossibleFuncs: TypeAlias = list[
 ]
 
 logger = logging.getLogger("infer")
-TRACE = False  # TODO add logging level?
 
 
 class MaxIterationsException(Exception):
@@ -137,9 +117,8 @@ def _const_num(node: ast.AST) -> Union[int, float]:
 
 # Type inference tuning parameters
 # ---------------------------------
-# These constants control the iterative type analysis algorithm.
-# The algorithm uses Cartesian Product Analysis (CPA) with Iterative Flow
-# Analysis (IFA) to infer types. Processing happens incrementally to show
+# These constants control how much of the program `cpa()` is allowed to pull
+# into the analysis at a time. Processing happens incrementally to show
 # progress and avoid memory issues on large programs.
 
 # INCREMENTAL: Enable incremental analysis mode. When True, functions are
@@ -162,17 +141,30 @@ INCREMENTAL_DATA = True
 # increase total iterations.
 INCREMENTAL_ALLOCS = 1
 
-# MAXITERS: Maximum iterations per incremental round before forced restart.
-# If type propagation hasn't converged after this many iterations, the
-# algorithm restarts with more functions/allocations included. After 3
-# consecutive max-iteration hits, analysis terminates.
-MAXITERS = 30
+# SPLIT_CLASS_IDENTS: builtin classes that carry contours, i.e. the classes
+# that are duplicated per allocation site so that (say) a list of ints and a
+# list of strings can be told apart. These are the only classes that split.
+SPLIT_CLASS_IDENTS = (
+    "list",
+    "tuple",
+    "tuple2",
+    "dict",
+    "frozendict",
+    "defaultdict",
+    "Counter",
+    "set",
+    "frozenset",
+    "deque",
+    "__iter",
+    "array",
+)
 
-# CPA_LIMIT: Initial limit on cartesian product combinations per call site.
-# Limits combinatorial explosion when a function can be called with many
-# type combinations. If exceeded, the limit doubles and analysis restarts.
-# Higher values give more precise types but increase analysis time.
-CPA_LIMIT = 10
+# SCALAR_CLASS_IDENTS: builtin classes that are never duplicated per allocation
+# site. Allocation sites of these classes always live at dcpa 0 and so can
+# never gain contours.
+SCALAR_CLASS_IDENTS = frozenset(
+    ["int_", "float_", "str_", "bytes_", "none", "class_", "bool_"]
+)
 
 
 class CNode:
@@ -297,11 +289,6 @@ class CNode:
 
     def __repr__(self) -> str:
         return repr((self.thing, self.dcpa, self.cpa))
-
-
-def DEBUG(gx: "config.GlobalInfo", level: int) -> bool:
-    """Check if debug level is enabled"""
-    return gx.debug_level >= level
 
 
 def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
@@ -819,20 +806,25 @@ def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
                 add_constraint(gx, n, gx.cnode[var, dcpa, 0])
 
     for func in cl.funcs.values():
-        if (
-            cl.mv.module.ident == "builtin"
-            and cl.ident != "__iter"
-            and func.ident == "__iter__"
-        ):  # XXX hack for __iter__:__iter()
-            itercl = python.def_class(gx, "__iter")
-            gx.alloc_info[func.ident, ((cl, dcpa),), func.returnexpr[0]] = (
-                itercl,
-                itercl.dcpa,
-            )
-            class_copy(gx, itercl, itercl.dcpa)
-            itercl.dcpa += 1
-
         func_copy(gx, func, dcpa, 0)
+
+        # --- a method copied here is not a template yet, so its allocation
+        # --- sites are not seeded (cart is None), and CNode.copy has given
+        # --- each constructor node the types of the base copy: the shared
+        # --- bucket contour. Propagation reads that before the template is
+        # --- created for real and seeded from the core, and a bucket
+        # --- iterator is already flowing out of list.__iter__(7) by the time
+        # --- the site gets its own contour. The old analysis special-cased
+        # --- __iter__ for the same reason; the sweep owns every site, so
+        # --- nothing is known here and the node holds nothing.
+        for node in func.nodes:
+            if node.constructor and isinstance(
+                node.thing,
+                (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call),
+            ):
+                copied = gx.cnode.get((node.thing, dcpa, 0))
+                if copied is not None and copied is not node:
+                    gx.types[copied] = set()
 
 
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
@@ -901,6 +893,22 @@ def propagate(gx: "config.GlobalInfo") -> None:
     builtins = set(gx.builtins)
     types = gx.types
 
+    # --- infer v2: while sweeping, container contours outside the open set
+    # --- are frozen. They still propagate what they already hold, they just
+    # --- cannot receive anything new, so whatever arrives in an open contour
+    # --- came from a site that owns one rather than from the rest of the
+    # --- program merging into itself. The open set is the committed sites
+    # --- plus the ones minted during this sweep; it grows as the frozen core
+    # --- fills in.
+    # ---
+    # --- Only classes that carry contours are frozen. Freezing user class
+    # --- attributes as well starves template creation: a call whose argument
+    # --- comes out of an object attribute gets no argument types, so it
+    # --- forms no cartesian product and creates no template, and the molds
+    # --- inside it are never discovered.
+    open_contours = gx.infer_v2_open_contours
+    split_idents = SPLIT_CLASS_IDENTS
+
     # --- iterative dataflow analysis
     while worklist:
         callnodes = set()
@@ -919,6 +927,15 @@ def propagate(gx: "config.GlobalInfo") -> None:
                     b.thing.parent, python.Class
                 ):
                     parent_ident = b.thing.parent.ident
+
+                    if (
+                        open_contours is not None
+                        and parent_ident in split_idents
+                        and b.thing.parent.mv.module.builtin
+                        and (b.thing.parent, b.dcpa) not in open_contours
+                    ):
+                        continue
+
                     if parent_ident in builtins:
                         if parent_ident in [
                             "int_",
@@ -1490,663 +1507,6 @@ def actuals_formals(
         add_to_worklist(worklist, formalnode)
 
 
-# --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
-
-
-# Plevyak and Chien's IFA bounds contour creation from recursive program
-# structures (Iterative Flow Analysis, section 6.1). Their third case,
-# "function-data recursion" -- a recursive function creating objects on which
-# it is later invoked -- is the one that bites here: the contours involved end
-# up defining each other, and splitting them peels the cycle a contour at a
-# time, forever. Their remedy is to find the strongly connected components of
-# the contour graph and refuse to let relationships inside an SCC drive a
-# split, while still permitting a cycle to be peeled to a constant depth so
-# that recursive structures with a short period are still analysed precisely.
-SCC_SPLIT_LEVELS = 2
-
-
-def ifa_contour_sccs(gx: "config.GlobalInfo") -> set[tuple["python.Class", int]]:
-    """contours that lie on a cycle of the 'is defined using' relation
-
-    Nodes are class contours. There is an edge from contour A to contour B when
-    B's contents flow into A's, i.e. A's type variable node is reachable
-    backwards along `in_` from B's. A cycle therefore means the contours help
-    define each other, which is exactly the situation the paper singles out.
-    """
-    tvar_contour: dict[CNode, tuple["python.Class", int]] = {}
-    for cl in gx.allclasses:
-        for dcpa in range(1, cl.dcpa):
-            for name in cl.tvar_names():
-                var = cl.vars.get(name)
-                if var is None:
-                    continue
-                node = gx.cnode.get((var, dcpa, 0))
-                if node is not None:
-                    tvar_contour[node] = (cl, dcpa)
-
-    succ: dict[tuple["python.Class", int], set[tuple["python.Class", int]]] = {}
-    for start, src in tvar_contour.items():
-        edges = succ.setdefault(src, set())
-        stack = [start]
-        seen = {start}
-        while stack:
-            node = stack.pop()
-            for other in node.in_:
-                if other in seen:
-                    continue
-                seen.add(other)
-                if other in tvar_contour:
-                    edges.add(tvar_contour[other])
-                else:
-                    stack.append(other)  # look through non-contour nodes
-
-    return _cyclic_nodes(set(tvar_contour.values()), succ)
-
-
-def _cyclic_nodes(
-    nodes: set[tuple["python.Class", int]],
-    succ: dict[tuple["python.Class", int], set[tuple["python.Class", int]]],
-) -> set[tuple["python.Class", int]]:
-    """members of a non-trivial strongly connected component (Tarjan)"""
-    index: dict[Any, int] = {}
-    low: dict[Any, int] = {}
-    onstack: dict[Any, bool] = {}
-    stack: list[Any] = []
-    cyclic: set[tuple["python.Class", int]] = set()
-    counter = [0]
-
-    for root in nodes:
-        if root in index:
-            continue
-        work = [(root, 0)]
-        while work:  # iterative: contour graphs can be deep
-            node, pos = work[-1]
-            if pos == 0:
-                index[node] = low[node] = counter[0]
-                counter[0] += 1
-                stack.append(node)
-                onstack[node] = True
-            descend = False
-            edges = sorted(succ.get(node, ()), key=lambda c: (c[0].ident, c[1]))
-            for i in range(pos, len(edges)):
-                other = edges[i]
-                if other not in index:
-                    work[-1] = (node, i + 1)
-                    work.append((other, 0))
-                    descend = True
-                    break
-                if onstack.get(other):
-                    low[node] = min(low[node], index[other])
-            if descend:
-                continue
-            if low[node] == index[node]:
-                component = []
-                while True:
-                    other = stack.pop()
-                    onstack[other] = False
-                    component.append(other)
-                    if other == node:
-                        break
-                if len(component) > 1 or node in succ.get(node, ()):
-                    cyclic.update(component)
-            work.pop()
-            if work:
-                low[work[-1][0]] = min(low[work[-1][0]], low[node])
-    return cyclic
-
-
-def ifa(gx: "config.GlobalInfo") -> Split:
-    """Perform iterative flow analysis"""
-    logger.debug("ifa")
-    split: Split = []  # [(set of creation nodes, new type number), ..]
-
-    allcsites: AllCSites = {}
-    for n, types in gx.types.items():
-        if not n.in_:
-            for cl, dcpa in types:
-                allcsites.setdefault((cl, dcpa), set()).add(n)
-
-    cyclic = ifa_contour_sccs(gx)
-
-    for cl in ifa_classes_to_split(gx):
-        logger.debug("IFA: --- class %s ---", cl.ident)
-        cl.newdcpa = cl.dcpa
-        vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
-        classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
-        for dcpa in range(1, cl.dcpa):
-            if (
-                ifa_split_vars(
-                    gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites,
-                    cyclic,
-                )
-                is not None
-            ):
-                logger.debug("IFA found splits, return")
-                return split
-    logger.debug("IFA final return")
-    return split
-
-
-def ifa_split_vars(
-    gx: "config.GlobalInfo",
-    cl: "python.Class",
-    dcpa: int,
-    vars: list["python.Variable"],
-    nr_classes: NrClasses,
-    classes_nr: ClassesNr,
-    split: Split,
-    allcsites: AllCSites,
-    cyclic: set[tuple["python.Class", int]],
-) -> Optional[Split]:
-    """Split variables in a class"""
-
-    for varnum, var in enumerate(vars):
-        if (var, dcpa, 0) not in gx.cnode:
-            continue
-        node = gx.cnode[var, dcpa, 0]
-        (
-            creation_points,
-            paths,
-            assignsets,
-            allnodes,
-            csites,
-            emptycsites,
-        ) = ifa_flow_graph(gx, cl, dcpa, node, allcsites)
-        if TRACE:
-            logger.debug(
-                "IFA visit var %s.%s, %d, csites %d", cl.ident, var.name, dcpa, len(csites)
-            )
-        if len(csites) + len(emptycsites) == 1:
-            continue
-        if (
-            len(merge_simple_types(gx, gx.types[node])) > 1 and len(assignsets) > 1
-        ) or (assignsets and emptycsites):  # XXX move to split_no_conf
-            ifa_split_no_confusion(
-                gx,
-                cl,
-                dcpa,
-                varnum,
-                classes_nr,
-                nr_classes,
-                csites,
-                emptycsites,
-                allnodes,
-                split,
-            )
-        if split:
-            break
-        # The three branches below split on dataflow provenance rather than on
-        # types, so they are speculative and, on a contour that lies on a
-        # cycle, self-perpetuating: each split peels the cycle and leaves a
-        # fresh contour to peel next round. Peel to a constant depth and stop
-        # (see SCC_SPLIT_LEVELS). ifa_split_no_confusion above is exempt: it
-        # splits on type signature and consults classes_nr, so the signature
-        # lattice already bounds it.
-        if (cl, dcpa) in cyclic and cl.scc_depth.get(dcpa, 0) >= SCC_SPLIT_LEVELS:
-            continue
-
-        for node in allnodes:
-            if not ifa_confluence_point(node, creation_points):
-                continue
-            if not node.thing.formal_arg and not isinstance(
-                node.thing.parent, python.Class
-            ):
-                continue
-            remaining = ifa_determine_split(node, allnodes)
-            if len(remaining) < 2 or len(remaining) >= 10:
-                continue
-            # --- if it exists, perform actual splitting
-            logger.debug("IFA normal split, remaining: %d", len(remaining))
-            for splitsites in remaining[1:]:
-                ifa_split_class(gx, cl, dcpa, list(splitsites), split, cyclic)
-            return split
-
-        # --- try to partition csites across paths
-        prt: CreationPoints = {}
-        for c in csites:
-            tspaths: Types = set()
-            for p in c.paths:
-                tspaths.update(p)
-            ts = frozenset(tspaths)
-            if ts not in prt:
-                prt[ts] = []
-            prt[ts].append(c)
-        if len(prt) > 1:
-            logger.debug("IFA partition csites: %s", list(prt.values())[0])
-            ifa_split_class(gx, cl, dcpa, list(prt.values())[0], split, cyclic)
-
-        # --- if all else fails, perform wholesale splitting
-        elif len(paths) > 1 and 1 < len(csites) < 10:
-            logger.debug("IFA wholesale splitting, csites: %d", len(csites))
-            for csite in csites[1:]:
-                ifa_split_class(gx, cl, dcpa, [csite], split, cyclic)
-            return split
-
-    return None
-
-
-def ifa_split_no_confusion(
-    gx: "config.GlobalInfo",
-    cl: "python.Class",
-    dcpa: int,
-    varnum: int,
-    classes_nr: ClassesNr,
-    nr_classes: NrClasses,
-    csites: list[CNode],
-    emptycsites: list[CNode],
-    allnodes: set[CNode],
-    split: Split,
-) -> None:
-    """creation sites on single path: split them off, possibly reusing contour"""
-    attr_types = list(nr_classes[dcpa])
-    noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
-    others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites: dict[tuple[FTypes, ...], list[CNode]] = {}
-    for node in noconf:
-        if node.paths:
-            assign_set = node.paths[0]
-        else:
-            assign_set = frozenset()
-        if attr_types[varnum] == assign_set:
-            others += 1
-        else:
-            subtype_list = attr_types[:]
-            subtype_list[varnum] = assign_set
-            subtype = tuple(subtype_list)
-            try:
-                subtype_csites[subtype].append(node)
-            except KeyError:
-                subtype_csites[subtype] = [node]
-    for subtype, csites in subtype_csites.items():
-        if subtype in classes_nr:  # reuse contour
-            nr = classes_nr[subtype]
-            split.append((cl, dcpa, csites, nr))
-            cl.splits[nr] = dcpa
-        else:  # create new contour
-            classes_nr[subtype] = cl.newdcpa
-            ifa_split_class(gx, cl, dcpa, csites, split)
-    if subtype_csites:
-        if not TRACE:
-            logger.debug("IFA found simple split for (%s, %s):", cl.ident, dcpa)
-        for t in subtype_csites:
-            logger.debug("    %s", tuple(map(set, t)))
-
-
-def ifa_class_types(
-    gx: "config.GlobalInfo", cl: "python.Class", vars: list["python.Variable"]
-) -> tuple[ClassesNr, NrClasses]:
-    """create table for previously deduced types"""
-    classes_nr, nr_classes = {}, {}
-    for dcpa in range(1, cl.dcpa):
-        attr_types_list = []  # XXX merge with ifa_merge_contours.. sep func?
-        for var in vars:
-            if (var, dcpa, 0) in gx.cnode:
-                attr_types_list.append(
-                    merge_simple_types(gx, gx.cnode[var, dcpa, 0].types())
-                )
-            else:
-                attr_types_list.append(frozenset())
-        attr_types = tuple(attr_types_list)
-        if any(attr_types):
-            logger.debug(
-                "IFA %s: %s",
-                dcpa,
-                list(zip([var.name for var in vars], [list(a) for a in attr_types])),
-            )
-
-        nr_classes[dcpa] = attr_types
-        classes_nr[attr_types] = dcpa
-
-    return classes_nr, nr_classes
-
-
-def ifa_determine_split(node: CNode, allnodes: set[CNode]) -> list[set[CNode]]:
-    """determine split along incoming dataflow edges"""
-    remaining = [
-        incoming.csites.copy() for incoming in node.in_ if incoming in allnodes
-    ]
-    # --- try to clean out larger collections, if subsets are in smaller ones
-    for i, seti in enumerate(remaining):
-        for setj in remaining[i + 1 :]:
-            in_both = seti.intersection(setj)
-            if in_both:
-                if len(seti) > len(setj):
-                    seti -= in_both
-                else:
-                    setj -= in_both
-    remaining = [setx for setx in remaining if setx]
-    return remaining
-
-
-def ifa_classes_to_split(gx: "config.GlobalInfo") -> list["python.Class"]:
-    """setup classes to perform splitting on"""
-    classes = []
-    for ident in [
-        "list",
-        "tuple",
-        "tuple2",
-        "dict",
-        "frozendict",
-        "defaultdict",
-        "Counter",
-        "set",
-        "frozenset",
-        "deque",
-        "__iter",
-        "array",
-    ]:
-        for cl in gx.allclasses:
-            if cl.mv.module.builtin and cl.ident == ident:
-                cl.splits = {}
-                classes.append(cl)
-                break
-    random.shuffle(classes)
-    return classes
-
-
-def ifa_confluence_point(node: CNode, creation_points: CreationPoints) -> bool:
-    """determine if node is confluence point"""
-    if len(node.in_) > 1 and isinstance(node.thing, python.Variable):
-        for csite in node.csites:
-            occ = [csite in crpoints for crpoints in creation_points.values()].count(
-                True
-            )
-            if occ > 1:
-                return True
-    return False
-
-
-def ifa_flow_graph(
-    gx: "config.GlobalInfo",
-    cl: "python.Class",
-    dcpa: int,
-    node: CNode,
-    allcsites: AllCSites,
-) -> tuple[
-    CreationPoints, CreationPoints, CreationPoints, set[CNode], list[CNode], list[CNode]
-]:
-    """Create a flow graph for a given node"""
-    creation_points = {}
-    paths = {}
-    assignsets: CreationPoints = {}
-    allnodes = set()
-    csites = []
-
-    # --- determine assignment sets
-    for a in node.in_:
-        types = gx.types[a]
-        if types:
-            if a.thing in gx.assign_target:  # XXX *args
-                target = gx.cnode[gx.assign_target[a.thing], a.dcpa, a.cpa]
-                # print 'target', a, target, types
-                assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
-
-    # --- determine backflow paths and creation points per assignment set    
-    fout_dict: dict[CNode, set[CNode]] = collections.defaultdict(set) # unreal outgoing edges
-    for assign_set, targets in assignsets.items():
-        path = backflow_path(gx, set(targets), (cl, dcpa), fout_dict)
-        paths[assign_set] = path
-        allnodes.update(path)
-        alloc = [n for n in path if not n.in_]
-        creation_points[assign_set] = alloc
-
-    # --- per node, determine paths it is located on
-    for n in allnodes:
-        n.paths = []
-    for assign_set, path in paths.items():
-        for n in path:
-            n.paths.append(assign_set)
-
-    # --- for each node, determine creation points that 'flow' through it
-    for n in allnodes:
-        n.csites = set()
-        if not n.in_:
-            n.csites.add(n)
-            csites.append(n)
-    flow_creation_sites(set(csites), allnodes, fout_dict)
-
-    # csites not flowing to any assignment
-    allcsites2 = allcsites.get((cl, dcpa), set())
-    emptycsites = list(allcsites2 - set(csites))
-    for n in emptycsites:
-        n.paths = []
-
-    return creation_points, paths, assignsets, allnodes, csites, emptycsites
-
-
-def contour_is_empty(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> bool:
-    """does this contour carry no types in any of its type variables?"""
-    if not dcpa:
-        return False
-    names = cl.tvar_names()
-    if not names:
-        return False
-    for name in names:
-        var = cl.vars.get(name)
-        if var is None:
-            continue
-        node = gx.cnode.get((var, dcpa, 0))
-        if node is not None and node.types():
-            return False
-    return True
-
-
-def alloc_is_contentless(gx: "config.GlobalInfo", node: CNode) -> bool:
-    """will this creation site produce something with nothing in it?
-
-    A display takes its contents from sub-expressions evaluated right where
-    it is allocated. If none of those carries a type, the object it makes
-    carries nothing either.
-    """
-    thing = node.thing
-    if isinstance(thing, (ast.Tuple, ast.List, ast.Set)):
-        elements = list(thing.elts)
-    elif isinstance(thing, ast.Dict):
-        elements = list(thing.values)
-    else:
-        return False
-    if not elements:
-        return False
-    for elt in elements:
-        other = gx.cnode.get((elt, node.dcpa, node.cpa))
-        if other is not None and other.types():
-            return False
-    return True
-
-
-def empty_contour(gx: "config.GlobalInfo", cl: "python.Class") -> Optional[int]:
-    """an existing contentless contour of this class, if there is one"""
-    for dcpa in range(1, cl.dcpa):
-        if contour_is_empty(gx, cl, dcpa):
-            return dcpa
-    return None
-
-
-def ifa_split_class(
-    gx: "config.GlobalInfo",
-    cl: "python.Class",
-    dcpa: int,
-    things: list[CNode],
-    split: Split,
-    cyclic: Optional[set[tuple["python.Class", int]]] = None,
-) -> None:
-    """Split a class
-
-    A contour with nothing in it says nothing about the values it stands for,
-    so a second one describes exactly what the first already does. Creating it
-    anyway makes a new type appear, which IFA reads as a new confusion to
-    split on -- and that split creates another contentless contour, so the
-    confusion renews itself indefinitely. Reuse the one that exists: there are
-    no types in either to tell apart.
-
-    `cyclic` is passed by the provenance-based callers so that a contour split
-    off one that lies on a cycle inherits its peeling depth, bounding how far
-    a recursive structure is unrolled (see ifa_contour_sccs). Reusing an
-    existing empty contour peels nothing, so it does not count towards depth.
-    """
-    if things and all(alloc_is_contentless(gx, n) for n in things):
-        existing = empty_contour(gx, cl)
-        if existing is not None and existing != dcpa:
-            split.append((cl, dcpa, things, existing))
-            cl.splits[existing] = dcpa
-            return
-
-    if cyclic is not None and (cl, dcpa) in cyclic:
-        cl.scc_depth[cl.newdcpa] = cl.scc_depth.get(dcpa, 0) + 1
-
-    split.append((cl, dcpa, things, cl.newdcpa))
-    cl.splits[cl.newdcpa] = dcpa
-    cl.newdcpa += 1
-
-
-def update_progressbar(gx: "config.GlobalInfo", perc: float) -> None:
-    """Update the progress bar"""
-    if (
-        not gx.silent
-        and not logger.isEnabledFor(logging.DEBUG)
-    ):
-        if gx.progressbar is None:
-            gx.progressbar = utils.ProgressBar(total=1)
-
-        gx.progressbar.update(perc)
-
-
-# --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
-
-
-def iterative_dataflow_analysis(gx: "config.GlobalInfo") -> None:
-    """Perform iterative dataflow analysis"""
-    logger.info("[analyzing types..]")
-    backup = backup_network(gx)
-
-    gx.orig_types = {}
-    for n, t in gx.types.items():
-        gx.orig_types[n] = t.copy()
-
-    if INCREMENTAL:
-        update_progressbar(gx, 0)
-
-    gx.added_funcs = INCREMENTAL_FUNCS  # analyze root of callgraph in first round
-    gx.added_funcs_set = set()
-    gx.added_allocs = 0
-    gx.added_allocs_set = set()
-    gx.cpa_limit = CPA_LIMIT
-    gx.cpa_clean = False
-
-    while True:
-        gx.iterations += 1
-        gx.total_iterations += 1
-        maxiter = gx.iterations == MAXITERS
-        logger.debug("*** iteration %d ***", gx.iterations)
-
-        # --- propagate using cartesian product algorithm
-        gx.new_alloc_info = {}
-        #        print 'table'
-        #        print '\n'.join([repr(e)+': '+repr(l) for e,l in gx.alloc_info.items()])
-        gx.cpa_limited = False
-        propagate(gx)
-        gx.alloc_info = gx.new_alloc_info
-
-        if gx.cpa_limited:
-            logger.debug("CPA limit %d reached!", gx.cpa_limit)
-        else:
-            gx.cpa_clean = True
-
-        # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
-        split = ifa(gx)
-        if split:
-            logger.debug("%d splits", len(split))
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("IFA splits: %s", [(s[0], s[1], s[3]) for s in split])
-
-        if not split or maxiter:
-            if not maxiter:
-                logger.debug("no splits")
-            if INCREMENTAL:
-                allfuncs = [
-                    f
-                    for f in gx.allfuncs
-                    if not f.mv.module.builtin
-                    and not f.invisible
-                    and not f.inherited
-                    and f.lambdanr is None
-                ]
-                added_funcs = [
-                    f
-                    for f in gx.added_funcs_set
-                    if f in gx.allfuncs
-                ]
-                perc = 1.0
-                if allfuncs:
-                    perc = min((len(added_funcs) / len(allfuncs))**2, 0.99)
-                logger.debug('%d functions added out of %d', len(added_funcs), len(allfuncs))
-                update_progressbar(gx, perc)
-            if maxiter:
-                logger.warning("reached maximum number of iterations")
-                if gx.retry_maxiters:
-                    raise MaxIterationsException
-                gx.maxhits += 1
-                if gx.maxhits == 3:
-                    return
-
-            gx.cpa_clean = False
-            if INCREMENTAL and (gx.added_funcs or gx.added_allocs):
-                gx.added_funcs = 0
-                gx.added_allocs = 0
-                gx.iterations = 0
-            elif gx.cpa_limited:
-                gx.cpa_limit *= 2
-                gx.iterations = 0
-            else:
-                if INCREMENTAL:
-                    update_progressbar(gx, 1.0)
-                logger.debug(
-                    "iterations: %s templates: %s", gx.total_iterations, gx.templates
-                )
-                return
-
-        # --- update alloc info table for split contours
-        for cl, dcpa, nodes, newnr in split:
-            for n in nodes:
-                parent = parent_func(gx, n.thing)
-                if parent:
-                    if n.dcpa in parent.cp:
-                        for cart, cpa in parent.cp[n.dcpa].items():  # XXX not very fast
-                            if cpa == n.cpa:
-                                if parent.parent and isinstance(
-                                    parent.parent, python.Class
-                                ):  # self
-                                    cart = ((parent.parent, n.dcpa),) + cart
-
-                                gx.alloc_info[parent.ident, cart, n.thing] = (cl, newnr)
-                                break
-
-        beforetypes = backup[0]
-
-        # --- clean out constructor node types in functions, possibly to be seeded again
-        for node in beforetypes:
-            func = parent_func(gx, node.thing)
-            if isinstance(func, python.Function):
-                if node.constructor and isinstance(
-                    node.thing, (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call)
-                ):
-                    beforetypes[node] = set()
-
-        # --- create new class types, and seed global nodes
-        for cl, dcpa, nodes, newnr in split:
-            if newnr == cl.dcpa:
-                class_copy(gx, cl, newnr)
-                cl.dcpa += 1
-
-            # print 'split off', nodes, newnr
-            for n in nodes:
-                if not parent_func(gx, n.thing):
-                    beforetypes[n] = {(cl, newnr)}
-
-        # --- restore network
-        restore_network(gx, backup)
-
-
 # --- seed allocation sites in newly created templates (called by function.copy())
 
 
@@ -2197,6 +1557,18 @@ def ifa_seed_template(
                 if alloc_id in gx.alloc_info:
                     pass
                 #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
+                # --- infer v2: the frozen core owns allocation site contours.
+                # --- A mold in a newly created template becomes a real site
+                # --- here, so this is where it is given its contour: an
+                # --- existing one if the core already knows this (function,
+                # --- cart, node), a fresh provisional one otherwise. v2
+                # --- replaces the mother-contour search below rather than
+                # --- adding to it; that search exists to carry a contour
+                # --- across an IFA split, and v2 does not split.
+                elif gx.infer_v2_core is not None and gx.infer_v2_core.note_mold(
+                    gx, alloc_id, node
+                ):
+                    pass
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
@@ -2243,46 +1615,6 @@ def ifa_seed_template(
 
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
-
-
-def backflow_path(
-    gx: "config.GlobalInfo",
-    worklist: set[CNode],
-    t: tuple["python.Class", int],
-    fout_dict: dict[CNode, set[CNode]],
-) -> list[CNode]:
-    """Find the path of creation points for a given target node"""
-    path = set(worklist)
-    while worklist:
-        new = set()
-        for node in worklist:
-            for incoming in node.in_:
-                if t in gx.types[incoming]:
-                    fout_dict[incoming].add(node)
-                    if incoming not in path:
-                        path.add(incoming)
-                        new.add(incoming)
-        worklist = new
-    return list(path)
-
-
-def flow_creation_sites(
-    worklist: set[CNode],
-    allnodes: set[CNode],
-    fout_dict: dict[CNode, set[CNode]],
-) -> None:
-    """Flow creation sites through the graph"""
-    while worklist:
-        new = set()
-        for node in worklist:
-            for out in fout_dict[node]:
-                if out in allnodes:
-                    oldsize = len(out.csites)
-                    out.csites.update(node.csites)
-                    if len(out.csites) > oldsize:
-                        new.add(out)
-        worklist = new
-    return None
 
 
 # --- backup constraint network
@@ -2338,22 +1670,6 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         if stale:
             func.nodes -= stale
             func.nodes_ordered = [n for n in func.nodes_ordered if n not in stale]
-
-
-def merge_simple_types(
-    gx: "config.GlobalInfo", types: Types
-) -> frozenset[tuple["python.Class", int]]:
-    """Merge simple types"""
-    merge = types.copy()
-    if len(types) > 1 and (python.def_class(gx, "none"), 0) in types:
-        if (
-            (python.def_class(gx, "int_"), 0) not in types
-            and (python.def_class(gx, "float_"), 0) not in types
-            and (python.def_class(gx, "bool_"), 0) not in types
-        ):
-            merge.remove((python.def_class(gx, "none"), 0))
-
-    return frozenset(merge)
 
 
 def get_classes(gx: "config.GlobalInfo", var: "python.Variable") -> set["python.Class"]:
@@ -2444,9 +1760,9 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
             var = default_var(gx, "__name__", cl)
             gx.types[inode(gx, var)] = {(python.def_class(gx, "str_"), 0)}
 
-    # --- non-ifa: copy classes for each allocation site
+    # --- copy classes for each allocation site
     for cl in gx.allclasses:
-        if cl.ident in ["int_", "float_", "none", "class_", "str_", "bool_", "bytes_"]:
+        if cl.ident in SCALAR_CLASS_IDENTS:
             continue
         if cl.ident == "list":
             cl.dcpa = len(gx.list_types) + 2
@@ -2465,8 +1781,10 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     var = default_var(gx, "unit", cl)
     gx.types[inode(gx, var)] = {(python.def_class(gx, "int_"), 0)}
 
-    # --- cartesian product algorithm & iterative flow analysis
-    iterative_dataflow_analysis(gx)
+    # --- cartesian product algorithm & frozen-core sweep
+    from . import infer2
+
+    infer2.infer_v2_analysis(gx)
 
     logger.info("[generating c++ code..]")
 
