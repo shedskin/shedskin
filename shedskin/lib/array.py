@@ -21,6 +21,8 @@ class array:
         return [self.unit]
     def tobytes(self):
         return b''
+    def buffer_info(self):
+        return (0, 0)
 
     def fromlist(self, l):
         pass
