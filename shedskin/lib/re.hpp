@@ -136,7 +136,7 @@ public:
 
     match_object *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags_ = 0);
     str *__subn(str *repl, str *subj, __ss_int maxn = -1, int *howmany = 0);
-    list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_);
+    list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos = 0, __ss_int endpos = -1);
 
     match_object *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     match_object *prefixmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
@@ -147,7 +147,7 @@ public:
     str *sub(str *repl, str *subj, __ss_int maxn = -1);
     str *sub(replfunc repl, str *subj, __ss_int maxn = -1);
     tuple2<str *, __ss_int> *subn(str *repl, str *subj, __ss_int maxn = -1);
-    list<str *> *findall(str *subj, __ss_int flags_ = 0);
+    list<str *> *findall(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
 
     str *__repr__();
 };

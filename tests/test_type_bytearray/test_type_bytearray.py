@@ -243,6 +243,40 @@ def test_bytearray_misc():
     assert list(bytearray(4)) == [0,0,0,0]
 
 
+def test_bytearray_out_of_range():
+    # bytearray(<iterable of ints>) only accepts values in range(0, 256);
+    # out-of-range values used to be silently truncated to a single byte
+    assert bytearray([0, 255]) == bytearray(b'\x00\xff')
+
+    error = ''
+    try:
+        bytearray([300])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'byte must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytearray([-1])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'byte must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytearray([0, 255, 256])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'byte must be in range(0, 256)'
+
+    error = ''
+    try:
+        bytearray(-1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'negative count'
+
+
 def test_hex():
     b = bytearray.fromhex('aabb cc')
     assert b == bytearray(b'\xaa\xbb\xcc')
@@ -270,6 +304,7 @@ def test_all():
     test_bytearray_slice()
     test_bytearray_extended_slice_size_mismatch_message()
     test_bytearray_misc()
+    test_bytearray_out_of_range()
     test_hex()
 
 
