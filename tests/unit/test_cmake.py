@@ -34,6 +34,8 @@ def _generate_cmakelists(tmp_path, monkeypatch, **gx_attrs):
     gx.source_root = demo_path.parent
     gx.module_path = demo_path
     gx.outputdir = str(tmp_path)
+    gx.infer_v2 = True
+    gx.infer_v2_codegen = True
     for name, value in gx_attrs.items():
         setattr(gx, name, value)
 
