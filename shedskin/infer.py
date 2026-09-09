@@ -1554,21 +1554,27 @@ def ifa_seed_template(
                 )  # XXX ident?
                 alloc_node = gx.cnode[node.thing, dcpa, cpa]
 
+                # --- infer v2: the frozen core owns allocation site contours.
+                # --- A mold in a newly created template becomes a real site
+                # --- here, so this is where it is given its contour: the one
+                # --- the core already has for this (function, cart, node),
+                # --- or its class's shared bucket if the core has none yet.
+                # --- The answer is used directly rather than memoised in
+                # --- gx.alloc_info; v2 does not split, so the mother-contour
+                # --- search below (which carries a contour across an IFA
+                # --- split) has nothing to do for it.
+                if gx.infer_v2_core is not None:
+                    binding = gx.infer_v2_core.note_mold(gx, alloc_id, node)
+                    if binding is None and gx.orig_types[node]:
+                        binding = list(gx.orig_types[node])[0]
+                    if binding is not None:
+                        gx.types[alloc_node] = {binding}
+                        add_to_worklist(worklist, alloc_node)
+                    continue
+
                 if alloc_id in gx.alloc_info:
                     pass
                 #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
-                # --- infer v2: the frozen core owns allocation site contours.
-                # --- A mold in a newly created template becomes a real site
-                # --- here, so this is where it is given its contour: an
-                # --- existing one if the core already knows this (function,
-                # --- cart, node), a fresh provisional one otherwise. v2
-                # --- replaces the mother-contour search below rather than
-                # --- adding to it; that search exists to carry a contour
-                # --- across an IFA split, and v2 does not split.
-                elif gx.infer_v2_core is not None and gx.infer_v2_core.note_mold(
-                    gx, alloc_id, node
-                ):
-                    pass
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
