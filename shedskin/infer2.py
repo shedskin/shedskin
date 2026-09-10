@@ -485,6 +485,15 @@ def v2_propagate(gx: "config.GlobalInfo") -> int:
         gx.added_allocs = -sys.maxsize
         before = sum(len(types) for types in gx.types.values())
         infer.propagate(gx)
+        if not gx.cpa_limited:
+            # infer.propagate() drains its own worklist and re-runs cpa()
+            # until nothing is left, and the incremental counters are pushed
+            # out of range above, so the only work a round can leave behind
+            # is a cartesian product that cpa() refused as too large. If
+            # nothing was ever refused this already is the fixpoint, and the
+            # confirmation round below has nothing left to find. Once
+            # something has been refused we fall back to the old loop.
+            break
         if sum(len(types) for types in gx.types.values()) == before:
             break
     return rounds
