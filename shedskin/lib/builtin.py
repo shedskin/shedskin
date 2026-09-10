@@ -355,6 +355,38 @@ class tuple2(pyseq):
     def __hash__(self):
         return 1
 
+class tuple3(pyseq):
+    def __len__(self):
+        return 1
+    def __repr__(self):
+        self.first.__repr__()
+        self.second.__repr__()
+        self.third.__repr__()
+        return ''
+    def __str__(self):
+        return self.__repr__()
+
+    def __add__(self, b):
+        a = self.unit
+        a = b.unit
+        return (a,)
+
+    def __mul__(self, b):
+        return (self.unit,)
+
+    def __getitem__(self, i):
+        return self.unit
+
+    def __getfirst__(self, i):
+        return self.first
+    def __getsecond__(self, i):
+        return self.second
+    def __getthird__(self, i):
+        return self.third
+
+    def __hash__(self):
+        return 1
+
 class str_(pyseq):
     def maketrans(self, x, y=None, z=None):
         return {1: ''}
