@@ -185,6 +185,7 @@ template <class T> class pyseq;
 
 template <class T> class list;
 template <class A, class B> class tuple2;
+template <class A, class B, class C> class tuple3;
 template <class T> class set;
 template <class K, class V> class dict;
 template <class K, class V> class frozendict;
