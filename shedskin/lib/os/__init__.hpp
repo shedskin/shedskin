@@ -32,6 +32,7 @@ list<str *> *listdir(str *path=0);
 str *getcwd();
 void *chdir(str *dir);
 str *getenv(str *name_, str *default_=0);
+list<str *> *get_exec_path(dict<str *, str *> *env=0);
 void *rename(str *a, str *b);
 void *replace(str *a, str *b);
 __ss_int cpu_count();
