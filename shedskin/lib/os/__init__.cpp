@@ -455,9 +455,14 @@ list<DirEntry *> *scandir(str *path) {
 static str *__walk_join(str *top, str *name) {
     if(top->unit.empty())
         return name;
-    if(top->unit.back() == '/')
+    char last = top->unit.back();
+    if(last == '/' || last == '\\')
         return new str(top->unit + name->unit);
+#ifdef WIN32
+    return new str(top->unit + "\\" + name->unit);
+#else
     return new str(top->unit + "/" + name->unit);
+#endif
 }
 
 __walk_iter::__walk_iter(str *top, __ss_bool topdown_, __ss_bool followlinks_) {
