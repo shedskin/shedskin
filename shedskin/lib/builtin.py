@@ -384,7 +384,16 @@ class tuple3(pyseq):
     def __getthird__(self, i):
         return self.third
 
+    def __slice__(self, x, l, u, s):
+        return (self.unit,)
     def __hash__(self):
+        return 1
+
+    def index(self, u, start=0, stop=0):
+        u == self.unit
+        return 1
+    def count(self, u):
+        u == self.unit
         return 1
 
 class str_(pyseq):

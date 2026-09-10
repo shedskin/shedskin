@@ -388,7 +388,7 @@ def typestrnew(
         elif node not in gx.bool_test_only:
             if tuple_check:
                 error.error(
-                    "tuple with length > 2 and different types of elements",
+                    "tuple with length > 3 and different types of elements",
                     gx,
                     node,
                     warning=True,
