@@ -85,5 +85,92 @@ class TestInOut:
         assert a in b.in_
 
 
+class TestBackupRestore:
+    """Tests for backup_network / restore_network round-tripping.
+
+    backup_network stores empty sets as a single shared immutable marker
+    instead of copying one empty set per node, so restore_network has to
+    hand back real, independent, mutable sets.
+    """
+
+    def _network(self, gx):
+        """Three nodes, one edge a -> b, and a mix of empty and non-empty
+        type sets."""
+        a = infer.CNode(gx, None, ast.Name(id="a", ctx=ast.Load()))
+        b = infer.CNode(gx, None, ast.Name(id="b", ctx=ast.Load()))
+        c = infer.CNode(gx, None, ast.Name(id="c", ctx=ast.Load()))
+        gx.types[a] = {("cls", 0)}
+        gx.types[b] = set()
+        gx.types[c] = set()
+        infer.in_out(a, b)
+        return a, b, c
+
+    def test_restore_undoes_type_and_edge_changes(self, gx):
+        """restore_network should put types and in_/out back as they were."""
+        a, b, c = self._network(gx)
+        backup = infer.backup_network(gx)
+
+        gx.types[a].add(("late", 0))
+        gx.types[b].add(("late", 0))
+        infer.in_out(b, c)
+
+        infer.restore_network(gx, backup)
+
+        assert gx.types[a] == {("cls", 0)}
+        assert gx.types[b] == set()
+        assert a.out == {b}
+        assert b.in_ == {a}
+        assert b.out == set()
+        assert c.in_ == set()
+
+    def test_restore_drops_nodes_created_afterwards(self, gx):
+        """Nodes added after the backup should be gone again."""
+        a, _b, _c = self._network(gx)
+        backup = infer.backup_network(gx)
+
+        d = infer.CNode(gx, None, ast.Name(id="d", ctx=ast.Load()))
+        gx.types[d] = {("late", 0)}
+
+        infer.restore_network(gx, backup)
+
+        assert d not in gx.types
+        assert a in gx.types
+
+    def test_restored_sets_are_mutable_and_independent(self, gx):
+        """Restored sets must be real sets, not the shared empty marker."""
+        a, b, c = self._network(gx)
+        backup = infer.backup_network(gx)
+
+        gx.types[b].add(("late", 0))
+        infer.in_out(b, c)
+
+        infer.restore_network(gx, backup)
+
+        for node in (a, b, c):
+            assert isinstance(gx.types[node], set)
+            assert isinstance(node.in_, set)
+            assert isinstance(node.out, set)
+            # mutating one restored set must not affect any other
+            gx.types[node].add(("mutable", 0))
+            node.in_.add(a)
+            node.out.add(a)
+
+        assert infer.EMPTY_SET == set()
+
+    def test_backup_is_not_aliased(self, gx):
+        """Mutating the live network must not disturb the snapshot."""
+        a, b, _c = self._network(gx)
+        backup = infer.backup_network(gx)
+
+        gx.types[a].add(("late", 0))
+        gx.types[b].add(("late", 0))
+        a.out.clear()
+
+        beforetypes, _constr, beforeinout, _cnode = backup
+        assert beforetypes[a] == {("cls", 0)}
+        assert beforetypes[b] == set()
+        assert beforeinout[a][1] == {b}
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

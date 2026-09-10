@@ -59,7 +59,7 @@ from typing import (
     TypeAlias,
     Union,
 )
-from collections.abc import Iterable
+from collections.abc import Iterable, Set as AbstractSet
 
 from . import ast_utils, error, python
 
@@ -85,9 +85,11 @@ Analysis: TypeAlias = tuple[
     bool,
 ]
 Backup: TypeAlias = tuple[
-    dict["CNode", set[tuple[Any, int]]],  # gx.types
+    # gx.types (empty sets are stored as the shared EMPTY_SET marker)
+    dict["CNode", AbstractSet[tuple[Any, int]]],
     set[tuple["CNode", "CNode"]],  # gx.constraints
-    dict["CNode", tuple[set["CNode"], set["CNode"]]],  # cnode -> (cnode.in_, cnode.out)
+    # cnode -> (cnode.in_, cnode.out), same marker for empty sets
+    dict["CNode", tuple[AbstractSet["CNode"], AbstractSet["CNode"]]],
     dict[tuple[Any, int, int], "CNode"],  # gx.cnode
 ]
 PossibleFuncs: TypeAlias = list[
@@ -781,6 +783,12 @@ def in_out(a: CNode, b: CNode) -> None:
     """Add an outgoing edge to a node"""
     a.out.add(b)
     b.in_.add(a)
+
+
+# --- shared, immutable stand-in for an empty set, so that snapshots of the
+# --- constraint network do not allocate one empty set per node. It must never
+# --- be stored where a mutable set is expected.
+EMPTY_SET: frozenset = frozenset()
 
 
 def add_to_worklist(
@@ -1625,17 +1633,27 @@ def ifa_seed_template(
 
 # --- backup constraint network
 def backup_network(gx: "config.GlobalInfo") -> Backup:
-    """Backup the constraint network"""
-    beforetypes = {}
+    """Backup the constraint network
+
+    Most nodes carry no types and have no incoming or outgoing edges, so the
+    bulk of the work here used to be allocating empty set copies. Empty sets
+    are stored as the shared immutable EMPTY_SET marker instead;
+    `restore_network` turns them back into fresh mutable sets where needed.
+    The two passes over `gx.types` are also fused into one.
+    """
+    beforetypes: dict[CNode, AbstractSet[tuple[Any, int]]] = {}
+    beforeinout: dict[CNode, tuple[AbstractSet[CNode], AbstractSet[CNode]]] = {}
+
     for node, typeset in gx.types.items():
-        beforetypes[node] = typeset.copy()
+        beforetypes[node] = typeset.copy() if typeset else EMPTY_SET
+        in_ = node.in_
+        out = node.out
+        beforeinout[node] = (
+            in_.copy() if in_ else EMPTY_SET,
+            out.copy() if out else EMPTY_SET,
+        )
 
     beforeconstr = gx.constraints.copy()
-
-    beforeinout = {}
-    for node in gx.types:
-        beforeinout[node] = (node.in_.copy(), node.out.copy())
-
     beforecnode = gx.cnode.copy()
 
     return (beforetypes, beforeconstr, beforeinout, beforecnode)
@@ -1652,20 +1670,25 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         if before is None:
             del cur[node]
         elif cur[node] != before:
-            cur[node] = before.copy()
+            cur[node] = set(before)
     if len(cur) != len(beforetypes):
         for node, typeset in beforetypes.items():
             if node not in cur:
-                cur[node] = typeset.copy()
+                cur[node] = set(typeset)
 
     gx.constraints = beforeconstr.copy()
     gx.cnode = beforecnode.copy()
 
-    for node, typeset in gx.types.items():
-        node.nodecp = set()
+    for node in gx.types:
+        # only reallocate what is not already empty on both sides
+        if node.nodecp:
+            node.nodecp = set()
         node.defnodes = False
-        befinout = beforeinout[node]
-        node.in_, node.out = befinout[0].copy(), befinout[1].copy()
+        before_in, before_out = beforeinout[node]
+        if node.in_ or before_in:
+            node.in_ = set(before_in)
+        if node.out or before_out:
+            node.out = set(before_out)
 
     for func in gx.allfuncs:
         func.cp = {}
