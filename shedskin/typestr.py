@@ -119,6 +119,10 @@ def polymorphic_cl(
         python.def_class(gx, "tuple2") in cls and python.def_class(gx, "tuple") in cls
     ):  # XXX hmm
         cls.remove(python.def_class(gx, "tuple2"))
+    if python.def_class(gx, "tuple3") in cls and (
+        python.def_class(gx, "tuple") in cls or python.def_class(gx, "tuple2") in cls
+    ):  # XXX hmm
+        cls.remove(python.def_class(gx, "tuple3"))
     return cls
 
 
@@ -422,6 +426,7 @@ def typestrnew(
                 "list",
                 "tuple",
                 "tuple2",
+                "tuple3",
                 "dict",
                 "frozendict",
                 "set",
@@ -474,7 +479,7 @@ def typestrnew(
             )
             if [t[0] for t in vartypes if isinstance(t[0], python.Function)]:
                 ident = cl.ident
-                if ident == "tuple2":
+                if ident in ("tuple2", "tuple3"):
                     ident = "tuple"
                 error.error(
                     "'%s' instance containing function reference" % ident,
@@ -490,11 +495,14 @@ def typestrnew(
 
     ident = cl.ident
 
-    # --- binary tuples
+    # --- binary/ternary tuples
     if ident == "tuple2":
         if subtypes[0] == subtypes[1]:
             ident, subtypes = "tuple", [subtypes[0]]
-    if ident == "tuple2" and not cplusplus:
+    elif ident == "tuple3":
+        if subtypes[0] == subtypes[1] == subtypes[2]:
+            ident, subtypes = "tuple", [subtypes[0]]
+    if ident in ("tuple2", "tuple3") and not cplusplus:
         ident = "tuple"
     elif ident == "tuple" and cplusplus:
         return namespace + "tuple" + sep[0] + subtypes[0] + sep[1] + ptr

@@ -148,6 +148,7 @@ SPLIT_CLASS_IDENTS = (
     "list",
     "tuple",
     "tuple2",
+    "tuple3",
     "dict",
     "frozendict",
     "defaultdict",
@@ -974,6 +975,13 @@ def propagate(gx: "config.GlobalInfo") -> None:
                             "second",
                         ]:
                             continue
+                        elif parent_ident == "tuple3" and b.thing.name not in [
+                            "unit",
+                            "first",
+                            "second",
+                            "third",
+                        ]:
+                            continue
 
                 typesa = types[a]
                 typesb = types[b]
@@ -1238,21 +1246,26 @@ def redirect(
             func = list(callnode.types())[0][0].funcs["__init_%s__" % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
+    # tuple3.__getitem__(0/1/2) -> __getfirst__/__getsecond__/__getthird__
     if (
         isinstance(callfunc.func, ast.Attribute)
         and callfunc.func.attr in ("__getitem__", "__getunit__")
         and ast_utils.is_num(callfunc.args[0])
-        and _const_num(callfunc.args[0]) in (0, 1)
         and func.parent
         and func.parent.mv.module.builtin
-        and func.parent.ident == "tuple2"
+        and (
+            (func.parent.ident == "tuple2" and _const_num(callfunc.args[0]) in (0, 1))
+            or (
+                func.parent.ident == "tuple3"
+                and _const_num(callfunc.args[0]) in (0, 1, 2)
+            )
+        )
     ):
-        if _const_num(callfunc.args[0]) == 0:
-            assert isinstance(func.parent, python.Class)
-            func = func.parent.funcs["__getfirst__"]
-        else:
-            assert isinstance(func.parent, python.Class)
-            func = func.parent.funcs["__getsecond__"]
+        assert isinstance(func.parent, python.Class)
+        getter = ["__getfirst__", "__getsecond__", "__getthird__"][
+            _const_num(callfunc.args[0])
+        ]
+        func = func.parent.funcs[getter]
 
     # property
     if isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in [
