@@ -1191,6 +1191,18 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
 }
 #endif
 
+list<str *> *get_exec_path(dict<str *, str *> *env) {
+    if(!env)
+        env = __ss_environ;
+    str *key = new str("PATH");
+    str *envpath;
+    if(env->__contains__(key))
+        envpath = env->get(key);
+    else
+        envpath = defpath;
+    return envpath->split(pathsep);
+}
+
 #ifndef WIN32
 
 __ss_bool access(str *path, __ss_int mode) {
@@ -1241,15 +1253,6 @@ char **__exec_envplist(dict<str *, str *> *env) {
     return envplist;
 }
 
-list<str *> *__exec_path() {
-    str* envpath;
-    if(__ss_environ->__contains__(new str("PATH")))
-        envpath = __ss_environ->get(new str("PATH"));
-    else
-        envpath = defpath;
-    return envpath->split(pathsep);
-}
-
 void *execv(str* file, list<str*>* args) {
     ::execv(file->c_str(), __exec_argvlist(args));
     throw new OSError(new str("os.execv"));
@@ -1263,7 +1266,7 @@ void *execvp(str* file, list<str*>* args) {
         throw new OSError(new str("os.execvp"));
     }
 
-    list<str *> *PATH = __exec_path();
+    list<str *> *PATH = get_exec_path();
 
     for(__ss_int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
@@ -1288,7 +1291,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
         throw new OSError(new str("os.execvpe"));
     }
 
-    list<str *> *PATH = __exec_path();
+    list<str *> *PATH = get_exec_path(env);
 
     for(__ss_int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
