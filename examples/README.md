@@ -59,6 +59,7 @@ lines  name                 description
    212 pycsg                constructive solid geometry     (extmod)
   1510 pygasus              NES emulator                    (extmod, GUI)
    275 pygmy                raytracer
+   860 pyvm                 CPython 3.14 bytecode interpreter
    286 pylife               hashlife-based game of life     (extmod, curses)
    943 pylot                raytracer                       (extmod, GUI, multiprocessing)
    179 pystone              standard benchmark
