@@ -979,7 +979,16 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
             try {
                 value = __mod6(value, 1, vars);
             } catch (KeyError *e) {
-                throw ((new InterpolationMissingOptionError(option,section,rawval,e->message)));
+                /* KeyError's message is repr(key) (see builtin/dict.hpp), but
+                   'reference' should be the bare option name, like CPython's
+                   e.args[0] */
+                str *reference = e->message;
+                if (reference && len(reference) >= 2 &&
+                    reference->unit[0] == '\'' &&
+                    reference->unit[len(reference)-1] == '\'') {
+                    reference = reference->__slice__(3, 1, len(reference)-1, 0);
+                }
+                throw ((new InterpolationMissingOptionError(option,section,rawval,reference)));
             }
         }
         else {
