@@ -403,6 +403,59 @@ def test_getboolean_invalid():
         ok = True
     assert ok
 
+def test_error_attribute_types():
+    # exercise exception attributes as real strings/ints, so that untyped
+    # attributes fail to compile (see shedskin/lib/configparser.py)
+    config = configparser.ConfigParser()
+    try:
+        config.read_string('[a]\nx = 1\n[a]\ny = 2\n')
+    except configparser.DuplicateSectionError as e:
+        assert e.section.upper() == 'A'
+        assert e.source.strip() == '<string>'
+        assert e.lineno + 1 == 4
+        assert len(e.message) > 0
+
+    config2 = configparser.ConfigParser()
+    try:
+        config2.read_string('[a]\nx = 1\nx = 2\n')
+    except configparser.DuplicateOptionError as e2:
+        assert e2.section.upper() == 'A'
+        assert e2.option.upper() == 'X'
+        assert e2.source.strip() == '<string>'
+        assert e2.lineno + 1 == 4
+
+    config3 = configparser.ConfigParser()
+    try:
+        config3.get('nope', 'x')
+    except configparser.NoSectionError as e3:
+        assert e3.section.upper() == 'NOPE'
+        assert 'nope' in e3.message
+
+    config4 = configparser.ConfigParser()
+    config4.read_string('[p]\nx = 1\n')
+    try:
+        config4.get('p', 'nope')
+    except configparser.NoOptionError as e4:
+        assert e4.option.upper() == 'NOPE'
+        assert e4.section.upper() == 'P'
+
+    config5 = configparser.ConfigParser()
+    config5.read_string('[p]\na = %(b)s\n')
+    try:
+        config5.get('p', 'a')
+    except configparser.InterpolationMissingOptionError as e5:
+        assert e5.reference.upper() == 'B'
+        assert e5.option.upper() == 'A'
+        assert e5.section.upper() == 'P'
+
+    config6 = configparser.ConfigParser()
+    try:
+        config6.read_string('x = 1\n')
+    except configparser.MissingSectionHeaderError as e6:
+        assert e6.lineno + 1 == 2
+        assert e6.line.strip() == 'x = 1'
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -427,6 +480,7 @@ def test_all():
     test_missing_section_header_error()
     test_parsing_error()
     test_getboolean_invalid()
+    test_error_attribute_types()
 
 if __name__ == '__main__':
     test_all()

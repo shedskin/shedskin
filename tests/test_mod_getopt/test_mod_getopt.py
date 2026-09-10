@@ -193,6 +193,31 @@ def test_posixly_correct_env():
     del os.environ["POSIXLY_CORRECT"]
 
 
+def test_error_attribute_types():
+    # exercise the attributes as strings, so that a GetoptError with untyped
+    # attributes fails to compile (see shedskin/lib/getopt.py)
+    msg = ''
+    opt = ''
+    try:
+        getopt(["-z"], "a")
+    except GetoptError as e:
+        msg = e.msg
+        opt = e.opt
+    assert msg.upper() == "OPTION -Z NOT RECOGNIZED"
+    assert len(opt) == 1
+    assert opt.upper() == "Z"
+
+    msg2 = ''
+    opt2 = ''
+    try:
+        gnu_getopt(["--foo=1"], "", ["foo"])
+    except error as e2:
+        msg2 = e2.msg
+        opt2 = e2.opt
+    assert msg2.startswith("option --foo")
+    assert opt2.strip() == "foo"
+
+
 def test_all():
     test_getopt()
     test_getopt_stops_at_first_nonoption()
@@ -207,6 +232,7 @@ def test_all():
     test_long_option_empty_argument_rejected()
     test_error_alias_catches_getopterror()
     test_posixly_correct_env()
+    test_error_attribute_types()
 
 if __name__ == '__main__':
     test_all()
