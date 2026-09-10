@@ -122,6 +122,55 @@ def test_count():
     assert s.count("z") == 0
 
 
+def get_tuple3():
+    return (1, 'a', 2.5)
+
+def recv_tuple3(t):
+    return t[0], t[1], t[2]
+
+def test_tuple3():
+    # heterogeneous 3-tuple: construction, indexing, unpacking, printing
+    t = (1, '1', ['x'])
+    assert t[0] == 1
+    assert t[1] == '1'
+    assert t[2] == ['x']
+    a, b, c = t
+    assert (a, b, c) == (1, '1', ['x'])
+    assert str(t) == "(1, '1', ['x'])"
+    assert repr((1, 'a', 2.5)) == "(1, 'a', 2.5)"
+
+    # equality, comparison, hashing, formatting
+    assert get_tuple3() == (1, 'a', 2.5)
+    assert get_tuple3() != (1, 'a', 3.5)
+    assert (1, 'a', 2.5) < (1, 'a', 3.5)
+    assert (1, 'b', 2.5) > (1, 'a', 3.5)
+    assert len(get_tuple3()) == 3
+    assert "%d-%s-%.1f" % get_tuple3() == "1-a-2.5"
+    d = {get_tuple3(): 10, (2, 'b', 3.5): 20}
+    assert d[(1, 'a', 2.5)] == 10
+    assert len(d) == 2
+
+    # passing/returning, nesting, unpacking in for-loops
+    assert recv_tuple3((7, 'z', 0.5)) == (7, 'z', 0.5)
+    nested = (5, (1, 'a', 2.5))
+    assert nested[1][2] == 2.5
+    l = [(2, 'b', 3.5), (1, 'a', 2.5)]
+    l.sort()
+    assert l[0] == (1, 'a', 2.5)
+    total = 0.0
+    names = []
+    for x, y, z in l:
+        total += x + z
+        names.append(y)
+    assert total == 9.0
+    assert names == ['a', 'b']
+
+    # homogeneous 3-tuples remain plain tuples
+    h = (1, 2, 3)
+    assert h[1:] == (2, 3)
+    assert sum(h) == 6
+
+
 def test_all():
     test_tuple()
     test_equivalence()
@@ -133,6 +182,7 @@ def test_all():
     test_mul()
     test_index()
     test_count()
+    test_tuple3()
 
 
 

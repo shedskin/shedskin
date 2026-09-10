@@ -344,20 +344,21 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.instance(node, cl, func)
         infer.default_var(self.gx, "unit", cl)
 
-        # --- internally flow binary tuples
-        if isinstance(node, ast.Tuple) and cl.ident == "tuple2":
-            infer.default_var(self.gx, "first", cl)
-            infer.default_var(self.gx, "second", cl)
-            elem0, elem1 = node.elts
+        # --- internally flow binary/ternary tuples
+        if isinstance(node, ast.Tuple) and cl.ident in ("tuple2", "tuple3"):
+            elemnames = cl.tvar_names()
+            assert elemnames and len(elemnames) == len(node.elts)
+            for elemname in elemnames:
+                infer.default_var(self.gx, elemname, cl)
 
-            self.visit(elem0, func)
-            self.visit(elem1, func)
+            for elem in node.elts:
+                self.visit(elem, func)
 
-            self.add_dynamic_constraint(node, elem0, "unit", func)
-            self.add_dynamic_constraint(node, elem1, "unit", func)
+            for elem in node.elts:
+                self.add_dynamic_constraint(node, elem, "unit", func)
 
-            self.add_dynamic_constraint(node, elem0, "first", func)
-            self.add_dynamic_constraint(node, elem1, "second", func)
+            for elem, elemname in zip(node.elts, elemnames):
+                self.add_dynamic_constraint(node, elem, elemname, func)
 
             return
 
@@ -412,6 +413,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 cl = python.def_class(self.gx, "list")
             elif len(node.elts) == 2:
                 cl = python.def_class(self.gx, "tuple2")
+            elif len(node.elts) == 3:
+                cl = python.def_class(self.gx, "tuple3")
             else:
                 cl = python.def_class(self.gx, "tuple")
 
@@ -1280,6 +1283,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(node.ctx, ast.Load):
             if len(node.elts) == 2:
                 self.constructor(node, "tuple2", func)
+            elif len(node.elts) == 3:
+                self.constructor(node, "tuple3", func)
             else:
                 self.constructor(node, "tuple", func)
         else:
