@@ -10,6 +10,11 @@ class GetoptError(Exception):
 class error(GetoptError):
     pass
 
+# seed attribute types: these exceptions are only ever raised from the C++
+# implementation, so without a construction here their attributes stay untyped
+__getopterror = GetoptError('', '')
+__getopterror2 = error('', '')
+
 def getopt(args, shortopts, longopts = []):
     return ([('',)], [''])
 
