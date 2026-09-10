@@ -480,7 +480,7 @@ __walk_tuple *__walk_iter::__scan(str *top, std::vector<str *> &subdirs) {
     try {
         for (const auto & entry : std::filesystem::directory_iterator(top->unit)) {
             std::error_code ec;
-            str *name = new str(entry.path().filename().c_str());
+            str *name = new str(entry.path().filename().string().c_str());
             if(entry.is_directory(ec)) {
                 dirs->append(name);
                 if(followlinks || !entry.is_symlink(ec))
