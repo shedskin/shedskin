@@ -81,6 +81,61 @@ def test_scandir_name_path():
 
 # following currently only tested under posix
 
+def test_walk():
+    base = 'shedskin_test_walk_dir'
+    a = os.path.join(base, 'a')
+    ab = os.path.join(a, 'b')
+    c = os.path.join(base, 'c')
+    paths = [os.path.join(base, 'f1'), os.path.join(a, 'f2'),
+             os.path.join(ab, 'f3'), os.path.join(c, 'f4')]
+
+    for d in (base, a, ab, c):
+        os.mkdir(d)
+    for p in paths:
+        with open(p, 'w') as f:
+            f.write('hi')
+
+    # top-down: parent before children, dirnames/filenames per directory
+    seen = []
+    for root, dirs, files in os.walk(base):
+        dirs.sort()
+        seen.append((root, dirs[:], sorted(files)))
+    assert seen == [
+        (base, ['a', 'c'], ['f1']),
+        (a, ['b'], ['f2']),
+        (ab, [], ['f3']),
+        (c, [], ['f4']),
+    ]
+
+    # pruning dirnames in place skips those subtrees
+    roots = []
+    for root, dirs, files in os.walk(base):
+        dirs.sort()
+        if 'a' in dirs:
+            dirs.remove('a')
+        roots.append(root)
+    assert roots == [base, c]
+
+    # bottom-up: children before parent
+    roots2 = []
+    for root, dirs, files in os.walk(base, topdown=False):
+        roots2.append(root)
+    assert roots2[-1] == base
+    assert roots2.index(ab) < roots2.index(a)
+    assert sorted(roots2) == sorted([base, a, ab, c])
+
+    # unreadable/missing top yields nothing
+    assert list(os.walk('shedskin_test_walk_nonexistent')) == []
+
+    # count files via unpacking in a genexpr
+    assert sum(len(files) for root, dirs, files in os.walk(base)) == 4
+
+    for p in paths:
+        os.remove(p)
+    for d in (ab, a, c, base):
+        os.rmdir(d)
+
+
 def test_env():
     os.environ['bert'] = 'value'
 #    assert os.getenv('bert') == 'value'  # TODO
@@ -307,6 +362,7 @@ def test_all():
     test_fspath()
     test_scandir()
     test_scandir_name_path()
+    test_walk()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
