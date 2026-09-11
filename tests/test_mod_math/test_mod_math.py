@@ -361,6 +361,46 @@ def test_nextafter():
     assert math.nextafter(1.0, -math.inf) < 1.0
 
 
+def test_nextafter_steps():
+    # steps=1 is the default, steps=0 leaves x alone
+    assert math.nextafter(1.0, 2.0, steps=1) == math.nextafter(1.0, 2.0)
+    assert math.nextafter(1.0, 2.0, steps=0) == 1.0
+    assert math.nextafter(1.0, 1.0, steps=7) == 1.0
+
+    # n steps up/down is n ulps away, in both directions
+    assert math.nextafter(1.0, math.inf, steps=3) - 1.0 == 3.0 * math.ulp(1.0)
+    assert 1.0 - math.nextafter(1.0, -math.inf, steps=2) == 2.0 * math.ulp(math.nextafter(1.0, -math.inf))
+
+    # repeated single steps give the same answer
+    stepped = 1.0
+    for _ in range(4):
+        stepped = math.nextafter(stepped, 2.0)
+    assert math.nextafter(1.0, 2.0, steps=4) == stepped
+
+    # more steps than there are floats in between: saturate at y
+    close = math.nextafter(1.0, 2.0)
+    assert math.nextafter(1.0, close, steps=100) == close
+    assert math.nextafter(1.0, 1.0, steps=100) == 1.0
+
+    # stepping across zero
+    assert math.nextafter(0.0, -1.0, steps=2) < 0.0
+    assert math.nextafter(0.0, 1.0, steps=2) > 0.0
+    assert math.nextafter(math.nextafter(0.0, -1.0), 1.0, steps=2) > 0.0
+    assert math.nextafter(0.0, 1.0, steps=1) == -math.nextafter(0.0, -1.0, steps=1)
+
+    # nans propagate, as without steps
+    assert math.isnan(math.nextafter(math.nan, 1.0, steps=3))
+    assert math.isnan(math.nextafter(1.0, math.nan, steps=3))
+    assert math.isnan(math.nextafter(math.nan, 1.0, steps=0))
+
+    error = ''
+    try:
+        math.nextafter(1.0, 2.0, steps=-1)
+    except ValueError as e:
+        error = str(e)
+    assert error.startswith('steps must be a non-negative integer')
+
+
 def test_ulp():
     assert math.ulp(1.0) > 0.0
     assert math.ulp(-1.0) == math.ulp(1.0)
@@ -477,6 +517,7 @@ def test_all():
     test_classification()
     test_signbit()
     test_nextafter()
+    test_nextafter_steps()
     test_ulp()
     test_remainder()
     test_atan2()

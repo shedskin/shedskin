@@ -81,7 +81,7 @@ def isnormal(x): return True
 def issubnormal(x): return True
 
 def ulp(x): return 1.0
-def nextafter(x, y): return 1.0
+def nextafter(x, y, steps=None): return 1.0
 def remainder(x, y): return 1.0
 
 # soft deprecated (moved to math.integer)
