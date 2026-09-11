@@ -527,20 +527,20 @@ template<class T> inline filterfalseiter<T, bool> *filterfalse(void * /* null */
 
 template<class T> class isliceiter : public __iter<T> {
 public:
-    int current_position;
-    int next_position;
-    int stop;
-    int step;
+    __ss_int current_position;
+    __ss_int next_position;
+    __ss_int stop;
+    __ss_int step;
     __iter<T> *iter;
 
     isliceiter();
-    isliceiter(pyiter<T> *iterable, int start, int stop, int step);
+    isliceiter(pyiter<T> *iterable, __ss_int start, __ss_int stop, __ss_int step);
 
     T __next__();
 };
 
 template<class T> inline isliceiter<T>::isliceiter() {}
-template<class T> inline isliceiter<T>::isliceiter(pyiter<T> *iterable, int start_, int stop_, int step_) {
+template<class T> inline isliceiter<T>::isliceiter(pyiter<T> *iterable, __ss_int start_, __ss_int stop_, __ss_int step_) {
     current_position = 0;
     next_position = start_;
     stop = stop_;
@@ -562,41 +562,58 @@ template<class T> T isliceiter<T>::__next__() {
     return this->iter->__next__();
 }
 
-inline int _start(int start) {
-    return start;
-}
-inline int _start(void*) {
+/* islice arguments: 'stop' and 'step' may be omitted entirely (__ss_void),
+   passed as None, or given as an integer. isliceiter uses -1 internally to
+   mean 'no stop', which is unambiguous as negative arguments are rejected. */
+
+inline __ss_int _islice_start(void *) {
     return 0;
 }
-inline int _stop(int stop) {
-    return stop;
+inline __ss_int _islice_start(__ss_int start) {
+    if (start < 0)
+        throw new ValueError(new str("Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize."));
+    return start;
 }
-inline int _stop(void*) {
+
+inline __ss_int _islice_stop(void *) {
     return -1;
 }
-inline int _step(int step) {
-    if (step > 0) {
-        return step;
-    } else {
-        return 1;
-    }
+inline __ss_int _islice_stop(__ss_int stop) {
+    if (stop < 0)
+        throw new ValueError(new str("Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize."));
+    return stop;
 }
-inline int _step(void*) {
+
+inline __ss_int _islice_stop_arg(void *) {
+    return -1;
+}
+inline __ss_int _islice_stop_arg(__ss_int stop) {
+    if (stop < 0)
+        throw new ValueError(new str("Stop argument for islice() must be None or an integer: 0 <= x <= sys.maxsize."));
+    return stop;
+}
+
+inline __ss_int _islice_step(void *) {
     return 1;
 }
-template<class T> inline bool _onearg(T /* stop */) {
-    return false;
-}
-template<> inline bool _onearg(__ss_int stop) {
-    return stop == -1;
+inline __ss_int _islice_step(__ss_int step) {
+    if (step <= 0)
+        throw new ValueError(new str("Step for islice() must be a positive integer or None."));
+    return step;
 }
 
 template<class T, class U, class V, class W> inline isliceiter<T> *islice(pyiter<T> *iterable, U start, V stop, W step) {
-  if (_onearg(stop)) {
-      return new isliceiter<T>(iterable, 0, _stop(start), _step(step));
-  } else {
-      return new isliceiter<T>(iterable, _start(start), _stop(stop), _step(step));
-  }
+    __ss_int step_;
+    if constexpr (std::is_same_v<W, __ss_void_struct>)
+        step_ = 1;                                       // step omitted
+    else
+        step_ = _islice_step(step);
+
+    if constexpr (std::is_same_v<V, __ss_void_struct>) { // islice(iterable, stop)
+        return new isliceiter<T>(iterable, 0, _islice_stop_arg(start), step_);
+    } else {                                             // islice(iterable, start, stop[, step])
+        return new isliceiter<T>(iterable, _islice_start(start), _islice_stop(stop), step_);
+    }
 }
 
 // starmap
