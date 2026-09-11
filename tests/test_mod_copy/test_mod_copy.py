@@ -131,6 +131,26 @@ def test_copy_deque():
 
 
 
+def test_error():
+    # copy.Error is effectively unreachable in CPython 3 (object always
+    # provides __reduce_ex__), and shedskin never raises it either, since
+    # copyability is decided at compile time. It exists so that code
+    # raising/catching it compiles.
+    error = ''
+    try:
+        raise copy.Error('un(shallow)copyable object')
+    except copy.Error as e:
+        error = str(e)
+    assert error == 'un(shallow)copyable object'
+
+    caught = False
+    try:
+        raise copy.Error('oops')
+    except Exception:
+        caught = True
+    assert caught
+
+
 def test_all():
     test_copy1()
     test_copy2()
@@ -140,6 +160,7 @@ def test_all():
     test_copy_obj1()
     test_copy_obj2()
     test_copy_obj3()
+    test_error()
 
 if __name__ == '__main__':
     test_all()

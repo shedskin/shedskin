@@ -4,8 +4,10 @@
 
 namespace __copy__ {
 
-void __init() {
+class_ *cl_Error;
 
+void __init() {
+    cl_Error = new class_("Error");
 }
 
 
