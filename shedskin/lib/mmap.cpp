@@ -7,15 +7,33 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdio>
 #include <cstring>
+#include <limits>
 
 #ifndef WIN32
-#include <sys/mman.h>  // mmap, munmap, msync, mremap
+#include <sys/mman.h>  // mmap, munmap, msync, mremap, madvise
 #include <sys/types.h>
 #include <sys/stat.h>  // fstat
 #include <unistd.h>    // sysconf
 #define MMAP_PUSH(constant) __##constant = (constant)
 #define HAVE_MREMAP
+#define HAVE_MADVISE
+#ifdef __linux__
+/* set_name() annotates an anonymous mapping so that it shows up by name in
+   /proc/<pid>/maps. This needs prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, ...),
+   which is Linux >= 5.17 with CONFIG_ANON_VMA_NAME; older kernels fail the
+   call with EINVAL, which surfaces as OSError. The constants are spelled out
+   here as well, since older libc headers may not have them yet. */
+#include <sys/prctl.h>
+#define HAVE_ANON_VMA_NAME
+#ifndef PR_SET_VMA
+#define PR_SET_VMA 0x53564d41
+#endif
+#ifndef PR_SET_VMA_ANON_NAME
+#define PR_SET_VMA_ANON_NAME 0
+#endif
+#endif /* __linux__ */
 #else /* WIN32 */
 #include <io.h>        // lseek
 #define MMAP_PUSH(constant) __##constant = -1
@@ -52,9 +70,133 @@ enum
   __MAP_POPULATE = -1,
 #endif
 #ifdef MAP_STACK
-  MMAP_PUSH(MAP_STACK)
+  MMAP_PUSH(MAP_STACK),
 #else
-  __MAP_STACK = -1
+  __MAP_STACK = -1,
+#endif
+
+  /* madvise() advice; not every option exists on every system (and none of
+     them do on WIN32), so missing ones fall back to -1, which madvise()
+     then rejects with EINVAL -> OSError. */
+#ifdef MADV_NORMAL
+  MMAP_PUSH(MADV_NORMAL),
+#else
+  __MADV_NORMAL = -1,
+#endif
+#ifdef MADV_RANDOM
+  MMAP_PUSH(MADV_RANDOM),
+#else
+  __MADV_RANDOM = -1,
+#endif
+#ifdef MADV_SEQUENTIAL
+  MMAP_PUSH(MADV_SEQUENTIAL),
+#else
+  __MADV_SEQUENTIAL = -1,
+#endif
+#ifdef MADV_WILLNEED
+  MMAP_PUSH(MADV_WILLNEED),
+#else
+  __MADV_WILLNEED = -1,
+#endif
+#ifdef MADV_DONTNEED
+  MMAP_PUSH(MADV_DONTNEED),
+#else
+  __MADV_DONTNEED = -1,
+#endif
+#ifdef MADV_FREE
+  MMAP_PUSH(MADV_FREE),
+#else
+  __MADV_FREE = -1,
+#endif
+#ifdef MADV_REMOVE
+  MMAP_PUSH(MADV_REMOVE),
+#else
+  __MADV_REMOVE = -1,
+#endif
+#ifdef MADV_DONTFORK
+  MMAP_PUSH(MADV_DONTFORK),
+#else
+  __MADV_DONTFORK = -1,
+#endif
+#ifdef MADV_DOFORK
+  MMAP_PUSH(MADV_DOFORK),
+#else
+  __MADV_DOFORK = -1,
+#endif
+#ifdef MADV_MERGEABLE
+  MMAP_PUSH(MADV_MERGEABLE),
+#else
+  __MADV_MERGEABLE = -1,
+#endif
+#ifdef MADV_UNMERGEABLE
+  MMAP_PUSH(MADV_UNMERGEABLE),
+#else
+  __MADV_UNMERGEABLE = -1,
+#endif
+#ifdef MADV_HUGEPAGE
+  MMAP_PUSH(MADV_HUGEPAGE),
+#else
+  __MADV_HUGEPAGE = -1,
+#endif
+#ifdef MADV_NOHUGEPAGE
+  MMAP_PUSH(MADV_NOHUGEPAGE),
+#else
+  __MADV_NOHUGEPAGE = -1,
+#endif
+#ifdef MADV_DONTDUMP
+  MMAP_PUSH(MADV_DONTDUMP),
+#else
+  __MADV_DONTDUMP = -1,
+#endif
+#ifdef MADV_DODUMP
+  MMAP_PUSH(MADV_DODUMP),
+#else
+  __MADV_DODUMP = -1,
+#endif
+#ifdef MADV_HWPOISON
+  MMAP_PUSH(MADV_HWPOISON),
+#else
+  __MADV_HWPOISON = -1,
+#endif
+#ifdef MADV_SOFT_OFFLINE
+  MMAP_PUSH(MADV_SOFT_OFFLINE),
+#else
+  __MADV_SOFT_OFFLINE = -1,
+#endif
+#ifdef MADV_NOSYNC
+  MMAP_PUSH(MADV_NOSYNC),
+#else
+  __MADV_NOSYNC = -1,
+#endif
+#ifdef MADV_AUTOSYNC
+  MMAP_PUSH(MADV_AUTOSYNC),
+#else
+  __MADV_AUTOSYNC = -1,
+#endif
+#ifdef MADV_NOCORE
+  MMAP_PUSH(MADV_NOCORE),
+#else
+  __MADV_NOCORE = -1,
+#endif
+#ifdef MADV_CORE
+  MMAP_PUSH(MADV_CORE),
+#else
+  __MADV_CORE = -1,
+#endif
+#ifdef MADV_PROTECT
+  MMAP_PUSH(MADV_PROTECT),
+#else
+  __MADV_PROTECT = -1,
+#endif
+#ifdef MADV_FREE_REUSABLE
+  MMAP_PUSH(MADV_FREE_REUSABLE),
+#else
+  __MADV_FREE_REUSABLE = -1,
+#endif
+#ifdef MADV_FREE_REUSE
+  MMAP_PUSH(MADV_FREE_REUSE)
+#else
+  __MADV_FREE_REUSE = -1
 #endif
 };
 } // __mmap__ namespace
@@ -74,6 +216,31 @@ enum
 #undef MAP_EXECUTABLE
 #undef MAP_POPULATE
 #undef MAP_STACK
+
+#undef MADV_NORMAL
+#undef MADV_RANDOM
+#undef MADV_SEQUENTIAL
+#undef MADV_WILLNEED
+#undef MADV_DONTNEED
+#undef MADV_FREE
+#undef MADV_REMOVE
+#undef MADV_DONTFORK
+#undef MADV_DOFORK
+#undef MADV_MERGEABLE
+#undef MADV_UNMERGEABLE
+#undef MADV_HUGEPAGE
+#undef MADV_NOHUGEPAGE
+#undef MADV_DONTDUMP
+#undef MADV_DODUMP
+#undef MADV_HWPOISON
+#undef MADV_SOFT_OFFLINE
+#undef MADV_NOSYNC
+#undef MADV_AUTOSYNC
+#undef MADV_NOCORE
+#undef MADV_CORE
+#undef MADV_PROTECT
+#undef MADV_FREE_REUSABLE
+#undef MADV_FREE_REUSE
 
 #include "mmap.hpp"
 
@@ -104,7 +271,32 @@ const __ss_int
     MAP_DENYWRITE  = __MAP_DENYWRITE,
     MAP_EXECUTABLE = __MAP_EXECUTABLE,
     MAP_POPULATE   = __MAP_POPULATE,
-    MAP_STACK      = __MAP_STACK;
+    MAP_STACK      = __MAP_STACK,
+
+    MADV_NORMAL = __MADV_NORMAL,
+    MADV_RANDOM = __MADV_RANDOM,
+    MADV_SEQUENTIAL = __MADV_SEQUENTIAL,
+    MADV_WILLNEED = __MADV_WILLNEED,
+    MADV_DONTNEED = __MADV_DONTNEED,
+    MADV_FREE = __MADV_FREE,
+    MADV_REMOVE = __MADV_REMOVE,
+    MADV_DONTFORK = __MADV_DONTFORK,
+    MADV_DOFORK = __MADV_DOFORK,
+    MADV_MERGEABLE = __MADV_MERGEABLE,
+    MADV_UNMERGEABLE = __MADV_UNMERGEABLE,
+    MADV_HUGEPAGE = __MADV_HUGEPAGE,
+    MADV_NOHUGEPAGE = __MADV_NOHUGEPAGE,
+    MADV_DONTDUMP = __MADV_DONTDUMP,
+    MADV_DODUMP = __MADV_DODUMP,
+    MADV_HWPOISON = __MADV_HWPOISON,
+    MADV_SOFT_OFFLINE = __MADV_SOFT_OFFLINE,
+    MADV_NOSYNC = __MADV_NOSYNC,
+    MADV_AUTOSYNC = __MADV_AUTOSYNC,
+    MADV_NOCORE = __MADV_NOCORE,
+    MADV_CORE = __MADV_CORE,
+    MADV_PROTECT = __MADV_PROTECT,
+    MADV_FREE_REUSABLE = __MADV_FREE_REUSABLE,
+    MADV_FREE_REUSE = __MADV_FREE_REUSE;
 
 // Default parameters.
 #ifndef WIN32 /* UNIX */
@@ -117,7 +309,9 @@ str *default_2;
 // Error messages.
 str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
-    *const_13, *const_14, *const_15, *const_16, *const_17, *const_18;
+    *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
+    *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
+    *const_25, *const_26;
 
 str *__name__;
 class_ *cl_mmap;
@@ -669,6 +863,91 @@ void *mmap::seek(__ss_int offset, __ss_int whence)
     return NULL;
 }
 
+void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
+{
+    __raise_if_closed();
+#ifdef HAVE_MADVISE
+    const __ss_int mapsize = (__ss_int)__size();
+    /* CPython spells "the rest of the mapping" as a missing (or None)
+       length argument; since Shed Skin has no such default, -1 is used as
+       the sentinel instead. Other negative values are rejected, as in
+       CPython. */
+    __ss_int length = (length_ == -1) ? mapsize : length_;
+
+    if (start < 0 or start >= mapsize)
+    {
+        throw new ValueError(const_19);
+    }
+    if (length < 0)
+    {
+        throw new ValueError(const_20);
+    }
+    if (std::numeric_limits<__ss_int>::max() - start < length)
+    {
+        throw new OverflowError(const_21);
+    }
+    if (start + length > mapsize)
+    {
+        length = mapsize - start;
+    }
+    if (::madvise(m_begin + start, (size_t)length, (int)option) != 0)
+    {
+        throw new OSError();
+    }
+    return NULL;
+#else /* !HAVE_MADVISE */
+    /* No madvise() system call (WIN32). CPython does not define the method
+       at all there; since Shed Skin models the class once for all
+       platforms, it exists but always raises. */
+    (void)option;
+    (void)start;
+    (void)length_;
+    throw new NotImplementedError(const_22);
+#endif /* HAVE_MADVISE */
+}
+
+__ss_bool mmap::seekable()
+{
+    /* Always True, matching CPython -- which does not check for a closed
+       mapping here either. */
+    return True;
+}
+
+void *mmap::set_name(str *name)
+{
+#ifdef HAVE_ANON_VMA_NAME
+    /* Unlike CPython, which only annotates in development mode (-X dev) or
+       in a debug build, this always annotates: there is no equivalent
+       runtime switch here, and the call is cheap and harmless. */
+    __raise_if_closed();
+    const char *prefix = "cpython:mmap:";
+    const __GC_STRING& unit = name->unit;
+    if (unit.find('\0') != __GC_STRING::npos)
+    {
+        throw new ValueError(const_26);
+    }
+    if (unit.size() + strlen(prefix) > 79)
+    {
+        throw new ValueError(const_23);
+    }
+    if (not (flags & MAP_ANONYMOUS))
+    {
+        throw new ValueError(const_24);
+    }
+    char buf[80];
+    snprintf(buf, sizeof(buf), "%s%s", prefix, unit.c_str());
+    if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME,
+              (unsigned long)m_begin, __size(), (unsigned long)buf) < 0)
+    {
+        throw new OSError();
+    }
+    return NULL;
+#else /* !HAVE_ANON_VMA_NAME */
+    (void)name;
+    throw new NotImplementedError(const_25);
+#endif /* HAVE_ANON_VMA_NAME */
+}
+
 __ss_int mmap::size()
 {
     __raise_if_closed();
@@ -999,6 +1278,14 @@ void __init()
         const_16 = new str("mmap invalid file handle");
         const_17 = new str("mmap invalid file size");
         const_18 = new str("read byte out of range");
+        const_19 = new str("madvise start out of bounds");
+        const_20 = new str("madvise length invalid");
+        const_21 = new str("madvise length too large");
+        const_22 = new str("madvise is not supported on this platform");
+        const_23 = new str("name is too long");
+        const_24 = new str("Cannot set annotation on non-anonymous mappings");
+        const_25 = new str("Annotation of mmap is not supported on this platform");
+        const_26 = new str("embedded null character");
 
         __name__ = new str("mmap");
 
