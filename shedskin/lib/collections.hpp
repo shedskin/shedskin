@@ -582,6 +582,13 @@ public:
         return result;
     }
 
+    V total() {
+        V sum = 0;
+        for(auto &kv : this->gcd)
+            sum += kv.second;
+        return sum;
+    }
+
     __counterelements<K, V> *elements() {
         return new __counterelements<K, V>(this);
     }

@@ -158,6 +158,9 @@ class Counter(dict):
         item = iter(i).__next__()
         self.__setunit__(item, 1)
 
+    def total(self):
+        return self.value
+
     def most_common(self, n=-1):
         return [(self.unit, self.value)]
 
