@@ -456,6 +456,114 @@ def test_error_attribute_types():
         assert e6.line.strip() == 'x = 1'
 
 
+def test_typed_getters_fallback():
+    config = configparser.ConfigParser()
+    config.read_string('[a]\nx = 42\nf = 2.5\nb = yes\nbad = notanumber\n')
+
+    # missing option / missing section: fallback is returned instead of raising
+    assert config.getint('a', 'missing', fallback=7) == 7
+    assert config.getint('nosuch', 'x', fallback=-1) == -1
+    assert config.getfloat('a', 'missing', fallback=1.5) == 1.5
+    assert config.getboolean('a', 'missing', fallback=True) == True
+    assert config.getboolean('a', 'missing', fallback=False) == False
+
+    # a present option is returned normally; fallback is ignored
+    assert config.getint('a', 'x', fallback=0) == 42
+    assert config.getfloat('a', 'f', fallback=0.0) == 2.5
+    assert config.getboolean('a', 'b', fallback=False) == True
+
+    # fallback only covers a *missing* option: a present but unconvertible
+    # value still raises ValueError, same as cpython
+    ok = False
+    try:
+        config.getint('a', 'bad', fallback=0)
+    except ValueError:
+        ok = True
+    assert ok
+
+    # omitting fallback still raises, as before
+    ok = False
+    try:
+        config.getint('a', 'missing')
+    except configparser.NoOptionError:
+        ok = True
+    assert ok
+    ok = False
+    try:
+        config.getfloat('nosuch', 'x')
+    except configparser.NoSectionError:
+        ok = True
+    assert ok
+
+    # raw= / vars= are honored, as for get()
+    config.set('a', 'y', '%(x)s0')
+    assert config.getint('a', 'y') == 420
+    assert config.get('a', 'y', raw=True) == '%(x)s0'
+    assert config.getint('a', 'z', vars={'z': '9'}) == 9
+
+
+def test_section_proxy_name_parser_repr():
+    config = configparser.ConfigParser()
+    config.read_string('[sect]\nx = 1\n')
+    proxy = config['sect']
+    assert proxy.name == 'sect'
+    assert repr(proxy) == '<Section: sect>'
+    assert repr(config['DEFAULT']) == '<Section: DEFAULT>'
+
+    # .parser is the live parser the proxy writes through to
+    proxy.parser.set('sect', 'x', '2')
+    assert proxy['x'] == '2'
+    assert proxy.parser.get('sect', 'x') == '2'
+
+
+def test_section_proxy_get():
+    config = configparser.ConfigParser()
+    config.read_string('[DEFAULT]\nd = dflt\n[sect]\nx = 1\ny = %(x)s0\n')
+    proxy = config['sect']
+
+    assert proxy.get('x') == '1'
+    # falls back to the DEFAULT section, like __getitem__
+    assert proxy.get('d') == 'dflt'
+    # unlike the parser's get(), a missing option returns None / the fallback
+    # rather than raising
+    assert proxy.get('missing') is None
+    assert proxy.get('missing', 'fb') == 'fb'
+    assert proxy.get('missing', fallback='fb2') == 'fb2'
+    # interpolation goes through the parser, raw= disables it
+    assert proxy.get('y') == '10'
+    assert proxy.get('y', raw=True) == '%(x)s0'
+    assert proxy.get('z', vars={'z': 'vz'}) == 'vz'
+
+
+def test_section_proxy_typed_getters():
+    config = configparser.ConfigParser()
+    config.read_string('[sect]\nx = 42\nf = 2.5\nb = off\n')
+    proxy = config['sect']
+
+    assert proxy.getint('x') == 42
+    assert proxy.getfloat('f') == 2.5
+    assert proxy.getboolean('b') == False
+
+    assert proxy.getint('missing', 7) == 7
+    assert proxy.getint('missing', fallback=8) == 8
+    assert proxy.getfloat('missing', fallback=0.5) == 0.5
+    assert proxy.getboolean('missing', fallback=True) == True
+
+    # present value wins over the fallback
+    assert proxy.getint('x', 0) == 42
+
+    # (not tested: cpython returns None when no fallback is given and the
+    # option is missing; shedskin cannot return an optional int, so it raises
+    # NoOptionError there, as the parser-level getters do)
+
+
+def test_parsing_error_append():
+    e = configparser.ParsingError('some.ini')
+    e.append(3, 'bad line 3')
+    e.append(7, 'bad line 7')
+    assert e.errors == [(3, 'bad line 3'), (7, 'bad line 7')]
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -481,6 +589,11 @@ def test_all():
     test_parsing_error()
     test_getboolean_invalid()
     test_error_attribute_types()
+    test_typed_getters_fallback()
+    test_section_proxy_name_parser_repr()
+    test_section_proxy_get()
+    test_section_proxy_typed_getters()
+    test_parsing_error_append()
 
 if __name__ == '__main__':
     test_all()
