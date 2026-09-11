@@ -116,6 +116,53 @@ def test_islice():
     assert list(itertools.islice('ABCDEFG', 2, 0, 2)) == []
     assert list(itertools.islice('ABCDEFG', 0, 0, 2)) == []
 
+    # islice shares the underlying iterator (chunking idiom)
+    it = iter([1, 2, 3, 4, 5, 6, 7])
+    assert list(itertools.islice(it, 3)) == [1, 2, 3]
+    assert list(itertools.islice(it, 3)) == [4, 5, 6]
+
+    try:
+        list(itertools.islice('ABCDEFG', -1))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', -2, 4))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', 2, -3))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', 2, -1))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', 0, 4, 0))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', 0, 4, -1))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.islice('ABCDEFG', 0, 4, -2))
+        assert False
+    except ValueError:
+        pass
+
 
 def test_permutations():
     assert list(itertools.permutations('ABDC', 0)) == [()]
