@@ -450,6 +450,104 @@ list<DirEntry *> *scandir(str *path) {
     return r;
 }
 
+/* os.walk */
+
+static str *__walk_join(str *top, str *name) {
+    if(top->unit.empty())
+        return name;
+    char last = top->unit.back();
+    if(last == '/' || last == '\\')
+        return new str(top->unit + name->unit);
+#ifdef WIN32
+    return new str(top->unit + "\\" + name->unit);
+#else
+    return new str(top->unit + "/" + name->unit);
+#endif
+}
+
+__walk_iter::__walk_iter(str *top, __ss_bool topdown_, __ss_bool followlinks_) {
+    topdown = topdown_;
+    followlinks = followlinks_;
+    last = NULL;
+    pos = 0;
+    if(topdown)
+        pending.push_back(top);
+    else
+        __collect(top);
+}
+
+/* scan a directory into a (dirpath, dirnames, filenames) tuple; returns NULL if
+   it cannot be read (silently skipped, like os.walk with onerror=None) */
+__walk_tuple *__walk_iter::__scan(str *top, std::vector<str *> &subdirs) {
+    list<str *> *dirs = new list<str *>();
+    list<str *> *files = new list<str *>();
+
+    try {
+        for (const auto & entry : std::filesystem::directory_iterator(top->unit)) {
+            std::error_code ec;
+            str *name = new str(entry.path().filename().string().c_str());
+            if(entry.is_directory(ec)) {
+                dirs->append(name);
+                if(followlinks || !entry.is_symlink(ec))
+                    subdirs.push_back(name);
+            } else
+                files->append(name);
+        }
+    } catch (std::filesystem::filesystem_error const&) {
+        return NULL;
+    }
+
+    return new __walk_tuple(3, top, dirs, files);
+}
+
+/* bottom-up: precompute results in post-order (no pruning possible) */
+void __walk_iter::__collect(str *top) {
+    std::vector<str *> subdirs;
+    __walk_tuple *t = __scan(top, subdirs);
+    if(!t)
+        return;
+    for(str *name : subdirs)
+        __collect(__walk_join(top, name));
+    results.push_back(t);
+}
+
+__walk_tuple *__walk_iter::__next__() {
+    if(!topdown) {
+        if(pos >= results.size())
+            throw new StopIteration();
+        return results[pos++];
+    }
+
+    /* descend into the (possibly pruned) dirnames of the last yielded tuple */
+    if(last) {
+        list<str *> *dirs = last->__getsecond__();
+        for(size_t i = dirs->units.size(); i > 0; i--) {
+            str *name = dirs->units[i-1];
+            std::error_code ec;
+            str *path = __walk_join(last->__getfirst__(), name);
+            if(followlinks || !std::filesystem::is_symlink(path->unit, ec))
+                pending.push_back(path);
+        }
+        last = NULL;
+    }
+
+    while(!pending.empty()) {
+        str *top = pending.back();
+        pending.pop_back();
+        std::vector<str *> subdirs; /* unused for topdown: recursion uses last->dirnames */
+        __walk_tuple *t = __scan(top, subdirs);
+        if(t) {
+            last = t;
+            return t;
+        }
+    }
+    throw new StopIteration();
+}
+
+__walk_iter *walk(str *top, __ss_bool topdown, void *, __ss_bool followlinks) {
+    return new __walk_iter(top, topdown, followlinks);
+}
+
 __ss_bool stat_float_times(__ss_int newvalue) {
     if(newvalue==0)
         throw new TypeError(new str("os.stat_float_times: cannot change type"));

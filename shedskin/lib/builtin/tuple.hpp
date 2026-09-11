@@ -31,6 +31,36 @@ public:
 #endif
 };
 
+template<class A, class B, class C> class tuple3 : public pyobj {
+public:
+    A first;
+    B second;
+    C third;
+
+    tuple3();
+    tuple3(int n, A a, B b, C c);
+    void __init3__(A a, B b, C c);
+
+    A __getfirst__();
+    B __getsecond__();
+    C __getthird__();
+
+    str *__repr__();
+    __ss_int __len__();
+
+    __ss_bool __eq__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
+    __ss_int __hash__();
+
+    tuple3<A,B,C> *__copy__();
+    tuple3<A,B,C> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+#ifdef __SS_BIND
+    tuple3(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
+
 template<class T> class tuple2<T,T> : public pyseq<T> {
 public:
     __GC_VECTOR(T) units;
@@ -368,6 +398,91 @@ template<class A, class B> PyObject *tuple2<A, B>::__to_py__() {
     PyObject *p = PyTuple_New(2);
     PyTuple_SetItem(p, 0, __to_py(first));
     PyTuple_SetItem(p, 1, __to_py(second));
+    return p;
+}
+#endif
+
+/* tuple3 methods (ternary, heterogeneous) */
+
+template<class A, class B, class C> void tuple3<A, B, C>::__init3__(A a, B b, C c) {
+    first = a;
+    second = b;
+    third = c;
+}
+
+template<class A, class B, class C> tuple3<A, B, C>::tuple3() {
+    this->__class__ = cl_tuple;
+}
+
+template<class A, class B, class C> tuple3<A, B, C>::tuple3(int, A a, B b, C c) {
+    this->__class__ = cl_tuple;
+    first = a;
+    second = b;
+    third = c;
+}
+
+template<class A, class B, class C> A tuple3<A, B, C>::__getfirst__() {
+    return first;
+}
+template<class A, class B, class C> B tuple3<A, B, C>::__getsecond__() {
+    return second;
+}
+template<class A, class B, class C> C tuple3<A, B, C>::__getthird__() {
+    return third;
+}
+
+template<class A, class B, class C> __ss_int tuple3<A, B, C>::__len__() {
+    return 3;
+}
+
+template<class A, class B, class C> __ss_bool tuple3<A, B, C>::__eq__(pyobj *p) {
+    tuple3<A,B,C> *b = (tuple3<A,B,C> *)p;
+    return __mbool(__eq(first, b->first) & __eq(second, b->second) & __eq(third, b->third));
+}
+
+template<class A, class B, class C> __ss_int tuple3<A, B, C>::__cmp__(pyobj *p) {
+    if (!p) return 1;
+    tuple3<A,B,C> *b = (tuple3<A,B,C> *)p;
+    if(__ss_int c = __cmp(first, b->first)) return c;
+    if(__ss_int c = __cmp(second, b->second)) return c;
+    return __cmp(third, b->third);
+}
+
+template<class A, class B, class C> __ss_int tuple3<A, B, C>::__hash__() {
+    __ss_int seed = 0;
+    seed = hash_combine(seed, hasher<A>(first));
+    seed = hash_combine(seed, hasher<B>(second));
+    seed = hash_combine(seed, hasher<C>(third));
+    return seed;
+}
+
+template<class A, class B, class C> str *tuple3<A, B, C>::__repr__() {
+    __GC_STRING s = "(";
+    s += repr(first)->c_str();
+    s += ", ";
+    s += repr(second)->c_str();
+    s += ", ";
+    s += repr(third)->c_str();
+    s += ")";
+    return new str(s);
+}
+
+#ifdef __SS_BIND
+template<class A, class B, class C> tuple3<A, B, C>::tuple3(PyObject *p) {
+    if(!PyTuple_Check(p))
+        throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
+
+    this->__class__ = cl_tuple;
+    first = __to_ss<A>(PyTuple_GetItem(p, 0));
+    second = __to_ss<B>(PyTuple_GetItem(p, 1));
+    third = __to_ss<C>(PyTuple_GetItem(p, 2));
+}
+
+template<class A, class B, class C> PyObject *tuple3<A, B, C>::__to_py__() {
+    PyObject *p = PyTuple_New(3);
+    PyTuple_SetItem(p, 0, __to_py(first));
+    PyTuple_SetItem(p, 1, __to_py(second));
+    PyTuple_SetItem(p, 2, __to_py(third));
     return p;
 }
 #endif

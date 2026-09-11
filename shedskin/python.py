@@ -238,6 +238,8 @@ class Class(PyObject):
                 return ["unit", "value"]
             elif self.ident == "tuple2":
                 return ["first", "second"]
+            elif self.ident == "tuple3":
+                return ["first", "second", "third"]
         return []
 
 

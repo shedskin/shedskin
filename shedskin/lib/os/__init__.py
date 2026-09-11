@@ -149,6 +149,9 @@ class DirEntry:
 def scandir(path=None):
     return [DirEntry()]
 
+def walk(top, topdown=True, onerror=None, followlinks=False):
+    return __iter((top, [top], [top]))
+
 def getenv(name, default=None):
     return ''
 

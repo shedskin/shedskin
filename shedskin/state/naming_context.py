@@ -29,6 +29,7 @@ class NamingContext:
             "list",
             "tuple",
             "tuple2",
+            "tuple3",
             "dict",
             "set",
             "frozenset",
