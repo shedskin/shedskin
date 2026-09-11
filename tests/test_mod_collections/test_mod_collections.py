@@ -553,6 +553,24 @@ def test_counter_type_identity():
     assert not repr(plain).startswith('Counter(')
 
 
+def test_counter_total():
+    # total() sums the counts, including zero and negative ones
+    c = Counter('abracadabra')
+    assert c.total() == 11
+    assert Counter().total() == 0
+    c.subtract('aaaaaa')
+    assert c['a'] == -1
+    assert c.total() == 5
+    c['b'] = 0
+    assert c.total() == 3
+    # unchanged by lookups of missing keys
+    c['zzz']
+    assert c.total() == 3
+    # still works after a key is deleted
+    del c['r']
+    assert c.total() == 1
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -600,6 +618,7 @@ def test_all():
     test_counter_copy()
     test_counter_copy_module()
     test_counter_type_identity()
+    test_counter_total()
 
 
 if __name__ == '__main__':
