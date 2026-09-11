@@ -67,6 +67,19 @@ template<class A, class B> tuple2<A,B> *tuple2<A,B>::__deepcopy__(dict<void *, p
     return n;
 }
 
+template<class A, class B, class C> tuple3<A,B,C> *tuple3<A,B,C>::__copy__() {
+    return new tuple3<A,B,C>(3, first, second, third);
+}
+
+template<class A, class B, class C> tuple3<A,B,C> *tuple3<A,B,C>::__deepcopy__(dict<void *, pyobj *> *memo) {
+    tuple3<A,B,C> *n = new tuple3<A,B,C>();
+    memo->__setitem__(this, n);
+    n->first = __deepcopy(first, memo);
+    n->second = __deepcopy(second, memo);
+    n->third = __deepcopy(third, memo);
+    return n;
+}
+
 template<class T> list<T> *list<T>::__copy__() {
     list<T> *c = new list<T>();
     c->units = this->units;

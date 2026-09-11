@@ -1125,24 +1125,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         subtypes.update(self.gx.cnode[var, t[1], 0].types())
         return subtypes
 
-    def bin_tuple(self, types: Types) -> bool:
-        """Check if a tuple is binary"""
+    def hetero_tuple(self, types: Types) -> Optional[list[str]]:
+        """Return the element var names ('first', 'second', ...) if this is
+        a heterogeneous tuple2/tuple3 (i.e. not all element types coincide)"""
         for t in types:
-            if isinstance(t[0], python.Class) and t[0].ident == "tuple2":
-                var1 = t[0].vars.get("first")
-                var2 = t[0].vars.get("second")
-                if var1 and var2:
-                    if (var1, t[1], 0) in self.gx.cnode and (
-                        var2,
-                        t[1],
-                        0,
-                    ) in self.gx.cnode:
-                        if (
-                            self.gx.cnode[var1, t[1], 0].types()
-                            != self.gx.cnode[var2, t[1], 0].types()
-                        ):
-                            return True
-        return False
+            if isinstance(t[0], python.Class) and t[0].ident in ("tuple2", "tuple3"):
+                names = t[0].tvar_names()
+                assert names
+                elemvars = [t[0].vars.get(name) for name in names]
+                if all(elemvars) and all(
+                    (var, t[1], 0) in self.gx.cnode for var in elemvars
+                ):
+                    elemtypes = [self.gx.cnode[var, t[1], 0].types() for var in elemvars]
+                    if any(types_ != elemtypes[0] for types_ in elemtypes[1:]):
+                        return names
+        return None
 
     def instance_new(self, node: ast.AST, argtypes: Optional[Types]) -> Types:
         """Get the types for a new instance"""
@@ -1216,12 +1213,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         children = list(node.elts)
         if children:
             self.append(str(len(children)) + ",")
-        if len(children) >= 2 and self.bin_tuple(argtypes):  # XXX >=2?
-            type_child = self.subtypes(argtypes, "first")
-            self.impl_visit_conv(children[0], type_child, func)
-            self.append(",")
-            type_child = self.subtypes(argtypes, "second")
-            self.impl_visit_conv(children[1], type_child, func)
+        elemnames = self.hetero_tuple(argtypes) if len(children) >= 2 else None
+        if elemnames and len(elemnames) == len(children):
+            for i, (child, elemname) in enumerate(zip(children, elemnames)):
+                type_child = self.subtypes(argtypes, elemname)
+                self.impl_visit_conv(child, type_child, func)
+                if i < len(children) - 1:
+                    self.append(",")
         else:
             for child in children:
                 type_child = self.subtypes(argtypes, "unit")
@@ -1238,7 +1236,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit a tuple node"""
         if isinstance(node.ctx, ast.Load):
-            if len(node.elts) > 2:
+            if len(node.elts) > 3:
                 types = set()
                 for child in node.elts:
                     types.update(self.mergeinh[child])
@@ -1497,6 +1495,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             node.iter, (ast.List, ast.Tuple)
         )
 
+    def effective_class(self, t: Any) -> Any:
+        """A homogeneous tuple3 is emitted as a plain tuple (see typestr), so
+        treat it as such when checking classes"""
+        if (
+            isinstance(t[0], python.Class)
+            and t[0].ident == "tuple3"
+            and not self.hetero_tuple({t})
+        ):
+            return python.def_class(self.gx, "tuple", mv=self.mv)
+        return t[0]
+
     def only_classes(self, node: ast.AST, names: tuple[str, ...]) -> bool:
         """Check if a node is only classes"""
         if node not in self.mergeinh:
@@ -1504,7 +1513,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         classes = [python.def_class(self.gx, name, mv=self.mv) for name in names] + [
             python.def_class(self.gx, "none")
         ]
-        return not [t for t in self.mergeinh[node] if t[0] not in classes]
+        return not [
+            t for t in self.mergeinh[node] if self.effective_class(t) not in classes
+        ]
 
     def visit_For(
         self, node: ast.For, func: Optional["python.Function"] = None
@@ -3083,18 +3094,30 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     return
 
             # tuple2.__getitem -> __getfirst__/__getsecond
+            # tuple3.__getitem -> __getfirst__/__getsecond/__getthird__
             if (
                 ident == "__getitem__"
                 and ast_utils.is_num(node.args[0])
                 and isinstance(node.args[0], ast.Constant)
                 and isinstance(node.args[0].value, int)
-                and node.args[0].value in (0, 1)
-                and self.only_classes(objexpr, ("tuple2",))
+                and (
+                    (
+                        node.args[0].value in (0, 1)
+                        and self.only_classes(objexpr, ("tuple2",))
+                    )
+                    or (
+                        node.args[0].value in (0, 1, 2)
+                        and self.only_classes(objexpr, ("tuple3",))
+                    )
+                )
             ):
                 assert isinstance(node.func, ast.Attribute)
                 self.visit(node.func.value, func)
                 self.append(
-                    "->%s()" % ["__getfirst__", "__getsecond__"][node.args[0].value]
+                    "->%s()"
+                    % ["__getfirst__", "__getsecond__", "__getthird__"][
+                        node.args[0].value
+                    ]
                 )
                 return
 
@@ -3477,7 +3500,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 rvalue_node = self.gx.item_rvalue[item]
                 if i == 0:
                     if self.only_classes(
-                        rvalue_node, ("list", "str_", "bytes_", "tuple", "tuple2")
+                        rvalue_node,
+                        ("list", "str_", "bytes_", "tuple", "tuple2", "tuple3"),
                     ):
                         self.output(
                             "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
@@ -3513,6 +3537,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         sel = "__getitem__(%d)" % i
         if i < 2 and self.only_classes(rvalue_node, ("tuple2",)):
             sel = ["__getfirst__()", "__getsecond__()"][i]
+        elif i < 3 and self.only_classes(rvalue_node, ("tuple3",)):
+            sel = ["__getfirst__()", "__getsecond__()", "__getthird__()"][i]
         elif self.one_class(rvalue_node, ("list", "str_", "tuple", "bytes_")):
             sel = "__getfast__(%d)" % i
         return "{}->{}".format(temp, sel)
@@ -4294,7 +4320,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and [
                 t
                 for t in self.gx.merged_inh[node.right]
-                if t[0].ident in ["tuple", "tuple2"]
+                if t[0].ident in ["tuple", "tuple2", "tuple3"]
             ]
         ):
             self.visitm("__modtuple(", node.left, ", ", node.right, ")", func)

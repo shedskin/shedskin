@@ -96,6 +96,24 @@ public:
 
 list<DirEntry *> *scandir(str *path=0);
 
+typedef tuple3<str *, list<str *> *, list<str *> *> __walk_tuple;
+
+class __walk_iter : public __iter<__walk_tuple *> {
+public:
+    __ss_bool topdown, followlinks;
+    std::vector<str *> pending;  /* directories still to be scanned (topdown) */
+    __walk_tuple *last;          /* last yielded tuple; its dirnames may have been pruned by the caller */
+    std::vector<__walk_tuple *> results; /* precomputed post-order results (bottom-up) */
+    size_t pos;
+
+    __walk_iter(str *top, __ss_bool topdown, __ss_bool followlinks);
+    __walk_tuple *__scan(str *top, std::vector<str *> &subdirs);
+    void __collect(str *top);
+    __walk_tuple *__next__();
+};
+
+__walk_iter *walk(str *top, __ss_bool topdown=True, void *onerror=0, __ss_bool followlinks=False);
+
 __ss_bool stat_float_times(__ss_int newvalue=-1);
 str *strerror(__ss_int i);
 

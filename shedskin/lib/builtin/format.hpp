@@ -360,6 +360,10 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
     return __mod6(fmt, 2, t->__getfirst__(), t->__getsecond__());
 }
 
+template<class A, class B, class C> str *__modtuple(str *fmt, tuple3<A,B,C> *t) {
+    return __mod6(fmt, 3, t->__getfirst__(), t->__getsecond__(), t->__getthird__());
+}
+
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     str *result = new str();
     size_t pos = 0;
@@ -417,6 +421,10 @@ template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
 
 template<class A, class B> bytes *__modtuple(bytes *fmt, tuple2<A,B> *t) {
     return __mod6(fmt, 2, t->__getfirst__(), t->__getsecond__());
+}
+
+template<class A, class B, class C> bytes *__modtuple(bytes *fmt, tuple3<A,B,C> *t) {
+    return __mod6(fmt, 3, t->__getfirst__(), t->__getsecond__(), t->__getthird__());
 }
 
 #endif
