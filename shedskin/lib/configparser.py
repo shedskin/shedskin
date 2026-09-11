@@ -6,6 +6,8 @@ import io
 DEFAULTSECT = "DEFAULT"
 MAX_INTERPOLATION_DEPTH = 10
 
+__void = 0  # 'no fallback given' sentinel for the typed getters
+
 class Error(Exception):
     def __init__(self, msg=''):
         self.message = msg
@@ -54,6 +56,8 @@ class ParsingError(Error):
         self.message = ''
         self.filename = filename
         self.errors = [(0, '')]
+    def append(self, lineno, line):
+        pass
 class MissingSectionHeaderError(ParsingError):
     def __init__(self, filename, lineno, line):
         self.message = ''
@@ -104,12 +108,16 @@ class RawConfigParser:
     def items(self, section, __kw_raw=False, __kw_vars=None):
         return [('', '')]
     def __items0(self, __kw_raw=False, __kw_vars=None):
-        return [('', SectionProxy(self, ''))]
-    def getint(self, section, option):
+        # not SectionProxy(self, ''): for a zero-arg items() call the
+        # compiler misaligns the __kw_ defaults after the arity redirect and
+        # lets 'False' flow into 'self' here, which would then surface as
+        # {ConfigParser, bool} on SectionProxy.parser (see 'claude bugs')
+        return [('', SectionProxy(RawConfigParser(), ''))]
+    def getint(self, section, option, raw=False, vars=None, fallback=__void):
         return 1
-    def getfloat(self, section, option):
+    def getfloat(self, section, option, raw=False, vars=None, fallback=__void):
         return 1.0
-    def getboolean(self, section, option):
+    def getboolean(self, section, option, raw=False, vars=None, fallback=__void):
         return True
     def optionxform(self, optionstr):
         return ''
@@ -142,6 +150,22 @@ class SectionProxy:
     def __init__(self, parser, name):
         self._parser = parser
         self._name = name
+    def getname(self):
+        return self._name
+    def getparser(self):
+        return self._parser
+    name = property(getname)
+    parser = property(getparser)
+    def __repr__(self):
+        return ''
+    def get(self, option, fallback=None, raw=False, vars=None):
+        return ''
+    def getint(self, option, fallback=__void, raw=False, vars=None):
+        return 1
+    def getfloat(self, option, fallback=__void, raw=False, vars=None):
+        return 1.0
+    def getboolean(self, option, fallback=__void, raw=False, vars=None):
+        return True
     def __getitem__(self, key):
         return ''
     def __setitem__(self, key, value):
