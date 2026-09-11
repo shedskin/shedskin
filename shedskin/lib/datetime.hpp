@@ -44,6 +44,8 @@ public:
 
     date(__ss_int year, __ss_int month, __ss_int day);
     date(date* d):year(d->year),month(d->month),day(d->day){__class__=cl_date;};
+    static date *min, *max;
+    static timedelta *resolution;
     static date *today();
     static date *fromtimestamp(__ss_int timestamp);
     static date *fromordinal(__ss_int o);                    //copied from cpython
@@ -60,6 +62,8 @@ public:
     tuple2<__ss_int, __ss_int> *isocalendar();
     str *isoformat();
     str *__str__();
+    str *__repr__();
+    __ss_int __hash__();
     str *ctime();
     str *strftime(str *format);
 
@@ -70,6 +74,12 @@ public:
     __ss_bool __lt__(date *other);
     __ss_bool __ge__(date *other);
     __ss_bool __le__(date *other);
+
+    /* pyobj* overrides, so generic (untyped) comparison paths dispatch here
+       instead of falling back to pyobj's pointer-identity defaults */
+    __ss_int __cmp__(pyobj *other) { return __cmp__((date *)other); }
+    __ss_bool __eq__(pyobj *other) { return __eq__((date *)other); }
+    __ss_bool __ne__(pyobj *other) { return __ne__((date *)other); }
 };
 
 
@@ -97,6 +107,8 @@ public:
     datetime(datetime *d) : date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo)
                 {__class__=cl_datetime;};
     datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
+    static datetime *min, *max;
+    static timedelta *resolution;
 
     static datetime *today();
     static datetime *now(tzinfo *tzinfo=NULL);
@@ -130,6 +142,8 @@ public:
 
     str *isoformat(str *sep = NULL);
     str *__str__();
+    str *__repr__();
+    __ss_int __hash__();
     str *ctime();
     str *strftime(str *format);
 
@@ -140,6 +154,10 @@ public:
     __ss_bool __lt__(datetime *other);
     __ss_bool __ge__(datetime *other);
     __ss_bool __le__(datetime *other);
+
+    __ss_int __cmp__(pyobj *other) { return __cmp__((datetime *)other); }
+    __ss_bool __eq__(pyobj *other) { return __eq__((datetime *)other); }
+    __ss_bool __ne__(pyobj *other) { return __ne__((datetime *)other); }
 };
 
 
@@ -153,6 +171,8 @@ public:
     time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo)
                 {__class__=cl_time;};                                                       //copyconstructor
     time(__ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
+    static time *min, *max;
+    static timedelta *resolution;
 
     static time *fromisoformat(str *time_string);
 
@@ -160,6 +180,8 @@ public:
 
     str *isoformat();
     str *__str__();
+    str *__repr__();
+    __ss_int __hash__();
     str *strftime(str* format);
     timedelta *utcoffset();
     timedelta *dst();
@@ -172,6 +194,10 @@ public:
     __ss_bool __lt__(time *other);
     __ss_bool __ge__(time *other);
     __ss_bool __le__(time *other);
+
+    __ss_int __cmp__(pyobj *other) { return __cmp__((time *)other); }
+    __ss_bool __eq__(pyobj *other) { return __eq__((time *)other); }
+    __ss_bool __ne__(pyobj *other) { return __ne__((time *)other); }
 };
 
 //class timedelta
@@ -184,7 +210,10 @@ public:
 
     timedelta(double days=0., double seconds=0., double microseconds=0., double milliseconds=0., double minutes=0., double hours=0., double weeks=0.);
     timedelta(timedelta *c):days(c->days),seconds(c->seconds),microseconds(c->microseconds){__class__=cl_timedelta;}
+    static timedelta *min, *max, *resolution;
     str *__str__();
+    str *__repr__();
+    __ss_int __hash__();
     timedelta *__add__(timedelta *other);
     timedelta *__sub__(timedelta *other);
     timedelta *__mul__(__ss_int n);
@@ -201,6 +230,10 @@ public:
     __ss_bool __lt__(timedelta *other);
     __ss_bool __ge__(timedelta *other);
     __ss_bool __le__(timedelta *other);
+
+    __ss_int __cmp__(pyobj *other) { return __cmp__((timedelta *)other); }
+    __ss_bool __eq__(pyobj *other) { return __eq__((timedelta *)other); }
+    __ss_bool __ne__(pyobj *other) { return __ne__((timedelta *)other); }
 };
 
 

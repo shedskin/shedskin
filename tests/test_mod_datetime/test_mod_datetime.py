@@ -382,6 +382,161 @@ def test_datetime_isoformat():
     assert error == 'TypeError'
 
 
+def test_date_repr():
+    assert repr(datetime.date(2024, 3, 1)) == 'datetime.date(2024, 3, 1)'
+    assert repr(datetime.date(1, 1, 1)) == 'datetime.date(1, 1, 1)'
+
+
+def test_time_repr():
+    # trailing zero second/microsecond are omitted, same as cpython
+    assert repr(datetime.time(10, 30)) == 'datetime.time(10, 30)'
+    assert repr(datetime.time(0, 0)) == 'datetime.time(0, 0)'
+    assert repr(datetime.time(1, 2, 3)) == 'datetime.time(1, 2, 3)'
+    assert repr(datetime.time(1, 2, 0, 4)) == 'datetime.time(1, 2, 0, 4)'
+    assert repr(datetime.time(1, 2, 3, 4)) == 'datetime.time(1, 2, 3, 4)'
+
+
+def test_datetime_repr():
+    assert repr(datetime.datetime(2024, 1, 2)) == 'datetime.datetime(2024, 1, 2, 0, 0)'
+    assert repr(datetime.datetime(2024, 1, 1, 10, 30)) == 'datetime.datetime(2024, 1, 1, 10, 30)'
+    assert repr(datetime.datetime(2024, 1, 2, 3, 4, 5)) == 'datetime.datetime(2024, 1, 2, 3, 4, 5)'
+    assert repr(datetime.datetime(2024, 1, 2, 3, 4, 0, 6)) == 'datetime.datetime(2024, 1, 2, 3, 4, 0, 6)'
+
+
+def test_timedelta_repr():
+    # keyword form with zero fields omitted (cpython >= 3.7)
+    assert repr(datetime.timedelta()) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(days=1)) == 'datetime.timedelta(days=1)'
+    assert repr(datetime.timedelta(seconds=30, microseconds=5)) == \
+        'datetime.timedelta(seconds=30, microseconds=5)'
+    # normalized representation, not the constructor arguments
+    assert repr(datetime.timedelta(days=-1, hours=1)) == 'datetime.timedelta(days=-1, seconds=3600)'
+    assert repr(datetime.timedelta(hours=25)) == 'datetime.timedelta(days=1, seconds=3600)'
+
+
+def test_date_hash():
+    # regression test: date/datetime/time/timedelta used to inherit pyobj's
+    # pointer-identity __hash__, so equal values were distinct set members
+    # and dict keys
+    d1 = datetime.date(2024, 3, 1)
+    d2 = datetime.date(2024, 3, 1)
+    d3 = datetime.date(2023, 1, 1)
+    assert hash(d1) == hash(d2)
+    assert hash(d1) != hash(d3)
+    assert len(set([d1, d2, d3])) == 2
+    assert d2 in {d1: 1}
+    assert {d1: 1, d2: 2}[d1] == 2
+
+
+def test_datetime_hash():
+    a = datetime.datetime(2024, 1, 1, 10, 30)
+    b = datetime.datetime(2024, 1, 1, 10, 30)
+    c = datetime.datetime(2024, 1, 1, 10, 30, 0, 1)
+    assert hash(a) == hash(b)
+    assert hash(a) != hash(c)
+    assert len(set([a, b, c])) == 2
+    assert b in {a: 1}
+
+
+def test_time_hash():
+    a = datetime.time(10, 30)
+    b = datetime.time(10, 30)
+    c = datetime.time(10, 31)
+    assert hash(a) == hash(b)
+    assert hash(a) != hash(c)
+    assert len(set([a, b, c])) == 2
+    assert b in {a: 1}
+
+
+def test_timedelta_hash():
+    a = datetime.timedelta(days=1)
+    b = datetime.timedelta(hours=24)
+    c = datetime.timedelta(days=2)
+    assert hash(a) == hash(b)
+    assert hash(a) != hash(c)
+    assert len(set([a, b, c])) == 2
+    assert b in {a: 1}
+
+
+def test_datetime_hash_aware():
+    # aware datetimes compare by their utc equivalent, so equal instants
+    # with different offsets must hash the same (consistent with __eq__)
+    a = datetime.datetime(2007, 4, 3, 0, 0, tzinfo=UTC0())
+    b = datetime.datetime(2007, 4, 2, 18, 21, tzinfo=TZ2())  # utc-5:39
+    assert a == b
+    assert hash(a) == hash(b)
+    assert len(set([a, b])) == 1
+
+
+def test_date_sorting():
+    d1 = datetime.date(2024, 3, 1)
+    d2 = datetime.date(2023, 1, 1)
+    d3 = datetime.date(2024, 2, 29)
+    assert sorted([d1, d2, d3]) == [d2, d3, d1]
+    assert min([d1, d2, d3]) == d2
+    assert max([d1, d2, d3]) == d1
+    assert d2 < d3 < d1
+    assert d1 >= d3 >= d2
+    assert d1 <= datetime.date(2024, 3, 1)
+    assert d1 != d3
+
+
+def test_datetime_sorting():
+    a = datetime.datetime(2024, 1, 1, 10, 30)
+    b = datetime.datetime(2024, 1, 1, 10, 31)
+    c = datetime.datetime(2024, 1, 2)
+    assert sorted([c, b, a]) == [a, b, c]
+    assert min([c, b, a]) == a
+    assert max([c, b, a]) == c
+
+
+def test_time_sorting():
+    a = datetime.time(1, 2, 3)
+    b = datetime.time(1, 2, 3, 4)
+    c = datetime.time(10, 0)
+    assert sorted([c, b, a]) == [a, b, c]
+    assert a < b < c
+    assert c > b > a
+    assert a <= datetime.time(1, 2, 3) <= a
+
+
+def test_timedelta_sorting():
+    a = datetime.timedelta(seconds=1)
+    b = datetime.timedelta(days=1)
+    c = datetime.timedelta(days=1, microseconds=1)
+    assert sorted([c, b, a]) == [a, b, c]
+    assert a < b < c
+    assert c >= b >= a
+    assert datetime.timedelta(hours=24) == b
+
+
+def test_class_attributes():
+    assert datetime.date.min == datetime.date(datetime.MINYEAR, 1, 1)
+    assert datetime.date.max == datetime.date(datetime.MAXYEAR, 12, 31)
+    assert datetime.date.resolution == datetime.timedelta(days=1)
+
+    assert datetime.datetime.min == datetime.datetime(datetime.MINYEAR, 1, 1)
+    assert datetime.datetime.max == datetime.datetime(datetime.MAXYEAR, 12, 31, 23, 59, 59, 999999)
+    assert datetime.datetime.resolution == datetime.timedelta(microseconds=1)
+
+    assert datetime.time.min == datetime.time(0, 0)
+    assert datetime.time.max == datetime.time(23, 59, 59, 999999)
+    assert datetime.time.resolution == datetime.timedelta(microseconds=1)
+
+    assert datetime.timedelta.min == datetime.timedelta(days=-999999999)
+    assert datetime.timedelta.max == datetime.timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999)
+    assert datetime.timedelta.resolution == datetime.timedelta(microseconds=1)
+
+    assert str(datetime.date.min) == '0001-01-01'
+    assert str(datetime.datetime.max) == '9999-12-31 23:59:59.999999'
+    assert repr(datetime.timedelta.max) == \
+        'datetime.timedelta(days=999999999, seconds=86399, microseconds=999999)'
+
+    # bounds are actually usable as bounds
+    assert datetime.date.min <= datetime.date(2024, 1, 1) <= datetime.date.max
+    assert datetime.timedelta.min < datetime.timedelta() < datetime.timedelta.max
+
+
 def test_all():
         test_date()
         test_date_ctime()
@@ -405,6 +560,20 @@ def test_all():
         test_date_replace_keeps_unchanged_day_out_of_range()
         test_datetime_replace_keywords()
         test_time_replace_keywords()
+        test_date_repr()
+        test_time_repr()
+        test_datetime_repr()
+        test_timedelta_repr()
+        test_date_hash()
+        test_datetime_hash()
+        test_time_hash()
+        test_timedelta_hash()
+        test_datetime_hash_aware()
+        test_date_sorting()
+        test_datetime_sorting()
+        test_time_sorting()
+        test_timedelta_sorting()
+        test_class_attributes()
 
 if __name__ == "__main__":
     test_all()

@@ -43,6 +43,18 @@ str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*s
 
 __ss_int MINYEAR, MAXYEAR;
 
+date *date::min, *date::max;
+timedelta *date::resolution;
+datetime *datetime::min, *datetime::max;
+timedelta *datetime::resolution;
+time *time::min, *time::max;
+timedelta *time::resolution;
+timedelta *timedelta::min, *timedelta::max, *timedelta::resolution;
+
+str *date_repr_format, *time_repr_format, *datetime_repr_format;
+str *repr_arg_format, *repr_tzinfo_format, *repr_days_format, *repr_seconds_format, *repr_microseconds_format;
+str *comma_space_string, *zero_string, *close_paren_string;
+
 list<str *> *DayNames, *MonthNames;
 
 class_ *cl_date, *cl_tzinfo, *cl_timedelta, *cl_time, *cl_datetime;
@@ -72,6 +84,34 @@ void __init() {
 
     MINYEAR = 1;
     MAXYEAR = 9999;
+
+    date_repr_format = new str("datetime.date(%d, %d, %d)");
+    time_repr_format = new str("datetime.time(%d, %d");
+    datetime_repr_format = new str("datetime.datetime(%d, %d, %d, %d, %d");
+    repr_arg_format = new str(", %d");
+    repr_tzinfo_format = new str(", tzinfo=%s");
+    repr_days_format = new str("days=%d");
+    repr_seconds_format = new str("seconds=%d");
+    repr_microseconds_format = new str("microseconds=%d");
+    comma_space_string = new str(", ");
+    zero_string = new str("0");
+    close_paren_string = new str(")");
+
+    date::min = new date(MINYEAR, 1, 1);
+    date::max = new date(MAXYEAR, 12, 31);
+    date::resolution = new timedelta(1);
+
+    datetime::min = new datetime(MINYEAR, 1, 1);
+    datetime::max = new datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999);
+    datetime::resolution = new timedelta(0, 0, 1);
+
+    time::min = new time(0, 0, 0, 0);
+    time::max = new time(23, 59, 59, 999999);
+    time::resolution = new timedelta(0, 0, 1);
+
+    timedelta::min = new timedelta(-999999999);
+    timedelta::max = new timedelta(999999999, 59, 999999, 0, 59, 23);
+    timedelta::resolution = new timedelta(0, 0, 1);
 
     DayNames = (new str("Mon Tue Wed Thu Fri Sat Sun"))->split();
     MonthNames = (new str("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"))->split();
@@ -195,6 +235,14 @@ __ss_bool date::__gt__(date *other) { return __mbool(__cmp__(other) == 1); }
 __ss_bool date::__lt__(date *other) { return __mbool(__cmp__(other) == -1); }
 __ss_bool date::__ge__(date *other) { return __mbool(__cmp__(other) != -1); }
 __ss_bool date::__le__(date *other) { return __mbool(__cmp__(other) != 1); }
+
+str *date::__repr__() {
+    return __mod6(date_repr_format, 3, year, month, day);
+}
+
+__ss_int date::__hash__() {
+    return hash_combine(hash_combine(year, month), day);
+}
 
 date *date::replace(__ss_int year_, __ss_int month_, __ss_int day_) {
     date* t = new date(this);
@@ -628,6 +676,35 @@ __ss_bool datetime::__lt__(datetime *other) { return __mbool(__cmp__(other) == -
 __ss_bool datetime::__ge__(datetime *other) { return __mbool(__cmp__(other) != -1); }
 __ss_bool datetime::__le__(datetime *other) { return __mbool(__cmp__(other) != 1); }
 
+/* cpython omits trailing zero second/microsecond fields from the repr */
+static str *time_repr_tail(__ss_int second, __ss_int microsecond, tzinfo *tz) {
+    str *s = new str("");
+    if(microsecond != 0)
+        s = __add_strs(2, __mod6(repr_arg_format, 1, second), __mod6(repr_arg_format, 1, microsecond));
+    else if(second != 0)
+        s = __mod6(repr_arg_format, 1, second);
+    if(tz)
+        s = __add_strs(2, s, __mod6(repr_tzinfo_format, 1, repr(tz)));
+    return __add_strs(2, s, close_paren_string);
+}
+
+str *datetime::__repr__() {
+    str *head = __mod6(datetime_repr_format, 5, year, month, day, hour, minute);
+    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo));
+}
+
+__ss_int datetime::__hash__() {
+    /* consistent with __cmp__: aware datetimes hash by their utc equivalent */
+    datetime *f = this;
+    if(_tzinfo)
+        f = __sub__(_tzinfo->utcoffset(this));
+    __ss_int h = hash_combine(hash_combine(f->year, f->month), f->day);
+    h = hash_combine(h, f->hour);
+    h = hash_combine(h, f->minute);
+    h = hash_combine(h, f->second);
+    return hash_combine(h, f->microsecond);
+}
+
 date *datetime::_date() {
 	return new date(year,month,day);
 }
@@ -992,6 +1069,17 @@ __ss_bool time::__lt__(time *other) { return __mbool(__cmp__(other) == -1); }
 __ss_bool time::__ge__(time *other) { return __mbool(__cmp__(other) != -1); }
 __ss_bool time::__le__(time *other) { return __mbool(__cmp__(other) != 1); }
 
+str *time::__repr__() {
+    str *head = __mod6(time_repr_format, 2, hour, minute);
+    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo));
+}
+
+__ss_int time::__hash__() {
+    __ss_int h = hash_combine(hour, minute);
+    h = hash_combine(h, second);
+    return hash_combine(h, microsecond);
+}
+
 
 //class timedelta
 timedelta::timedelta(double days_, double seconds_, double microseconds_, double milliseconds, double minutes, double hours, double weeks) {
@@ -1173,6 +1261,24 @@ __ss_int timedelta::__cmp__(timedelta *other) {
 }
 
 __ss_bool timedelta::__eq__(timedelta *other) { return __mbool(__cmp__(other) == 0); }
+
+str *timedelta::__repr__() {
+    /* cpython (>= 3.7): keyword form, zero fields omitted, '0' if all zero */
+    list<str *> *args = new list<str *>();
+    if(days != 0)
+        args->append(__mod6(repr_days_format, 1, days));
+    if(seconds != 0)
+        args->append(__mod6(repr_seconds_format, 1, seconds));
+    if(microseconds != 0)
+        args->append(__mod6(repr_microseconds_format, 1, microseconds));
+    if(args->__len__() == 0)
+        args->append(zero_string);
+    return __add_strs(3, new str("datetime.timedelta("), comma_space_string->join(args), close_paren_string);
+}
+
+__ss_int timedelta::__hash__() {
+    return hash_combine(hash_combine(days, seconds), microseconds);
+}
 __ss_bool timedelta::__ne__(timedelta *other) { return __mbool(__cmp__(other) != 0); }
 __ss_bool timedelta::__gt__(timedelta *other) { return __mbool(__cmp__(other) == 1); }
 __ss_bool timedelta::__lt__(timedelta *other) { return __mbool(__cmp__(other) == -1); }

@@ -67,6 +67,23 @@ class date:
     def __str__(self):
         return ''
 
+    def __eq__(self, other):
+        return True
+    def __ne__(self, other):
+        return True
+    def __lt__(self, other):
+        return True
+    def __le__(self, other):
+        return True
+    def __gt__(self, other):
+        return True
+    def __ge__(self, other):
+        return True
+    def __hash__(self):
+        return 1
+    def __repr__(self):
+        return ''
+
 class datetime(date):
     def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         date.__init__(self, year, month, day)
@@ -188,6 +205,23 @@ class datetime(date):
     def __str__(self):
         return ''
 
+    def __eq__(self, other):
+        return True
+    def __ne__(self, other):
+        return True
+    def __lt__(self, other):
+        return True
+    def __le__(self, other):
+        return True
+    def __gt__(self, other):
+        return True
+    def __ge__(self, other):
+        return True
+    def __hash__(self):
+        return 1
+    def __repr__(self):
+        return ''
+
 class time:
     def __init__(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         self.hour = hour
@@ -228,6 +262,23 @@ class time:
     def __str__(self):
         return ''
 
+    def __eq__(self, other):
+        return True
+    def __ne__(self, other):
+        return True
+    def __lt__(self, other):
+        return True
+    def __le__(self, other):
+        return True
+    def __gt__(self, other):
+        return True
+    def __ge__(self, other):
+        return True
+    def __hash__(self):
+        return 1
+    def __repr__(self):
+        return ''
+
 class timedelta:
     def __init__(self, days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0):
         self.days = 1
@@ -265,6 +316,23 @@ class timedelta:
         return datetime(1, 1, 1)
 
     def __str__(self):
+        return ''
+
+    def __eq__(self, other):
+        return True
+    def __ne__(self, other):
+        return True
+    def __lt__(self, other):
+        return True
+    def __le__(self, other):
+        return True
+    def __gt__(self, other):
+        return True
+    def __ge__(self, other):
+        return True
+    def __hash__(self):
+        return 1
+    def __repr__(self):
         return ''
 
 class tzinfo:
