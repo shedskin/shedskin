@@ -7,6 +7,8 @@
 #include <math.h>
 #include <numeric>
 #include <limits>
+#include <cstdint>
+#include <cstring>
 
 #include "integer.hpp"
 
@@ -438,6 +440,71 @@ inline __ss_bool __ss_issubnormal(__ss_float x) {
 
 inline __ss_float nextafter(__ss_float x, __ss_float y) {
     return std::nextafter(x, y);
+}
+
+/* math.nextafter(x, y, steps=n): the value n representable steps after x
+ * towards y. Like CPython, this walks the integer representation of the
+ * floats, so the cost does not depend on n. */
+inline __ss_float nextafter(__ss_float x, __ss_float y, __ss_int steps) {
+    /* unsigned integer type with the same width as __ss_float */
+#if defined(__SS_FLOAT32)
+    typedef uint32_t __bits;
+#else
+    typedef uint64_t __bits;
+#endif
+    static_assert(sizeof(__bits) == sizeof(__ss_float),
+                  "nextafter assumes __ss_float has an integer counterpart of equal width");
+
+    if(steps < 0)
+        throw new ValueError(new str("steps must be a non-negative integer"));
+
+    /* __ss_int and __bits can each be the wider type (--int128 with doubles,
+     * --float32 with 64-bit ints), so saturate by detecting truncation rather
+     * than by comparing the two ranges. Saturating is harmless: a step count
+     * spanning the whole range lands on y either way. */
+    __ss_uint nsteps = (__ss_uint)steps;
+    __bits usteps = (__bits)nsteps;
+    if((__ss_uint)usteps != nsteps)
+        usteps = std::numeric_limits<__bits>::max();
+
+    if(usteps == 0)
+        return x;
+    if(std::isnan(x))
+        return x;
+    if(std::isnan(y))
+        return y;
+
+    /* type-punned via memcpy, assuming __ss_float and __bits share endianness */
+    __bits ix, iy;
+    memcpy(&ix, &x, sizeof(__bits));
+    memcpy(&iy, &y, sizeof(__bits));
+
+    if(ix == iy)
+        return x;
+
+    const __bits sign_bit = (__bits)1 << (8 * sizeof(__bits) - 1);
+    const __bits ax = (__bits)(ix & (__bits)~sign_bit);
+    const __bits ay = (__bits)(iy & (__bits)~sign_bit);
+
+    __bits result;
+    if((ix ^ iy) & sign_bit) {
+        /* opposite signs: ax+ay cannot overflow, as neither has its top bit set */
+        if((__bits)(ax + ay) <= usteps)
+            result = iy;
+        /* strictly less-than, so that +0.0 and -0.0 come out right */
+        else if(ax < usteps)
+            result = (__bits)((iy & sign_bit) | (__bits)(usteps - ax));
+        else
+            result = (__bits)(ix - usteps);
+    } else if(ax > ay) {
+        result = ((__bits)(ax - ay) >= usteps) ? (__bits)(ix - usteps) : iy;
+    } else {
+        result = ((__bits)(ay - ax) >= usteps) ? (__bits)(ix + usteps) : iy;
+    }
+
+    __ss_float r;
+    memcpy(&r, &result, sizeof(__bits));
+    return r;
 }
 
 inline __ss_float ulp(__ss_float x) {
