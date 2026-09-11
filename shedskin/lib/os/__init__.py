@@ -155,6 +155,9 @@ def walk(top, topdown=True, onerror=None, followlinks=False):
 def getenv(name, default=None):
     return ''
 
+def get_exec_path(env=None):
+    return ['']
+
 def getcwd():
     return ''
 

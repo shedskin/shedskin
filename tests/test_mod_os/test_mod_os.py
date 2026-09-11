@@ -160,6 +160,21 @@ def test_getenv():
     assert os.getenv(missing, default="fallback") == "fallback"
 
 
+def test_get_exec_path():
+    # default: derived from os.environ['PATH']
+    path = os.get_exec_path()
+    assert path == os.environ['PATH'].split(os.pathsep)
+    assert os.get_exec_path(None) == path
+
+    # explicit env dict
+    custom = {'PATH': os.pathsep.join(['/a', '/b/c', ''])}
+    assert os.get_exec_path(custom) == ['/a', '/b/c', '']
+    assert os.get_exec_path(env=custom) == ['/a', '/b/c', '']
+
+    # no PATH in env: fall back to os.defpath
+    assert os.get_exec_path({'HOME': '/x'}) == os.defpath.split(os.pathsep)
+
+
 def test_makedirs_exist_ok():
     path = '/tmp/shedskin_test_makedirs_exist_ok/a/b'
 
@@ -368,6 +383,7 @@ def test_all():
         test_posix()
         test_env()
         test_getenv()
+        test_get_exec_path()
         test_rdwr()
         test_lseek()
         test_isatty()
