@@ -356,11 +356,6 @@ str *RawConfigParser::optionxform(str *optionstr) {
     return optionstr->lower();
 }
 
-double RawConfigParser::getfloat(str *section, str *option) {
-
-    return __float(this->get(section, option, default_5, NULL));
-}
-
 void *RawConfigParser::_set(str *section, str *option, str *value) {
     /**
     Set an option.
@@ -624,10 +619,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     return read_ok;
 }
 
-__ss_bool RawConfigParser::getboolean(str *section, str *option) {
-    str *v;
-
-    v = this->get(section, option, default_5, NULL);
+__ss_bool RawConfigParser::_to_boolean(str *v) {
     if ((!(RawConfigParser::_boolean_states)->__contains__(v->lower()))) {
         throw ((new ValueError(__mod6(const_16, 1, v))));
     }
@@ -863,11 +855,6 @@ void *RawConfigParser::read_dict(dict<str *, dict<str *, str *> *> *dictionary, 
     END_FOR
 
     return NULL;
-}
-
-__ss_int RawConfigParser::getint(str *section, str *option) {
-
-    return __int(this->get(section, option, default_5, NULL));
 }
 
 dict<str *, str *> *RawConfigParser::defaults() {
@@ -1139,6 +1126,27 @@ void *SectionProxy::__init__(RawConfigParser *parser_, str *name_) {
     _parser = parser_;
     _name = name_;
     return NULL;
+}
+
+str *RawConfigParser::_get_or_null(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
+    try {
+        return this->get(section, option, raw, vars, NULL);
+    } catch (NoSectionError *) {
+        return NULL;
+    } catch (NoOptionError *) {
+        return NULL;
+    }
+}
+
+str *SectionProxy::__repr__() {
+    return __add_strs(3, new str("<Section: "), _name, new str(">"));
+}
+
+/* Unlike RawConfigParser.get(), a missing option returns 'fallback' (None
+   by default) instead of raising, matching CPython's SectionProxy.get(). */
+str *SectionProxy::get(str *option, str *fallback, __ss_int raw, dict<str *, str *> *vars) {
+    str *v = _parser->_get_or_null(_name, option, raw, vars);
+    return v ? v : fallback;
 }
 
 list<str *> *SectionProxy::_options() {

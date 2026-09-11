@@ -236,7 +236,6 @@ public:
     }
     virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
     str *optionxform(str *optionstr);
-    double getfloat(str *section, str *option);
     void *_set(str *section, str *option, str *value);
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
@@ -251,11 +250,45 @@ public:
     void *read_string(str *string_, str *source=NULL);
     void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
     void *read_file(file *fp, str *source=NULL);
-    __ss_bool getboolean(str *section, str *option);
     list<tuple2<str *, SectionProxy *> *> *items(dict<str *, str *> *vars, __ss_int raw);
     list<tuple<str *> *> *items(dict<str *, str *> *vars, __ss_int raw, str *section);
     void *_read(file *fp, str *fpname);
-    __ss_int getint(str *section, str *option);
+
+    /* Typed getters, matching CPython's _get_conv(): look the value up
+       through the (virtual) get(), so interpolation happens for a
+       ConfigParser, then convert. 'fallback' is only used when the section
+       or option is missing (NoSectionError/NoOptionError); a value that is
+       present but fails conversion still raises ValueError. The model marks
+       'no fallback' with the __void sentinel, which the compiler passes as
+       __ss_void, so D is __ss_void_struct in that case and the lookup
+       errors propagate. */
+    str *_get_or_null(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
+    __ss_bool _to_boolean(str *v);
+
+    template<class D> __ss_int getint(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
+        if constexpr (std::is_same_v<D, __ss_void_struct>)
+            return __int(this->get(section, option, raw, vars, NULL));
+        else {
+            str *v = _get_or_null(section, option, raw, vars);
+            return v ? __int(v) : (__ss_int)fallback;
+        }
+    }
+    template<class D> __ss_float getfloat(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
+        if constexpr (std::is_same_v<D, __ss_void_struct>)
+            return __float(this->get(section, option, raw, vars, NULL));
+        else {
+            str *v = _get_or_null(section, option, raw, vars);
+            return v ? __float(v) : (__ss_float)fallback;
+        }
+    }
+    template<class D> __ss_bool getboolean(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
+        if constexpr (std::is_same_v<D, __ss_void_struct>)
+            return _to_boolean(this->get(section, option, raw, vars, NULL));
+        else {
+            str *v = _get_or_null(section, option, raw, vars);
+            return v ? _to_boolean(v) : ___bool(fallback);
+        }
+    }
     dict<str *, str *> *defaults();
     list<str *> *options(str *section);
 
@@ -309,6 +342,19 @@ public:
     }
     void *__init__(RawConfigParser *parser_, str *name_);
     list<str *> *_options();
+    str *getname() { return _name; }
+    RawConfigParser *getparser() { return _parser; }
+    str *__repr__();
+    str *get(str *option, str *fallback, __ss_int raw, dict<str *, str *> *vars);
+    template<class D> __ss_int getint(str *option, D fallback, __ss_int raw, dict<str *, str *> *vars) {
+        return _parser->getint(_name, option, raw, vars, fallback);
+    }
+    template<class D> __ss_float getfloat(str *option, D fallback, __ss_int raw, dict<str *, str *> *vars) {
+        return _parser->getfloat(_name, option, raw, vars, fallback);
+    }
+    template<class D> __ss_bool getboolean(str *option, D fallback, __ss_int raw, dict<str *, str *> *vars) {
+        return _parser->getboolean(_name, option, raw, vars, fallback);
+    }
     str *__getitem__(str *key);
     void *__setitem__(str *key, str *value);
     void *__delitem__(str *key);
