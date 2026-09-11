@@ -150,6 +150,7 @@ add_subdirectory(pisang)
 add_subdirectory(plcfrs)
 add_subdirectory(pygasus) # ext no-bounds
 add_subdirectory(pygmy)
+add_subdirectory(pyvm)
 add_subdirectory(pycsg)
 add_subdirectory(pylife) # ext
 add_subdirectory(pylot) # nested ext
