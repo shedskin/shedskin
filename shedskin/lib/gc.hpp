@@ -14,7 +14,15 @@ void *enable();
 
 void *disable();
 
-void *collect();
+__ss_bool isenabled();
+
+__ss_int collect();
+
+tuple<__ss_int> *get_count();
+
+tuple<__ss_int> *get_threshold();
+
+void *set_threshold(__ss_int threshold0, __ss_int threshold1=-1, __ss_int threshold2=-1);
 
 } // module namespace
 #endif
