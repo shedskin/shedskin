@@ -2,10 +2,22 @@
 
 #include "binascii.hpp"
 #include <climits>
+#include <cstdint>
+#include <cstring>
 
 namespace __binascii__ {
 
 str *__name__;
+
+/* Non-trivial argument defaults from binascii.py, numbered in definition
+ * order by the compiler (keep in sync when editing the model):
+ *   default_0: a2b_ascii85(ignorechars=b'')
+ *   default_2: a2b_base85(ignorechars=b'')
+ *   default_5: a2b_base32(ignorechars=b'')
+ */
+bytes *default_0, *default_2, *default_5;
+
+bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
 
 #ifndef PY_SSIZE_T_MAX
 #define PY_SSIZE_T_MAX INT_MAX 
@@ -470,7 +482,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     return binary;
 }
 
-bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
+bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, bytes *altchars) {
     unsigned char table_b2a_base64[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -518,11 +530,15 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, bytes *altchars) {
         *ascii_data++ = (char)table_b2a_base64[(leftchar&0xf) << 2];
         *ascii_data++ = BASE64_PAD;
     }
-    if (newline)
-        *ascii_data++ = '\n';       /* Append a courtesy newline */
-
     // resize to ascii_data - start
     ascii->unit.resize((size_t)(ascii_data-ascii_start));
+    if (wrapcol > 0) {
+        /* Each line should encode a whole number of bytes. */
+        size_t w = wrapcol < 4 ? 4 : (size_t)wrapcol / 4 * 4;
+        wraplines(ascii, w);
+    }
+    if (newline)
+        ascii->unit.push_back('\n');       /* Append a courtesy newline */
     return ascii;
 }
 
@@ -949,8 +965,556 @@ bytes *a2b_hex(bytes *data) {
     return unhexlify(data);
 }
 
+
+/* ---------------------------------------------------------------------
+ * Shared helpers for the base32/base64/base85/ascii85 codecs below
+ * (ported from CPython 3.15 Modules/binascii.c).
+ */
+
+/* Insert '\n' after every `width` characters of `data`, in place. */
+void wraplines(bytes *data, size_t width) {
+    __GC_BYTES &u = data->unit;
+    size_t size = u.size();
+    if (width == 0 || size <= width)
+        return;
+    __GC_BYTES out;
+    out.reserve(size + (size - 1) / width);
+    for (size_t i = 0; i < size; i += width) {
+        if (i)
+            out.push_back('\n');
+        out.append(u, i, width);
+    }
+    u.swap(out);
+}
+
+/* Build a 256-entry reverse lookup table for an alternative alphabet of
+ * `size` symbols (entries not in the alphabet map to 0xff; the pad
+ * character, if any, maps to `size`). */
+static void build_reverse_table(bytes *alphabet, int size, int padchar,
+                                unsigned char *out) {
+    if ((int)alphabet->unit.size() != size)
+        throw new ValueError(__mod6(new str("alphabet must have length %d"), 1, (__ss_int)size));
+    memset(out, 0xff, 256);
+    for (int i = 0; i < size; i++)
+        out[(unsigned char)alphabet->unit[(size_t)i]] = (unsigned char)i;
+    if (padchar >= 0)
+        out[padchar] = (unsigned char)size;
+}
+
+static inline bool ignorechar(unsigned char c, bytes *ignorechars) {
+    if (!ignorechars || ignorechars->unit.empty())
+        return false;
+    return ignorechars->unit.find((char)c) != std::string::npos;
+}
+
+static const unsigned char table_a2b_base85[256] = {
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255, 62,255, 63,  64, 65, 66,255,  67, 68, 69, 70, 255, 71,255,255,
+      0,  1,  2,  3,   4,  5,  6,  7,   8,  9,255, 72,  73, 74, 75, 76,
+     77, 10, 11, 12,  13, 14, 15, 16,  17, 18, 19, 20,  21, 22, 23, 24,
+     25, 26, 27, 28,  29, 30, 31, 32,  33, 34, 35,255, 255,255, 78, 79,
+     80, 36, 37, 38,  39, 40, 41, 42,  43, 44, 45, 46,  47, 48, 49, 50,
+     51, 52, 53, 54,  55, 56, 57, 58,  59, 60, 61, 81,  82, 83, 84,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+};
+
+/* Ascii85: '!' (33) .. 'u' (117) map to 0..84 */
+static const unsigned char table_a2b_base85_a85[256] = {
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,  0,  1,  2,   3,  4,  5,  6,   7,  8,  9, 10,  11, 12, 13, 14,
+     15, 16, 17, 18,  19, 20, 21, 22,  23, 24, 25, 26,  27, 28, 29, 30,
+     31, 32, 33, 34,  35, 36, 37, 38,  39, 40, 41, 42,  43, 44, 45, 46,
+     47, 48, 49, 50,  51, 52, 53, 54,  55, 56, 57, 58,  59, 60, 61, 62,
+     63, 64, 65, 66,  67, 68, 69, 70,  71, 72, 73, 74,  75, 76, 77, 78,
+     79, 80, 81, 82,  83, 84,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+};
+
+static const unsigned char table_b2a_base85[] =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
+
+static const unsigned char table_b2a_base85_a85[] =
+    "!\"#$%&\'()*+,-./0123456789:;<=>?@"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu";
+
+#define BASE85_A85_PREFIX '<'
+#define BASE85_A85_AFFIX '~'
+#define BASE85_A85_SUFFIX '>'
+#define BASE85_A85_Z 0x00000000u
+#define BASE85_A85_Y 0x20202020u
+
+/* 85**0 through 85**4, used for canonical encoding checks. */
+static const uint32_t pow85[] = {1, 85, 7225, 614125, 52200625};
+
+static const unsigned char table_a2b_base32[256] = {
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255, 26, 27,  28, 29, 30, 31, 255,255,255,255, 255, 32,255,255,
+    255,  0,  1,  2,   3,  4,  5,  6,   7,  8,  9, 10,  11, 12, 13, 14,
+     15, 16, 17, 18,  19, 20, 21, 22,  23, 24, 25,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+    255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255,
+};
+
+static const unsigned char table_b2a_base32[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+#define BASE32_PAD '='
+
+/* ---------------------------------------------------------------------
+ * Base85 / Ascii85
+ *
+ * Both share the same 5-digit radix-85 group codec; Ascii85 additionally
+ * knows the 'z' / 'y' shorthands and the Adobe <~ ~> framing.
+ */
+
+/* Decode radix-85 groups from ascii_data using table_a2b into out. */
+static void base85_decode_core(const unsigned char *ascii_data, size_t ascii_size,
+                               const unsigned char *table_a2b, bytes *ignorechars,
+                               bool canonical, bool ascii85, bool foldspaces,
+                               __GC_BYTES &out) {
+    /* signed: goes negative while the final partial group is padded out */
+    ptrdiff_t total_len = (ptrdiff_t)ascii_size;
+    ptrdiff_t ascii_len = total_len;
+    uint32_t leftchar = 0;
+    int group_pos = 0;
+    bool from_z = false;
+    unsigned char this_ch = 0;
+
+    for (; ascii_len > 0 || group_pos != 0; ascii_len--, ascii_data++) {
+        unsigned char this_digit;
+        if (ascii_len > 0) {
+            this_ch = *ascii_data;
+            this_digit = table_a2b[this_ch];
+        } else {
+            /* Pad with largest radix-85 digit when decoding. */
+            this_digit = 84;
+        }
+        if (this_digit < 85) {
+            if (group_pos == 4
+                && (leftchar > UINT32_MAX / 85
+                    || leftchar * 85 > UINT32_MAX - this_digit)) {
+                if (ascii85)
+                    throw new Error(new str("Ascii85 overflow"));
+                throw new Error(__mod6(new str("Base85 overflow in hunk starting at byte %d"), 1,
+                                       (__ss_int)((total_len - ascii_len) / 5 * 5)));
+            }
+            leftchar = leftchar * 85 + this_digit;
+            group_pos++;
+        }
+        else if (ascii85 && ((this_ch == 'y' && foldspaces) || this_ch == 'z')) {
+            if (group_pos != 0)
+                throw new Error(__mod6(new str("'%c' inside Ascii85 5-tuple"), 1, (__ss_int)this_ch));
+            leftchar = this_ch == 'y' ? BASE85_A85_Y : BASE85_A85_Z;
+            from_z = (this_ch == 'z');
+            group_pos = 5;
+        }
+        else if (!ignorechar(this_ch, ignorechars)) {
+            if (ascii85)
+                throw new Error(__mod6(new str("Non-Ascii85 digit found: %c"), 1, (__ss_int)this_ch));
+            throw new Error(__mod6(new str("bad Base85 character at position %d"), 1,
+                                   (__ss_int)(total_len - ascii_len)));
+        }
+
+        /* Wait until buffer is full. */
+        if (group_pos != 5)
+            continue;
+
+        /* Write current chunk. */
+        int chunk_len = ascii_len < 1 ? 3 + (int)ascii_len : 4;
+
+        /* A 1-char final group is an encoding violation. */
+        if (chunk_len == 0)
+            throw new Error(new str(ascii85 ? "Incomplete Ascii85 group" : "Incomplete Base85 group"));
+
+        for (int i = 0; i < chunk_len; i++)
+            out.push_back((char)((leftchar >> (24 - 8 * i)) & 0xff));
+
+        if (canonical) {
+            if (ascii85 && chunk_len == 4 && leftchar == 0 && !from_z)
+                throw new Error(new str("Non-canonical encoding, use 'z' for all-zero groups"));
+            /* Reject non-canonical partial groups: a partial group of N
+             * chars encodes N-1 bytes; two encodings are equivalent iff
+             * they yield the same quotient when divided by 85**(5-N). */
+            if (chunk_len < 4) {
+                int n_pad = 4 - chunk_len;
+                uint32_t canonical_top = (leftchar >> (n_pad * 8)) << (n_pad * 8);
+                if (canonical_top / pow85[n_pad] != leftchar / pow85[n_pad])
+                    throw new Error(new str("Non-zero padding bits"));
+            }
+        }
+
+        from_z = false;
+        group_pos = 0;
+        leftchar = 0;
+    }
+}
+
+/* Encode bin_data as radix-85 groups using table_b2a into out. */
+static void base85_encode_core(const unsigned char *bin_data, size_t bin_len,
+                               const unsigned char *table_b2a, bool pad,
+                               bool ascii85, bool foldspaces, __GC_BYTES &out) {
+    unsigned char group[5];
+
+    /* Encode all full-length chunks. */
+    for (; bin_len >= 4; bin_len -= 4, bin_data += 4) {
+        uint32_t leftchar = ((uint32_t)bin_data[0] << 24) | ((uint32_t)bin_data[1] << 16) |
+                            ((uint32_t)bin_data[2] << 8)  |  (uint32_t)bin_data[3];
+        if (ascii85 && leftchar == BASE85_A85_Z) {
+            out.push_back('z');
+        } else if (ascii85 && foldspaces && leftchar == BASE85_A85_Y) {
+            out.push_back('y');
+        } else {
+            for (int i = 4; i >= 0; i--) {
+                group[i] = table_b2a[leftchar % 85];
+                leftchar /= 85;
+            }
+            out.append((const char *)group, 5);
+        }
+    }
+
+    /* Encode partial-length final chunk. */
+    if (bin_len > 0) {
+        uint32_t leftchar = 0;
+        for (size_t i = 0; i < 4; i++) {
+            leftchar <<= 8;     /* Pad with zero when encoding. */
+            if (i < bin_len)
+                leftchar |= *bin_data++;
+        }
+        if (ascii85 && pad && leftchar == BASE85_A85_Z) {
+            out.push_back('z');
+        } else {
+            size_t group_len = pad ? 5 : bin_len + 1;
+            for (int i = 4; i >= 0; i--) {
+                group[i] = table_b2a[leftchar % 85];
+                leftchar /= 85;
+            }
+            out.append((const char *)group, group_len);
+        }
+    }
+}
+
+bytes *a2b_ascii85(bytes *data, __ss_bool foldspaces, __ss_bool adobe, bytes *ignorechars, __ss_bool canonical) {
+    const unsigned char *ascii_data = (const unsigned char *)data->unit.data();
+    size_t ascii_len = data->unit.size();
+
+    /* Consume Ascii85 prefix and suffix if present. */
+    if (adobe) {
+        if (ascii_len < 2
+            || ascii_data[ascii_len - 2] != BASE85_A85_AFFIX
+            || ascii_data[ascii_len - 1] != BASE85_A85_SUFFIX)
+            throw new Error(new str("Ascii85 encoded byte sequences must end with b'~>'"));
+        ascii_len -= 2;
+        if (ascii_len >= 2
+            && ascii_data[0] == BASE85_A85_PREFIX
+            && ascii_data[1] == BASE85_A85_AFFIX) {
+            ascii_data += 2;
+            ascii_len -= 2;
+        }
+    }
+
+    bytes *result = new bytes();
+    result->unit.reserve((ascii_len + 4) / 5 * 4);
+    base85_decode_core(ascii_data, ascii_len, table_a2b_base85_a85, ignorechars,
+                       (bool)canonical, true, (bool)foldspaces, result->unit);
+    return result;
+}
+
+bytes *b2a_ascii85(bytes *data, __ss_bool foldspaces, __ss_int wrapcol, __ss_bool pad, __ss_bool adobe) {
+    if (wrapcol < 0)
+        throw new ValueError(new str("wrapcol must be non-negative"));
+    if (adobe && wrapcol == 1)
+        wrapcol = 2;
+
+    bytes *result = new bytes();
+    result->unit.reserve((data->unit.size() + 3) / 4 * 5 + 4);
+
+    if (adobe) {
+        result->unit.push_back(BASE85_A85_PREFIX);
+        result->unit.push_back(BASE85_A85_AFFIX);
+    }
+    base85_encode_core((const unsigned char *)data->unit.data(), data->unit.size(),
+                       table_b2a_base85_a85, (bool)pad, true, (bool)foldspaces, result->unit);
+    if (adobe) {
+        result->unit.push_back(BASE85_A85_AFFIX);
+        result->unit.push_back(BASE85_A85_SUFFIX);
+    }
+
+    if (wrapcol > 0 && !result->unit.empty()) {
+        wraplines(result, (size_t)wrapcol);
+        __GC_BYTES &u = result->unit;
+        size_t n = u.size();
+        /* Never split the closing '~>' across a line break: move the
+         * newline in front of it instead (as CPython does). */
+        if (adobe && n >= 3 && u[n - 2] == '\n') {
+            u[n - 3] = '\n';
+            u[n - 2] = BASE85_A85_AFFIX;
+        }
+    }
+    return result;
+}
+
+bytes *a2b_base85(bytes *data, bytes *alphabet, bytes *ignorechars, __ss_bool canonical) {
+    unsigned char custom_table[256];
+    const unsigned char *table_a2b = table_a2b_base85;
+    if (alphabet) {
+        build_reverse_table(alphabet, 85, -1, custom_table);
+        table_a2b = custom_table;
+    }
+
+    bytes *result = new bytes();
+    result->unit.reserve((data->unit.size() + 4) / 5 * 4);
+    base85_decode_core((const unsigned char *)data->unit.data(), data->unit.size(),
+                       table_a2b, ignorechars, (bool)canonical, false, false, result->unit);
+    return result;
+}
+
+bytes *b2a_base85(bytes *data, bytes *alphabet, __ss_int wrapcol, __ss_bool pad) {
+    const unsigned char *table_b2a = table_b2a_base85;
+    if (alphabet) {
+        if (alphabet->unit.size() != 85)
+            throw new ValueError(new str("alphabet must have length 85"));
+        table_b2a = (const unsigned char *)alphabet->unit.data();
+    }
+    if (wrapcol < 0)
+        throw new ValueError(new str("wrapcol must be non-negative"));
+
+    bytes *result = new bytes();
+    result->unit.reserve((data->unit.size() + 3) / 4 * 5);
+    base85_encode_core((const unsigned char *)data->unit.data(), data->unit.size(),
+                       table_b2a, (bool)pad, false, false, result->unit);
+
+    if (wrapcol > 0 && !result->unit.empty()) {
+        /* Each line should encode a whole number of bytes. */
+        size_t w = wrapcol < 5 ? 5 : (size_t)wrapcol / 5 * 5;
+        wraplines(result, w);
+    }
+    return result;
+}
+
+/* ---------------------------------------------------------------------
+ * Base32
+ */
+
+bytes *a2b_base32(bytes *data, __ss_bool padded, bytes *alphabet, bytes *ignorechars, __ss_bool canonical) {
+    const unsigned char *ascii_data = (const unsigned char *)data->unit.data();
+    size_t ascii_len = data->unit.size();
+    unsigned char custom_table[256];
+    const unsigned char *table_a2b = table_a2b_base32;
+    if (alphabet) {
+        build_reverse_table(alphabet, 32, BASE32_PAD, custom_table);
+        table_a2b = custom_table;
+    }
+
+    bytes *result = new bytes();
+    __GC_BYTES &out = result->unit;
+    out.reserve((ascii_len + 7) / 8 * 5);
+
+    unsigned char leftchar = 0;
+    int octa_pos = 0;
+    int pads = 0;
+    for (; ascii_len; ascii_len--, ascii_data++) {
+        unsigned char this_ch = *ascii_data;
+
+        /* Check for pad sequences. They may only occur at certain positions. */
+        if (padded && this_ch == BASE32_PAD) {
+            pads++;
+            if ((octa_pos == 2 || octa_pos == 4 || octa_pos == 5 || octa_pos == 7)
+                && octa_pos + pads <= 8)
+                continue;
+            // RFC 4648, section 3.3: pad characters before the end of the
+            // data, and excess pad characters, MAY be ignored.
+            if (ignorechar(BASE32_PAD, ignorechars))
+                continue;
+            if (octa_pos == 1 || octa_pos == 3 || octa_pos == 6)
+                break; /* error reported below */
+            throw new Error(new str((octa_pos == 0 && out.empty())
+                                    ? "Leading padding not allowed"
+                                    : "Excess padding not allowed"));
+        }
+
+        unsigned char v = table_a2b[this_ch];
+        if (v >= 32) {
+            if (!ignorechar(this_ch, ignorechars))
+                throw new Error(new str((this_ch == BASE32_PAD)
+                                        ? "Padding not allowed"
+                                        : "Only base32 data is allowed"));
+            continue;
+        }
+
+        // Non-pad characters in the middle of the padding are not allowed.
+        if (pads && !ignorechar(BASE32_PAD, ignorechars))
+            throw new Error(new str((octa_pos + pads == 8)
+                                    ? "Excess data after padding"
+                                    : "Discontinuous padding not allowed"));
+
+        switch (octa_pos) {
+            case 0:
+                octa_pos = 1;
+                leftchar = v;
+                break;
+            case 1:
+                octa_pos = 2;
+                out.push_back((char)((leftchar << 3) | (v >> 2)));
+                leftchar = v & 0x03;
+                break;
+            case 2:
+                octa_pos = 3;
+                leftchar = (unsigned char)((leftchar << 5) | v);
+                break;
+            case 3:
+                octa_pos = 4;
+                out.push_back((char)((leftchar << 1) | (v >> 4)));
+                leftchar = v & 0x0f;
+                break;
+            case 4:
+                octa_pos = 5;
+                out.push_back((char)((leftchar << 4) | (v >> 1)));
+                leftchar = v & 0x01;
+                break;
+            case 5:
+                octa_pos = 6;
+                leftchar = (unsigned char)((leftchar << 5) | v);
+                break;
+            case 6:
+                octa_pos = 7;
+                out.push_back((char)((leftchar << 2) | (v >> 3)));
+                leftchar = v & 0x07;
+                break;
+            case 7:
+                octa_pos = 0;
+                out.push_back((char)((leftchar << 5) | v));
+                leftchar = 0;
+                break;
+        }
+    }
+
+    if (octa_pos == 1 || octa_pos == 3 || octa_pos == 6)
+        throw new Error(__mod6(new str("Invalid base32-encoded string: number of data characters (%d) "
+                                       "cannot be 1, 3, or 6 more than a multiple of 8"), 1,
+                               (__ss_int)(out.size() / 5 * 8 + (size_t)octa_pos)));
+
+    if (padded && octa_pos != 0 && octa_pos + pads < 8)
+        throw new Error(new str("Incorrect padding"));
+
+    /* RFC 4648 section 3.5: decoders MAY reject non-zero padding bits. */
+    if (canonical && leftchar != 0)
+        throw new Error(new str("Non-zero padding bits"));
+
+    return result;
+}
+
+bytes *b2a_base32(bytes *data, __ss_bool padded, bytes *alphabet, __ss_int wrapcol) {
+    const unsigned char *table_b2a = table_b2a_base32;
+    const unsigned char *bin_data = (const unsigned char *)data->unit.data();
+    size_t bin_len = data->unit.size();
+    if (alphabet) {
+        if (alphabet->unit.size() != 32)
+            throw new ValueError(new str("alphabet must have length 32"));
+        table_b2a = (const unsigned char *)alphabet->unit.data();
+    }
+    if (wrapcol < 0)
+        throw new ValueError(new str("wrapcol must be non-negative"));
+
+    bytes *result = new bytes();
+    __GC_BYTES &out = result->unit;
+    out.reserve((bin_len + 4) / 5 * 8);
+    unsigned int pads = (unsigned int)((5 - (bin_len % 5)) % 5 * 8 / 5);
+    if (!padded)
+        pads = 0;
+
+    /* Complete 5-byte groups. */
+    for (; bin_len >= 5; bin_len -= 5, bin_data += 5) {
+        uint64_t combined = ((uint64_t)bin_data[0] << 32) |
+                            ((uint64_t)bin_data[1] << 24) |
+                            ((uint64_t)bin_data[2] << 16) |
+                            ((uint64_t)bin_data[3] << 8) |
+                             (uint64_t)bin_data[4];
+        for (int shift = 35; shift >= 0; shift -= 5)
+            out.push_back((char)table_b2a[(combined >> shift) & 0x1f]);
+    }
+
+    /* Handle the remaining 0-4 bytes. */
+    if (bin_len == 1) {
+        uint32_t val = bin_data[0];
+        out.push_back((char)table_b2a[(val >> 3) & 0x1f]);
+        out.push_back((char)table_b2a[(val << 2) & 0x1f]);
+    }
+    else if (bin_len == 2) {
+        uint32_t val = ((uint32_t)bin_data[0] << 8) | bin_data[1];
+        out.push_back((char)table_b2a[(val >> 11) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 6) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 1) & 0x1f]);
+        out.push_back((char)table_b2a[(val << 4) & 0x1f]);
+    }
+    else if (bin_len == 3) {
+        uint32_t val = ((uint32_t)bin_data[0] << 16) | ((uint32_t)bin_data[1] << 8) | bin_data[2];
+        out.push_back((char)table_b2a[(val >> 19) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 14) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 9) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 4) & 0x1f]);
+        out.push_back((char)table_b2a[(val << 1) & 0x1f]);
+    }
+    else if (bin_len == 4) {
+        uint32_t val = ((uint32_t)bin_data[0] << 24) | ((uint32_t)bin_data[1] << 16)
+                     | ((uint32_t)bin_data[2] << 8) | bin_data[3];
+        out.push_back((char)table_b2a[(val >> 27) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 22) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 17) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 12) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 7) & 0x1f]);
+        out.push_back((char)table_b2a[(val >> 2) & 0x1f]);
+        out.push_back((char)table_b2a[(val << 3) & 0x1f]);
+    }
+    for (; pads; pads--)
+        out.push_back(BASE32_PAD);
+
+    if (wrapcol > 0 && !out.empty()) {
+        /* Each line should encode a whole number of bytes. */
+        size_t w = wrapcol < 8 ? 8 : (size_t)wrapcol / 8 * 8;
+        wraplines(result, w);
+    }
+    return result;
+}
+
 void __init() {
     __name__ = new str("binascii");
+
+    default_0 = default_2 = default_5 = new bytes();
+
+    BASE64_ALPHABET = new bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    URLSAFE_BASE64_ALPHABET = new bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+    BASE85_ALPHABET = new bytes((const char *)table_b2a_base85, (size_t)85);
+    ASCII85_ALPHABET = new bytes((const char *)table_b2a_base85_a85, (size_t)85);
+    Z85_ALPHABET = new bytes("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#");
+    BASE32_ALPHABET = new bytes((const char *)table_b2a_base32, (size_t)32);
+    BASE32HEX_ALPHABET = new bytes("0123456789ABCDEFGHIJKLMNOPQRSTUV");
 
     cl_Error = new class_("Error");
     cl_Incomplete = new class_("Incomplete");

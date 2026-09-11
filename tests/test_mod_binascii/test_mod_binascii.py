@@ -394,6 +394,231 @@ def test_crc_hqx_high_bit_bytes():
     assert binascii.crc_hqx(data2, 0xffff) == 24380
 
 
+def expect_error(f):
+    ok = False
+    try:
+        f()
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+def expect_value_error(f):
+    ok = False
+    try:
+        f()
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def a2b_base32_fails(s, padded=True):
+    ok = False
+    try:
+        binascii.a2b_base32(s, padded=padded)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+def a2b_base85_fails(s):
+    ok = False
+    try:
+        binascii.a2b_base85(s)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+def test_alphabets():
+    assert len(binascii.BASE64_ALPHABET) == 64
+    assert len(binascii.URLSAFE_BASE64_ALPHABET) == 64
+    assert len(binascii.BASE85_ALPHABET) == 85
+    assert len(binascii.ASCII85_ALPHABET) == 85
+    assert len(binascii.Z85_ALPHABET) == 85
+    assert len(binascii.BASE32_ALPHABET) == 32
+    assert len(binascii.BASE32HEX_ALPHABET) == 32
+    assert binascii.BASE64_ALPHABET.endswith(b'+/')
+    assert binascii.URLSAFE_BASE64_ALPHABET.endswith(b'-_')
+    assert binascii.ASCII85_ALPHABET == bytes(range(33, 118))
+    assert binascii.BASE32_ALPHABET == b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+    assert binascii.BASE32HEX_ALPHABET == b'0123456789ABCDEFGHIJKLMNOPQRSTUV'
+    assert binascii.Z85_ALPHABET == b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#'
+    for alphabet in (binascii.BASE85_ALPHABET, binascii.ASCII85_ALPHABET, binascii.Z85_ALPHABET):
+        assert len(set(alphabet)) == 85
+
+
+def test_b2a_base64_wrapcol():
+    data = b'x' * 60
+    assert binascii.b2a_base64(data, wrapcol=0) == b'eHh4' * 20 + b'\n'
+    assert binascii.b2a_base64(data, wrapcol=8, newline=False) == b'\n'.join([b'eHh4eHh4'] * 10)
+    assert binascii.b2a_base64(data, wrapcol=8) == b'\n'.join([b'eHh4eHh4'] * 10) + b'\n'
+    # wrapcol is rounded down to a multiple of 4 (minimum 4)
+    assert binascii.b2a_base64(b'\x00\x00\x00\x00\x00', wrapcol=1) == b'AAAA\nAAA=\n'
+    assert binascii.b2a_base64(b'\x00\x00\x00\x00\x00', wrapcol=7) == b'AAAA\nAAA=\n'
+    assert binascii.b2a_base64(b'', wrapcol=4) == b'\n'
+    assert binascii.b2a_base64(b'abc', wrapcol=4) == b'YWJj\n'
+
+
+def test_base32():
+    vectors = [
+        (b'', b''),
+        (b'f', b'MY======'),
+        (b'fo', b'MZXQ===='),
+        (b'foo', b'MZXW6==='),
+        (b'foob', b'MZXW6YQ='),
+        (b'fooba', b'MZXW6YTB'),
+        (b'foobar', b'MZXW6YTBOI======'),
+    ]
+    for raw, enc in vectors:
+        assert binascii.b2a_base32(raw) == enc
+        assert binascii.a2b_base32(enc) == raw
+        unpadded = enc.rstrip(b'=')
+        assert binascii.b2a_base32(raw, padded=False) == unpadded
+        assert binascii.a2b_base32(unpadded, padded=False) == raw
+        if unpadded != enc:
+            a2b_base32_fails(unpadded)
+            # with padded=False, '=' is a plain non-alphabet character
+            a2b_base32_fails(enc, padded=False)
+            assert binascii.a2b_base32(enc, padded=False, ignorechars=b'=') == raw
+
+    # base32hex via alphabet=
+    assert binascii.b2a_base32(b'foobar', alphabet=binascii.BASE32HEX_ALPHABET) == b'CPNMUOJ1E8======'
+    assert binascii.a2b_base32(b'CPNMUOJ1E8======', alphabet=binascii.BASE32HEX_ALPHABET) == b'foobar'
+    expect_value_error(lambda: binascii.b2a_base32(b'foo', alphabet=b'abc'))
+    expect_value_error(lambda: binascii.a2b_base32(b'foo', alphabet=b'abc'))
+
+    # wrapcol is rounded down to a multiple of 8 (minimum 8)
+    data = bytes(range(20))
+    enc = binascii.b2a_base32(data)
+    assert len(enc) == 32
+    assert binascii.b2a_base32(data, wrapcol=8) == b'\n'.join([enc[i:i + 8] for i in range(0, 32, 8)])
+    assert binascii.b2a_base32(data, wrapcol=1) == binascii.b2a_base32(data, wrapcol=8)
+    assert binascii.b2a_base32(data, wrapcol=15) == binascii.b2a_base32(data, wrapcol=8)
+    assert binascii.b2a_base32(data, wrapcol=16) == enc[:16] + b'\n' + enc[16:]
+    assert binascii.b2a_base32(data, wrapcol=32) == enc
+    assert binascii.b2a_base32(data, wrapcol=100) == enc
+    assert binascii.a2b_base32(binascii.b2a_base32(data, wrapcol=8), ignorechars=b'\n') == data
+    a2b_base32_fails(binascii.b2a_base32(data, wrapcol=8))
+
+    # canonical: non-zero padding bits are rejected
+    assert binascii.a2b_base32(b'MZ======') == b'f'
+    assert binascii.a2b_base32(b'MY======', canonical=True) == b'f'
+    expect_error(lambda: binascii.a2b_base32(b'MZ======', canonical=True))
+
+    # malformed input
+    for bad in (b'M', b'MZX', b'MZXW6Y', b'=', b'M=======', b'MZXW6YTB=', b'MY======MZXQ====', b'MZ=XW6==', b'my======'):
+        a2b_base32_fails(bad)
+    # excess padding can be ignored explicitly
+    assert binascii.a2b_base32(b'MY=======', ignorechars=b'=') == b'f'
+
+    input_bytes = bytes(range(256))
+    assert binascii.a2b_base32(binascii.b2a_base32(input_bytes)) == input_bytes
+    assert binascii.a2b_base32(binascii.b2a_base32(input_bytes, padded=False), padded=False) == input_bytes
+
+
+def test_base85():
+    assert binascii.b2a_base85(b'') == b''
+    assert binascii.b2a_base85(b'www.python.org') == b'cXxL#aCvlSZ*DGca%T'
+    assert binascii.a2b_base85(b'cXxL#aCvlSZ*DGca%T') == b'www.python.org'
+    assert binascii.b2a_base85(b'\x00\x00\x00\x00') == b'00000'
+    assert binascii.b2a_base85(b'\xff\xff\xff\xff') == b'|NsC0'
+    assert binascii.b2a_base85(b'f') == b'W&'
+    assert binascii.b2a_base85(b'f', pad=True) == b'W&i*H'
+    assert binascii.a2b_base85(b'W&i*H') == b'f\x00\x00\x00'
+
+    # z85 via alphabet= (ZeroMQ RFC 32 test vector)
+    assert binascii.b2a_base85(b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b', alphabet=binascii.Z85_ALPHABET) == b'HelloWorld'
+    assert binascii.a2b_base85(b'HelloWorld', alphabet=binascii.Z85_ALPHABET) == b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b'
+    expect_value_error(lambda: binascii.b2a_base85(b'foo', alphabet=b'abc'))
+    expect_value_error(lambda: binascii.a2b_base85(b'foo', alphabet=b'abc'))
+
+    # wrapcol is rounded down to a multiple of 5 (minimum 5)
+    data = bytes(range(16))
+    enc = binascii.b2a_base85(data)
+    assert len(enc) == 20
+    assert binascii.b2a_base85(data, wrapcol=5) == b'\n'.join([enc[i:i + 5] for i in range(0, 20, 5)])
+    assert binascii.b2a_base85(data, wrapcol=1) == binascii.b2a_base85(data, wrapcol=5)
+    assert binascii.b2a_base85(data, wrapcol=9) == binascii.b2a_base85(data, wrapcol=5)
+    assert binascii.b2a_base85(data, wrapcol=10) == enc[:10] + b'\n' + enc[10:]
+    assert binascii.b2a_base85(data, wrapcol=20) == enc
+    assert binascii.a2b_base85(binascii.b2a_base85(data, wrapcol=5), ignorechars=b'\n') == data
+    a2b_base85_fails(binascii.b2a_base85(data, wrapcol=5))
+
+    # canonical: partial final groups must use the encoder's padding digits
+    assert binascii.a2b_base85(b'W&', canonical=True) == b'f'
+    assert binascii.a2b_base85(b'W(') == b'f'
+    expect_error(lambda: binascii.a2b_base85(b'W(', canonical=True))
+
+    # malformed input
+    expect_error(lambda: binascii.a2b_base85(b'~~~~~'))      # > 2**32-1
+    expect_error(lambda: binascii.a2b_base85(b'a'))          # 1-char final group
+    expect_error(lambda: binascii.a2b_base85(b'abcdef'))     # 1-char final group
+    expect_error(lambda: binascii.a2b_base85(b'\x80'))
+    expect_error(lambda: binascii.a2b_base85(b'abc de'))
+    assert binascii.a2b_base85(b'abc de', ignorechars=b' ') == binascii.a2b_base85(b'abcde')
+
+    input_bytes = bytes(range(256))
+    for pad in (False, True):
+        assert binascii.a2b_base85(binascii.b2a_base85(input_bytes, pad=pad)) == input_bytes
+        assert binascii.a2b_base85(binascii.b2a_base85(input_bytes, pad=pad, alphabet=binascii.Z85_ALPHABET), alphabet=binascii.Z85_ALPHABET) == input_bytes
+
+
+def test_ascii85():
+    assert binascii.b2a_ascii85(b'') == b''
+    assert binascii.b2a_ascii85(b'\x00') == b'!!'
+    assert binascii.b2a_ascii85(b'\x00\x00\x00\x00') == b'z'
+    assert binascii.b2a_ascii85(b'www.python.org') == b'GB\\6`E-ZP=Df.1GEb>'
+    assert binascii.a2b_ascii85(b'GB\\6`E-ZP=Df.1GEb>') == b'www.python.org'
+    assert binascii.b2a_ascii85(b'f') == b'Ac'
+    assert binascii.b2a_ascii85(b'f', pad=True) == b'AcMf2'
+    assert binascii.b2a_ascii85(b'\x00', pad=True) == b'z'
+
+    # foldspaces
+    assert binascii.b2a_ascii85(b'    ') == b'+<VdL'
+    assert binascii.b2a_ascii85(b'    ', foldspaces=True) == b'y'
+    assert binascii.a2b_ascii85(b'y', foldspaces=True) == b'    '
+    expect_error(lambda: binascii.a2b_ascii85(b'y'))
+
+    # adobe framing: leading '<~' optional, trailing '~>' required
+    assert binascii.b2a_ascii85(b'www.python.org', adobe=True) == b'<~GB\\6`E-ZP=Df.1GEb>~>'
+    assert binascii.a2b_ascii85(b'<~GB\\6`E-ZP=Df.1GEb>~>', adobe=True) == b'www.python.org'
+    assert binascii.a2b_ascii85(b'GB\\6`E-ZP=Df.1GEb>~>', adobe=True) == b'www.python.org'
+    assert binascii.a2b_ascii85(b'<~~>', adobe=True) == b''
+    expect_error(lambda: binascii.a2b_ascii85(b'GB\\6`E-ZP=Df.1GEb>', adobe=True))
+    expect_error(lambda: binascii.a2b_ascii85(b'<~', adobe=True))
+
+    # wrapcol (exact, not rounded); '~>' is never split across lines
+    assert binascii.b2a_ascii85(b'www.python.org', wrapcol=5) == b'GB\\6`\nE-ZP=\nDf.1G\nEb>'
+    assert binascii.b2a_ascii85(b'hello world', adobe=True, wrapcol=5) == b'<~BOu\n!rD]j\n7BEbo\n7~>'
+    assert binascii.b2a_ascii85(b'foob', adobe=True, wrapcol=7) == b'<~AoDTs\n~>'
+
+    # whitespace is only ignored when asked for
+    expect_error(lambda: binascii.a2b_ascii85(b'GB\\6`E -ZP=Df.1GEb>'))
+    assert binascii.a2b_ascii85(b'GB\\6`E \n-ZP=Df.1GEb>', ignorechars=b' \n') == b'www.python.org'
+
+    # canonical: 'z' must be used for all-zero groups, partial groups must be canonical
+    assert binascii.a2b_ascii85(b'!!!!!') == b'\x00\x00\x00\x00'
+    assert binascii.a2b_ascii85(b'z', canonical=True) == b'\x00\x00\x00\x00'
+    expect_error(lambda: binascii.a2b_ascii85(b'!!!!!', canonical=True))
+    assert binascii.a2b_ascii85(b'Ac', canonical=True) == b'f'
+    assert binascii.a2b_ascii85(b'Ad') == b'f'
+    expect_error(lambda: binascii.a2b_ascii85(b'Ad', canonical=True))
+
+    # malformed input
+    expect_error(lambda: binascii.a2b_ascii85(b'v'))         # outside '!'..'u'
+    expect_error(lambda: binascii.a2b_ascii85(b'!z'))        # 'z' inside a group
+    expect_error(lambda: binascii.a2b_ascii85(b'uuuuu'))     # > 2**32-1
+    expect_error(lambda: binascii.a2b_ascii85(b'!'))         # 1-char final group
+
+    input_bytes = bytes(range(256))
+    for foldspaces in (False, True):
+        for adobe in (False, True):
+            for pad in (False, True):
+                e = binascii.b2a_ascii85(input_bytes, foldspaces=foldspaces, adobe=adobe, pad=pad, wrapcol=40)
+                assert binascii.a2b_ascii85(e, foldspaces=foldspaces, adobe=adobe, ignorechars=b'\n') == input_bytes
+
+
 def test_all():
     test_qp()
     test_b2a_qp_leading_dot_at_end()
@@ -411,6 +636,11 @@ def test_all():
     test_hex_sep_validated_on_empty_data()
     test_crc()
     test_crc_hqx_high_bit_bytes()
+    test_alphabets()
+    test_b2a_base64_wrapcol()
+    test_base32()
+    test_base85()
+    test_ascii85()
 
 
 if __name__ == '__main__':

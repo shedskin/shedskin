@@ -1,5 +1,6 @@
 import base64
 import binascii
+import io
 
 
 def test_basic():
@@ -164,6 +165,220 @@ def test_asan_regression():
         assert base64.b16decode(h) == data
 
 
+# note: older CPython versions raise ValueError from the pure-Python
+# a85decode/b85decode; shedskin (like CPython 3.15) raises binascii.Error
+def expect_error(f):
+    ok = False
+    try:
+        f()
+    except (binascii.Error, ValueError):
+        ok = True
+    assert ok
+
+
+def b32decode_fails(s):
+    ok = False
+    try:
+        base64.b32decode(s)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+# RFC 4648 section 10 test vectors
+def test_b32():
+    vectors = [
+        (b'', b''),
+        (b'f', b'MY======'),
+        (b'fo', b'MZXQ===='),
+        (b'foo', b'MZXW6==='),
+        (b'foob', b'MZXW6YQ='),
+        (b'fooba', b'MZXW6YTB'),
+        (b'foobar', b'MZXW6YTBOI======'),
+    ]
+    for raw, enc in vectors:
+        assert base64.b32encode(raw) == enc
+        assert base64.b32decode(enc) == raw
+        # lowercase input is only accepted with casefold=True
+        assert base64.b32decode(enc.lower(), casefold=True) == raw
+        if raw:
+            b32decode_fails(enc.lower())
+
+    # RFC 4648 section 2.4 zero/one mapping
+    assert base64.b32decode(b'MZXW6YTB0I======', map01=b'I') == b'foobar'
+    assert base64.b32decode(b'MZXW6YTB01======', map01=b'I') == b'foobar'
+    assert base64.b32decode(b'ME======', map01=b'L') == b'a'
+    assert base64.b32decode(b'ME======', map01=b'I') == b'a'
+    assert base64.b32decode(b'M1======', map01=b'L') == base64.b32decode(b'ML======')
+
+    input_bytes = bytes(range(256))
+    e = base64.b32encode(input_bytes)
+    assert len(e) % 8 == 0
+    assert base64.b32decode(e) == input_bytes
+
+    # bad padding / non-alphabet characters
+    for bad in (b'MY', b'MY=', b'M=======', b'MZXW6YTB=', b'my======', b'MZXW6YQ=MY======'):
+        b32decode_fails(bad)
+
+
+def test_b32hex():
+    vectors = [
+        (b'', b''),
+        (b'f', b'CO======'),
+        (b'fo', b'CPNG===='),
+        (b'foo', b'CPNMU==='),
+        (b'foob', b'CPNMUOG='),
+        (b'fooba', b'CPNMUOJ1'),
+        (b'foobar', b'CPNMUOJ1E8======'),
+    ]
+    for raw, enc in vectors:
+        assert base64.b32hexencode(raw) == enc
+        assert base64.b32hexdecode(enc) == raw
+        assert base64.b32hexdecode(enc.lower(), casefold=True) == raw
+
+    input_bytes = bytes(range(256))
+    e = base64.b32hexencode(input_bytes)
+    assert base64.b32hexdecode(e) == input_bytes
+    # base32hex output is sortable like the input
+    assert base64.b32hexencode(b'\x00') < base64.b32hexencode(b'\x01') < base64.b32hexencode(b'\xff')
+
+    # standard base32 alphabet chars 'W'..'Z' are invalid in base32hex
+    expect_error(lambda: base64.b32hexdecode(b'MZXW6==='))
+
+
+def test_a85():
+    assert base64.a85encode(b'') == b''
+    assert base64.a85encode(b'\x00') == b'!!'
+    assert base64.a85encode(b'\x00\x00\x00\x00') == b'z'
+    assert base64.a85encode(b'www.python.org') == b'GB\\6`E-ZP=Df.1GEb>'
+    assert base64.a85encode(b'f') == b'Ac'
+    assert base64.a85encode(b'fo') == b'Ao@'
+    assert base64.a85encode(b'foo') == b'AoDS'
+    assert base64.a85encode(b'foob') == b'AoDTs'
+    assert base64.a85encode(b'foobar') == b'AoDTs@<)'
+
+    # foldspaces: four spaces become 'y'
+    assert base64.a85encode(b'    ') == b'+<VdL'
+    assert base64.a85encode(b'    ', foldspaces=True) == b'y'
+    assert base64.a85decode(b'y', foldspaces=True) == b'    '
+    expect_error(lambda: base64.a85decode(b'y'))
+
+    # pad: final group is fully retained
+    assert base64.a85encode(b'f', pad=True) == b'AcMf2'
+    assert base64.a85encode(b'\x00', pad=True) == b'z'
+    assert base64.a85decode(b'AcMf2') == b'f\x00\x00\x00'
+
+    # adobe framing
+    assert base64.a85encode(b'www.python.org', adobe=True) == b'<~GB\\6`E-ZP=Df.1GEb>~>'
+    assert base64.a85decode(b'<~GB\\6`E-ZP=Df.1GEb>~>', adobe=True) == b'www.python.org'
+    assert base64.a85decode(b'GB\\6`E-ZP=Df.1GEb>~>', adobe=True) == b'www.python.org'
+    expect_error(lambda: base64.a85decode(b'GB\\6`E-ZP=Df.1GEb>', adobe=True))
+
+    # wrapcol
+    assert base64.a85encode(b'www.python.org', wrapcol=5) == b'GB\\6`\nE-ZP=\nDf.1G\nEb>'
+    assert base64.a85encode(b'hello world', adobe=True, wrapcol=5) == b'<~BOu\n!rD]j\n7BEbo\n7~>'
+    # the closing '~>' is never split across lines
+    assert base64.a85encode(b'foob', adobe=True, wrapcol=7) == b'<~AoDTs\n~>'
+
+    # whitespace in the input is ignored by default
+    assert base64.a85decode(b'GB\\6`E-ZP=Df.1GEb>') == b'www.python.org'
+    assert base64.a85decode(b'GB\\6`E \n\t-ZP=Df.1GE\rb>') == b'www.python.org'
+    assert base64.a85decode(b'GB\\6`E-ZP=Df.1GEb>', ignorechars=b'') == b'www.python.org'
+    expect_error(lambda: base64.a85decode(b'GB\\6`E -ZP=Df.1GEb>', ignorechars=b''))
+
+    # invalid input
+    expect_error(lambda: base64.a85decode(b'v'))         # outside '!'..'u'
+    expect_error(lambda: base64.a85decode(b'!z'))        # 'z' inside a group
+    expect_error(lambda: base64.a85decode(b'uuuuu'))     # > 2**32-1
+
+    input_bytes = bytes(range(256))
+    for foldspaces in (False, True):
+        for adobe in (False, True):
+            for pad in (False, True):
+                e = base64.a85encode(input_bytes, foldspaces=foldspaces, adobe=adobe, pad=pad, wrapcol=40)
+                assert base64.a85decode(e, foldspaces=foldspaces, adobe=adobe) == input_bytes
+
+
+def test_b85():
+    assert base64.b85encode(b'') == b''
+    assert base64.b85encode(b'\x00') == b'00'
+    assert base64.b85encode(b'\x00\x00\x00\x00') == b'00000'
+    assert base64.b85encode(b'www.python.org') == b'cXxL#aCvlSZ*DGca%T'
+    assert base64.b85encode(b'f') == b'W&'
+    assert base64.b85encode(b'foobar') == b'W^Zp|VR8'
+    assert base64.b85encode(b'f', pad=True) == b'W&i*H'
+    assert base64.b85decode(b'W&i*H') == b'f\x00\x00\x00'
+    assert base64.b85decode(b'cXxL#aCvlSZ*DGca%T') == b'www.python.org'
+
+    expect_error(lambda: base64.b85decode(b'~~~~~'))    # > 2**32-1
+    expect_error(lambda: base64.b85decode(b'\x80'))
+    expect_error(lambda: base64.b85decode(b'abc de'))
+
+    input_bytes = bytes(range(256))
+    for pad in (False, True):
+        e = base64.b85encode(input_bytes, pad=pad)
+        assert base64.b85decode(e) == input_bytes
+
+
+def test_z85():
+    # ZeroMQ RFC 32 test vector
+    assert base64.z85encode(b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b') == b'HelloWorld'
+    assert base64.z85decode(b'HelloWorld') == b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b'
+    assert base64.z85encode(b'') == b''
+    assert base64.z85encode(b'www.python.org') == b'CxXl-AcVLsz/dgCA+t'
+    assert base64.z85decode(b'CxXl-AcVlsz*dgCA%t') == b'www.pyk\xc6ow\x8d\\s\x06'
+    assert base64.z85encode(b'f', pad=True) == b'w=I/h'
+
+    input_bytes = bytes(range(256))
+    for pad in (False, True):
+        e = base64.z85encode(input_bytes, pad=pad)
+        assert base64.z85decode(e) == input_bytes
+
+    expect_error(lambda: base64.z85decode(b'HelloWorl~'))   # '~' not in Z85 alphabet
+
+
+def test_encodebytes():
+    assert base64.encodebytes(b'') == b''
+    assert base64.encodebytes(b'www.python.org') == b'd3d3LnB5dGhvbi5vcmc=\n'
+    assert base64.encodebytes(b'a') == b'YQ==\n'
+    assert base64.encodebytes(b'ab') == b'YWI=\n'
+    assert base64.encodebytes(b'abc') == b'YWJj\n'
+    assert base64.encodebytes(b'x' * 58) == b'eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4\neA==\n'
+
+    input_bytes = bytes(range(256))
+    e = base64.encodebytes(input_bytes)
+    lines = e.split(b'\n')
+    assert e.endswith(b'\n')
+    for line in lines[:-2]:
+        assert len(line) == 76
+    assert base64.decodebytes(e) == input_bytes
+    assert base64.decodebytes(b'd3d3LnB5dGhvbi5vcmc=\n') == b'www.python.org'
+    assert base64.decodebytes(b'') == b''
+
+
+def test_stream_encode_decode():
+    data = bytes(range(256)) * 3
+    inp = io.BytesIO(data)
+    out = io.BytesIO()
+    base64.encode(inp, out)
+    encoded = out.getvalue()
+    assert encoded == base64.encodebytes(data)
+    assert encoded.endswith(b'\n')
+
+    inp = io.BytesIO(encoded)
+    out = io.BytesIO()
+    base64.decode(inp, out)
+    assert out.getvalue() == data
+
+    # empty input yields empty output
+    out = io.BytesIO()
+    base64.encode(io.BytesIO(b''), out)
+    assert out.getvalue() == b''
+    out = io.BytesIO()
+    base64.decode(io.BytesIO(b''), out)
+    assert out.getvalue() == b''
+
+
 def test_all():
     test_basic()
     test_altchars()
@@ -174,6 +389,13 @@ def test_all():
     test_decode_bad_padding()
     test_b16()
     test_asan_regression()
+    test_b32()
+    test_b32hex()
+    test_a85()
+    test_b85()
+    test_z85()
+    test_encodebytes()
+    test_stream_encode_decode()
 
 
 if __name__ == '__main__':
