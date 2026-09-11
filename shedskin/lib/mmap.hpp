@@ -45,7 +45,33 @@ MAP_ANON,      /* Syn. MAP_ANONYMOUS.   */
 MAP_DENYWRITE, /* ETXTBSY on write access.   */
 MAP_EXECUTABLE,/* Mark it as an executable.  */
 MAP_POPULATE,  /* Populate page tables.      */
-MAP_STACK;     /* Reserve for a process stack.*/
+MAP_STACK,     /* Reserve for a process stack.*/
+
+/* madvise() advice (value is -1 on platforms that lack them). */
+MADV_NORMAL,
+MADV_RANDOM,
+MADV_SEQUENTIAL,
+MADV_WILLNEED,
+MADV_DONTNEED,
+MADV_FREE,
+MADV_REMOVE,
+MADV_DONTFORK,
+MADV_DOFORK,
+MADV_MERGEABLE,
+MADV_UNMERGEABLE,
+MADV_HUGEPAGE,
+MADV_NOHUGEPAGE,
+MADV_DONTDUMP,
+MADV_DODUMP,
+MADV_HWPOISON,
+MADV_SOFT_OFFLINE,
+MADV_NOSYNC,
+MADV_AUTOSYNC,
+MADV_NOCORE,
+MADV_CORE,
+MADV_PROTECT,
+MADV_FREE_REUSABLE,
+MADV_FREE_REUSE;
 
 extern str *__name__;
 extern class_ *cl_mmap;
@@ -108,6 +134,7 @@ class mmap: public pyiter<bytes *>
     void     __enter__();
     void     __exit__();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
+    void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
     __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
     bytes *    read(__ss_int size=all);
@@ -116,6 +143,8 @@ class mmap: public pyiter<bytes *>
     void *   resize(__ss_int newsize);
     __ss_int rfind(bytes *string, __ss_int start=-1, __ss_int end=-1);
     void *   seek(__ss_int offset, __ss_int whence=0);
+    __ss_bool seekable();
+    void *   set_name(str *name);
     __ss_int size();
     __ss_int tell();
     void *   write(bytes *string);
