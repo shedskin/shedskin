@@ -15,6 +15,40 @@ MAP_EXECUTABLE = 4096
 MAP_POPULATE = 32768
 MAP_STACK = 131072
 
+# madvise() advice constants. Only MADV_NORMAL/RANDOM/SEQUENTIAL/WILLNEED/
+# DONTNEED are portable; the others are Linux-, BSD- or macOS-only. Unlike
+# CPython (which simply omits the missing ones), they are always defined
+# here and are -1 on platforms that lack them, so that passing one raises
+# OSError instead of failing to compile.
+MADV_NORMAL = 0
+MADV_RANDOM = 1
+MADV_SEQUENTIAL = 2
+MADV_WILLNEED = 3
+MADV_DONTNEED = 4
+MADV_FREE = 8
+MADV_REMOVE = 9
+MADV_DONTFORK = 10
+MADV_DOFORK = 11
+MADV_MERGEABLE = 12
+MADV_UNMERGEABLE = 13
+MADV_HUGEPAGE = 14
+MADV_NOHUGEPAGE = 15
+MADV_DONTDUMP = 16
+MADV_DODUMP = 17
+MADV_HWPOISON = 100
+MADV_SOFT_OFFLINE = 101
+
+# BSD-only
+MADV_NOSYNC = -1
+MADV_AUTOSYNC = -1
+MADV_NOCORE = -1
+MADV_CORE = -1
+MADV_PROTECT = -1
+
+# macOS-only
+MADV_FREE_REUSABLE = -1
+MADV_FREE_REUSE = -1
+
 class mmap(pyiter):
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
         self.closed = False
@@ -33,6 +67,9 @@ class mmap(pyiter):
 
     def flush(self, offset=0, size=-1):
         return 0
+
+    def madvise(self, option, start=0, length=-1):
+        pass
 
     def find(self, string, start=-1, end=-1):
         return -1
@@ -56,6 +93,12 @@ class mmap(pyiter):
         return -1
 
     def seek(self, offset, whence=0):
+        pass
+
+    def seekable(self):
+        return True
+
+    def set_name(self, name):
         pass
 
     def size(self):

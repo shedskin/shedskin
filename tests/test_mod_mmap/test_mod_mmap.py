@@ -361,6 +361,128 @@ def test_resize_shrinks_backing_file():
         pass
 
 
+def test_madvise():
+    # madvise() is available wherever the madvise() system call is (so not
+    # on Windows). MADV_NORMAL/WILLNEED/DONTNEED/RANDOM/SEQUENTIAL are the
+    # portable subset; the platform-specific ones are -1 here when missing,
+    # which madvise() rejects with OSError.
+    PAGESIZE = mmap.PAGESIZE
+    m = mmap.mmap(-1, 4 * PAGESIZE)
+
+    m.madvise(mmap.MADV_NORMAL)
+    m.madvise(mmap.MADV_WILLNEED)
+    m.madvise(mmap.MADV_RANDOM, 0, PAGESIZE)
+    m.madvise(mmap.MADV_SEQUENTIAL, PAGESIZE, PAGESIZE)
+    # a length running past the end of the mapping is clamped, not an error
+    m.madvise(mmap.MADV_NORMAL, 2 * PAGESIZE, 99 * PAGESIZE)
+
+    error = False
+    try:
+        m.madvise(mmap.MADV_NORMAL, -1)
+    except ValueError as e:
+        error = True
+        assert str(e) == "madvise start out of bounds"
+    assert error, "negative start should raise ValueError"
+
+    error = False
+    try:
+        m.madvise(mmap.MADV_NORMAL, 4 * PAGESIZE)
+    except ValueError:
+        error = True
+    assert error, "start at or past the end should raise ValueError"
+
+    error = False
+    try:
+        m.madvise(mmap.MADV_NORMAL, 0, -2)
+    except ValueError as e:
+        error = True
+        assert str(e) == "madvise length invalid"
+    assert error, "negative length should raise ValueError"
+
+    m.close()
+
+    error = False
+    try:
+        m.madvise(mmap.MADV_NORMAL)
+    except ValueError:
+        error = True
+    assert error, "madvise() on a closed mmap should raise ValueError"
+
+
+def test_seekable():
+    m = mmap.mmap(-1, mmap.PAGESIZE)
+    assert m.seekable() is True
+    m.seek(10)
+    assert m.seekable() is True
+    m.close()
+
+
+def test_set_name():
+    # set_name() is Linux-only (kernel >= 5.17 built with
+    # CONFIG_ANON_VMA_NAME); elsewhere it raises NotImplementedError, and on
+    # a kernel without the feature the underlying prctl() fails with OSError.
+    # Only the error cases are checked unconditionally, since those do not
+    # depend on the kernel.
+    m = mmap.mmap(-1, mmap.PAGESIZE)
+
+    if sys.platform == "linux":
+        try:
+            m.set_name("test-anon")
+        except OSError:
+            pass  # kernel without CONFIG_ANON_VMA_NAME
+
+        error = False
+        try:
+            m.set_name("x" * 67)
+        except ValueError as e:
+            error = True
+            assert str(e) == "name is too long"
+        except OSError:
+            error = True
+        assert error, "overlong name should raise ValueError"
+    else:
+        error = False
+        try:
+            m.set_name("test-anon")
+        except NotImplementedError:
+            error = True
+        assert error, "set_name() should raise NotImplementedError here"
+
+    m.close()
+
+    error = False
+    try:
+        m.set_name("after-close")
+    except ValueError:
+        error = True
+    except NotImplementedError:
+        error = True
+    assert error, "set_name() on a closed mmap should raise"
+
+
+def test_set_name_file_backed():
+    # only anonymous mappings can be annotated
+    if sys.platform != "linux":
+        return
+
+    setUp()
+    f = open(TESTFILE_OUT, "w+b")
+    f.write(b"x" * mmap.PAGESIZE)
+    f.flush()
+    m = mmap.mmap(f.fileno(), mmap.PAGESIZE)
+    f.close()
+
+    error = False
+    try:
+        m.set_name("file-backed")
+    except ValueError as e:
+        error = True
+        assert str(e) == "Cannot set annotation on non-anonymous mappings"
+    assert error, "file-backed mapping should not be nameable"
+
+    tearDown(m)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -373,6 +495,10 @@ def test_all():
         test_closed()
         test_resize_grows_backing_file()
         test_resize_shrinks_backing_file()
+        test_madvise()
+        test_seekable()
+        test_set_name()
+        test_set_name_file_backed()
 
 if __name__ == '__main__':
     test_all()
