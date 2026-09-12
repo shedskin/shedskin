@@ -12,6 +12,7 @@ import argparse
 import ast
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -57,6 +58,32 @@ def analyzed_global_sites():
     infer.analyze(gx, module_name)
 
     return gx
+
+
+class SweptSite(NamedTuple):
+    """What sweeping one site on its own found."""
+
+    contour: int
+    inflow: dict
+    reached: bool
+    core: "infer2.FrozenCore"
+    result: "infer2.SweepResult"
+
+
+def sweep_site(gx, site, core=None):
+    """Sweep a single allocation site over a core of its own.
+
+    A one-site sweep is what the old probe_allocation_site did; sweep_once
+    does it for any number of sites at once, so the tests that assert on a
+    single site drive it through the same entry point the analysis uses.
+    """
+    if core is None:
+        core = infer2.FrozenCore()
+    baseline = {cl: cl.dcpa for cl in gx.allclasses}
+    result = infer2.sweep_once(gx, [site], core, baseline)
+    contour = core.bindings[site.node][1]
+    inflow = result.probe_inflow.get(site, {})
+    return SweptSite(contour, inflow, site in result.probe_inflow, core, result)
 
 
 class TestAllocationSiteKind:
@@ -310,7 +337,7 @@ class TestModuleLevelVersusMold:
         assert all(s.module_level for s in sites)
 
     def test_molds_are_refused(self, analyzed_alloc_sites):
-        """Probing a mold would share one contour across every template."""
+        """Sweeping a mold would share one contour across every template."""
         gx = analyzed_alloc_sites
         mold = next(
             s
@@ -318,10 +345,10 @@ class TestModuleLevelVersusMold:
             if not s.module_level and s.kind != infer2.ALLOC_SCALAR
         )
         with pytest.raises(AssertionError):
-            infer2.probe_allocation_site(gx, mold)
+            sweep_site(gx, mold)
 
 
-class TestProbeAllocationSite:
+class TestSweepOneSite:
     """Stage 2: give a container site its own contour and see what arrives."""
 
     def _sites(self, gx):
@@ -332,7 +359,7 @@ class TestProbeAllocationSite:
         }
 
     def test_instances_are_refused(self, analyzed_global_sites):
-        """User classes are never split, so probing one says nothing."""
+        """User classes are never split, so sweeping one says nothing."""
         gx = analyzed_global_sites
         instance = next(
             s
@@ -340,34 +367,35 @@ class TestProbeAllocationSite:
             if s.kind == infer2.ALLOC_INSTANCE and s.module_level
         )
         with pytest.raises(AssertionError):
-            infer2.probe_allocation_site(gx, instance)
+            sweep_site(gx, instance)
 
-    def test_probe_uses_a_fresh_contour(self, analyzed_global_sites):
+    def test_sweep_uses_a_fresh_contour(self, analyzed_global_sites):
         gx = analyzed_global_sites
         site = self._sites(gx)["[1, 2, 3]"]
         before = site.cl.dcpa
-        assert infer2.probe_allocation_site(gx, site).contour == before
+        assert sweep_site(gx, site).contour == before
 
-    def test_probe_restores_the_network(self, analyzed_global_sites):
-        """Probes must be independent, so nothing may survive one."""
+    def test_sweep_restores_the_network(self, analyzed_global_sites):
+        """Sweeps must be independent, so nothing may survive one."""
         gx = analyzed_global_sites
         site = self._sites(gx)["[1, 2, 3]"]
         before_dcpa = site.cl.dcpa
         before_types = sum(len(t) for t in gx.types.values())
         before_cnodes = len(gx.cnode)
 
-        infer2.probe_allocation_site(gx, site)
+        sweep_site(gx, site)
 
         assert site.cl.dcpa == before_dcpa
         assert sum(len(t) for t in gx.types.values()) == before_types
         assert len(gx.cnode) == before_cnodes
 
-    def test_open_contour_is_cleared(self, analyzed_global_sites):
-        """The freeze must not outlive the probe that set it."""
+    def test_open_contours_are_cleared(self, analyzed_global_sites):
+        """The freeze must not outlive the sweep that set it."""
         gx = analyzed_global_sites
         assert gx.infer_v2_open_contours is None
-        infer2.probe_allocation_site(gx, self._sites(gx)["[1, 2, 3]"])
+        sweep_site(gx, self._sites(gx)["[1, 2, 3]"])
         assert gx.infer_v2_open_contours is None
+        assert gx.infer_v2_core is None
 
     def test_frozen_contours_gain_nothing(self, analyzed_global_sites):
         """Only the contour under test may receive inflow."""
@@ -380,7 +408,7 @@ class TestProbeAllocationSite:
                 gx, other.cl, other.dcpa
             ).items()
         }
-        infer2.probe_allocation_site(gx, sites["[1, 2, 3]"])
+        sweep_site(gx, sites["[1, 2, 3]"])
         after = {
             name: node.types()
             for name, node in infer2.contour_variables(
@@ -389,49 +417,44 @@ class TestProbeAllocationSite:
         }
         assert after == before
 
-    def test_repeated_probes_agree(self, analyzed_global_sites):
-        """Same site, same answer: the probe is observational only."""
+    def test_repeated_sweeps_agree(self, analyzed_global_sites):
+        """Same site, same answer: a sweep is observational only."""
         gx = analyzed_global_sites
         site = self._sites(gx)["[1, 2, 3]"]
-        first = infer2.probe_allocation_site(gx, site).inflow
-        second = infer2.probe_allocation_site(gx, site).inflow
+        first = sweep_site(gx, site).inflow
+        second = sweep_site(gx, site).inflow
         assert first == second
 
     def test_list_inflow(self, analyzed_global_sites):
         gx = analyzed_global_sites
-        inflow = infer2.probe_allocation_site(
-            gx, self._sites(gx)["[1, 2, 3]"]
-        ).inflow
+        inflow = sweep_site(gx, self._sites(gx)["[1, 2, 3]"]).inflow
         assert {cl.ident for cl, _d in inflow["unit"]} == {"int_"}
 
     def test_dict_inflow(self, analyzed_global_sites):
         gx = analyzed_global_sites
-        inflow = infer2.probe_allocation_site(
-            gx, self._sites(gx)["{'a': 1}"]
-        ).inflow
+        inflow = sweep_site(gx, self._sites(gx)["{'a': 1}"]).inflow
         assert {cl.ident for cl, _d in inflow["unit"]} == {"str_"}
         assert {cl.ident for cl, _d in inflow["value"]} == {"int_"}
 
-    def test_probe_converges_quickly(self, analyzed_global_sites):
-        """A probe that needs the whole safety bound is not converging."""
+    def test_sweep_converges_quickly(self, analyzed_global_sites):
+        """A sweep that needs the whole safety bound is not converging."""
         gx = analyzed_global_sites
         for site in self._sites(gx).values():
-            result = infer2.probe_allocation_site(gx, site)
-            assert result.rounds < infer2.V2_PROBE_ROUNDS
+            assert sweep_site(gx, site).result.rounds < infer2.V2_PROBE_ROUNDS
 
 
-class TestProbeReachability:
+class TestSweepReachability:
     """Module-level container sites always allocate their contour."""
 
     def test_module_level_containers_are_reached(self, analyzed_global_sites):
         gx = analyzed_global_sites
-        probed = 0
+        swept = 0
         for site in infer2.collect_allocation_sites(gx, builtins=False):
             if site.kind != infer2.ALLOC_CONTAINER or not site.module_level:
                 continue
-            assert infer2.probe_allocation_site(gx, site).reached
-            probed += 1
-        assert probed >= 2
+            assert sweep_site(gx, site).reached
+            swept += 1
+        assert swept >= 2
 
 
 class TestFrozenCore:
@@ -447,11 +470,11 @@ class TestFrozenCore:
     def test_open_contour_is_cleared_afterwards(self, analyzed_global_sites):
         gx = analyzed_global_sites
         site = self._container_sites(gx)["[1, 2, 3]"]
-        infer2.probe_allocation_site(gx, site)
+        sweep_site(gx, site)
         assert gx.infer_v2_open_contours is None
 
     def test_other_contours_are_unchanged(self, analyzed_global_sites):
-        """Probing one site must not add anything to any other contour."""
+        """Sweeping one site must not add anything to any other contour."""
         gx = analyzed_global_sites
 
         def snapshot():
@@ -464,15 +487,13 @@ class TestFrozenCore:
 
         before = snapshot()
         for site in self._container_sites(gx).values():
-            infer2.probe_allocation_site(gx, site)
+            sweep_site(gx, site)
         assert snapshot() == before
 
-    def test_probe_still_sees_direct_inflow(self, analyzed_global_sites):
+    def test_sweep_still_sees_direct_inflow(self, analyzed_global_sites):
         """Freezing must not block what flows straight into the open contour."""
         gx = analyzed_global_sites
-        inflow = infer2.probe_allocation_site(
-            gx, self._container_sites(gx)["[1, 2, 3]"]
-        ).inflow
+        inflow = sweep_site(gx, self._container_sites(gx)["[1, 2, 3]"]).inflow
         assert {cl.ident for cl, _d in inflow["unit"]} == {"int_"}
 
 
