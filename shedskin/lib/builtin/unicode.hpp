@@ -50,6 +50,23 @@ __codec_result __latin1_encode(const char32_t *src, size_t len, char *dst);
    those exist). return the number of units produced. */
 size_t __utf8_decode_checked(const char *src, size_t len, char32_t *dst);
 size_t __utf8_encode_checked(const char32_t *src, size_t len, char *dst);
+
+void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const char *msg);
+void __throw_encode_error(const char *codec, char32_t cp, size_t pos, const char *msg);
+
+/* supported encodings for str.encode/bytes.decode */
+enum __ss_encoding {
+    __SS_ENC_UTF8,
+    __SS_ENC_ASCII,
+    __SS_ENC_LATIN1,
+};
+
+/* normalize an encoding name (0 means the default, utf-8) to an
+   __ss_encoding; raises LookupError for anything unsupported */
+__ss_encoding __lookup_encoding(str *encoding);
+
+/* only 'strict' (or 0) is accepted for the errors= argument for now */
+void __check_errors_arg(str *errors);
 #endif
 
 #ifdef __SS_UNICODE_STANDALONE

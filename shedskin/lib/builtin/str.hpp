@@ -45,6 +45,8 @@ public:
     inline __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
+    bytes *encode(str *encoding=0, str *errors=0); /* 0 -> 'utf-8'/'strict' */
+
     list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
     list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
     tuple2<str *, str *> *rpartition(str *sep);

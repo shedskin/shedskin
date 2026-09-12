@@ -195,30 +195,77 @@ __codec_result __latin1_encode(const char32_t *src, size_t len, char *dst) {
 
 #ifndef __SS_UNICODE_STANDALONE
 
+void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const char *msg) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "'%s' codec can't decode byte 0x%02x in position %zu: %s", codec, b, pos, msg);
+    throw new ValueError(new str(buf));
+}
+
+void __throw_encode_error(const char *codec, char32_t cp, size_t pos, const char *msg) {
+    char crepr[16];
+    char buf[128];
+    if (cp < 0x100) /* character repr as CPython formats it */
+        snprintf(crepr, sizeof(crepr), "\\x%02x", (unsigned int)cp);
+    else if (cp < 0x10000)
+        snprintf(crepr, sizeof(crepr), "\\u%04x", (unsigned int)cp);
+    else
+        snprintf(crepr, sizeof(crepr), "\\U%08x", (unsigned int)cp);
+    snprintf(buf, sizeof(buf), "'%s' codec can't encode character '%s' in position %zu: %s", codec, crepr, pos, msg);
+    throw new ValueError(new str(buf));
+}
+
 size_t __utf8_decode_checked(const char *src, size_t len, char32_t *dst) {
     __codec_result r = __utf8_decode(src, len, dst);
     if (!r.ok) {
-        char buf[128];
-        if (r.errmsg == ERR_TRUNC) /* errpos = start of the incomplete sequence */
+        if (r.errmsg == ERR_TRUNC) { /* errpos = start of the incomplete sequence */
+            char buf[128];
             snprintf(buf, sizeof(buf), "'utf-8' codec can't decode bytes in position %zu-%zu: %s", r.errpos, len - 1, r.errmsg);
-        else
-            snprintf(buf, sizeof(buf), "'utf-8' codec can't decode byte 0x%02x in position %zu: %s", (unsigned char)src[r.errpos], r.errpos, r.errmsg);
-        throw new ValueError(new str(buf));
+            throw new ValueError(new str(buf));
+        }
+        __throw_decode_error("utf-8", (unsigned char)src[r.errpos], r.errpos, r.errmsg);
     }
     return r.units;
 }
 
 size_t __utf8_encode_checked(const char32_t *src, size_t len, char *dst) {
     __codec_result r = __utf8_encode(src, len, dst);
-    if (!r.ok) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "'utf-8' codec can't encode character '\\U%08x' in position %zu: %s", (unsigned int)src[r.errpos], r.errpos, r.errmsg);
-        throw new ValueError(new str(buf));
-    }
+    if (!r.ok)
+        __throw_encode_error("utf-8", src[r.errpos], r.errpos, r.errmsg);
     return r.units;
 }
 
-#endif
+__ss_encoding __lookup_encoding(str *encoding) {
+    if (!encoding)
+        return __SS_ENC_UTF8;
+    __GC_BYTES norm;
+    for (char ch : encoding->unit) {
+        if (ch >= 'A' && ch <= 'Z')
+            ch = (char)(ch + ('a' - 'A'));
+        if (ch == '_' || ch == ' ')
+            ch = '-';
+        norm += ch;
+    }
+    if (norm == "utf-8" || norm == "utf8" || norm == "utf" || norm == "u8" || norm == "cp65001")
+        return __SS_ENC_UTF8;
+    if (norm == "ascii" || norm == "us-ascii" || norm == "646")
+        return __SS_ENC_ASCII;
+    if (norm == "latin-1" || norm == "latin1" || norm == "latin" || norm == "l1" ||
+        norm == "iso-8859-1" || norm == "iso8859-1" || norm == "8859" || norm == "cp819")
+        return __SS_ENC_LATIN1;
+    char buf[128];
+    snprintf(buf, sizeof(buf), "unknown encoding: %s", encoding->unit.c_str());
+    throw new LookupError(new str(buf));
+}
+
+void __check_errors_arg(str *errors) {
+    if (!errors || errors->unit == "strict")
+        return;
+    char buf[128];
+    snprintf(buf, sizeof(buf), "error handler '%s' is not supported by shedskin (only 'strict')", errors->unit.c_str());
+    throw new ValueError(new str(buf));
+}
+
+#endif /* !__SS_UNICODE_STANDALONE */
 
 #ifdef __SS_UNICODE_STANDALONE
 } // namespace __shedskin__

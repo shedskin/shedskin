@@ -956,3 +956,28 @@ __ss_bool bytes::__contains__(__ss_int i) {
     }
     return False;
 }
+
+str *bytes::decode(str *encoding, str *errors) {
+    /* str is internally utf-8 encoded bytes (for now), so decoding
+       means: decode to code points, then encode those as utf-8. */
+    __check_errors_arg(errors);
+    __ss_encoding enc = __lookup_encoding(encoding);
+    str *s = new str();
+
+    if (enc == __SS_ENC_UTF8) {
+        __utf8_decode_checked(unit.data(), unit.size(), 0); /* validate only */
+        s->unit = unit;
+    } else if (enc == __SS_ENC_ASCII) {
+        __codec_result r = __ascii_decode(unit.data(), unit.size(), 0);
+        if (!r.ok)
+            __throw_decode_error("ascii", (unsigned char)unit[r.errpos], r.errpos, r.errmsg);
+        s->unit = unit;
+    } else { /* latin-1: cannot fail */
+        std::vector<char32_t> cps(unit.size());
+        __latin1_decode(unit.data(), unit.size(), cps.data());
+        __codec_result m = __utf8_encode(cps.data(), unit.size(), 0); /* measure */
+        s->unit.resize(m.units);
+        __utf8_encode(cps.data(), unit.size(), s->unit.data());
+    }
+    return s;
+}

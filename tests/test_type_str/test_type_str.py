@@ -591,14 +591,19 @@ def test_str_id():
 
 
 def test_bin():
-    s = '\xab'
-    assert len(s) == 1
-    assert ord(s) == 0xab
+    # binary data belongs in bytes literals
+    b = b'\xab'
+    assert len(b) == 1
+    assert b[0] == 0xab
 
-    s = '\xab\x00\xba'
-    assert len(s) == 3
-    assert ord(s[1]) == 0
-    assert ord(s[2]) == 0xba
+    b = b'\xab\x00\xba'
+    assert len(b) == 3
+    assert b[1] == 0
+    assert b[2] == 0xba
+
+    # str literals with code points >= 0x80 are stored utf-8 encoded,
+    # so '\xab' is the same string however it is written
+    assert '\xab' == '\u00ab'
 
     s = '\x012' # shows that we need to use octal escaping
     assert len(s) == 2
