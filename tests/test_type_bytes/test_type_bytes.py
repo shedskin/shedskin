@@ -38,6 +38,34 @@ def test_count():
     assert b'abc'.count(b'', 1) == 3
     assert b'abc'.count(b'', 1, 2) == 2
 
+def test_high_byte_values():
+    # regression test: searching for an int byte value compared the stored
+    # (signed) char against the int directly, so any value >= 128 never
+    # matched.
+    b = bytes([0, 1, 128, 200, 254, 254, 255, 7])
+
+    assert b.count(254) == 2
+    assert b.count(255) == 1
+    assert b.count(128) == 1
+    assert b.count(200) == 1
+    assert b.count(7) == 1
+    assert b.count(3) == 0
+
+    assert b.find(254) == 4
+    assert b.find(255) == 6
+    assert b.find(254, 5) == 5
+    assert b.find(3) == -1
+
+    assert b.rfind(254) == 5
+    assert b.rfind(255) == 6
+
+    assert b.index(255) == 6
+
+    assert 254 in b
+    assert 255 in b
+    assert 3 not in b
+
+
 def test_count_embedded_null():
     # regression test: count used to search for the target via a
     # NUL-terminated C string, so a target containing an embedded NUL byte
@@ -503,6 +531,7 @@ def test_all():
     test_center()
     test_count()
     test_count_embedded_null()
+    test_high_byte_values()
     test_encode()
     test_endswith()
     test_expandtabs()

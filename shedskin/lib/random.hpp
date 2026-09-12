@@ -36,6 +36,16 @@ public:
     int VERSION;
     __ss_float gauss_next;
 
+    /* xoshiro256++ state, one copy per instance so that separate Random
+       objects have independent streams (as the docstring above promises).
+       Use _next_word()/_seed_state() rather than touching this directly. */
+    uint64_t _s[4];
+
+    /* The single source of randomness for random(), getrandbits() and
+       randbytes(). SystemRandom overrides it to draw from the OS instead. */
+    virtual uint64_t _next_word();
+    void _seed_state(uint64_t initial_seed);
+
     Random();
     Random(int a);
     virtual __ss_float random();
@@ -86,9 +96,7 @@ system (such as /dev/urandom on Unix or CryptGenRandom on Windows).
 public:
     SystemRandom();
     SystemRandom(int a);
-    virtual __ss_float random();
-    virtual __ss_int getrandbits(__ss_int k);
-    virtual bytes *randbytes(__ss_int n);
+    virtual uint64_t _next_word();
     virtual bytes *getstate();
     virtual void *setstate(bytes *state);
     template <class A> void *seed(A a) {
@@ -285,9 +293,9 @@ template <class A> void *Random::seed(A a) {
 
     if(__is_none(a)) {
         std::random_device rd;
-        seed_xoshiro256(rd());
+        this->_seed_state(rd());
     } else {
-        seed_xoshiro256(hasher(a));
+        this->_seed_state(hasher(a));
     }
 
     return NULL;

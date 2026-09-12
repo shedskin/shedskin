@@ -70,7 +70,7 @@ __ss_int bytes::find(__ss_int i, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
     for(__ss_int j=a; j<b; j++) {
-        if(unit[(size_t)j] == i)
+        if((__ss_int)(unsigned char)unit[(size_t)j] == i)
             return j;
     }
     return -1;
@@ -98,7 +98,7 @@ __ss_int bytes::rfind(__ss_int i, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
     for(__ss_int j=b-1; j>=a; j--) {
-        if(unit[(size_t)j] == i)
+        if((__ss_int)(unsigned char)unit[(size_t)j] == i)
             return j;
     }
     return -1;
@@ -521,7 +521,7 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
 
     count = 0;
     for(i = (size_t)start; i < (size_t)end; i++) {
-        if((unsigned char)b == unit[i])
+        if((unsigned char)b == (unsigned char)unit[i])
             count++;
     }
 
@@ -951,7 +951,7 @@ __ss_bool bytes::__contains__(bytes *b) {
 __ss_bool bytes::__contains__(__ss_int i) {
     size_t len = unit.size();
     for(size_t j=0; j<len; j++) {
-        if(unit[j] == i)
+        if((__ss_int)(unsigned char)unit[j] == i)
             return True;
     }
     return False;
