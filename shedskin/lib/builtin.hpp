@@ -170,6 +170,11 @@ static inline __ss_uint __ss_magnitude(__ss_int i) {
     typedef double __ss_float;
 #endif
 
+/* str character type: one unicode code point. fixed at char32_t for now,
+   but a typedef like __ss_int/__ss_float so a more compact representation
+   (or a byte mode) could be made configurable later. */
+typedef char32_t __ss_char;
+
 /* forward class declarations */
 
 class __ss_bool;
@@ -215,23 +220,16 @@ using __ss_allocator = gc_allocator< T >;
 #define __GC_BYTES std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
 #define __GC_STRING __GC_BYTES /* compat alias, to be removed */
 
-#ifdef __SS_UNICODE
 /* Fixed-width internal representation for str: one code point per
- * character instead of one raw byte. We use char32_t rather than wchar_t
+ * character instead of one raw byte (see the __ss_char typedef above).
+ * We use char32_t rather than wchar_t
  * -- wchar_t's width is platform-defined (4 bytes on Linux/macOS, but
  * only 2 on Windows, where it stores UTF-16 code units rather than code
  * points), while char32_t is guaranteed (at least) 32 bits and behaves
  * identically everywhere, matching the "wide"/UCS-4 representation
- * CPython itself used pre-PEP 393.
- *
- * This is just the type plumbing for now -- nothing else has been
- * touched. str's own methods (and everything else that reaches into
- * str::unit) are still written against __GC_BYTES and will not compile
- * with this defined; that's expected at this stage. */
-#define __GC_STR std::basic_string<char32_t, std::char_traits<char32_t>, __ss_allocator<char32_t> >
-#else
-#define __GC_STR __GC_BYTES
-#endif
+ * CPython itself used pre-PEP 393. Conversion to/from utf-8 happens at
+ * the boundaries (literals, I/O, str.encode/bytes.decode). */
+#define __GC_STR std::basic_string<__ss_char, std::char_traits<__ss_char>, __ss_allocator<__ss_char> >
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -358,8 +356,8 @@ template<class T> static inline __ss_int __wrap(T a, __ss_int i, const char *msg
 
 #include "builtin/iter.hpp"
 #include "builtin/hash.hpp"
-#include "builtin/str.hpp"
 #include "builtin/unicode.hpp"
+#include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
 #ifdef __SS_BOOST

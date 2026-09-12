@@ -55,7 +55,7 @@ static inline __codec_result __codec_err(size_t units, size_t errpos, const char
    an invalid start byte, the first bad continuation byte otherwise),
    except for truncated input, where it is the index of the sequence's
    start byte, matching the position range CPython reports. */
-__codec_result __utf8_decode(const char *src, size_t len, char32_t *dst) {
+__codec_result __utf8_decode(const char *src, size_t len, __ss_char *dst) {
     size_t pos = 0;
     size_t units = 0;
 
@@ -63,11 +63,11 @@ __codec_result __utf8_decode(const char *src, size_t len, char32_t *dst) {
         unsigned char b0 = (unsigned char)src[pos];
         size_t nfollow;
         unsigned char lo = 0x80, hi = 0xbf; /* allowed range for first continuation byte */
-        char32_t cp;
+        __ss_char cp;
 
         if (b0 < 0x80) {
             if (dst)
-                dst[units] = (char32_t)b0;
+                dst[units] = (__ss_char)b0;
             units++;
             pos++;
             continue;
@@ -75,17 +75,17 @@ __codec_result __utf8_decode(const char *src, size_t len, char32_t *dst) {
             return __codec_err(units, pos, ERR_START);
         } else if (b0 < 0xe0) {
             nfollow = 1;
-            cp = (char32_t)(b0 & 0x1fu);
+            cp = (__ss_char)(b0 & 0x1fu);
         } else if (b0 < 0xf0) {
             nfollow = 2;
-            cp = (char32_t)(b0 & 0x0fu);
+            cp = (__ss_char)(b0 & 0x0fu);
             if (b0 == 0xe0)
                 lo = 0xa0;
             else if (b0 == 0xed)
                 hi = 0x9f;
         } else if (b0 < 0xf5) {
             nfollow = 3;
-            cp = (char32_t)(b0 & 0x07u);
+            cp = (__ss_char)(b0 & 0x07u);
             if (b0 == 0xf0)
                 lo = 0x90;
             else if (b0 == 0xf4)
@@ -102,7 +102,7 @@ __codec_result __utf8_decode(const char *src, size_t len, char32_t *dst) {
                 return __codec_err(units, pos + k, ERR_CONT);
             lo = 0x80;
             hi = 0xbf;
-            cp = (cp << 6) | (char32_t)(b & 0x3fu);
+            cp = (cp << 6) | (__ss_char)(b & 0x3fu);
         }
 
         if (dst)
@@ -113,11 +113,59 @@ __codec_result __utf8_decode(const char *src, size_t len, char32_t *dst) {
     return __codec_ok(units);
 }
 
-__codec_result __utf8_encode(const char32_t *src, size_t len, char *dst) {
+size_t __utf8_decode_one(const char *src, size_t len, size_t pos, __ss_char *cp) {
+    /* same validity rules as __utf8_decode above */
+    if (pos >= len)
+        return 0;
+    unsigned char b0 = (unsigned char)src[pos];
+    if (b0 < 0x80) {
+        *cp = (__ss_char)b0;
+        return 1;
+    }
+    size_t nfollow;
+    unsigned char lo = 0x80, hi = 0xbf;
+    __ss_char out;
+    if (b0 < 0xc2) {
+        return 0;
+    } else if (b0 < 0xe0) {
+        nfollow = 1;
+        out = (__ss_char)(b0 & 0x1fu);
+    } else if (b0 < 0xf0) {
+        nfollow = 2;
+        out = (__ss_char)(b0 & 0x0fu);
+        if (b0 == 0xe0)
+            lo = 0xa0;
+        else if (b0 == 0xed)
+            hi = 0x9f;
+    } else if (b0 < 0xf5) {
+        nfollow = 3;
+        out = (__ss_char)(b0 & 0x07u);
+        if (b0 == 0xf0)
+            lo = 0x90;
+        else if (b0 == 0xf4)
+            hi = 0x8f;
+    } else {
+        return 0;
+    }
+    if (pos + nfollow >= len)
+        return 0;
+    for (size_t k = 1; k <= nfollow; k++) {
+        unsigned char b = (unsigned char)src[pos + k];
+        if (b < lo || b > hi)
+            return 0;
+        lo = 0x80;
+        hi = 0xbf;
+        out = (out << 6) | (__ss_char)(b & 0x3fu);
+    }
+    *cp = out;
+    return nfollow + 1;
+}
+
+__codec_result __utf8_encode(const __ss_char *src, size_t len, char *dst) {
     size_t units = 0;
 
     for (size_t pos = 0; pos < len; pos++) {
-        char32_t cp = src[pos];
+        __ss_char cp = src[pos];
 
         if (cp < 0x80) {
             if (dst)
@@ -153,20 +201,20 @@ __codec_result __utf8_encode(const char32_t *src, size_t len, char *dst) {
     return __codec_ok(units);
 }
 
-__codec_result __ascii_decode(const char *src, size_t len, char32_t *dst) {
+__codec_result __ascii_decode(const char *src, size_t len, __ss_char *dst) {
     for (size_t pos = 0; pos < len; pos++) {
         unsigned char b = (unsigned char)src[pos];
         if (b >= 0x80)
             return __codec_err(pos, pos, ERR_ASCII);
         if (dst)
-            dst[pos] = (char32_t)b;
+            dst[pos] = (__ss_char)b;
     }
     return __codec_ok(len);
 }
 
-__codec_result __ascii_encode(const char32_t *src, size_t len, char *dst) {
+__codec_result __ascii_encode(const __ss_char *src, size_t len, char *dst) {
     for (size_t pos = 0; pos < len; pos++) {
-        char32_t cp = src[pos];
+        __ss_char cp = src[pos];
         if (cp >= 0x80)
             return __codec_err(pos, pos, ERR_ASCII);
         if (dst)
@@ -175,16 +223,16 @@ __codec_result __ascii_encode(const char32_t *src, size_t len, char *dst) {
     return __codec_ok(len);
 }
 
-__codec_result __latin1_decode(const char *src, size_t len, char32_t *dst) {
+__codec_result __latin1_decode(const char *src, size_t len, __ss_char *dst) {
     if (dst)
         for (size_t pos = 0; pos < len; pos++)
-            dst[pos] = (char32_t)(unsigned char)src[pos];
+            dst[pos] = (__ss_char)(unsigned char)src[pos];
     return __codec_ok(len);
 }
 
-__codec_result __latin1_encode(const char32_t *src, size_t len, char *dst) {
+__codec_result __latin1_encode(const __ss_char *src, size_t len, char *dst) {
     for (size_t pos = 0; pos < len; pos++) {
-        char32_t cp = src[pos];
+        __ss_char cp = src[pos];
         if (cp >= 0x100)
             return __codec_err(pos, pos, ERR_LATIN1);
         if (dst)
@@ -201,7 +249,7 @@ void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const 
     throw new ValueError(new str(buf));
 }
 
-void __throw_encode_error(const char *codec, char32_t cp, size_t pos, const char *msg) {
+void __throw_encode_error(const char *codec, __ss_char cp, size_t pos, const char *msg) {
     char crepr[16];
     char buf[128];
     if (cp < 0x100) /* character repr as CPython formats it */
@@ -214,7 +262,7 @@ void __throw_encode_error(const char *codec, char32_t cp, size_t pos, const char
     throw new ValueError(new str(buf));
 }
 
-size_t __utf8_decode_checked(const char *src, size_t len, char32_t *dst) {
+size_t __utf8_decode_checked(const char *src, size_t len, __ss_char *dst) {
     __codec_result r = __utf8_decode(src, len, dst);
     if (!r.ok) {
         if (r.errmsg == ERR_TRUNC) { /* errpos = start of the incomplete sequence */
@@ -227,7 +275,7 @@ size_t __utf8_decode_checked(const char *src, size_t len, char32_t *dst) {
     return r.units;
 }
 
-size_t __utf8_encode_checked(const char32_t *src, size_t len, char *dst) {
+size_t __utf8_encode_checked(const __ss_char *src, size_t len, char *dst) {
     __codec_result r = __utf8_encode(src, len, dst);
     if (!r.ok)
         __throw_encode_error("utf-8", src[r.errpos], r.errpos, r.errmsg);
@@ -238,12 +286,16 @@ __ss_encoding __lookup_encoding(str *encoding) {
     if (!encoding)
         return __SS_ENC_UTF8;
     __GC_BYTES norm;
-    for (char ch : encoding->unit) {
+    for (__ss_char ch : encoding->unit) {
         if (ch >= 'A' && ch <= 'Z')
-            ch = (char)(ch + ('a' - 'A'));
+            ch = ch + ('a' - 'A');
         if (ch == '_' || ch == ' ')
             ch = '-';
-        norm += ch;
+        if (ch > 127) { /* no non-ascii encoding names */
+            norm += '?';
+            continue;
+        }
+        norm += (char)(unsigned char)ch;
     }
     if (norm == "utf-8" || norm == "utf8" || norm == "utf" || norm == "u8" || norm == "cp65001")
         return __SS_ENC_UTF8;
@@ -253,16 +305,112 @@ __ss_encoding __lookup_encoding(str *encoding) {
         norm == "iso-8859-1" || norm == "iso8859-1" || norm == "8859" || norm == "cp819")
         return __SS_ENC_LATIN1;
     char buf[128];
-    snprintf(buf, sizeof(buf), "unknown encoding: %s", encoding->unit.c_str());
+    snprintf(buf, sizeof(buf), "unknown encoding: %s", __to_utf8(encoding->unit).c_str());
     throw new LookupError(new str(buf));
 }
 
 void __check_errors_arg(str *errors) {
-    if (!errors || errors->unit == "strict")
+    if (!errors || errors->unit == U"strict")
         return;
     char buf[128];
-    snprintf(buf, sizeof(buf), "error handler '%s' is not supported by shedskin (only 'strict')", errors->unit.c_str());
+    snprintf(buf, sizeof(buf), "error handler '%s' is not supported by shedskin (only 'strict')", __to_utf8(errors->unit).c_str());
     throw new ValueError(new str(buf));
+}
+
+__GC_STR __from_utf8(const char *s, size_t len) {
+    __GC_STR out;
+    out.reserve(len);
+    size_t pos = 0;
+    while (pos < len) {
+        __ss_char cp;
+        size_t n = __utf8_decode_one(s, len, pos, &cp);
+        if (n == 0) { /* lenient: invalid byte becomes one code point */
+            cp = (__ss_char)(unsigned char)s[pos];
+            n = 1;
+        }
+        out += cp;
+        pos += n;
+    }
+    return out;
+}
+
+__GC_STR __from_utf8(const __GC_BYTES &b) {
+    return __from_utf8(b.data(), b.size());
+}
+
+__GC_BYTES __to_utf8(const __ss_char *s, size_t len) {
+    __GC_BYTES out;
+    out.reserve(len);
+    for (size_t pos = 0; pos < len; pos++) {
+        __ss_char cp = s[pos];
+        if (cp > __MAX_CODEPOINT) /* cannot normally happen */
+            cp = 0xfffd;
+        if (cp < 0x80)
+            out += (char)(unsigned char)cp;
+        else if (cp < 0x800) {
+            out += (char)(unsigned char)(0xc0u | (cp >> 6));
+            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        } else if (cp < 0x10000) { /* note: surrogates pass through (wtf-8) */
+            out += (char)(unsigned char)(0xe0u | (cp >> 12));
+            out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
+            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        } else {
+            out += (char)(unsigned char)(0xf0u | (cp >> 18));
+            out += (char)(unsigned char)(0x80u | ((cp >> 12) & 0x3fu));
+            out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
+            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        }
+    }
+    return out;
+}
+
+__GC_BYTES __to_utf8(const __GC_STR &u) {
+    return __to_utf8(u.data(), u.size());
+}
+
+__GC_STR __gcs(const char *s) {
+    __GC_STR out;
+    while (*s)
+        out += (__ss_char)(unsigned char)*s++;
+    return out;
+}
+
+__GC_STR __gcs(const std::string &s) {
+    __GC_STR out;
+    out.reserve(s.size());
+    for (char c : s)
+        out += (__ss_char)(unsigned char)c;
+    return out;
+}
+
+__GC_STR __widen(const __GC_BYTES &b) {
+    __GC_STR out;
+    out.reserve(b.size());
+    for (char c : b)
+        out += (__ss_char)(unsigned char)c;
+    return out;
+}
+
+__GC_BYTES __narrow(const __GC_STR &u) {
+    __GC_BYTES out;
+    out.reserve(u.size());
+    for (__ss_char cp : u)
+        out += (cp < 0x100) ? (char)(unsigned char)cp : '?';
+    return out;
+}
+
+std::string __narrow_std(const __GC_STR &u) {
+    std::string out;
+    out.reserve(u.size());
+    for (__ss_char cp : u)
+        out += (cp < 0x100) ? (char)(unsigned char)cp : '?';
+    return out;
+}
+
+str *__char_str(__ss_char cp) {
+    if (cp < 256)
+        return __char_cache[cp];
+    return new str(__GC_STR(1, cp));
 }
 
 #endif /* !__SS_UNICODE_STANDALONE */

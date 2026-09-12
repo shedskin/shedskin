@@ -49,7 +49,7 @@ file::file(str *file_name, str *flags) {
     options.universal_mode = true;
 
     if (flags) {
-        size_t universal = flags->unit.find_first_of("Uu");
+        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {
             options.universal_mode = true;
             flags = new str(flags->unit);
@@ -80,10 +80,10 @@ __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t s_size = s->unit.size();
-        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
+        __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
+        if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             throw new OSError();
-        size = (__ss_int)s_size;
+        size = (__ss_int)s->unit.size(); /* characters written, as CPython */
     }
     return size;
 }
@@ -308,7 +308,7 @@ str *file::__next__() {
 
 file_binary::file_binary(str *file_name, str *flags) {
     if (flags) {
-        size_t universal = flags->unit.find_first_of("Uu");
+        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {
             options.universal_mode = true;
             flags = new str(flags->unit);
@@ -427,7 +427,7 @@ bytes *file_binary::read(__ss_int n) {
         if(FERROR(f) != 0) /* avoid virtual call */
             __throw_io_error();
         if(c != EOF)
-            return new bytes(__char_cache[static_cast<unsigned char>(c)]->unit);
+            return new bytes(__GC_BYTES(1, (char)c));
         else
             return new bytes();
     } // other cases (n != 1):
