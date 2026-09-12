@@ -135,7 +135,25 @@ def test_open_directory_raises_oserror():
         pass
 
 
+def test_read_chars_unicode():
+    # text-mode read(n) counts characters, not bytes
+    with open('utest.txt', 'w') as f:
+        f.write('caf\xe9 \u20ac \U0001f600 end\n')
+    with open('utest.txt') as f:
+        a = f.read(5)
+        b = f.read(3)
+        c = f.read(1)
+        d = f.read()
+    assert a == 'caf\xe9 '
+    assert b == '\u20ac \U0001f600'
+    assert c == ' '
+    assert d == 'end\n'
+    import os
+    os.remove('utest.txt')
+
+
 def test_all():
+    test_read_chars_unicode()
     test_open_for()
     test_open_read()
     test_open_read2()

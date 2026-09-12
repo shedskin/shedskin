@@ -130,10 +130,32 @@ __ss_bool str::__ctype_function(int (*cfunc)(int))
 
 __ss_bool str::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(__uws) == std::string::npos)); }
 __ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
-__ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
+__ss_bool str::isalpha() {
+    size_t l = unit.size();
+    if(!l) return False;
+    for(size_t i = 0; i < l; i++)
+        if(!__ss_char_alpha(unit[i])) return False;
+    return True;
+}
 __ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
-__ss_bool str::islower() { return __ctype_function(&::islower); }
-__ss_bool str::isupper() { return __ctype_function(&::isupper); }
+__ss_bool str::islower() { /* has a cased char, and no upper-case ones */
+    size_t l = unit.size();
+    bool cased = false;
+    for(size_t i = 0; i < l; i++) {
+        if(__ss_char_upper(unit[i])) return False;
+        if(__ss_char_lower(unit[i])) cased = true;
+    }
+    return __mbool(cased);
+}
+__ss_bool str::isupper() { /* has a cased char, and no lower-case ones */
+    size_t l = unit.size();
+    bool cased = false;
+    for(size_t i = 0; i < l; i++) {
+        if(__ss_char_lower(unit[i])) return False;
+        if(__ss_char_upper(unit[i])) cased = true;
+    }
+    return __mbool(cased);
+}
 
 __ss_bool str::isprintable() {
   size_t i, l = this->unit.size();
@@ -350,21 +372,23 @@ __ss_bool str::istitle()
     if(!len)
         return False;
 
+    bool cased = false; /* cpython: needs at least one cased character */
     for(i = 0; i < len; )
     {
-        for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
+        for( ; i < len && !__ss_char_alpha(unit[i]); i++) ;
         if(i == len) break;
 
-        if(!::isupper((int)unit[i])) return False;
+        if(!__ss_char_upper(unit[i])) return False;
+        cased = true;
         i++;
 
-        for( ; ::islower((int)unit[i]) && i < len; i++) ;
+        for( ; i < len && __ss_char_lower(unit[i]); i++) ;
         if(i == len) break;
 
-        if(::isalpha((int)unit[i])) return False;
+        if(__ss_char_alpha(unit[i])) return False;
     }
 
-    return True;
+    return __mbool(cased);
 }
 
 __ss_bool str::isidentifier() {
@@ -552,8 +576,10 @@ dict<__ss_int, str *> *str::maketrans(dict<str *, str *> *table) {
 str *str::swapcase() {
     str *r = new str(unit);
     size_t len = unit.size();
-    for(size_t i=0; i<len; i++)
-        r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
+    for(size_t i=0; i<len; i++) {
+        __ss_char c = unit[i];
+        r->unit[i] = __ss_char_upper(c) ? __ss_tolower(c) : __ss_char_lower(c) ? __ss_toupper(c) : c;
+    }
     return r;
 }
 
@@ -817,15 +843,15 @@ str *str::title() {
     bool up = true;
     size_t len = this->unit.size();
     for(size_t i=0; i<len; i++) {
-        char c = this->unit[i];
-        if(!::isalpha(c))
+        __ss_char c = this->unit[i];
+        if(!__ss_char_alpha(c))
             up = true;
         else if (up) {
-            c = (char)::toupper(c);
+            c = __ss_toupper(c);
             up = false;
         }
         else
-            c = (char)::tolower(c);
+            c = __ss_tolower(c);
         r->unit[i] = c;
     }
     return r;
@@ -837,7 +863,7 @@ str *str::casefold() {
     r->unit.reserve(len);
 
     for(size_t i=0; i<len; i++) {
-        unsigned char c = (unsigned char)unit[i];
+        __ss_char c = unit[i];
 
         if(65 <= c and c <= 90)
             c += 32;
@@ -846,7 +872,7 @@ str *str::casefold() {
         else if(216 <= c and c <= 222)
             c += 32;
 
-        r->unit += (char)c;
+        r->unit += c;
     }
 
     return r;

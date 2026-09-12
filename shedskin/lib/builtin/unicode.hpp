@@ -112,6 +112,17 @@ inline __ss_char __ss_tolower(__ss_char c) {
     if (c >= 0xc0 && c <= 0xde && c != 0xd7) return c + 32;
     return c;
 }
+
+/* cased-letter predicates over the same ascii + latin-1 subset */
+inline bool __ss_char_upper(__ss_char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 0xc0 && c <= 0xde && c != 0xd7);
+}
+inline bool __ss_char_lower(__ss_char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 0xdf && c <= 0xff && c != 0xf7);
+}
+inline bool __ss_char_alpha(__ss_char c) {
+    return __ss_char_upper(c) || __ss_char_lower(c);
+}
 #endif
 
 #ifdef __SS_UNICODE_STANDALONE
