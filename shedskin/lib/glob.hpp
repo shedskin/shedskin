@@ -24,6 +24,7 @@ list<str *> *glob1(str *dirname, str *pattern);
 list<str *> *glob0(str *dirname, str *basename);
 __ss_bool has_magic(str *s);
 str *escape(str *pathname);
+str *translate(str *pat, __ss_bool recursive=False, __ss_bool include_hidden=False, str *seps=0);
 
 void __init(void);
 
