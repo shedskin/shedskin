@@ -100,7 +100,7 @@ ConfigParser -- responsible for parsing a list of
 namespace __configparser__ {
 
 tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -135,38 +135,6 @@ __ss_int  default_7;
 __ss_int  default_4;
 str * default_0;
 __ss_int  default_21;
-
-static inline list<tuple<str *> *> *list_comp_0(list<str *> *options, dict<str *, str *> *d) {
-    list<str *> *__56;
-
-    str *option;
-    __ss_int __58;
-    list<tuple<str *> *> *result = new list<tuple<str *> *>();
-    list<str *>::for_in_loop __123;
-
-    result->resize(len(options));
-    FOR_IN(option,options,56,58,123)
-        result->units[(size_t)__58] = (new tuple<str *>(2, option, d->__getitem__(option)));
-    END_FOR
-
-    return result;
-}
-
-static inline list<tuple<str *> *> *list_comp_1(dict<str *, str *> *d, ConfigParser *self, list<str *> *options, str *section) {
-    list<str *> *__59;
-
-    str *option;
-    __ss_int __61;
-    list<tuple<str *> *> *result = new list<tuple<str *> *>();
-    list<str *>::for_in_loop __123;
-
-    result->resize(len(options));
-    FOR_IN(option,options,59,61,123)
-        result->units[(size_t)__61] = (new tuple<str *>(2, option, self->_interpolate(section, option, d->__getitem__(option), d)));
-    END_FOR
-
-    return result;
-}
 
 /**
 class Error
@@ -358,11 +326,19 @@ str *RawConfigParser::optionxform(str *optionstr) {
 
 void *RawConfigParser::_set(str *section, str *option, str *value) {
     /**
-    Set an option.
+    Set an option. Non-empty values are passed through the interpolation
+    object's before_set() first (matching CPython's set()), which for
+    BasicInterpolation/ExtendedInterpolation validates the %/$ syntax and
+    raises ValueError on stray '%' or '$'. This also covers read_dict()
+    and the mapping-protocol setters, which funnel through here, exactly
+    like CPython's counterparts funnel through set().
     */
     __ss_int __16;
     dict<str *, str *> *sectdict;
 
+    if (___bool(value)) {
+        value = (this->_interpolation)->before_set(this, section, option, value);
+    }
     if (__OR((!___bool(section)), __eq(section, this->default_section), 16)) {
         sectdict = this->_defaults;
     }
@@ -426,7 +402,15 @@ __ss_bool RawConfigParser::remove_section(str *section) {
     return existed;
 }
 
-void *RawConfigParser::__init__(dict<str *, str *> *defaults, str *default_section_) {
+Interpolation *RawConfigParser::_default_interpolation() {
+    return new Interpolation();
+}
+
+Interpolation *ConfigParser::_default_interpolation() {
+    return new BasicInterpolation();
+}
+
+void *RawConfigParser::__init__(dict<str *, str *> *defaults, str *default_section_, Interpolation *interpolation_) {
     __ss_int __3;
     tuple<str *> *__0;
     str *key, *value;
@@ -438,6 +422,7 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults, str *default_secti
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
     this->default_section = (default_section_ != NULL) ? default_section_ : DEFAULTSECT;
+    this->_interpolation = (interpolation_ != NULL) ? interpolation_ : this->_default_interpolation();
     if (___bool(defaults)) {
 
         FOR_IN(__0,defaults->items(),1,3,123)
@@ -544,29 +529,65 @@ list<str *> *RawConfigParser::sections() {
     return new list<str *>((this->_sections)->keys());
 }
 
-str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *> *, str *fallback) {
-    str *opt;
+dict<str *, str *> *RawConfigParser::_unify_values(str *section, dict<str *, str *> *vars) {
+    /**
+    Create a copy of the DEFAULT values, updated with the values of the
+    given section and the option-name-normalized contents of `vars`
+    (CPython's _unify_values). Raises NoSectionError for an unknown
+    non-default section.
+    */
+    __ss_int __46;
+    tuple<str *> *__44;
+    str *key, *value;
+    __iter<tuple<str *> *> *__45;
+    dict<str *, str *> *d;
 
-    opt = this->optionxform(option);
+    __iter<tuple<str *> *>::for_in_loop __123;
+
+    d = (this->_defaults)->copy();
     try {
-        if ((!(this->_sections)->__contains__(section))) {
-            if (__ne(section, this->default_section)) {
-                throw ((new NoSectionError(section)));
-            }
-            if ((this->_defaults)->__contains__(opt)) {
-                return (this->_defaults)->__getitem__(opt);
-            }
-            else {
-                throw ((new NoOptionError(option,section)));
-            }
+        d->update((this->_sections)->__getitem__(section));
+    } catch (KeyError *) {
+        if (__ne(section, this->default_section)) {
+            throw ((new NoSectionError(section)));
         }
-        else if (((this->_sections)->__getitem__(section))->__contains__(opt)) {
-            return ((this->_sections)->__getitem__(section))->__getitem__(opt);
-        }
-        else if ((this->_defaults)->__contains__(opt)) {
-            return (this->_defaults)->__getitem__(opt);
-        }
-        else {
+    }
+    if (___bool(vars)) {
+
+        FOR_IN(__44,vars->items(),45,46,123)
+            __44 = __44;
+            key = __44->__getfirst__();
+            value = __44->__getsecond__();
+            d->__setitem__(this->optionxform(key), value);
+        END_FOR
+
+    }
+    return d;
+}
+
+str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback) {
+    /**
+    Get an option value for a given section.
+
+    If `vars' is provided, it must be a dictionary. The option is looked
+    up in `vars' (if provided), `section', and in `DEFAULTSECT' in that
+    order. If the key is not found and `fallback' is given (non-None), it
+    is returned instead of raising NoSectionError/NoOptionError.
+
+    Unless `raw' is true, the value is passed through the interpolation
+    object's before_get(): a no-op for RawConfigParser's default dummy
+    Interpolation, %-expansion for ConfigParser's default
+    BasicInterpolation, ${}-expansion for ExtendedInterpolation.
+    */
+    str *value;
+    dict<str *, str *> *d;
+
+    try {
+        d = this->_unify_values(section, vars);
+        option = this->optionxform(option);
+        try {
+            value = d->__getitem__(option);
+        } catch (KeyError *) {
             throw ((new NoOptionError(option,section)));
         }
     } catch (NoSectionError *) {
@@ -576,7 +597,10 @@ str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *
         if (fallback != NULL) return fallback;
         throw;
     }
-    return (str *)NULL;
+    if (raw) {
+        return value;
+    }
+    return (this->_interpolation)->before_get(this, section, option, value, d);
 }
 
 list<str *> *RawConfigParser::read(str *filename) {
@@ -653,8 +677,22 @@ list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(dict<str *, str *>
     return result;
 }
 
-list<tuple<str *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int, str *section) {
+list<tuple<str *> *> *RawConfigParser::items(dict<str *, str *> *vars, __ss_int raw, str *section) {
+    /**
+    Return a list of (name, value) tuples for each option in the section.
+
+    Matching CPython: keys that only exist in `vars` are used for
+    interpolation but do not show up in the result, and unless `raw` is
+    true each value is passed through the interpolation object's
+    before_get().
+    */
     dict<str *, str *> *d, *d2;
+    list<str *> *orig_keys;
+    list<tuple<str *> *> *result;
+    str *opt, *value;
+    __ss_int __62;
+    list<str *> *__63;
+    list<str *>::for_in_loop __123;
 
     try {
         d2 = (this->_sections)->__getitem__(section);
@@ -669,7 +707,51 @@ list<tuple<str *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int, str
     if (d->__contains__(const_15)) {
         d->__delitem__(const_15);
     }
-    return new list<tuple<str *> *>(d->items());
+    orig_keys = new list<str *>(d->keys());
+    if (___bool(vars)) {
+        tuple<str *> *__65;
+        __iter<tuple<str *> *> *__66;
+        __ss_int __67;
+        __iter<tuple<str *> *>::for_in_loop __124;
+
+        FOR_IN(__65,vars->items(),66,67,124)
+            __65 = __65;
+            d->__setitem__(this->optionxform(__65->__getfirst__()), __65->__getsecond__());
+        END_FOR
+
+    }
+    result = (new list<tuple<str *> *>());
+
+    FOR_IN(opt,orig_keys,63,62,123)
+        value = d->__getitem__(opt);
+        if (!raw) {
+            value = (this->_interpolation)->before_get(this, section, opt, value, d);
+        }
+        result->append((new tuple<str *>(2, opt, value)));
+    END_FOR
+
+    return result;
+}
+
+tuple2<str *, SectionProxy *> *RawConfigParser::popitem() {
+    /**
+    Remove a section from the parser and return it as a
+    (section_name, section_proxy) tuple. If no section is present, raise
+    KeyError. The default section is never returned because it cannot be
+    removed.
+    */
+    list<str *> *secs;
+    str *key;
+    SectionProxy *value;
+
+    secs = this->sections();
+    if (len(secs) == 0) {
+        throw ((new KeyError(const_17)));
+    }
+    key = secs->__getitem__(0);
+    value = this->__getitem__(key);
+    this->__delitem__(key);
+    return (new tuple2<str *, SectionProxy *>(2, key, value));
 }
 
 void *RawConfigParser::_read(file *fp, str *fpname) {
@@ -947,173 +1029,228 @@ __re__::re_object *RawConfigParser::SECTCRE;
 __re__::re_object *RawConfigParser::OPTCRE;
 
 /**
+class Interpolation
+*/
+
+class_ *cl_Interpolation;
+
+str *Interpolation::before_get(RawConfigParser *, str *, str *, str *value, dict<str *, str *> *) {
+    return value;
+}
+
+str *Interpolation::before_set(RawConfigParser *, str *, str *, str *value) {
+    return value;
+}
+
+str *Interpolation::before_read(RawConfigParser *, str *, str *, str *value) {
+    return value;
+}
+
+str *Interpolation::before_write(RawConfigParser *, str *, str *, str *value) {
+    return value;
+}
+
+/**
+class BasicInterpolation
+*/
+
+class_ *cl_BasicInterpolation;
+__re__::re_object *BasicInterpolation::_KEYCRE;
+
+str *BasicInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
+    list<str *> *L;
+
+    L = (new list<str *>());
+    this->_interpolate_some(parser, option, L, value, section, defaults, 1);
+    return const_17->join(L);
+}
+
+str *BasicInterpolation::before_set(RawConfigParser *, str *section, str *option, str *value) {
+    str *tmp_value;
+    __ss_int pos;
+
+    tmp_value = value->replace(const_61, const_17); /* escaped percent signs */
+    tmp_value = (BasicInterpolation::_KEYCRE)->sub(const_17, tmp_value); /* valid syntax */
+    pos = tmp_value->find(const_63);
+    if (pos >= 0) {
+        throw ((new ValueError(__mod6(const_65, 2, value, pos))));
+    }
+    (void)section; (void)option;
+    return value;
+}
+
+void BasicInterpolation::_interpolate_some(RawConfigParser *parser, str *option, list<str *> *accum, str *rest, str *section, dict<str *, str *> *map, __ss_int depth) {
+    /**
+    Faithful port of CPython's BasicInterpolation._interpolate_some().
+    */
+    str *rawval, *c, *var, *v;
+    __ss_int p;
+    __re__::match_object *m;
+
+    rawval = parser->get(section, option, 1, NULL, rest);
+    if (depth > MAX_INTERPOLATION_DEPTH) {
+        throw ((new InterpolationDepthError(option, section, rawval)));
+    }
+    while (len(rest) > 0) {
+        p = rest->find(const_63);
+        if (p < 0) {
+            accum->append(rest);
+            return;
+        }
+        if (p > 0) {
+            accum->append(rest->__slice__(2, 0, p, 0));
+            rest = rest->__slice__(1, p, 0, 0);
+        }
+        /* p is no longer used */
+        c = rest->__slice__(3, 1, 2, 0);
+        if (__eq(c, const_63)) { /* '%' */
+            accum->append(const_63);
+            rest = rest->__slice__(1, 2, 0, 0);
+        }
+        else if (__eq(c, const_66)) { /* '(' */
+            m = (BasicInterpolation::_KEYCRE)->match(rest);
+            if (!m) {
+                throw ((new InterpolationSyntaxError(option, section, __mod6(const_67, 1, rest))));
+            }
+            var = parser->optionxform(m->group(1, 1));
+            rest = rest->__slice__(1, m->end(), 0, 0);
+            try {
+                v = map->__getitem__(var);
+            } catch (KeyError *) {
+                throw ((new InterpolationMissingOptionError(option, section, rawval, var)));
+            }
+            if (v->__contains__(const_63)) {
+                this->_interpolate_some(parser, option, accum, v, section, map, (depth+1));
+            }
+            else {
+                accum->append(v);
+            }
+        }
+        else {
+            throw ((new InterpolationSyntaxError(option, section, __mod6(const_68, 1, rest))));
+        }
+    }
+}
+
+/**
+class ExtendedInterpolation
+*/
+
+class_ *cl_ExtendedInterpolation;
+__re__::re_object *ExtendedInterpolation::_KEYCRE;
+
+str *ExtendedInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
+    list<str *> *L;
+
+    L = (new list<str *>());
+    this->_interpolate_some(parser, option, L, value, section, defaults, 1);
+    return const_17->join(L);
+}
+
+str *ExtendedInterpolation::before_set(RawConfigParser *, str *section, str *option, str *value) {
+    str *tmp_value;
+    __ss_int pos;
+
+    tmp_value = value->replace(const_62, const_17); /* escaped dollar signs */
+    tmp_value = (ExtendedInterpolation::_KEYCRE)->sub(const_17, tmp_value); /* valid syntax */
+    pos = tmp_value->find(const_64);
+    if (pos >= 0) {
+        throw ((new ValueError(__mod6(const_65, 2, value, pos))));
+    }
+    (void)section; (void)option;
+    return value;
+}
+
+void ExtendedInterpolation::_interpolate_some(RawConfigParser *parser, str *option, list<str *> *accum, str *rest, str *section, dict<str *, str *> *map, __ss_int depth) {
+    /**
+    Faithful port of CPython's ExtendedInterpolation._interpolate_some():
+    ${opt} looks up in the current section (via `map`), ${sect:opt} in
+    another section; recursion re-derives the map for the target section.
+    */
+    str *rawval, *c, *sect, *opt, *v;
+    list<str *> *path;
+    __ss_int p;
+    __re__::match_object *m;
+
+    rawval = parser->get(section, option, 1, NULL, rest);
+    if (depth > MAX_INTERPOLATION_DEPTH) {
+        throw ((new InterpolationDepthError(option, section, rawval)));
+    }
+    while (len(rest) > 0) {
+        p = rest->find(const_64);
+        if (p < 0) {
+            accum->append(rest);
+            return;
+        }
+        if (p > 0) {
+            accum->append(rest->__slice__(2, 0, p, 0));
+            rest = rest->__slice__(1, p, 0, 0);
+        }
+        /* p is no longer used */
+        c = rest->__slice__(3, 1, 2, 0);
+        if (__eq(c, const_64)) { /* '$' */
+            accum->append(const_64);
+            rest = rest->__slice__(1, 2, 0, 0);
+        }
+        else if (__eq(c, const_69)) { /* '{' */
+            m = (ExtendedInterpolation::_KEYCRE)->match(rest);
+            if (!m) {
+                throw ((new InterpolationSyntaxError(option, section, __mod6(const_70, 1, rest))));
+            }
+            path = (m->group(1, 1))->split(const_1);
+            rest = rest->__slice__(1, m->end(), 0, 0);
+            sect = section;
+            opt = option;
+            try {
+                if (len(path) == 1) {
+                    opt = parser->optionxform(path->__getfast__(0));
+                    v = map->__getitem__(opt);
+                }
+                else if (len(path) == 2) {
+                    sect = path->__getfast__(0);
+                    opt = parser->optionxform(path->__getfast__(1));
+                    v = parser->get(sect, opt, 1, NULL, NULL);
+                }
+                else {
+                    throw ((new InterpolationSyntaxError(option, section, __mod6(const_71, 1, rest))));
+                }
+            } catch (KeyError *) {
+                throw ((new InterpolationMissingOptionError(option, section, rawval, const_1->join(path))));
+            } catch (NoSectionError *) {
+                throw ((new InterpolationMissingOptionError(option, section, rawval, const_1->join(path))));
+            } catch (NoOptionError *) {
+                throw ((new InterpolationMissingOptionError(option, section, rawval, const_1->join(path))));
+            }
+            if (v->__contains__(const_64)) {
+                dict<str *, str *> *submap;
+                list<tuple<str *> *> *subitems;
+                tuple<str *> *t;
+                __ss_int k, n;
+
+                submap = (new dict<str *, str *>());
+                subitems = parser->items(NULL, 1, sect);
+                n = len(subitems);
+                for (k = 0; k < n; k++) {
+                    t = subitems->__getfast__(k);
+                    submap->__setitem__(t->__getfirst__(), t->__getsecond__());
+                }
+                this->_interpolate_some(parser, opt, accum, v, sect, submap, (depth+1));
+            }
+            else {
+                accum->append(v);
+            }
+        }
+        else {
+            throw ((new InterpolationSyntaxError(option, section, __mod6(const_72, 1, rest))));
+        }
+    }
+}
+
+/**
 class ConfigParser
 */
 
 class_ *cl_ConfigParser;
-
-str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars) {
-    str *value;
-    __ss_int depth;
-
-    value = rawval;
-    depth = MAX_INTERPOLATION_DEPTH;
-
-    while (depth) {
-        depth = (depth-1);
-        if (value->__contains__(const_28)) {
-            value = (ConfigParser::_KEYCRE)->sub(_interpolation_replace, value);
-            try {
-                value = __mod6(value, 1, vars);
-            } catch (KeyError *e) {
-                /* KeyError's message is repr(key) (see builtin/dict.hpp), but
-                   'reference' should be the bare option name, like CPython's
-                   e.args[0] */
-                str *reference = e->message;
-                if (reference && len(reference) >= 2 &&
-                    reference->unit[0] == '\'' &&
-                    reference->unit[len(reference)-1] == '\'') {
-                    reference = reference->__slice__(3, 1, len(reference)-1, 0);
-                }
-                throw ((new InterpolationMissingOptionError(option,section,rawval,reference)));
-            }
-        }
-        else {
-            break;
-        }
-    }
-    if (value->__contains__(const_28)) {
-        throw ((new InterpolationDepthError(option,section,rawval)));
-    }
-    return value;
-}
-
-str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback) {
-    /**
-    Get an option value for a given section.
-
-    All % interpolations are expanded in the return values, based on the
-    defaults passed into the constructor, unless the optional argument
-    `raw' is true.  Additional substitutions may be provided using the
-    `vars' argument, which must be a dictionary whose contents overrides
-    any pre-existing defaults.
-
-    The section DEFAULT is special.
-
-    If the section/option isn't found and `fallback' is given (non-None),
-    it is returned instead of raising NoSectionError/NoOptionError.
-    */
-    __ss_int __49;
-    tuple<str *> *__46;
-    str *key, *value;
-    __iter<tuple<str *> *> *__47;
-    dict<str *, str *> *d;
-
-    __iter<tuple<str *> *>::for_in_loop __123;
-
-    try {
-        d = (this->_defaults)->copy();
-        try {
-            d->update((this->_sections)->__getitem__(section));
-        } catch (KeyError *) {
-            if (__ne(section, this->default_section)) {
-                throw ((new NoSectionError(section)));
-            }
-        }
-        if (___bool(vars)) {
-
-            FOR_IN(__46,vars->items(),47,49,123)
-                __46 = __46;
-                key = __46->__getfirst__();
-                value = __46->__getsecond__();
-                d->__setitem__(this->optionxform(key), value);
-            END_FOR
-
-        }
-        option = this->optionxform(option);
-        try {
-            value = d->__getitem__(option);
-        } catch (KeyError *) {
-            throw ((new NoOptionError(option,section)));
-        }
-        if (raw) {
-            return value;
-        }
-        else {
-            return this->_interpolate(section, option, value, d);
-        }
-    } catch (NoSectionError *) {
-        if (fallback != NULL) return fallback;
-        throw;
-    } catch (NoOptionError *) {
-        if (fallback != NULL) return fallback;
-        throw;
-    }
-    return (str *)NULL;
-}
-
-list<tuple2<str *, SectionProxy *> *> *ConfigParser::items(dict<str *, str *> *vars, __ss_int raw) {
-    /**
-    Return a list of (section_name, SectionProxy) pairs for every
-    section, including the default section. Delegates straight to
-    RawConfigParser::items(): SectionProxy calls through this->get(),
-    which is virtual, so values still come back interpolated here.
-    */
-    return RawConfigParser::items(vars, raw);
-}
-
-list<tuple<str *> *> *ConfigParser::items(dict<str *, str *> *vars, __ss_int raw, str *section) {
-    /**
-    Return a list of tuples with (name, value) for each option
-    in the section.
-
-    All % interpolations are expanded in the return values, based on the
-    defaults passed into the constructor, unless the optional argument
-    `raw' is true.  Additional substitutions may be provided using the
-    `vars' argument, which must be a dictionary whose contents overrides
-    any pre-existing defaults.
-
-    The section DEFAULT is special.
-    */
-    list<str *> *options;
-    dict<str *, str *> *d;
-
-    d = (this->_defaults)->copy();
-    try {
-        d->update((this->_sections)->__getitem__(section));
-    } catch (KeyError *) {
-        if (__ne(section, this->default_section)) {
-            throw ((new NoSectionError(section)));
-        }
-    }
-
-    if (___bool(vars)) {
-        str *key, *value;
-        tuple<str *> *__62;
-        __iter<tuple<str *> *> *__63;
-        __ss_int __65;
-        __iter<tuple<str *> *>::for_in_loop __123;
-
-        FOR_IN(__62,vars->items(),63,65,123)
-            __62 = __62;
-            key = __62->__getfirst__();
-            value = __62->__getsecond__();
-            d->__setitem__(this->optionxform(key), value);
-        END_FOR
-    }
-
-    options = new list<str *>(d->keys());
-    if (options->__contains__(const_15)) {
-        options->remove(const_15);
-    }
-    if (raw) {
-        return list_comp_0(options, d);
-    }
-    else {
-        return list_comp_1(d, this, options, section);
-    }
-    return (list<tuple<str *> *> *)NULL;
-}
 
 /**
 class SectionProxy
@@ -1200,32 +1337,7 @@ __iter<str *> *SectionProxy::__iter__() {
     return (_options())->__iter__();
 }
 
-str *_interpolation_replace(__re__::match_object *match) {
-    str *s;
 
-    /* ConfigParser._KEYCRE is "%\(([^)]*)\)s|.": group 1 only
-       participates in the match when the "%(name)s" alternative fired.
-       When the catch-all "." alternative matched instead, group 1 is
-       unmatched. CPython's re returns None for match.group(1) in that
-       case; shedskin's match_object.group() raises re.error("group is
-       unmatched") instead (see re.cpp), so that has to be caught here
-       to get the same "s is None" behavior the original Python code
-       relies on. */
-    try {
-        s = match->group(1, 1);
-    } catch (__re__::error *) {
-        s = 0;
-    }
-    if (s == 0) {
-        return match->group(1);
-    }
-    else {
-        return __mod6(new str("%%(%s)s"), 1, s->lower());
-    }
-    return (str *)NULL;
-}
-
-__re__::re_object *ConfigParser::_KEYCRE;
 
 void __init() {
     const_0 = new str("=");
@@ -1265,7 +1377,6 @@ void __init() {
     const_36 = new str("off");
     const_37 = new str("\\[(?P<header>[^]]+)\\]");
     const_38 = new str("(?P<option>[^:=\\s][^:=]*)\\s*(?P<vi>[:=])\\s*(?P<value>.*)$");
-    const_39 = new str("%\\(([^)]*)\\)s|.");
     const_40 = new str("NoSectionError");
     const_41 = new str("DuplicateSectionError");
     const_42 = new str("NoOptionError");
@@ -1284,6 +1395,20 @@ void __init() {
     const_56 = new str("While reading from %r [line %2d]: option %r in section %r already exists");
     const_57 = new str("DuplicateOptionError");
     const_58 = new str("Cannot remove the default section.");
+    const_59 = new str("%\\(([^)]+)\\)s");
+    const_60 = new str("\\$\\{([^}]+)\\}");
+    const_61 = new str("%%");
+    const_62 = new str("$$");
+    const_63 = new str("%");
+    const_64 = new str("$");
+    const_65 = new str("invalid interpolation syntax in %r at position %d");
+    const_66 = new str("(");
+    const_67 = new str("bad interpolation variable reference %r");
+    const_68 = new str("'%%' must be followed by '%%' or '(', found: %r");
+    const_69 = new str("{");
+    const_70 = new str("bad interpolation variable reference %r");
+    const_71 = new str("More than one ':' found: %r");
+    const_72 = new str("'$' must be followed by '$' or '{', found: %r");
 
     __name__ = new str("ConfigParser");
 
@@ -1303,7 +1428,11 @@ void __init() {
     cl_NoOptionError = new class_("NoOptionError");
     cl_NoSectionError = new class_("NoSectionError");
     cl_ConfigParser = new class_("ConfigParser");
-    ConfigParser::_KEYCRE = __re__::compile(const_39);
+    cl_Interpolation = new class_("Interpolation");
+    cl_BasicInterpolation = new class_("BasicInterpolation");
+    cl_ExtendedInterpolation = new class_("ExtendedInterpolation");
+    BasicInterpolation::_KEYCRE = __re__::compile(const_59);
+    ExtendedInterpolation::_KEYCRE = __re__::compile(const_60);
     cl_SectionProxy = new class_("SectionProxy");
 
     DEFAULTSECT = const_53;
