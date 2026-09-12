@@ -52,6 +52,12 @@ typedef suseconds_t tv_usec_type;
 #define HOST_NAME_MAX 256
 #endif
 
+#ifdef WIN32
+#define SS_INVALID_SOCKET INVALID_SOCKET
+#else
+#define SS_INVALID_SOCKET (-1)
+#endif
+
 #include <sstream>
 
 namespace __socket__ {
@@ -63,6 +69,7 @@ str *timed_out;
 str *host_not_found;
 __ss_int default_0;
 __ss_int default_1;
+__ss_int default_4;
 
 /**
   class error
@@ -124,9 +131,11 @@ __ss_int __ss_SOMAXCONN = SOMAXCONN;
 double __ss_default_timeout = -1.0;
 
 __ss_int socket::__ss_fileno() {
-
-    return this->_fd;
+    if (_fd == SS_INVALID_SOCKET)
+        return -1;
+    return (__ss_int)this->_fd;
 }
+
 
 #ifdef WIN32
 //not exactly the correct definition, but we only use it with ostringstream
@@ -144,6 +153,94 @@ str* make_errstring(const char *prefix)
     os << prefix << ": " << strerror(ERRNO) << " (errno " << ERRNO << ")";
     return new str( os.str().c_str() );
 }
+
+static socket_type dup_socket_fd(socket_type fd)
+{
+#ifdef WIN32
+    /* SOCKETs are not CRT file descriptors, so dup() does not apply;
+     * duplicate the underlying socket the way CPython does. */
+    WSAPROTOCOL_INFOW info;
+    if (WSADuplicateSocketW(fd, GetCurrentProcessId(), &info) == SOCKET_ERROR)
+        throw new error(make_errstring("dup"));
+    socket_type r = WSASocketW(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &info, 0, WSA_FLAG_OVERLAPPED);
+    if (r == INVALID_SOCKET)
+        throw new error(make_errstring("dup"));
+    return r;
+#else
+    int r = ::dup(fd);
+    if (r == SOCKET_ERROR)
+        throw new error(make_errstring("dup"));
+    return r;
+#endif
+}
+
+socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int type_, __ss_int proto_) {
+    this->__class__ = cl_socket;
+    this->family = family_;
+    this->type = type_;
+    this->proto = proto_;
+    _fd = fd;
+    _timeout = __ss_default_timeout;
+    _blocking = true;
+}
+
+str *socket::__repr__() {
+    std::ostringstream os;
+    if (_fd == SS_INVALID_SOCKET)
+        os << "<socket.socket fd=-1";
+    else
+        os << "<socket.socket fd=" << _fd;
+    os << ", family=" << family << ", type=" << type << ", proto=" << proto << ">";
+    return new str(os.str().c_str());
+}
+
+void socket::__enter__() { }
+
+void socket::__exit__() {
+    close();
+}
+
+__ss_int socket::detach() {
+    socket_type fd = _fd;
+    _fd = SS_INVALID_SOCKET;
+    return (__ss_int)fd;
+}
+
+socket *socket::dup() {
+    socket *sock = new socket(wrap_fd_tag(), dup_socket_fd(_fd), family, type, proto);
+    sock->_blocking = _blocking;
+    sock->_timeout = _timeout;
+    return sock;
+}
+
+__ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
+    /* portable fallback implementation (chunked read/send loop), like
+     * CPython uses on platforms without os.sendfile() */
+    if (offset)
+        f->seek(offset, 0);
+    size_t total = 0;
+    for (;;) {
+        __ss_int toread = 8192;
+        if (count >= 0) {
+            __ss_int remaining = count - (__ss_int)total;
+            if (remaining <= 0)
+                break;
+            if (toread > remaining)
+                toread = remaining;
+        }
+        bytes *b = f->read(toread);
+        size_t len = b->unit.size();
+        if (len == 0)
+            break;
+        const char *s = b->unit.data();
+        size_t off = 0;
+        while (off < len)
+            off += send(s + off, len - off, 0);
+        total += len;
+    }
+    return (__ss_int)total;
+}
+
 
 str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     socklen_t buflen = (socklen_t)value;
@@ -168,9 +265,9 @@ file *socket::makefile(str *mode) {
 
 #ifdef WIN32
 	if (((fd = _open_osfhandle(_fd, O_BINARY)) < 0) ||
-	    ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode->c_str())) == NULL))
+	    ((fd = ::dup(fd)) < 0) || ((fp = fdopen(fd, mode->c_str())) == NULL))
 #else
-	if ((fd = dup(_fd)) < 0 || (fp = fdopen(fd, mode->c_str())) == NULL)
+	if ((fd = ::dup(_fd)) < 0 || (fp = fdopen(fd, mode->c_str())) == NULL)
 #endif
 	{
 		/*if (fd >= 0)
@@ -467,10 +564,14 @@ __ss_int socket::sendto(bytes* msg, socket::inet_address addr)
 
 socket *socket::close()
 {
-    if (::CLOSE(_fd) == SOCKET_ERROR)
+    if (_fd != SS_INVALID_SOCKET) {
+        socket_type fd = _fd;
+        _fd = SS_INVALID_SOCKET;
+        if (::CLOSE(fd) == SOCKET_ERROR)
 #define STRINGIFY(x) #x
-        throw new error(make_errstring(STRINGIFY(CLOSE)));
+            throw new error(make_errstring(STRINGIFY(CLOSE)));
 #undef STRINGIFY
+    }
     return this;
 }
 
@@ -550,7 +651,8 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_) {
 
 socket::~socket()
 {
-    ::CLOSE(_fd); // ignore errror since we can't throw
+    if (_fd != SS_INVALID_SOCKET)
+        ::CLOSE(_fd); // ignore error since we can't throw
 }
 
 socket *socket::listen(__ss_int backlog)
@@ -578,13 +680,7 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
     if ((r = ::accept(_fd, sa, salen)) == SOCKET_ERROR) {
         throw new error(make_errstring("accept"));
     }
-    socket *sock = new socket();
-    ::CLOSE(sock->_fd); // avoid leaking the fd opened by the default constructor
-    sock->family = family;
-    sock->proto = proto;
-    sock->type = type;
-    sock->_fd = r;
-    return sock;
+    return new socket(wrap_fd_tag(), r, family, type, proto);
 }
 
 #if 0
@@ -661,6 +757,41 @@ socket *create_connection(socket::inet_address address, double timeout, socket::
     return s;
 }
 
+socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto)
+{
+    return new socket(socket::wrap_fd_tag(), dup_socket_fd((socket_type)fd), family, type, proto);
+}
+
+socket *create_server(socket::inet_address address, __ss_int family, __ss_int backlog, __ss_bool reuse_port, __ss_bool dualstack_ipv6)
+{
+    if (dualstack_ipv6)
+        throw new ValueError(new str("dualstack_ipv6 not supported"));
+    socket *s = new socket(family, __ss_SOCK_STREAM, 0);
+#ifdef WIN32
+    /* SO_REUSEADDR has different (unsafe) semantics on Windows; do what
+     * CPython does and set SO_EXCLUSIVEADDRUSE instead. */
+    s->setsockopt(SOL_SOCKET, SO_EXCLUSIVEADDRUSE, 1);
+#else
+    s->setsockopt(SOL_SOCKET, SO_REUSEADDR, 1);
+#endif
+    if (reuse_port) {
+#ifdef SO_REUSEPORT
+        s->setsockopt(SOL_SOCKET, SO_REUSEPORT, 1);
+#else
+        throw new ValueError(new str("SO_REUSEPORT not supported on this platform"));
+#endif
+    }
+    s->bind(address);
+    s->listen(backlog >= 0 ? backlog : __ss_SOMAXCONN);
+    return s;
+}
+
+__ss_bool has_dualstack_ipv6()
+{
+    /* requires IPv6 sockaddr support, which this module does not have yet */
+    return False;
+}
+
 __ss_int _ss_htonl(__ss_int x) {
     return (__ss_int)htonl((uint32_t)x);
 }
@@ -706,6 +837,7 @@ void __init()
 
     default_0 = __ss_AF_INET;
     default_1 = __ss_SOCK_STREAM;
+    default_4 = __ss_AF_INET; /* create_server family */
 
     // string constants used by this module
     invalid_address = new str("invalid address");
