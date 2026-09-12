@@ -5,5 +5,6 @@ if(NOT WIN32)
     add_shedskin_product(
         SYS_MODULES
             select
+            os
     )
 endif()
