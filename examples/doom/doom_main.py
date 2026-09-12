@@ -36,7 +36,7 @@ MUSIC = 'E1M1.FLAC'
 def main(test):
     screen = (doom.WIDTH, doom.HEIGHT)
     pygame.init()
-    surface = pygame.display.set_mode(screen)
+    surface = pygame.display.set_mode(screen, pygame.SCALED)
     drawsurf = pygame.Surface(screen).convert()
     drawsurf.set_colorkey((0, 0, 0))
 

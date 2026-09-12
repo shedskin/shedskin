@@ -8,7 +8,7 @@ print(pygasus)
 
 def main(test):
     pygame.init()
-    hScreen=pygame.display.set_mode((256,240))
+    hScreen=pygame.display.set_mode((256,240), pygame.SCALED)
     if test:
         pygasus.read_ines('mario_bros.nes')
     else:

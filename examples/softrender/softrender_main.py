@@ -46,7 +46,7 @@ def main(test):
     screen = (WIDTH, HEIGHT)
     pygame.init()
 
-    surface = pygame.display.set_mode(screen)
+    surface = pygame.display.set_mode(screen, pygame.SCALED)
     drawsurf = pygame.Surface(screen).convert()
 
     clock = pygame.time.Clock()
