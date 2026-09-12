@@ -68,7 +68,53 @@ def test_maxunicode():
         pass
 
 def test_executable():
-    assert sys.executable
+    # note: 'assert sys.executable' would compile to a pointer check and
+    # always pass; test the length explicitly instead
+    if sys.argv:  # compiled binary
+        assert len(sys.executable) > 0
+    else:  # extension module: no C-level argv, executable is empty
+        assert len(sys.executable) == 0
+
+def test_float_info():
+    # values for IEEE-754 double, which is what the default build uses
+    fi = sys.float_info
+    assert fi.radix == 2
+    assert fi.rounds == 1
+    assert fi.mant_dig == 53
+    assert fi.dig == 15
+    assert fi.max_exp == 1024
+    assert fi.min_exp == -1021
+    assert fi.max_10_exp == 308
+    assert fi.min_10_exp == -307
+    assert fi.max > 1e308
+    assert 0.0 < fi.min < 1e-307
+    # epsilon must be the actual gap at 1.0
+    assert 1.0 + fi.epsilon > 1.0
+    assert 1.0 + fi.epsilon / 2 == 1.0
+    assert repr(fi).startswith('sys.float_info(max=')
+
+def test_implementation():
+    assert sys.implementation.name == 'shedskin'
+    assert sys.implementation.version[0] == sys.version_info[0]
+    assert sys.implementation.version[1] == sys.version_info[1]
+    assert sys.implementation.hexversion == sys.hexversion
+    assert repr(sys.implementation).startswith("namespace(name='shedskin'")
+
+def test_encode_errors():
+    assert sys.getfilesystemencodeerrors() in ('surrogateescape', 'surrogatepass')
+
+def test_float_repr_style():
+    assert sys.float_repr_style == 'short'
+
+def test_orig_argv():
+    # orig_argv always mirrors argv: a compiled binary has no interpreter
+    # options in front, and an extension module receives no C-level argv
+    # at all (sys is initialized with argc=0), leaving both lists empty
+    assert sys.orig_argv == sys.argv
+    if sys.argv:  # compiled binary
+        assert sys.orig_argv[0] == sys.executable
+    else:  # extension module
+        assert len(sys.orig_argv) == 0
 
 def test_all():
     test_sys()
@@ -81,6 +127,11 @@ def test_all():
     test_encodings()
     test_maxunicode()
     test_executable()
+    test_float_info()
+    test_implementation()
+    test_encode_errors()
+    test_float_repr_style()
+    test_orig_argv()
 
 if __name__ == '__main__':
     test_all()
