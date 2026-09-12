@@ -1050,3 +1050,26 @@ template<> str *__str(size_t i) {
     return __str((__ss_int)i);
 }
 #endif
+
+bytes *str::encode(str *encoding, str *errors) {
+    /* str is internally utf-8 encoded bytes (for now), so encoding
+       means: decode those to code points, then encode to the target. */
+    __check_errors_arg(errors);
+    __ss_encoding enc = __lookup_encoding(encoding);
+    bytes *b = new bytes();
+
+    if (enc == __SS_ENC_UTF8) {
+        __utf8_decode_checked(unit.data(), unit.size(), 0); /* validate only */
+        b->unit = unit;
+    } else {
+        std::vector<char32_t> cps(unit.size());
+        size_t n = __utf8_decode_checked(unit.data(), unit.size(), cps.data());
+        b->unit.resize(n); /* ascii/latin-1: one byte per code point */
+        __codec_result r = (enc == __SS_ENC_ASCII) ?
+            __ascii_encode(cps.data(), n, b->unit.data()) :
+            __latin1_encode(cps.data(), n, b->unit.data());
+        if (!r.ok)
+            __throw_encode_error(enc == __SS_ENC_ASCII ? "ascii" : "latin-1", cps[r.errpos], r.errpos, r.errmsg);
+    }
+    return b;
+}

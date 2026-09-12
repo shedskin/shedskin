@@ -31,6 +31,8 @@ public:
     bytes *translate(bytes *table, bytes *delete_chars=0);
 
     list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
+    str *decode(str *encoding=0, str *errors=0); /* 0 -> 'utf-8'/'strict' */
+
     list<bytes *> *rsplit(bytes *sep=0, __ss_int maxsplit=-1);
     tuple2<bytes *, bytes *> *rpartition(bytes *sep);
     tuple2<bytes *, bytes *> *partition(bytes *sep);
