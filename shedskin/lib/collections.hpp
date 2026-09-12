@@ -144,12 +144,12 @@ public:
         for(__ss_int i = 0; i<this->__len__();i++) {
             r->unit += repr(units[i])->unit;
             if (i<this->__len__()-1)
-                r->unit += ", ";
+                r->unit += __gcs(", ");
         }
-        r->unit += "]";
+        r->unit += ']';
         if(this->maxlen != -1)
-            r->unit += ", maxlen=" + __str(this->maxlen)->unit;
-        r->unit += ")";
+            r->unit += __gcs(", maxlen=") + __str(this->maxlen)->unit;
+        r->unit += ')';
         return r;
     }
 
