@@ -359,6 +359,7 @@ template<class T> static inline __ss_int __wrap(T a, __ss_int i, const char *msg
 #include "builtin/iter.hpp"
 #include "builtin/hash.hpp"
 #include "builtin/str.hpp"
+#include "builtin/unicode.hpp"
 #include "builtin/compare.hpp"
 
 #ifdef __SS_BOOST
