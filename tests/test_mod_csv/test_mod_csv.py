@@ -628,6 +628,63 @@ def test_dictreader_fieldnames():
         assert csv.DictReader(f).fieldnames is None
 
 
+def test_predefined_dialect_classes():
+    e = csv.excel()
+    assert e.delimiter == ','
+    assert e.quotechar == '"'
+    assert e.doublequote == True
+    assert e.skipinitialspace == False
+    assert e.lineterminator == '\r\n'
+    assert e.quoting == csv.QUOTE_MINIMAL
+
+    et = csv.excel_tab()
+    assert et.delimiter == '\t'
+    assert et.lineterminator == '\r\n'
+    assert et.quoting == csv.QUOTE_MINIMAL
+
+    u = csv.unix_dialect()
+    assert u.delimiter == ','
+    assert u.lineterminator == '\n'
+    assert u.quoting == csv.QUOTE_ALL
+
+
+def test_dialect_instance_honored():
+    # passing a Dialect *instance* (predefined class or from get_dialect)
+    # must actually be used, not silently replaced by a fallback name
+    path = _csv_path('dialect_instance.csv')
+
+    with open(path, 'w', newline='') as f:
+        w = csv.writer(f, csv.excel_tab())
+        w.writerow(['a', 'b'])
+    assert open(path, 'rb').read() == b'a\tb\r\n'
+
+    with open(path, 'w', newline='') as f:
+        w = csv.writer(f, csv.unix_dialect())
+        w.writerow(['x', 'y'])
+    assert open(path, 'rb').read() == b'"x","y"\n'
+
+    with open(path, 'w', newline='') as f:
+        f.write('1\t2\t3\r\n')
+    with open(path, newline='') as f:
+        assert list(csv.reader(f, csv.get_dialect('excel-tab'))) == [['1', '2', '3']]
+
+    # keyword overrides still apply on top of the instance
+    with open(path, 'w', newline='') as f:
+        w = csv.writer(f, csv.excel(), delimiter=';')
+        w.writerow(['p', 'q'])
+    assert open(path, 'rb').read() == b'p;q\r\n'
+
+    # DictReader/DictWriter take instances too
+    with open(path, 'w', newline='') as f:
+        dw = csv.DictWriter(f, ['a', 'b'], dialect=csv.unix_dialect())
+        dw.writeheader()
+        dw.writerow({'a': '1', 'b': '2'})
+    assert open(path, 'rb').read() == b'"a","b"\n"1","2"\n'
+    with open(path, newline='') as f:
+        dr = csv.DictReader(f, dialect=csv.unix_dialect())
+        assert list(dr) == [{'a': '1', 'b': '2'}]
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -653,6 +710,8 @@ def test_all():
     test_sniffer_has_header()
     test_dictreader_dictwriter_roundtrip()
     test_dictreader_fieldnames()
+    test_predefined_dialect_classes()
+    test_dialect_instance_honored()
 
 
 if __name__ == "__main__":

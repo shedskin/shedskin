@@ -72,8 +72,19 @@ void _dialect_check_chars(str *name1, str *name2, str *val1, str *val2) { // TOD
         throw new ValueError(__add_strs(5, new str("bad "), name1, new str(" or "), name2, new str(" value")));
 }
 
+Dialect *_lookup_dialect(str *name) {
+    if(name == NULL)
+        name = new str("excel");
+
+    try {
+        return _dialects->__getitem__(name);
+    } catch (KeyError *) {
+        throw new Error(new str("unknown dialect"));
+    }
+}
+
 Dialect *_make_dialect(
-    str *name,
+    Dialect *from,
     str *delimiter,
     str *quotechar,
     __ss_int doublequote,
@@ -83,16 +94,6 @@ Dialect *_make_dialect(
     str *escapechar,
     __ss_int strict
 ) {
-    if(name == NULL)
-        name = new str("excel");
-
-    Dialect *from;
-    try {
-        from = _dialects->__getitem__(name);
-    } catch (KeyError *) {
-        throw new Error(new str("unknown dialect"));
-    }
-
     Dialect *dialect = new Dialect();
 
     // TODO virtual dialect.copy() to maintain type eg as reader.dialect..?
@@ -178,7 +179,7 @@ void *register_dialect(
     str *escapechar,
     __ss_int strict
 ) {
-    Dialect *new_dialect = _make_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    Dialect *new_dialect = _make_dialect(_lookup_dialect(dialect), delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     _dialects->__setitem__(name, new_dialect);
     return NULL;
 }
@@ -219,7 +220,12 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
 
 /* reader */
 
-void *reader::__init__(pyiter<str *> *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *Dialect::__init__() { return NULL; }
+void *excel::__init__() { return NULL; }
+void *excel_tab::__init__() { return NULL; }
+void *unix_dialect::__init__() { return NULL; }
+
+void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     this->input_iter = input_iter_->__iter__();
     this->line_num = 0;
     this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
@@ -498,7 +504,7 @@ __csviter *reader::__iter__() {
 
 /* writer */
 
-void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *writer::__init__(file *output_file_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     this->output_file = output_file_;
     this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
@@ -643,7 +649,7 @@ void *writer::join_append(str *field, __ss_int quoted) {
 
 /* DictReader */
 
-void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if(fieldnames_)
         this->_fieldnames = new list<str *>(fieldnames_);
     else
@@ -718,13 +724,11 @@ __driter *DictReader::__iter__() {
 
 /* DictWriter */
 
-void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if(!restval_)
         restval_ = new str();
     if(!extrasaction_)
         extrasaction_ = new str("raise");
-    if(!dialect_)
-        dialect_ = new str("excel");
     if(fieldnames_)
         this->fieldnames = new list<str *>(fieldnames_);
     else
@@ -1158,15 +1162,9 @@ __ss_bool Sniffer::has_header(str *sample) {
 
     list<str *> *sample_lines = sample->split(new str("\n"));
     // pass the sniffed dialect as explicit overrides on top of "excel", since
-    // reader's constructor only resolves a *named*, registered dialect and
-    // otherwise silently falls back to excel defaults (see the `D dialect_`
-    // template dispatch above) -- an ad-hoc Dialect object isn't threaded
-    // through directly.
     reader *rdr = new reader(
-        sample_lines, new str("excel"),
-        dialect->delimiter, dialect->quotechar,
-        dialect->doublequote, dialect->skipinitialspace,
-        NULL, -1, NULL, -1
+        sample_lines, dialect,
+        NULL, NULL, -1, -1, NULL, -1, NULL, -1
     );
 
     list<str *> *header = rdr->__next__();
