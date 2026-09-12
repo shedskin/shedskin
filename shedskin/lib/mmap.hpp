@@ -173,7 +173,7 @@ class mmap: public pyiter<bytes *>
 
     inline size_t for_in_init() { return 0; }
     inline bool for_in_has_next(size_t i) const { return i < __size(); }
-    inline bytes *for_in_next(size_t &i) const { return new bytes(__char_cache[(unsigned char)(m_begin[i++])]->unit); }
+    inline bytes *for_in_next(size_t &i) const { return new bytes(__GC_BYTES(1, (char)m_begin[i++])); }
 
     // closed is a real, documented public attribute in CPython's mmap
     // (https://docs.python.org/3/library/mmap.html), so it must be

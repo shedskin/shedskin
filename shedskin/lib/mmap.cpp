@@ -921,8 +921,8 @@ void *mmap::set_name(str *name)
        runtime switch here, and the call is cheap and harmless. */
     __raise_if_closed();
     const char *prefix = "cpython:mmap:";
-    const __GC_STRING& unit = name->unit;
-    if (unit.find('\0') != __GC_STRING::npos)
+    const __GC_BYTES unit = __to_utf8(name->unit); /* kernel wants bytes */
+    if (unit.find('\0') != __GC_BYTES::npos)
     {
         throw new ValueError(const_26);
     }
@@ -1245,7 +1245,7 @@ bytes *__mmapiter::__next__()
 {
     if (pos >= map->__size())
         throw new StopIteration();
-    return new bytes(__char_cache[(unsigned char)(map->data()[pos++])]->unit);
+    return new bytes(__GC_BYTES(1, (char)map->data()[pos++]));
 }
 
 void __init()
