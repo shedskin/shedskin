@@ -13,3 +13,6 @@ def has_magic(s):
 
 def escape(pathname):
     return pathname
+
+def translate(pat, recursive=False, include_hidden=False, seps=None):
+    return ''
