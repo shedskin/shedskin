@@ -94,6 +94,81 @@ def test_process_time_ns():
     assert p2 >= p1
     print(x)
 
+def test_thread_time():
+    p1 = time.thread_time()
+    x = 0
+    for i in range(1000000):
+        x += i * i
+    p2 = time.thread_time()
+    # cpu time should never go backwards
+    assert p2 >= p1
+    # thread cpu time cannot exceed process cpu time
+    assert p2 <= time.process_time() + 1.0
+    print(x)
+
+def test_thread_time_ns():
+    p1 = time.thread_time_ns()
+    x = 0
+    for i in range(1000000):
+        x += i * i
+    p2 = time.thread_time_ns()
+    assert p2 >= p1
+    # the float and ns variants must agree
+    assert abs(p2 / 1e9 - time.thread_time()) < 1.0
+    print(x)
+
+def test_clock_gettime():
+    # CLOCK_REALTIME must agree with time() to sub-second precision
+    t1 = time.clock_gettime(time.CLOCK_REALTIME)
+    assert abs(t1 - time.time()) < 1.0
+
+    # CLOCK_MONOTONIC must move forward, and only forward
+    m1 = time.clock_gettime(time.CLOCK_MONOTONIC)
+    time.sleep(0.1)
+    m2 = time.clock_gettime(time.CLOCK_MONOTONIC)
+    assert m2 > m1
+    assert (m2 - m1) >= 0.09
+
+    # cpu clocks are small positive offsets, not wall clock
+    assert time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID) < t1
+    assert time.clock_gettime(time.CLOCK_THREAD_CPUTIME_ID) >= 0.0
+
+def test_clock_gettime_ns():
+    t1 = time.clock_gettime_ns(time.CLOCK_REALTIME)
+    # must not be derived by multiplying the float result by 1e9, which
+    # loses precision for seconds-since-epoch-sized values
+    assert abs(t1 / 1e9 - time.time()) < 1.0
+
+    m1 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    time.sleep(0.1)
+    m2 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    assert m2 > m1
+    assert (m2 - m1) >= 90000000
+
+def test_clock_getres():
+    for clk_id in [time.CLOCK_REALTIME, time.CLOCK_MONOTONIC,
+                   time.CLOCK_PROCESS_CPUTIME_ID, time.CLOCK_THREAD_CPUTIME_ID]:
+        res = time.clock_getres(clk_id)
+        assert res > 0.0
+        assert res <= 1.0
+
+def test_clock_invalid_id():
+    # -1 is the "unavailable on this platform" id, and no platform has a
+    # clock with that id, so it must raise instead of silently succeeding
+    caught = False
+    try:
+        time.clock_gettime(-1)
+    except OSError:
+        caught = True
+    assert caught
+
+    caught = False
+    try:
+        time.clock_getres(-1)
+    except OSError:
+        caught = True
+    assert caught
+
 def test_isdst_attribute():
     t = time.localtime(0)
     # regression test: struct_time must expose tm_isdst (not "isdst")
@@ -178,6 +253,12 @@ def test_all():
     test_perf_counter_ns()
     test_monotonic_ns()
     test_process_time_ns()
+    test_thread_time()
+    test_thread_time_ns()
+    test_clock_gettime()
+    test_clock_gettime_ns()
+    test_clock_getres()
+    test_clock_invalid_id()
     test_isdst_attribute()
     test_len()
     test_eq_and_ordering()

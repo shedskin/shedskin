@@ -5,8 +5,32 @@ altzone = 0
 daylight = 0
 tzname = ("str", "str")
 
+CLOCK_REALTIME = 0
+CLOCK_MONOTONIC = 0
+CLOCK_MONOTONIC_RAW = 0
+CLOCK_PROCESS_CPUTIME_ID = 0
+CLOCK_THREAD_CPUTIME_ID = 0
+CLOCK_BOOTTIME = 0
+CLOCK_TAI = 0
+CLOCK_UPTIME_RAW = 0
+
 def clock():
     return 1.0
+
+def clock_gettime(clk_id):
+    return 1.0
+
+def clock_gettime_ns(clk_id):
+    return 1
+
+def clock_getres(clk_id):
+    return 1.0
+
+def thread_time():
+    return 1.0
+
+def thread_time_ns():
+    return 1
 
 def perf_counter():
     return 1.0

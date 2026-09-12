@@ -2,6 +2,7 @@
 
 #include "time.hpp"
 #include "time.h"
+#include <cerrno>
 #include <climits>
 #include <cmath>
 
@@ -13,12 +14,21 @@ __ss_int altzone;
 __ss_int daylight;
 tuple2<str *, str *> *tzname;
 
+__ss_int __ss_CLOCK_REALTIME;
+__ss_int __ss_CLOCK_MONOTONIC;
+__ss_int __ss_CLOCK_MONOTONIC_RAW;
+__ss_int __ss_CLOCK_PROCESS_CPUTIME_ID;
+__ss_int __ss_CLOCK_THREAD_CPUTIME_ID;
+__ss_int __ss_CLOCK_BOOTTIME;
+__ss_int __ss_CLOCK_TAI;
+__ss_int __ss_CLOCK_UPTIME_RAW;
+
 #ifdef _MSC_VER
 
 #define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
 #define POW10_7 10000000
 
-int clock_gettime(int, struct timespec *tp)
+static int __ss_realtime_gettime(struct timespec *tp)
 {
     unsigned __int64 t;
     LARGE_INTEGER pf, pc;
@@ -135,9 +145,9 @@ struct_time *tm2tuple(tm* tm_time) {
 __ss_float time() {
     timespec ts { 0, 0 };
 #ifdef _MSC_VER
-    if (clock_gettime(0, &ts) == -1)
+    if (__ss_realtime_gettime(&ts) == -1)
 #else
-    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+    if (::clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
 	    throw new Exception(new str("clock_gettime"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
@@ -146,9 +156,9 @@ __ss_float time() {
 __ss_int time_ns() {
     timespec ts { 0, 0 };
 #ifdef _MSC_VER
-    if (clock_gettime(0, &ts) == -1)
+    if (__ss_realtime_gettime(&ts) == -1)
 #else
-    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+    if (::clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
 	    throw new Exception(new str("clock_gettime"));
     return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
@@ -180,6 +190,17 @@ __ss_float process_time() {
     /* FILETIME units are 100ns */
     return (__ss_float)(k.QuadPart + u.QuadPart) / 10000000.0;
 }
+__ss_float thread_time() {
+    FILETIME creation, exit, kernel, user;
+    GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user);
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime;
+    k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime;
+    u.HighPart = user.dwHighDateTime;
+    /* FILETIME units are 100ns */
+    return (__ss_float)(k.QuadPart + u.QuadPart) / 10000000.0;
+}
 __ss_int perf_counter_ns() {
     static LARGE_INTEGER frequency;
     static bool frequency_initialized = false;
@@ -189,7 +210,12 @@ __ss_int perf_counter_ns() {
     }
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
-    return (__ss_int)((counter.QuadPart * (int64_t)1000000000) / frequency.QuadPart);
+    /* Split into whole seconds and remainder before scaling to nanoseconds:
+       counter.QuadPart counts ticks since boot, so multiplying it by 1e9 up
+       front overflows int64 after a few minutes of uptime at a typical 10MHz
+       QPC frequency. */
+    int64_t q = counter.QuadPart, f = frequency.QuadPart;
+    return (__ss_int)((q / f) * (int64_t)1000000000 + ((q % f) * (int64_t)1000000000) / f);
 }
 __ss_int monotonic_ns() {
     return perf_counter_ns();
@@ -205,10 +231,21 @@ __ss_int process_time_ns() {
     /* FILETIME units are 100ns */
     return (__ss_int)((k.QuadPart + u.QuadPart) * (int64_t)100);
 }
+__ss_int thread_time_ns() {
+    FILETIME creation, exit, kernel, user;
+    GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user);
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime;
+    k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime;
+    u.HighPart = user.dwHighDateTime;
+    /* FILETIME units are 100ns */
+    return (__ss_int)((k.QuadPart + u.QuadPart) * (int64_t)100);
+}
 #else
 __ss_float perf_counter() {
     timespec ts { 0, 0 };
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+    if (::clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
@@ -219,14 +256,14 @@ __ss_float monotonic() {
 
 __ss_float process_time() {
     timespec ts { 0, 0 };
-    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
+    if (::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
 __ss_int perf_counter_ns() {
     timespec ts { 0, 0 };
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+    if (::clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
 }
@@ -237,10 +274,102 @@ __ss_int monotonic_ns() {
 
 __ss_int process_time_ns() {
     timespec ts { 0, 0 };
-    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
+    if (::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1)
         throw new Exception(new str("clock_gettime"));
     return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
 }
+
+__ss_float thread_time() {
+    timespec ts { 0, 0 };
+    if (::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
+}
+
+__ss_int thread_time_ns() {
+    timespec ts { 0, 0 };
+    if (::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == -1)
+        throw new Exception(new str("clock_gettime"));
+    return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
+}
+#endif
+
+/* clock_gettime/clock_gettime_ns/clock_getres
+
+   On POSIX these forward straight to the corresponding system calls. Windows
+   has no clock_gettime at all, so there the CLOCK_* constants are synthetic
+   ids (see __init) dispatched onto the Win32 clock APIs already used above,
+   which keeps the Python-level API identical across platforms. Clock ids the
+   platform does not provide are -1, which reaches the default branch below
+   and raises OSError, mirroring the EINVAL a POSIX system would return. */
+
+#ifdef WIN32
+
+static __ss_int __ss_win_clock_ns(__ss_int clk_id) {
+    if (clk_id == __ss_CLOCK_REALTIME) {
+        FILETIME ft;
+        ULARGE_INTEGER u;
+        GetSystemTimeAsFileTime(&ft);
+        u.LowPart = ft.dwLowDateTime;
+        u.HighPart = ft.dwHighDateTime;
+        /* FILETIME is 100ns units since 1601-01-01 */
+        return (__ss_int)(((int64_t)u.QuadPart - (int64_t)116444736000000000LL) * 100);
+    } else if (clk_id == __ss_CLOCK_MONOTONIC) {
+        return monotonic_ns();
+    } else if (clk_id == __ss_CLOCK_PROCESS_CPUTIME_ID) {
+        return process_time_ns();
+    } else if (clk_id == __ss_CLOCK_THREAD_CPUTIME_ID) {
+        return thread_time_ns();
+    }
+    errno = EINVAL;
+    throw new OSError(new str("clock_gettime"));
+}
+
+__ss_float clock_gettime(__ss_int clk_id) {
+    return (__ss_float)__ss_win_clock_ns(clk_id) / 1000000000.0;
+}
+
+__ss_int clock_gettime_ns(__ss_int clk_id) {
+    return __ss_win_clock_ns(clk_id);
+}
+
+__ss_float clock_getres(__ss_int clk_id) {
+    if (clk_id == __ss_CLOCK_MONOTONIC) {
+        LARGE_INTEGER frequency;
+        QueryPerformanceFrequency(&frequency);
+        return 1.0 / (__ss_float)frequency.QuadPart;
+    } else if (clk_id == __ss_CLOCK_REALTIME ||
+               clk_id == __ss_CLOCK_PROCESS_CPUTIME_ID ||
+               clk_id == __ss_CLOCK_THREAD_CPUTIME_ID) {
+        return 1e-7; /* FILETIME granularity: 100ns */
+    }
+    errno = EINVAL;
+    throw new OSError(new str("clock_getres"));
+}
+
+#else
+
+__ss_float clock_gettime(__ss_int clk_id) {
+    timespec ts { 0, 0 };
+    if (::clock_gettime((clockid_t)clk_id, &ts) == -1)
+        throw new OSError(new str("clock_gettime"));
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
+}
+
+__ss_int clock_gettime_ns(__ss_int clk_id) {
+    timespec ts { 0, 0 };
+    if (::clock_gettime((clockid_t)clk_id, &ts) == -1)
+        throw new OSError(new str("clock_gettime"));
+    return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
+}
+
+__ss_float clock_getres(__ss_int clk_id) {
+    timespec ts { 0, 0 };
+    if (::clock_getres((clockid_t)clk_id, &ts) == -1)
+        throw new OSError(new str("clock_getres"));
+    return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
+}
+
 #endif
 
 #ifndef WIN32
@@ -1011,8 +1140,54 @@ struct_time *strptime(str *string, str *format) {
     return tm2tuple(&time_tuple);
 }
 
+void __init_clock_ids() {
+    /* -1 means "not available on this platform"; passing it to
+       clock_gettime/clock_getres raises OSError. */
+    __ss_CLOCK_REALTIME = -1;
+    __ss_CLOCK_MONOTONIC = -1;
+    __ss_CLOCK_MONOTONIC_RAW = -1;
+    __ss_CLOCK_PROCESS_CPUTIME_ID = -1;
+    __ss_CLOCK_THREAD_CPUTIME_ID = -1;
+    __ss_CLOCK_BOOTTIME = -1;
+    __ss_CLOCK_TAI = -1;
+    __ss_CLOCK_UPTIME_RAW = -1;
+#ifdef WIN32
+    /* synthetic ids, dispatched by __ss_win_clock_ns/clock_getres */
+    __ss_CLOCK_REALTIME = 0;
+    __ss_CLOCK_MONOTONIC = 1;
+    __ss_CLOCK_PROCESS_CPUTIME_ID = 2;
+    __ss_CLOCK_THREAD_CPUTIME_ID = 3;
+#else
+#ifdef CLOCK_REALTIME
+    __ss_CLOCK_REALTIME = CLOCK_REALTIME;
+#endif
+#ifdef CLOCK_MONOTONIC
+    __ss_CLOCK_MONOTONIC = CLOCK_MONOTONIC;
+#endif
+#ifdef CLOCK_MONOTONIC_RAW
+    __ss_CLOCK_MONOTONIC_RAW = CLOCK_MONOTONIC_RAW;
+#endif
+#ifdef CLOCK_PROCESS_CPUTIME_ID
+    __ss_CLOCK_PROCESS_CPUTIME_ID = CLOCK_PROCESS_CPUTIME_ID;
+#endif
+#ifdef CLOCK_THREAD_CPUTIME_ID
+    __ss_CLOCK_THREAD_CPUTIME_ID = CLOCK_THREAD_CPUTIME_ID;
+#endif
+#ifdef CLOCK_BOOTTIME
+    __ss_CLOCK_BOOTTIME = CLOCK_BOOTTIME;
+#endif
+#ifdef CLOCK_TAI
+    __ss_CLOCK_TAI = CLOCK_TAI;
+#endif
+#ifdef CLOCK_UPTIME_RAW
+    __ss_CLOCK_UPTIME_RAW = CLOCK_UPTIME_RAW;
+#endif
+#endif
+}
+
 void __init() {
     start = std::clock();
+    __init_clock_ids();
     const_0 = new str("time.struct_time() takes a 9-sequence");
     const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
     struct_time* gmt = gmtime();

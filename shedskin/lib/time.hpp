@@ -33,14 +33,32 @@ extern __ss_int altzone;
 extern __ss_int daylight;
 extern tuple2<str *, str *> *tzname;
 
+/* Clock identifiers for clock_gettime/clock_gettime_ns/clock_getres. These
+   are filled in by __init() from the corresponding platform macros; a clock
+   the platform does not provide is set to -1, so that passing it raises
+   OSError (EINVAL) rather than silently selecting some other clock. */
+extern __ss_int __ss_CLOCK_REALTIME;
+extern __ss_int __ss_CLOCK_MONOTONIC;
+extern __ss_int __ss_CLOCK_MONOTONIC_RAW;
+extern __ss_int __ss_CLOCK_PROCESS_CPUTIME_ID;
+extern __ss_int __ss_CLOCK_THREAD_CPUTIME_ID;
+extern __ss_int __ss_CLOCK_BOOTTIME;
+extern __ss_int __ss_CLOCK_TAI;
+extern __ss_int __ss_CLOCK_UPTIME_RAW;
+
 __ss_float time();
 __ss_float perf_counter();
 __ss_float monotonic();
 __ss_float process_time();
+__ss_float thread_time();
 __ss_int time_ns();
 __ss_int perf_counter_ns();
 __ss_int monotonic_ns();
 __ss_int process_time_ns();
+__ss_int thread_time_ns();
+__ss_float clock_gettime(__ss_int clk_id);
+__ss_int clock_gettime_ns(__ss_int clk_id);
+__ss_float clock_getres(__ss_int clk_id);
 void *sleep(__ss_float s);
 
 extern str *const_0, *const_1;
