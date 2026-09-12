@@ -143,16 +143,17 @@ __ss_bool fnmatchcase(str *name, str *pat) {
     return __mbool((_cache->__getitem__(pat))->match(name)!=0);
 }
 
-str *translate(str *pat) {
+void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
+                      const __GC_STRING &qmark, __GC_STRING &res) {
     /**
-    Translate a shell PATTERN to a regular expression.
-
-    There is no way to quote meta-characters.
+    Shared core of fnmatch.translate() and glob.translate(): translate one
+    shell pattern (for glob: one path segment) to regex text, appending to
+    `res`. `star` and `qmark` are what `*` and `?` translate to (".*"/"." for
+    fnmatch, "[^<seps>]*"/"[^<seps>]" for glob), mirroring CPython's
+    fnmatch._translate(pat, STAR, QUESTION_MARK) refactoring.
     */
-    const __GC_STRING &p = pat->unit;
     size_t n = p.size();
     size_t i = 0;
-    __GC_STRING res;
     bool last_was_star = false;
 
     while (i < n) {
@@ -166,7 +167,7 @@ str *translate(str *pat) {
                "a****************b" from building up redundant, slower
                regexes. */
             if (!last_was_star) {
-                res += ".*";
+                res += star;
                 last_was_star = true;
             }
             continue;
@@ -174,7 +175,7 @@ str *translate(str *pat) {
         last_was_star = false;
 
         if (c == '?') {
-            res += '.';
+            res += qmark;
         }
         else if (c == '[') {
             size_t j = i;
@@ -284,6 +285,16 @@ str *translate(str *pat) {
             escape_char(res, c);
         }
     }
+}
+
+str *translate(str *pat) {
+    /**
+    Translate a shell PATTERN to a regular expression.
+
+    There is no way to quote meta-characters.
+    */
+    __GC_STRING res;
+    __translate_core(pat->unit, __GC_STRING(".*"), __GC_STRING("."), res);
 
     /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
        DOTALL scope and anchors with \Z. shedskin's re module hands patterns
