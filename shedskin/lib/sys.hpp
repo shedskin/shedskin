@@ -32,6 +32,35 @@ str *intern(str *s);
 __ss_bool is_finalizing();
 str *getdefaultencoding();
 str *getfilesystemencoding();
+str *getfilesystemencodeerrors();
+
+extern str *float_repr_style;
+extern list<str *> *orig_argv;
+
+extern class_ *cl_float_info, *cl_implementation;
+
+/* describes __ss_float, so it stays honest under --float32 */
+class __float_info : public pyobj {
+public:
+    __ss_float max, min, epsilon;
+    __ss_int max_exp, max_10_exp, min_exp, min_10_exp, dig, mant_dig, radix, rounds;
+
+    __float_info();
+    str *__repr__();
+};
+
+class __implementation : public pyobj {
+public:
+    str *name;
+    tuple2<__ss_int, __ss_int> *version;
+    __ss_int hexversion;
+
+    __implementation();
+    str *__repr__();
+};
+
+extern __float_info *float_info;
+extern __implementation *implementation;
 
 } // module namespace
 #endif
