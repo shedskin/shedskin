@@ -122,11 +122,9 @@ def test_interpolation():
     config.set('paths', 'my_dir', '%(home_dir)s/mine')
     config.set('paths', 'both', 'prefix-%(home_dir)s-mid-%(my_dir)s-suffix')
     config.set('paths', 'no_ref', 'just a plain value')
-    # a literal '%' has to be doubled to survive interpolation, but only
-    # once the value also contains a real "%(...)s" reference somewhere
-    # -- ConfigParser._interpolate only runs its %-substitution pass at
-    # all when "%(" appears in the value (this mirrors old ConfigParser,
-    # not modern configparser's BasicInterpolation).
+    # a literal '%' has to be doubled to survive interpolation (matching
+    # modern configparser's BasicInterpolation: a bare '%' that is not
+    # part of '%%' or '%(name)s' raises InterpolationSyntaxError)
     config.set('paths', 'mixed_percent', '%(home_dir)s has 100%% capacity')
 
     assert config.get('paths', 'home_dir') == '/home/user'
@@ -564,6 +562,137 @@ def test_parsing_error_append():
     assert e.errors == [(3, 'bad line 3'), (7, 'bad line 7')]
 
 
+def test_parsing_error_combine():
+    e1 = configparser.ParsingError('a.ini')
+    e1.append(1, 'one')
+    e2 = configparser.ParsingError('b.ini')
+    e2.append(2, 'two')
+    e2.append(3, 'three')
+    e3 = configparser.ParsingError('c.ini')
+    e3.append(4, 'four')
+    combined = e1.combine([e2, e3])
+    assert combined is e1
+    assert e1.errors == [(1, 'one'), (2, 'two'), (3, 'three'), (4, 'four')]
+    assert 'two' in e1.message and 'four' in e1.message
+    # the donors are unchanged
+    assert e2.errors == [(2, 'two'), (3, 'three')]
+
+
+def test_popitem():
+    config = configparser.ConfigParser()
+    config.read_string('[DEFAULT]\nd = 1\n[s1]\nx = a\n[s2]\ny = b\n')
+    # note: CPython pops the *first* section in insertion order; shedskin
+    # dicts are not insertion-ordered, so only check the popped set here
+    name1, proxy1 = config.popitem()
+    assert proxy1.name == name1
+    name2, proxy2 = config.popitem()
+    assert sorted([name1, name2]) == ['s1', 's2']
+    # the default section is never popped
+    assert config.sections() == []
+    assert config.defaults()['d'] == '1'
+    ok = False
+    try:
+        config.popitem()
+    except KeyError:
+        ok = True
+    assert ok
+
+
+def test_interpolation_kwarg():
+    # dummy Interpolation() passes values through untouched, even on a
+    # ConfigParser; BasicInterpolation() enables %-expansion, even on a
+    # RawConfigParser
+    config = configparser.ConfigParser(interpolation=configparser.Interpolation())
+    config.read_string('[p]\nhome = /home/user\nmy = %(home)s/mine\n')
+    assert config.get('p', 'my') == '%(home)s/mine'
+
+    config2 = configparser.RawConfigParser(interpolation=configparser.BasicInterpolation())
+    config2.read_string('[p]\nhome = /home/user\nmy = %(home)s/mine\n')
+    assert config2.get('p', 'my') == '/home/user/mine'
+    assert config2.get('p', 'my', raw=True) == '%(home)s/mine'
+
+
+def test_extended_interpolation():
+    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+    config.read_string('[DEFAULT]\nroot = /opt\n'
+                       '[common]\nprefix = ${root}/app\n'
+                       '[paths]\nbin = ${common:prefix}/bin\n'
+                       'both = ${bin} and ${common:prefix}\n'
+                       'money = 100$$\n')
+    assert config.get('common', 'prefix') == '/opt/app'
+    # cross-section reference, recursing through another section
+    assert config.get('paths', 'bin') == '/opt/app/bin'
+    assert config.get('paths', 'both') == '/opt/app/bin and /opt/app'
+    # '$$' is an escaped dollar sign
+    assert config.get('paths', 'money') == '100$'
+    # raw bypasses interpolation
+    assert config.get('paths', 'bin', raw=True) == '${common:prefix}/bin'
+    # through the mapping protocol / SectionProxy too
+    assert config['paths']['bin'] == '/opt/app/bin'
+    # items() interpolates as well
+    assert dict(config.items('common'))['prefix'] == '/opt/app'
+
+    # missing reference
+    ok = False
+    try:
+        config.read_string('[q]\nbad = ${nope}\n')
+        config.get('q', 'bad')
+    except configparser.InterpolationMissingOptionError as e:
+        ok = True
+        assert 'nope' in e.reference
+    assert ok
+
+    # missing section in a cross-section reference
+    ok = False
+    try:
+        config.read_string('[r]\nbad = ${gone:opt}\n')
+        config.get('r', 'bad')
+    except configparser.InterpolationMissingOptionError as e2:
+        ok = True
+        assert 'gone' in e2.reference
+    assert ok
+
+    # more than one ':' -> InterpolationSyntaxError
+    ok = False
+    try:
+        config.read_string('[t]\nbad = ${a:b:c}\n')
+        config.get('t', 'bad')
+    except configparser.InterpolationSyntaxError:
+        ok = True
+    assert ok
+
+    # set() validates the '$' syntax
+    ok = False
+    try:
+        config.set('common', 'oops', 'stray $ sign')
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_basic_interpolation_syntax_errors():
+    config = configparser.ConfigParser()
+    # a bare '%' read from input raises InterpolationSyntaxError on get
+    config.read_string('[p]\nbad = 100% sure\n')
+    ok = False
+    try:
+        config.get('p', 'bad')
+    except configparser.InterpolationSyntaxError:
+        ok = True
+    assert ok
+    assert config.get('p', 'bad', raw=True) == '100% sure'
+    # set() validates the '%' syntax up front
+    ok = False
+    try:
+        config.set('p', 'oops', '100% sure')
+    except ValueError:
+        ok = True
+    assert ok
+    # ...but escaped/reference forms are fine to set
+    config.set('p', 'fine', '100%% sure')
+    assert config.get('p', 'fine') == '100% sure'
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -594,6 +723,11 @@ def test_all():
     test_section_proxy_get()
     test_section_proxy_typed_getters()
     test_parsing_error_append()
+    test_parsing_error_combine()
+    test_popitem()
+    test_interpolation_kwarg()
+    test_extended_interpolation()
+    test_basic_interpolation_syntax_errors()
 
 if __name__ == '__main__':
     test_all()
