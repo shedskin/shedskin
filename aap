@@ -1,0 +1,80 @@
+[1G*** SHED SKIN Python-to-C++ Compiler 0.9.14-pre ***
+[1GCopyright 2005-2026 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+[1G
+>> reading Python
+[1G[infer v2: allocation site inventory]
+[1G  program constructor nodes: 4 (builtin scanned: 1424)
+[1G    container  0
+[1G    instance   0
+[1G    scalar     4
+[1G[infer v2: 0 module-level container site(s); 0 in-function mold(s) to be discovered per template]
+[1G[infer v2: round 1]
+[1G  round 1 sweep 1: 0 contour variable(s) grew, 0 provisional site(s) (2 propagation round(s))
+[1G  round 1: +1 site __init__:886  tuple  contour 2  (3 still waiting)
+[1G      ('',)   cart Exception(1),str_(0)
+[1G[infer v2: round 1 done: 1 sweep(s), 1 site(s) discovered (0 merged, 4 minted), 0 learned, 17 template(s), 1 contour(s) total]
+[1G[infer v2: round 2]
+[1G  round 2 sweep 1: 1 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 2 sweep 2: 0 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 2: +1 site __init__:886  tuple  contour 3  (2 still waiting)
+[1G      ('',)   cart FileNotFoundError(1),str_(0)
+[1G[infer v2: round 2 done: 2 sweep(s), 1 site(s) discovered (0 merged, 3 minted), 1 learned, 17 template(s), 2 contour(s) total]
+[1G  round 2: 1 contour(s) moved to a larger signature
+[1G[infer v2: round 3]
+[1G  round 3 sweep 1: 1 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 3 sweep 2: 0 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 3: +1 site __init__:886  tuple  contour 4  (1 still waiting)
+[1G      ('',)   cart OSError(1),str_(0)
+[1G[infer v2: round 3 done: 2 sweep(s), 1 site(s) discovered (0 merged, 2 minted), 1 learned, 17 template(s), 3 contour(s) total]
+[1G  round 3: 1 contour(s) moved to a larger signature
+[1G[infer v2: round 4]
+[1G  round 4 sweep 1: 1 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 4 sweep 2: 0 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 4: +1 site __init__:886  tuple  contour 5  (0 still waiting)
+[1G      ('',)   cart SystemExit(1),str_(0)
+[1G[infer v2: round 4 done: 2 sweep(s), 1 site(s) discovered (0 merged, 1 minted), 1 learned, 17 template(s), 4 contour(s) total]
+[1G  round 4: 1 contour(s) moved to a larger signature
+[1G[infer v2: round 5]
+[1G  round 5 sweep 1: 1 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G  round 5 sweep 2: 0 contour variable(s) grew, 1 provisional site(s) (2 propagation round(s))
+[1G[infer v2: round 5 done: 2 sweep(s), 0 site(s) discovered (0 merged, 0 minted), 1 learned, 17 template(s), 4 contour(s) total]
+[1G  round 5: 1 contour(s) moved to a larger signature
+[1G[infer v2: round 6]
+[1G  round 6 sweep 1: 0 contour variable(s) grew, 0 provisional site(s) (2 propagation round(s))
+[1G[infer v2: round 6 done: 1 sweep(s), 0 site(s) discovered (0 merged, 0 minted), 0 learned, 17 template(s), 4 contour(s) total]
+[1G[infer v2: growth per round]
+[1G    round  sweeps  found   merged  learned  contours  templates  upgrade sigs 
+[1G    1      1       1       0       0        1         17         0       1    
+[1G    2      2       1       0       1        2         17         1       2    
+[1G    3      2       1       0       1        3         17         1       2    
+[1G    4      2       1       0       1        4         17         1       2    
+[1G    5      2       0       0       1        4         17         1       2    
+[1G    6      1       0       0       0        4         17         0       2    
+[1G[infer v2: frozen core after 6 round(s): 0 module-level site(s), 4 in-function site(s), 4 contour(s), 4 contour variable(s)]
+[1G    tuple      4 contour(s)
+[1G[infer v2: templates created during propagation]
+[1G  templates: 17 (program: 1, builtin: 16)
+[1G  0 program template(s) enable 0 new allocation site(s)
+[1G  builtin templates by function:
+[1G    builtin.__iter.__init__                  3
+[1G    builtin.__iter.__next__                  2
+[1G    builtin.Exception.__init__               1
+[1G    builtin.FileNotFoundError.__init__       1
+[1G    builtin.OSError.__init__                 1
+[1G    builtin.SystemExit.__init__              1
+[1G    builtin.__xrange.__init__                1
+[1G    builtin.__xrange.__iter__                1
+[1G    builtin.file.__init__                    1
+[1G    builtin.file_binary.__init__             1
+[1G    builtin.frozendict.__initdict__          1
+[1G    builtin.int_.__neg__                     1
+[1G    builtin.range                            1
+[1G[infer v2: materialised in 2 propagation round(s); 4 contour(s); 0 site(s) fell back to the old heuristic]
+[1G[generating c++ code..]
+>> generating C++
+*WARNING* test.py:1: Function h not called!
+*WARNING* test.py:5: variable 'c' has no type
+>> generating Makefile
+[1G
+[prebuild time: 0.79 secs]
+

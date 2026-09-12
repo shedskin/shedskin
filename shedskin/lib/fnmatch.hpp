@@ -20,6 +20,13 @@ list<str *> *filter(list<str *> *names, str *pat);
 list<str *> *filterfalse(list<str *> *names, str *pat);
 str *translate(str *pat);
 
+/* internal: shared pattern-translation core, parameterized over what `*` and
+   `?` translate to, so glob.translate() can reuse the exact same wildcard and
+   character-class handling with segment-local replacements ("[^/]*", "[^/]").
+   Appends to `res`; does not add the "(?s:...)" wrapper or end anchor. */
+void __translate_core(const __GC_STR &pat, const __GC_STR &star,
+                      const __GC_STR &qmark, __GC_STR &res);
+
 void __init(void);
 
 } // module namespace

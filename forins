@@ -1,0 +1,74 @@
+diff --git a/shedskin/lib/builtin.hpp b/shedskin/lib/builtin.hpp
+index 2c056d31..bf3a65eb 100644
+--- a/shedskin/lib/builtin.hpp
++++ b/shedskin/lib/builtin.hpp
+@@ -176,6 +176,18 @@ public:
+     inline T for_in_next(__iter<T> *iter);
+ };
+ 
++template <class T> auto __for_in_init(T t) {
++    return t->for_in_init();
++}
++
++template <class T, class I> bool __for_in_has_next(T t, I i) {
++    return t->for_in_has_next(i);
++}
++
++template <class T, class I> auto __for_in_next(T t, I &i) {
++    return t->for_in_next(i);
++}
++
+ /* abstract sequence class */
+ 
+ template <class T> class pyseq : public pyiter<T> {
+@@ -424,6 +436,7 @@ template<class T> __iter<T> *__iter<T>::__iter__() {
+ }
+ 
+ template<class T> T __iter<T>::__next__() { /* __get_next can be overloaded instead to avoid (slow) exception handling */
++    printf("iter next..\n");
+     __result = this->__get_next();
+     if(__stop_iteration)
+         throw new StopIteration();
+@@ -431,6 +444,7 @@ template<class T> T __iter<T>::__next__() { /* __get_next can be overloaded inst
+ }
+ 
+ template<class T> T __iter<T>::__get_next() {
++    printf("pyiter getnext..\n");
+     try {
+         __result = this->__next__();
+     } catch (StopIteration *) {
+diff --git a/shedskin/lib/builtin/function.hpp b/shedskin/lib/builtin/function.hpp
+index 53e4834d..f5173b37 100644
+--- a/shedskin/lib/builtin/function.hpp
++++ b/shedskin/lib/builtin/function.hpp
+@@ -112,6 +112,11 @@ template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
+ 
+ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
+     typename __sumtype1<typename U::for_in_unit>::type result;
++    if constexpr (U::is_awesome) {
++        while(!iter->__stop_iteration)
++            result += iter->__get_next();
++        return result;
++    }
+     result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
+     typename U::for_in_unit e;
+     typename U::for_in_loop __3;
+diff --git a/shedskin/lib/builtin/iter.hpp b/shedskin/lib/builtin/iter.hpp
+index db3f22f4..47e5a796 100644
+--- a/shedskin/lib/builtin/iter.hpp
++++ b/shedskin/lib/builtin/iter.hpp
+@@ -16,11 +16,11 @@
+     __ ## temp = iter; \
+     __ ## i = -1; \
+     (void)__ ## i; \
+-    __ ## t = __ ## temp->for_in_init(); \
+-    while(__ ## temp->for_in_has_next(__ ## t)) \
++    __ ## t = __for_in_init(__ ## temp); \
++    while(__for_in_has_next(__ ## temp, __ ## t)) \
+     { \
+         __ ## i ++; \
+-        e = __ ## temp->for_in_next(__ ## t);
++        e = __for_in_next(__ ## temp, __ ## t);
+ 
+ #define FOR_IN_ZIP(a, b, k, l, t, u, n, m) \
+     __ ## m = __SS_MIN(k->units.size(), l->units.size()); \
