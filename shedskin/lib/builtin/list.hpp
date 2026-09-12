@@ -513,7 +513,7 @@ template<class T> str *list<T>::__repr__() {
     str *r = new str("[");
     size_t len = this->units.size();
     for(size_t i=0; i<len; i++) {
-        *r += repr(units[i])->c_str();
+        r->unit += repr(units[i])->unit;
         if (i<len-1)
             *r += ", ";
     }

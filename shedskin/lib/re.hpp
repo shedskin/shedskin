@@ -8,7 +8,7 @@
 
 #include "builtin.hpp"
 
-#define PCRE2_CODE_UNIT_WIDTH 8
+#define PCRE2_CODE_UNIT_WIDTH 32
 
 #ifndef __sun
 #include <pcre2.h>
@@ -127,9 +127,9 @@ public:
     __ss_int groups;
 
     //internal functions
-    __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int m);
-    __GC_STRING __group(__GC_STRING *subj, PCRE2_SIZE *captured, str *m);
-    __GC_STRING __expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_STRING tpl);
+    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int m);
+    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, str *m);
+    __GC_STR __expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl);
 
     //the compiled pattern
     pcre2_code *compiled_pattern;

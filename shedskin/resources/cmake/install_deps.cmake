@@ -24,11 +24,11 @@ function(common)
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
-        set(LIBPCRE2 libpcre2-8.a)
+        set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE2 pcre2-8-static.lib)
+        set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
     if(ENABLE_FETCH_CONTENT)
@@ -36,7 +36,7 @@ function(common)
         set(LIB_DEPS
             gc
             gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
         )
         set(LIB_DIRS)
         set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
@@ -69,7 +69,7 @@ function(common)
         set(LIB_DEPS 
             "-lgc"
             "-lgccpp"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
+            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )

@@ -226,11 +226,11 @@ function(add_shedskin_product)
     if (UNIX)
         set(LIBGC libgc.a)
         set(LIBGCCPP libgccpp.a)
-        set(LIBPCRE2 libpcre2-8.a)
+        set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
         set(LIBGCCPP gccpp.lib)
-        set(LIBPCRE2 pcre2-8-static.lib)
+        set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
     # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
@@ -242,7 +242,7 @@ function(add_shedskin_product)
         set(LIB_DEPS
             gc
             gccpp
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-8-static>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
         )
@@ -300,7 +300,7 @@ function(add_shedskin_product)
         set(LIB_DEPS
             "-lgc"
             "-lgccpp"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-8>"
+            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             ${SHEDSKIN_LINK_LIBS}
