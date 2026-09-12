@@ -52,6 +52,7 @@ class socket;
 
 extern __ss_int default_0;
 extern __ss_int default_1;
+extern __ss_int default_4;
 
 extern str *__name__;
 
@@ -109,8 +110,17 @@ public:
     typedef tuple2<str *, __ss_int> *inet_address;
 
     socket(__ss_int family=2, __ss_int type=1, __ss_int proto=0);
+    /* internal: adopt an existing fd instead of creating a new socket */
+    struct wrap_fd_tag {};
+    socket(wrap_fd_tag, socket_type fd, __ss_int family, __ss_int type, __ss_int proto);
     ~socket();
+    str *__repr__();
+    void __enter__();
+    void __exit__();
     __ss_int __ss_fileno();
+    __ss_int detach();
+    socket *dup();
+    __ss_int sendfile(file_binary *f, __ss_int offset=0, __ss_int count=-1);
     str *getsockopt(__ss_int level, __ss_int optname, __ss_int value);
     socket *bind(inet_address address);
     socket *bind(pyseq<str *> *address);
@@ -142,6 +152,9 @@ public:
 extern str * __name__;
 void __init();
 socket *create_connection(socket::inet_address address, double timeout=-1, socket::inet_address source_address=0);
+socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto=0);
+socket *create_server(socket::inet_address address, __ss_int family=2, __ss_int backlog=-1, __ss_bool reuse_port=False, __ss_bool dualstack_ipv6=False);
+__ss_bool has_dualstack_ipv6();
 str *gethostbyname(str *hostname);
 str *inet_aton(str *x);
 str *inet_ntoa(str *x);
