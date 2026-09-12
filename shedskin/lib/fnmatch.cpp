@@ -149,7 +149,7 @@ str *translate(str *pat) {
 
     There is no way to quote meta-characters.
     */
-    const __GC_STRING &p = pat->unit;
+    const __GC_STR &p = pat->unit;
     size_t n = p.size();
     size_t i = 0;
     __GC_STRING res;
