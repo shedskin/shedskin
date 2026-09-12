@@ -591,6 +591,43 @@ def test_dictreader_dictwriter_roundtrip():
         assert f.read() == 'name,age\nCarol,40\n'
 
 
+def test_dictreader_fieldnames():
+    rows = ['a,b,c', '1,2,3', '4,5,6']
+
+    # lazy header read; repeated access must not consume another row
+    reader = csv.DictReader(rows)
+    assert reader.fieldnames == ['a', 'b', 'c']
+    assert reader.fieldnames == ['a', 'b', 'c']
+    assert reader.line_num == 1
+    assert list(reader) == [
+        {'a': '1', 'b': '2', 'c': '3'},
+        {'a': '4', 'b': '5', 'c': '6'},
+    ]
+
+    # setter overrides the header, so the first row becomes data
+    reader2 = csv.DictReader(rows)
+    reader2.fieldnames = ['x', 'y', 'z']
+    assert reader2.fieldnames == ['x', 'y', 'z']
+    assert next(reader2) == {'x': 'a', 'y': 'b', 'z': 'c'}
+
+    # setter after partial iteration
+    reader3 = csv.DictReader(rows)
+    next(reader3)
+    reader3.fieldnames = ['u', 'v', 'w']
+    assert next(reader3) == {'u': '4', 'v': '5', 'w': '6'}
+
+    # explicit fieldnames argument wins, header row is data
+    reader4 = csv.DictReader(rows, fieldnames=['p', 'q', 'r'])
+    assert reader4.fieldnames == ['p', 'q', 'r']
+    assert next(reader4) == {'p': 'a', 'q': 'b', 'r': 'c'}
+
+    # empty input: fieldnames is None
+    path = _csv_path('emptycsv.csv')
+    open(path, 'w').close()
+    with open(path) as f:
+        assert csv.DictReader(f).fieldnames is None
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -615,6 +652,7 @@ def test_all():
     test_sniffer_no_delimiter_error()
     test_sniffer_has_header()
     test_dictreader_dictwriter_roundtrip()
+    test_dictreader_fieldnames()
 
 
 if __name__ == "__main__":
