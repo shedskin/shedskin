@@ -68,7 +68,12 @@ def test_maxunicode():
         pass
 
 def test_executable():
-    assert sys.executable
+    # note: 'assert sys.executable' would compile to a pointer check and
+    # always pass; test the length explicitly instead
+    if sys.argv:  # compiled binary
+        assert len(sys.executable) > 0
+    else:  # extension module: no C-level argv, executable is empty
+        assert len(sys.executable) == 0
 
 def test_float_info():
     # values for IEEE-754 double, which is what the default build uses
@@ -102,10 +107,14 @@ def test_float_repr_style():
     assert sys.float_repr_style == 'short'
 
 def test_orig_argv():
-    # no interpreter in front of a compiled binary, so the full original
-    # command line is exactly argv
+    # orig_argv always mirrors argv: a compiled binary has no interpreter
+    # options in front, and an extension module receives no C-level argv
+    # at all (sys is initialized with argc=0), leaving both lists empty
     assert sys.orig_argv == sys.argv
-    assert sys.orig_argv[0] == sys.executable
+    if sys.argv:  # compiled binary
+        assert sys.orig_argv[0] == sys.executable
+    else:  # extension module
+        assert len(sys.orig_argv) == 0
 
 def test_all():
     test_sys()
