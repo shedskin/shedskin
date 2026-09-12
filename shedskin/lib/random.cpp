@@ -3,6 +3,7 @@
 #include "random.hpp"
 
 #include <stdint.h>
+#include <cstring>
 
 /*
     Random module implementation for Shed Skin copyright Jeff Miller.
@@ -42,9 +43,11 @@ static inline uint64_t rotl(const uint64_t x, int k) {
     return (x << k) | (x >> (64 - k));
 }
 
-static uint64_t s[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
+static const uint64_t default_state[4] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
 
-uint64_t inline next(void) {
+uint64_t Random::_next_word(void) {
+    uint64_t *s = this->_s;
+
     const uint64_t result = rotl(s[0] + s[3], 23) + s[0];
 
     const uint64_t t = s[1] << 17;
@@ -70,12 +73,18 @@ uint64_t next_splitmix64(uint64_t *sm_state) {
 }
 
 // Seeding function for xoshiro256
-void seed_xoshiro256(uint64_t initial_seed) {
+void Random::_seed_state(uint64_t initial_seed) {
     uint64_t sm_state = initial_seed;
-    s[0] = next_splitmix64(&sm_state);
-    s[1] = next_splitmix64(&sm_state);
-    s[2] = next_splitmix64(&sm_state);
-    s[3] = next_splitmix64(&sm_state);
+    this->_s[0] = next_splitmix64(&sm_state);
+    this->_s[1] = next_splitmix64(&sm_state);
+    this->_s[2] = next_splitmix64(&sm_state);
+    this->_s[3] = next_splitmix64(&sm_state);
+}
+
+/* Kept for source compatibility: seeds the module-level generator, i.e.
+   the one behind random.seed()/random.random(). */
+void seed_xoshiro256(uint64_t initial_seed) {
+    _inst->_seed_state(initial_seed);
 }
 
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_4, *const_7, *const_8, *const_9;
@@ -204,7 +213,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return static_cast<__ss_float>(next() >> 11) * 0x1.0p-53;
+    return static_cast<__ss_float>(this->_next_word() >> 11) * 0x1.0p-53;
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
@@ -253,6 +262,7 @@ __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
 Random::Random() { // : gen(7.0), distr(0.0, 1.0) {
     this->__class__ = cl_Random;
 
+    memcpy(this->_s, default_state, sizeof(this->_s));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL);
@@ -269,6 +279,7 @@ Random::Random(int a) {
     */
     this->__class__ = cl_Random;
 
+    memcpy(this->_s, default_state, sizeof(this->_s));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed(a);
@@ -493,7 +504,7 @@ __ss_int Random::getrandbits(__ss_int k) {
     __ss_int remaining = k;
     int shift = 0;
     while (remaining > 0) {
-        uint64_t word = next();
+        uint64_t word = this->_next_word();
         int take = remaining < 64 ? (int)remaining : 64;
         uint64_t mask = (take >= 64) ? ~UINT64_C(0) : ((UINT64_C(1) << take) - 1);
         acc |= (word & mask) << shift;
@@ -504,8 +515,31 @@ __ss_int Random::getrandbits(__ss_int k) {
 }
 
 bytes *Random::randbytes(__ss_int n) {
-    return __random__::randbytes(n);
+    /**
+    Generate n random bytes from this instance's own stream.
+    */
+    if (n < 0)
+        throw (new ValueError(new str("negative argument not allowed")));
+
+    bytes *result = new bytes();
+    result->unit.resize((size_t)n);
+    __ss_int i = 0;
+    while (i < n) {
+        uint64_t word = this->_next_word();
+        for (int b = 0; b < 8 && i < n; b++, i++) {
+            result->__setitem__(i, (__ss_int)((word >> (8*b)) & 0xff));
+        }
+    }
+    return result;
 }
+
+/* Serialised state layout (RANDOM_STATE_SIZE bytes):
+     [0:32]  the four xoshiro256++ words, little-endian
+     [32:40] gauss_next, as raw IEEE-754 bits, little-endian
+     [40]    gauss_switch (0 or 1)
+   The gauss cache is included so that a getstate()/setstate() round trip
+   reproduces gauss() as well as random(), matching CPython. */
+static const size_t RANDOM_STATE_SIZE = 41;
 
 bytes *Random::getstate() {
     /**
@@ -514,8 +548,16 @@ bytes *Random::getstate() {
     bytes *state = new bytes();
     for(size_t i=0; i<4; i++)
         for(size_t j=0; j<64; j += 8) {
-            state->unit += (unsigned char)((s[i] >> j) & 0xff);
+            state->unit += (unsigned char)((this->_s[i] >> j) & 0xff);
     }
+
+    uint64_t g;
+    memcpy(&g, &this->gauss_next, sizeof(g));
+    for(size_t j=0; j<64; j += 8)
+        state->unit += (unsigned char)((g >> j) & 0xff);
+
+    state->unit += (unsigned char)(this->gauss_switch ? 1 : 0);
+
     return state;
 }
 
@@ -523,12 +565,23 @@ void *Random::setstate(bytes *state) {
     /**
     Restore internal state from object returned by getstate().
     */
+    if (state->unit.size() != RANDOM_STATE_SIZE)
+        throw (new ValueError(new str("state vector is the wrong size")));
+
     size_t x = 0;
     for(size_t i=0; i<4; i++) {
-        s[i] = 0;
+        this->_s[i] = 0;
         for(size_t j=0; j<64; j += 8)
-            s[i] |= ((uint64_t)((unsigned char)(state->unit[x++]))) << j;
+            this->_s[i] |= ((uint64_t)((unsigned char)(state->unit[x++]))) << j;
     }
+
+    uint64_t g = 0;
+    for(size_t j=0; j<64; j += 8)
+        g |= ((uint64_t)((unsigned char)(state->unit[x++]))) << j;
+    memcpy(&this->gauss_next, &g, sizeof(g));
+
+    this->gauss_switch = ((unsigned char)(state->unit[x]) ? 1 : 0);
+
     return NULL;
 }
 
@@ -603,17 +656,6 @@ class SystemRandom
 
 class_ *cl_SystemRandom;
 
-/* Draw a uniformly random 64-bit word straight from the OS entropy
-   source, bypassing the deterministic xoshiro256 stream entirely (and
-   the shared state s[] it depends on). std::random_device typically
-   yields 32 bits per call, so two draws are combined. */
-static inline uint64_t system_random_word() {
-    static std::random_device rd;
-    uint64_t hi = rd();
-    uint64_t lo = rd();
-    return (hi << 32) | lo;
-}
-
 SystemRandom::SystemRandom() {
     this->__class__ = cl_SystemRandom;
     this->gauss_next = 0.0;
@@ -630,59 +672,17 @@ SystemRandom::SystemRandom(int a) {
     this->VERSION = 2;
 }
 
-__ss_float SystemRandom::random() {
+uint64_t SystemRandom::_next_word() {
     /**
-    Get the next random number in the range 0.0 <= X < 1.0, drawn from
-    an OS-provided source of randomness rather than a seeded PRNG stream.
+    Draw a uniformly random 64-bit word straight from the OS entropy
+    source, bypassing the seeded xoshiro256 stream entirely. Everything
+    else (random(), getrandbits(), randbytes()) is inherited from Random
+    and simply consumes these words.
     */
-
-    return static_cast<__ss_float>(system_random_word() >> 11) * 0x1.0p-53;
-}
-
-__ss_int SystemRandom::getrandbits(__ss_int k) {
-    /**
-    getrandbits(k) -> x.  Generates an int with k random bits, drawn
-    directly from the OS entropy source.
-    */
-
-    if (k<0)
-        throw (new ValueError(const_8));
-    if (k == 0)
-        return 0;
-
-    unsigned acc_bits = sizeof(uint64_t)*8 - 2;
-    if ((size_t)k > acc_bits) {
-        throw (new ValueError(const_9));
-    }
-
-    uint64_t acc = 0;
-    __ss_int remaining = k;
-    int shift = 0;
-    while (remaining > 0) {
-        uint64_t word = system_random_word();
-        int take = remaining < 64 ? (int)remaining : 64;
-        uint64_t mask = (take >= 64) ? ~UINT64_C(0) : ((UINT64_C(1) << take) - 1);
-        acc |= (word & mask) << shift;
-        shift += take;
-        remaining -= take;
-    }
-    return (__ss_int)acc;
-}
-
-bytes *SystemRandom::randbytes(__ss_int n) {
-    /**
-    Generate n random bytes, drawn directly from the OS entropy source.
-    */
-    bytes *result = new bytes();
-    result->unit.resize(n);
-    __ss_int i = 0;
-    while (i < n) {
-        uint64_t word = system_random_word();
-        for (int b = 0; b < 8 && i < n; b++, i++) {
-            result->__setitem__(i, (__ss_int)((word >> (8*b)) & 0xff));
-        }
-    }
-    return result;
+    static std::random_device rd;
+    uint64_t hi = rd();
+    uint64_t lo = rd();
+    return (hi << 32) | lo;
 }
 
 bytes *SystemRandom::getstate() {
@@ -865,11 +865,8 @@ __ss_float triangular(__ss_float low, __ss_float high, void *mode) {
 }
 
 bytes *randbytes(__ss_int n) {
-    bytes *result = new bytes();
-    result->unit.resize(n);
-    for(__ss_int i=0; i < n; i++)
-        result->__setitem__(i, (__ss_int)(255*random()));
-    return result;
+
+    return _inst->randbytes(n);
 }
 
 } // module namespace
