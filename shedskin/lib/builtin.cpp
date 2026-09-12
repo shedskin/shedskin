@@ -177,6 +177,7 @@ __ss_bool class_::__eq__(pyobj *c) {
 #include "builtin/bool.cpp"
 #include "builtin/complex.cpp"
 #include "builtin/str.cpp"
+#include "builtin/unicode.cpp"
 #include "builtin/bytes.cpp"
 #include "builtin/exception.cpp"
 #include "builtin/function.cpp"
