@@ -128,9 +128,9 @@ ALLOC_SCALAR = "scalar"  # int/str/None/..: never gets a contour
 # ones are truncated so the listing stays one site per line.
 ALLOC_SOURCE_MAXLEN = 40
 
-# V2_PROBE_ROUNDS: safety bound on the propagate-to-fixpoint loop used when
-# probing a single allocation site. Propagation is monotone, so this should
-# not be reached; hitting it means the probe itself is not converging.
+# V2_PROBE_ROUNDS: safety bound on the propagate-to-fixpoint loop a sweep
+# runs. Propagation is monotone, so this should not be reached; hitting it
+# means the sweep itself is not converging.
 V2_PROBE_ROUNDS = 20
 
 # V2_CPA_LIMIT: cartesian product limit used while probing. Deliberately far
@@ -511,22 +511,6 @@ def contour_variables(
     return nodes
 
 
-class ProbeResult(NamedTuple):
-    """What probing one allocation site found.
-
-    `reached` is false when the site never allocated its contour at all,
-    because nothing propagated into the function holding it yet. That is not
-    the same as a site nothing flows into, and the two must not be reported
-    alike: one is a fact about the program, the other just means the call
-    graph has not been discovered that far.
-    """
-
-    contour: int
-    inflow: dict[str, infer.Types]
-    rounds: int
-    reached: bool
-
-
 def site_allocated(
     gx: "config.GlobalInfo", site: AllocationSite, contour: int
 ) -> bool:
@@ -653,7 +637,16 @@ class FrozenCore:
     def contour_for(
         self, site: AllocationSite, baseline_dcpa: dict["python.Class", int]
     ) -> int:
-        """The contour a module-level site owns, allocating one on first use."""
+        """The contour a module-level site owns, allocating one on first use.
+
+        Only module-level container sites own a contour keyed by node alone.
+        A node inside a function has no site until a template exists, and its
+        contour belongs in gx.alloc_info keyed by (function, cartesian
+        product, node); those are minted by note_mold instead. User classes
+        are never split, so they have nothing to own.
+        """
+        assert site.module_level, "only module-level sites own a contour here"
+        assert site.kind == ALLOC_CONTAINER, "only builtin containers are split"
         binding = self.bindings.get(site.node)
         if binding is not None:
             return binding[1]
@@ -1232,84 +1225,6 @@ def commit_round(
     core.provisional = {}
     core.contents = observed
     return CommitResult(bound, probe_fresh, mold_fresh)
-
-
-def probe_allocation_site(
-    gx: "config.GlobalInfo",
-    site: AllocationSite,
-    core: Optional[FrozenCore] = None,
-    baseline_dcpa: Optional[dict["python.Class", int]] = None,
-) -> ProbeResult:
-    """Give one allocation site a contour of its own and see what flows in.
-
-    The site allocates a contour nothing else uses, and the program is then
-    propagated. Whatever ends up in that contour's variables came from this
-    site and nowhere else, which is what makes the result attributable.
-
-    Contours outside the open set are frozen for the duration: they still
-    propagate what they already hold, but cannot receive anything new. Without
-    that, a probe is just an unsplit analysis of the whole program, and every
-    container merges into every other one; what arrives then says more about
-    the absence of splitting than about the site. The open set is the sites
-    already committed to the core plus this one, so it widens as the core
-    fills in and the freeze dissolves as coverage grows.
-
-    Only module-level sites can be probed this way. A node inside a function
-    has no site until a template exists, and its contour is keyed by
-    (function, cartesian product, node) in the core rather than by the node
-    alone.
-
-    The network is restored afterwards. Only the core survives a probe, so
-    what one probe passes to the next is exactly what it committed.
-    """
-    assert site.module_level, "only module-level sites can be probed directly"
-    assert site.kind == ALLOC_CONTAINER, "only builtin containers are split"
-
-    standalone = core is None
-    if core is None:
-        core = FrozenCore()
-    if baseline_dcpa is None:
-        baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
-
-    cl = site.cl
-    saved_dcpa = dict(baseline_dcpa)
-    saved_orig_types = gx.orig_types
-    backup = infer.backup_network(gx)
-
-    apply_core(gx, core, baseline_dcpa)
-    contour = core.contour_for(site, baseline_dcpa)
-    infer.class_copy(gx, cl, contour)
-    cl.dcpa = max(cl.dcpa, contour + 1)
-    gx.types[site.cnode] = {(cl, contour)}
-
-    gx.orig_types = {node: types.copy() for node, types in gx.types.items()}
-
-    # what the contour holds before propagation, so the result shows what
-    # arrived rather than what the core already knew
-    seeded = {
-        name: node.types().copy()
-        for name, node in contour_variables(gx, cl, contour).items()
-    }
-
-    gx.infer_v2_open_contours = core.owned_contours() | {(cl, contour)}
-    try:
-        rounds = v2_propagate(gx)
-        reached = site_allocated(gx, site, contour)
-        inflow = {}
-        for name, node in contour_variables(gx, cl, contour).items():
-            arrived = node.types() - seeded.get(name, set())
-            if arrived:
-                inflow[name] = arrived
-    finally:
-        gx.infer_v2_open_contours = None
-        infer.restore_network(gx, backup)
-        gx.orig_types = saved_orig_types
-        for klass, dcpa in saved_dcpa.items():
-            klass.dcpa = dcpa
-        if standalone:
-            core.bindings.pop(site.node, None)
-
-    return ProbeResult(contour, inflow, rounds, reached)
 
 
 class TemplateRecord(NamedTuple):
