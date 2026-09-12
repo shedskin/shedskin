@@ -11,7 +11,7 @@ using namespace __shedskin__;
 namespace __configparser__ {
 
 extern tuple2<str *, str *> *const_2;
-extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_39, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_6, *const_7, *const_8, *const_9;
+extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
 
 class Error;
 class NoSectionError;
@@ -24,6 +24,9 @@ class InterpolationSyntaxError;
 class InterpolationDepthError;
 class ParsingError;
 class MissingSectionHeaderError;
+class Interpolation;
+class BasicInterpolation;
+class ExtendedInterpolation;
 class RawConfigParser;
 class ConfigParser;
 class SectionProxy;
@@ -166,6 +169,10 @@ does not conform to the required syntax.
 public:
 
     InterpolationSyntaxError() { this->__class__ = cl_InterpolationSyntaxError; }
+    InterpolationSyntaxError(str *option_, str *section_, str *msg) {
+        this->__class__ = cl_InterpolationSyntaxError;
+        InterpolationError::__init__(option_, section_, msg);
+    }
 };
 
 extern class_ *cl_InterpolationDepthError;
@@ -199,6 +206,23 @@ public:
     }
     void *__init__(str *filename_);
     void *append(__ss_int lineno, str *line);
+
+    /* Merge the errors of any number of other ParsingErrors into this one
+       and return self (CPython 3.13+). Templated on the list type so a
+       list of a ParsingError subclass (e.g. MissingSectionHeaderError)
+       also works despite template invariance. */
+    template<class L> ParsingError *combine(L *others) {
+        __ss_int n = len(others);
+        for (__ss_int i = 0; i < n; i++) {
+            ParsingError *other = others->__getitem__(i);
+            __ss_int m = len(other->errors);
+            for (__ss_int j = 0; j < m; j++) {
+                tuple2<__ss_int, str *> *t = (other->errors)->__getitem__(j);
+                this->append(t->__getfirst__(), t->__getsecond__());
+            }
+        }
+        return this;
+    }
 };
 
 extern class_ *cl_MissingSectionHeaderError;
@@ -218,6 +242,57 @@ public:
     void *__init__(str *filename_, __ss_int lineno_, str *line_);
 };
 
+extern class_ *cl_Interpolation;
+class Interpolation : public pyobj {
+/**
+Dummy interpolation that passes the value through with no changes.
+Also the base class the parsers dispatch through: RawConfigParser
+holds an Interpolation* and calls before_get()/before_set() on it,
+so the interpolation style is selected per instance (matching
+CPython) instead of per class.
+*/
+public:
+    Interpolation() { this->__class__ = cl_Interpolation; }
+    virtual str *before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults);
+    virtual str *before_set(RawConfigParser *parser, str *section, str *option, str *value);
+    virtual str *before_read(RawConfigParser *parser, str *section, str *option, str *value);
+    virtual str *before_write(RawConfigParser *parser, str *section, str *option, str *value);
+    virtual ~Interpolation() {}
+};
+
+extern class_ *cl_BasicInterpolation;
+class BasicInterpolation : public Interpolation {
+/**
+%(name)s interpolation, as used by ConfigParser by default. Ported
+from CPython's BasicInterpolation._interpolate_some(), so (unlike
+the old ConfigParser::_interpolate() it replaces) a bare '%' that is
+not part of '%%' or '%(name)s' raises InterpolationSyntaxError even
+when the value contains no reference at all.
+*/
+public:
+    static __re__::re_object *_KEYCRE;
+
+    BasicInterpolation() { this->__class__ = cl_BasicInterpolation; }
+    str *before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults);
+    str *before_set(RawConfigParser *parser, str *section, str *option, str *value);
+    void _interpolate_some(RawConfigParser *parser, str *option, list<str *> *accum, str *rest, str *section, dict<str *, str *> *map, __ss_int depth);
+};
+
+extern class_ *cl_ExtendedInterpolation;
+class ExtendedInterpolation : public Interpolation {
+/**
+${option} / ${section:option} interpolation, in the style of
+zc.buildout. Enables interpolation between sections.
+*/
+public:
+    static __re__::re_object *_KEYCRE;
+
+    ExtendedInterpolation() { this->__class__ = cl_ExtendedInterpolation; }
+    str *before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults);
+    str *before_set(RawConfigParser *parser, str *section, str *option, str *value);
+    void _interpolate_some(RawConfigParser *parser, str *option, list<str *> *accum, str *rest, str *section, dict<str *, str *> *map, __ss_int depth);
+};
+
 extern class_ *cl_RawConfigParser;
 class RawConfigParser : public pyiter<str *> {
 public:
@@ -228,19 +303,26 @@ public:
     dict<str *, str *> *_defaults;
     dict<str *, dict<str *, str *> *> *_sections;
     str *default_section;
+    Interpolation *_interpolation;
 
     RawConfigParser() {}
-    RawConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL) {
+    RawConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
         this->__class__ = cl_RawConfigParser;
-        __init__(defaults, default_section_);
+        __init__(defaults, default_section_, interpolation_);
     }
+    /* class-specific default for the interpolation= constructor argument
+       (Interpolation for RawConfigParser, BasicInterpolation for
+       ConfigParser); resolved with a virtual call from within the derived
+       class's constructor body, where the dynamic type is already the
+       derived class */
+    virtual Interpolation *_default_interpolation();
     virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
     str *optionxform(str *optionstr);
     void *_set(str *section, str *option, str *value);
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
     __ss_bool remove_section(str *section);
-    void *__init__(dict<str *, str *> *defaults, str *default_section_=NULL);
+    void *__init__(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL);
     __ss_bool has_option(str *section, str *option);
     void *write(file *fp);
     void *add_section(str *section);
@@ -296,6 +378,15 @@ public:
        Lives on RawConfigParser (matching CPython) so ConfigParser inherits it
        for free -- SectionProxy calls the (virtual) get(), so interpolation
        still happens correctly for a wrapped ConfigParser instance. */
+    /* defaults + section + normalized vars merged into one lookup dict
+       (CPython's _unify_values); raises NoSectionError */
+    dict<str *, str *> *_unify_values(str *section, dict<str *, str *> *vars);
+
+    /* Remove a section (never the default section) and return it as a
+       (section_name, section_proxy) tuple; KeyError when no section is
+       left (CPython 3.x MutableMapping API) */
+    tuple2<str *, SectionProxy *> *popitem();
+
     SectionProxy *__getitem__(str *section);
     void *__setitem__(str *section, dict<str *, str *> *value);
     void *__delitem__(str *section);
@@ -306,19 +397,19 @@ public:
 
 extern class_ *cl_ConfigParser;
 class ConfigParser : public RawConfigParser {
+/**
+Same as RawConfigParser, but with BasicInterpolation as the default
+interpolation. get()/items()/set() are inherited: they dispatch
+through the _interpolation member, so no overrides are needed here.
+*/
 public:
-    static __re__::re_object *_KEYCRE;
-
 
     ConfigParser() {}
-    ConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL) {
+    ConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
         this->__class__ = cl_ConfigParser;
-        __init__(defaults, default_section_);
+        __init__(defaults, default_section_, interpolation_);
     }
-    str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
-    str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
-    list<tuple2<str *, SectionProxy *> *> *items(dict<str *, str *> *vars, __ss_int raw);
-    list<tuple<str *> *> *items(dict<str *, str *> *vars, __ss_int raw, str *section);
+    Interpolation *_default_interpolation();
 };
 
 extern class_ *cl_SectionProxy;
@@ -362,8 +453,6 @@ public:
     __ss_int __len__();
     __iter<str *> *__iter__();
 };
-
-str *_interpolation_replace(__re__::match_object *match);
 
 extern str * default_11;
 extern __ss_int  default_10;

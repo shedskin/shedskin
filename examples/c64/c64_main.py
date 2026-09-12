@@ -32,7 +32,7 @@ def main():
 
     pygame.init()
     screen = (WIDTH, HEIGHT)
-    surface = pygame.display.set_mode(screen)
+    surface = pygame.display.set_mode(screen, pygame.SCALED)
     drawsurf = pygame.Surface(screen).convert()
     drawsurf.set_colorkey((0, 0, 0))
 

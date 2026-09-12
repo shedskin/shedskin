@@ -1,0 +1,1 @@
+-Ofast -march=native -flto -funroll-loops -ffat-lto-objects

@@ -58,6 +58,8 @@ class ParsingError(Error):
         self.errors = [(0, '')]
     def append(self, lineno, line):
         pass
+    def combine(self, others):
+        return self
 class MissingSectionHeaderError(ParsingError):
     def __init__(self, filename, lineno, line):
         self.message = ''
@@ -65,6 +67,25 @@ class MissingSectionHeaderError(ParsingError):
         self.errors = [(0, '')]
         self.lineno = lineno
         self.line = line
+
+class Interpolation:
+    """Dummy interpolation that passes the value through with no changes."""
+    def before_get(self, parser, section, option, value, defaults):
+        return value
+    def before_set(self, parser, section, option, value):
+        return value
+    def before_read(self, parser, section, option, value):
+        return value
+    def before_write(self, parser, section, option, value):
+        return value
+
+class BasicInterpolation(Interpolation):
+    """%(name)s interpolation, as used by ConfigParser by default."""
+    pass
+
+class ExtendedInterpolation(Interpolation):
+    """${section:option} interpolation, in the style of zc.buildout."""
+    pass
 
 # seed attribute types: these exceptions are only ever raised from the C++
 # implementation, so without a construction here their attributes stay untyped
@@ -81,10 +102,14 @@ __cperror9 = ParsingError('')
 __cperror10 = MissingSectionHeaderError('', 0, '')
 
 class RawConfigParser:
-    def __init__(self, defaults=None, default_section=None):
+    def __init__(self, defaults=None, default_section=None, interpolation=None):
         self._sections = {'': ''}
         self._defaults = {'': ''}
         self.default_section = ''
+        if interpolation is None:
+            self._interpolation = Interpolation()
+        else:
+            self._interpolation = interpolation
     def defaults(self):
         return self._defaults
     def sections(self):
@@ -133,6 +158,8 @@ class RawConfigParser:
         return True
     def _read(self, fp, fpname):
         pass
+    def popitem(self):
+        return ('', SectionProxy(self, ''))
     def __getitem__(self, section):
         return SectionProxy(self, section)
     def __setitem__(self, section, value):
