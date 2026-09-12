@@ -35,3 +35,39 @@ def getfilesystemencoding():
 
 def exit(code=0):
     pass
+
+def getfilesystemencodeerrors():
+    return ''
+
+float_repr_style = ''
+orig_argv = ['']
+
+class __float_info:
+    def __init__(self):
+        self.max = 1.0
+        self.max_exp = 0
+        self.max_10_exp = 0
+        self.min = 1.0
+        self.min_exp = 0
+        self.min_10_exp = 0
+        self.dig = 0
+        self.mant_dig = 0
+        self.epsilon = 1.0
+        self.radix = 0
+        self.rounds = 0
+
+    def __repr__(self):
+        return 'str'
+
+float_info = __float_info()
+
+class __implementation:
+    def __init__(self):
+        self.name = ''
+        self.version = version_info
+        self.hexversion = 0
+
+    def __repr__(self):
+        return 'str'
+
+implementation = __implementation()

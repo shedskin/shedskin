@@ -70,6 +70,43 @@ def test_maxunicode():
 def test_executable():
     assert sys.executable
 
+def test_float_info():
+    # values for IEEE-754 double, which is what the default build uses
+    fi = sys.float_info
+    assert fi.radix == 2
+    assert fi.rounds == 1
+    assert fi.mant_dig == 53
+    assert fi.dig == 15
+    assert fi.max_exp == 1024
+    assert fi.min_exp == -1021
+    assert fi.max_10_exp == 308
+    assert fi.min_10_exp == -307
+    assert fi.max > 1e308
+    assert 0.0 < fi.min < 1e-307
+    # epsilon must be the actual gap at 1.0
+    assert 1.0 + fi.epsilon > 1.0
+    assert 1.0 + fi.epsilon / 2 == 1.0
+    assert repr(fi).startswith('sys.float_info(max=')
+
+def test_implementation():
+    assert sys.implementation.name == 'shedskin'
+    assert sys.implementation.version[0] == sys.version_info[0]
+    assert sys.implementation.version[1] == sys.version_info[1]
+    assert sys.implementation.hexversion == sys.hexversion
+    assert repr(sys.implementation).startswith("namespace(name='shedskin'")
+
+def test_encode_errors():
+    assert sys.getfilesystemencodeerrors() in ('surrogateescape', 'surrogatepass')
+
+def test_float_repr_style():
+    assert sys.float_repr_style == 'short'
+
+def test_orig_argv():
+    # no interpreter in front of a compiled binary, so the full original
+    # command line is exactly argv
+    assert sys.orig_argv == sys.argv
+    assert sys.orig_argv[0] == sys.executable
+
 def test_all():
     test_sys()
     test_version_consistency()
@@ -81,6 +118,11 @@ def test_all():
     test_encodings()
     test_maxunicode()
     test_executable()
+    test_float_info()
+    test_implementation()
+    test_encode_errors()
+    test_float_repr_style()
+    test_orig_argv()
 
 if __name__ == '__main__':
     test_all()
