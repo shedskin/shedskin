@@ -936,7 +936,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
 
     // check for an extra quote between delimiters -> doubled-quote format
     std::string escaped_delim(delim.empty() ? "" :
-        std::string(__re__::escape(new str(delim.c_str(), delim.size()))->unit.c_str()));
+        __narrow_std(__re__::escape(new str(delim.c_str(), delim.size()))->unit));
     std::string qc(1, quotechar);
     std::string dq_pattern =
         "((" + escaped_delim + ")|^)\\W*" + qc + "[^" + escaped_delim + "\\n]*" +
@@ -959,7 +959,10 @@ static void __guess_delimiter(str *data_str, str *delimiters, std::string &out_d
         list<str *> *lines = data_str->split(new str("\n"));
         for (__ss_int i = 0; i < lines->__len__(); i++) {
             str *line = lines->__getitem__(i);
-            if (line->unit.size() > 0) data.push_back(std::string(line->unit.c_str(), line->unit.size()));
+            if (line->unit.size() > 0) {
+                __GC_BYTES lb = __to_utf8(line->unit); /* sniff on utf-8 bytes */
+                data.push_back(std::string(lb.data(), lb.size()));
+            }
         }
     }
 
