@@ -148,7 +148,6 @@ def test_read_chars_unicode():
     assert b == '\u20ac \U0001f600'
     assert c == ' '
     assert d == 'end\n'
-    import os
     os.remove('utest.txt')
 
 
