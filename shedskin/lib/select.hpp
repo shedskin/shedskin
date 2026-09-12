@@ -5,6 +5,15 @@
 
 #include "builtin.hpp"
 
+/* the select() template below is instantiated in user code, so the
+   platform headers that provide fd_set/select must be included here,
+   not just in select.cpp */
+#ifndef WIN32
+#include <sys/select.h>
+#else
+#include <winsock2.h>
+#endif
+
 using namespace __shedskin__;
 namespace __select__ {
 
@@ -46,9 +55,17 @@ template<class A, class B, class C, class D> tuple2<list<__ss_int> *, list<__ss_
         FD = (intptr_t)FDa;
         if(FD < 0)
             throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+#ifdef WIN32
+        /* winsock fd_set holds up to FD_SETSIZE sockets; handle values
+           themselves can be arbitrarily large, so limit the count instead */
+        if(lrFDs.fd_count >= FD_SETSIZE)
+            throw new ValueError(new str("too many file descriptors in select()"));
+        FD_SET((SOCKET)FD, &lrFDs);
+#else
         if(FD >= FD_SETSIZE)
             throw new ValueError(new str("filedescriptor out of range in select()"));
         FD_SET(FD, &lrFDs);
+#endif
         if(FD > maxFD)
             maxFD = FD;
     END_FOR
@@ -56,9 +73,15 @@ template<class A, class B, class C, class D> tuple2<list<__ss_int> *, list<__ss_
         FD = (intptr_t)FDb;
         if(FD < 0)
             throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+#ifdef WIN32
+        if(lwFDs.fd_count >= FD_SETSIZE)
+            throw new ValueError(new str("too many file descriptors in select()"));
+        FD_SET((SOCKET)FD, &lwFDs);
+#else
         if(FD >= FD_SETSIZE)
             throw new ValueError(new str("filedescriptor out of range in select()"));
         FD_SET(FD, &lwFDs);
+#endif
         if(FD > maxFD)
             maxFD = FD;
     END_FOR
@@ -66,9 +89,15 @@ template<class A, class B, class C, class D> tuple2<list<__ss_int> *, list<__ss_
         FD = (intptr_t)FDc;
         if(FD < 0)
             throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
+#ifdef WIN32
+        if(lxFDs.fd_count >= FD_SETSIZE)
+            throw new ValueError(new str("too many file descriptors in select()"));
+        FD_SET((SOCKET)FD, &lxFDs);
+#else
         if(FD >= FD_SETSIZE)
             throw new ValueError(new str("filedescriptor out of range in select()"));
         FD_SET(FD, &lxFDs);
+#endif
         if(FD > maxFD)
             maxFD = FD;
     END_FOR
