@@ -150,6 +150,86 @@ def test_randbytes():
     assert len(rr.randbytes(5)) == 5
 
 
+def test_instance_streams():
+    # separate Random instances must have independent streams
+    r1 = random.Random(42)
+    a = [r1.random() for _ in range(3)]
+
+    r2 = random.Random(42)
+    b = [r2.random()]
+    r3 = random.Random(999)
+    r3.random()                 # must not disturb r2
+    b.append(r2.random())
+    b.append(r2.random())
+
+    assert a == b
+
+    # the module-level generator is likewise unaffected by instances
+    random.seed(1)
+    m1 = random.random()
+    random.Random(12345).random()
+    random.seed(1)
+    assert random.random() == m1
+
+
+def test_instance_getsetstate():
+    r = random.Random(7)
+    st = r.getstate()
+    a = [r.random() for _ in range(3)]
+    r.setstate(st)
+    assert [r.random() for _ in range(3)] == a
+
+    # state is per-instance: restoring into another instance clones the stream
+    ra = random.Random(100)
+    rb = random.Random(200)
+    rb.setstate(ra.getstate())
+    assert ra.random() == rb.random()
+
+    # setstate() must not disturb the module-level generator
+    random.seed(3)
+    m1 = random.random()
+    random.seed(3)
+    random.Random(5).setstate(random.Random(6).getstate())
+    assert random.random() == m1
+
+    # the gauss() cache is part of the state
+    rg = random.Random(5)
+    rg.gauss(0.0, 1.0)          # leaves a cached value behind
+    sg = rg.getstate()
+    g1 = rg.gauss(0.0, 1.0)
+    rg.setstate(sg)
+    assert rg.gauss(0.0, 1.0) == g1
+
+    # a state of the wrong size is rejected
+    ok = False
+    try:
+        random.Random(1).setstate(b'short')
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_randbytes_range():
+    random.seed(17)
+    bs = random.randbytes(4000)
+    assert min(bs) == 0
+    assert max(bs) == 255       # 255 used to be unreachable
+
+    # instance randbytes draws from the instance's own stream
+    r = random.Random(9)
+    st = r.getstate()
+    x = r.randbytes(16)
+    r.setstate(st)
+    assert r.randbytes(16) == x
+
+    ok = False
+    try:
+        random.Random(1).randbytes(-1)
+    except ValueError:
+        ok = True
+    assert ok
+
+
 def test_choices():
     assert len(random.choices(range(100), k=5)) == 5
     assert len(random.choices(list(range(100)), k=5)) == 5
@@ -234,6 +314,9 @@ def test_all():
     test_choices()
     test_sample_errors()
     test_getsetstate()
+    test_instance_streams()
+    test_instance_getsetstate()
+    test_randbytes_range()
     test_getrandbits()
     test_systemrandom()
 
