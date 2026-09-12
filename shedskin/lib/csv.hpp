@@ -119,6 +119,8 @@ public:
     void *__init__();
 };
 
+Dialect *_lookup_dialect(str *name);
+
 class __csviter : public __iter<list<str *> *> {
 public:
     reader *r;
@@ -154,19 +156,19 @@ public:
     ) {
         this->__class__ = cl_reader;
 
-        str *dialectstr;
+        Dialect *from_dialect;
         if constexpr (std::is_same_v<D, str *>) {
-            dialectstr = dialect_;
+            from_dialect = _lookup_dialect(dialect_);
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
-            dialectstr = new str("excel");
+        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
+            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
         }
-        else
-            dialectstr = new str("excel");
+        else /* omitted (__ss_void) or None */
+            from_dialect = _lookup_dialect(new str("excel"));
 
         __init__(
             input_iter_,
-            dialectstr,
+            from_dialect,
             delimiter,
             quotechar,
             doublequote,
@@ -180,7 +182,7 @@ public:
 
     void *__init__(
         pyiter<str *> *input_iter_,
-        str *dialect_,
+        Dialect *dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -224,19 +226,19 @@ public:
     ) {
         this->__class__ = cl_writer;
 
-        str *dialectstr;
+        Dialect *from_dialect;
         if constexpr (std::is_same_v<D, str *>) {
-            dialectstr = dialect_;
+            from_dialect = _lookup_dialect(dialect_);
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
-            dialectstr = new str("unix");
+        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
+            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
         }
-        else
-            dialectstr = new str("excel");
+        else /* omitted (__ss_void) or None */
+            from_dialect = _lookup_dialect(new str("excel"));
 
         __init__(
             output_file_,
-            dialectstr,
+            from_dialect,
             delimiter,
             quotechar,
             doublequote,
@@ -250,7 +252,7 @@ public:
 
     void *__init__(
         file *output_file_,
-        str *dialect_,
+        Dialect *dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -302,22 +304,22 @@ public:
     ) {
         this->__class__ = cl_DictReader;
 
-        str *dialectstr;
+        Dialect *from_dialect;
         if constexpr (std::is_same_v<D, str *>) {
-            dialectstr = dialect_;
+            from_dialect = _lookup_dialect(dialect_);
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
-            dialectstr = new str("unix");
+        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
+            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
         }
-        else
-            dialectstr = new str("excel");
+        else /* omitted (__ss_void) or None */
+            from_dialect = _lookup_dialect(new str("excel"));
 
         __init__(
             f,
             fieldnames_,
             restkey_,
             restval_,
-            dialectstr,
+            from_dialect,
             delimiter,
             quotechar,
             doublequote,
@@ -334,7 +336,7 @@ public:
         pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
-        str *dialect_,
+        Dialect *dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -377,22 +379,22 @@ public:
     ) {
         this->__class__ = cl_DictWriter;
 
-        str *dialectstr;
+        Dialect *from_dialect;
         if constexpr (std::is_same_v<D, str *>) {
-            dialectstr = dialect_;
+            from_dialect = _lookup_dialect(dialect_);
         }
-        else if constexpr (std::is_same_v<D, Dialect *>) { // TODO move to __init__
-            dialectstr = new str("unix");
+        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
+            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
         }
-        else
-            dialectstr = new str("excel");
+        else /* omitted (__ss_void) or None */
+            from_dialect = _lookup_dialect(new str("excel"));
 
         __init__(
             f,
             fieldnames_,
             restval_,
             extrasaction_,
-            dialectstr,
+            from_dialect,
             delimiter,
             quotechar,
             doublequote,
@@ -409,7 +411,7 @@ public:
         pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
-        str *dialect_,
+        Dialect *dialect_,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
