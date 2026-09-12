@@ -571,6 +571,95 @@ def test_counter_total():
     assert c.total() == 1
 
 
+def test_counter_eq_zero_counts():
+    # equality is a multiset comparison: missing counts count as zero, so an
+    # explicit zero is equal to an absent key (dict equality would disagree)
+    a = Counter('aab')
+    b = Counter()
+    b['a'] = 2
+    b['b'] = 1
+    b['z'] = 0
+
+    assert a == b
+    assert b == a
+    assert not (a != b)
+
+
+def test_counter_ne():
+    a = Counter('aab')
+    b = Counter('ab')
+
+    assert a != b
+    assert not (a == b)
+    # and a counter equals a copy of itself
+    assert a == a.copy()
+
+
+def test_counter_subset_superset():
+    a = Counter('aab')
+    sub = Counter('ab')
+
+    assert sub <= a
+    assert sub < a
+    assert a >= sub
+    assert a > sub
+
+    # equal counters are subsets/supersets, but not proper ones
+    same = Counter('aab')
+    assert a <= same
+    assert a >= same
+    assert not (a < same)
+    assert not (a > same)
+
+    # neither is a subset of the other
+    other = Counter('bcc')
+    assert not (sub <= other)
+    assert not (sub >= other)
+
+
+def test_counter_cmp_negative_counts():
+    # counts are compared as numbers, so negative counts order below zero
+    neg = Counter()
+    neg['x'] = -1
+    pos = Counter()
+    pos['x'] = 1
+
+    assert neg <= pos
+    assert neg < pos
+    assert not (neg >= pos)
+
+
+def test_counter_xor_operator():
+    a = Counter('aab')
+    b = Counter('abbb')
+    # symmetric difference: absolute difference of the counts
+    assert sorted((a ^ b).items()) == [('a', 1), ('b', 2)]
+
+    # zero differences are dropped
+    assert len(Counter('aab') ^ Counter('aab')) == 0
+
+    # disjoint counters keep both sides
+    assert sorted((Counter('aa') ^ Counter('bb')).items()) == [('a', 2), ('b', 2)]
+
+
+def test_counter_xor_negative_counts():
+    # unlike +, -, & and |, ^ keeps negative counts, as absolute values
+    c = Counter()
+    c['x'] = -5
+    c['y'] = 2
+    # (an empty Counter() literal is avoided here: its key type stays
+    # unresolved, as with an empty list)
+    d = Counter()
+    d['x'] = 0
+    assert sorted((c ^ d).items()) == [('x', 5), ('y', 2)]
+
+
+def test_counter_ixor():
+    c = Counter('aab')
+    c ^= Counter('abbb')
+    assert sorted(c.items()) == [('a', 1), ('b', 2)]
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -619,6 +708,13 @@ def test_all():
     test_counter_copy_module()
     test_counter_type_identity()
     test_counter_total()
+    test_counter_eq_zero_counts()
+    test_counter_ne()
+    test_counter_subset_superset()
+    test_counter_cmp_negative_counts()
+    test_counter_xor_operator()
+    test_counter_xor_negative_counts()
+    test_counter_ixor()
 
 
 if __name__ == '__main__':
