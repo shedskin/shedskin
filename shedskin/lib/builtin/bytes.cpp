@@ -596,7 +596,7 @@ __ss_bool bytes::__ss_isascii() {
 
 bytes *bytes::upper() {
     if(this->unit.size() == 1)
-        return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit, frozen);
+        return new bytes(__GC_BYTES(1, (char)::toupper((unsigned char)unit[0])), frozen);
 
     bytes *toReturn = new bytes(this->unit, frozen);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
@@ -606,7 +606,7 @@ bytes *bytes::upper() {
 
 bytes *bytes::lower() {
     if(this->unit.size() == 1)
-        return new bytes(__char_cache[((unsigned char)(::tolower(unit[0])))]->unit, frozen);
+        return new bytes(__GC_BYTES(1, (char)::tolower((unsigned char)unit[0])), frozen);
 
     bytes *toReturn = new bytes(this->unit, frozen);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
@@ -685,10 +685,9 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
     }
     hexstr.reserve(result_len);
     hexstr.resize(result_len);
-    str *hex = new str(hexstr);
 
     char * curdata = &unit[0];
-    char * curhex = &hex->unit[0];
+    char * curhex = &hexstr[0];
     char * end = curdata+len;
     char c;
     // from python's implementation (2.7.1, if it matters)
@@ -716,7 +715,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
         processed += 1;
     }
 
-    return hex;
+    return new str(hexstr); /* ascii */
 }
 
 
@@ -958,26 +957,23 @@ __ss_bool bytes::__contains__(__ss_int i) {
 }
 
 str *bytes::decode(str *encoding, str *errors) {
-    /* str is internally utf-8 encoded bytes (for now), so decoding
-       means: decode to code points, then encode those as utf-8. */
+    /* str holds code points; decode the bytes into them directly */
     __check_errors_arg(errors);
     __ss_encoding enc = __lookup_encoding(encoding);
     str *s = new str();
 
     if (enc == __SS_ENC_UTF8) {
-        __utf8_decode_checked(unit.data(), unit.size(), 0); /* validate only */
-        s->unit = unit;
+        size_t n = __utf8_decode_checked(unit.data(), unit.size(), 0); /* measure+validate */
+        s->unit.resize(n);
+        __utf8_decode(unit.data(), unit.size(), s->unit.data());
     } else if (enc == __SS_ENC_ASCII) {
-        __codec_result r = __ascii_decode(unit.data(), unit.size(), 0);
+        s->unit.resize(unit.size());
+        __codec_result r = __ascii_decode(unit.data(), unit.size(), s->unit.data());
         if (!r.ok)
             __throw_decode_error("ascii", (unsigned char)unit[r.errpos], r.errpos, r.errmsg);
-        s->unit = unit;
     } else { /* latin-1: cannot fail */
-        std::vector<char32_t> cps(unit.size());
-        __latin1_decode(unit.data(), unit.size(), cps.data());
-        __codec_result m = __utf8_encode(cps.data(), unit.size(), 0); /* measure */
-        s->unit.resize(m.units);
-        __utf8_encode(cps.data(), unit.size(), s->unit.data());
+        s->unit.resize(unit.size());
+        __latin1_decode(unit.data(), unit.size(), s->unit.data());
     }
     return s;
 }

@@ -8,15 +8,23 @@ str::str() : hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s) : unit(s), hash(-1), charcache(0) {
+str::str(const char *s) : unit(__from_utf8(s, strlen(s))), hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(__GC_STRING s) : unit(s), hash(-1), charcache(0) {
+str::str(__GC_STRING s) : unit(__from_utf8(s)), hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, size_t size) : unit(s, size), hash(-1), charcache(0) { /* '\0' delimiter in C */
+str::str(const char *s, size_t size) : unit(__from_utf8(s, size)), hash(-1), charcache(0) { /* '\0' delimiter in C */
+    __class__ = cl_str_;
+}
+
+str::str(__GC_STR s) : unit(s), hash(-1), charcache(0) { /* code points, no conversion */
+    __class__ = cl_str_;
+}
+
+str::str(const __ss_char *s, size_t size) : unit(s, size), hash(-1), charcache(0) { /* code points, no conversion */
     __class__ = cl_str_;
 }
 
@@ -25,46 +33,56 @@ str *str::__str__() {
 }
 
 char *str::c_str() const {
-    return (char *)this->unit.c_str();
+    /* utf-8 encoded, for boundary use (paths, C apis) */
+    __GC_BYTES b = __to_utf8(unit);
+    __ss_allocator<char> alloc;
+    char *p = alloc.allocate(b.size() + 1);
+    memcpy(p, b.data(), b.size());
+    p[b.size()] = '\0';
+    return p;
 }
 
 str *str::__repr__() {
-    std::stringstream ss;
-    __GC_STRING separator = "\\\n\r\t";
-    __GC_STRING let = "\\nrt";
-
-    const char *quote = "'";
+    __GC_STR out;
+    __ss_char quote = '\'';
     size_t hasq = this->unit.find('\'');
-    size_t hasd = this->unit.find('\"');
+    size_t hasd = this->unit.find('"');
 
-    if (hasq != std::string::npos && hasd != std::string::npos) {
-        separator += "'"; let += "'";
-    }
-    if (hasq != std::string::npos && hasd == std::string::npos)
-        quote = "\"";
+    if (hasq != std::string::npos && hasd != std::string::npos)
+        ; /* both kinds: single quotes, escape the single quotes */
+    else if (hasq != std::string::npos)
+        quote = '"';
 
-    ss << quote;
-    for(unsigned int i=0; i<this->unit.size(); i++)
-    {
-        char c = unit[i];
-        size_t k;
-
-        if((k = separator.find_first_of(c)) != std::string::npos)
-            ss << "\\" << let[k];
-        else {
-            int j = (int)((unsigned char)c);
-
-            if(j<16)
-                ss << "\\x0" << std::hex << j;
-            else if(j>=' ' && j<='~')
-                ss << (char)j;
-            else
-                ss << "\\x" << std::hex << j;
+    out += quote;
+    for (__ss_char c : this->unit) {
+        char buf[16];
+        switch (c) {
+            case '\\': out += __gcs("\\\\"); continue;
+            case '\n': out += __gcs("\\n"); continue;
+            case '\r': out += __gcs("\\r"); continue;
+            case '\t': out += __gcs("\\t"); continue;
+        }
+        if (c == quote) {
+            out += '\\';
+            out += c;
+        } else if ((c >= 0x20 && c <= 0x7e) || c >= 0xa0) {
+            /* printable ascii, and non-ascii shown raw (as CPython does
+               for printable characters; proper printability tables later) */
+            out += c;
+        } else if (c < 0x100) {
+            snprintf(buf, sizeof(buf), "\\x%02x", (unsigned int)c);
+            out += __gcs(buf);
+        } else if (c < 0x10000) {
+            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned int)c);
+            out += __gcs(buf);
+        } else {
+            snprintf(buf, sizeof(buf), "\\U%08x", (unsigned int)c);
+            out += __gcs(buf);
         }
     }
-    ss << quote;
+    out += quote;
 
-    return new str(ss.str().c_str());
+    return new str(out);
 }
 
 __ss_int str::__int__() {
@@ -78,17 +96,17 @@ __ss_bool str::__contains__(str *s) {
 }
 
 str *str::operator+ (const char *rhs) {
-    str *ret = new str(this->unit + rhs);
+    str *ret = new str(this->unit + __gcs(rhs));
     return ret;
 }
 
 str *str::operator+ (const char &rhs) {
-    str *ret = new str(this->unit + rhs);
+    str *ret = new str(this->unit + (__ss_char)rhs);
     return ret;
 }
 
 void str::operator+= (const char *rhs) {
-    this->unit += rhs;
+    this->unit += __gcs(rhs);
 }
 
 void str::operator+= (const char &rhs) {
@@ -102,13 +120,15 @@ __ss_bool str::__ctype_function(int (*cfunc)(int))
   if(!l)
       return False;
 
-  for(i = 0; i < l; i++)
-      if(!cfunc((int)unit[i])) return False;
+  for(i = 0; i < l; i++) {
+      __ss_char c = unit[i];
+      if(c > 127 || !cfunc((int)c)) return False; /* ascii-only for now */
+  }
 
   return True;
 }
 
-__ss_bool str::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
+__ss_bool str::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(__uws) == std::string::npos)); }
 __ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
 __ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
 __ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
@@ -119,7 +139,7 @@ __ss_bool str::isprintable() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = (unsigned char)unit[i];
+      __ss_char elem = unit[i];
 
       if(elem <= 31 or (127 <= elem and elem <= 160) or elem == 173)
           return False;
@@ -204,19 +224,19 @@ str *str::rjust(__ss_int width, str *s) {
 
 str *str::zfill(__ss_int width) {
     if(width<=__len__()) return this;
-    __GC_STRING r = unit;
+    __GC_STR r = unit;
     size_t offset = (__len__() > 0 and (unit[0] == '-' or unit[0] == '+')) ? 1 : 0;
     r.insert(offset, (size_t)(width-__len__()), '0');
     return new str(r);
 }
 
 str *str::expandtabs(__ss_int tabsize) {
-    __GC_STRING r;
+    __GC_STR r;
     size_t len = unit.size();
     r.reserve(len);
     __ss_int col = 0;
     for(size_t i = 0; i < len; i++) {
-        char c = unit[i];
+        __ss_char c = unit[i];
         if(c == '\t') {
             if(tabsize > 0) {
                 __ss_int spaces = tabsize - (col % tabsize);
@@ -243,10 +263,10 @@ str *str::strip(str *chars) {
             return __ss_empty_str;
         last = unit.find_last_not_of(chars->unit);
     } else {
-        first = unit.find_first_not_of(ws);
+        first = unit.find_first_not_of(__uws);
         if(first == std::string::npos)
             return __ss_empty_str;
-        last = unit.find_last_not_of(ws);
+        last = unit.find_last_not_of(__uws);
     }
     return new str(this->unit.data()+first, last-first+1);
 }
@@ -256,7 +276,7 @@ str *str::lstrip(str *chars) {
     if(chars) {
         first = unit.find_first_not_of(chars->unit);
     } else {
-        first = unit.find_first_not_of(ws);
+        first = unit.find_first_not_of(__uws);
     }
     if(first == std::string::npos)
         return __ss_empty_str;
@@ -268,7 +288,7 @@ str *str::rstrip(str *chars) {
     if(chars) {
         last = unit.find_last_not_of(chars->unit);
     } else {
-        last = unit.find_last_not_of(ws);
+        last = unit.find_last_not_of(__uws);
     }
     if(last == std::string::npos)
         return __ss_empty_str;
@@ -299,12 +319,12 @@ tuple2<str *, str *> *str::rpartition(str *separator)
 
 list<str *> *str::rsplit(str *separator, __ss_int maxsep)
 {
-    __GC_STRING r = unit;
+    __GC_STR r = unit;
     std::reverse(r.begin(), r.end());
     str *sep;
 
     if(separator) {
-        __GC_STRING s = separator->unit;
+        __GC_STR s = separator->unit;
         std::reverse(s.begin(), s.end());
         sep = new str(s);
     }
@@ -367,7 +387,7 @@ list<str *> *str::splitlines(__ss_int keepends)
 {
     list<str *> *r = new list<str *>();
     size_t i, j, endlen;
-    const char *ends = "\r\n";
+    __GC_STR ends = __gcs("\r\n");
 
     endlen = i = 0;
     do
@@ -399,21 +419,21 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         throw new ValueError(new str("empty separator"));
 
     if(sep_ == NULL) {
-        pos_start = unit.find_first_not_of(ws, pos_start);
+        pos_start = unit.find_first_not_of(__uws, pos_start);
         if (pos_start == std::string::npos)
             return result;
     }
 
     while(1) {
         if(sep_ == NULL)
-            pos_end = unit.find_first_of(ws, pos_start);
+            pos_end = unit.find_first_of(__uws, pos_start);
         else
             pos_end = unit.find(sep_->unit, pos_start);
 
         if(pos_end == std::string::npos || ((maxsplit >= 0) && splits >= maxsplit)) {
             count = unit.size()-pos_start;
             if(count == 1)
-                result->append(__char_cache[(unsigned char)unit[pos_start]]);
+                result->append(__char_str(unit[pos_start]));
             else
                 result->append(new str(unit.substr(pos_start, count)));
             break;
@@ -421,13 +441,13 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
 
         count = pos_end-pos_start;
         if(count == 1)
-            result->append(__char_cache[(unsigned char)unit[pos_start]]);
+            result->append(__char_str(unit[pos_start]));
         else
             result->append(new str(unit.substr(pos_start, count)));
         splits += 1;
 
         if(sep_ == NULL) {
-            pos_start = unit.find_first_not_of(ws, pos_end);
+            pos_start = unit.find_first_not_of(__uws, pos_end);
             if(pos_start == std::string::npos)
                 break;
         } else {
@@ -435,7 +455,7 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
             if(pos_start == unit.size()) {
                 count = unit.size()-pos_start;
                 if(count == 1)
-                    result->append(__char_cache[(unsigned char)unit[pos_start]]);
+                    result->append(__char_str(unit[pos_start]));
                 else
                     result->append(new str(unit.substr(pos_start, count)));
                 break;
@@ -466,7 +486,7 @@ str *str::translate(dict<__ss_int, str *> *table) {
 
     size_t self_size = this->unit.size();
     for(size_t i = 0; i < self_size; i++) {
-        __ss_int ord = (__ss_int)(unsigned char)unit[i];
+        __ss_int ord = (__ss_int)unit[i];
         if(table->__contains__(ord)) {
             str *repl = table->__getitem__(ord);
             if(repl)
@@ -523,7 +543,7 @@ dict<__ss_int, str *> *str::maketrans(dict<str *, str *> *table) {
         str *k = kv.first;
         if(k->unit.size() != 1)
             throw new ValueError(new str("string keys in translate table must be of length 1"));
-        __ss_int ord = (__ss_int)(unsigned char)k->unit[0];
+        __ss_int ord = (__ss_int)k->unit[0];
         result->__setitem__(ord, kv.second);
     }
     return result;
@@ -586,11 +606,11 @@ str *str::__mul__(__ss_int n) { /* optimize */
 
     str *r = new str();
     size_t ns = (size_t)n;
-    __GC_STRING &s = r->unit;
+    __GC_STR &s = r->unit;
     size_t ulen = this->unit.size();
 
     if(ulen == 1)
-       r->unit = __GC_STRING(ns, unit[0]);
+       r->unit = __GC_STR(ns, unit[0]);
     else {
         s.resize(ulen*ns);
 
@@ -608,7 +628,7 @@ __ss_int str::__hash__() { // TODO check cpython, check for -1 result?
     if (hash != -1)
         return hash;
 
-    hash = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    hash = (__ss_int)std::hash<std::u32string_view>{}(std::u32string_view(unit.data(), unit.size()));
 
     return hash; 
 }
@@ -632,7 +652,7 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     if(s == 1)
         return new str(unit.data()+l, (u>l) ? (size_t)(u-l) : 0);
     else {
-        __GC_STRING r;
+        __GC_STR r;
         if(!(x&1) && !(x&2) && s==-1) {
             r.resize(len);
             for(size_t i=0; i<len; i++)
@@ -660,8 +680,8 @@ __ss_int str::find(str *s, __ss_int a) {
 __ss_int str::find(str *s, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    std::string_view view(this->unit.data() + a, b - a);
-    size_t pos = view.find(s->unit);
+    std::u32string_view view(this->unit.data() + a, (size_t)(b - a));
+    size_t pos = view.find(std::u32string_view(s->unit.data(), s->unit.size()));
     if(pos == std::string::npos)
         return -1;
     return (__ss_int)(pos + a);
@@ -759,7 +779,7 @@ __ss_bool str::endswith(tuple<str *> *s, __ss_int start, __ss_int end) {
 }
 
 str *str::replace(str *a, str *b, __ss_int c) {
-    __GC_STRING s = unit;
+    __GC_STR s = unit;
     size_t i, j, p;
     size_t asize = a->unit.size();
     size_t bsize = b->unit.size();
@@ -774,20 +794,20 @@ str *str::replace(str *a, str *b, __ss_int c) {
 
 str *str::upper() {
     if(this->unit.size() == 1)
-        return __char_cache[((unsigned char)(::toupper(unit[0])))];
+        return __char_str(__ss_toupper(unit[0]));
 
     str *toReturn = new str(*this);
-    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
+    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_toupper);
 
     return toReturn;
 }
 
 str *str::lower() {
     if(this->unit.size() == 1)
-        return __char_cache[((unsigned char)(::tolower(unit[0])))];
+        return __char_str(__ss_tolower(unit[0]));
 
     str *toReturn = new str(*this);
-    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
+    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_tolower);
 
     return toReturn;
 }
@@ -852,9 +872,9 @@ str *str::capitalize() {
     str *r = new str(unit);
     size_t len = r->unit.size();
     if(len) {
-        r->unit[0] = (char)::toupper((unsigned char)r->unit[0]);
+        r->unit[0] = __ss_toupper(r->unit[0]);
         for(size_t i = 1; i < len; i++)
-            r->unit[i] = (char)::tolower((unsigned char)r->unit[i]);
+            r->unit[i] = __ss_tolower(r->unit[i]);
     }
     return r;
 }
@@ -869,7 +889,7 @@ str::str(PyObject *p) : hash(-1) {
     __class__ = cl_str_;
     Py_ssize_t sz;
     const char *data = PyUnicode_AsUTF8AndSize(p, &sz);
-    unit = __GC_STRING(data, (size_t)sz);
+    unit = __from_utf8(data, (size_t)sz);
 
     // unit = __GC_STRING(PyUnicode_AsUTF8(p), PyUnicode_GET_SIZE(p));
     // unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
@@ -880,7 +900,8 @@ PyObject *str::__to_py__() {
 //    return PyBytes_FromStringAndSize("bla", 3);
     // return PyString_FromStringAndSize(c_str(), size());
     // return PyBytes_FromStringAndSize(c_str(), size());
-    return PyUnicode_DecodeLatin1(c_str(), (Py_ssize_t)this->unit.size(), "");
+    __GC_BYTES b = __to_utf8(unit);
+    return PyUnicode_DecodeUTF8(b.data(), (Py_ssize_t)b.size(), "");
 }
 #endif
 
@@ -1052,24 +1073,26 @@ template<> str *__str(size_t i) {
 #endif
 
 bytes *str::encode(str *encoding, str *errors) {
-    /* str is internally utf-8 encoded bytes (for now), so encoding
-       means: decode those to code points, then encode to the target. */
+    /* str holds code points; encode them into the target encoding */
     __check_errors_arg(errors);
     __ss_encoding enc = __lookup_encoding(encoding);
     bytes *b = new bytes();
+    __codec_result r;
 
     if (enc == __SS_ENC_UTF8) {
-        __utf8_decode_checked(unit.data(), unit.size(), 0); /* validate only */
-        b->unit = unit;
+        r = __utf8_encode(unit.data(), unit.size(), 0); /* measure */
+        if (r.ok) {
+            b->unit.resize(r.units);
+            __utf8_encode(unit.data(), unit.size(), b->unit.data());
+        }
     } else {
-        std::vector<char32_t> cps(unit.size());
-        size_t n = __utf8_decode_checked(unit.data(), unit.size(), cps.data());
-        b->unit.resize(n); /* ascii/latin-1: one byte per code point */
-        __codec_result r = (enc == __SS_ENC_ASCII) ?
-            __ascii_encode(cps.data(), n, b->unit.data()) :
-            __latin1_encode(cps.data(), n, b->unit.data());
-        if (!r.ok)
-            __throw_encode_error(enc == __SS_ENC_ASCII ? "ascii" : "latin-1", cps[r.errpos], r.errpos, r.errmsg);
+        b->unit.resize(unit.size()); /* ascii/latin-1: one byte per code point */
+        r = (enc == __SS_ENC_ASCII) ?
+            __ascii_encode(unit.data(), unit.size(), b->unit.data()) :
+            __latin1_encode(unit.data(), unit.size(), b->unit.data());
     }
+    if (!r.ok)
+        __throw_encode_error(enc == __SS_ENC_UTF8 ? "utf-8" : enc == __SS_ENC_ASCII ? "ascii" : "latin-1",
+                             unit[r.errpos], r.errpos, r.errmsg);
     return b;
 }

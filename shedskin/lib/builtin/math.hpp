@@ -483,7 +483,8 @@ namespace __float___ {
     }
 
     inline __ss_float fromhex(void *, str *s) {
-        const char *start = s->unit.c_str();
+        __GC_BYTES b = __to_utf8(s->unit);
+        const char *start = b.c_str();
         char *end;
         double f = std::strtod(start, &end);
         if(start == end)

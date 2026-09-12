@@ -21,6 +21,7 @@ str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 bytes *bsp;
 
 __GC_STRING ws, __fmtchars;
+__GC_STR __uws;
 __GC_VECTOR(str *) __char_cache;
 __GC_VECTOR(bytes *) __byte_cache;
 
@@ -83,6 +84,7 @@ void __init() {
     byteorder_little = new str("little");
 
     ws = " \n\r\t\f\v";
+    __uws = __gcs(" \n\r\t\f\v");
     __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
     bsp = new bytes(" ");
@@ -92,8 +94,7 @@ void __init() {
     __fmt_d = new str("%d");
 
     for(int i=0;i<256;i++) {
-        char c = (char)i;
-        str *charstr = new str(&c, 1);
+        str *charstr = new str(__GC_STR(1, (__ss_char)i));
         charstr->charcache = 1;
         __char_cache.push_back(charstr);
     }

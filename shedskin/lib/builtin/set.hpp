@@ -313,14 +313,14 @@ template<class T> str *set<T>::__repr__() {
     for(it = gcs.begin(); it != gcs.end(); it++) {
         r->unit += repr(*it)->unit;
         if(rest)
-           r->unit += ", ";
+           r->unit += __gcs(", ");
         --rest;
     }
 
     if(this->frozen)
-        r->unit += "})";
+        r->unit += __gcs("})");
     else
-        r->unit += "}";
+        r->unit += __gcs("}");
     return r;
 }
 
