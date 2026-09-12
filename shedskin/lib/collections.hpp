@@ -593,6 +593,30 @@ public:
         return new __counterelements<K, V>(this);
     }
 
+    /* Rich comparisons are multiset comparisons over the union of both key
+       sets, with missing counts treated as zero: Counter(a=1) equals
+       Counter(a=1, b=0), and <=/>= are (non-strict) subset/superset tests.
+       dict's inherited versions would compare keys only, and its inherited
+       ordering throws NotImplementedError. */
+    __ss_bool __eq__(pyobj *p) {
+        return __allcounts((Counter<K, V> *)p, __CMP_EQ);
+    }
+    __ss_bool __ne__(pyobj *p) {
+        return __mbool(!__eq__(p));
+    }
+    __ss_bool __le__(pyobj *p) {
+        return __allcounts((Counter<K, V> *)p, __CMP_LE);
+    }
+    __ss_bool __ge__(pyobj *p) {
+        return __allcounts((Counter<K, V> *)p, __CMP_GE);
+    }
+    __ss_bool __lt__(pyobj *p) { /* proper subset */
+        return __mbool(__le__(p) && !__eq__(p));
+    }
+    __ss_bool __gt__(pyobj *p) { /* proper superset */
+        return __mbool(__ge__(p) && !__eq__(p));
+    }
+
     /* +, -, &, | all drop non-positive results, matching CPython */
     Counter<K, V> *__add__(Counter<K, V> *other) {
         return __combine(other, true, true);
@@ -638,6 +662,26 @@ public:
         return result;
     }
 
+    /* symmetric difference: absolute difference of the counts. unlike
+       +, -, & and |, negative counts survive (as their absolute value);
+       only zero results are dropped */
+    Counter<K, V> *__xor__(Counter<K, V> *other) {
+        Counter<K, V> *result = new Counter<K, V>();
+        for(auto &kv : this->gcd) {
+            V v = __abscount(kv.second - other->__getitem__(kv.first));
+            if(v != 0)
+                result->__setitem__(kv.first, v);
+        }
+        for(auto &kv : other->gcd) {
+            if(!this->__contains__(kv.first)) {
+                V v = __abscount(kv.second);
+                if(v != 0)
+                    result->__setitem__(kv.first, v);
+            }
+        }
+        return result;
+    }
+
     Counter<K, V> *__pos__() {
         return __combine(new Counter<K, V>(), true, true);
     }
@@ -667,6 +711,10 @@ public:
         this->gcd = __and__(other)->gcd;
         return this;
     }
+    Counter<K, V> *__ixor__(Counter<K, V> *other) {
+        this->gcd = __xor__(other)->gcd;
+        return this;
+    }
     template <class U> Counter<K, V> *__ior__(U *other) {
         if constexpr (std::is_same_v<Counter<K, V>, U>) {
             this->gcd = __or__(other)->gcd;
@@ -678,6 +726,32 @@ public:
     }
 
 private:
+    enum __cmpkind { __CMP_EQ, __CMP_LE, __CMP_GE };
+
+    static bool __cmpcount(V a, V b, __cmpkind kind) {
+        switch(kind) {
+            case __CMP_LE: return a <= b;
+            case __CMP_GE: return a >= b;
+            default: return a == b;
+        }
+    }
+
+    static V __abscount(V v) {
+        return (v < 0) ? -v : v;
+    }
+
+    /* shared helper for the rich comparisons: does the comparison hold for
+       every key in either operand, with missing counts treated as zero? */
+    __ss_bool __allcounts(Counter<K, V> *other, __cmpkind kind) {
+        for(auto &kv : this->gcd)
+            if(!__cmpcount(kv.second, other->__getitem__(kv.first), kind))
+                return False;
+        for(auto &kv : other->gcd)
+            if(!this->__contains__(kv.first) && !__cmpcount(V(), kv.second, kind))
+                return False;
+        return True;
+    }
+
     /* shared helper for __add__/__sub__/__pos__: unions keys from both
        operands, combines with +/-, keeps positive results only when
        positive_only is set */

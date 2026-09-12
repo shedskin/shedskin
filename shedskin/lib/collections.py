@@ -183,6 +183,10 @@ class Counter(dict):
         c = Counter()
         c.__setunit__(self.unit, self.value)
         return c
+    def __xor__(self, other):
+        c = Counter()
+        c.__setunit__(self.unit, self.value)
+        return c
 
     def __pos__(self):
         c = Counter()
@@ -200,6 +204,9 @@ class Counter(dict):
         self.__setunit__(self.unit, self.value)
         return self
     def __iand__(self, other):
+        self.__setunit__(self.unit, self.value)
+        return self
+    def __ixor__(self, other):
         self.__setunit__(self.unit, self.value)
         return self
     def __ior__(self, d):
