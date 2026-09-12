@@ -158,7 +158,7 @@ class ShedskinDependencyManager:
         """Check if required targets exist"""
         libgc = self.lib_dir / f"libgc{self.lib_suffix}"
         libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
-        libpcre2 = self.lib_dir / f"libpcre2-8{self.lib_suffix}"
+        libpcre2 = self.lib_dir / f"libpcre2-32{self.lib_suffix}"
         gc_h = self.include_dir / "gc.h"
         pcre2_h = self.include_dir / "pcre2.h"
 
@@ -273,6 +273,8 @@ class ShedskinDependencyManager:
             PCRE2_SUPPORT_LIBBZ2=False,
             PCRE2_BUILD_TESTS=False,
             PCRE2_SHOW_REPORT=False,
+            PCRE2_BUILD_PCRE2_8=False,
+            PCRE2_BUILD_PCRE2_32=True,
         )
         self.cmake_build(pcre2_build)
         self.cmake_install(pcre2_build)

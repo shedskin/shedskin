@@ -162,31 +162,31 @@ str *Match::__repr__() {
 }
 
 //these are for internal use (used by expand()/sub() template backreference resolution)
-__GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, __ss_int matchid)
+__GC_STR re_object::__group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int matchid)
 {
     //an out-of-range numeric backreference is a template/pattern error
     if(matchid > capture_count || matchid < 0) throw new error(new str("invalid group reference"));
     //a group that exists but did not participate in the match expands to an empty string
-    if(captured[matchid * 2] == PCRE2_UNSET) return "";
+    if(captured[matchid * 2] == PCRE2_UNSET) return __GC_STR();
 
     return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
 }
 
-__GC_STRING re_object::__group(__GC_STRING *subj, PCRE2_SIZE *captured, str *mname)
+__GC_STR re_object::__group(__GC_STR *subj, PCRE2_SIZE *captured, str *mname)
 {
     if(!groupindex->has_key(mname)) throw new IndexError(new str("unknown group name"));
 
     return __group(subj, captured, groupindex->__getitem__(mname));
 }
 
-__GC_STRING re_object::__expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_STRING tpl)
+__GC_STR re_object::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
 {
-    __GC_STRING out;
+    __GC_STR out;
     size_t i, j, len;
     __ss_int ref;
-    char c;
+    __ss_char c;
 
-    out = "";
+    out = __GC_STR();
     len = tpl.length();
 
     for(i = 0; i < len; i++)
@@ -213,9 +213,9 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_ST
             case '9' :
 
                 j = i;
-                while(isdigit(tpl[i]) && i < len) i++;
+                while(i < len && tpl[i] >= '0' && tpl[i] <= '9') i++;
 
-                ref = (__ss_int)strtol(tpl.substr(j, i - j).c_str(), 0, 10);
+                ref = (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10);
                 out += __group(subj, captured, ref);
 
                 i--;
@@ -229,12 +229,12 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, PCRE2_SIZE *captured, __GC_ST
 
                 j = i;
                 c = 1;
-                while(tpl[i] != '>' && i < len) c = c && ::isdigit((int)tpl[i]), i++;
+                while(i < len && tpl[i] != '>') c = c && (tpl[i] >= '0' && tpl[i] <= '9'), i++;
 
-                if(tpl[i] != '>') throw new error(new str("unterminated name group"));
-                if(::isdigit((int)tpl[j]) && !c) throw new error(new str("invalid first character in name group"));
+                if(i == len || tpl[i] != '>') throw new error(new str("unterminated name group"));
+                if((tpl[j] >= '0' && tpl[j] <= '9') && !c) throw new error(new str("invalid first character in name group"));
 
-                if(c) out += __group(subj, captured, (__ss_int)strtol(tpl.substr(j, i - j).c_str(), 0, 10));
+                if(c) out += __group(subj, captured, (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10));
                 else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
 
                 continue;
@@ -279,16 +279,16 @@ void re_free(void *o, void *)
 
 str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 {
-    __GC_STRING *s, out;
+    __GC_STR *s, out;
     PCRE2_SIZE i, cur;
-    const char *c_subj;
+    PCRE2_SPTR c_subj;
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
     PCRE2_SIZE *captured;
 
-    out = "";
+    out = __GC_STR();
 
     s = &subj->unit;
-    c_subj = s->c_str();
+    c_subj = (PCRE2_SPTR) s->data();
     for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
     {
         if(i > s->size())
@@ -297,7 +297,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         //get a match
         if(pcre2_match(
             compiled_pattern,
-            (PCRE2_SPTR) c_subj,
+            c_subj,
             (PCRE2_SIZE)s->size(),
             i,
             0,
@@ -380,7 +380,7 @@ tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, __ss_int maxn)
 
 list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos, __ss_int endpos)
 {
-    __GC_STRING *subjs;
+    __GC_STR *subjs;
     list<str *> *r;
     PCRE2_SIZE i, j, cur, start, nendpos;
     PCRE2_SPTR c_subj;
@@ -392,7 +392,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
     r = new list<str *>();
 
     subjs = &subj->unit;
-    c_subj = (PCRE2_SPTR) subjs->c_str();
+    c_subj = (PCRE2_SPTR) subjs->data();
 
     //'i' is the start of the segment still pending output (the end of the
     //previous match); 'start' is where the next match attempt begins. These
@@ -549,7 +549,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
 
     r = pcre2_match(
         compiled_pattern,
-        (PCRE2_SPTR) subj->c_str(),
+        (PCRE2_SPTR) subj->unit.data(),
         nendpos,
         pos,
         flags_,
@@ -625,8 +625,10 @@ match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
 //re.* functions
 __ss_int __convert_flags(__ss_int flags)
 {
-    int ta[] = {IGNORECASE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE},
-        tb[] = {PCRE2_CASELESS, PCRE2_MULTILINE, PCRE2_DOTALL, PCRE2_UTF, PCRE2_EXTENDED};
+    //U/UNICODE is the default in python 3 (a no-op here); unicode
+    //character properties are enabled below unless re.ASCII is given
+    int ta[] = {IGNORECASE, MULTILINE, DOTALL, VERBOSE},
+        tb[] = {PCRE2_CASELESS, PCRE2_MULTILINE, PCRE2_DOTALL, PCRE2_EXTENDED};
     int i, r;
 
     r = 0;
@@ -639,7 +641,7 @@ __ss_int __convert_flags(__ss_int flags)
 re_object *compile(str *pat, __ss_int flags)
 {
     re_object *reobj;
-    __GC_STRING fullerr;
+    __GC_STR fullerr;
     pcre2_code *cpat;
     int errorcode;
     PCRE2_SIZE erroroffset;
@@ -651,13 +653,17 @@ re_object *compile(str *pat, __ss_int flags)
     if(flags & LOCALE)
         throw new error(new str("cannot use LOCALE flag with a str pattern"));
 
-    //convert flags
-    options = __convert_flags(flags);
+    //convert flags; with 32-bit code units each unit is one code point, so
+    //no PCRE2_UTF needed (this also keeps lone surrogates matchable, like
+    //CPython); PCRE2_UCP makes \w/\d/\s/caseless follow unicode properties
+    options = (uint32_t)__convert_flags(flags);
+    if(!(flags & ASCII))
+        options |= PCRE2_UCP;
 
     //attempt a compilation
     cpat = pcre2_compile(
-        (PCRE2_SPTR) pat->c_str(),
-        PCRE2_ZERO_TERMINATED,
+        (PCRE2_SPTR) pat->unit.data(),
+        pat->unit.size(),
         options,
         &errorcode,
         &erroroffset,
@@ -668,12 +674,13 @@ re_object *compile(str *pat, __ss_int flags)
     if(!cpat)
     {
         PCRE2_UCHAR errormessage[128];
-        pcre2_get_error_message(errorcode, errormessage, sizeof(errormessage));
+        pcre2_get_error_message(errorcode, errormessage, 128); /* length in code units */
 
-        fullerr = "char ";
-        fullerr += std::to_string((unsigned long long) erroroffset).c_str();
-        fullerr += ":";
-        fullerr += (char *) errormessage;
+        fullerr = __gcs("char ");
+        fullerr += __gcs(std::to_string((unsigned long long) erroroffset));
+        fullerr += ':';
+        for(PCRE2_UCHAR *ep = errormessage; *ep; ep++)
+            fullerr += (__ss_char)*ep;
 
         throw new error(new str(fullerr));
     }
@@ -691,10 +698,13 @@ re_object *compile(str *pat, __ss_int flags)
 
     for(i = 0; i < ntlen; i++)
     {
-        //first 2 bytes = number
-        //rest = name
-        reobj->groupindex->__setitem__(new str((char *)&nametable[i * nteach + 2]),
-            (short)nametable[i * nteach] << 8 | (short)nametable[i * nteach + 1]);
+        //in the 32-bit library: first code unit = group number,
+        //then the name as a zero-terminated 32-bit string
+        const PCRE2_UCHAR *entry = &nametable[i * nteach];
+        __GC_STR gname;
+        for(const PCRE2_UCHAR *np = entry + 1; *np; np++)
+            gname += (__ss_char)*np;
+        reobj->groupindex->__setitem__(new str(gname), (__ss_int)entry[0]);
     }
 
     //extra info
@@ -710,12 +720,12 @@ re_object *compile(str *pat, __ss_int flags)
 
 str *escape(str *s)
 {
-    __GC_STRING *ps, out;
+    __GC_STR *ps, out;
     size_t i, j, len;
 
     ps = &s->unit;
     len = ps->size();
-    out = "";
+    out = __GC_STR();
     /* NOTE: 'i' is advanced manually within the loop body (once per
        alphanumeric run, and once per metacharacter processed below), so
        this loop must not also auto-increment 'i' in its own header --
@@ -725,7 +735,7 @@ str *escape(str *s)
     for(i = 0; i < len; )
     {
         //skip alphanumerics
-        for(j = i; j < len && ::isalnum((int)(*ps)[j]); j++) ;
+        for(j = i; j < len && ((*ps)[j] > 127 || ::isalnum((int)(*ps)[j])); j++) ;
 
         if(j != i)
         {
@@ -735,9 +745,9 @@ str *escape(str *s)
         }
 
         //now process potential metachars
-        while(i < len && !::isalnum((int)(*ps)[i]))
+        while(i < len && (*ps)[i] <= 127 && !::isalnum((int)(*ps)[i]))
         {
-            out += "\\";
+            out += '\\';
             out += (*ps)[i];
 
             i++;

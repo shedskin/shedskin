@@ -349,9 +349,9 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     __ss_int i = __len__();
 
     for (const auto& [key, value] : gcd) {
-        *r += repr(key)->c_str();
+        r->unit += repr(key)->unit;
         *r += ": ";
-        *r += repr(value)->c_str();
+        r->unit += repr(value)->unit;
         if(--i > 0)
             *r += ", ";
     }
@@ -508,9 +508,9 @@ template<class K, class V> str *frozendict<K,V>::__repr__() {
     int i = this->__len__();
 
     for (const auto& [key, value] : this->gcd) {
-        *r += repr(key)->c_str();
+        r->unit += repr(key)->unit;
         *r += ": ";
-        *r += repr(value)->c_str();
+        r->unit += repr(value)->unit;
         if(--i > 0)
             *r += ", ";
     }
