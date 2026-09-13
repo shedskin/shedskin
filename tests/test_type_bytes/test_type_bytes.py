@@ -258,6 +258,13 @@ def test_rpartition():
     assert b"a and b and c".rpartition(b"and") ==  (b'a and b ', b'and', b' c')
     assert b'aa-bb-cc'.rpartition(b'-')
 
+def test_rpartition_not_found():
+    # regression test: when the separator is absent, rpartition puts the
+    # original bytes in the *last* field (partition puts it in the first)
+    assert b'abc'.rpartition(b'x') == (b'', b'', b'abc')
+    assert b'abc'.partition(b'x') == (b'abc', b'', b'')
+    assert b''.rpartition(b'x') == (b'', b'', b'')
+
 def test_rsplit():
     assert b'bla'.rsplit(b'l') == [b'b', b'a']
     assert b'b l a'.rsplit() == [b'b', b'l', b'a']
@@ -560,6 +567,7 @@ def test_all():
     test_rindex()
     test_rjust()
     test_rpartition()
+    test_rpartition_not_found()
     test_rsplit()
     test_rstrip()
     test_split()
