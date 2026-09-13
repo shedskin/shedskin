@@ -6,5 +6,7 @@ if(NOT WIN32)
         SYS_MODULES
             select
             os
+            os.path
+            stat
     )
 endif()
