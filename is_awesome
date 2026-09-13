@@ -1,0 +1,16 @@
+diff --git a/shedskin/lib/builtin/function.hpp b/shedskin/lib/builtin/function.hpp
+index 53e4834d..44d5b84c 100644
+--- a/shedskin/lib/builtin/function.hpp
++++ b/shedskin/lib/builtin/function.hpp
+@@ -113,6 +113,11 @@ template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
+ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
+     typename __sumtype1<typename U::for_in_unit>::type result;
+     result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
++    if constexpr (U::is_awesome) {
++        while(!iter->__stop_iteration)
++            result += iter->konijn();
++        return result;
++    }
+     typename U::for_in_unit e;
+     typename U::for_in_loop __3;
+     int __2;

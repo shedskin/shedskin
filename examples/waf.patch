@@ -1,0 +1,58 @@
+commit b409ffc8fcf22be43a798882ffa48f86526cf6af
+Author: Mark Dufour <mark.dufour@gmail.com>
+Date:   Sat Sep 12 19:34:21 2026 +0200
+
+    use pygame.SCALED
+
+diff --git a/examples/c64/c64_main.py b/examples/c64/c64_main.py
+index 883e2003..82c6700f 100644
+--- a/examples/c64/c64_main.py
++++ b/examples/c64/c64_main.py
+@@ -32,7 +32,7 @@ def main():
+ 
+     pygame.init()
+     screen = (WIDTH, HEIGHT)
+-    surface = pygame.display.set_mode(screen)
++    surface = pygame.display.set_mode(screen, pygame.SCALED)
+     drawsurf = pygame.Surface(screen).convert()
+     drawsurf.set_colorkey((0, 0, 0))
+ 
+diff --git a/examples/doom/doom_main.py b/examples/doom/doom_main.py
+index e05a23eb..dfe15f97 100644
+--- a/examples/doom/doom_main.py
++++ b/examples/doom/doom_main.py
+@@ -36,7 +36,7 @@ MUSIC = 'E1M1.FLAC'
+ def main(test):
+     screen = (doom.WIDTH, doom.HEIGHT)
+     pygame.init()
+-    surface = pygame.display.set_mode(screen)
++    surface = pygame.display.set_mode(screen, pygame.SCALED)
+     drawsurf = pygame.Surface(screen).convert()
+     drawsurf.set_colorkey((0, 0, 0))
+ 
+diff --git a/examples/pygasus/pygasus_main.py b/examples/pygasus/pygasus_main.py
+index b9cd2308..99296c10 100644
+--- a/examples/pygasus/pygasus_main.py
++++ b/examples/pygasus/pygasus_main.py
+@@ -8,7 +8,7 @@ print(pygasus)
+ 
+ def main(test):
+     pygame.init()
+-    hScreen=pygame.display.set_mode((256,240))
++    hScreen=pygame.display.set_mode((256,240), pygame.SCALED)
+     if test:
+         pygasus.read_ines('mario_bros.nes')
+     else:
+diff --git a/examples/softrender/softrender_main.py b/examples/softrender/softrender_main.py
+index b281af12..61ba5ef6 100644
+--- a/examples/softrender/softrender_main.py
++++ b/examples/softrender/softrender_main.py
+@@ -46,7 +46,7 @@ def main(test):
+     screen = (WIDTH, HEIGHT)
+     pygame.init()
+ 
+-    surface = pygame.display.set_mode(screen)
++    surface = pygame.display.set_mode(screen, pygame.SCALED)
+     drawsurf = pygame.Surface(screen).convert()
+ 
+     clock = pygame.time.Clock()

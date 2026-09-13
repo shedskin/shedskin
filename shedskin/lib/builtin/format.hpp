@@ -11,7 +11,7 @@ template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
 }
 template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     bytes *key = new bytes(); // optimize
-    key->unit = name->unit;
+    key->unit = __narrow(name->unit);
     return d->__getitem__(key);
 }
 
@@ -21,18 +21,22 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
 // the default right-justification) insert padding *between* the sign and
 // the digits, while '-' always left-justifies using space padding after the
 // digits, regardless of the '0' flag.
-static inline void __mod_pad_signed(str *result, const std::string &sign, const std::string &digits, char f_flag, __ss_int f_width, bool f_zero) {
+static inline void __mod_pad_signed(str *result, const std::string &sign, const __GC_STR &digits, char f_flag, __ss_int f_width, bool f_zero) {
     __ss_int padlen = f_width - (__ss_int)(sign.size() + digits.size());
     if (f_flag == '-') {
-        result->unit += sign + digits;
+        result->unit += __gcs(sign) + digits;
         if (f_width != -1 && padlen > 0)
-            result->unit += std::string((size_t)padlen, ' ');
+            result->unit += __GC_STR((size_t)padlen, ' ');
     } else {
-        result->unit += sign;
+        result->unit += __gcs(sign);
         if (f_width != -1 && padlen > 0)
-            result->unit += std::string((size_t)padlen, f_zero ? '0' : ' ');
+            result->unit += __GC_STR((size_t)padlen, f_zero ? '0' : ' ');
         result->unit += digits;
     }
+}
+
+static inline void __mod_pad_signed(str *result, const std::string &sign, const std::string &digits, char f_flag, __ss_int f_width, bool f_zero) {
+    __mod_pad_signed(result, sign, __gcs(digits), f_flag, f_width, f_zero);
 }
 
 template <class T> void __mod_int(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
@@ -57,7 +61,7 @@ template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char 
 // TODO same as mod_int different base?
 template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    std::string sabs(__str(__abs(arg), (__ss_int)8)->unit.c_str());
+    std::string sabs(__narrow_std(__str(__abs(arg), (__ss_int)8)->unit));
     std::string sign;
     if (arg < 0)
         sign = "-";
@@ -76,9 +80,9 @@ template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss
 template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::string sabs;
     if (c == 'x')
-       sabs = std::string(__str(__abs(arg), (__ss_int)16)->unit.c_str());
+       sabs = __narrow_std(__str(__abs(arg), (__ss_int)16)->unit);
     else
-       sabs = std::string(__str(__abs(arg), (__ss_int)16)->upper()->unit.c_str());
+       sabs = __narrow_std(__str(__abs(arg), (__ss_int)16)->upper()->unit);
     std::string sign;
     if (arg < 0)
         sign = "-";
@@ -126,11 +130,11 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
     __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
 }
 template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __mod_float(result, pos, c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
+    __mod_float(result, pos, (char)c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
-    std::string s;
+    __GC_STR s;
     if(c=='s')
         s = __str(arg)->unit;
     else
@@ -143,9 +147,9 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
     __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
-    std::string s;
+    __GC_STR s;
     if(flag) // bytes % bytes
-        s = arg->unit;
+        s = __widen(arg->unit);
     else
         s = repr(arg)->unit; // TODO escaping?
 
@@ -157,9 +161,9 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
 
 template <class T> void __mod_char(str *, size_t &, char, T) {}
 template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg) {
-    if(arg < 0 || arg > 255)
-        throw new OverflowError(new str("%c arg not in range(256)"));
-    result->unit += (char)arg;
+    if(arg < 0 || arg > 0x10ffff)
+        throw new OverflowError(new str("%c arg not in range(0x110000)"));
+    result->unit += (__ss_char)arg;
 }
 template<> inline void __mod_char(str *result, size_t &, char, str *arg) {
     if(arg->unit.size() != 1)
@@ -170,10 +174,10 @@ template<> inline void __mod_char(str *result, size_t &, char, str *arg) {
 template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
     size_t namepos, startpos;
     str *name = NULL;
-    std::string fmtchars = "0123456789# -+.*";
+    __GC_STR fmtchars = __gcs("0123456789# -+.*");
 
     for(; j<fmtlen;) {
-        char c = fmt->unit[j++];
+        __ss_char c = fmt->unit[j++];
         if(c != '%') {
             result->unit += c;
             continue;
@@ -198,7 +202,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             if(j >= fmtlen)
                 throw new ValueError(new str("incomplete format key"));
             j++;
-            name = new str(fmt->unit.c_str()+namepos, j-namepos-1);
+            name = new str(fmt->unit.substr(namepos, j-namepos-1));
         }
         else
             name = NULL;
@@ -213,7 +217,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
         c = fmt->unit[j++];
 
         std::string fstr = "%";
-        fstr += fmt->unit.substr(startpos, j-startpos-1);
+        fstr += __narrow_std(fmt->unit.substr(startpos, j-startpos-1));
         if(fstr.find('*') != std::string::npos)
             throw new ValueError(new str("unsupported format character"));
 
@@ -291,10 +295,10 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 'x':
             case 'X':
                 if(name) {
-                    __mod_hex(result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_hex(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_hex(result, pos, c, arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_hex(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
 
@@ -305,10 +309,10 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 'g':
             case 'G':
                 if(name) {
-                    __mod_float(result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_float(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_float(result, pos, c, arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_float(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
                     return;
                 }
                 break;
@@ -316,19 +320,19 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 's':
             case 'r':
                 if(name) {
-                    __mod_str(flag, result, pos, c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision);
+                    __mod_str(flag, result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision);
                     break;
                 } else {
-                    __mod_str(flag, result, pos, c, arg, f_flag, f_width, f_precision);
+                    __mod_str(flag, result, pos, (char)c, arg, f_flag, f_width, f_precision);
                     return;
                 }
 
             case 'c':
                 if(name) {
-                    __mod_char(result, pos, c, __mod_dict_arg(arg, name));
+                    __mod_char(result, pos, (char)c, __mod_dict_arg(arg, name));
                     break;
                 } else {
-                    __mod_char(result, pos, c, arg);
+                    __mod_char(result, pos, (char)c, arg);
                     return;
                 }
 
@@ -347,7 +351,7 @@ template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     (__mod_one(0, fmt, fmtlen, j, result, pos, args), ...);
 
     for(; j < fmtlen; j++) {
-        char c = fmt->unit[j];
+        __ss_char c = fmt->unit[j];
         result->unit += c;
         if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
             j++;
@@ -375,7 +379,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
         __mod_one(0, fmt, fmtlen, j, result, pos, t->units[i]);
 
     for(; j < fmtlen; j++) {
-        char c = fmt->unit[j];
+        __ss_char c = fmt->unit[j];
         result->unit += c;
         if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%') // TODO incomplete format exception if % is last char
             j++;
@@ -393,29 +397,29 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
     size_t fmtlen = fmt->unit.size();
     size_t j = 0;
     str *sfmt = new str();
-    sfmt->unit = fmt->unit;
+    sfmt->unit = __widen(fmt->unit);
 
     (__mod_one(1, sfmt, fmtlen, j, result, pos, args), ...);
 
     for(; j < fmtlen; j++) {
-        char c = fmt->unit[j];
+        __ss_char c = fmt->unit[j];
         result->unit += c;
         if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
             j++;
     }
 
-    r->unit = result->unit;
+    r->unit = __narrow(result->unit);
     return r;
 }
 
 template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
     str *fmt = new str();
-    fmt->unit = bfmt->unit;
+    fmt->unit = __widen(bfmt->unit);
 
     str *result = __modtuple(fmt, t);
 
     bytes *r = new bytes();
-    r->unit = result->unit;
+    r->unit = __narrow(result->unit);
     return r;
 }
 

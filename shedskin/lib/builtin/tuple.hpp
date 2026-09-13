@@ -182,7 +182,7 @@ template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
 template<class T> str *tuple2<T, T>::__repr__() {
     str *r = new str("(");
     for(size_t i = 0; i<this->units.size();i++) {
-        *r += repr(this->units[i])->c_str();
+        r->unit += repr(this->units[i])->unit;
         if(this->units.size() == 1 )
             *r += ",";
         if(i<this->units.size()-1)
@@ -375,11 +375,11 @@ template<class A, class B> __ss_int tuple2<A, B>::__hash__() {
 }
 
 template<class A, class B> str *tuple2<A, B>::__repr__() {
-    __GC_STRING s = "(";
-    s += repr(first)->c_str();
-    s += ", ";
-    s += repr(second)->c_str();
-    s += ")";
+    __GC_STR s = __gcs("(");
+    s += repr(first)->unit;
+    s += __gcs(", ");
+    s += repr(second)->unit;
+    s += ')';
     return new str(s);
 }
 
@@ -457,13 +457,13 @@ template<class A, class B, class C> __ss_int tuple3<A, B, C>::__hash__() {
 }
 
 template<class A, class B, class C> str *tuple3<A, B, C>::__repr__() {
-    __GC_STRING s = "(";
-    s += repr(first)->c_str();
-    s += ", ";
-    s += repr(second)->c_str();
-    s += ", ";
-    s += repr(third)->c_str();
-    s += ")";
+    __GC_STR s = __gcs("(");
+    s += repr(first)->unit;
+    s += __gcs(", ");
+    s += repr(second)->unit;
+    s += __gcs(", ");
+    s += repr(third)->unit;
+    s += ')';
     return new str(s);
 }
 

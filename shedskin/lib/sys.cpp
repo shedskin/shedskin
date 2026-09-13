@@ -48,7 +48,7 @@ void __init(int c, char **v) {
 #endif
 
     maxsize = std::numeric_limits<__ss_int>::max();
-    maxunicode = 255; /* str is byte-based here; chr()/ord() are limited to range(256) */
+    maxunicode = 0x10ffff; /* str holds full unicode code points; chr()/ord() cover range(0x110000) */
 
     /* a compiled binary has no interpreter options in front of the
        program arguments, so orig_argv equals argv here */

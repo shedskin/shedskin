@@ -14,6 +14,8 @@ public:
     str(const char *s);
     str(__GC_STRING s);
     str(const char *s, size_t size); /* '\0' delimiter in C */
+    str(__GC_STR s); /* code points, no conversion */
+    str(const __ss_char *s, size_t size); /* code points, no conversion */
 
     __ss_bool __contains__(str *s);
     str *strip(str *chars=0);
@@ -44,6 +46,8 @@ public:
     inline str *__getfast__(__ss_int i);
     inline __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+
+    bytes *encode(str *encoding=0, str *errors=0); /* 0 -> 'utf-8'/'strict' */
 
     list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
     list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
@@ -140,12 +144,12 @@ public:
 
 inline str *str::__getitem__(__ss_int i) {
     i = __wrap(this, i, "string index out of range");
-    return __char_cache[((unsigned char)(unit[(size_t)i]))];
+    return __char_str(unit[(size_t)i]);
 }
 
 inline str *str::__getfast__(__ss_int i) {
     i = __wrap(this, i, "string index out of range");
-    return __char_cache[((unsigned char)(unit[(size_t)i]))];
+    return __char_str(unit[(size_t)i]);
 }
 
 inline __ss_int str::__len__() {
@@ -157,7 +161,7 @@ inline bool str::for_in_has_next(size_t i) {
 }
 
 inline str *str::for_in_next(size_t &i) {
-    return __char_cache[((unsigned char)(unit[i++]))];
+    return __char_str(unit[i++]);
 }
 
 template <class U> str *str::join(U *iter) {
