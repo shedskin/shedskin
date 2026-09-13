@@ -25,3 +25,8 @@ testdata/log.txt
 
 
 !cpp/*.cpp
+
+# compiled test binaries: extensionless, named after their directory
+test_*/test_*
+!test_*/test_*.*
+!test_*/testdata/
