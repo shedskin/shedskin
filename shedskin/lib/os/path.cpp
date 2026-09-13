@@ -175,7 +175,7 @@ bytes *basename(bytes *p) {
     Returns the final component of a pathname
     */
 
-    return new bytes(basename(new str(p->unit))->unit);
+    return new bytes(__to_utf8(basename(new str(p->unit))->unit));
 }
 
 str *dirname(str *p) {
@@ -767,7 +767,7 @@ bytes *basename(bytes *p) {
     Returns the final component of a pathname
     */
 
-    return new bytes(basename(new str(p->unit))->unit);
+    return new bytes(__to_utf8(basename(new str(p->unit))->unit));
 }
 
 str *dirname(str *p) {

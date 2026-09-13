@@ -36,7 +36,7 @@ class Incomplete
 class_ *cl_Incomplete;
 
 bytes *hexlify(bytes *data, str *sep, __ss_int bytes_per_sep) {
-    return new bytes(data->hex(sep, bytes_per_sep)->unit);
+    return new bytes(__to_utf8(data->hex(sep, bytes_per_sep)->unit));
 }
 
 /*

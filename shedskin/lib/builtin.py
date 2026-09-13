@@ -421,6 +421,8 @@ class str_(pyseq):
         return ['']
     def join(self, l):
         return self
+    def encode(self, encoding='utf-8', errors='strict'):
+        return b''
     def __getitem__(self, i):
         return ''
     def __mul__(self, n):
@@ -526,6 +528,9 @@ class bytes_(pyseq):
     @classmethod
     def maketrans(cls, frm, to):
         return b''
+
+    def decode(self, encoding='utf-8', errors='strict'):
+        return ''
 
     def strip(self, bytes=''):
         return b''

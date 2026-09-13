@@ -222,8 +222,8 @@ namespace {
    fnmatch translation core uses (see escape_char there): alphanumerics pass
    through, everything else is backslash-escaped (safe in PCRE2: a backslash
    before a non-alphanumeric always means the literal character). */
-inline void escape_char(__GC_STRING &out, char c) {
-    if (::isalnum((unsigned char)c)) {
+inline void escape_char(__GC_STR &out, __ss_char c) {
+    if (c > 127 || ::isalnum((int)c)) {
         out += c;
     }
     else {
@@ -257,52 +257,52 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
     resulting regex text can differ from CPython's character for character,
     but matches the same strings when compiled with shedskin's re module.
     */
-    __GC_STRING seps_s;
+    __GC_STR seps_s;
     if (seps && seps->unit.size()) {
         seps_s = seps->unit;
     }
     else {
 #ifdef WIN32
-        seps_s = "\\/";
+        seps_s = __gcs("\\/");
 #else
-        seps_s = "/";
+        seps_s = __gcs("/");
 #endif
     }
 
-    __GC_STRING escaped_seps;
+    __GC_STR escaped_seps;
     for (size_t k = 0; k < seps_s.size(); k++)
         escape_char(escaped_seps, seps_s[k]);
 
-    __GC_STRING any_sep;
+    __GC_STR any_sep;
     if (seps_s.size() > 1)
-        any_sep = "[" + escaped_seps + "]";
+        any_sep = __gcs("[") + escaped_seps + __gcs("]");
     else
         any_sep = escaped_seps;
-    __GC_STRING not_sep = "[^" + escaped_seps + "]";
+    __GC_STR not_sep = __gcs("[^") + escaped_seps + __gcs("]");
 
-    __GC_STRING one_last_segment, one_segment, any_segments, any_last_segments;
+    __GC_STR one_last_segment, one_segment, any_segments, any_last_segments;
     if (include_hidden.value) {
-        one_last_segment = not_sep + "+";
+        one_last_segment = not_sep + __gcs("+");
         one_segment = one_last_segment + any_sep;
-        any_segments = "(?:.+" + any_sep + ")?";
-        any_last_segments = ".*";
+        any_segments = __gcs("(?:.+") + any_sep + __gcs(")?");
+        any_last_segments = __gcs(".*");
     }
     else {
-        one_last_segment = "[^" + escaped_seps + ".]" + not_sep + "*";
+        one_last_segment = __gcs("[^") + escaped_seps + __gcs(".]") + not_sep + __gcs("*");
         one_segment = one_last_segment + any_sep;
-        any_segments = "(?:" + one_segment + ")*";
-        any_last_segments = any_segments + "(?:" + one_last_segment + ")?";
+        any_segments = __gcs("(?:") + one_segment + __gcs(")*");
+        any_last_segments = any_segments + __gcs("(?:") + one_last_segment + __gcs(")?");
     }
 
     /* split the pattern on any separator character (like CPython's
        re.split(any_sep, pat): separators between/around segments produce
        empty parts, so "a//b" -> ["a", "", "b"] and "/a" -> ["", "a"]) */
-    std::vector<__GC_STRING> parts;
+    std::vector<__GC_STR> parts;
     {
-        const __GC_STRING &p = pat->unit;
-        __GC_STRING cur;
+        const __GC_STR &p = pat->unit;
+        __GC_STR cur;
         for (size_t k = 0; k < p.size(); k++) {
-            if (seps_s.find(p[k]) != __GC_STRING::npos) {
+            if (seps_s.find(p[k]) != __GC_STR::npos) {
                 parts.push_back(cur);
                 cur.clear();
             }
@@ -313,18 +313,18 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
         parts.push_back(cur);
     }
 
-    __GC_STRING res;
-    __GC_STRING seg_star = not_sep + "*"; /* what `*` means inside a segment */
+    __GC_STR res;
+    __GC_STR seg_star = not_sep + __gcs("*"); /* what `*` means inside a segment */
     size_t last_part_idx = parts.size() - 1;
 
     for (size_t idx = 0; idx < parts.size(); idx++) {
-        const __GC_STRING &part = parts[idx];
-        if (part == "*") {
+        const __GC_STR &part = parts[idx];
+        if (part == U"*") {
             res += (idx < last_part_idx) ? one_segment : one_last_segment;
         }
-        else if (recursive.value && part == "**") {
+        else if (recursive.value && part == U"**") {
             if (idx < last_part_idx) {
-                if (parts[idx + 1] != "**") /* consecutive '**' collapse */
+                if (parts[idx + 1] != U"**") /* consecutive '**' collapse */
                     res += any_segments;
             }
             else {
@@ -334,7 +334,7 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
         else {
             if (!part.empty()) {
                 if (!include_hidden.value && (part[0] == '*' || part[0] == '?'))
-                    res += "(?!\\.)"; /* wildcards must not match hidden names */
+                    res += __gcs("(?!\\.)"); /* wildcards must not match hidden names */
                 __fnmatch__::__translate_core(part, seg_star, not_sep, res);
             }
             if (idx < last_part_idx)
@@ -342,7 +342,7 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
         }
     }
 
-    return new str("(?s:" + res + ")\\z");
+    return new str(__gcs("(?s:") + res + __gcs(")\\z"));
 }
 
 } // module namespace

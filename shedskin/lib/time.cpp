@@ -1131,11 +1131,11 @@ struct_time *strptime(str *string, str *format) {
 #ifdef WIN32
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
     if(!strptime(string->c_str(), format->c_str(), &time_tuple))
-        throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
+        throw  new ValueError(new str(__gcs("time data did not match format:  data=")+string->unit+__gcs(" fmt=")+format->unit));
 #else
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
     if(!::strptime(string->c_str(), format->c_str(), &time_tuple))
-        throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
+        throw  new ValueError(new str(__gcs("time data did not match format:  data=")+string->unit+__gcs(" fmt=")+format->unit));
 #endif
     return tm2tuple(&time_tuple);
 }

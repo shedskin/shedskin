@@ -102,7 +102,7 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned int len;
     switch(c) {
         case 'c':
-             result = new bytes(__char_cache[(unsigned char)(data->unit[(size_t)(*pos)])]->unit);
+             result = new bytes(__GC_BYTES(1, (char)data->unit[(size_t)(*pos)]));
              break;
         case 's':
              result = new bytes();

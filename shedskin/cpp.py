@@ -4673,7 +4673,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def expand_special_chars(self, val: Union[str, bytes]) -> str:
         """Expand special characters in a string"""
-        if isinstance(val, bytes):
+        is_bytes = isinstance(val, bytes)
+        if is_bytes:
             values = [chr(i) for i in val]
         else:
             values = list(val)
@@ -4683,7 +4684,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if 32 <= ord_val <= 126 and val not in ('"', '\\'):
                 result.append(val)
                 continue
-            if ord_val > 255:
+            if not is_bytes and ord_val > 127:
+                # str is internally utf-8 encoded: emit all non-ascii code
+                # points as utf-8 bytes, so that e.g. '\xe9' == 'é' holds
                 for i in val.encode('utf8'):
                     result.append('\\' + oct(i)[2:].zfill(3))
             else:

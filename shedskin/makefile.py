@@ -676,7 +676,7 @@ class ShedskinBuilder(Builder):
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
         )
-        self.add_ldlibs("-lgc", "-lpcre2-8", "-lgccpp")
+        self.add_ldlibs("-lgc", "-lpcre2-32", "-lgccpp")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -702,16 +702,16 @@ class ShedskinBuilder(Builder):
                     self.add_ldlibs(
                         f"{prefix}/lib/libgc.a",
                         f"{prefix}/lib/libgccpp.a",
-                        f"{prefix}/lib/libpcre2-8.a",
+                        f"{prefix}/lib/libpcre2-32.a",
                     )
                 else:
                     self.add_ldlibs(
                         "-lgc",
                         "-lgctba",
-                        "-lpcre2-8",
+                        "-lpcre2-32",
                     )
             else:
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-8")
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-32")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -777,7 +777,7 @@ class ShedskinBuilder(Builder):
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
         if "re" in module_ids:
-            self.add_ldlibs("-lpcre2-8")
+            self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32")
@@ -1197,7 +1197,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-Wl,--enable-auto-import",
                 "$(CPPFLAGS)",
             )
-            self.add_ldlibs("-lgc", "-lpcre2-8", "-lgccpp")
+            self.add_ldlibs("-lgc", "-lpcre2-32", "-lgccpp")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -1222,7 +1222,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_link_dirs(LOCAL_DEPS_LIB="$(LOCAL_DEPS_DIR)/lib")
                 self.add_variable("STATIC_GC", "$(LOCAL_DEPS_LIB)/libgc.a")
                 self.add_variable("STATIC_GCCPP", "$(LOCAL_DEPS_LIB)/libgccpp.a")
-                self.add_variable("STATIC_PCRE2", "$(LOCAL_DEPS_LIB)/libpcre2-8.a")
+                self.add_variable("STATIC_PCRE2", "$(LOCAL_DEPS_LIB)/libpcre2-32.a")
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
                 )
@@ -1251,14 +1251,14 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
                 self.add_variable("STATIC_GCCPP", "$(HOMEBREW_LIB)/libgccpp.a")
-                self.add_variable("STATIC_PCRE2", "$(HOMEBREW_LIB)/libpcre2-8.a")
+                self.add_variable("STATIC_PCRE2", "$(HOMEBREW_LIB)/libpcre2-32.a")
                 self.add_variable(
                     "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
                 )
 
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated", "$(CPPFLAGS)")
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-8")
+                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-32")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -1328,7 +1328,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
         if "re" in module_ids:
-            self.add_ldlibs("-lpcre2-8")
+            self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32")

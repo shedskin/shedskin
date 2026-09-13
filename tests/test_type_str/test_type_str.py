@@ -591,20 +591,42 @@ def test_str_id():
 
 
 def test_bin():
-    s = '\xab'
-    assert len(s) == 1
-    assert ord(s) == 0xab
+    # binary data belongs in bytes literals
+    b = b'\xab'
+    assert len(b) == 1
+    assert b[0] == 0xab
 
-    s = '\xab\x00\xba'
-    assert len(s) == 3
-    assert ord(s[1]) == 0
-    assert ord(s[2]) == 0xba
+    b = b'\xab\x00\xba'
+    assert len(b) == 3
+    assert b[1] == 0
+    assert b[2] == 0xba
+
+    # str literals with code points >= 0x80 are stored utf-8 encoded,
+    # so '\xab' is the same string however it is written
+    assert '\xab' == '\u00ab'
 
     s = '\x012' # shows that we need to use octal escaping
     assert len(s) == 2
 
 
+def test_unicode_case():
+    # title/swapcase/istitle on non-ascii (code point, latin-1 case mapping)
+    assert 'caf\xe9 bar'.title() == 'Caf\xe9 Bar'
+    assert '\xe9abc\xe9'.title() == '\xc9abc\xe9'.lower().title()
+    assert 'aB\xe9'.swapcase() == 'Ab\xc9'
+    assert '\u20ac\u20ac'.swapcase() == '\u20ac\u20ac'
+    assert 'a\U0001f600b'.title() == 'A\U0001f600B'
+    assert 'Caf\xe9'.istitle()
+    assert not 'caf\xe9'.istitle()
+    assert '\u20ac'.istitle() == False
+    assert 'caf\xe9'.islower() and not 'caf\xe9'.isupper()
+    assert 'CAF\xc9'.isupper() and 'ab1'.islower()
+    assert 'caf\xe9'.isalpha() and not 'caf\xe9 '.isalpha()
+    assert 'caf\xe9'.casefold() == 'caf\xe9'
+
+
 def test_all():
+    test_unicode_case()
     test_str_cmp()
     test_str_concat()
     test_str_overload()

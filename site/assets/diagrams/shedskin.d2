@@ -1,0 +1,49 @@
+# d2 syntax: https://github.com/terrastruct/d2
+
+# actors
+shedskin: Shedskin
+
+compiler: Compiler
+
+inputs: {
+  module: module.py
+  dependent: dependent.py
+}
+
+executable {
+  exe_cpp: 'exe.[ch]pp'
+  make_exe: exec Makefile
+  exe: 'module.exe'
+}
+
+extension {
+  ext_cpp: 'ext.[ch]pp'
+  make_ext: ext Makefile
+  ext: 'module.so'
+}
+
+# process
+inputs.module -> shedskin: basic case
+inputs.dependent -> inputs.module: depends on
+
+# translation
+shedskin -> executable.exe_cpp: translates
+shedskin -> extension.ext_cpp: translates
+
+# generation
+shedskin -> executable.make_exe: generates
+shedskin -> extension.make_ext: generates
+
+# configuration
+executable.make_exe -> compiler: config executable
+extension.make_ext -> compiler: config extension
+
+# building
+executable.exe_cpp -> compiler: src
+compiler -> executable.exe: compile executable
+
+extension.ext_cpp -> compiler: src
+compiler -> extension.ext: compile extension
+
+
+

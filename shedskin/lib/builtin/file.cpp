@@ -49,7 +49,7 @@ file::file(str *file_name, str *flags) {
     options.universal_mode = true;
 
     if (flags) {
-        size_t universal = flags->unit.find_first_of("Uu");
+        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {
             options.universal_mode = true;
             flags = new str(flags->unit);
@@ -80,10 +80,10 @@ __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
     if(f) {
-        size_t s_size = s->unit.size();
-        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
+        __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
+        if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             throw new OSError();
-        size = (__ss_int)s_size;
+        size = (__ss_int)s->unit.size(); /* characters written, as CPython */
     }
     return size;
 }
@@ -165,11 +165,18 @@ static void __throw_io_error() {
     throw new OSError();
 }
 
+/* a utf-8 continuation byte never starts a character, so counting
+   non-continuation bytes counts code points; text-mode read(n) means n
+   *characters* (as in CPython), so stop -- pushing the byte back -- when
+   character n+1 begins. */
+static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
+
 str *file::read(__ss_int n) {
     __check_closed();
+    size_t chars = 0;
     if (options.universal_mode) {
         __read_cache.clear();
-        for(size_t i = 0; i < size_t(n); ++i) {
+        for(;;) {
             int c = GETC(f);
             if(c == EOF)
                 break;
@@ -180,6 +187,13 @@ str *file::read(__ss_int n) {
                     if(c == EOF)
                         break;
                 }
+            }
+            if(!__is_utf8_cont(c)) {
+                if(chars == size_t(n)) { /* character n+1 starts: not ours */
+                    ungetc(c, f); /* raw byte, before any cr translation */
+                    break;
+                }
+                chars++;
             }
             if(c == '\r') {
                 options.cr = true;
@@ -195,16 +209,24 @@ str *file::read(__ss_int n) {
         const int c = GETC(f);
         if(FERROR(f) != 0) /* avoid virtual call */
             __throw_io_error();
-        if(c != EOF)
-            return __char_cache[static_cast<unsigned char>(c)];
-        else
+        if(c == EOF)
             return new str();
+        if(!(c & 0x80)) /* ascii fast path */
+            return __char_cache[static_cast<unsigned char>(c)];
+        ungetc(c, f); /* multi-byte character: take the generic path */
     } // other cases (n != 1):
     __read_cache.clear();
-    for(size_t i = 0; i < size_t(n); ++i) {
+    for(;;) {
         const int c = GETC(f);
         if(c == EOF)
             break;
+        if(!__is_utf8_cont(c)) {
+            if(chars == size_t(n)) {
+                ungetc(c, f);
+                break;
+            }
+            chars++;
+        }
         __read_cache.push_back((char)c);
     }
     if(__error())
@@ -308,7 +330,7 @@ str *file::__next__() {
 
 file_binary::file_binary(str *file_name, str *flags) {
     if (flags) {
-        size_t universal = flags->unit.find_first_of("Uu");
+        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {
             options.universal_mode = true;
             flags = new str(flags->unit);
@@ -427,7 +449,7 @@ bytes *file_binary::read(__ss_int n) {
         if(FERROR(f) != 0) /* avoid virtual call */
             __throw_io_error();
         if(c != EOF)
-            return new bytes(__char_cache[static_cast<unsigned char>(c)]->unit);
+            return new bytes(__GC_BYTES(1, (char)c));
         else
             return new bytes();
     } // other cases (n != 1):

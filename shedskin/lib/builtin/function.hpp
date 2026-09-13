@@ -863,14 +863,14 @@ inline __ss_int ord(str *s) {
     size_t len = s->unit.size();
     if(len != 1)
         __throw_ord_exc(len);
-    return (unsigned char)(s->c_str()[0]);
+    return (__ss_int)s->unit[0];
 }
 
 inline __ss_int ord(bytes *s) {
     size_t len = s->unit.size();
     if(len != 1)
         __throw_ord_exc(len);
-    return (unsigned char)(s->c_str()[0]);
+    return (unsigned char)s->unit[0];
 }
 
 /* bin */
@@ -894,7 +894,7 @@ inline str *bin(__ss_bool i) {
 /* chr */
 
 static void __throw_chr_out_of_range() { /* improve inlining */
-    throw new ValueError(new str("chr() arg not in range(256)"));
+    throw new ValueError(new str("chr() arg not in range(0x110000)"));
 }
 
 template<class T> str *chr(T t) {
@@ -903,9 +903,9 @@ template<class T> str *chr(T t) {
 
 template<>
 inline str *chr(__ss_int i) {
-    if(i < 0 || i > 255)
+    if(i < 0 || i > 0x10ffff)
         __throw_chr_out_of_range();
-    return __char_cache[(size_t)i];
+    return __char_str((__ss_char)i);
 }
 
 template<>
@@ -993,10 +993,10 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
             f->flush();
     }
     else {
-        for(unsigned int i=0; i<s->unit.size(); i++)
-            printf("%c", s->unit[i]);
-        for(unsigned int i=0; i<end->unit.size(); i++)
-            printf("%c", end->unit[i]);
+        __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
+        fwrite(b.data(), 1, b.size(), stdout);
+        b = __to_utf8(end->unit);
+        fwrite(b.data(), 1, b.size(), stdout);
         if(f)
             fflush(stdout);
     }

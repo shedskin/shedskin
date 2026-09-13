@@ -24,8 +24,8 @@ str *translate(str *pat);
    `?` translate to, so glob.translate() can reuse the exact same wildcard and
    character-class handling with segment-local replacements ("[^/]*", "[^/]").
    Appends to `res`; does not add the "(?s:...)" wrapper or end anchor. */
-void __translate_core(const __GC_STRING &pat, const __GC_STRING &star,
-                      const __GC_STRING &qmark, __GC_STRING &res);
+void __translate_core(const __GC_STR &pat, const __GC_STR &star,
+                      const __GC_STR &qmark, __GC_STR &res);
 
 void __init(void);
 

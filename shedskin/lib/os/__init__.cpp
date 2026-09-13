@@ -459,9 +459,9 @@ static str *__walk_join(str *top, str *name) {
     if(last == '/' || last == '\\')
         return new str(top->unit + name->unit);
 #ifdef WIN32
-    return new str(top->unit + "\\" + name->unit);
+    return new str(top->unit + __gcs("\\") + name->unit);
 #else
-    return new str(top->unit + "/" + name->unit);
+    return new str(top->unit + __gcs("/") + name->unit);
 #endif
 }
 

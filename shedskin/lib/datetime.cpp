@@ -146,11 +146,11 @@ static __ss_int iso_fraction_to_microseconds(const char *frac) {
 /* true iff s[start..start+len) exists and consists only of ASCII digits;
  * used to enforce the fixed zero-padded field widths cpython requires
  * (e.g. rejects '2020-1-1', which sscanf's "%2d" would happily accept). */
-static bool iso_all_digits(const __GC_STRING &s, size_t start, size_t len) {
+static bool iso_all_digits(const __GC_STR &s, size_t start, size_t len) {
     if (start + len > s.size())
         return false;
     for (size_t i = 0; i < len; i++)
-        if (!isdigit((unsigned char)s[start+i]))
+        if (s[start+i] < '0' || s[start+i] > '9')
             return false;
     return true;
 }
@@ -199,13 +199,14 @@ date* date::fromordinal(__ss_int o) {
 
 date *date::fromisoformat(str *date_string) {
     //supports the plain zero-padded 'YYYY-MM-DD' form (no timezone offsets)
-    const __GC_STRING &s = date_string->unit;
+    const __GC_STR &s = date_string->unit;
     if (s.size() != 10 || s[4] != '-' || s[7] != '-' ||
             !iso_all_digits(s, 0, 4) || !iso_all_digits(s, 5, 2) || !iso_all_digits(s, 8, 2))
-        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
 
     int y, m, d;
-    sscanf(s.c_str(), "%4d-%2d-%2d", &y, &m, &d);
+    std::string ns = __narrow_std(s);
+    sscanf(ns.c_str(), "%4d-%2d-%2d", &y, &m, &d);
     return new date((__ss_int)y, (__ss_int)m, (__ss_int)d);
 }
 
@@ -541,7 +542,7 @@ datetime *datetime::strptime(str *date_string, str *format) {
     char *e = ::strptime(date_string->c_str(), format->c_str(), &t);
 #endif
     if(!e)
-        throw new ValueError(new str("time data did not match format:  data="+date_string->unit+" fmt="+format->unit));
+        throw new ValueError(new str(__gcs("time data did not match format:  data=")+date_string->unit+__gcs(" fmt=")+format->unit));
     if((*e)!='\0')
         throw new ValueError((new str("ValueError: unconverted data remains: "))->__add__(new str(e)));
     return new datetime(t.tm_year + 1900,
@@ -555,9 +556,9 @@ datetime *datetime::strptime(str *date_string, str *format) {
 datetime *datetime::fromisoformat(str *date_string) {
     //supports 'YYYY-MM-DD[*HH:MM:SS[.ffffff]]' (no timezone offsets), where
     //'*' is any single separator character, matching cpython (>=3.11)
-    const __GC_STRING &s = date_string->unit;
+    const __GC_STR &s = date_string->unit;
     if (s.size() < 10)
-        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
 
     str *date_part = new str(s.substr(0, 10));
     if (s.size() == 10) {
@@ -934,19 +935,20 @@ time *time::fromisoformat(str *time_string) {
     //supports zero-padded 'HH:MM:SS' and 'HH:MM:SS.ffffff' (no timezone
     //offsets); a fractional part longer than 6 digits is truncated, same
     //as cpython
-    const __GC_STRING &s = time_string->unit;
+    const __GC_STR &s = time_string->unit;
     if (s.size() < 8 || s[2] != ':' || s[5] != ':' ||
             !iso_all_digits(s, 0, 2) || !iso_all_digits(s, 3, 2) || !iso_all_digits(s, 6, 2))
-        throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
+        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
 
     int h, mi, sec;
-    sscanf(s.c_str(), "%2d:%2d:%2d", &h, &mi, &sec);
+    std::string ns = __narrow_std(s);
+    sscanf(ns.c_str(), "%2d:%2d:%2d", &h, &mi, &sec);
 
     __ss_int us = 0;
     if (s.size() > 8) {
         if (s[8] != '.' || s.size() == 9 || !iso_all_digits(s, 9, s.size()-9))
-            throw new ValueError(new str("Invalid isoformat string: '"+s+"'"));
-        us = iso_fraction_to_microseconds(s.c_str()+9);
+            throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
+        us = iso_fraction_to_microseconds(ns.c_str()+9);
     }
     return new time((__ss_int)h, (__ss_int)mi, (__ss_int)sec, us);
 }

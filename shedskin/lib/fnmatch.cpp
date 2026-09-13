@@ -31,8 +31,8 @@ namespace {
 /* Mirrors re.escape()'s "pass alnum through, backslash-escape everything
    else" rule for a single character, without the overhead of building a
    str object and round-tripping through __re__::escape(). */
-inline void escape_char(__GC_STRING &out, char c) {
-    if (::isalnum((unsigned char)c)) {
+inline void escape_char(__GC_STR &out, __ss_char c) {
+    if (c > 127 || ::isalnum((int)c)) {
         out += c;
     }
     else {
@@ -143,8 +143,8 @@ __ss_bool fnmatchcase(str *name, str *pat) {
     return __mbool((_cache->__getitem__(pat))->match(name)!=0);
 }
 
-void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
-                      const __GC_STRING &qmark, __GC_STRING &res) {
+void __translate_core(const __GC_STR &p, const __GC_STR &star,
+                      const __GC_STR &qmark, __GC_STR &res) {
     /**
     Shared core of fnmatch.translate() and glob.translate(): translate one
     shell pattern (for glob: one path segment) to regex text, appending to
@@ -157,7 +157,7 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
     bool last_was_star = false;
 
     while (i < n) {
-        char c = p[i];
+        __ss_char c = p[i];
         i++;
 
         if (c == '*') {
@@ -184,13 +184,13 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
             while (j < n && p[j] != ']') j++;
 
             if (j >= n) {
-                res += "\\[";
+                res += __gcs("\\[");
             }
             else {
-                __GC_STRING stuff;
-                __GC_STRING raw = p.substr(i, j - i); /* pat[i:j] */
+                __GC_STR stuff;
+                __GC_STR raw = p.substr(i, j - i); /* pat[i:j] */
 
-                if (raw.find('-') == __GC_STRING::npos) {
+                if (raw.find('-') == __GC_STR::npos) {
                     /* no ranges in this class: just double up backslashes */
                     for (size_t k = 0; k < raw.size(); k++) {
                         if (raw[k] == '\\') stuff += '\\';
@@ -208,18 +208,18 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
                        the whole program with an uncaught regex-compile
                        exception the moment somebody feeds fnmatch/glob an
                        unlucky pattern. */
-                    std::vector<__GC_STRING> chunks;
+                    std::vector<__GC_STR> chunks;
                     size_t start = i;
                     size_t k = (p[i] == '!') ? i + 2 : i + 1;
 
                     while (true) {
                         size_t dash = p.find('-', k);
-                        if (dash == __GC_STRING::npos || dash >= j) break;
+                        if (dash == __GC_STR::npos || dash >= j) break;
                         chunks.push_back(p.substr(start, dash - start));
                         start = dash + 1;
                         k = dash + 3;
                     }
-                    __GC_STRING last_chunk = p.substr(start, j - start);
+                    __GC_STR last_chunk = p.substr(start, j - start);
                     if (!last_chunk.empty()) {
                         chunks.push_back(last_chunk);
                     }
@@ -227,7 +227,7 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
                         chunks.back() += '-';
                     }
                     else {
-                        chunks.push_back(__GC_STRING("-"));
+                        chunks.push_back(__gcs("-"));
                     }
 
                     /* Remove empty/out-of-order ranges -- invalid in a
@@ -237,7 +237,7 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
                        literal run instead of emitting it as a range. */
                     for (size_t m = chunks.size(); m-- > 1; ) {
                         if (!chunks[m-1].empty() && !chunks[m].empty() &&
-                            (unsigned char)chunks[m-1].back() > (unsigned char)chunks[m].front()) {
+                            chunks[m-1].back() > chunks[m].front()) {
                             chunks[m-1] = chunks[m-1].substr(0, chunks[m-1].size()-1) + chunks[m].substr(1);
                             chunks.erase(chunks.begin() + (long)m);
                         }
@@ -251,7 +251,7 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
                     for (size_t m = 0; m < chunks.size(); m++) {
                         if (m) stuff += '-';
                         for (size_t k2 = 0; k2 < chunks[m].size(); k2++) {
-                            char ch = chunks[m][k2];
+                            __ss_char ch = chunks[m][k2];
                             if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|') {
                                 stuff += '\\';
                             }
@@ -263,17 +263,17 @@ void __translate_core(const __GC_STRING &p, const __GC_STRING &star,
                 i = j + 1;
 
                 if (stuff.empty()) {
-                    res += "(?!)"; /* empty range: never matches */
+                    res += __gcs("(?!)"); /* empty range: never matches */
                 }
-                else if (stuff == "!") {
+                else if (stuff == U"!") {
                     res += '.'; /* negated empty range: matches anything */
                 }
                 else {
                     if (stuff[0] == '!') {
-                        stuff = "^" + stuff.substr(1);
+                        stuff = __gcs("^") + stuff.substr(1);
                     }
                     else if (stuff[0] == '^' || stuff[0] == '[') {
-                        stuff = "\\" + stuff;
+                        stuff = __gcs("\\") + stuff;
                     }
                     res += '[';
                     res += stuff;
@@ -293,8 +293,8 @@ str *translate(str *pat) {
 
     There is no way to quote meta-characters.
     */
-    __GC_STRING res;
-    __translate_core(pat->unit, __GC_STRING(".*"), __GC_STRING("."), res);
+    __GC_STR res;
+    __translate_core(pat->unit, __gcs(".*"), __gcs("."), res);
 
     /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
        DOTALL scope and anchors with \Z. shedskin's re module hands patterns
@@ -303,7 +303,7 @@ str *translate(str *pat) {
        same loose semantics as a bare $. Python's re \Z (strict end of
        string, no trailing-newline exception) is PCRE2's \z, so that's what
        we anchor with here. */
-    return new str("(?s:" + res + ")\\z");
+    return new str(__gcs("(?s:") + res + __gcs(")\\z"));
 }
 
 } // module namespace
