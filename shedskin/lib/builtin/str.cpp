@@ -336,7 +336,7 @@ tuple2<str *, str *> *str::rpartition(str *separator)
     if(i != std::string::npos)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
-        return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
+        return new tuple2<str *, str *>(3, new str(""), new str(""), new str(unit));
 }
 
 list<str *> *str::rsplit(str *separator, __ss_int maxsep)
