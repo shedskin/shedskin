@@ -530,7 +530,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
             c == dialect->quotechar->unit[0] ||
             c == '\n' ||
             c == '\r' ||
-            dialect->lineterminator->unit.find(c) != std::string::npos) {
+            dialect->lineterminator->unit.find(c) != __GC_STR::npos) {
             if (dialect->quoting == QUOTE_NONE)
                 want_escape = 1;
             else {
