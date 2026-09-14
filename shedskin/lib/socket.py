@@ -37,12 +37,34 @@ class timeout(Exception): pass
 
 class socket(object):
     def __init__(self, family=AF_INET, type=SOCK_STREAM, proto=0):
+        self.family = family
+        self.type = type
+        self.proto = proto
+
+    def __repr__(self):
+        return ''
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
         pass
 
     def accept(self):
         return (socket(), ('', 1) )
 
     def fileno(self):
+        return 0
+
+    def detach(self):
+        return 0
+
+    def dup(self):
+        return socket()
+
+    # FIXME CPython default is count=None; a negative value means 'send
+    # everything' instead (same convention as timeouts in this module)
+    def sendfile(self, file, offset=0, count=-1):
         return 0
 
     def makefile(self, flags=None):
@@ -109,6 +131,17 @@ class socket(object):
 # "no timeout given" instead.
 def create_connection(address, timeout=-1, source_address=None):
     return socket()
+
+def fromfd(fd, family, type, proto=0):
+    return socket()
+
+# FIXME CPython default is backlog=None; a negative value means 'use a
+# reasonable default' instead (same convention as timeouts in this module)
+def create_server(address, family=AF_INET, backlog=-1, reuse_port=False, dualstack_ipv6=False):
+    return socket()
+
+def has_dualstack_ipv6():
+    return False
 
 def getfqdn(name):
     return ''
