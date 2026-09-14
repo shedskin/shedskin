@@ -38,6 +38,88 @@ def test_iglob():
     os.remove(os.path.join(path, 'x2.txt'))
     os.removedirs(path)
 
+
+def names(it, base):
+    # strip the base directory and normalize separators, so results
+    # are comparable regardless of where the tree was created
+    out = []
+    for f in it:
+        assert f.startswith(base)
+        out.append(f[len(base):].replace(os.sep, '/'))
+    return sorted(out)
+
+
+def test_recursive():
+    base = '/tmp/shedskin_test_glob_rec'
+    files = ['a.txt', 'b.py', '.hid.txt', 'sub/c.txt', 'sub/d.py',
+             'sub/deep/e.txt', '.hsub/f.txt', 'sub2/g.txt']
+    for f in files:
+        d = os.path.dirname(os.path.join(base, f))
+        os.makedirs(d, exist_ok=True)
+        open(os.path.join(base, f), 'w').close()
+    os.makedirs(os.path.join(base, 'emptydir'), exist_ok=True)
+    B = base + '/'
+
+    # without recursive=True, '**' behaves like '*'
+    assert names(glob.glob(B + '**/*.txt'), B) == ['sub/c.txt', 'sub2/g.txt']
+    assert names(glob.glob(B + '**'), B) == ['a.txt', 'b.py', 'emptydir', 'sub', 'sub2']
+
+    # '**' matches zero or more directories
+    assert names(glob.glob(B + '**/*.txt', recursive=True), B) == \
+        ['a.txt', 'sub/c.txt', 'sub/deep/e.txt', 'sub2/g.txt']
+    assert names(glob.glob(B + '**/*.py', recursive=True), B) == ['b.py', 'sub/d.py']
+    assert names(glob.glob(B + '**/deep/*', recursive=True), B) == ['sub/deep/e.txt']
+
+    # bare '**' includes the (trailing-slash) base directory itself
+    assert names(glob.glob(B + '**', recursive=True), B) == \
+        ['', 'a.txt', 'b.py', 'emptydir', 'sub', 'sub/c.txt', 'sub/d.py',
+         'sub/deep', 'sub/deep/e.txt', 'sub2', 'sub2/g.txt']
+    # trailing slash: directories only
+    assert names(glob.glob(B + '**/', recursive=True), B) == \
+        ['', 'emptydir/', 'sub/', 'sub/deep/', 'sub2/']
+    # consecutive '**' segments do not collapse in glob() (unlike in
+    # translate()): each '**' expands independently, so deeper matches
+    # are reported multiple times -- this mirrors CPython exactly
+    assert names(glob.glob(B + '**/**/*.txt', recursive=True), B) == \
+        ['a.txt', 'sub/c.txt', 'sub/c.txt', 'sub/deep/e.txt', 'sub/deep/e.txt',
+         'sub/deep/e.txt', 'sub2/g.txt', 'sub2/g.txt']
+    # '**' in the middle, with a magic tail
+    assert names(glob.glob(B + 'sub/**/*.txt', recursive=True), B) == \
+        ['sub/c.txt', 'sub/deep/e.txt']
+    # '**' with a non-magic tail
+    assert names(glob.glob(B + '**/e.txt', recursive=True), B) == ['sub/deep/e.txt']
+    # non-existent directory
+    assert glob.glob(B + 'nope/**', recursive=True) == []
+
+    # hidden files/dirs are skipped unless include_hidden=True
+    assert names(glob.glob(B + '**/*.txt', recursive=True, include_hidden=True), B) == \
+        ['.hid.txt', '.hsub/f.txt', 'a.txt', 'sub/c.txt', 'sub/deep/e.txt', 'sub2/g.txt']
+    assert names(glob.glob(B + '**/.*', recursive=True), B) == ['.hid.txt', '.hsub']
+    assert names(glob.glob(B + '.*', include_hidden=True), B) == ['.hid.txt', '.hsub']
+
+    # iglob with recursive=True
+    assert names(glob.iglob(B + '**/*.py', recursive=True), B) == ['b.py', 'sub/d.py']
+
+    # relative patterns, evaluated from inside the tree
+    cwd = os.getcwd()
+    os.chdir(base)
+    assert sorted(glob.glob('**/*.txt', recursive=True)) == \
+        ['a.txt', 'sub/c.txt', 'sub/deep/e.txt', 'sub2/g.txt']
+    assert sorted(glob.glob('**', recursive=True)) == \
+        ['a.txt', 'b.py', 'emptydir', 'sub', 'sub/c.txt', 'sub/d.py',
+         'sub/deep', 'sub/deep/e.txt', 'sub2', 'sub2/g.txt']
+    assert sorted(glob.glob('sub/**', recursive=True)) == \
+        ['sub/', 'sub/c.txt', 'sub/d.py', 'sub/deep', 'sub/deep/e.txt']
+    os.chdir(cwd)
+
+    for f in files:
+        os.remove(os.path.join(base, f))
+    os.rmdir(os.path.join(base, 'emptydir'))
+    os.removedirs(os.path.join(base, 'sub', 'deep'))
+    os.removedirs(os.path.join(base, 'sub2'))
+    os.removedirs(os.path.join(base, '.hsub'))
+
+
 def matches(regex, s):
     # the exact regex text differs slightly between implementations
     # (escaping conventions, \Z vs \z anchor), so tests are behavioral:
@@ -139,6 +221,7 @@ def test_all():
     test_has_magic()
     test_escape()
     test_iglob()
+    test_recursive()
     test_translate()
 
 

@@ -12,16 +12,25 @@
 using namespace __shedskin__;
 namespace __glob__ {
 
-extern str *const_0, *const_2, *const_3, *const_4, *const_5;
+extern str *const_0, *const_2, *const_3, *const_4, *const_5, *const_6;
 
 extern str *__name__;
 extern __re__::re_object *magic_check;
 extern __re__::re_object *magic_check_escape;
 
-list<str *> *glob(str *pathname);
-__iter<str *> *iglob(str *pathname);
+list<str *> *glob(str *pathname, __ss_bool recursive=False, __ss_bool include_hidden=False);
+__iter<str *> *iglob(str *pathname, __ss_bool recursive=False, __ss_bool include_hidden=False);
 list<str *> *glob1(str *dirname, str *pattern);
 list<str *> *glob0(str *dirname, str *basename);
+__iter<str *> *_iglob(str *pathname, __ss_bool recursive, __ss_bool dironly, __ss_bool include_hidden);
+__iter<str *> *_skip_empty(__iter<str *> *it);
+list<str *> *_glob1(str *dirname, str *pattern, __ss_bool dironly, __ss_bool include_hidden);
+list<str *> *_glob0(str *dirname, str *basename, __ss_bool dironly, __ss_bool include_hidden);
+__iter<str *> *_glob2(str *dirname, str *pattern, __ss_bool dironly, __ss_bool include_hidden);
+list<str *> *_listdir(str *dirname, __ss_bool dironly);
+__iter<str *> *_rlistdir(str *dirname, __ss_bool dironly, __ss_bool include_hidden);
+__ss_bool _ishidden(str *path);
+__ss_bool _isrecursive(str *pattern);
 __ss_bool has_magic(str *s);
 str *escape(str *pathname);
 str *translate(str *pat, __ss_bool recursive=False, __ss_bool include_hidden=False, str *seps=0);
