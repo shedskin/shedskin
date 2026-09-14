@@ -1,5 +1,6 @@
 import csv
 import collections
+import io
 import os
 import os.path
 
@@ -650,39 +651,40 @@ def test_predefined_dialect_classes():
 
 def test_dialect_instance_honored():
     # passing a Dialect *instance* (predefined class or from get_dialect)
-    # must actually be used, not silently replaced by a fallback name
-    path = _csv_path('dialect_instance.csv')
+    # must actually be used, not silently replaced by a fallback name.
+    #
+    # StringIO is used here instead of a real file so the assertions see the
+    # exact line terminator the writer emitted: open() does not support
+    # newline='' yet, so on windows a text-mode file would additionally
+    # translate every '\n' into '\r\n' on the way out.
+    s = io.StringIO()
+    w = csv.writer(s, csv.excel_tab())
+    w.writerow(['a', 'b'])
+    assert s.getvalue() == 'a\tb\r\n'
 
-    with open(path, 'w', newline='') as f:
-        w = csv.writer(f, csv.excel_tab())
-        w.writerow(['a', 'b'])
-    assert open(path, 'rb').read() == b'a\tb\r\n'
+    s = io.StringIO()
+    w = csv.writer(s, csv.unix_dialect())
+    w.writerow(['x', 'y'])
+    assert s.getvalue() == '"x","y"\n'
 
-    with open(path, 'w', newline='') as f:
-        w = csv.writer(f, csv.unix_dialect())
-        w.writerow(['x', 'y'])
-    assert open(path, 'rb').read() == b'"x","y"\n'
-
-    with open(path, 'w', newline='') as f:
-        f.write('1\t2\t3\r\n')
-    with open(path, newline='') as f:
-        assert list(csv.reader(f, csv.get_dialect('excel-tab'))) == [['1', '2', '3']]
+    r = csv.reader(io.StringIO('1\t2\t3\r\n'), csv.get_dialect('excel-tab'))
+    assert list(r) == [['1', '2', '3']]
 
     # keyword overrides still apply on top of the instance
-    with open(path, 'w', newline='') as f:
-        w = csv.writer(f, csv.excel(), delimiter=';')
-        w.writerow(['p', 'q'])
-    assert open(path, 'rb').read() == b'p;q\r\n'
+    s = io.StringIO()
+    w = csv.writer(s, csv.excel(), delimiter=';')
+    w.writerow(['p', 'q'])
+    assert s.getvalue() == 'p;q\r\n'
 
     # DictReader/DictWriter take instances too
-    with open(path, 'w', newline='') as f:
-        dw = csv.DictWriter(f, ['a', 'b'], dialect=csv.unix_dialect())
-        dw.writeheader()
-        dw.writerow({'a': '1', 'b': '2'})
-    assert open(path, 'rb').read() == b'"a","b"\n"1","2"\n'
-    with open(path, newline='') as f:
-        dr = csv.DictReader(f, dialect=csv.unix_dialect())
-        assert list(dr) == [{'a': '1', 'b': '2'}]
+    s = io.StringIO()
+    dw = csv.DictWriter(s, ['a', 'b'], dialect=csv.unix_dialect())
+    dw.writeheader()
+    dw.writerow({'a': '1', 'b': '2'})
+    assert s.getvalue() == '"a","b"\n"1","2"\n'
+
+    dr = csv.DictReader(io.StringIO('"a","b"\n"1","2"\n'), dialect=csv.unix_dialect())
+    assert list(dr) == [{'a': '1', 'b': '2'}]
 
 
 def test_all():
