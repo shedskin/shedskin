@@ -134,7 +134,7 @@ dict<str *, str *> *match_object::groupdict(str *defval)
     int __2;
     dict<str *, __ss_int> *__1;
     FOR_IN(k,re->groupindex,1,2,3)
-        t = re->groupindex->__getitem__(k);
+        t = (int)re->groupindex->__getitem__(k);
 
         if(captured[t * 2] != PCRE2_UNSET) r->__setitem__(new str(k->unit),
             new str(string->unit.substr((size_t)(captured[t * 2]), (size_t)(captured[t * 2 + 1] - captured[t * 2]))));
@@ -341,7 +341,7 @@ str *re_object::sub(str *repl, str *subj, __ss_int maxn)
 
 str *re_object::sub(replfunc func, str *string, __ss_int maxn) {
     list<str *> *l;
-    int at;
+    __ss_int at;
 
     at = 0;
     l = (new list<str *>());
@@ -531,7 +531,8 @@ __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int en
 match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
 {
     match_object *mobj;
-    int r, t, mx_i, nendpos;
+    int r, t, mx_i;
+    __ss_int nendpos;
     str *mx_s = NULL;
     PCRE2_SIZE *captured;
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
@@ -552,7 +553,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
         (PCRE2_SPTR) subj->unit.data(),
         nendpos,
         pos,
-        flags_,
+        (uint32_t)flags_,
         match_data,
         NULL
     );
@@ -581,7 +582,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     int __2;
     dict<str *, __ss_int> *__1;
     FOR_IN(k,groupindex,1,2,3)
-        t = groupindex->__getitem__(k);
+        t = (int)groupindex->__getitem__(k);
         if(captured[t * 2] != PCRE2_UNSET && t > mx_i)
         {
             mx_s = k;

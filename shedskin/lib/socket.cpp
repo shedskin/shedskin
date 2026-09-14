@@ -246,7 +246,7 @@ str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     socklen_t buflen = (socklen_t)value;
     std::vector<char> buf(buflen);
 
-    if (::getsockopt(_fd, level, optname, buf.data(), &buflen) == SOCKET_ERROR)
+    if (::getsockopt(_fd, (int)level, (int)optname, buf.data(), &buflen) == SOCKET_ERROR)
         throw new error(make_errstring("getsockopt"));
 
     return new str(buf.data(), buflen);
@@ -337,7 +337,7 @@ socket *socket::bind(socket::inet_address address)
 }
 
 socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
-    if (::setsockopt(_fd, level, optname, SOCKOPT_CAST &value, sizeof(value)) == SOCKET_ERROR)
+    if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &value, sizeof(value)) == SOCKET_ERROR)
         throw new error(make_errstring("setsockopt"));
 
     return this;
@@ -347,7 +347,7 @@ socket *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
     const char *host = address->first->c_str();
-    int port = address->second;
+    int port = (int)address->second;
 
     sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -488,7 +488,7 @@ socket *socket::settimeout(double val)
 
 socket *socket::shutdown(__ss_int how)
 {
-    if (::shutdown(_fd, how) == SOCKET_ERROR)
+    if (::shutdown(_fd, (int)how) == SOCKET_ERROR)
         throw new error(make_errstring("shutdown"));
     return this;
 }
@@ -520,7 +520,7 @@ size_t socket::send(const char *s, size_t len, int flags)
 }
 
 __ss_int socket::send(bytes *string, __ss_int flags) {
-    return (__ss_int)send( string->unit.data(), string->unit.size(), flags );
+    return (__ss_int)send( string->unit.data(), string->unit.size(), (int)flags );
 }
 
 __ss_int socket::sendall(bytes *string, __ss_int flags) {
@@ -529,7 +529,7 @@ __ss_int socket::sendall(bytes *string, __ss_int flags) {
     size_t len = string->unit.size(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
     while (offset < len)
-        offset += send(s + offset, len - offset, flags);
+        offset += send(s + offset, len - offset, (int)flags);
     return (__ss_int)len;
 }
 
@@ -550,7 +550,7 @@ __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 
     tuple_to_sin_addr(&sin, addr);
 
-    ssize_t len = ::sendto(_fd, buf, buflen, flags, sa, salen);
+    ssize_t len = ::sendto(_fd, buf, buflen, (int)flags, sa, salen);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("sendto"));
 
@@ -596,7 +596,7 @@ bytes *socket::recv(__ss_int bufsize, __ss_int flags)
     read_wait();
 
     std::vector<char> buf((size_t)bufsize);
-    ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags);
+    ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, (int)flags);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("recv"));
     return new bytes(buf.data(), (size_t)len);
@@ -632,7 +632,7 @@ tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_i
     std::vector<char> buf((size_t)bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
-    size_t len = recvfrom(buf.data(), (size_t)bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
+    size_t len = recvfrom(buf.data(), (size_t)bufsize, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
     return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
@@ -642,7 +642,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_) {
     this->family = family_;
     this->type = type_;
     this->proto = proto_;
-    _fd = ::socket(family_, type_, proto_);
+    _fd = ::socket((int)family_, (int)type_, (int)proto_);
     if (_fd == SOCKET_ERROR)
         throw new error(make_errstring("socket"));
     _timeout = __ss_default_timeout;
@@ -657,7 +657,7 @@ socket::~socket()
 
 socket *socket::listen(__ss_int backlog)
 {
-    if(::listen(_fd, backlog) == SOCKET_ERROR)
+    if(::listen(_fd, (int)backlog) == SOCKET_ERROR)
         throw new error(make_errstring("listen"));
     return this;
 }

@@ -1010,7 +1010,7 @@ static void __guess_delimiter(str *data_str, str *delimiters, std::string &out_d
 
             int total_seen = 0;
             for (size_t i = 0; i < counts.order.size(); i++) total_seen += counts.counts[counts.order[i]];
-            int missed_lines = num_lines - total_seen;
+            int missed_lines = (int)num_lines - total_seen;
 
             // effective items = real (key,count) pairs, plus a synthetic
             // (0, missed_lines) entry appended last if nonzero

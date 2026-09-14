@@ -228,7 +228,7 @@ date *date::__sub__(timedelta *other) {
 }
 
 timedelta *date::__sub__(date *other) {
-    return new timedelta(toordinal()-other->toordinal(), 0, 0, 0 ,0, 0, 0);
+    return new timedelta((double)(toordinal()-other->toordinal()), 0, 0, 0 ,0, 0, 0);
 }
 
 __ss_int date::__cmp__(date *other) {
@@ -633,7 +633,7 @@ datetime *datetime::__sub__(timedelta *other) {
 }
 
 timedelta *datetime::__sub__(datetime *other) {
-	timedelta *td = new timedelta(this->toordinal()-other->toordinal(),this->second-other->second,this->microsecond-other->microsecond,0,this->minute-other->minute,this->hour-other->hour);
+	timedelta *td = new timedelta((double)(this->toordinal()-other->toordinal()),(double)(this->second-other->second),(double)(this->microsecond-other->microsecond),0,(double)(this->minute-other->minute),(double)(this->hour-other->hour));
 	if(_tzinfo==NULL && other->_tzinfo==NULL)
 		return td;
 	if(_tzinfo!=NULL && other->_tzinfo!=NULL) {
@@ -809,10 +809,10 @@ __ss_float datetime::timestamp() {
 		 * process' local timezone setting. */
 		static const __ss_int epoch_ordinal = 719163; //date(1970,1,1).toordinal()
 		__ss_float secs = (__ss_float)(toordinal()-epoch_ordinal)*86400.0 +
-			hour*3600.0 + minute*60.0 + second + microsecond/1e6;
+			(__ss_float)hour*3600.0 + (__ss_float)minute*60.0 + (__ss_float)second + (__ss_float)microsecond/1e6;
 		timedelta *off = utcoffset();
 		if(off!=NULL)
-			secs -= (__ss_float)off->days*86400.0 + off->seconds + off->microseconds/1e6;
+			secs -= (__ss_float)off->days*86400.0 + (__ss_float)off->seconds + (__ss_float)off->microseconds/1e6;
 		return secs;
 	}
 	else {
@@ -835,7 +835,7 @@ __ss_float datetime::timestamp() {
 		if(timet==(time_t)(-1) && t.tm_wday==-1)
 			throw new OverflowError(new str("timestamp out of range"));
 
-		return (__ss_float)timet + microsecond/1e6;
+		return (__ss_float)timet + (__ss_float)microsecond/1e6;
 	}
 }
 
@@ -1145,15 +1145,15 @@ str *timedelta::__str__() {
 }
 
 timedelta *timedelta::__add__(timedelta *other) {
-    return new timedelta(days+other->days, seconds+other->seconds, microseconds+other->microseconds,0,0,0,0);
+    return new timedelta((double)(days+other->days), (double)(seconds+other->seconds), (double)(microseconds+other->microseconds),0,0,0,0);
 }
 
 timedelta *timedelta::__sub__(timedelta *other) {
-    return new timedelta(days-other->days, seconds-other->seconds, microseconds-other->microseconds,0,0,0,0);
+    return new timedelta((double)(days-other->days), (double)(seconds-other->seconds), (double)(microseconds-other->microseconds),0,0,0,0);
 }
 
 timedelta *timedelta::__mul__(__ss_int n) {
-    return new timedelta(days*n, seconds*n, microseconds*n,0,0,0,0);
+    return new timedelta((double)(days*n), (double)(seconds*n), (double)(microseconds*n),0,0,0,0);
 }
 
 /* Exact-integer floor division of timedelta(days,seconds,microseconds) by n,
@@ -1230,7 +1230,7 @@ timedelta *timedelta::__truediv__(__ss_int n) {
 }
 
 timedelta *timedelta::__neg__() {
-    return new timedelta(-days, -seconds, -microseconds,0,0,0,0);
+    return new timedelta((double)-days, (double)-seconds, (double)-microseconds,0,0,0,0);
 }
 
 timedelta *timedelta::__floordiv__(__ss_int n) {
@@ -1258,7 +1258,7 @@ timedelta *timedelta::__abs__() {
 }
 
 __ss_float timedelta::total_seconds() {
-    return ((__ss_float)days*24*3600 + seconds) + microseconds/(__ss_float)1000000.0;
+    return ((__ss_float)days*24*3600 + (__ss_float)seconds) + (__ss_float)microseconds/(__ss_float)1000000.0;
 }
 
 __ss_int timedelta::__cmp__(timedelta *other) {

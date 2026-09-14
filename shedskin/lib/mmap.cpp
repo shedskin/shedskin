@@ -384,7 +384,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         }
     }
 
-    void *temp = ::mmap(0, (size_t)length_, prot_, flags_, fd, offset_);
+    void *temp = ::mmap(0, (size_t)length_, (int)prot_, (int)flags_, fd, offset_);
 
     if (temp == MAP_FAILED)
     {

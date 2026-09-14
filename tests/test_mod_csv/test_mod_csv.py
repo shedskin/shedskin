@@ -687,6 +687,28 @@ def test_dialect_instance_honored():
     assert list(dr) == [{'a': '1', 'b': '2'}]
 
 
+def test_non_ascii_fields():
+    # code points beyond latin-1 must survive the reader/writer unchanged
+    rows = [['café', 'naïve'], ['日本語', 'x'], ['a,b', 'q"r']]
+    out = io.StringIO()
+    w = csv.writer(out)
+    for row in rows:
+        w.writerow(row)
+    text = out.getvalue()
+    assert text == 'café,naïve\r\n日本語,x\r\n"a,b","q""r"\r\n'
+    r = csv.reader(io.StringIO(text))
+    assert [row for row in r] == rows
+
+    # non-ascii delimiter/quotechar
+    out = io.StringIO()
+    w = csv.writer(out, delimiter='€', quotechar='ß')
+    w.writerow(['a€b', 'cßd', 'plain'])
+    text = out.getvalue()
+    assert text == 'ßa€bß€ßcßßdß€plain\r\n'
+    r = csv.reader(io.StringIO(text), delimiter='€', quotechar='ß')
+    assert [row for row in r] == [['a€b', 'cßd', 'plain']]
+    
+    
 def test_unicode_roundtrip():
     # reader/writer used to truncate each code point to a char, so anything
     # above U+00FF was mangled on the way out ('😀' became 'B\x00') and on
@@ -746,6 +768,7 @@ def test_all():
     test_dictreader_fieldnames()
     test_predefined_dialect_classes()
     test_dialect_instance_honored()
+    test_non_ascii_fields()
     test_unicode_roundtrip()
 
 
