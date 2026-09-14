@@ -401,7 +401,7 @@ tuple2<bytes *, bytes *> *bytes::rpartition(bytes *separator)
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
     else
-        return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
+        return new tuple2<bytes *, bytes *>(3, new bytes(frozen), new bytes(frozen), new bytes(unit, frozen));
 }
 
 list<bytes *> *bytes::splitlines(__ss_int keepends)
