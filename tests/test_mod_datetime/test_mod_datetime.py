@@ -171,8 +171,16 @@ def test_date_fromisoformat():
 
 def test_time_fromisoformat():
     assert datetime.time.fromisoformat('12:30:15') == datetime.time(12, 30, 15)
-    assert datetime.time.fromisoformat('12:30:15.5') == datetime.time(12, 30, 15, 500000)
     assert datetime.time.fromisoformat('12:30:15.123456') == datetime.time(12, 30, 15, 123456)
+
+    # fractions shorter than 6 digits are right-padded with zeroes
+    assert datetime.time.fromisoformat('12:30:15.5') == datetime.time(12, 30, 15, 500000)
+    assert datetime.time.fromisoformat('12:30:15.12') == datetime.time(12, 30, 15, 120000)
+    assert datetime.time.fromisoformat('12:30:15.123') == datetime.time(12, 30, 15, 123000)
+    assert datetime.time.fromisoformat('12:30:15.1234') == datetime.time(12, 30, 15, 123400)
+    assert datetime.time.fromisoformat('12:30:15.12345') == datetime.time(12, 30, 15, 123450)
+    assert datetime.datetime.fromisoformat('2024-01-01T12:30:15.5') == \
+        datetime.datetime(2024, 1, 1, 12, 30, 15, 500000)
 
     # fractional part longer than 6 digits is truncated, same as cpython
     assert datetime.time.fromisoformat('12:30:15.1234567').microsecond == 123456

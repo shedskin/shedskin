@@ -134,11 +134,20 @@ static __ss_int iso_week1_monday(__ss_int year);
  * positions are treated as 0, so shorter fractions are implicitly
  * right-padded with zeros. */
 static __ss_int iso_fraction_to_microseconds(const char *frac) {
+    /* right-pad the fraction to 6 digits; stop at the first non-digit (which
+       includes the terminating '\0'), so a fraction shorter than 6 digits does
+       not read past the end of the buffer */
     __ss_int us = 0;
+    bool ended = false;
     for (int i = 0; i < 6; i++) {
         us *= 10;
-        if (frac[i] >= '0' && frac[i] <= '9')
-            us += frac[i] - '0';
+        if (!ended) {
+            char c = frac[i];
+            if (c >= '0' && c <= '9')
+                us += c - '0';
+            else
+                ended = true;
+        }
     }
     return us;
 }

@@ -322,6 +322,14 @@ def test_rpartition():
     assert "a and b and c".rpartition("and") == ('a and b ', 'and', ' c')
     assert 'aa-bb-cc'.rpartition('-')
 
+def test_rpartition_not_found():
+    # regression test: when the separator is absent, rpartition puts the
+    # original string in the *last* field (partition puts it in the first)
+    assert 'abc'.rpartition('x') == ('', '', 'abc')
+    assert 'abc'.partition('x') == ('abc', '', '')
+    assert ''.rpartition('x') == ('', '', '')
+    assert 'caf\u00e9'.rpartition('\u00e8') == ('', '', 'caf\u00e9')
+
 
 def test_rstrip():
     assert 'bla'.rstrip('a') == 'bl'
@@ -669,6 +677,7 @@ def test_all():
     test_rindex()
     test_rjust()
     test_rpartition()
+    test_rpartition_not_found()
     test_rsplit()
     test_rstrip()
     test_split()
