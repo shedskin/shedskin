@@ -14,6 +14,7 @@ extern void *buffy;
 extern str *typecodes;
 
 size_t get_itemsize(char typechar);
+void __throw_no_char();
 
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
@@ -44,9 +45,11 @@ public:
     void *fromstring(str *s);
     void *fromstring(bytes *s);
     void *frombytes(bytes *b);
+    void *fromunicode(str *s);
 
     list<T> *tolist();
     bytes *tobytes();
+    str *tounicode();
     tuple2<__ss_int, __ss_int> *buffer_info();
 
     T __getitem__(__ss_int i);
@@ -93,6 +96,18 @@ public:
     void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     void *__delslice__(__ss_int a, __ss_int b);
 };
+
+/* unicode arrays ('u'/'w') are backed by array<str *>, whose elements are
+ * single-character strings. Declare its specializations up front: they are
+ * defined further down, but are used before that point (__repr__() calls
+ * tounicode(), for one), and an explicit specialization must be declared
+ * before the first use that would otherwise instantiate the primary
+ * template. */
+template<> inline void array<str *>::fillbuf(str *t);
+template<> inline str *array<str *>::__getfast__(__ss_int i);
+template<> inline str *array<str *>::__repr__();
+template<> inline str *array<str *>::tounicode();
+template<> inline void *array<str *>::fromunicode(str *s);
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *iter) {
     typecode = typecode_;
@@ -201,6 +216,19 @@ template<class T> bytes *array<T>::tobytes() {
 template<class T> void *array<T>::fromstring(bytes *s) {
     frombytes(s);
     return NULL;
+}
+
+/* tounicode()/fromunicode() only make sense for the unicode typecodes, which
+ * are exactly the ones backed by array<str *> (see the specializations near
+ * the bottom of this file). For every other element type the call is a
+ * (statically well-typed, but semantically wrong) mistake, so mirror
+ * CPython's runtime ValueError rather than silently returning nonsense. */
+template<class T> str *array<T>::tounicode() {
+    throw new ValueError(new str("tounicode() may only be called on unicode type arrays"));
+}
+
+template<class T> void *array<T>::fromunicode(str *) {
+    throw new ValueError(new str("fromunicode() may only be called on unicode type arrays"));
 }
 
 /* Address of the backing buffer plus its length in *elements* (not bytes --
@@ -439,6 +467,21 @@ template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
         return (__ss_float)(*((double *)(&units[(size_t)i*itemsize])));
 }
 
+/* unicode arrays ('u'/'w'): elements are single-character strings, stored as
+ * bare __ss_char code points. The numeric fillbuf() above cannot be
+ * instantiated for str * at all (no comparisons against integer bounds), so
+ * this is a full specialization rather than an extra switch case. */
+template<> inline void array<str *>::fillbuf(str *t) {
+    if(t == NULL or t->__len__() != 1)
+        __throw_no_char();
+    *((__ss_char *)buffy) = t->unit[0];
+}
+
+template<> inline str *array<str *>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    return __char_str(*((__ss_char *)(&units[(size_t)i*itemsize])));
+}
+
 template<class T> void *array<T>::append(T t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
@@ -480,6 +523,34 @@ template<class T> str *array<T>::__repr__() {
         return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
     else
         return __add_strs(5, new str("array('"), typecode, new str("')"));
+}
+
+/* CPython prints the contents of a unicode array as a plain string, not as a
+ * list of one-character strings: array('w', 'abc'), not array('w', ['a', 'b',
+ * 'c']). */
+template<> inline str *array<str *>::__repr__() {
+    if (this->__len__())
+        return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tounicode()), new str(")"));
+    else
+        return __add_strs(5, new str("array('"), typecode, new str("')"));
+}
+
+template<> inline str *array<str *>::tounicode() {
+    if(this->units.empty())
+        return new str();
+    /* the code points are already stored contiguously, exactly as str holds
+     * them, so this is a single copy rather than a per-element loop */
+    return new str((const __ss_char *)(&this->units[0]), this->units.size()/sizeof(__ss_char));
+}
+
+template<> inline void *array<str *>::fromunicode(str *s) {
+    size_t len = s->unit.size();
+    if(len) {
+        size_t s1 = this->units.size();
+        this->units.resize(s1+len*sizeof(__ss_char));
+        memcpy(&(this->units[s1]), s->unit.data(), len*sizeof(__ss_char));
+    }
+    return NULL;
 }
 
 template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */

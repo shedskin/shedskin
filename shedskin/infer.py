@@ -1250,6 +1250,11 @@ def redirect(
             array_type = "int"
         elif typecode in "fd":
             array_type = "float"
+        elif typecode in "uw":
+            # unicode typecodes: elements are single-character strings
+            # ('u' is deprecated in CPython since 3.3 and removed in 3.16,
+            # 'w' is its replacement, added in 3.13)
+            array_type = "str"
         if array_type is not None:
             func = list(callnode.types())[0][0].funcs["__init_%s__" % array_type]
 
