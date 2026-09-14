@@ -555,6 +555,22 @@ def test_order():
     assert a == b[::-1]
 
 
+def test_non_ascii_format_char():
+    # a non-ascii code point must not be truncated to a valid format char
+    # (e.g. U+0169 & 0xff == 'i'); cpython raises UnicodeEncodeError here,
+    # shedskin struct.error, so only check that it doesn't silently work
+    try:
+        struct.calcsize('ũ')
+        assert False
+    except Exception:
+        pass
+    try:
+        struct.pack('ũ', 1)
+        assert False
+    except Exception:
+        pass
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -580,6 +596,7 @@ def test_all():
     test_mid_format_order_char()
     test_order()
     test_ws()
+    test_non_ascii_format_char()
 
 
 if __name__ == '__main__':

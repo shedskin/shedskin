@@ -30,7 +30,7 @@ str *capwords(str *s, str *sep) {
 str *__ctype_str(int (*cfunc)(int)) {
     str *s = new str();
     for(__ss_int i=0; i<256; i++)
-        if(cfunc(i))
+        if(cfunc((int)i))
             s->unit += (char)i;
     return s;
 }

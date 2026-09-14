@@ -166,7 +166,7 @@ __ss_int calcsize(str *fmt) {
     __ss_int ndigits = -1;
 
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
-        char c = fmt->unit[i];
+        __ss_char c = fmt->unit[i];
         switch(c) {
             case '@':
             case '=':
@@ -180,7 +180,7 @@ __ss_int calcsize(str *fmt) {
                    along the string) */
                 if(i != 0)
                     throw new error(new str("bad char in struct format"));
-                order = c;
+                order = (char)c;
                 break;
             case '0':
             case '1':
@@ -192,7 +192,7 @@ __ss_int calcsize(str *fmt) {
             case '7':
             case '8':
             case '9':
-                n = c - '0';
+                n = (__ss_int)(c - '0');
                 if(ndigits == -1)
                     ndigits = n;
                 else
@@ -212,7 +212,7 @@ __ss_int calcsize(str *fmt) {
             case 'f':
 //            case 'n':
             case 'N':
-                itemsize = get_itemsize(order, c);
+                itemsize = get_itemsize(order, (char)c);
                 if(itemsize == 0)
                     /* e.g. 'N' (size_t) is only valid with the native '@'
                        byte order, matching CPython */
@@ -255,7 +255,7 @@ __ss_int calcitems(str *fmt) {
     __ss_int ndigits = -1;
 
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
-        char c = fmt->unit[i];
+        __ss_char c = fmt->unit[i];
         switch(c) {
             case '@':
             case '=':
@@ -275,7 +275,7 @@ __ss_int calcitems(str *fmt) {
             case '7':
             case '8':
             case '9':
-                n = c - '0';
+                n = (__ss_int)(c - '0');
                 if(ndigits == -1)
                     ndigits = n;
                 else

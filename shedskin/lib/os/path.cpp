@@ -222,7 +222,7 @@ double getmtime(str *filename) {
     Return the last modification time of a file, reported by os.stat().
     */
 
-    return (__os__::stat(filename))->__ss_st_mtime;
+    return (double)(__os__::stat(filename))->__ss_st_mtime;
 }
 
 double getatime(str *filename) {
@@ -230,7 +230,7 @@ double getatime(str *filename) {
     Return the last access time of a file, reported by os.stat().
     */
 
-    return (__os__::stat(filename))->__ss_st_atime;
+    return (double)(__os__::stat(filename))->__ss_st_atime;
 }
 
 double getctime(str *filename) {
@@ -238,7 +238,7 @@ double getctime(str *filename) {
     Return the metadata change time of a file, reported by os.stat().
     */
 
-    return (__os__::stat(filename))->__ss_st_ctime;
+    return (double)(__os__::stat(filename))->__ss_st_ctime;
 }
 
 __ss_bool islink(str *path) {
@@ -822,7 +822,7 @@ double getmtime(str *filename) {
     Return the last modification time of a file, reported by os.stat()
     */
 
-    return (__os__::stat(filename))->__ss_st_mtime;
+    return (double)(__os__::stat(filename))->__ss_st_mtime;
 }
 
 double getatime(str *filename) {
@@ -830,7 +830,7 @@ double getatime(str *filename) {
     Return the last access time of a file, reported by os.stat()
     */
 
-    return (__os__::stat(filename))->__ss_st_atime;
+    return (double)(__os__::stat(filename))->__ss_st_atime;
 }
 
 double getctime(str *filename) {
@@ -838,7 +838,7 @@ double getctime(str *filename) {
     Return the creation time of a file, reported by os.stat().
     */
 
-    return (__os__::stat(filename))->__ss_st_ctime;
+    return (double)(__os__::stat(filename))->__ss_st_ctime;
 }
 
 __ss_bool islink(str *path) {
