@@ -2,7 +2,6 @@
 
 #include "string.hpp"
 #include <stdio.h>
-#include <ctype.h>
 
 namespace __string__ {
 
@@ -47,7 +46,13 @@ void __init() {
     octdigits = new str("01234567");
     hexdigits = new str("0123456789abcdefABCDEF");
 
-    punctuation = __ctype_str(ispunct);
+    /* CPython defines this as a fixed ascii constant (see Lib/string.py), so
+       do not derive it from ispunct(): that is locale-dependent, and on a
+       single-byte locale (a windows codepage, latin-1) it also reports true
+       for bytes 128-255, which are not code points but raw bytes -- and the
+       (char)i the old loop appended is negative there, so those bytes ended
+       up sign-extended into garbage code points (U+FFFFFFA7, not U+00A7). */
+    punctuation = new str("!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~");
 
     whitespace = new str(" \t\n\r\x0b\x0c");
 

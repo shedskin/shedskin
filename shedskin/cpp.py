@@ -2911,7 +2911,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 or not ast_utils.is_str(node.args[0])
                 or not isinstance(node.args[0], ast.Constant)
                 or not isinstance(node.args[0].value, str)
-                or node.args[0].value not in "bBhHiIlLqQfd"
+                or node.args[0].value not in "bBuwhHiIlLqQfd"
             ):
                 error.error(
                     "non-constant or unsupported type code",

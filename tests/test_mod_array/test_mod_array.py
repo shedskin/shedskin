@@ -443,6 +443,154 @@ def test_extend_overflow_no_corruption():
     assert arr4.tolist() == [9, 8, 1, 2]
 
 
+def test_unicode():
+    # 'w' arrays hold unicode characters: the elements are single-character
+    # strings, not the small ints of the numeric typecodes
+    arr = array.array('w', 'abc')
+    assert arr.typecode == 'w'
+    assert arr.itemsize == 4
+    assert len(arr) == 3
+    assert arr.tolist() == ['a', 'b', 'c']
+    assert arr.tounicode() == 'abc'
+    assert arr[0] == 'a'
+    assert arr[-1] == 'c'
+
+    # any iterable of one-character strings works as initializer too,
+    # as does another array of the same typecode
+    assert array.array('w', ['a', 'b', 'c']) == arr
+    assert array.array('w', arr) == arr
+    assert array.array('w') == array.array('w')
+    assert array.array('w', 'ab') != array.array('w', 'ba')
+
+    # fromunicode() extends, tounicode() is its inverse
+    arr2 = array.array('w')
+    assert arr2.tounicode() == ''
+    arr2.fromunicode('abc')
+    arr2.fromunicode('')
+    assert arr2 == arr
+
+
+def test_unicode_mutate():
+    arr = array.array('w', 'abc')
+    arr.append('d')
+    arr.insert(0, 'Z')
+    assert arr.tounicode() == 'Zabcd'
+    assert arr.pop() == 'd'
+    assert arr.pop(0) == 'Z'
+    arr[1] = 'B'
+    assert arr.tounicode() == 'aBc'
+    del arr[1]
+    assert arr.tounicode() == 'ac'
+    arr.remove('a')
+    assert arr.tounicode() == 'c'
+    arr.clear()
+    assert arr.tounicode() == ''
+    assert len(arr) == 0
+
+
+def test_unicode_sequence():
+    arr = array.array('w', 'abcdef')
+    assert arr[1:3].tounicode() == 'bc'
+    assert arr[::2].tounicode() == 'ace'
+    assert (arr + arr).tounicode() == 'abcdefabcdef'
+    assert (arr * 2).tounicode() == 'abcdefabcdef'
+    assert arr.count('a') == 1
+    assert arr.index('c') == 2
+    assert 'e' in arr
+    assert 'z' not in arr
+    arr.reverse()
+    assert arr.tounicode() == 'fedcba'
+
+    chars = []
+    for c in array.array('w', 'xyz'):
+        chars.append(c)
+    assert chars == ['x', 'y', 'z']
+
+
+def test_unicode_repr():
+    # CPython prints the contents as a string, not as a list of characters
+    assert repr(array.array('w', 'abc')) == "array('w', 'abc')"
+    assert repr(array.array('w')) == "array('w')"
+
+
+def test_unicode_bytes():
+    arr = array.array('w', 'abc')
+    bs = arr.tobytes()
+    assert len(bs) == 3 * arr.itemsize
+
+    arr2 = array.array('w')
+    arr2.frombytes(bs)
+    assert arr2 == arr
+    assert arr2.tounicode() == 'abc'
+
+    address, length = arr.buffer_info()
+    assert length == 3
+    assert address != 0
+
+
+def test_unicode_non_ascii():
+    # code points beyond ascii, latin-1 and the BMP must all survive
+    s = 'h\u00e9llo \u4e16\u754c \U0001f600'
+    arr = array.array('w', s)
+    assert len(arr) == 10
+    assert arr.tounicode() == s
+    assert arr[6] == '\u4e16'
+    assert arr[-1] == '\U0001f600'
+
+    arr2 = array.array('w')
+    arr2.frombytes(arr.tobytes())
+    assert arr2.tounicode() == s
+
+
+def test_unicode_errors():
+    arr = array.array('w', 'abc')
+
+    # items must be strings of length exactly one
+    try:
+        arr.append('ab')
+        assert False, "expected TypeError"
+    except TypeError as e:
+        assert str(e) == "array item must be unicode character"
+    try:
+        arr.append('')
+        assert False, "expected TypeError"
+    except TypeError:
+        pass
+    # ..and a rejected item must leave the array untouched
+    assert arr.tounicode() == 'abc'
+
+    # tounicode()/fromunicode() only apply to unicode arrays
+    nums = array.array('i', [1, 2, 3])
+    try:
+        nums.tounicode()
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert str(e) == "tounicode() may only be called on unicode type arrays"
+    try:
+        nums.fromunicode('a')
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert str(e) == "fromunicode() may only be called on unicode type arrays"
+    assert nums.tolist() == [1, 2, 3]
+
+
+def test_unicode_typecode_u():
+    # 'u' is the deprecated predecessor of 'w' (removed from CPython in
+    # 3.16): same element type, same methods. Drop this test once shedskin
+    # requires a python version that no longer has it.
+    arr = array.array('u', 'abc')
+    assert arr.typecode == 'u'
+    assert arr.tolist() == ['a', 'b', 'c']
+    assert arr.tounicode() == 'abc'
+    assert repr(arr) == "array('u', 'abc')"
+    # ..but it is a distinct typecode, so mixing the two is rejected
+    try:
+        arr.extend(array.array('w', 'de'))
+        assert False, "expected TypeError"
+    except TypeError:
+        pass
+
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -468,6 +616,14 @@ def test_all():
     test_extend_typecode_mismatch()
     test_iadd_typecode_mismatch_message()
     test_extend_overflow_no_corruption()
+    test_unicode()
+    test_unicode_mutate()
+    test_unicode_sequence()
+    test_unicode_repr()
+    test_unicode_bytes()
+    test_unicode_non_ascii()
+    test_unicode_errors()
+    test_unicode_typecode_u()
 
 
 if __name__ == '__main__':
