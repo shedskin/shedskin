@@ -41,11 +41,17 @@ def test_iglob():
 
 def names(it, base):
     # strip the base directory and normalize separators, so results
-    # are comparable regardless of where the tree was created
+    # are comparable regardless of where the tree was created.
+    # normalization has to happen *before* the prefix is stripped: glob
+    # assembles its results with os.path.join(), which inserts os.sep
+    # ('\' on windows) even when the pattern itself used '/', so a
+    # '/'-terminated base is not a literal prefix of the output there.
+    base = base.replace(os.sep, '/')
     out = []
     for f in it:
+        f = f.replace(os.sep, '/')
         assert f.startswith(base)
-        out.append(f[len(base):].replace(os.sep, '/'))
+        out.append(f[len(base):])
     return sorted(out)
 
 
@@ -74,6 +80,10 @@ def test_recursive():
     assert names(glob.glob(B + '**', recursive=True), B) == \
         ['', 'a.txt', 'b.py', 'emptydir', 'sub', 'sub/c.txt', 'sub/d.py',
          'sub/deep', 'sub/deep/e.txt', 'sub2', 'sub2/g.txt']
+    # whatever separator os.path.join() used, every result must be a
+    # path that actually resolves
+    for f in glob.glob(B + '**', recursive=True):
+        assert os.path.exists(f)
     # trailing slash: directories only
     assert names(glob.glob(B + '**/', recursive=True), B) == \
         ['', 'emptydir/', 'sub/', 'sub/deep/', 'sub2/']
@@ -103,12 +113,12 @@ def test_recursive():
     # relative patterns, evaluated from inside the tree
     cwd = os.getcwd()
     os.chdir(base)
-    assert sorted(glob.glob('**/*.txt', recursive=True)) == \
+    assert names(glob.glob('**/*.txt', recursive=True), '') == \
         ['a.txt', 'sub/c.txt', 'sub/deep/e.txt', 'sub2/g.txt']
-    assert sorted(glob.glob('**', recursive=True)) == \
+    assert names(glob.glob('**', recursive=True), '') == \
         ['a.txt', 'b.py', 'emptydir', 'sub', 'sub/c.txt', 'sub/d.py',
          'sub/deep', 'sub/deep/e.txt', 'sub2', 'sub2/g.txt']
-    assert sorted(glob.glob('sub/**', recursive=True)) == \
+    assert names(glob.glob('sub/**', recursive=True), '') == \
         ['sub/', 'sub/c.txt', 'sub/d.py', 'sub/deep', 'sub/deep/e.txt']
     os.chdir(cwd)
 
