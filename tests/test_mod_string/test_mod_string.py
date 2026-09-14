@@ -19,9 +19,15 @@ def test_string_module():
     assert string.octdigits == '01234567'
     assert string.whitespace == ' \t\n\r\x0b\x0c'
 
-    # locale-dependent
-    assert '.' in string.punctuation
-    assert 'a' in string.printable
+    # fixed ascii constants, whatever the locale is (see Lib/string.py)
+    assert string.punctuation == '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+    assert len(string.punctuation) == 32
+    assert string.printable == (string.digits + string.ascii_lowercase +
+                                string.ascii_uppercase + string.punctuation +
+                                string.whitespace)
+    assert len(string.printable) == 100
+    for c in string.printable:
+        assert ord(c) < 128
 
 
 def test_all():
