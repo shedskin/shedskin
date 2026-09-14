@@ -687,6 +687,38 @@ def test_dialect_instance_honored():
     assert list(dr) == [{'a': '1', 'b': '2'}]
 
 
+def test_unicode_roundtrip():
+    # reader/writer used to truncate each code point to a char, so anything
+    # above U+00FF was mangled on the way out ('😀' became 'B\x00') and on
+    # the way back in.
+    rows = [
+        ['héllo', 'wörld', 'ünïcödé'],
+        ['日本語', 'テキスト', '🙂😀'],
+        ['Ā,ā', 'c"日', 'e\nf'],
+    ]
+    s = io.StringIO()
+    w = csv.writer(s)
+    for r in rows:
+        w.writerow(r)
+    assert s.getvalue() == 'héllo,wörld,ünïcödé\r\n日本語,テキスト,🙂😀\r\n"Ā,ā","c""日","e\nf"\r\n'
+    assert list(csv.reader(io.StringIO(s.getvalue()))) == rows
+
+    # non-ascii delimiter and quotechar
+    s = io.StringIO()
+    w = csv.writer(s, delimiter='§', quotechar='«')
+    w.writerow(['a§b', 'c«d', '日'])
+    assert s.getvalue() == '«a§b»§«c««d»§日\r\n'.replace('»', '«')
+    assert list(csv.reader(io.StringIO(s.getvalue()), delimiter='§', quotechar='«')) == [['a§b', 'c«d', '日']]
+
+    # dict flavours
+    s = io.StringIO()
+    dw = csv.DictWriter(s, fieldnames=['名前', 'värde'])
+    dw.writeheader()
+    dw.writerow({'名前': 'x', 'värde': 'ÿ'})
+    assert s.getvalue() == '名前,värde\r\nx,ÿ\r\n'
+    assert list(csv.DictReader(io.StringIO(s.getvalue()))) == [{'名前': 'x', 'värde': 'ÿ'}]
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -714,6 +746,7 @@ def test_all():
     test_dictreader_fieldnames()
     test_predefined_dialect_classes()
     test_dialect_instance_honored()
+    test_unicode_roundtrip()
 
 
 if __name__ == "__main__":
