@@ -21,6 +21,8 @@ class array:
         return [self.unit]
     def tobytes(self):
         return b''
+    def tounicode(self):
+        return ''
     def buffer_info(self):
         return (0, 0)
 
@@ -29,6 +31,8 @@ class array:
     def fromstring(self, s):
         pass
     def frombytes(self, s):
+        pass
+    def fromunicode(self, s):
         pass
 
     def extend(self, it):
