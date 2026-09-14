@@ -11,7 +11,7 @@ str *typecodes;
 void *buffy;
 
 void __throw_no_char() {
-    throw new TypeError(new str("array item must be char"));
+    throw new TypeError(new str("array item must be unicode character"));
 }
 
 size_t get_itemsize(char typechar) {
@@ -28,15 +28,17 @@ size_t get_itemsize(char typechar) {
         case 'Q': return sizeof(unsigned long long);
         case 'f': return sizeof(float);
         case 'd': return sizeof(double);
-        /* 'u' and 'w' are real, valid CPython typecodes (unicode characters --
-         * 'u' deprecated since 3.3/scheduled for removal in 3.16, 'w' its
-         * replacement, added in 3.13) and so belong in array.typecodes, but
-         * shedskin has no unicode array element type to back them with. Give
-         * a clear, honest error instead of falling through to the generic
-         * "not a valid typecode at all" case below with a message that has
-         * nothing to do with the actual problem. */
-        case 'u': case 'w':
-            throw new NotImplementedError(new str("unicode array typecodes ('u', 'w') are not supported"));
+        /* 'u' and 'w' hold unicode characters ('u' deprecated since
+         * 3.3/removed in 3.16, 'w' its replacement, added in 3.13). CPython
+         * backs 'u' with wchar_t, so *its* itemsize is platform-dependent
+         * (2 on Windows, 4 elsewhere), while 'w' is always a 4-byte Py_UCS4.
+         * Shedskin represents str as a sequence of __ss_char code points
+         * throughout, so both typecodes get sizeof(__ss_char) here: itemsize,
+         * tobytes() and buffer_info() then agree across platforms, and this
+         * only deviates from CPython for the (already doomed) 'u' on
+         * Windows, where a surrogate-pair-free 2-byte encoding could not
+         * represent every code point anyway. */
+        case 'u': case 'w': return sizeof(__ss_char);
     }
     throw new ValueError(new str("bad typecode (must be b, B, u, h, H, i, I, l, L, q, Q, f, d or w)"));
 }
