@@ -126,7 +126,7 @@ void *chdir(str *dir) {
 }
 
 str *strerror(__ss_int i) {
-    return new str(::strerror(i));
+    return new str(::strerror((int)i));
 }
 
 __ss_int system(str *c) {
@@ -232,7 +232,7 @@ void *mkdir(str *path, __ss_int mode) {
 }
 
 void _exit(__ss_int code) {
-    ::exit(code);
+    ::exit((int)code);
 }
 
 void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mode) {
@@ -305,7 +305,7 @@ __cstat::__cstat(str *path, __ss_int t) {
 __cstat::__cstat(__ss_int fd) {
     this->__class__ = cl___cstat;
 
-    if(::fstat(fd, &sbuf) == -1)
+    if(::fstat((int)fd, &sbuf) == -1)
         throw new OSError();
 
     fill_er_up();
@@ -455,7 +455,7 @@ list<DirEntry *> *scandir(str *path) {
 static str *__walk_join(str *top, str *name) {
     if(top->unit.empty())
         return name;
-    char last = top->unit.back();
+    __ss_char last = top->unit.back();
     if(last == '/' || last == '\\')
         return new str(top->unit + name->unit);
 #ifdef WIN32
@@ -681,28 +681,28 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
 #endif
 
 __ss_int dup(__ss_int f1) {
-    __ss_int f2 = ::dup(f1);
+    __ss_int f2 = ::dup((int)f1);
     if (f2 == -1)
         throw new OSError(new str("os.dup failed"));
     return f2;
 }
 
 void *dup2(__ss_int f1, __ss_int f2) {
-    if (::dup2(f1,f2) == -1)
+    if (::dup2((int)f1,(int)f2) == -1)
         throw new OSError(new str("os.dup2 failed"));
     return NULL;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(__ss_int f1) {
-    if (::fdatasync(f1) == -1)
+    if (::fdatasync((int)f1) == -1)
         throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
 #endif
 
 __ss_int open(str *name_, __ss_int flags) { /* XXX mode argument */
-    __ss_int fp = ::open(name_->c_str(), flags);
+    __ss_int fp = ::open(name_->c_str(), (int)flags);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
@@ -712,7 +712,7 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
-    FILE* fp = ::fdopen(fd, mode->c_str());
+    FILE* fp = ::fdopen((int)fd, mode->c_str());
     if(fp == NULL)
         throw new OSError(new str("os.fdopen failed"));
 
@@ -726,7 +726,7 @@ bytes *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
     bytes *s = new bytes();
     size_t nr;
     for(__ss_int i=0; i<n; i++) {
-        nr = (size_t)::read(fd, &c, 1);
+        nr = (size_t)::read((int)fd, &c, 1);
         if(nr == std::string::npos)
             throw new OSError(new str("os.read"));
         if(nr == 0)
@@ -738,14 +738,14 @@ bytes *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
 
 __ss_int write(__ss_int fd, bytes *s) {
     size_t r;
-    if((r=(size_t)::write(fd, s->c_str(), s->unit.size())) == std::string::npos)
+    if((r=(size_t)::write((int)fd, s->c_str(), s->unit.size())) == std::string::npos)
         throw new OSError(new str("os.write"));
     return (__ss_int)r;
 }
 
 
 void *close(__ss_int fd) {
-   if(::close(fd) < 0)
+   if(::close((int)fd) < 0)
        throw new OSError(new str("os.close failed"));
    return NULL;
 }
@@ -813,7 +813,7 @@ void __utime(str *path) {
 }
 #endif
 
-#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
+#define HOPPA if (times) __utime(path, (double)times->__getfirst__(), (double)times->__getsecond__()); else __utime(path); return NULL;
 
 void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
 void *utime(str *path, tuple2<__ss_int, __ss_float> *times) { HOPPA }
@@ -885,7 +885,7 @@ __ss_int __ss_WTERMSIG(__ss_int status) {
 }
 
 void *fchdir(__ss_int f1) {
-    if (::fchdir(f1) == -1)
+    if (::fchdir((int)f1) == -1)
         throw new OSError(new str("os.fchdir failed"));
     return NULL;
 }
@@ -954,14 +954,14 @@ void *setregid(__ss_int rgid, __ss_int egid) {
 
 __ss_int tcgetpgrp(__ss_int fd) {
     __ss_int nr;
-    nr = ::tcgetpgrp(fd);
+    nr = ::tcgetpgrp((int)fd);
     if(nr == -1)
         throw new OSError(new str("os.tcgetpgrp"));
     return nr;
 }
 
 void *tcsetpgrp(__ss_int fd, __ss_int pg) {
-    if(::tcsetpgrp(fd, pg) == -1)
+    if(::tcsetpgrp((int)fd, (pid_t)pg) == -1)
         throw new OSError(new str("os.tcsetpgrp"));
     return NULL;
 }
@@ -974,7 +974,7 @@ __ss_int fork() {
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
-    if (::ftruncate(fd, n) == -1)
+    if (::ftruncate((int)fd, n) == -1)
         throw new OSError(new str("os.ftruncate"));
     return NULL;
 }
@@ -1004,25 +1004,25 @@ tuple<__ss_int> *wait() {
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status;
-    if((pid = ::waitpid(pid, &status, options)) == -1)
+    if((pid = ::waitpid((pid_t)pid, &status, (int)options)) == -1)
         throw new OSError(new str("os.waitpid"));
     return new tuple<__ss_int>(2, pid, (__ss_int)status);
 }
 
 __ss_int nice(__ss_int n) {
     __ss_int m;
-    if((m = ::nice(n)) == -1)
+    if((m = ::nice((int)n)) == -1)
         throw new OSError(new str("os.nice"));
     return m;
 }
 
 void *kill(__ss_int pid, __ss_int sig) {
-    if(::kill(pid, sig) == -1)
+    if(::kill((pid_t)pid, (int)sig) == -1)
         throw new OSError(new str("os.kill"));
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {
-    if(::killpg(pgid, sig) == -1)
+    if(::killpg((pid_t)pgid, (int)sig) == -1)
         throw new OSError(new str("os.killpg"));
     return NULL;
 }
@@ -1059,11 +1059,11 @@ str *ctermid() {
 }
 
 __ss_bool isatty(__ss_int fd) {
-    return __mbool(::isatty(fd));
+    return __mbool(::isatty((int)fd));
 }
 
 str *ttyname(__ss_int fd) {
-    char *name_ = ::ttyname(fd);
+    char *name_ = ::ttyname((int)fd);
     if(!name_)
         throw new OSError(new str("os.ttyname"));
     return new str(name_);
@@ -1097,7 +1097,7 @@ void *setgroups(pyseq<__ss_int> *groups) {
 }
 
 __ss_int getsid(__ss_int pid) {
-    __ss_int nr = ::getsid(pid);
+    __ss_int nr = ::getsid((pid_t)pid);
     if(nr == -1)
         throw new OSError(new str("os.getsid"));
     return nr;
@@ -1110,13 +1110,13 @@ __ss_int setsid() {
 }
 
 __ss_int getpgid(__ss_int pid) {
-    __ss_int nr = ::getpgid(pid);
+    __ss_int nr = ::getpgid((pid_t)pid);
     if(nr == -1)
         throw new OSError(new str("os.getpgid"));
     return nr;
 }
 void *setpgid(__ss_int pid, __ss_int pgrp) {
-    if(::setpgid(pid, pgrp) == -1)
+    if(::setpgid((pid_t)pid, (pid_t)pgrp) == -1)
         throw new OSError(new str("os.setpgid"));
     return NULL;
 }
@@ -1148,7 +1148,7 @@ __ss_int pathconf(str *path, str *name_) {
     return pathconf(path, pathconf_names->__getitem__(name_)); /* XXX errors */
 }
 __ss_int pathconf(str *path, __ss_int name_) {
-    return (__ss_int)::pathconf(path->c_str(), name_); /* XXX errors */
+    return (__ss_int)::pathconf(path->c_str(), (int)name_); /* XXX errors */
 }
 
 __ss_int fpathconf(__ss_int fd, str *name_) {
@@ -1157,7 +1157,7 @@ __ss_int fpathconf(__ss_int fd, str *name_) {
     return fpathconf(fd, pathconf_names->__getitem__(name_)); /* XXX errors */
 }
 __ss_int fpathconf(__ss_int fd, __ss_int name_) {
-    return (__ss_int)::fpathconf(fd, name_); /* XXX errors */
+    return (__ss_int)::fpathconf((int)fd, (int)name_); /* XXX errors */
 }
 
 str *confstr(str *name_) {
@@ -1167,7 +1167,7 @@ str *confstr(str *name_) {
 }
 str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
-    size_t size = ::confstr(name_, buf, MAXENTRIES); /* XXX errors */
+    size_t size = ::confstr((int)name_, buf, MAXENTRIES); /* XXX errors */
     if(size == std::string::npos)
         throw new OSError(new str("os.confstr"));
     return new str(buf);
@@ -1179,7 +1179,7 @@ __ss_int sysconf(str *name_) {
     return sysconf(sysconf_names->__getitem__(name_)); /* XXX errors */
 }
 __ss_int sysconf(__ss_int name_) {
-    return (__ss_int)::sysconf(name_); /* XXX errors */
+    return (__ss_int)::sysconf((int)name_); /* XXX errors */
 }
 
 tuple<__ss_float> *getloadavg() {
@@ -1212,7 +1212,7 @@ __vfsstat::__vfsstat(str *path) {
 
 __vfsstat::__vfsstat(__ss_int fd) {
     this->__class__ = cl___vfsstat;
-    if(fstatvfs(fd, &vbuf) == -1)
+    if(fstatvfs((int)fd, &vbuf) == -1)
         throw new OSError(__str(fd));
     fill_er_up();
 }
@@ -1263,7 +1263,7 @@ __vfsstat *fstatvfs(__ss_int fd) {
 }
 
 void *fsync(__ss_int fd) {
-    if(::fsync(fd) == -1)
+    if(::fsync((int)fd) == -1)
         throw new OSError(new str("os.fsync"));
     return NULL;
 }
@@ -1282,7 +1282,7 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
 }
 #else
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
-    off_t r = ::lseek(fd, pos, how);
+    off_t r = ::lseek((int)fd, pos, (int)how);
     if(r == -1)
         throw new OSError(new str("os.lseek"));
     return (__ss_int)r;
@@ -1304,7 +1304,7 @@ list<str *> *get_exec_path(dict<str *, str *> *env) {
 #ifndef WIN32
 
 __ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(path->c_str(), mode) == 0);
+    return __mbool(::access(path->c_str(), (int)mode) == 0);
 }
 
 tuple<__ss_float> *times() {

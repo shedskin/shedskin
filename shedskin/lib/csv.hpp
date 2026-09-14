@@ -200,7 +200,7 @@ public:
     void *parse_process_char(str *c);
     void *parse_reset();
     void *parse_save_field();
-    void *parse_add_char(char c);
+    void *parse_add_char(__ss_char c);
 };
 
 class writer : public pyobj {

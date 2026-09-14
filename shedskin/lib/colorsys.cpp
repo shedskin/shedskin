@@ -140,7 +140,7 @@ tuple2<__ss_float, __ss_float> *hsv_to_rgb(__ss_float h, __ss_float s, __ss_floa
         return (new tuple2<__ss_float, __ss_float>(3,v,v,v));
     }
     i = __int((h*(__ss_float)6.0));
-    f = ((h*6.0)-i);
+    f = ((h*6.0)-(__ss_float)i);
     p = (v*(1.0-s));
     q = (v*(1.0-(s*f)));
     t = (v*(1.0-(s*(1.0-f))));
