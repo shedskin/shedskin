@@ -17,7 +17,7 @@ tuple2<str *, str *> *const_3;
 
 str *const_1, *const_16, *const_17, *const_2, *const_21, *const_22, *const_23, *const_7;
 
-char EOL = '\000';
+__ss_char EOL = 0;
 
 const __ss_int QUOTE_MINIMAL = 0;
 const __ss_int QUOTE_ALL = 1;
@@ -233,7 +233,7 @@ void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, str *delim
 }
 
 void *reader::parse_process_char(str *s) {
-    char c = s->unit[0];
+    __ss_char c = s->unit[0];
 
     Dialect *dialect = this->dialect;
 
@@ -479,7 +479,7 @@ void *reader::parse_save_field() {
     return NULL;
 }
 
-void *reader::parse_add_char(char c) {
+void *reader::parse_add_char(__ss_char c) {
     if ((len(this->field)>=_field_limit)) { // TODO use field_len
         throw ((new Error(__mod6(const_17, 1, _field_limit))));
     }
@@ -522,7 +522,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
     str *rr = new str(); // TODO
 
     for (size_t i = 0; field != NULL && i < field->unit.size(); i++) {
-        char c = field->unit[i];
+        __ss_char c = field->unit[i];
         int want_escape = 0;
 
         if (c == dialect->delimiter->unit[0] ||
@@ -530,7 +530,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
             c == dialect->quotechar->unit[0] ||
             c == '\n' ||
             c == '\r' ||
-            dialect->lineterminator->unit.find(c) != std::string::npos) {
+            dialect->lineterminator->unit.find(c) != __GC_STR::npos) {
             if (dialect->quoting == QUOTE_NONE)
                 want_escape = 1;
             else {
