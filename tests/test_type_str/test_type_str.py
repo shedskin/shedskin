@@ -151,11 +151,27 @@ def test_isascii():
     assert not '\xf0'.isascii()
     assert ''.isascii()
 
+    # code points used to be masked to their low byte first, so anything
+    # with a low byte below 0x80 passed for ascii ('\u2603' as '\x03')
+    assert not '\u2603'.isascii()
+    assert not '\u0100'.isascii()
+    assert not '\U0001f600'.isascii()
+    assert not 'caf\xe9'.isascii()
+    assert not 'abc\u2603'.isascii()
+
 
 def test_isdecimal():
     assert not 'bla'.isdecimal()
     assert '123'.isdecimal()
     assert not ''.isdecimal()
+
+    # same masking bug: '\u0130' has low byte 0x30, so it used to pass
+    # for the digit '0'
+    assert not '\u0130'.isdecimal()
+    assert not '\u0131'.isdecimal()
+    assert not '\u2603'.isdecimal()
+    assert not '\U0001f600'.isdecimal()
+    assert not '1\u0130'.isdecimal()
 
 
 def test_isdigit():
@@ -184,6 +200,17 @@ def test_isnumeric():
     assert not 'bla'.isnumeric()
     assert '123'.isnumeric()
     assert not ''.isnumeric()
+
+    # latin-1 numerics still count..
+    assert '\xb2\xb3\xb9'.isnumeric()    # superscript 2, 3, 1
+    assert '\xbc\xbd\xbe'.isnumeric()    # 1/4, 1/2, 3/4
+    assert not '\xba'.isnumeric()        # masculine ordinal indicator
+
+    # ..but code points above it must not be masked down into those ranges
+    assert not '\u0130'.isnumeric()
+    assert not '\u0131'.isnumeric()
+    assert not '\u2603'.isnumeric()
+    assert not '\U0001f600'.isnumeric()
 
 
 def test_isprintable():

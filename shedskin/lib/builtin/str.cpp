@@ -168,12 +168,9 @@ __ss_bool str::isprintable() {
 __ss_bool str::__ss_isascii() {
   size_t i, l = this->unit.size();
 
-  for(i = 0; i < l; i++) {
-      unsigned char elem = (unsigned char)unit[i];
-
-      if(elem > 127)
+  for(i = 0; i < l; i++)
+      if(unit[i] > 127)
           return False;
-  }
 
   return True;
 }
@@ -185,7 +182,7 @@ __ss_bool str::isdecimal() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = (unsigned char)unit[i];
+      __ss_char elem = unit[i];
 
       if(elem < 48 or elem > 57)
           return False;
@@ -201,7 +198,7 @@ __ss_bool str::isnumeric() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = (unsigned char)unit[i];
+      __ss_char elem = unit[i];
 
       if(elem < 48 or (elem > 57 and elem < 178) or (elem > 179 and elem < 185) or (elem > 185 and elem < 188) or elem > 190)
           return False;
