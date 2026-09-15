@@ -13,9 +13,9 @@ def a2b_uu(data):
 def b2a_uu(data, backtick=False):
     return b''
 
-def a2b_base64(data, strict_mode=False):
+def a2b_base64(data, strict_mode=False, padded=True):
     return b''
-def b2a_base64(data, newline=True, wrapcol=0):
+def b2a_base64(data, newline=True, wrapcol=0, padded=True):
     return b''
 
 def a2b_ascii85(data, foldspaces=False, adobe=False, ignorechars=b'', canonical=False):

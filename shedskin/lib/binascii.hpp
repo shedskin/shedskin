@@ -43,8 +43,8 @@ public:
 
 bytes *a2b_uu(bytes *string);
 bytes *b2a_uu(bytes *data, __ss_bool backtick);
-bytes *a2b_base64(bytes *string, __ss_bool strict_mode, bytes *altchars=0);
-bytes *b2a_base64(bytes *data, __ss_bool newline, __ss_int wrapcol=0, bytes *altchars=0);
+bytes *a2b_base64(bytes *string, __ss_bool strict_mode, __ss_bool padded=True, bytes *altchars=0);
+bytes *b2a_base64(bytes *data, __ss_bool newline, __ss_int wrapcol=0, __ss_bool padded=True, bytes *altchars=0);
 bytes *a2b_ascii85(bytes *data, __ss_bool foldspaces=False, __ss_bool adobe=False, bytes *ignorechars=0, __ss_bool canonical=False);
 bytes *b2a_ascii85(bytes *data, __ss_bool foldspaces=False, __ss_int wrapcol=0, __ss_bool pad=False, __ss_bool adobe=False);
 bytes *a2b_base85(bytes *data, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False);

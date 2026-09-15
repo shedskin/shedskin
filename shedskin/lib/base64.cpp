@@ -20,35 +20,30 @@ bytes *default_3, *default_4, *default_5, *default_6, *default_7;
 bytes *b64encode(bytes *s, bytes *altchars, __ss_bool padded, __ss_int wrapcol) {
     if (altchars && altchars->unit.size() != 2)
         throw new ValueError(new str("invalid altchars"));
-    bytes *result = __binascii__::b2a_base64(s, False, wrapcol, altchars);
-    if (!padded) {
-        __GC_BYTES &u = result->unit;
-        while (!u.empty() && u.back() == '=')
-            u.pop_back();
-    }
-    return result;
+    return __binascii__::b2a_base64(s, False, wrapcol, padded, altchars);
 }
 
 bytes *standard_b64encode(bytes *s) {
     return b64encode(s, NULL);
 }
 
-bytes *urlsafe_b64encode(bytes *s) {
-    return b64encode(s, new bytes("-_"));
+bytes *urlsafe_b64encode(bytes *s, __ss_bool padded) {
+    return b64encode(s, new bytes("-_"), padded);
 }
 
-bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate) {
+bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate, __ss_bool padded) {
     if (altchars && altchars->unit.size() != 2)
         throw new ValueError(new str("invalid altchars"));
-    return __binascii__::a2b_base64(s, validate, altchars);
+    return __binascii__::a2b_base64(s, validate, padded, altchars);
 }
 
 bytes *standard_b64decode(bytes *s) {
     return b64decode(s, NULL, False);
 }
 
-bytes *urlsafe_b64decode(bytes *s) {
-    return b64decode(s, new bytes("-_"), False);
+bytes *urlsafe_b64decode(bytes *s, __ss_bool padded) {
+    // note: unlike b64decode, this defaults to padded=False (CPython 3.15)
+    return b64decode(s, new bytes("-_"), False, padded);
 }
 
 bytes *b16encode(bytes *s) {

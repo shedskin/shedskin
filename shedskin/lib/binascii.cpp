@@ -276,7 +276,7 @@ int find_valid(char *s, size_t slen, int num, signed char *table_a2b_base64)
 }
 
 // from python 2.7.1
-bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
+bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, __ss_bool padded, bytes *altchars) {
     signed char table_a2b_base64[] = {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -303,6 +303,16 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1
     };
 
+    /* The table above maps BASE64_PAD to 0 ("Note PAD->0"), which is only
+    ** safe because the padded branch below intercepts '=' before the table
+    ** is ever consulted. With padded=False there is no such branch, so '='
+    ** has to become genuinely invalid here, or it would silently decode as
+    ** a zero sextet. Do this before the altchars assignment, so an (exotic)
+    ** altchars containing '=' still wins.
+    */
+    if (!padded)
+        table_a2b_base64[BASE64_PAD] = -1;
+
     // Standard '+' and '/' must remain valid regardless of altchars: base64.py's
     // altchars support works by translating the altchars onto '+'/'/' before
     // decoding, which leaves any literal '+'/'/' already present untouched (and
@@ -316,7 +326,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
     }
 
-    if(strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)
+    if(padded && strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)
         throw new Error(new str("Leading padding not allowed"));
 
     char * ascii_data = &pascii->unit[0];
@@ -368,7 +378,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         /* Check for pad sequences and ignore
         ** the invalid ones.
         */
-        if (this_ch == BASE64_PAD) {
+        if (padded && this_ch == BASE64_PAD) {
             if (quad_pos == 2 && !seen_pad_at_2) {
                 /* First pad closing a quad_pos == 2 group: this only
                 ** completes the group once a *second* pad is reached.
@@ -423,7 +433,9 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
         this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
         if ( this_ch == (unsigned char) -1 ) {
             if (strict_mode)
-                throw new Error(new str("Only base64 data is allowed"));
+                throw new Error(new str(
+                    (*ascii_data == BASE64_PAD) ? "Padding not allowed"
+                                                : "Only base64 data is allowed"));
             continue;
         }
 
@@ -460,13 +472,19 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     ** before a terminating pad was reached.
     */
     if (!complete && leftbits != 0) {
+        /* A single leftover data character can never represent a whole byte,
+        ** padded or not, so that one stays unconditional. The plain
+        ** "Incorrect padding" case is exactly what padded=False is for: a
+        ** truncated final group is then a valid, unpadded encoding.
+        */
         if (leftbits == 6)
             throw new Error(__add_strs(3,
                 new str("Invalid base64-encoded string: number of data "
                         "characters ("),
                 __str(data_chars),
                 new str(") cannot be 1 more than a multiple of 4")));
-        throw new Error(new str("Incorrect padding"));
+        if (padded)
+            throw new Error(new str("Incorrect padding"));
     }
 
     /* And set string size correctly. If the result string is empty
@@ -482,7 +500,7 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, bytes *altchars) {
     return binary;
 }
 
-bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, bytes *altchars) {
+bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, __ss_bool padded, bytes *altchars) {
     unsigned char table_b2a_base64[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -522,13 +540,20 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, bytes *alt
             *ascii_data++ = (char)table_b2a_base64[(unsigned char)this_ch];
         }
     }
+    /* Padding only ever lands in the final quad, and wrapcol is rounded to a
+    ** multiple of 4 below, so dropping it here (rather than after wrapping)
+    ** matches CPython for every combination of padded and wrapcol.
+    */
     if ( leftbits == 2 ) {
         *ascii_data++ = (char)table_b2a_base64[(leftchar&3) << 4];
-        *ascii_data++ = BASE64_PAD;
-        *ascii_data++ = BASE64_PAD;
+        if (padded) {
+            *ascii_data++ = BASE64_PAD;
+            *ascii_data++ = BASE64_PAD;
+        }
     } else if ( leftbits == 4 ) {
         *ascii_data++ = (char)table_b2a_base64[(leftchar&0xf) << 2];
-        *ascii_data++ = BASE64_PAD;
+        if (padded)
+            *ascii_data++ = BASE64_PAD;
     }
     // resize to ascii_data - start
     ascii->unit.resize((size_t)(ascii_data-ascii_start));

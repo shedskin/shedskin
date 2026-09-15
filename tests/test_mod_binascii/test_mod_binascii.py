@@ -412,6 +412,15 @@ def expect_value_error(f):
     assert ok
 
 
+def a2b_base64_fails(s, padded=True, strict_mode=False):
+    ok = False
+    try:
+        binascii.a2b_base64(s, strict_mode=strict_mode, padded=padded)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
 def a2b_base32_fails(s, padded=True):
     ok = False
     try:
@@ -458,6 +467,20 @@ def test_b2a_base64_wrapcol():
     assert binascii.b2a_base64(b'\x00\x00\x00\x00\x00', wrapcol=7) == b'AAAA\nAAA=\n'
     assert binascii.b2a_base64(b'', wrapcol=4) == b'\n'
     assert binascii.b2a_base64(b'abc', wrapcol=4) == b'YWJj\n'
+
+
+def test_base64_padded():
+    assert binascii.b2a_base64(b'abcde', newline=False, padded=False) == b'YWJjZGU'
+    assert binascii.b2a_base64(b'abcde', newline=False) == b'YWJjZGU='
+    assert binascii.b2a_base64(b'ab', newline=False, padded=False) == b'YWI'
+    assert binascii.b2a_base64(b'abcde', wrapcol=4, newline=False, padded=False) == b'YWJj\nZGU'
+    assert binascii.a2b_base64(b'YWJjZGU', padded=False) == b'abcde'
+    assert binascii.a2b_base64(b'YWI', padded=False) == b'ab'
+    # '=' is not padding when padded=False, just non-alphabet data
+    assert binascii.a2b_base64(b'YWJjZGU=', padded=False) == b'abcde'
+    a2b_base64_fails(b'YWJjZGU=', padded=False, strict_mode=True)
+    a2b_base64_fails(b'YWJjZGU')
+    a2b_base64_fails(b'YWJjZ', padded=False)
 
 
 def test_base32():
@@ -638,6 +661,7 @@ def test_all():
     test_crc_hqx_high_bit_bytes()
     test_alphabets()
     test_b2a_base64_wrapcol()
+    test_base64_padded()
     test_base32()
     test_base85()
     test_ascii85()

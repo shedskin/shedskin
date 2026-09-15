@@ -14,11 +14,11 @@ extern bytes *default_3, *default_4, *default_5, *default_6, *default_7;
 
 bytes *b64encode(bytes *s, bytes *altchars, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *standard_b64encode(bytes *s);
-bytes *urlsafe_b64encode(bytes *s);
+bytes *urlsafe_b64encode(bytes *s, __ss_bool padded=True);
 
-bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate);
+bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate, __ss_bool padded=True);
 bytes *standard_b64decode(bytes *s);
-bytes *urlsafe_b64decode(bytes *s);
+bytes *urlsafe_b64decode(bytes *s, __ss_bool padded=False);
 
 bytes *b16encode(bytes *s);
 bytes *b16decode(bytes *s, __ss_bool casefold);
