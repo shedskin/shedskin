@@ -84,6 +84,10 @@ def test_key():
     assert bisect.bisect_right(l, 'w', key=lambda a: idx[a]) == 2
 
 
+def negate(a):
+    return -a
+
+
 def test_bounds():
     xs = [1, 2, 3, 4, 5]
 
@@ -106,6 +110,69 @@ def test_bounds():
     # 'lo < hi' is immediately false and the search range is empty
     assert bisect.bisect_right(xs, 3, 0, -100) == 0
     assert bisect.bisect_left(xs, 3, 0, -100) == 0
+    assert bisect.bisect_right(xs, 3, 0, -2) == 0
+
+    # ..except for -1, which is the in-band 'hi is None' sentinel in
+    # CPython's _bisect, so it means len(a) there. (the pure python
+    # bisect.py fallback disagrees, but _bisect is what users get)
+    assert bisect.bisect_right(xs, 3, 0, -1) == 3
+    assert bisect.bisect_left(xs, 3, 0, -1) == 2
+    assert bisect.bisect(xs, 3, 0, -1) == 3
+
+    ks = [5, 4, 3, 2, 1]
+    assert bisect.bisect_right(ks, -3, 0, -1, key=negate) == 3
+    assert bisect.bisect_left(ks, -3, 0, -1, key=negate) == 2
+
+    ys = [1, 2, 3, 4, 5]
+    bisect.insort_right(ys, 3, 0, -1)
+    assert ys == [1, 2, 3, 3, 4, 5]
+
+
+def test_hi_out_of_range():
+    xs = [1, 2, 3, 4, 5]
+
+    # 'hi' beyond len(a) is not clamped: CPython raises IndexError as
+    # soon as the search probes an index that is out of range
+    ok = False
+    try:
+        bisect.bisect_right(xs, 3, 0, 100)
+    except IndexError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        bisect.bisect_left(xs, 3, 0, 100)
+    except IndexError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        bisect.bisect_right([5, 4, 3, 2, 1], -3, 0, 100, key=negate)
+    except IndexError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        bisect.insort_right(xs, 3, 0, 100)
+    except IndexError:
+        ok = True
+    assert ok
+    assert xs == [1, 2, 3, 4, 5]
+
+    ok = False
+    try:
+        bisect.insort_left(xs, 3, 0, 100)
+    except IndexError:
+        ok = True
+    assert ok
+
+    # ..but only if it actually probes out of range: here the very first
+    # probe moves 'hi' back into the list, so no error is raised
+    assert bisect.bisect_right(xs, 1, 0, 6) == 1
+    assert bisect.bisect_left(xs, 1, 0, 6) == 0
 
 
 def test_all():
@@ -113,6 +180,7 @@ def test_all():
     test_bisect_insort()
     test_key()
     test_bounds()
+    test_hi_out_of_range()
 
 
 if __name__ == '__main__':
