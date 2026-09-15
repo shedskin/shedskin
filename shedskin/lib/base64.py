@@ -9,16 +9,16 @@ def b64encode(s, altchars=None, padded=True, wrapcol=0):
 def standard_b64encode(s):
     return b''
 
-def urlsafe_b64encode(s):
+def urlsafe_b64encode(s, padded=True):
     return b''
 
-def b64decode(s, altchars=None, validate=False):
+def b64decode(s, altchars=None, validate=False, padded=True):
     return b''
 
 def standard_b64decode(s):
     return b''
 
-def urlsafe_b64decode(s):
+def urlsafe_b64decode(s, padded=False):
     return b''
 
 def b16encode(s):

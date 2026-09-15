@@ -83,6 +83,51 @@ def test_validate():
     assert base64.b64decode(bad) == b'Hello!'
 
 
+def test_padded():
+    # encoding without padding
+    assert base64.b64encode(b'abcde', padded=False) == b'YWJjZGU'
+    assert base64.b64encode(b'a', padded=False) == b'YQ'
+    assert base64.b64encode(b'abc', padded=False) == b'YWJj'
+    assert base64.b64encode(b'', padded=False) == b''
+    assert base64.urlsafe_b64encode(b'\xfb\xef') == b'--8='
+    assert base64.urlsafe_b64encode(b'\xfb\xef', padded=False) == b'--8'
+
+    # padding is dropped before wrapping, not after
+    assert base64.b64encode(b'abcde', padded=False, wrapcol=4) == b'YWJj\nZGU'
+    assert base64.b64encode(b'abcde', wrapcol=4) == b'YWJj\nZGU='
+
+    # decoding input that carries no padding
+    assert base64.b64decode(b'YWJjZGU', padded=False) == b'abcde'
+    assert base64.b64decode(b'YQ', padded=False) == b'a'
+    assert base64.b64decode(b'YWJj', padded=False) == b'abc'
+    assert base64.b64decode(b'', padded=False) == b''
+    expect_error(lambda: base64.b64decode(b'YWJjZGU'))
+
+    # padded input is still accepted when padded=False: '=' is then simply
+    # non-alphabet data, discarded unless validate=True
+    assert base64.b64decode(b'YWJjZGU=', padded=False) == b'abcde'
+    assert base64.b64decode(b'YWJj=ZGU', padded=False) == b'abcde'
+    expect_error(lambda: base64.b64decode(b'YWJjZGU=', validate=True, padded=False))
+    expect_error(lambda: base64.b64decode(b'=YWJj', validate=True, padded=False))
+
+    # a lone trailing data character is invalid either way
+    expect_error(lambda: base64.b64decode(b'YWJjZ', padded=False))
+    expect_error(lambda: base64.b64decode(b'Y', padded=False))
+
+    # urlsafe_b64decode defaults to padded=False
+    assert base64.urlsafe_b64decode(b'--8') == b'\xfb\xef'
+    assert base64.urlsafe_b64decode(b'--8=') == b'\xfb\xef'
+    expect_error(lambda: base64.urlsafe_b64decode(b'--8', padded=True))
+
+    # round trip
+    data = bytes(range(256))
+    for n in range(24):
+        chunk = data[:n]
+        assert base64.b64decode(base64.b64encode(chunk, padded=False), padded=False) == chunk
+        assert base64.urlsafe_b64decode(base64.urlsafe_b64encode(chunk, padded=False)) == chunk
+        assert base64.b64decode(base64.b64encode(chunk)) == chunk
+
+
 def test_b16():
     input_bytes = bytes(range(256))
     e = base64.b16encode(input_bytes)
@@ -387,6 +432,7 @@ def test_all():
     test_name()
     test_validate()
     test_decode_bad_padding()
+    test_padded()
     test_b16()
     test_asan_regression()
     test_b32()
