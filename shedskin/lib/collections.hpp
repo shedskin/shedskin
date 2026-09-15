@@ -504,7 +504,10 @@ public:
         return NULL;
     }
 
+    /* CPython prints an empty counter as 'Counter()', not 'Counter({})' */
     str *__repr__() {
+        if(this->gcd.empty())
+            return new str("Counter()");
         return __add_strs(3, new str("Counter("), dict<K, V>::__repr__(), new str(")"));
     }
 
