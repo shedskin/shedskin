@@ -186,6 +186,25 @@ def test_read_string():
     assert config.get('book', 'title') == 'Dune'
     assert config.getint('book', 'pages') == 412
 
+def test_no_inline_comments():
+    # CPython 3 has inline_comment_prefixes=None by default, so ';' and '#'
+    # inside a value are data, not the start of a comment (python 2 stripped
+    # ' ;'-comments here). Full-line comments are still comments.
+    config = configparser.ConfigParser()
+    config.read_string(
+        "[a]\n"
+        "; a real comment\n"
+        "url = http://host/?x=1 ; y=2\n"
+        "hash = red #ff0000\n"
+        "semi = a;b\n"
+        "tail = value ;\n"
+    )
+    assert config.get('a', 'url') == 'http://host/?x=1 ; y=2'
+    assert config.get('a', 'hash') == 'red #ff0000'
+    assert config.get('a', 'semi') == 'a;b'
+    assert config.get('a', 'tail') == 'value ;'
+    assert sorted(config.options('a')) == ['hash', 'semi', 'tail', 'url']
+
 def test_read_dict():
     config = configparser.ConfigParser()
     config.read_dict({'server': {'host': 'localhost', 'port': '8080'}})
@@ -704,6 +723,7 @@ def test_all():
     test_interpolation()
     test_error_str_and_repr()
     test_read_string()
+    test_no_inline_comments()
     test_read_dict()
     test_get_fallback()
     test_duplicate_section_error()
