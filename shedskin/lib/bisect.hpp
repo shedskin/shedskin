@@ -11,15 +11,28 @@ namespace __bisect__ {
 extern str * __name__;
 void __init();
 
-void __pos_check(__ss_int lo, __ss_int hi);
+/* validate 'lo'/'hi' and resolve CPython's '-1' sentinel for 'hi' */
+__ss_int __pos_check(__ss_int lo, __ss_int hi, __ss_int size);
+
+/* out-of-line so the binary search loops stay small */
+void __idx_error();
+
+/* 'lo' and 'hi' are both non-negative whenever the loop body runs, so the
+   unsigned addition below just avoids signed overflow for huge bounds
+   (CPython does the same, see its issue 13496) */
+static inline void __idx_check(__ss_int mid, __ss_int size) {
+    if(mid >= size)
+        __idx_error();
+}
 
 template <class A, class B> void *insort_left(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
     B key_x = key(x);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(key(a->units[mid]), key_x))
             lo = (mid+1);
         else
@@ -30,11 +43,12 @@ template <class A, class B> void *insort_left(B (*key)(A), list<A> *a, A x, __ss
 }
 
 template <class A> void *insort_left(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(a->units[mid], x)) {
             lo = (mid+1);
         }
@@ -48,12 +62,13 @@ template <class A> void *insort_left(long int /* key = None */, list<A> *a, A x,
 }
 
 template <class A, class B> void *insort_right(B (*key)(A), list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
     B key_x = key(x);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(key_x, key(a->units[mid]))) {
             hi = mid;
         }
@@ -66,11 +81,12 @@ template <class A, class B> void *insort_right(B (*key)(A), list<A> *a, A x, __s
 }
 
 template <class A> void *insort_right(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(x, a->units[mid])) {
             hi = mid;
         }
@@ -93,11 +109,12 @@ template <class A, class B> void *insort(B (*key)(A), list<A> *a, A x, __ss_int 
 
 
 template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, B x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(key(a->units[mid]), x))
             lo = (mid+1);
         else
@@ -107,11 +124,12 @@ template <class A, class B> __ss_int bisect_left(B (*key)(A), list<A> *a, B x, _
 }
 
 template <class A> __ss_int bisect_left(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(a->units[mid], x))
             lo = (mid+1);
         else
@@ -121,11 +139,12 @@ template <class A> __ss_int bisect_left(long int /* key = None */, list<A> *a, A
 }
 
 template <class A, class B> __ss_int bisect_right(B (*key)(A), list<A> *a, B x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(x, key(a->units[mid])))
             hi = mid;
         else
@@ -135,11 +154,12 @@ template <class A, class B> __ss_int bisect_right(B (*key)(A), list<A> *a, B x, 
 }
 
 template <class A> __ss_int bisect_right(long int /* key = None */, list<A> *a, A x, __ss_int lo, __ss_int hi) {
-    __ss_int mid;
-    __pos_check(lo, hi);
+    __ss_int mid, size = len(a);
+    hi = __pos_check(lo, hi, size);
 
     while((lo<hi)) {
-        mid = (lo+hi)/2;
+        mid = (__ss_int)(((size_t)lo + (size_t)hi) / 2);
+        __idx_check(mid, size);
         if (__lt(x, a->units[mid]))
             hi = mid;
         else
