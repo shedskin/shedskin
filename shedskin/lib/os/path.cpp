@@ -32,8 +32,16 @@ namespace __os__ {
 namespace __path__ {
 
 tuple2<str *, str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
+
+/**
+Special value for the 'strict' argument of realpath(). CPython uses a
+singleton object with a true boolean value here; since shed skin types
+'strict' as a bool, we use a bool whose (uint8_t) value is neither 0 nor 1,
+so it is distinguishable from True while still being true.
+*/
+__ss_bool ALLOW_MISSING;
 #ifdef WIN32
 __ss_int supports_unicode_filenames;
 #endif
@@ -63,6 +71,8 @@ void __init() {
     defpath = const_6;
     altsep = NULL;
     devnull = const_7;
+
+    ALLOW_MISSING.value = (uint8_t)2;
 }
 
 str *normcase(str *s) {
@@ -160,6 +170,28 @@ tuple2<str *, str *> *splitdrive(str *p) {
     */
 
     return (new tuple2<str *, str *>(2, const_0, p));
+}
+
+tuple2<str *, str *> *splitroot(str *p) {
+    /**
+    Split a pathname into drive, root and tail. On Posix, drive is always
+    empty. The tail contains anything after the root.
+    */
+
+    if (__ne(p->__slice__(2, 0, 1, 0), const_4)) {
+        /* relative path, e.g.: 'foo' */
+        return (new tuple2<str *, str *>(3, const_0, const_0, p));
+    }
+    else if (__ne(p->__slice__(3, 1, 2, 0), const_4) || __eq(p->__slice__(3, 2, 3, 0), const_4)) {
+        /* absolute path, e.g.: '/foo', '///foo', '////foo', etc. */
+        return (new tuple2<str *, str *>(3, const_0, const_4, p->__slice__(1, 1, 0, 0)));
+    }
+    else {
+        /* precisely two leading slashes, e.g.: '//foo'. implementation
+           defined per POSIX, see
+           https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap04.html#tag_04_11 */
+        return (new tuple2<str *, str *>(3, const_0, p->__slice__(2, 0, 2, 0), p->__slice__(1, 2, 0, 0)));
+    }
 }
 
 str *basename(str *p) {
@@ -306,6 +338,16 @@ __ss_bool isfile(str *path) {
         return False;
     }
     return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
+}
+
+__ss_bool isjunction(str *) {
+    /**
+    Test whether a path is a junction
+
+    Junctions are not a thing on Posix, so always return False.
+    */
+
+    return False;
 }
 
 __ss_bool samefile(str *f1, str *f2) {
@@ -471,8 +513,10 @@ str *relpath(str *path, str *start) {
 str *realpath(str *filename, __ss_bool strict) {
     /**
     Return the canonical path of the specified filename, eliminating any
-    symbolic links encountered in the path. If strict is true, raise
-    FileNotFoundError for the first path component that does not exist.
+    symbolic links encountered in the path. If strict is True, raise
+    FileNotFoundError for the first path component that does not exist, and
+    OSError for a symlink loop. If strict is ALLOW_MISSING, missing path
+    components are tolerated, but a symlink loop is still an error.
 
     Note: this is a lighter-weight approximation of CPython's strict mode:
     a broken symlink's *target* is not specially detected as missing, only
@@ -481,6 +525,9 @@ str *realpath(str *filename, __ss_bool strict) {
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;
+    __ss_bool allow_missing;
+
+    allow_missing = __mbool(strict.value == ALLOW_MISSING.value);
 
     if (isabs(filename)) {
         bits = ((new list<str *>(1, const_4)))->__add__((filename->split(const_4))->__slice__(1, 1, 0, 0));
@@ -491,12 +538,15 @@ str *realpath(str *filename, __ss_bool strict) {
 
     FAST_FOR(i,2,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
-        if (strict.value && (!lexists(component).value)) {
+        if (strict.value && (!allow_missing.value) && (!lexists(component).value)) {
             throw new FileNotFoundError(component);
         }
         if (islink(component)) {
             resolved = _resolve_link(component);
             if (resolved==0) {
+                if (strict.value) { /* symlink loop: not ignored by ALLOW_MISSING */
+                    throw new OSError(component);
+                }
                 return abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0))));
             }
             else {
@@ -589,6 +639,7 @@ void __init() {
     const_23 = new str("HOMEPATH");
     const_24 = new str("HOMEDRIVE");
     const_25 = new str("USERNAME");
+    const_26 = new str("\\\\?\\UNC\\");
 
     __name__ = new str("__main__");
 
@@ -601,6 +652,8 @@ void __init() {
     defpath = const_7;
     devnull = const_8;
     supports_unicode_filenames = 0;
+
+    ALLOW_MISSING.value = (uint8_t)2;
 }
 
 str *normcase(str *s) {
@@ -695,6 +748,57 @@ tuple2<str *, str *> *splitdrive(str *p) {
     }
     return (new tuple2<str *, str *>(2, const_1, p));
 }
+tuple2<str *, str *> *splitroot(str *p) {
+    /**
+    Split a pathname into drive, root and tail. The tail contains anything
+    after the root.
+    */
+    str *normp;
+    __ss_int index, index2, start;
+
+    normp = p->replace(const_6, const_4);
+
+    if (__eq(normp->__slice__(2, 0, 1, 0), const_4)) {
+        if (__eq(normp->__slice__(3, 1, 2, 0), const_4)) {
+            /* UNC drives, e.g. \\server\share or \\?\UNC\server\share;
+               device drives, e.g. \\.\device or \\?\device */
+            if (__eq((normp->__slice__(2, 0, 8, 0))->upper(), const_26)) {
+                start = 8;
+            }
+            else {
+                start = 2;
+            }
+            index = normp->find(const_4, start);
+            if (index == -1) {
+                return (new tuple2<str *, str *>(3, p, const_1, const_1));
+            }
+            index2 = normp->find(const_4, (index+1));
+            if (index2 == -1) {
+                return (new tuple2<str *, str *>(3, p, const_1, const_1));
+            }
+            return (new tuple2<str *, str *>(3, p->__slice__(2, 0, index2, 0), p->__slice__(3, index2, (index2+1), 0), p->__slice__(1, (index2+1), 0, 0)));
+        }
+        else {
+            /* relative path with root, e.g. \Windows */
+            return (new tuple2<str *, str *>(3, const_1, p->__slice__(2, 0, 1, 0), p->__slice__(1, 1, 0, 0)));
+        }
+    }
+    else if (__eq(normp->__slice__(3, 1, 2, 0), const_19)) {
+        if (__eq(normp->__slice__(3, 2, 3, 0), const_4)) {
+            /* absolute drive-letter path, e.g. X:\Windows */
+            return (new tuple2<str *, str *>(3, p->__slice__(2, 0, 2, 0), p->__slice__(3, 2, 3, 0), p->__slice__(1, 3, 0, 0)));
+        }
+        else {
+            /* relative path with drive, e.g. X:Windows */
+            return (new tuple2<str *, str *>(3, p->__slice__(2, 0, 2, 0), const_1, p->__slice__(1, 2, 0, 0)));
+        }
+    }
+    else {
+        /* relative path, e.g. Windows */
+        return (new tuple2<str *, str *>(3, const_1, const_1, p));
+    }
+}
+
 
 tuple2<str *, str *> *split(str *p) {
     /**
@@ -893,6 +997,35 @@ __ss_bool isfile(str *path) {
         return False;
     }
     return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
+}
+
+__ss_bool isjunction(str *path) {
+    /**
+    Test whether a path is a junction
+
+    A junction is a reparse point tagged IO_REPARSE_TAG_MOUNT_POINT. The
+    tag is reported in WIN32_FIND_DATA::dwReserved0, which is only
+    meaningful when FILE_ATTRIBUTE_REPARSE_POINT is set.
+    */
+    DWORD attr;
+    HANDLE handle;
+    WIN32_FIND_DATAA data;
+
+    attr = GetFileAttributesA(path->c_str());
+    if (attr == INVALID_FILE_ATTRIBUTES) {
+        return False;
+    }
+    if (!(attr & FILE_ATTRIBUTE_REPARSE_POINT)) {
+        return False;
+    }
+
+    handle = FindFirstFileA(path->c_str(), &data);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return False;
+    }
+    FindClose(handle);
+
+    return __mbool(data.dwReserved0 == IO_REPARSE_TAG_MOUNT_POINT);
 }
 
 __ss_bool samefile(str *f1, str *f2) {
@@ -1104,7 +1237,7 @@ str *relpath(str *path, str *start) {
 
 str *realpath(str *path, __ss_bool strict) {
 
-    if (strict.value && (!exists(path).value)) {
+    if (strict.value && (strict.value != ALLOW_MISSING.value) && (!exists(path).value)) {
         throw new FileNotFoundError(path);
     }
     return abspath(path);

@@ -44,6 +44,60 @@ def test_os_path():
     assert getmtime(abc) > 1 # dummy: cannot test for time
 
 
+def test_os_path_splitroot():
+    if os.name == "nt":
+        assert splitroot("") == ("", "", "")
+        assert splitroot("foo") == ("", "", "foo")
+        assert splitroot("foo\\bar") == ("", "", "foo\\bar")
+        assert splitroot("\\") == ("", "\\", "")
+        assert splitroot("\\foo") == ("", "\\", "foo")
+        assert splitroot("/foo") == ("", "/", "foo")
+        assert splitroot("c:") == ("c:", "", "")
+        assert splitroot("c:foo") == ("c:", "", "foo")
+        assert splitroot("c:\\") == ("c:", "\\", "")
+        assert splitroot("c:\\foo") == ("c:", "\\", "foo")
+        assert splitroot("C:/foo") == ("C:", "/", "foo")
+        # UNC and device paths
+        assert splitroot("\\\\server\\share\\x") == ("\\\\server\\share", "\\", "x")
+        assert splitroot("//server/share/x") == ("//server/share", "/", "x")
+        assert splitroot("\\\\?\\UNC\\server\\share\\x") == ("\\\\?\\UNC\\server\\share", "\\", "x")
+        assert splitroot("\\\\.\\dev") == ("\\\\.\\dev", "", "")
+        assert splitroot("\\\\server") == ("\\\\server", "", "")
+    else:
+        assert splitroot("") == ("", "", "")
+        assert splitroot("foo") == ("", "", "foo")
+        assert splitroot("foo/bar") == ("", "", "foo/bar")
+        assert splitroot("/") == ("", "/", "")
+        assert splitroot("/foo") == ("", "/", "foo")
+        assert splitroot("/foo/bar") == ("", "/", "foo/bar")
+        # precisely two leading slashes are implementation-defined and
+        # kept as the root; three or more are not
+        assert splitroot("//") == ("", "//", "")
+        assert splitroot("//foo") == ("", "//", "foo")
+        assert splitroot("//foo/bar") == ("", "//", "foo/bar")
+        assert splitroot("///") == ("", "/", "//")
+        assert splitroot("///foo") == ("", "/", "//foo")
+        assert splitroot("////foo") == ("", "/", "///foo")
+
+
+def test_os_path_isjunction():
+    # junctions are a Windows-only thing, and none of these are one, so
+    # this is False everywhere
+    assert not isjunction("")
+    assert not isjunction(".")
+    assert not isjunction("shedskin_no_such_path_here")
+
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    assert not isjunction(testdata)
+    assert not isjunction(join(testdata, "abc.txt"))
+
+
 def test_os_path_samefile():
     if exists("testdata"):
         testdata = "testdata"
@@ -193,11 +247,47 @@ def test_os_path_realpath_strict():
     except FileNotFoundError:
         pass
 
+    # strict=ALLOW_MISSING: missing components are explicitly tolerated
+    assert realpath(missing, strict=os.path.ALLOW_MISSING) == missing
+
     # strict=True: no error for a path that does exist
     existing = join(tmpdir, "shedskin_test_realpath_strict_exists")
     os.system("mkdir -p " + existing)
     assert realpath(existing, strict=True) == existing
+    assert realpath(existing, strict=os.path.ALLOW_MISSING) == existing
     os.system("rm -rf " + existing)
+
+
+def test_os_path_realpath_symlink_loop():
+    if os.name == "nt":
+        return  # posix shell syntax below, and no ln(1) on cmd.exe
+
+    base = join(realpath("/tmp"), "shedskin_test_realpath_loop")
+    link = join(base, "loop")
+
+    os.system("rm -rf " + base)
+    os.system("mkdir -p " + base)
+    os.system("ln -s " + link + " " + link)
+
+    # non-strict: a symlink loop is not an error, the path is just left
+    # as unresolved as it can be
+    realpath(link)
+
+    # both strict modes report the loop: ALLOW_MISSING only tolerates
+    # *missing* components, not other errors
+    try:
+        realpath(link, strict=True)
+        assert False, "expected OSError for symlink loop"
+    except OSError:
+        pass
+
+    try:
+        realpath(link, strict=os.path.ALLOW_MISSING)
+        assert False, "expected OSError for symlink loop"
+    except OSError:
+        pass
+
+    os.system("rm -rf " + base)
 
 
 def test_os_path_realpath_through_symlink():
@@ -324,6 +414,8 @@ def test_os_path_commonpath():
 def test_all():
     test_os_path_join()
     test_os_path()
+    test_os_path_splitroot()
+    test_os_path_isjunction()
     test_os_path_samefile()
     test_os_path_ismount()
     test_os_path_isabs()
@@ -331,6 +423,7 @@ def test_all():
     # test_os_path_islink_samefile_samestat_realpath()  # see comment above, disabled for now
     test_os_path_relpath()
     test_os_path_realpath_strict()
+    test_os_path_realpath_symlink_loop()
     # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
     # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
     # this function's body to C++ unconditionally (the `os.name == "nt"`

@@ -11,6 +11,12 @@ defpath = ''
 altsep = ''
 devnull = ''
 
+# special value for the 'strict' argument of realpath(): missing path
+# components are tolerated, other errors are not. CPython models this as a
+# singleton object with a true boolean value; shed skin models it as a bool
+# with a value distinct from True/False (see ALLOW_MISSING in path.cpp).
+ALLOW_MISSING = True
+
 def isdir(path):
     return True
 
@@ -24,6 +30,9 @@ def islink(path):
     return True
 
 def isfile(path):
+    return True
+
+def isjunction(path):
     return True
 
 def samefile(a, b):
@@ -52,6 +61,9 @@ def isabs(s):
 
 def splitdrive(s):
     return ('', '')
+
+def splitroot(s):
+    return ('', '', '')
 
 def basename(s):
     return s
