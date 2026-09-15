@@ -10,11 +10,6 @@
 using namespace __shedskin__;
 namespace __os__ {
 
-extern str * default_0;
-extern str * default_1;
-extern str * default_2;
-extern str * default_3;
-extern str * default_4;
 extern str * default_5;
 
 extern str *linesep, *name;
