@@ -490,6 +490,22 @@ def test_maketrans_translate():
     d_str = {'a': 'X', 'b': None}
     assert 'abcdef'.translate(''.maketrans(d_str)) == 'Xcdef'
 
+    # maketrans keys used to be truncated to 8 bits, so a non-ascii code
+    # point ended up under the wrong ordinal ('\u2603' as '\x03')
+    tu = ''.maketrans('\u2603\xe9', 'xy')
+    assert '\u2603 \xe9 abc'.translate(tu) == 'x y abc'
+    assert '\x03 abc'.translate(tu) == '\x03 abc'  # must not be hit instead
+
+    # above the bmp, and non-ascii on the replacement side
+    tb = ''.maketrans('\U0001f600', 'z')
+    assert 'a\U0001f600b'.translate(tb) == 'azb'
+    assert 'ab'.translate(''.maketrans('ab', '\u2603\U0001f600')) == '\u2603\U0001f600'
+
+    # non-ascii deletion set
+    td = ''.maketrans('x', 'y', '\u2603')
+    assert 'x\u2603z'.translate(td) == 'yz'
+    assert 'x\x03z'.translate(td) == 'y\x03z'
+
 
 def test_upper():
     assert 'bla'.upper() == 'BLA'

@@ -533,13 +533,13 @@ dict<__ss_int, str *> *str::maketrans(str *x, str *y, str *z) {
     dict<__ss_int, str *> *table = new dict<__ss_int, str *>();
     size_t n = x->unit.size();
     for(size_t i = 0; i < n; i++) {
-        __ss_int k = (__ss_int)(unsigned char)x->unit[i];
+        __ss_int k = (__ss_int)x->unit[i];
         table->__setitem__(k, new str(y->unit.substr(i, 1)));
     }
     if(z) {
         size_t zn = z->unit.size();
         for(size_t i = 0; i < zn; i++) {
-            __ss_int k = (__ss_int)(unsigned char)z->unit[i];
+            __ss_int k = (__ss_int)z->unit[i];
             table->__setitem__(k, (str *)0);
         }
     }
