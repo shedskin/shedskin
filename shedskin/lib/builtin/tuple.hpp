@@ -156,7 +156,7 @@ template<class T> tuple2<T, T>::tuple2(str *s) {
     this->units.resize(len(s));
     size_t sz = s->unit.size();
     for(size_t i=0; i<sz; i++)
-        this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
+        this->units[i] = __char_str(s->unit[i]);
 }
 
 template<class T> T tuple2<T, T>::__getfirst__() {

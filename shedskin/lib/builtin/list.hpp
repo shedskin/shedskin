@@ -190,7 +190,7 @@ template<class T> list<T>::list(str *s) {
     this->units.resize(s->unit.size());
     size_t sz = s->unit.size();
     for(size_t i=0; i<sz; i++)
-        this->units[i] = __char_cache[(unsigned char)s->unit[i]];
+        this->units[i] = __char_str(s->unit[i]);
 }
 
 template<class T> list<T>::list(bytes *b) {
@@ -302,7 +302,7 @@ template<class T> void *list<T>::extend(str *s) {
     const size_t org_size = this->units.size();
     this->units.resize(sz+org_size);
     for(size_t i=0; i<sz; i++)
-        this->units.at(i + org_size) = __char_cache[((unsigned char)(s->unit[i]))];
+        this->units.at(i + org_size) = __char_str(s->unit[i]);
     return NULL;
 }
 
