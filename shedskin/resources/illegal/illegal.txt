@@ -96,9 +96,6 @@ FILE_ATTRIBUTE_VIRTUAL
 fileno
 float
 F_OK
-FOR_IN
-FOR_IN_ENUMERATE
-FOR_IN_ZIP
 friend
 goto
 htonl
@@ -370,3 +367,13 @@ static_assert
 thread_local
 xor
 xor_eq
+synchronized
+NULL
+EOF
+ASSERT
+FOR_IN
+FOR_IN_ENUMERATE
+FOR_IN_ZIP
+FOR_IN_DICT
+FOR_IN_FILE
+FOR_IN_ENUMERATE_STR
