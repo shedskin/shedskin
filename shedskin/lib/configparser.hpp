@@ -453,36 +453,7 @@ public:
     __iter<str *> *__iter__();
 };
 
-extern str * default_11;
-extern __ss_int  default_10;
-extern __ss_int  default_13;
-extern __ss_int  default_23;
-extern __ss_int  default_25;
-extern __ss_int  default_28;
-extern __ss_int  default_1;
-extern __ss_int  default_5;
-extern __ss_int  default_19;
-extern __ss_int  default_29;
-extern __ss_int  default_12;
-extern str * default_22;
-extern __ss_int  default_31;
-extern __ss_int  default_30;
-extern str * default_9;
-extern __ss_int  default_8;
-extern str * default_24;
-extern str * default_14;
-extern str * default_16;
-extern str * default_26;
-extern __ss_int  default_17;
-extern str * default_18;
-extern __ss_int  default_6;
-extern __ss_int  default_15;
-extern __ss_int  default_27;
-extern str * default_20;
-extern __ss_int  default_7;
-extern __ss_int  default_4;
 extern str * default_0;
-extern __ss_int  default_21;
 
 void __init();
 

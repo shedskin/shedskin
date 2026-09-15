@@ -104,36 +104,13 @@ str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
 
-str * default_11;
-__ss_int  default_10;
-__ss_int  default_13;
-__ss_int  default_23;
-__ss_int  default_25;
-__ss_int  default_28;
-__ss_int  default_1;
-__ss_int  default_5;
-__ss_int  default_19;
-__ss_int  default_29;
-__ss_int  default_12;
-str * default_22;
-__ss_int  default_31;
-__ss_int  default_30;
-str * default_9;
-__ss_int  default_8;
-str * default_24;
-str * default_14;
-str * default_16;
-str * default_26;
-__ss_int  default_17;
-str * default_18;
-__ss_int  default_6;
-__ss_int  default_15;
-__ss_int  default_27;
-str * default_20;
-__ss_int  default_7;
-__ss_int  default_4;
+/* default argument value for Error.__init__(msg=''); see
+   shedskin/lib/configparser.py. Numbering follows the order in which
+   ModuleVisitor registers non-literal defaults, so it shifts whenever a
+   default argument is added to the model. All other defaults in this
+   module are either None (emitted as NULL) or __void (emitted as
+   __ss_void), so they need no global here. */
 str * default_0;
-__ss_int  default_21;
 
 /**
 class Error
@@ -1302,7 +1279,7 @@ str *SectionProxy::__getitem__(str *key) {
     if ((!_parser->has_option(_name, key))) {
         throw ((new KeyError(key)));
     }
-    return _parser->get(_name, key, default_5, NULL);
+    return _parser->get(_name, key, 0, NULL);
 }
 
 void *SectionProxy::__setitem__(str *key, str *value) {
@@ -1432,12 +1409,6 @@ void __init() {
     DEFAULTSECT = const_53;
     MAX_INTERPOLATION_DEPTH = 10;
     default_0 = const_17;
-    default_1 = 0;
-    default_4 = 0;
-    default_5 = 0;
-    default_6 = 0;
-    default_7 = 0;
-    default_8 = 0;
 }
 
 } // module namespace

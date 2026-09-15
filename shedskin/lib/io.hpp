@@ -58,9 +58,6 @@ public:
     str *getvalue();
 };
 
-extern bytes *default_0;
-extern str *default_1;
-
 extern const __ss_int DEFAULT_BUFFER_SIZE;
 
 /* SEEK_SET/SEEK_CUR/SEEK_END are in shedskin's reserved-identifier list

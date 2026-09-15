@@ -73,11 +73,10 @@ extern char **environ;
 
 namespace __os__ {
 
-str * default_0;
-str * default_1;
-str * default_2;
-str * default_3;
-str * default_4;
+/* default argument value for popen/popen2/popen3/popen4/fdopen(mode='r');
+   see shedskin/lib/os/__init__.py. Numbering follows the order in which
+   ModuleVisitor registers non-literal defaults, so it shifts whenever a
+   default argument is added to the model. */
 str * default_5;
 
 str *linesep, *name;
@@ -1589,14 +1588,8 @@ tuple<__ss_int>* pipe() {
 #endif
 
 void __init() {
-    str *const_0 = new str("");
     str *const_1 = __char_cache['r'];
 
-    default_0 = const_0;
-    default_1 = const_1;
-    default_2 = const_1;
-    default_3 = const_1;
-    default_4 = const_1;
     default_5 = const_1;
 
     cl___cstat = new class_("__cstat");
