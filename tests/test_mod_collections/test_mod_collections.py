@@ -553,6 +553,21 @@ def test_counter_type_identity():
     assert not repr(plain).startswith('Counter(')
 
 
+def test_counter_repr_empty():
+    # regression test: an empty Counter used to repr as 'Counter({})',
+    # because __repr__ unconditionally wrapped dict's repr. CPython
+    # special-cases the empty case and prints 'Counter()' instead
+    c = Counter()
+    assert repr(c) == 'Counter()'
+    assert str(c) == 'Counter()'
+
+    # and a Counter that becomes empty again reprs the same way
+    c['a'] += 1
+    assert repr(c) == "Counter({'a': 1})"
+    del c['a']
+    assert repr(c) == 'Counter()'
+
+
 def test_counter_total():
     # total() sums the counts, including zero and negative ones
     c = Counter('abracadabra')
@@ -707,6 +722,7 @@ def test_all():
     test_counter_copy()
     test_counter_copy_module()
     test_counter_type_identity()
+    test_counter_repr_empty()
     test_counter_total()
     test_counter_eq_zero_counts()
     test_counter_ne()
