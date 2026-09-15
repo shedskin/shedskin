@@ -99,8 +99,7 @@ ConfigParser -- responsible for parsing a list of
 
 namespace __configparser__ {
 
-tuple<str *> *const_2;
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -766,10 +765,10 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     and just about everything else are ignored.
     */
     __re__::match_object *mo;
-    __ss_int __33, __41, __43, lineno, pos;
+    __ss_int __33, lineno;
 
     ParsingError *e;
-    str *line, *optname, *optval, *sectname, *value, *vi, *cursectname;
+    str *line, *optname, *optval, *sectname, *value, *cursectname;
     dict<str *, str *> *cursect;
     set<str *> *elements_added;
     set<str *> *cur_options;
@@ -831,14 +830,13 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
                 mo = (RawConfigParser::OPTCRE)->match(line);
                 if (___bool(mo)) {
                     optname = mo->group(1, const_23);
-                    vi = mo->group(1, const_24);
                     optval = mo->group(1, const_25);
-                    if (__AND((const_2)->__contains__(vi), optval->__contains__(const_26), 41)) {
-                        pos = optval->find(const_26);
-                        if (__AND((pos!=(-1)), (optval->__getitem__((pos-1)))->isspace(), 43)) {
-                            optval = optval->__slice__(2, 0, pos, 0);
-                        }
-                    }
+                    /* No inline-comment stripping here: CPython 3's
+                       inline_comment_prefixes defaults to None, so a ';'
+                       (or '#') inside a value is data, not a comment.
+                       Python 2's ConfigParser did strip ' ;'-comments;
+                       doing that here silently truncated values such as
+                       'url = http://host/?x=1 ; y=2'. */
                     optval = optval->strip();
                     if (__eq(optval, const_27)) {
                         optval = const_17;
@@ -1340,9 +1338,7 @@ __iter<str *> *SectionProxy::__iter__() {
 
 
 void __init() {
-    const_0 = new str("=");
     const_1 = new str(":");
-    const_2 = (new tuple<str *>(2, const_0, const_1));
     const_3 = new str("No section: %r");
     const_4 = new str("Section %r already exists");
     const_5 = new str("No option %r in section: %r");
@@ -1362,9 +1358,7 @@ void __init() {
     const_21 = new str("%s\n%s");
     const_22 = new str("header");
     const_23 = new str("option");
-    const_24 = new str("vi");
     const_25 = new str("value");
-    const_26 = new str(";");
     const_27 = new str("\"\"");
     const_28 = new str("%(");
     const_29 = new str("1");
