@@ -24,6 +24,24 @@ typedef char32_t __ss_char;
 
 const __ss_char __MAX_CODEPOINT = 0x10FFFF;
 
+/* printability, as used by repr() and str.isprintable(): a code point is
+   non-printable when its unicode general category is Cc, Cf, Cs, Co, Zl,
+   Zp or Zs -- with the space character itself as the one exception.
+
+   CPython also treats Cn (unassigned) as non-printable. that is left out
+   here on purpose: Cn accounts for ~700 of the ~730 ranges involved (the
+   table below is 28), and it shifts with every unicode release, so
+   CPython's own output for those code points changes between versions
+   anyway. the visible difference is that repr() of a currently
+   unassigned code point shows it raw instead of escaped. */
+bool __ss_char_printable_nonascii(__ss_char c); /* c >= 0x80, see unicode.cpp */
+
+inline bool __ss_char_printable(__ss_char c) {
+    if (c < 0x80) /* no table lookup for the common case */
+        return c >= 0x20 && c != 0x7f;
+    return __ss_char_printable_nonascii(c);
+}
+
 struct __codec_result {
     bool ok;
     size_t units;       /* units produced (or that would be, if dst==NULL):

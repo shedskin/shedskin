@@ -190,6 +190,42 @@ def test_isprintable():
     assert 'bla'.isprintable()
     assert chr(200).isprintable()
     assert ''.isprintable()
+    # non-printable categories above ascii: Cc, Zs, Cf, Zl, Zp, Co
+    assert not '\x85'.isprintable()      # Cc
+    assert not '\xa0'.isprintable()      # Zs (no-break space)
+    assert not '\xad'.isprintable()      # Cf (soft hyphen)
+    assert not '\u2028'.isprintable()    # Zl
+    assert not '\u2029'.isprintable()    # Zp
+    assert not '\u200b'.isprintable()    # Cf (zero width space)
+    assert not '\u3000'.isprintable()    # Zs (ideographic space)
+    assert not '\ue000'.isprintable()    # Co (private use)
+    assert not '\U000e0020'.isprintable()  # Cf, above the bmp
+    assert not 'ok\xa0'.isprintable()    # one bad char is enough
+    assert ' '.isprintable()             # space is the Zs exception
+    assert '\u2603'.isprintable()
+    assert '\U0001f600'.isprintable()   # printable above the bmp
+
+
+def test_repr():
+    # printable code points are shown raw, non-printable ones escaped
+    assert repr('bla') == "'bla'"
+    assert repr('h\xe9llo') == "'h\xe9llo'"
+    assert repr('\u2603') == "'\u2603'"
+    assert repr('\U0001f600') == "'\U0001f600'"
+    assert repr('\n') == "'\\n'"
+    assert repr('\x00') == "'\\x00'"
+    assert repr('\x7f') == "'\\x7f'"
+    assert repr('\x85') == "'\\x85'"
+    assert repr('\xa0') == "'\\xa0'"
+    assert repr('\xad') == "'\\xad'"
+    assert repr('\u200b') == "'\\u200b'"
+    assert repr('\u2028') == "'\\u2028'"
+    assert repr('\u3000') == "'\\u3000'"
+    assert repr('\ue000') == "'\\ue000'"
+    assert repr('\U000e0020') == "'\\U000e0020'"
+    assert repr('a\xa0b') == "'a\\xa0b'"
+    # the same path is used for strs inside containers
+    assert str(['\xa0']) == "['\\xa0']"
 
 
 def test_isspace():
@@ -660,6 +696,7 @@ def test_all():
     test_islower()
     test_isnumeric()
     test_isprintable()
+    test_repr()
     test_isspace()
     test_istitle()
     test_isupper()
