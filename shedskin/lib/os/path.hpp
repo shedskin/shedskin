@@ -13,8 +13,9 @@ namespace __os__ {
 namespace __path__ {
 
 extern str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
+extern __ss_bool ALLOW_MISSING;
 extern tuple2<str *, str *> *const_2;
-extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 #ifdef WIN32
 extern __ss_int supports_unicode_filenames;
 #endif
@@ -32,6 +33,7 @@ template <class ... Args> str *join(__ss_int, Args ... args) {
 tuple2<str *, str *> *split(str *p);
 tuple2<str *, str *> *splitext(str *p);
 tuple2<str *, str *> *splitdrive(str *p);
+tuple2<str *, str *> *splitroot(str *p);
 str *basename(str *p);
 bytes *basename(bytes *p); /* TODO ugh, support bytes everywhere..? */
 str *dirname(str *p);
@@ -45,6 +47,7 @@ __ss_bool exists(str *path);
 __ss_bool lexists(str *path);
 __ss_bool isdir(str *path);
 __ss_bool isfile(str *path);
+__ss_bool isjunction(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
 str *realpath(str *filename, __ss_bool strict=False);
