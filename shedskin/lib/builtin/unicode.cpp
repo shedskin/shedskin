@@ -241,6 +241,56 @@ __codec_result __latin1_encode(const __ss_char *src, size_t len, char *dst) {
     return __codec_ok(len);
 }
 
+/* non-printable code points >= 0x80: general category Cc, Cf, Cs, Co,
+   Zl, Zp or Zs, as sorted non-overlapping ranges (unicode 15.0.0). see
+   __ss_char_printable in unicode.hpp for what is deliberately not here. */
+static const struct { __ss_char lo, hi; } __nonprintable[] = {
+    {0x00000, 0x0001F},  /* Cc */
+    {0x0007F, 0x000A0},  /* Cc/Zs */
+    {0x000AD, 0x000AD},  /* Cf */
+    {0x00600, 0x00605},  /* Cf */
+    {0x0061C, 0x0061C},  /* Cf */
+    {0x006DD, 0x006DD},  /* Cf */
+    {0x0070F, 0x0070F},  /* Cf */
+    {0x00890, 0x00891},  /* Cf */
+    {0x008E2, 0x008E2},  /* Cf */
+    {0x01680, 0x01680},  /* Zs */
+    {0x0180E, 0x0180E},  /* Cf */
+    {0x02000, 0x0200F},  /* Zs/Cf */
+    {0x02028, 0x0202F},  /* Zl/Zp/Cf/Zs */
+    {0x0205F, 0x02064},  /* Zs/Cf */
+    {0x02066, 0x0206F},  /* Cf */
+    {0x03000, 0x03000},  /* Zs */
+    {0x0D800, 0x0F8FF},  /* Cs/Co */
+    {0x0FEFF, 0x0FEFF},  /* Cf */
+    {0x0FFF9, 0x0FFFB},  /* Cf */
+    {0x110BD, 0x110BD},  /* Cf */
+    {0x110CD, 0x110CD},  /* Cf */
+    {0x13430, 0x1343F},  /* Cf */
+    {0x1BCA0, 0x1BCA3},  /* Cf */
+    {0x1D173, 0x1D17A},  /* Cf */
+    {0xE0001, 0xE0001},  /* Cf */
+    {0xE0020, 0xE007F},  /* Cf */
+    {0xF0000, 0xFFFFD},  /* Co */
+    {0x100000, 0x10FFFD},  /* Co */
+};
+
+bool __ss_char_printable_nonascii(__ss_char c) {
+    size_t lo = 0, hi = sizeof(__nonprintable) / sizeof(__nonprintable[0]);
+
+    while (lo < hi) { /* at most 5 steps for 28 ranges */
+        size_t mid = lo + (hi - lo) / 2;
+        if (c < __nonprintable[mid].lo)
+            hi = mid;
+        else if (c > __nonprintable[mid].hi)
+            lo = mid + 1;
+        else
+            return false;
+    }
+
+    return true;
+}
+
 #ifndef __SS_UNICODE_STANDALONE
 
 void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const char *msg) {

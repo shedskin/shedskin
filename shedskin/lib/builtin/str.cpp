@@ -65,9 +65,7 @@ str *str::__repr__() {
         if (c == quote) {
             out += '\\';
             out += c;
-        } else if ((c >= 0x20 && c <= 0x7e) || c >= 0xa0) {
-            /* printable ascii, and non-ascii shown raw (as CPython does
-               for printable characters; proper printability tables later) */
+        } else if (__ss_char_printable(c)) {
             out += c;
         } else if (c < 0x100) {
             snprintf(buf, sizeof(buf), "\\x%02x", (unsigned int)c);
@@ -160,12 +158,9 @@ __ss_bool str::isupper() { /* has a cased char, and no lower-case ones */
 __ss_bool str::isprintable() {
   size_t i, l = this->unit.size();
 
-  for(i = 0; i < l; i++) {
-      __ss_char elem = unit[i];
-
-      if(elem <= 31 or (127 <= elem and elem <= 160) or elem == 173)
+  for(i = 0; i < l; i++)
+      if(!__ss_char_printable(unit[i]))
           return False;
-  }
 
   return True;
 }
