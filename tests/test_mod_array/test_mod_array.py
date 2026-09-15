@@ -443,6 +443,33 @@ def test_extend_overflow_no_corruption():
     assert arr4.tolist() == [9, 8, 1, 2]
 
 
+def test_itemsize_is_a_plain_int():
+    # itemsize is a Python int (see lib/array.py), but the C++ member used to
+    # be a size_t, so every int operation on it silently went unsigned
+    arr = array.array('i', [1, 2, 3])
+    assert arr.itemsize == 4
+    assert repr(arr.itemsize) == '4'
+    assert str(arr.itemsize) == '4'
+
+    # floor division used to pick the float overload -> 1.0 instead of 1
+    assert arr.itemsize // 3 == 1
+    assert repr(arr.itemsize // 3) == '1'
+
+    # and anything going negative wrapped around to ~1.8e19
+    assert arr.itemsize - 10 == -6
+    assert (arr.itemsize - 10) // 3 == -2
+    assert -arr.itemsize == -4
+    assert abs(arr.itemsize - 10) == 6
+    assert max(arr.itemsize - 10, 0) == 0
+    assert min(arr.itemsize - 10, 0) == -6
+
+    # the other typecodes, including the unicode ones
+    assert array.array('b', [1]).itemsize == 1
+    assert array.array('d', [1.0]).itemsize == 8
+    assert array.array('w', 'a').itemsize == 4
+    assert array.array('i', [1]).itemsize * 3 == 12
+
+
 def test_unicode():
     # 'w' arrays hold unicode characters: the elements are single-character
     # strings, not the small ints of the numeric typecodes
@@ -616,6 +643,7 @@ def test_all():
     test_extend_typecode_mismatch()
     test_iadd_typecode_mismatch_message()
     test_extend_overflow_no_corruption()
+    test_itemsize_is_a_plain_int()
     test_unicode()
     test_unicode_mutate()
     test_unicode_sequence()

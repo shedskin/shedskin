@@ -13,7 +13,7 @@ extern str *__name__;
 extern void *buffy;
 extern str *typecodes;
 
-size_t get_itemsize(char typechar);
+__ss_int get_itemsize(char typechar);
 void __throw_no_char();
 
 extern class_ *cl_array;
@@ -22,7 +22,11 @@ public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
     char typechar;
-    size_t itemsize;
+    /* python-visible attribute, so it needs the type lib/array.py gives it
+     * (int). as a size_t it dragged every int operation on it into unsigned
+     * land: repr() bound to the "?" placeholder overload, a.itemsize // 3
+     * bound to the float one, and abs()/max() did not compile at all. */
+    __ss_int itemsize;
 
     array(str *typecode_) {
         this->__class__ = cl_array;
@@ -621,11 +625,11 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
         if(slen) memcpy(&(c->units[0]), &(this->units[l*itemsize]), slen);
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
-            for(size_t j=0; j<itemsize; j++)
+            for(size_t j=0; j<(size_t)itemsize; j++)
                 c->units.push_back(units[(size_t)i*itemsize+j]);
     else
         for(__ss_int i=l; i>u; i += s)
-            for(size_t j=0; j<itemsize; j++)
+            for(size_t j=0; j<(size_t)itemsize; j++)
                 c->units.push_back(units[(size_t)i*itemsize+j]);
     return c;
 }
