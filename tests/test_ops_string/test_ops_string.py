@@ -1,6 +1,3 @@
-# TODO %g works, just a bit differently
-
-
 def test_classic1():
     assert "%d" % 255 == '255'
     assert "%s" % "255" == '255'
@@ -116,6 +113,70 @@ def test_width_and_justify():
     assert "[%08.3d]" % 5 == '[00000005]'
 
 
+def test_float_conversions():
+    # %g used to be formatted as %f with precision-1, so it had no
+    # significant-digit semantics, never switched to exponent form and kept
+    # its trailing zeroes
+    assert ("%g" % 0.5) == '0.5'
+    assert ("%g" % 100.0) == '100'
+    assert ("%g" % 1234.5678) == '1234.57'
+    assert ("%g" % 0.000123456) == '0.000123456'
+    assert ("%g" % 1e-5) == '1e-05'
+    assert ("%g" % 1e20) == '1e+20'
+    assert ("%.1g" % 123456789.0) == '1e+08'
+    assert ("%.2g" % 123456789.0) == '1.2e+08'
+    assert ("%.3g" % 3.14159265358979) == '3.14'
+    assert ("%.12g" % 0.450632335008) == '0.450632335008'
+    assert ("%.0g" % 123.0) == '1e+02'  # a precision of 0 means 1
+
+    # %e ignored its precision entirely, always formatting as %.6e
+    assert ("%e" % 1234.5678) == '1.234568e+03'
+    assert ("%.0e" % 1234.5678) == '1e+03'
+    assert ("%.3e" % 3.14159265358979) == '3.142e+00'
+    assert ("%.10e" % 0.5) == '5.0000000000e-01'
+
+    # the uppercase conversions were not recognized at all, and silently
+    # formatted as the empty string
+    assert ("%E" % 1234.5678) == '1.234568E+03'
+    assert ("%F" % 1234.5678) == '1234.567800'
+    assert ("%G" % 1234.5678) == '1234.57'
+    assert ("%.2E" % 0.000123456) == '1.23E-04'
+    assert ("%.3G" % 1e20) == '1E+20'
+
+    # %f keeps working as before
+    assert ("%f" % 1234.5678) == '1234.567800'
+    assert ("%.0f" % 2.5) == '2'
+    assert ("%.3f" % 3.14159265358979) == '3.142'
+
+    # negative zero was not detected as negative, so it lost its sign to the
+    # digits and confused the sign/padding logic
+    assert ("%g" % -0.0) == '-0'
+    assert ("%f" % -0.0) == '-0.000000'
+    assert ("%+g" % -0.0) == '-0'
+    assert ("%012.3g" % -0.0) == '-00000000000'
+
+
+def test_sign_padding():
+    # space padding used to be inserted between the sign and the digits,
+    # giving '[-   42]' instead of '[   -42]'
+    assert ("[%6d]" % -42) == '[   -42]'
+    assert ("[%6x]" % -255) == '[   -ff]'
+    assert ("[%6o]" % -8) == '[   -10]'
+    assert ("[%8.2f]" % -3.14159) == '[   -3.14]'
+    assert ("[%12.3g]" % -2.5) == '[        -2.5]'
+    assert ("[%14.3e]" % -1234.5678) == '[    -1.235e+03]'
+    assert ("[%6d]" % 42) == '[    42]'
+
+    # zero fill still pads between the sign and the digits
+    assert ("[%06d]" % -42) == '[-00042]'
+    assert ("[%012.3g]" % -2.5) == '[-000000002.5]'
+    assert ("[%014.3e]" % -1234.5678) == '[-00001.235e+03]'
+
+    # and '-' still left-justifies with spaces after the digits
+    assert ("[%-6d]" % -42) == '[-42   ]'
+    assert ("[%-12.3g]" % -2.5) == '[-2.5        ]'
+
+
 def test_all():
     test_classic1()
     test_classic2()
@@ -124,6 +185,8 @@ def test_all():
     test_unterminated_mapping_key()
     test_none_argument()
     test_width_and_justify()
+    test_float_conversions()
+    test_sign_padding()
 
 
 if __name__ == "__main__":
