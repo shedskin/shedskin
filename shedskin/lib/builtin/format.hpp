@@ -17,10 +17,11 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
 
 // Compose a signed/zero-precision-padded numeric string ('sign' + 'digits')
 // into 'result', honoring the field width and the '-' (left-justify) and
-// '0' (zero-fill) flags the way CPython's %-formatting does: zero-fill (and
-// the default right-justification) insert padding *between* the sign and
-// the digits, while '-' always left-justifies using space padding after the
-// digits, regardless of the '0' flag.
+// '0' (zero-fill) flags the way CPython's %-formatting does: zero-fill
+// inserts padding *between* the sign and the digits, plain right-
+// justification puts the space padding *before* the sign, and '-' always
+// left-justifies using space padding after the digits, regardless of the
+// '0' flag.
 static inline void __mod_pad_signed(str *result, const std::string &sign, const __GC_STR &digits, char f_flag, __ss_int f_width, bool f_zero) {
     __ss_int padlen = f_width - (__ss_int)(sign.size() + digits.size());
     if (f_flag == '-') {
@@ -28,9 +29,11 @@ static inline void __mod_pad_signed(str *result, const std::string &sign, const 
         if (f_width != -1 && padlen > 0)
             result->unit += __GC_STR((size_t)padlen, ' ');
     } else {
+        if (f_width != -1 && padlen > 0 && !f_zero)
+            result->unit += __GC_STR((size_t)padlen, ' ');
         result->unit += __gcs(sign);
-        if (f_width != -1 && padlen > 0)
-            result->unit += __GC_STR((size_t)padlen, f_zero ? '0' : ' ');
+        if (f_width != -1 && padlen > 0 && f_zero)
+            result->unit += __GC_STR((size_t)padlen, '0');
         result->unit += digits;
     }
 }
@@ -101,32 +104,39 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
     std::stringstream t;
     std::string sign;
     __ss_float aarg = arg;
-    if (arg < 0) {
+    if (arg < 0 || (arg == 0 && std::signbit(arg))) { /* also catch -0.0 */
         sign = "-";
         aarg = -arg;
     } else if (f_flag == '+')
         sign = "+";
     else if (f_flag == ' ')
         sign = " ";
-    if(c == 'f') {
-        t.setf(std::ios::fixed);
-        if (f_precision != -1)
-            t.precision(f_precision);
-        else
-            t.precision(6);
-        t << aarg;
-    } else if(c == 'g') {
-        t.setf(std::ios::fixed);
-        if (f_precision > 0)
-            t.precision(f_precision-1);
-        else
-            t.precision(5);
-        t << aarg;
-    } else if(c == 'e') {
-        char num[64];
-        snprintf(num, 64, "%.6e", aarg); // TODO use f_precision without generating warnings..
-        t << num;
+    /* the uppercase conversions ('E', 'F', 'G') format exactly like their
+       lowercase counterparts, apart from using an uppercase exponent marker
+       and uppercase 'INF'/'NAN' */
+    char lc = c;
+    if (c == 'E' || c == 'F' || c == 'G') {
+        t.setf(std::ios::uppercase);
+        lc = (char)(c + ('a' - 'A'));
     }
+
+    /* all three conversions default to a precision of 6, as in CPython */
+    if (f_precision == -1)
+        f_precision = 6;
+
+    if (lc == 'f') {
+        t.setf(std::ios::fixed, std::ios::floatfield);
+        t.precision(f_precision);
+    } else if (lc == 'e') {
+        t.setf(std::ios::scientific, std::ios::floatfield);
+        t.precision(f_precision);
+    } else { /* 'g': significant digits, exponent form as needed, no
+                trailing zeroes; a precision of 0 is taken to mean 1 */
+        t.unsetf(std::ios::floatfield);
+        t.precision(f_precision ? f_precision : 1);
+    }
+    t << aarg;
+
     __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
 }
 template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
