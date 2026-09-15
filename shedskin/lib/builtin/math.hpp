@@ -176,7 +176,10 @@ template<> inline int __mods(int a, int b) {
 template<> inline __ss_float __mods(__ss_float a, __ss_float b) {
     __SS_ZERO_CHECK(b, "float modulo");
     __ss_float f = fmod(a,b);
-    if((f<0 && b>0)||(f>0 && b<0)) f+=b;
+    if(f == 0.0)
+        f = std::copysign(0.0, b); /* a zero result takes the sign of the divisor */
+    else if((f<0 && b>0)||(f>0 && b<0))
+        f+=b;
     return f;
 }
 
