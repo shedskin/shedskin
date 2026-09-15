@@ -44,6 +44,23 @@ def test_division():
     assert 7.7 // 7.0 == 1
 
 
+def test_modulo():
+    assert 4.5 % 1.5 == 0.0
+    assert -4.0 % 1.5 == 0.5
+    assert 4.0 % -1.5 == -0.5
+
+    # a zero result takes the sign of the divisor
+    assert str(0.0 % -1.5) == "-0.0"
+    assert str(3.0 % -1.5) == "-0.0"
+    assert str(-0.0 % 1.5) == "0.0"
+    assert str(-4.5 % 1.5) == "0.0"
+    assert str(0.0 % 1.5) == "0.0"
+    assert str(-0.0 % -1.5) == "-0.0"
+
+    assert str(divmod(3.0, -1.5)[1]) == "-0.0"
+    assert str(divmod(-4.5, 1.5)[1]) == "0.0"
+
+
 def test_multiplication():
     assert 2.5 * 4.0 == 10.0
     assert 2.5 * -4.0 == -10.0
@@ -120,6 +137,7 @@ def test_all():
     test_is_integer()
     test_from_number()
     test_division()
+    test_modulo()
     test_multiplication()
     test_hex_fromhex()
     test_repr_roundtrip()
