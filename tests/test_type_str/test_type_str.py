@@ -669,6 +669,18 @@ def test_unicode_case():
     assert 'caf\xe9'.casefold() == 'caf\xe9'
 
 
+def test_unicode_seq_conversion():
+    # code points >= 256 must not be truncated to their low byte
+    s = '\u2192a\u00e9\u20ac'
+    assert list(s) == ['\u2192', 'a', '\u00e9', '\u20ac']
+    assert tuple(s) == ('\u2192', 'a', '\u00e9', '\u20ac')
+    l = ['x']
+    l.extend(s)
+    assert l == ['x', '\u2192', 'a', '\u00e9', '\u20ac']
+    assert list(s)[0] == s[0]
+    assert '\u2192' in list(s)
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -731,6 +743,7 @@ def test_all():
     test_special_characters()
     test_str_id()
     test_bin()
+    test_unicode_seq_conversion()
 
 
 if __name__ == "__main__":
