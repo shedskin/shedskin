@@ -138,9 +138,14 @@ def test_walk():
 
 def test_env():
     os.environ['bert'] = 'value'
-#    assert os.getenv('bert') == 'value'  # TODO
+    assert os.getenv('bert') == 'value'
 
     os.putenv('bert', 'value2') # does not change os.environ
+    assert os.getenv('bert') == 'value'
+
+    del os.environ['bert']
+    assert os.getenv('bert') is None
+    assert os.getenv('bert', 'dflt') == 'dflt'
 
 
 def test_getenv():

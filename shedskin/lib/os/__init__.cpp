@@ -128,10 +128,17 @@ __ss_int system(str *c) {
 }
 
 str *getenv(str *name_, str *default_) {
-    const char *waba = name_->c_str();
-    if(std::getenv(waba))
-        return new str(std::getenv(waba));
+    /* like CPython, consult os.environ (so assignments to it are seen) */
+#ifdef WIN32
+    /* environment variable names are case-insensitive on Windows */
+    str *key = name_->upper();
+    for (auto const& [k, v] : __ss_environ->gcd)
+        if (__eq(k->upper(), key))
+            return v;
     return default_;
+#else
+    return __ss_environ->get(name_, default_);
+#endif
 }
 
 void *rename(str *a, str *b) {
