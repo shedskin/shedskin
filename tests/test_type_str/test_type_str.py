@@ -451,6 +451,10 @@ def test_split():
 def test_splitlines():
     assert "ab\ncd\r\nef\rghi\n".splitlines() == ['ab', 'cd', 'ef', 'ghi']
     assert "ab\ncd\r\nef\rghi\n".splitlines(1) == ['ab\n', 'cd\r\n', 'ef\r', 'ghi\n']
+    # all unicode line boundaries, not just \r and \n
+    assert 'a\x0bb\x0cc\x1cd\x1de\x1ef\x85g\u2028h\u2029i'.splitlines() == ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    assert 'a\u2028b\x85'.splitlines(True) == ['a\u2028', 'b\x85']
+    assert 'ab\r'.splitlines(True) == ['ab\r']
 
 
 def test_startswith():

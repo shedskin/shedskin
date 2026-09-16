@@ -253,6 +253,126 @@ def test_stringio_negative_seek():
     assert err
 
 
+def test_readlines_newline_only():
+    # readlines splits on '\n' only, not on the other splitlines boundaries
+    s = io.StringIO('a\rb\x0bc\u2028d\ne\r\nf')
+    assert s.readlines() == ['a\rb\x0bc\u2028d\n', 'e\r\n', 'f']
+    b = io.BytesIO(b'a\rb\x0bc\nd\r\ne')
+    assert b.readlines() == [b'a\rb\x0bc\n', b'd\r\n', b'e']
+
+
+def test_readlines_hint():
+    s = io.StringIO('aa\nbb\ncc\n')
+    assert s.readlines(3) == ['aa\n', 'bb\n']
+    assert s.readlines() == ['cc\n']
+    b = io.BytesIO(b'aa\nbb\ncc\n')
+    assert b.readlines(1) == [b'aa\n']
+    assert b.readlines(0) == [b'bb\n', b'cc\n']
+
+
+def test_getvalue_is_snapshot():
+    s = io.StringIO()
+    s.write('abc')
+    v = s.getvalue()
+    s.seek(0)
+    s.write('XYZ')
+    assert v == 'abc'
+    assert s.getvalue() == 'XYZ'
+    b = io.BytesIO()
+    b.write(b'abc')
+    w = b.getvalue()
+    b.seek(0)
+    b.write(b'XYZ')
+    assert w == b'abc'
+    assert b.getvalue() == b'XYZ'
+
+
+def test_truncate_does_not_grow():
+    s = io.StringIO('abc')
+    assert s.truncate(10) == 10
+    assert s.getvalue() == 'abc'
+    b = io.BytesIO(b'abc')
+    assert b.truncate(10) == 10
+    assert b.getvalue() == b'abc'
+    s = io.StringIO('abcdef')
+    s.seek(4)
+    assert s.truncate(2) == 2
+    assert s.tell() == 4
+    try:
+        b.truncate(-2)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'negative size value -2'
+
+
+def test_read_past_end_keeps_position():
+    s = io.StringIO('abc')
+    s.seek(10)
+    assert s.read() == ''
+    assert s.tell() == 10
+    b = io.BytesIO(b'abc')
+    b.seek(10)
+    assert b.read(2) == b''
+    assert b.tell() == 10
+
+
+def test_stringio_seek_whence():
+    s = io.StringIO('abc')
+    assert s.seek(0, 2) == 3
+    assert s.seek(0, 1) == 3
+    err = False
+    try:
+        s.seek(1, 1)
+    except OSError:
+        err = True
+    assert err
+    err = False
+    try:
+        s.seek(-1, 2)
+    except OSError:
+        err = True
+    assert err
+    assert s.tell() == 3
+    try:
+        s.seek(0, 3)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'Invalid whence (3, should be 0, 1 or 2)'
+
+
+def test_unicode_positions():
+    s = io.StringIO('h\xe9llo\n\u20acuro\n')
+    assert s.readline() == 'h\xe9llo\n'
+    assert s.tell() == 6
+    assert s.read(2) == '\u20acu'
+    assert s.seek(0, 2) == 11
+    s.write('\U0001f600')
+    assert s.getvalue() == 'h\xe9llo\n\u20acuro\n\U0001f600'
+    assert len(s.getvalue()) == 12
+
+
+def test_close():
+    s = io.StringIO('abc')
+    s.close()
+    assert s.closed
+    try:
+        s.write('x')
+        assert False
+    except ValueError:
+        pass
+    b = io.BytesIO(b'abc')
+    b.close()
+    assert b.closed
+    try:
+        b.read()
+        assert False
+    except ValueError:
+        pass
+    with io.StringIO('x') as f:
+        assert f.read() == 'x'
+    assert f.closed
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -269,6 +389,14 @@ def test_all():
     test_stringio_does_not_alias_input()
     test_bytesio_negative_seek()
     test_stringio_negative_seek()
+    test_readlines_newline_only()
+    test_readlines_hint()
+    test_getvalue_is_snapshot()
+    test_truncate_does_not_grow()
+    test_read_past_end_keeps_position()
+    test_stringio_seek_whence()
+    test_unicode_positions()
+    test_close()
 
 
 if __name__ == '__main__':
