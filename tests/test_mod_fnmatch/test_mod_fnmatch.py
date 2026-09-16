@@ -44,6 +44,29 @@ def test_fnmatch_bad_range():
     assert not fnmatch.fnmatch("d", "[a-c]")
 
 
+def test_fnmatch_posix_bracket():
+    # a '[' inside a character class is just a literal in shell patterns
+    # (and in Python's re), but PCRE2 treats "[:", "[." and "[=" inside a
+    # class as POSIX bracket syntax ([:alpha:], [.a.], [=a=]).
+    assert fnmatch.fnmatchcase("x", "[x[:alpha:]")
+    assert fnmatch.fnmatchcase(":", "[x[:alpha:]")
+    assert fnmatch.fnmatchcase("x", "[x[.a.]")
+    assert fnmatch.fnmatchcase("x", "[x[=a=]")
+    assert fnmatch.fnmatchcase("x", "[a-z[:b:]")
+    assert fnmatch.fnmatchcase("[", "[x[:alpha:]")
+    assert not fnmatch.fnmatchcase("b", "[x[:alpha:]")
+    # silent wrong match: class must end at the first ']'
+    assert not fnmatch.fnmatchcase("5", "[a[:digit:]x[y]")
+    assert fnmatch.fnmatchcase("axy", "[a[:digit:]x[y]")
+    assert fnmatch.fnmatchcase(":xy", "[a[:digit:]x[y]")
+    # negated forms, and via fnmatch()/filter()
+    assert not fnmatch.fnmatchcase("x", "[!x[:alpha:]")
+    assert fnmatch.fnmatchcase("b", "[!x[:alpha:]")
+    assert fnmatch.fnmatch("x", "[x[:alpha:]")
+    assert fnmatch.filter(["x", ":", "b", "["], "[x[:alpha:]") == ["x", ":", "["]
+    assert fnmatch.filterfalse(["x", ":", "b", "["], "[x[:alpha:]") == ["b"]
+
+
 def test_filter():
     fnmatch.filter(fs, '*.txt') == ['a.txt', 'b.txt', 'c.txt']
 
@@ -61,6 +84,7 @@ def test_all():
     test_fnmatchcase()
     test_fnmatch_newline()
     test_fnmatch_bad_range()
+    test_fnmatch_posix_bracket()
     test_filter()
     test_filterfalse()
     test_translate()
