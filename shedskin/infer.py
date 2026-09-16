@@ -1170,17 +1170,18 @@ def redirect_func(
     callfunc: ast.Call,
 ) -> "python.Function":
     """ redirect based on number of arguments (__%s%d syntax in builtins) """
+
     if func.mv.module.builtin:
         if isinstance(func.parent, python.Class):
             funcs = func.parent.funcs
         else:
             funcs = func.mv.funcs
-        redir = "__%s%d" % (
-            func.ident,
-            len(
-                [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
-            ),
+        nargs = len(
+            [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
         )
+        if func.ident == 'groupby':  # TODO avoid special case..
+            nargs += len([a for a in callfunc.keywords if a.arg == 'key'])
+        redir = "__%s%d" % (func.ident, nargs)
         func = funcs.get(redir, func)
     return func
 
