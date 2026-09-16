@@ -46,16 +46,21 @@ static inline bool is_big_endian_order(char o) {
 }
 
 __ss_int calcsize(str *fmt);
+__ss_int calcsize(const char *fmt);
 __ss_int calcitems(str *fmt);
 __ss_int padding(char o, __ss_int pos, unsigned int itemsize);
 
-__ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
-bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
-__ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
-double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
-void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
+/* 'base' is the start position of the unpacked data, used for native alignment */
+__ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
+bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
+__ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
+double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
+void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
 
 unsigned int get_itemsize(char order, char c);
+
+__ss_int unpack_pos(const char *fmt, bytes *data);
+__ss_int unpack_from_pos(const char *fmt, bytes *data, __ss_int offset);
 
 void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize);
 void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);
@@ -120,6 +125,8 @@ template<class T> void __pack_pascal(char, T, bytes *, size_t &, __ss_int) {
 template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos, __ss_int ndigits) {
     if(ndigits == -1)
         ndigits = 1;
+    if(ndigits == 0) /* '0p' packs nothing (as of CPython 3.15) */
+        return;
     __ss_int len = t->__len__();
     if(len+1 > ndigits)
         len = ndigits-1;
@@ -135,7 +142,7 @@ template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos,
 
 /* pack single arg */
 
-template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t &pos, __ss_int &ndigits, T arg) {
+template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t base, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
     int pad;
     __ss_int n;
@@ -181,9 +188,13 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 //            case 'n':
             case 'N':
                 itemsize = get_itemsize(order, c);
-                pad = padding(order, (unsigned int)pos, itemsize);
+                pad = padding(order, (__ss_int)(pos-base), itemsize);
                 for(int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
+                if(ndigits == 0) { /* e.g. '0i': align, but consume no argument */
+                    ndigits = -1;
+                    break;
+                }
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
@@ -196,9 +207,13 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'd':
             case 'f':
                 itemsize = get_itemsize(order, c);
-                pad = padding(order, (unsigned int)pos, itemsize);
+                pad = padding(order, (__ss_int)(pos-base), itemsize);
                 for(int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
+                if(ndigits == 0) {
+                    ndigits = -1;
+                    break;
+                }
                 __pack_float(c, arg, order, itemsize);
                 if(swap_endian(order))
                     for(int k=(int)itemsize-1; k>=0; k--)
@@ -213,6 +228,10 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 return;
 
             case 'c':
+                if(ndigits == 0) {
+                    ndigits = -1;
+                    break;
+                }
                 __pack_char(c, arg, result, pos);
                 if(ndigits == -1 or --ndigits == 0) {
                     j++;
@@ -221,6 +240,10 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 return;
 
             case '?':
+                if(ndigits == 0) {
+                    ndigits = -1;
+                    break;
+                }
                 if(___bool(arg))
                     result->unit[pos++] = '\x01';
                 else
@@ -266,8 +289,9 @@ template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigi
 
     unsigned int fmtlen = fmt->__len__();
     unsigned int j = 0;
+    size_t base = pos; /* native alignment is relative to the start of the packed data */
 
-    (__pack_one(fmt, fmtlen, j, order, result, pos, ndigits, args), ...);
+    (__pack_one(fmt, fmtlen, j, order, result, base, pos, ndigits, args), ...);
 }
 
 /* python API */
@@ -290,8 +314,6 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
 }
 
 template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
-    size_t pos = (size_t)__wrap(buffer, offset);
-
     __ss_int ndigits = -1;
 
     __ss_int expected_args = calcitems(fmt);
@@ -300,8 +322,23 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
         throw new error(__mod6(new str("pack_into expected %d items for packing (got %d)"), 2, expected_args, received_args));
 
     __ss_int result_size = calcsize(fmt);
-    if(offset + result_size > len(buffer))
-        throw new error(new str("pack_into requires larger buffer"));
+    __ss_int buflen = len(buffer);
+
+    /* same checks and messages as CPython */
+    if(offset < 0) {
+        if(offset + result_size > 0)
+            throw new error(__mod6(new str("no space to pack %d bytes at offset %d"), 2, result_size, offset));
+        if(offset + buflen < 0)
+            throw new error(__mod6(new str("offset %d out of range for %d-byte buffer"), 2, offset, buflen));
+        offset += buflen;
+    }
+    if(buflen - offset < result_size)
+        throw new error(__mod6(new str("pack_into requires a buffer of at least %d bytes for packing %d bytes at offset %d (actual buffer size is %d)"), 4, result_size+offset, result_size, offset, buflen));
+
+    /* zero the target area first, so pad bytes ('x', alignment) are written too */
+    size_t pos = (size_t)offset;
+    for(__ss_int k=0; k<result_size; k++)
+        buffer->unit[pos+(size_t)k] = '\x00';
 
     __pack(buffer, pos, ndigits, n, fmt, args...);
 

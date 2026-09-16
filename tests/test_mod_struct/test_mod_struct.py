@@ -571,6 +571,112 @@ def test_non_ascii_format_char():
         pass
 
 
+def test_zero_count():
+    # a zero repeat count consumes no argument (but still aligns natively)
+    assert struct.pack('<b0ih', 1, 2) == b'\x01\x02\x00'
+    assert struct.pack('@b0ib', 1, 2) == b'\x01' + (struct.calcsize('@i')-1)*b'\x00' + b'\x02'
+    assert struct.pack('<0cB', 9) == b'\t'
+    assert struct.pack('<0?B', 9) == b'\t'
+    assert struct.pack('<0dB', 9) == b'\t'
+
+    # '0p' packs nothing and unpacks to b'' (as of CPython 3.15)
+    assert struct.pack('<0pB', b'x', 5) == b'\x05'
+    buf = bytearray(b'----')
+    struct.pack_into('0p', buf, 0, b'x')
+    assert buf == b'----'
+    x, = struct.unpack('0p', b'')
+    assert x == b''
+    x, y = struct.unpack('<0pB', b'\x07')
+    assert x == b'' and y == 7
+
+
+def test_pack_into_pad_align():
+    # native alignment is relative to the offset, not the buffer start
+    buf = bytearray(b'----------')
+    struct.pack_into('@bi', buf, 2, 1, 2)
+    n = struct.calcsize('@bi')
+    assert buf[:2] == b'--'
+    assert buf[2:2+n] == struct.pack('@bi', 1, 2)
+    assert buf[2+n:] == (8-n)*b'-'
+    a, b = struct.unpack_from('@bi', buf, 2)
+    assert (a, b) == (1, 2)
+    a, b = struct.unpack_from('@bi', b'--' + struct.pack('@bi', 3, 4), 2)
+    assert (a, b) == (3, 4)
+    c, = struct.unpack_from('@H', b'-\x0c\x0b', 1)
+    assert c == 0x0b0c
+
+    # pad bytes are written
+    buf = bytearray(b'----------')
+    struct.pack_into('<bx2x', buf, 2, 7)
+    assert buf == b'--\x07\x00\x00\x00----'
+    buf = bytearray(b'----------')
+    struct.pack_into('3x', buf, 1)
+    assert buf == b'-\x00\x00\x00------'
+    buf = bytearray(b'----------')
+    struct.pack_into('<3s', buf, 0, b'a')
+    assert buf == b'a\x00\x00-------'
+
+
+def test_buffer_size_errors():
+    error = ''
+    try:
+        struct.pack_into('<i', bytearray(4), -2, 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'no space to pack 4 bytes at offset -2'
+
+    error = ''
+    try:
+        struct.pack_into('<i', bytearray(4), -6, 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'offset -6 out of range for 4-byte buffer'
+
+    error = ''
+    try:
+        struct.pack_into('<i', bytearray(4), 2, 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'pack_into requires a buffer of at least 6 bytes for packing 4 bytes at offset 2 (actual buffer size is 4)'
+
+    buf = bytearray(4)
+    struct.pack_into('<h', buf, -2, 258)
+    assert buf == b'\x00\x00\x02\x01'
+
+    error = ''
+    try:
+        a, = struct.unpack('<I', b'\x01\x02')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'unpack requires a buffer of 4 bytes'
+
+    error = ''
+    try:
+        a, = struct.unpack('<H', b'\x01\x02\x03')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'unpack requires a buffer of 2 bytes'
+
+    error = ''
+    try:
+        a, = struct.unpack_from('<I', b'\x01\x02\x03\x04', 2)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'unpack_from requires a buffer of at least 6 bytes for unpacking 4 bytes at offset 2 (actual buffer size is 4)'
+
+    error = ''
+    try:
+        a, = struct.unpack_from('<I', b'\x01\x02\x03\x04', offset=-5)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'offset -5 out of range for 4-byte buffer'
+
+    a, = struct.unpack_from('<H', b'\x01\x02\x03\x04', -2)
+    assert a == 0x0403
+    a, = struct.unpack_from('<H', b'\x01\x02\x03\x04')
+    assert a == 0x0201
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -597,6 +703,9 @@ def test_all():
     test_order()
     test_ws()
     test_non_ascii_format_char()
+    test_zero_count()
+    test_pack_into_pad_align()
+    test_buffer_size_errors()
 
 
 if __name__ == '__main__':
