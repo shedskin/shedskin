@@ -69,7 +69,7 @@ static inline list<str *> *list_comp_1(str *dirname, list<str *> *names) {
     return __ss_result;
 }
 
-list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden) {
+list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir) {
     /**
     Return a list of paths matching a pathname pattern.
 
@@ -83,11 +83,16 @@ list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden) 
 
     If `recursive` is true, the pattern '**' will match any files and
     zero or more directories and subdirectories.
+
+    If `root_dir` is not None, it should be a path specifying the root
+    directory for searching. It has the same effect as changing the current
+    directory before calling it. If pathname is relative, the result will
+    contain paths relative to `root_dir`.
     */
-    return (new list<str *>(iglob(pathname, recursive, include_hidden)));
+    return (new list<str *>(iglob(pathname, recursive, include_hidden, root_dir)));
 }
 
-__iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidden) {
+__iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir) {
     /**
     Return an iterator which yields the paths matching a pathname pattern.
 
@@ -101,7 +106,9 @@ __iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidde
     */
     __iter<str *> *it;
 
-    it = _iglob(pathname, recursive, False, include_hidden);
+    if (!root_dir)
+        root_dir = const_3;
+    it = _iglob(pathname, root_dir, recursive, False, include_hidden);
     if ((__NOT(___bool(pathname)) or (recursive and _isrecursive(pathname->__slice__(__ss_int(2LL), __ss_int(0LL), __ss_int(2LL), __ss_int(0LL)))))) {
         return _skip_empty(it);
     }
@@ -159,7 +166,7 @@ __iter<str *> *_skip_empty(__iter<str *> *it) {
 
 class __gen__iglob : public __iter<str *> {
 public:
-    str *basename, *dirname, *name, *pathname;
+    str *basename, *dirname, *name, *pathname, *root_dir;
     pyiter<str *> *__26, *__34, *__42, *dirs;
     __ss_bool __12, __13, __22, __23, __24, __25, dironly, include_hidden, recursive;
     tuple<str *> *__11;
@@ -172,8 +179,9 @@ public:
 
     int __last_yield;
 
-    __gen__iglob(str *pathname,__ss_bool recursive,__ss_bool dironly,__ss_bool include_hidden) {
+    __gen__iglob(str *pathname,str *root_dir,__ss_bool recursive,__ss_bool dironly,__ss_bool include_hidden) {
         this->pathname = pathname;
+        this->root_dir = root_dir;
         this->recursive = recursive;
         this->dironly = dironly;
         this->include_hidden = include_hidden;
@@ -200,14 +208,14 @@ public:
         basename = __11->__getsecond__();
         if (__NOT(has_magic(pathname))) {
             if (___bool(basename)) {
-                if (__os__::__path__::lexists(pathname)) {
+                if (__os__::__path__::lexists(_join(root_dir, pathname))) {
                     __last_yield = 0;
                     __result = pathname;
                     return __result;
                     __after_yield_0:;
                 }
             }
-            else if (__os__::__path__::isdir(dirname)) {
+            else if (__os__::__path__::isdir(_join(root_dir, dirname))) {
                 __last_yield = 1;
                 __result = pathname;
                 return __result;
@@ -219,7 +227,7 @@ public:
         if (__NOT(___bool(dirname))) {
             if ((recursive and _isrecursive(basename))) {
 
-                FOR_IN(name,_glob2(const_3, basename, dironly, include_hidden),14,16,17)
+                FOR_IN(name,_glob2(root_dir, basename, dironly, include_hidden),14,16,17)
                     __last_yield = 2;
                     __result = name;
                     return __result;
@@ -229,7 +237,7 @@ public:
             }
             else {
 
-                FOR_IN(name,_glob1(const_3, basename, dironly, include_hidden),18,20,21)
+                FOR_IN(name,_glob1(root_dir, basename, dironly, include_hidden),18,20,21)
                     __last_yield = 3;
                     __result = name;
                     return __result;
@@ -241,7 +249,7 @@ public:
             return __zero<str *>();
         }
         if ((__ne(dirname, pathname) and has_magic(dirname))) {
-            dirs = ((pyiter<str *> *)(_iglob(dirname, recursive, True, include_hidden)));
+            dirs = ((pyiter<str *> *)(_iglob(dirname, root_dir, recursive, True, include_hidden)));
         }
         else {
             dirs = (new list<str *>(1,dirname));
@@ -251,7 +259,7 @@ public:
 
                 FOR_IN(dirname,dirs,26,28,29)
 
-                    FOR_IN(name,_glob2(dirname, basename, dironly, include_hidden),30,32,33)
+                    FOR_IN(name,_glob2(_join(root_dir, dirname), basename, dironly, include_hidden),30,32,33)
                         __last_yield = 4;
                         __result = __os__::__path__::join(2, dirname, name);
                         return __result;
@@ -265,7 +273,7 @@ public:
 
                 FOR_IN(dirname,dirs,34,36,37)
 
-                    FOR_IN(name,_glob1(dirname, basename, dironly, include_hidden),38,40,41)
+                    FOR_IN(name,_glob1(_join(root_dir, dirname), basename, dironly, include_hidden),38,40,41)
                         __last_yield = 5;
                         __result = __os__::__path__::join(2, dirname, name);
                         return __result;
@@ -280,7 +288,7 @@ public:
 
             FOR_IN(dirname,dirs,42,44,45)
 
-                FOR_IN(name,_glob0(dirname, basename, dironly, include_hidden),46,48,49)
+                FOR_IN(name,_glob0(_join(root_dir, dirname), basename, dironly, include_hidden),46,48,49)
                     __last_yield = 6;
                     __result = __os__::__path__::join(2, dirname, name);
                     return __result;
@@ -296,8 +304,8 @@ public:
 
 };
 
-__iter<str *> *_iglob(str *pathname, __ss_bool recursive, __ss_bool dironly, __ss_bool include_hidden) {
-    return new __gen__iglob(pathname,recursive,dironly,include_hidden);
+__iter<str *> *_iglob(str *pathname, str *root_dir, __ss_bool recursive, __ss_bool dironly, __ss_bool include_hidden) {
+    return new __gen__iglob(pathname,root_dir,recursive,dironly,include_hidden);
 
 }
 
@@ -465,15 +473,11 @@ __ss_bool _isrecursive(str *pattern) {
     return ___bool(__eq(pattern, const_6));
 }
 
-
-/* pre-3.5 style helpers, kept for backwards compatibility */
-
-list<str *> *glob1(str *dirname, str *pattern) {
-    return _glob1(dirname, pattern, False, False);
-}
-
-list<str *> *glob0(str *dirname, str *basename) {
-    return _glob0(dirname, basename, False, False);
+str *_join(str *dirname, str *basename) {
+    /* it is common if dirname or basename is empty */
+    if (!___bool(dirname) || !___bool(basename))
+        return ___bool(dirname) ? dirname : basename;
+    return __os__::__path__::join(2, dirname, basename);
 }
 
 __ss_bool has_magic(str *s) {
