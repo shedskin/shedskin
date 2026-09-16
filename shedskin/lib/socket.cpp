@@ -67,9 +67,6 @@ str *__name__;
 str *invalid_address;
 str *timed_out;
 str *host_not_found;
-__ss_int default_0;
-__ss_int default_1;
-__ss_int default_4;
 
 /**
   class error
@@ -834,10 +831,6 @@ void __init()
     cl_gaierror = new class_("gaierror");
     cl_timeout = new class_("timeout");
     cl_error = new class_("error");
-
-    default_0 = __ss_AF_INET;
-    default_1 = __ss_SOCK_STREAM;
-    default_4 = __ss_AF_INET; /* create_server family */
 
     // string constants used by this module
     invalid_address = new str("invalid address");

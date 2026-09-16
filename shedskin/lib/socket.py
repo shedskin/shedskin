@@ -35,8 +35,10 @@ class herror(Exception): pass
 class gaierror(Exception): pass
 class timeout(Exception): pass
 
+# NOTE literal defaults (AF_INET=2, SOCK_STREAM=1, the same on all supported
+# platforms) so the compiler emits them directly instead of default_N globals
 class socket(object):
-    def __init__(self, family=AF_INET, type=SOCK_STREAM, proto=0):
+    def __init__(self, family=2, type=1, proto=0):
         self.family = family
         self.type = type
         self.proto = proto
@@ -137,7 +139,7 @@ def fromfd(fd, family, type, proto=0):
 
 # FIXME CPython default is backlog=None; a negative value means 'use a
 # reasonable default' instead (same convention as timeouts in this module)
-def create_server(address, family=AF_INET, backlog=-1, reuse_port=False, dualstack_ipv6=False):
+def create_server(address, family=2, backlog=-1, reuse_port=False, dualstack_ipv6=False):
     return socket()
 
 def has_dualstack_ipv6():
