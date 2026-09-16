@@ -419,6 +419,91 @@ def test_re_sub_out_of_range_group_raises_error():
     assert error != ''
 
 
+def test_re_fullmatch_backtracks():
+    # fullmatch() used to take the first anchored match and then check its
+    # end, instead of letting the regex engine backtrack into a full match
+    assert re.fullmatch('a|ab', 'ab') is not None
+    assert re.fullmatch('a.*?', 'abc').span() == (0, 3)
+    assert re.compile('a|ab').fullmatch('ab') is not None
+    assert re.compile('a|ab').fullmatch('xabx', 1, 3).span() == (1, 3)
+    assert re.fullmatch('a|ab', 'abc') is None
+
+
+def test_re_finditer_flags():
+    # module-level finditer(pattern, string, flags) passed flags as 'pos',
+    # and match_iter passed the pattern's re.* flags as pcre2 match options
+    assert [m.span() for m in re.finditer('A', 'aXa', re.I)] == [(0, 1), (2, 3)]
+    assert [m.span() for m in re.compile('A$', re.I).finditer('ba')] == [(1, 2)]
+    assert [m.span() for m in re.finditer('^a', 'a\na', re.M)] == [(0, 1), (2, 3)]
+
+
+def test_re_empty_matches_at_end_and_adjacent():
+    # empty matches at the end of the subject, and right after another match
+    assert [m.span() for m in re.finditer('x*', 'ab')] == [(0, 0), (1, 1), (2, 2)]
+    assert [m.span() for m in re.finditer('a*', 'baa')] == [(0, 0), (1, 3), (3, 3)]
+    assert [m.span() for m in re.finditer('|a', 'a')] == [(0, 0), (0, 1), (1, 1)]
+    assert re.sub('a*', lambda m: '-', 'baa') == '-b--'
+    assert re.sub('|a', '-', 'a') == '---'
+    assert re.sub('x*', '-', 'abxd') == '-a-b--d-'
+    assert re.subn('', '-', 'ab') == ('-a-b-', 3)
+    assert re.sub('a*', '-', 'baa', 2) == '-b-'
+
+
+def test_re_pos_endpos_clamped():
+    # CPython clamps out-of-range pos/endpos instead of raising
+    assert re.compile('x*').search('ab', 2).span() == (2, 2)
+    assert re.compile('').search('abc', 10).span() == (3, 3)
+    assert re.compile('a').search('abc', 2, 1) is None
+    assert re.compile('$').match('abc', 3).span() == (3, 3)
+    assert [m.span() for m in re.compile('b*').finditer('ab', 2)] == [(2, 2)]
+
+
+def test_re_start_of_unmatched_group():
+    m = re.match(r'(a)(b)?', 'a')
+    assert m.start(2) == -1
+    assert m.end(2) == -1
+    assert m.span(2) == (-1, -1)
+    m = re.match(r'(?P<x>a)(?P<y>b)?', 'a')
+    assert m.span('y') == (-1, -1)
+    error = False
+    try:
+        m.start(3)
+    except IndexError:
+        error = True
+    assert error
+
+
+def test_re_template_escapes():
+    assert re.sub('x', r'\\n', 'x') == '\\n'
+    assert re.sub('x', r'\\', 'x') == '\\'
+    assert re.sub('x', r'\0', 'x') == '\0'
+    assert re.sub('x', r'\101\1010', 'x') == 'AA0'
+    assert re.sub('x', r'\-', 'x') == '\\-'
+    assert re.sub('(x)', r'\g<0>\g<1>\1', 'x') == 'xxx'
+    assert re.sub('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)', r'\10\1', 'abcdefghij') == 'ja'
+    error = ''
+    try:
+        re.sub('x', r'\q', 'x')
+    except re.error as e:
+        error = str(e)
+    assert error.startswith('bad escape')
+    error = ''
+    try:
+        re.sub('x', '\\', 'x')
+    except re.error as e:
+        error = str(e)
+    assert error.startswith('bad escape')
+
+
+def test_re_escape_only_special():
+    # CPython 3.7+ only escapes regex special characters
+    assert re.escape('a_b!c@d"e:f') == 'a_b!c@d"e:f'
+    assert re.escape('a b-c#d&e~') == 'a\\ b\\-c\\#d\\&e\\~'
+    assert re.escape('\t\n') == '\\\t\\\n'
+    assert re.escape('é.ü') == 'é\\.ü'
+    assert re.match(re.escape('1+1=2?'), '1+1=2?') is not None
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -458,6 +543,13 @@ def test_all():
     test_re_escape()
     test_re_finditer_empty_string()
     test_re_pattern_findall()
+    test_re_fullmatch_backtracks()
+    test_re_finditer_flags()
+    test_re_empty_matches_at_end_and_adjacent()
+    test_re_pos_endpos_clamped()
+    test_re_start_of_unmatched_group()
+    test_re_template_escapes()
+    test_re_escape_only_special()
 
 
 if __name__ == "__main__":

@@ -55,7 +55,10 @@ __ss_int match_object::__index(__ss_int matchid, char isend)
 {
     PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
 
-    if(matchid > lastindex) throw new error(new str("group does not exist or is unmatched"));
+    //any existing group may be asked for; one that did not participate in the
+    //match gives -1 (CPython), even if it lies beyond the last matched group
+    if(matchid > re->capture_count || matchid < 0) throw new IndexError(new str("no such group"));
+    if(captured[matchid * 2] == PCRE2_UNSET || matchid > lastindex) return -1;
 
     return (__ss_int) captured[matchid * 2 + isend];
 }
@@ -179,12 +182,16 @@ __GC_STR re_object::__group(__GC_STR *subj, PCRE2_SIZE *captured, str *mname)
     return __group(subj, captured, groupindex->__getitem__(mname));
 }
 
+static inline bool __is_octdigit(__ss_char c) { return c >= '0' && c <= '7'; }
+static inline bool __is_digit(__ss_char c) { return c >= '0' && c <= '9'; }
+
+//template expansion (sub/subn/expand), following CPython's parse_template
 __GC_STR re_object::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
 {
     __GC_STR out;
     size_t i, j, len;
-    __ss_int ref;
     __ss_char c;
+    bool alldigits;
 
     out = __GC_STR();
     len = tpl.length();
@@ -193,71 +200,81 @@ __GC_STR re_object::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
     {
         //zip past anything that we don't need to worry about
         j = i;
-        while(tpl[i] != '\\' && i < len) i++;
+        while(i < len && tpl[i] != '\\') i++;
         if(i - j) out += tpl.substr(j, i - j);
 
         if(i == len) break;
 
         //we've hit a backslash
-        switch(tpl[++i])
+        if(++i == len) throw new error(new str("bad escape (end of pattern)"));
+        c = tpl[i];
+
+        if(c == 'g')
         {
-            //reference
-            case '1' :
-            case '2' :
-            case '3' :
-            case '4' :
-            case '5' :
-            case '6' :
-            case '7' :
-            case '8' :
-            case '9' :
+            //named or numbered reference: \g<name>, \g<2>
+            if(++i == len || tpl[i] != '<') throw new error(new str("missing <"));
+            j = ++i;
+            alldigits = true;
+            while(i < len && tpl[i] != '>') alldigits = alldigits && __is_digit(tpl[i]), i++;
 
-                j = i;
-                while(i < len && tpl[i] >= '0' && tpl[i] <= '9') i++;
+            if(i == len) throw new error(new str("missing >, unterminated name"));
+            if(i == j) throw new error(new str("missing group name"));
 
-                ref = (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10);
-                out += __group(subj, captured, ref);
-
-                i--;
-                continue;
-
-            //named reference
-            case 'g' :
-
-                if(tpl[++i] != '<') throw new error(new str("invalid name group"));
-                i++;
-
-                j = i;
-                c = 1;
-                while(i < len && tpl[i] != '>') c = c && (tpl[i] >= '0' && tpl[i] <= '9'), i++;
-
-                if(i == len || tpl[i] != '>') throw new error(new str("unterminated name group"));
-                if((tpl[j] >= '0' && tpl[j] <= '9') && !c) throw new error(new str("invalid first character in name group"));
-
-                if(c) out += __group(subj, captured, (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10));
-                else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
-
-                continue;
-
-            //escape char
-            case 'n' : c = '\n'; break;
-            case 'v' : c = '\v'; break;
-            case 'a' : c = '\a'; break;
-            case 'b' : c = '\b'; break;
-            case 'f' : c = '\f'; break;
-            case 't' : c = '\t'; break;
-            case 'r' : c = '\r'; break;
-
-            //nothing meaningful here, ignore
-            default :
-                c = 0;
+            if(alldigits) out += __group(subj, captured, (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10));
+            else if(__is_digit(tpl[j])) throw new error(new str("bad character in group name"));
+            else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
         }
-
-        if(c) out += c;
+        else if(c == '0')
+        {
+            //octal escape: \0 followed by at most two more octal digits
+            __ss_char v = 0;
+            for(j = 0; j < 2 && i + 1 < len && __is_octdigit(tpl[i + 1]); j++)
+                v = (__ss_char)(v * 8 + (tpl[++i] - '0'));
+            out += v;
+        }
+        else if(__is_digit(c))
+        {
+            //three octal digits form an octal escape, otherwise it is a
+            //group reference of at most two digits (\100 is '@', \10 is group 10)
+            if(i + 2 < len && __is_octdigit(c) && __is_octdigit(tpl[i + 1]) && __is_octdigit(tpl[i + 2]))
+            {
+                __ss_char v = (__ss_char)((c - '0') * 64 + (tpl[i + 1] - '0') * 8 + (tpl[i + 2] - '0'));
+                if(v > 0377) throw new error(new str("octal escape value outside of range 0-0o377"));
+                out += v;
+                i += 2;
+            }
+            else
+            {
+                __ss_int ref = (__ss_int)(c - '0');
+                if(i + 1 < len && __is_digit(tpl[i + 1]))
+                    ref = ref * 10 + (__ss_int)(tpl[++i] - '0');
+                out += __group(subj, captured, ref);
+            }
+        }
         else
         {
-            out += '\\';
-            i--;
+            switch(c)
+            {
+                case 'n' : out += '\n'; break;
+                case 'v' : out += '\v'; break;
+                case 'a' : out += '\a'; break;
+                case 'b' : out += '\b'; break;
+                case 'f' : out += '\f'; break;
+                case 't' : out += '\t'; break;
+                case 'r' : out += '\r'; break;
+                case '\\': out += '\\'; break;
+                default:
+                    //unknown ascii letter escapes are errors (CPython 3.7+),
+                    //anything else is kept as is, including the backslash
+                    if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                    {
+                        __GC_STR msg = __gcs("bad escape \\");
+                        msg += c;
+                        throw new error(new str(msg));
+                    }
+                    out += '\\';
+                    out += c;
+            }
         }
     }
 
@@ -280,18 +297,25 @@ void re_free(void *o, void *)
 str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 {
     __GC_STR *s, out;
-    PCRE2_SIZE i, cur;
+    PCRE2_SIZE i, start, cur;
     PCRE2_SPTR c_subj;
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
     PCRE2_SIZE *captured;
+    uint32_t extra;
 
     out = __GC_STR();
 
     s = &subj->unit;
     c_subj = (PCRE2_SPTR) s->data();
-    for(cur = i = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; cur++)
+
+    //'i' is the end of the previous match (start of text still to copy),
+    //'start' where the next match attempt begins. after a zero-length match
+    //we retry at the same offset forbidding an empty match there (CPython
+    //3.7+ semantics, so e.g. sub('|a', '-', 'a') == '---'), see __splitfind
+    extra = 0;
+    for(cur = i = start = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; )
     {
-        if(i > s->size())
+        if(start > s->size())
             break;
 
         //get a match
@@ -299,29 +323,28 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
             compiled_pattern,
             c_subj,
             (PCRE2_SIZE)s->size(),
-            i,
-            0,
+            start,
+            extra,
             match_data,
             NULL
-        ) <= 0) break;
+        ) <= 0)
+        {
+            if(extra == 0) break;
+            start++;
+            extra = 0;
+            continue;
+        }
 
         captured = pcre2_get_ovector_pointer(match_data);
 
-        //append stuff we skipped
-        if(i < s->size())
-            out += s->substr((size_t)i, (size_t)(captured[0] - i));
-
-        //replace section
+        //append stuff we skipped, then the replacement
+        out += s->substr((size_t)i, (size_t)(captured[0] - i));
         out += __expand(s, captured, repl->unit);
+        cur++;
 
-        //move our index
-        if(i == captured[1]) {
-            if(i < s->size())
-                out += s->at(i);
-            i++;
-        } else {
-            i = captured[1];
-        }
+        i = start = captured[1];
+        if(captured[0] == captured[1]) extra = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
+        else extra = 0;
     }
 
     //extra
@@ -504,28 +527,38 @@ match_object *match_iter::__next__(void)
     match_object *mobj;
     PCRE2_SIZE *captured;
 
-    if((pos > endpos && endpos != -1) || (subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size())) throw new StopIteration();
+    //'flags' holds pcre2_match() options (never python re.* flags); after a
+    //zero-length match it forbids another empty match at the same offset,
+    //like __splitfind. an empty match at the very end is valid (CPython).
+    for(;;)
+    {
+        if(pos > (__ss_int)subj->unit.size() || (endpos != -1 && pos > endpos)) throw new StopIteration();
 
-    //get next match
-    mobj = ro->__exec(subj, pos, endpos, flags);
-    if(!mobj) throw new StopIteration();
+        mobj = ro->__exec(subj, pos, endpos, flags);
+        if(mobj) break;
+        if(flags == 0) throw new StopIteration();
+
+        pos++;
+        flags = 0;
+    }
 
     captured = pcre2_get_ovector_pointer(mobj->match_data);
 
-    if(captured[1] == (PCRE2_SIZE) pos) pos++;
-    else pos = (__ss_int) captured[1];
+    pos = (__ss_int) captured[1];
+    if(captured[0] == captured[1]) flags = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
+    else flags = 0;
 
     return mobj;
 }
 
 __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos)
 {
-    if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
-    //mirror __exec's handling of the empty-string case: pos==0 on an empty
-    //subject is a valid starting position, not an out-of-range one
-    if(subj->unit.size()!=0 && (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    //like CPython, out-of-range pos/endpos are clamped rather than rejected
+    //(see __exec). the last argument holds pcre2_match() options: passing
+    //the python re.* flags here made e.g. re.I collide with PCRE2_NOTEOL
+    if(pos < 0) pos = 0;
 
-    return new match_iter(this, subj, pos, endpos, flags);
+    return new match_iter(this, subj, pos, endpos, 0);
 }
 
 match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
@@ -541,12 +574,17 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     //nendpos is the exclusive end of the search window (i.e. the number of
     //bytes of subj that pcre2_match is allowed to look at), matching the
     //semantics of Python's endpos (like a slice upper bound: subj[pos:endpos])
+    //like CPython, clamp pos/endpos to the subject instead of raising: pos
+    //== len(subj) is a valid position (e.g. for an empty match at the end),
+    //and an endpos before pos simply means there is nothing to match
+    if(pos < 0) pos = 0;
+    else if(pos > (__ss_int)subj->unit.size()) pos = (__ss_int)subj->unit.size();
+
     if(endpos == -1) nendpos = (__ss_int)subj->unit.size();
-    else if(endpos < pos) throw new error(new str("end position less than initial"));
-    //clamp, mirroring CPython's handling of an endpos beyond the string length
+    else if(endpos < 0) nendpos = 0;
     else nendpos = (endpos < (__ss_int)subj->unit.size()) ? endpos : (__ss_int)subj->unit.size();
 
-    if(subj->unit.size()!=0 and (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if(nendpos < pos) return (match_object *)NULL;
 
     r = pcre2_match(
         compiled_pattern,
@@ -607,14 +645,10 @@ match_object *re_object::prefixmatch(str *subj, __ss_int pos, __ss_int endpos)
 
 match_object *re_object::fullmatch(str *subj, __ss_int pos, __ss_int endpos)
 {
-    match_object *m = __exec(subj, pos, endpos, PCRE2_ANCHORED);
-    if (m) {
-        if(endpos == -1)
-            endpos = len(subj);
-        if(m->start() == pos && m->end() == endpos)
-            return m;
-    }
-    return NULL;
+    //PCRE2_ENDANCHORED makes pcre2 backtrack until the match ends at the end
+    //of the search window, so e.g. fullmatch('a|ab', 'ab') finds 'ab' (just
+    //checking the end of the first anchored match wrongly rejected it)
+    return __exec(subj, pos, endpos, PCRE2_ANCHORED | PCRE2_ENDANCHORED);
 }
 
 match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
@@ -721,38 +755,23 @@ re_object *compile(str *pat, __ss_int flags)
 
 str *escape(str *s)
 {
+    //like CPython (3.7+), only escape characters that are special in regular
+    //expressions; e.g. '_', '!', '@', '"' or ':' are left alone
+    static const char special[] = "()[]{}?*+-|^$\\.&~# \t\n\r\v\f";
     __GC_STR *ps, out;
-    size_t i, j, len;
+    size_t i, len;
+    __ss_char c;
 
     ps = &s->unit;
     len = ps->size();
     out = __GC_STR();
-    /* NOTE: 'i' is advanced manually within the loop body (once per
-       alphanumeric run, and once per metacharacter processed below), so
-       this loop must not also auto-increment 'i' in its own header --
-       doing so used to double-advance 'i' past a metacharacter and
-       silently drop the character right after it (e.g. escape("a..b")
-       produced "a\.\." instead of "a\.\.b"). */
-    for(i = 0; i < len; )
+
+    for(i = 0; i < len; i++)
     {
-        //skip alphanumerics
-        for(j = i; j < len && ((*ps)[j] > 127 || ::isalnum((int)(*ps)[j])); j++) ;
-
-        if(j != i)
-        {
-            out += ps->substr(i, j - i);
-
-            i = j;
-        }
-
-        //now process potential metachars
-        while(i < len && (*ps)[i] <= 127 && !::isalnum((int)(*ps)[i]))
-        {
+        c = (*ps)[i];
+        if(c < 128 && c != 0 && strchr(special, (int)c))
             out += '\\';
-            out += (*ps)[i];
-
-            i++;
-        }
+        out += c;
     }
 
     return new str(out);
@@ -763,8 +782,8 @@ match_object *__exec_once(str *pat, str *subj, __ss_int flags)
     re_object *r;
     match_object *mo;
 
-    r = compile(pat, flags);
-    mo = r->__exec(subj, 0, -1, flags & PCRE2_ANCHORED);
+    r = compile(pat, flags & ~(__ss_int)(PCRE2_ANCHORED | PCRE2_ENDANCHORED));
+    mo = r->__exec(subj, 0, -1, flags & (PCRE2_ANCHORED | PCRE2_ENDANCHORED));
 
     if(!mo) GC_FREE(r);
 
@@ -788,19 +807,16 @@ match_object *prefixmatch(str *pat, str *subj, __ss_int flags)
 
 match_object *fullmatch(str *pat, str *subj, __ss_int flags)
 {
-    match_object *m = __exec_once(pat, subj, flags | PCRE2_ANCHORED);
-    if(m && m->end() == len(subj))
-        return m;
-    return NULL;
+    return __exec_once(pat, subj, flags | PCRE2_ANCHORED | PCRE2_ENDANCHORED);
 }
 
-__iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
+__iter<match_object *> *finditer(str *pat, str *subj, __ss_int flags)
 {
     re_object *ro;
     __iter<match_object *> *r;
 
     ro = compile(pat, flags);
-    r = ro->finditer(subj, pos, endpos);
+    r = ro->finditer(subj);
 
     return r;
 }
