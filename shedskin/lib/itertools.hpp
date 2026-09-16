@@ -475,7 +475,7 @@ template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__()
     for (; ; ) {
         this->current_value = this->iter->__next__();
         const K& new_key = this->key(this->current_value);
-        if (new_key != this->current_key) {
+        if (__ne(new_key, this->current_key)) {
             this->current_key = new_key;
             return new tuple2<K, __iter<T> *>(2, this->current_key, new groupiter<T, K>(this));
         }
@@ -997,7 +997,6 @@ template<class T, class U> tuple2<T, U> *productiter<T, U>::__next__() {
 template<class T> class productiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     bool exhausted;
-    unsigned int highest_exhausted;
     std::vector<std::vector<T> > values;
     std::vector<unsigned int> iter;
     std::vector<unsigned int> indices;
@@ -1016,7 +1015,6 @@ public:
 
 template<class T> inline productiter<T, T>::productiter() {
     this->exhausted = false;
-    this->highest_exhausted = 0;
 
     this->__tuple_cache = new tuple2<T,T>[__SS_ALLOC_TUPLES];
     this->__tuple_count = 0; 
@@ -1024,7 +1022,6 @@ template<class T> inline productiter<T, T>::productiter() {
 
 template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->values.push_back(std::vector<T>());
-    this->indices.push_back(0);
 
     // TODO this is not optimal at all for pyseq
     // (could be improved with static polymorphism and partial specialization on templates templates)
@@ -1037,17 +1034,13 @@ template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
         }
     }
 
-    if (!this->values.back().size()) {
+    if (!this->values.back().size())
         this->exhausted = true;
-    } else if (this->values.back().size() == 1 && this->highest_exhausted == this->values.size() - 1) {
-        ++this->highest_exhausted;
-    }
 }
 
 template<class T> inline void productiter<T, T>::repeat(int times) {
-    if (this->highest_exhausted == this->values.size()) {
-      this->highest_exhausted *= times;
-    }
+    if (times <= 0) // product(..., repeat=0) yields a single empty tuple
+        this->exhausted = false;
 
     for (int time = 0; time < times; ++time) {
         for (unsigned int iter_ = 0; iter_ < this->values.size(); ++iter_) {
@@ -1075,23 +1068,13 @@ template<class T> tuple2<T, T> *productiter<T, T>::__next__() {
             size_t j = (size_t)(this->iter[i]);
             tuple->units[i] = this->values[j][this->indices[i]];
         }
-        for (size_t i = this->iter.size() - 1; i != std::string::npos; --i) {
+        for (size_t i = iter_size; i-- > 0; ) {
             size_t j = (size_t)(this->iter[i]);
-            ++this->indices[i];
-            if (i <= (size_t)this->highest_exhausted) {
-                if (this->indices[i] >= this->values[j].size() - 1) {
-                    ++this->highest_exhausted;
-                    if (this->highest_exhausted > this->iter.size()) {
-                        this->exhausted = true;
-                    }
-                    break;
-                }
-            }
-            if (this->indices[i] == this->values[j].size()) {
-                this->indices[i] = 0;
-            } else {
+            if (++this->indices[i] < this->values[j].size())
                 break;
-            }
+            this->indices[i] = 0;
+            if (i == 0)
+                this->exhausted = true;
         }
     } else {
         this->exhausted = true;
@@ -1152,7 +1135,7 @@ public:
     std::vector<T> cache;
 
     permutationsiter();
-    permutationsiter(pyiter<T> *iterable, __ss_int r);
+    permutationsiter(pyiter<T> *iterable, __ss_int r, bool r_none=false);
 
     ~permutationsiter();
 
@@ -1167,10 +1150,9 @@ template<class T> inline permutationsiter<T>::permutationsiter() {
     this->indices = 0;
     this->cycles = 0;
 }
-template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r_) {
-    if(r_ < 0)
+template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r_, bool r_none) {
+    if(!r_none && r_ < 0)
         throw new ValueError(new str("r must be non-negative"));
-    this->r = r_;
     this->len = 0;
 
     // TODO this is not optimal at all for pyseq
@@ -1184,6 +1166,9 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
         }
     }
     this->len = (int)(this->cache.size());
+    if (r_none)
+        r_ = this->len;
+    this->r = r_;
 
     if (r_ > this->len) {
         this->current = -1;
@@ -1246,7 +1231,7 @@ template<class T> tuple2<T, T> *permutationsiter<T>::__next__() {
 }
 
 template<class T> inline permutationsiter<T> *permutations(pyiter<T> *iterable, void* /* r */) {
-    return new permutationsiter<T>(iterable, iterable->__len__());
+    return new permutationsiter<T>(iterable, 0, true);
 }
 template<class T> inline permutationsiter<T> *permutations(pyiter<T> *iterable, __ss_int r) {
     return new permutationsiter<T>(iterable, r);
