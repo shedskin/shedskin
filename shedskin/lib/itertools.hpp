@@ -486,6 +486,14 @@ template<class T, class K> inline groupbyiter<T, K> *groupby(pyiter<T> *iterable
     return new groupbyiter<T, K>(iterable, key);
 }
 
+template<class T> inline T __groupby_identity(T x) {
+    return x;
+}
+
+template<class T> inline groupbyiter<T, T> *groupby(pyiter<T> *iterable) {
+    return new groupbyiter<T, T>(iterable, __groupby_identity<T>);
+}
+
 // filterfalse
 
 template<class T, class B> class filterfalseiter : public __iter<T> {

@@ -3280,6 +3280,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and not self.library_func(funcs, "builtin", None, "sum")
             and not self.library_func(funcs, "builtin", None, "next")
             and not self.library_func(funcs, "functools", None, "reduce")
+            and not self.library_func(funcs, "itertools", None, "groupby")
         ):
             error.error(
                 "call with incorrect number of arguments",

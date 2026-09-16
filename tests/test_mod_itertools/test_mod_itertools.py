@@ -100,6 +100,27 @@ def test_groupby():
     words = ['Apple', 'apple', 'APPLE', 'Bob', 'bob', 'cat']
     assert [k for k, g in itertools.groupby(words, key=lambda s: s.lower())] == ['apple', 'bob', 'cat']
 
+    # no key function: identity
+    res3 = []
+    for k, g in itertools.groupby([1, 1, 2, 3, 3, 3, 1]):
+        res3.append((k, list(g)))
+    assert res3 == [(1, [1, 1]), (2, [2]), (3, [3, 3, 3]), (1, [1])]
+
+    assert [k for k, g in itertools.groupby('aaabbcaa')] == ['a', 'b', 'c', 'a']
+    assert [(k, len(list(g))) for k, g in itertools.groupby('aaabbcaa')] == [('a', 3), ('b', 2), ('c', 1), ('a', 2)]
+
+    assert [k for k, g in itertools.groupby(['x', 'x', 'y'])] == ['x', 'y']
+    assert list(itertools.groupby([])) == []
+
+    # partially consumed groups
+    res4 = []
+    for k, g in itertools.groupby([1, 1, 1, 2, 2, 3]):
+        res4.append((k, next(g)))
+    assert res4 == [(1, 1), (2, 2), (3, 3)]
+
+    # keyed and unkeyed in the same program
+    assert [k for k, g in itertools.groupby([1, 2, 3, 4, 5], lambda x: x // 3)] == [0, 1]
+
 
 def test_islice():
     assert list(itertools.islice('ABCDEFG', 2)) == ['A', 'B']
