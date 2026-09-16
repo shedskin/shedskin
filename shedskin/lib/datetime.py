@@ -309,6 +309,9 @@ class timedelta:
     def total_seconds(self):
         return 1.0
 
+    def __bool__(self):
+        return True
+
     def subfromdate(self):
         return date(1, 1, 1)
 

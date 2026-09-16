@@ -127,6 +127,7 @@ static __ss_int days_before_year(__ss_int year);
 static void ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day);
 static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
 static __ss_int iso_week1_monday(__ss_int year);
+static __ss_int floordivmod(__ss_int a, __ss_int b, __ss_int *r);
 
 /* Parse the (already-isolated) fractional-seconds digits of an ISO 8601
  * time string into microseconds, e.g. "5" -> 500000, "123456" -> 123456,
@@ -465,10 +466,8 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 
 	timet = (time_t)timestamp;
 	fraction = timestamp - (double)timet;
-	if (fraction * 1e6 >= 0.0)
-		us = (__ss_int)floor(fraction * 1e6 + 0.5);
-	else
-		us = (__ss_int)ceil(fraction * 1e6 - 0.5);
+	/* round-half-to-even, like cpython (_PyTime_ROUND_HALF_EVEN) */
+	us = ___round(fraction * 1e6);
 
 	if (us < 0) {
 		/* Truncation towards zero is not what we wanted
@@ -1093,39 +1092,80 @@ __ss_int time::__hash__() {
 
 
 //class timedelta
+
+/* Split one constructor argument into its whole and fractional parts, like
+ * cpython's accum() in _datetimemodule.c: the whole part is scaled by factor
+ * and added exactly to the integer accumulator, the fractional part is scaled
+ * and carried along in a double (in microseconds), to be rounded once at the
+ * very end. Handling every argument separately keeps e.g.
+ * timedelta(hours=-55695256, seconds=-909.352) exact, where combining the
+ * arguments into one double first would lose the microseconds. */
+static inline void timedelta_accum(double arg, __ss_int factor, double factor_us, __ss_int *whole_acc, __ss_int *us_acc, double *leftover_us) {
+    double whole;
+    double frac = modf(arg, &whole);
+    *whole_acc += (__ss_int)whole * factor;
+    if (frac != 0.0) {
+        /* scale the fraction to microseconds and again split off the whole
+           microseconds, so that only the sub-microsecond remainder is carried
+           in floating point (keeps it small, hence precise) */
+        frac = modf(frac * factor_us, &whole);
+        *us_acc += (__ss_int)whole;
+        *leftover_us += frac;
+    }
+}
+
 timedelta::timedelta(double days_, double seconds_, double microseconds_, double milliseconds, double minutes, double hours, double weeks) {
     __class__ = cl_timedelta;
-//still some rounding errors
-//all little bits of hours and seconds added up
-    double usec1 = milliseconds*1000 + microseconds_ +
-                        (((weeks*7 + days_)*24*3600 + hours*3600 + minutes*60 + seconds_)
-						-(__ss_int)(hours*3600 + minutes*60 + seconds_ + (weeks*7 + days_)*24*3600))*1000000;
-    this->days = (__ss_int)(weeks*7 + days_);
-	this->seconds = (__ss_int)(hours*3600 + minutes*60 + seconds_ + (weeks*7 + days_ - (__ss_int)(weeks*7 + days_))*24*3600);
-    //rounding to nearest microsec
-	if(usec1>=0.0)
-		this->microseconds = (__ss_int)(floor(usec1+0.5));
-	else
-		this->microseconds = (__ss_int)(ceil(usec1-0.5));
 
-    //move 1000000us to 1s
-    this->seconds += this->microseconds/1000000;
-    this->microseconds %= 1000000;
-    //move 24*3600s to 1 day
-    this->days += this->seconds/(24*3600);
-    this->seconds %= 24*3600;
-    //make positive (% doesn't do that in C++)
-    if(this->microseconds<0) {
-        this->microseconds+=1000000;
-        this->seconds--;
+    /* Same algorithm as cpython: whole parts of the arguments are accumulated
+     * exactly in integer days/seconds/microseconds, fractional parts are
+     * carried as leftover microseconds and converted with a single
+     * round-half-to-even (___round, the builtin round() implementation). The
+     * old implementation derived the microseconds from one combined float
+     * total and the seconds from a separately truncated total; for negative
+     * totals the two disagreed by a second (timedelta(days=-1, seconds=1.5)
+     * came out as -1 day, 0:00:00.5), and it rounded ties away from zero. */
+    __ss_int d = 0, s = 0, us = 0;
+    double leftover_us = 0.0;
+
+    /* same order as cpython's delta_new: the leftover is a floating point sum,
+       so a different order can change the last bit and flip a tie */
+    timedelta_accum(microseconds_, 1, 1.0, &us, &us, &leftover_us);
+    timedelta_accum(milliseconds, 1000, 1000.0, &us, &us, &leftover_us);
+    timedelta_accum(seconds_, 1, 1e6, &s, &us, &leftover_us);
+    timedelta_accum(minutes, 60, 60 * 1e6, &s, &us, &leftover_us);
+    timedelta_accum(hours, 3600, 3600 * 1e6, &s, &us, &leftover_us);
+    timedelta_accum(days_, 1, 24 * 3600 * 1e6, &d, &us, &leftover_us);
+    timedelta_accum(weeks, 7, 7.0 * 24 * 3600 * 1e6, &d, &us, &leftover_us);
+
+    if (leftover_us != 0.0) {
+        /* round-half-to-even on the *total* number of microseconds (as
+         * cpython does), not on the leftover alone: the parity of the total
+         * is the parity of us, since the day and second factors are even.
+         * Adding that parity before rounding and removing it afterwards makes
+         * ___round's tie-breaking land the total on an even value. */
+        __ss_int odd = us & 1;
+        us += ___round(leftover_us + (double)odd) - odd;
     }
-    if(this->seconds<0) {
-        this->seconds+=24*3600;
-        this->days--;
-    }
+
+    /* normalize with floor semantics: 0 <= microseconds < 1e6, 0 <= seconds < 86400 */
+    __ss_int rem;
+    s += floordivmod(us, 1000000, &rem);
+    us = rem;
+    d += floordivmod(s, 24 * 3600, &rem);
+    s = rem;
+
+    this->days = d;
+    this->seconds = s;
+    this->microseconds = us;
+
     if(this->days>999999999 || this->days<(-999999999)) {
         throw new OverflowError();
     }
+}
+
+__ss_bool timedelta::__bool__() {
+    return __mbool(days != 0 || seconds != 0 || microseconds != 0);
 }
 
 str *timedelta::__str__() {

@@ -31,7 +31,6 @@ class timedelta;
 class time;
 
 //todo:
-//timedelta::timedelta() rounding problems
 //check (unsigned) integer/long ranges (arguments as well)
 
 //class date
@@ -214,6 +213,7 @@ public:
     str *__str__();
     str *__repr__();
     __ss_int __hash__();
+    __ss_bool __bool__();
     timedelta *__add__(timedelta *other);
     timedelta *__sub__(timedelta *other);
     timedelta *__mul__(__ss_int n);
