@@ -1351,7 +1351,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.mv.module.builtin and cl.ident in [
                         "KeyboardInterrupt",
                         "FloatingPointError",
-                        "OverflowError",
                         "SystemExit",
                     ]:
                         error.error(
