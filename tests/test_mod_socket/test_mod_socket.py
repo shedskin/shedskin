@@ -40,6 +40,8 @@ def test_attrs_repr():
 def test_with():
     with socket.socket() as s:
         assert s.fileno() != -1
+        assert s.family == socket.AF_INET  # default family/type
+        assert s.type == socket.SOCK_STREAM
 
 
 def test_detach_dup_fromfd():
@@ -65,6 +67,7 @@ def test_create_server():
     server = socket.create_server(('127.0.0.1', 0), backlog=2)
     port = server.getsockname()[1]
     assert port > 0
+    assert server.family == socket.AF_INET  # default family
 
     client = socket.socket()
     client.connect(('127.0.0.1', port))

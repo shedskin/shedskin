@@ -50,10 +50,6 @@ class gaierror;
 class timeout;
 class socket;
 
-extern __ss_int default_0;
-extern __ss_int default_1;
-extern __ss_int default_4;
-
 extern str *__name__;
 
 extern class_ *cl_error;
