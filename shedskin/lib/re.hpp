@@ -178,7 +178,7 @@ match_object *match(str *pat, str *subj, __ss_int flags = 0);
 match_object *prefixmatch(str *pat, str *subj, __ss_int flags = 0);
 match_object *fullmatch(str *pat, str *subj, __ss_int flags = 0);
 match_object *search(str *pat, str *subj, __ss_int flags = 0);
-__iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
+__iter<match_object *> *finditer(str *pat, str *subj, __ss_int flags = 0);
 list<str *> *split(str *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);
 str *sub(str *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 str *sub(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
