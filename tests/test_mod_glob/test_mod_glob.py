@@ -130,6 +130,44 @@ def test_recursive():
     os.removedirs(os.path.join(base, '.hsub'))
 
 
+def test_root_dir():
+    base = '/tmp/shedskin_test_glob_root'
+    files = ['a.txt', '.h.txt', 'sub/b.txt', 'sub/deep/c.txt']
+    for f in files:
+        os.makedirs(os.path.dirname(os.path.join(base, f)), exist_ok=True)
+        open(os.path.join(base, f), 'w').close()
+
+    # results are relative to root_dir, the current directory is not used
+    assert sorted(glob.glob('*.txt', root_dir=base)) == ['a.txt']
+    assert sorted(glob.glob('*.txt', root_dir=base, include_hidden=True)) == ['.h.txt', 'a.txt']
+    assert names(glob.glob('*/*.txt', root_dir=base), '') == ['sub/b.txt']
+    assert names(glob.glob('s*/', root_dir=base), '') == ['sub/']
+    assert names(glob.glob('**/*.txt', root_dir=base, recursive=True), '') == \
+        ['a.txt', 'sub/b.txt', 'sub/deep/c.txt']
+    assert names(glob.glob('**', root_dir=base, recursive=True), '') == \
+        ['a.txt', 'sub', 'sub/b.txt', 'sub/deep', 'sub/deep/c.txt']
+    assert names(glob.glob('sub/**/', root_dir=base, recursive=True), '') == \
+        ['sub/', 'sub/deep/']
+
+    # non-magic patterns are checked against root_dir as well
+    assert glob.glob('a.txt', root_dir=base) == ['a.txt']
+    assert glob.glob('sub/', root_dir=base) == ['sub/']
+    assert glob.glob('nope.txt', root_dir=base) == []
+    assert glob.glob('sub/nope/', root_dir=base) == []
+
+    # an absolute pattern ignores root_dir
+    B = base + '/'
+    assert names(glob.glob(B + '*.txt', root_dir='/nonexistent'), B) == ['a.txt']
+
+    # iglob, and a root_dir that does not exist
+    assert names(glob.iglob('*/*/*.txt', root_dir=base), '') == ['sub/deep/c.txt']
+    assert glob.glob('*', root_dir='/nonexistent') == []
+
+    for f in files:
+        os.remove(os.path.join(base, f))
+    os.removedirs(os.path.join(base, 'sub', 'deep'))
+
+
 def matches(regex, s):
     # the exact regex text differs slightly between implementations
     # (escaping conventions, \Z vs \z anchor), so tests are behavioral:
@@ -232,6 +270,7 @@ def test_all():
     test_escape()
     test_iglob()
     test_recursive()
+    test_root_dir()
     test_translate()
 
 

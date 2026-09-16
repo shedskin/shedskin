@@ -2,10 +2,10 @@
 
 import os, os.path, fnmatch, re
 
-def iglob(pathname, recursive=False, include_hidden=False):
+def iglob(pathname, recursive=False, include_hidden=False, root_dir=None):
     return __iter('')
 
-def glob(pathname, recursive=False, include_hidden=False):
+def glob(pathname, recursive=False, include_hidden=False, root_dir=None):
     return ['']
 
 def has_magic(s):
