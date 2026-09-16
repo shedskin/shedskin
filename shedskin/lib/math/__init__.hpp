@@ -9,6 +9,7 @@
 #include <limits>
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #include "integer.hpp"
 
@@ -23,8 +24,29 @@ extern __ss_float nan;
 
 void __init();
 
+/* CPython-style error handling (mirrors math_1 in mathmodule.c): a nan result
+ * for a non-nan argument is a domain error, an infinite result for a finite
+ * argument is either a range error (can_overflow) or a singularity. msg, if
+ * given, is a prefix to which the offending argument is appended. */
+[[noreturn]] void __math_domain_error(const char *msg, __ss_float x);
+[[noreturn]] void __math_range_error();
+
+inline __ss_float __math_1(__ss_float x, __ss_float r, bool can_overflow, const char *msg=nullptr) {
+    if(std::isnan(r) && !std::isnan(x))
+        __math_domain_error(msg, x);
+    if(std::isinf(r) && std::isfinite(x)) {
+        if(can_overflow)
+            __math_range_error();
+        __math_domain_error(msg, x);
+    }
+    return r;
+}
+
 inline __ss_int ceil(__ss_float x) {
-    return (__ss_int)std::ceil(x);
+    return __int(std::ceil(x));
+}
+inline __ss_int ceil(__ss_int x) {
+    return x;
 }
 
 inline __ss_float fabs(__ss_float x) {
@@ -36,11 +58,19 @@ inline __ss_int factorial(__ss_int x) {
 }
 
 inline __ss_int floor(__ss_float x) {
-    return (__ss_int)std::floor(x);
+    return __int(std::floor(x));
+}
+inline __ss_int floor(__ss_int x) {
+    return x;
 }
 
 inline __ss_float fmod(__ss_float x, __ss_float y) {
-    return std::fmod(x, y);
+    if(std::isinf(y) && std::isfinite(x))
+        return x;
+    __ss_float r = std::fmod(x, y);
+    if(std::isnan(r) && !std::isnan(x) && !std::isnan(y))
+        __math_domain_error(nullptr, x);
+    return r;
 }
 
 inline tuple2<__ss_float, __ss_float> *modf(__ss_float x) {
@@ -50,38 +80,52 @@ inline tuple2<__ss_float, __ss_float> *modf(__ss_float x) {
 }
 
 inline __ss_float ldexp(__ss_float x, __ss_int i) {
-    return std::ldexp(x, (int)i);
+    if(x == 0.0 || !std::isfinite(x))
+        return x;
+    /* don't truncate the exponent to int: that could wrap it around */
+    if(i > (__ss_int)std::numeric_limits<int>::max())
+        __math_range_error();
+    if(i < (__ss_int)std::numeric_limits<int>::min())
+        return std::copysign((__ss_float)0.0, x); /* underflow */
+    __ss_float r = std::ldexp(x, (int)i);
+    if(std::isinf(r))
+        __math_range_error();
+    return r;
 }
 
 inline __ss_float exp(__ss_float x) {
-    return std::exp(x);
+    return __math_1(x, std::exp(x), true);
 }
 
 inline __ss_float exp2(__ss_float x) {
-    return std::exp2(x);
+    return __math_1(x, std::exp2(x), true);
 }
+
+#define __SS_MATH_LOG_MSG "expected a positive input, got "
 
 inline __ss_float log(__ss_float x) {
     if(x <= 0)
-        throw new ValueError(new str("math domain error"));
+        __math_domain_error(__SS_MATH_LOG_MSG, x);
     return std::log(x);
 }
 
 inline __ss_float log2(__ss_float x) {
     if(x <= 0)
-        throw new ValueError(new str("math domain error"));
+        __math_domain_error(__SS_MATH_LOG_MSG, x);
     return std::log2(x);
 }
 
 inline __ss_float log(__ss_float x, __ss_float base) {
-    if(x <= 0)
-        throw new ValueError(new str("math domain error"));
-    return std::log(x) / std::log(base);
+    __ss_float num = log(x);
+    __ss_float den = log(base);
+    if(den == 0.0)
+        throw new ZeroDivisionError(new str("division by zero"));
+    return num / den;
 }
 
 inline __ss_float log10(__ss_float x) {
     if(x <= 0)
-        throw new ValueError(new str("math domain error"));
+        __math_domain_error(__SS_MATH_LOG_MSG, x);
     return std::log10(x);
 }
 
@@ -103,12 +147,14 @@ inline __ss_int isqrt(__ss_int n) {
     return __math__::__integer__::isqrt(n);
 }
 
+#define __SS_MATH_ARC_MSG "expected a number in range from -1 up to 1, got "
+
 inline __ss_float acos(__ss_float x) {
-    return std::acos(x);
+    return __math_1(x, std::acos(x), false, __SS_MATH_ARC_MSG);
 }
 
 inline __ss_float asin(__ss_float x) {
-    return std::asin(x);
+    return __math_1(x, std::asin(x), false, __SS_MATH_ARC_MSG);
 }
 
 inline __ss_float atan(__ss_float x) {
@@ -119,14 +165,43 @@ inline __ss_float atan2(__ss_float x, __ss_float y) {
     return std::atan2(x, y);
 }
 
+#define __SS_MATH_FINITE_MSG "expected a finite input, got "
+
 inline __ss_float cos(__ss_float x) {
-    return std::cos(x);
+    return __math_1(x, std::cos(x), false, __SS_MATH_FINITE_MSG);
+}
+
+/* euclidean norm of n non-negative values (the absolute coordinates).
+ * scaling by a power of two is exact, so this gives the same result as the
+ * naive formula, except that intermediate squares cannot overflow/underflow. */
+inline __ss_float __vector_norm(const __ss_float *v, size_t n) {
+    __ss_float max = 0.0;
+    bool found_nan = false;
+    for(size_t i = 0; i < n; i++) {
+        if(std::isnan(v[i]))
+            found_nan = true;
+        else if(v[i] > max)
+            max = v[i];
+    }
+    if(std::isinf(max))
+        return max; /* inf wins over nan, as in CPython */
+    if(found_nan)
+        return std::numeric_limits<__ss_float>::quiet_NaN();
+    if(max == 0.0 || n == 1)
+        return max;
+    int max_e;
+    std::frexp(max, &max_e);
+    __ss_float sumsq = 0.0;
+    for(size_t i = 0; i < n; i++) {
+        __ss_float s = std::ldexp(v[i], -max_e);
+        sumsq += s*s;
+    }
+    return std::ldexp(std::sqrt(sumsq), max_e);
 }
 
 template<class ... Args> __ss_float hypot(int, __ss_float x, Args ... args) {
-    __ss_float sumsq = x*x;
-    ((sumsq += args*args), ...);
-    return std::sqrt(sumsq);
+    const __ss_float v[] = {std::fabs(x), std::fabs((__ss_float)args)...};
+    return __vector_norm(v, 1 + sizeof...(args));
 }
 inline __ss_float hypot(int, __ss_float x) {
     return x < 0 ? -x : x;
@@ -136,11 +211,11 @@ inline __ss_float hypot(int) {
 }
 
 inline __ss_float sin(__ss_float x) {
-    return std::sin(x);
+    return __math_1(x, std::sin(x), false, __SS_MATH_FINITE_MSG);
 }
 
 inline __ss_float tan(__ss_float x) {
-    return std::tan(x);
+    return __math_1(x, std::tan(x), false, __SS_MATH_FINITE_MSG);
 }
 
 inline __ss_float degrees(__ss_float x) {
@@ -152,11 +227,11 @@ inline __ss_float radians(__ss_float x) {
 }
 
 inline __ss_float cosh(__ss_float x) {
-    return std::cosh(x);
+    return __math_1(x, std::cosh(x), true);
 }
 
 inline __ss_float sinh(__ss_float x) {
-    return std::sinh(x);
+    return __math_1(x, std::sinh(x), true);
 }
 
 inline __ss_float tanh(__ss_float x) {
@@ -164,11 +239,15 @@ inline __ss_float tanh(__ss_float x) {
 }
 
 inline __ss_float pow(__ss_float x, __ss_float y) {
-    if(x < 0.0 && std::floor(y) != y)
-        throw new ValueError(new str("math domain error"));
-    if(x == 0.0 && y < 0.0)
-        throw new ValueError(new str("math domain error"));
-    return std::pow(x,y);
+    /* C99/IEEE pow already gives CPython's results for non-finite arguments
+     * (e.g. pow(0.0, -inf) == inf, pow(-inf, 0.5) == inf, pow(-2.0, nan) == nan) */
+    __ss_float r = std::pow(x, y);
+    if(!std::isfinite(r) && std::isfinite(x) && std::isfinite(y)) {
+        if(std::isnan(r) || x == 0.0) /* negative**fraction, 0**negative */
+            __math_domain_error(nullptr, x);
+        __math_range_error();
+    }
+    return r;
 }
 
 inline __ss_bool isfinite(__ss_float x) {
@@ -188,7 +267,7 @@ inline __ss_bool signbit(__ss_float x) {
 }
 
 inline __ss_float acosh(__ss_float x) {
-    return ::acosh(x);
+    return __math_1(x, ::acosh(x), false, "expected argument value not less than 1, got ");
 }
 
 inline __ss_float asinh(__ss_float x) {
@@ -196,7 +275,7 @@ inline __ss_float asinh(__ss_float x) {
 }
 
 inline __ss_float atanh(__ss_float x) {
-    return ::atanh(x);
+    return __math_1(x, ::atanh(x), false, "expected a number between -1 and 1, got ");
 }
 
 inline __ss_float copysign(__ss_float x, __ss_float y) {
@@ -212,11 +291,19 @@ inline __ss_float erfc(__ss_float x) {
 }
 
 inline __ss_float expm1(__ss_float x) {
-    return ::expm1(x);
+    return __math_1(x, ::expm1(x), true);
 }
 
 inline __ss_float fma(__ss_float x, __ss_float y, __ss_float z) {
-    return ::fma(x, y, z);
+    __ss_float r = ::fma(x, y, z);
+    if(!std::isfinite(r)) {
+        if(std::isnan(r)) {
+            if(!std::isnan(x) && !std::isnan(y) && !std::isnan(z))
+                throw new ValueError(new str("invalid operation in fma"));
+        } else if(std::isfinite(x) && std::isfinite(y) && std::isfinite(z))
+            throw new OverflowError(new str("overflow in fma"));
+    }
+    return r;
 }
 
 inline tuple2<__ss_float, __ss_int> *frexp(__ss_float x) {
@@ -226,59 +313,107 @@ inline tuple2<__ss_float, __ss_int> *frexp(__ss_float x) {
     return (new tuple2<__ss_float, __ss_int>(2, mantisa, n));
 }
 
+#define __SS_MATH_GAMMA_MSG "expected a noninteger or positive integer, got "
+
 inline __ss_float gamma(__ss_float x) {
-    return ::tgamma(x);
+    /* poles at non-positive integers (including -0.0), and -inf */
+    if((std::isfinite(x) && x <= 0.0 && std::floor(x) == x) || (std::isinf(x) && x < 0.0))
+        __math_domain_error(__SS_MATH_GAMMA_MSG, x);
+    return __math_1(x, ::tgamma(x), true, __SS_MATH_GAMMA_MSG);
 }
 
 inline __ss_float lgamma(__ss_float x) {
-    return ::lgamma(x);
+    if(std::isfinite(x) && x <= 0.0 && std::floor(x) == x)
+        __math_domain_error(__SS_MATH_GAMMA_MSG, x);
+    return __math_1(x, ::lgamma(x), true, __SS_MATH_GAMMA_MSG);
 }
 
 inline __ss_float log1p(__ss_float x) {
-    return ::log1p(x);
+    return __math_1(x, ::log1p(x), false, "expected argument value > -1, got ");
 }
 
 inline __ss_int trunc(__ss_float x) {
-    return (__ss_int)::trunc(x);
+    return __int(::trunc(x));
+}
+inline __ss_int trunc(__ss_int x) {
+    return x;
 }
 
 inline __ss_int comb(__ss_int n, __ss_int k) {
     return __math__::__integer__::comb(n, k);
 }
 
+/* shewchuk's algorithm with a correctly rounded final summation, as in CPython */
 inline __ss_float fsum(pyiter<__ss_float> *iterable) {
-    list<__ss_float> *partials;
-    __ss_float hi, lo, x, y;
-    __ss_int i;
+    std::vector<__ss_float> p; /* partials, increasing magnitude */
+    __ss_float x, y, hi, yr, lo = 0.0;
+    __ss_float special_sum = 0.0, inf_sum = 0.0;
 
     __ss_int __2;
     pyiter<__ss_float> *__1;
     pyiter<__ss_float>::for_in_loop __3;
 
-    partials = (new list<__ss_float>());
-
     FOR_IN(x,iterable,1,2,3)
-        i = 0;
-        for(__ss_int j=0; j<partials->__len__(); j++) {
-            y = partials->__getitem__(j);
-            if ((__abs(x)<__abs(y))) {
-                __ss_float swap = y;
-                y = x;
-                x = swap;
-            }
-            hi = (x+y);
-            lo = (y-(hi-x));
-            if (___bool(lo)) {
-                partials->__setitem__(i, lo);
-                i = (i+1);
-            }
+        __ss_float xsave = x;
+        size_t i = 0;
+        for(size_t j = 0; j < p.size(); j++) {
+            y = p[j];
+            if(std::fabs(x) < std::fabs(y))
+                std::swap(x, y);
+            hi = x + y;
+            yr = hi - x;
+            lo = y - yr;
+            if(lo != 0.0)
+                p[i++] = lo;
             x = hi;
         }
-
-        (partials)->__setslice__(1,i,0,0,(new list<__ss_float>(1,x)));
+        p.resize(i);
+        if(x != 0.0) {
+            if(!std::isfinite(x)) {
+                /* a nonfinite x could arise either from an infinite or nan
+                   input, or from an intermediate overflow */
+                if(std::isfinite(xsave))
+                    throw new OverflowError(new str("intermediate overflow in fsum"));
+                if(std::isinf(xsave))
+                    inf_sum += xsave;
+                special_sum += xsave;
+                p.clear();
+            }
+            else
+                p.push_back(x);
+        }
     END_FOR
 
-    return __sum(partials);
+    if(special_sum != 0.0) {
+        if(std::isnan(inf_sum))
+            throw new ValueError(new str("-inf + inf in fsum"));
+        return special_sum;
+    }
+
+    size_t n = p.size();
+    hi = 0.0;
+    if(n > 0) {
+        hi = p[--n];
+        /* sum from the top, stopping as soon as the sum is inexact */
+        while(n > 0) {
+            x = hi;
+            y = p[--n];
+            hi = x + y;
+            yr = hi - x;
+            lo = y - yr;
+            if(lo != 0.0)
+                break;
+        }
+        /* make half-even rounding work across multiple partials */
+        if(n > 0 && ((lo < 0.0 && p[n-1] < 0.0) || (lo > 0.0 && p[n-1] > 0.0))) {
+            y = lo + lo;
+            x = hi + y;
+            yr = x - hi;
+            if(y == yr)
+                hi = x;
+        }
+    }
+    return hi;
 }
 
 template<class ... Args> __ss_int gcd(int, __ss_int x, Args ... args) {
@@ -351,7 +486,7 @@ template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {
     __iter<A> *q_iter = q->__iter__();
 
     A a, b;
-    __ss_float sum = 0;
+    std::vector<__ss_float> diffs;
     size_t n_exhausted;
 
     for(;;) {
@@ -372,10 +507,10 @@ template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {
         else if (n_exhausted > 0)
             throw new ValueError(new str("both points must have the same number of dimensions"));
 
-        sum += (a-b)*(a-b);
+        diffs.push_back(std::fabs((__ss_float)a - (__ss_float)b));
     }
 
-    return sqrt(sum);
+    return __vector_norm(diffs.data(), diffs.size());
 }
 
 template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
@@ -411,6 +546,9 @@ template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
 }
 
 inline __ss_bool isclose(__ss_float a, __ss_float b, __ss_float rel_tol=1e-09, __ss_float abs_tol=0.0) {
+    if (rel_tol < 0.0 || abs_tol < 0.0)
+        throw new ValueError(new str("tolerances must be non-negative"));
+
     if (a == b)
         return True;
 

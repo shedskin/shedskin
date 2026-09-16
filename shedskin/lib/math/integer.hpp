@@ -68,14 +68,23 @@ inline __ss_int perm(__ss_int n) {
 
 /* comb */
 
-inline __ss_int comb(__ss_int n, __ss_int k) { // TODO faster/std version?
+inline __ss_int comb(__ss_int n, __ss_int k) {
     if(n < 0)
-        throw new ValueError(new str("n must be a non-negative number"));
+        throw new ValueError(new str("n must be a non-negative integer"));
     if(k < 0)
-        throw new ValueError(new str("k must be a non-negative number"));
-    __ss_int b=1;
-    for(int p=1; p<=k; p++) {
-        b = b*(n+1-p)/p;
+        throw new ValueError(new str("k must be a non-negative integer"));
+    if(k > n)
+        return 0;
+    if(k > n - k)
+        k = n - k;
+    /* after step p, b == comb(n-k+p, p). b*m/p is exact, so dividing out the
+     * common factor g first keeps every intermediate value <= the new b,
+     * and therefore <= the final result (no spurious overflow). */
+    __ss_int b = 1;
+    for(__ss_int p = 1; p <= k; p++) {
+        __ss_int m = n - k + p;
+        __ss_int g = std::gcd(b, p);
+        b = (b / g) * (m / (p / g));
     }
     return b;
 }

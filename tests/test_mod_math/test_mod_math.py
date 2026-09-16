@@ -20,20 +20,40 @@ def test_fsum():
         ([1e16, 1.0, -1e16, 1.0], 2.0),
         ([1e100, 1.0, -1e100, 1e-100, 1e50, -1.0, -1e50], 1e-100),
         ([1e16 - 2., 1. - 2. ** -53, -(1e16 - 2.), -(1. - 2. ** -53)], 0.0),
-        # these still need a correctly-rounded final summation of the partials
-        # (the recipe ends with a plain sum(); CPython does a half-even aware
-        # sum_exact over the top partials):
-        # ([2.0 ** 53, -0.5, -2.0 ** -54], 2.0 ** 53 - 1.0),
-        # ([2.0 ** 53, 1.0, 2.0 ** -100], 2.0 ** 53 + 2.0),
-        # ([2.0 ** 53 + 10.0, 1.0, 2.0 ** -100], 2.0 ** 53 + 12.0),
-        # ([2.0 ** 53 - 4.0, 0.5, 2.0 ** -54], 2.0 ** 53 - 3.0),
-        # ([1e16, 1., 1e-16], 10000000000000002.0),
+        # correctly-rounded final summation of the partials
+        ([2.0 ** 53, -0.5, -2.0 ** -54], 2.0 ** 53 - 1.0),
+        ([2.0 ** 53, 1.0, 2.0 ** -100], 2.0 ** 53 + 2.0),
+        ([2.0 ** 53 + 10.0, 1.0, 2.0 ** -100], 2.0 ** 53 + 12.0),
+        ([2.0 ** 53 - 4.0, 0.5, 2.0 ** -54], 2.0 ** 53 - 3.0),
+        ([1e16, 1., 1e-16], 10000000000000002.0),
         # exercise code for resizing partials array
     ]
 
     for i, (vals, expected) in enumerate(test_values):
         assert math.fsum(vals) == expected
         # print(math.fsum(vals), expected)
+
+    # non-finite values and intermediate overflow
+    inf, nan = float('inf'), float('nan')
+    assert math.fsum([inf, 1.0]) == inf
+    assert math.fsum([1.0, -inf]) == -inf
+    assert math.fsum([1e308, -1e308, inf]) == inf
+    assert math.isnan(math.fsum([nan, 1.0]))
+    assert math.isnan(math.fsum([inf, nan]))
+
+    error = ''
+    try:
+        math.fsum([inf, -inf])
+    except ValueError as e:
+        error = str(e)
+    assert error == '-inf + inf in fsum'
+
+    error = ''
+    try:
+        math.fsum([1e308, 1e308, -1e308])
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'intermediate overflow in fsum'
 
 
 def test_sqrt():
@@ -69,6 +89,279 @@ def test_pow():
     except ValueError as e:
         error = str(e)
     assert error == 'math domain error'
+
+    # non-finite arguments follow C99 Annex F, as in CPython
+    inf, nan = float('inf'), float('nan')
+    assert math.pow(0.0, -inf) == inf
+    assert math.pow(-inf, 0.5) == inf
+    assert math.pow(-inf, -3.0) == -0.0
+    assert math.pow(-1.0, inf) == 1.0
+    assert math.pow(nan, 0.0) == 1.0
+    assert math.isnan(math.pow(-2.0, nan))
+    assert math.pow(1e-300, 2.0) == 0.0
+
+    error = ''
+    try:
+        math.pow(10.0, 400.0)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'math range error'
+
+
+def test_errors():
+    inf, nan = float('inf'), float('nan')
+
+    # domain errors, with the argument in the message (python 3.14+)
+    error = ''
+    try:
+        math.acos(2.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a number in range from -1 up to 1, got 2.0'
+
+    error = ''
+    try:
+        math.asin(-inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a number in range from -1 up to 1, got -inf'
+
+    error = ''
+    try:
+        math.acosh(0.5)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected argument value not less than 1, got 0.5'
+
+    error = ''
+    try:
+        math.atanh(1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a number between -1 and 1, got 1.0'
+
+    error = ''
+    try:
+        math.cos(inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a finite input, got inf'
+
+    error = ''
+    try:
+        math.sin(-inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a finite input, got -inf'
+
+    error = ''
+    try:
+        math.tan(inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a finite input, got inf'
+
+    error = ''
+    try:
+        math.log1p(-1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected argument value > -1, got -1.0'
+
+    for x in [0.0, -1.0, -inf]:
+        error = ''
+        try:
+            math.log(x)
+        except ValueError as e:
+            error = str(e)
+        assert error.startswith('expected a positive input, got ')
+
+        error = ''
+        try:
+            math.log2(x)
+        except ValueError as e:
+            error = str(e)
+        assert error.startswith('expected a positive input, got ')
+
+        error = ''
+        try:
+            math.log10(x)
+        except ValueError as e:
+            error = str(e)
+        assert error.startswith('expected a positive input, got ')
+
+    assert math.isnan(math.log(nan))
+    assert math.isnan(math.acos(nan))
+    assert math.isnan(math.sin(nan))
+
+    # log with a base
+    assert math.log(8.0, 2.0) == 3.0
+    assert math.log(2.0, 0.5) == -1.0
+
+    error = ''
+    try:
+        math.log(2.0, 1.0)
+    except ZeroDivisionError as e:
+        error = str(e)
+    assert error == 'division by zero'
+
+    error = ''
+    try:
+        math.log(2.0, -2.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a positive input, got -2.0'
+
+    # gamma/lgamma poles
+    for x in [0.0, -1.0, -1000.0]:
+        error = ''
+        try:
+            math.gamma(x)
+        except ValueError as e:
+            error = str(e)
+        assert error.startswith('expected a noninteger or positive integer, got ')
+
+        error = ''
+        try:
+            math.lgamma(x)
+        except ValueError as e:
+            error = str(e)
+        assert error.startswith('expected a noninteger or positive integer, got ')
+
+    error = ''
+    try:
+        math.gamma(-inf)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'expected a noninteger or positive integer, got -inf'
+    assert math.lgamma(-inf) == inf
+    assert math.gamma(inf) == inf
+
+    # range errors
+    for x in [1000.0, 3e307]:
+        error = ''
+        try:
+            math.exp(x)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+        error = ''
+        try:
+            math.expm1(x)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+        error = ''
+        try:
+            math.cosh(x)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+        error = ''
+        try:
+            math.sinh(x)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+        error = ''
+        try:
+            math.gamma(x)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+
+    error = ''
+    try:
+        math.exp2(3e307)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'math range error'
+
+    assert math.exp(-1000.0) == 0.0
+    assert math.exp(inf) == inf
+
+    # fmod
+    assert math.fmod(1.0, inf) == 1.0
+    for x, y in [(inf, 1.0), (1.0, 0.0), (inf, inf)]:
+        error = ''
+        try:
+            math.fmod(x, y)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'math domain error'
+    assert math.isnan(math.fmod(nan, 0.0))
+
+    # fma
+    error = ''
+    try:
+        math.fma(inf, 0.0, 1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'invalid operation in fma'
+
+    error = ''
+    try:
+        math.fma(1e308, 10.0, 0.0)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'overflow in fma'
+    assert math.isnan(math.fma(inf, 0.0, nan))
+
+    # ldexp must not truncate the exponent
+    assert math.ldexp(1e-320, 1070) == 126.5
+    assert math.ldexp(1.0, -5000) == 0.0
+    assert math.ldexp(1.0, -2**32 + 1) == 0.0
+    assert math.ldexp(-1.0, -2**40) == -0.0
+    assert math.ldexp(0.0, 2**40) == 0.0
+    for exp in [1024, 2**32 + 1]:
+        error = ''
+        try:
+            math.ldexp(1.0, exp)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'math range error'
+
+    # float to int conversion
+    error = ''
+    try:
+        math.floor(inf)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'cannot convert float infinity to integer'
+
+    error = ''
+    try:
+        math.ceil(-inf)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'cannot convert float infinity to integer'
+
+    error = ''
+    try:
+        math.trunc(nan)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'cannot convert float NaN to integer'
+
+    # isclose
+    error = ''
+    try:
+        math.isclose(1.0, 1.0, rel_tol=-1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'tolerances must be non-negative'
+
+    error = ''
+    try:
+        math.isclose(1.0, 1.0, abs_tol=-1.0)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'tolerances must be non-negative'
 
 
 def test_math():
@@ -160,6 +453,32 @@ def test_math():
 
     assert math.isqrt(18) == 4
     assert math.comb(17, 14) == 680
+
+    # no spurious intermediate overflow
+    assert math.comb(100, 98) == 4950
+    assert math.comb(62, 31) == 465428353255261088
+    assert math.comb(3, 5) == 0
+    assert math.comb(10, 0) == 1
+    assert math.comb(0, 0) == 1
+
+    error = ''
+    try:
+        math.comb(-1, 2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'n must be a non-negative integer'
+
+    error = ''
+    try:
+        math.comb(2, -1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'k must be a non-negative integer'
+
+    # floor/ceil/trunc of ints are exact (no roundtrip via float)
+    assert math.floor(2**53 + 1) == 2**53 + 1
+    assert math.ceil(2**53 + 1) == 2**53 + 1
+    assert math.trunc(-2**53 - 1) == -2**53 - 1
 
     assert math.gcd(2*2*3, 2*2*3*4, 2*3*5*7) == 2*3
     assert math.lcm(2*2*3, 2*2*3*4, 2*3*5*7, 2*2*3*4*5, 1681) == 1680*1681
@@ -255,6 +574,11 @@ def test_dist():
     assert math.dist(iter([1.0, 3.0]), (4.0, 7.0)) == 5.0
     assert math.dist(iter([1, 3]), (4, 7)) == 5.0
 
+    # no overflow/underflow of the intermediate squares
+    assert math.dist([1e200], [-1e200]) == 2e200
+    assert math.dist([1e200, 0.0], [0.0, 1e200]) == 1.414213562373095e+200
+    assert math.isnan(math.dist([float('inf')], [float('inf')]))
+
 
 def test_sumprod():
     assert math.sumprod([1,2],[3,4]) == 11
@@ -268,6 +592,7 @@ def test_math_integer():
     assert math.integer.perm(7, 3) == 210
 
     assert math.integer.comb(17, 14) == 680
+    assert math.integer.comb(100, 98) == 4950
 
     assert math.integer.gcd(1, 0) == 1
     assert math.integer.lcm(0, 1) == 0
@@ -495,6 +820,18 @@ def test_fabs():
 def test_hypot():
     assert math.hypot(3.0, 4.0) == 5.0
 
+    # no overflow/underflow of the intermediate squares
+    assert math.hypot(1e200, 1e200) == 1.414213562373095e+200
+    assert math.hypot(1e-200, 1e-200) == 1.414213562373095e-200
+    assert math.hypot(3.0 * 2.0 ** 700, 4.0 * 2.0 ** 700) == 5.0 * 2.0 ** 700
+    assert math.hypot(1e-320, 1e-320) == 1.414e-320
+
+    # inf wins over nan
+    inf, nan = float('inf'), float('nan')
+    assert math.hypot(inf, nan) == inf
+    assert math.hypot(nan, -inf) == inf
+    assert math.isnan(math.hypot(nan, 1.0))
+
 
 def test_log10():
     assert math.log10(100.0) == 2.0
@@ -505,6 +842,7 @@ def test_log10():
 def test_all():
     test_fsum()
     test_pow()
+    test_errors()
     test_sqrt()
     test_math()
     test_prod()
