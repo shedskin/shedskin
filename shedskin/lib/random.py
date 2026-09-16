@@ -16,7 +16,8 @@ UPPER = 1
 LOWER = 1
 
 class Random:
-    def __init__(self, a=-1): return 1
+    def __init__(self, a=None):
+        a.__hash__()
     def seed(self, a=None):
         a.__hash__()
     def random(self): return 1.0
@@ -27,9 +28,14 @@ class Random:
     def randbytes(self, n): return b''
     def getrandbits(self, k): return 1
     def choice(self, seq): return seq[seq.__len__()]
-    def choices(self, population, k=1): return [population[population.__len__()]]
+    def choices(self, population, weights=None, cum_weights=None, k=1):
+        weights.__iter__()
+        cum_weights.__iter__()
+        return [population[population.__len__()]]
     def shuffle(self, x): pass
-    def sample(self, population, k): return [iter(population).__next__()]
+    def sample(self, population, k, counts=None):
+        counts.__iter__()
+        return [iter(population).__next__()]
     def uniform(self, a, b): return 1.0
     def triangular(self, low=0.0, high=1.0, mode=None): return 1.0
     def normalvariate(self, mu=0.0, sigma=1.0): return 1.0
@@ -47,7 +53,8 @@ class Random:
 
 
 class SystemRandom(Random):
-    def __init__(self, a=-1): return 1
+    def __init__(self, a=None):
+        a.__hash__()
     def random(self): return 1.0
     def getrandbits(self, k): return 1
     def randbytes(self, n): return b''
@@ -67,9 +74,14 @@ def randint(a, b): return 1
 def randbytes(n): return b''
 def getrandbits(k): return 1
 def choice(seq): return seq[seq.__len__()]
-def choices(population, k=1): return [population[population.__len__()]]
+def choices(population, weights=None, cum_weights=None, k=1):
+    weights.__iter__()
+    cum_weights.__iter__()
+    return [population[population.__len__()]]
 def shuffle(x): pass
-def sample(population, k): return [iter(population).__next__()]
+def sample(population, k, counts=None):
+    counts.__iter__()
+    return [iter(population).__next__()]
 def uniform(a, b): return 1.0
 def triangular(low=0.0, high=1.0, mode=None): return 1.0
 def normalvariate(mu=0.0, sigma=1.0): return 1.0

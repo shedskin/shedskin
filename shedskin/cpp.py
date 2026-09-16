@@ -3231,6 +3231,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", None, "triangular")
             or self.library_func(funcs, "random", "Random", "seed")
             or self.library_func(funcs, "random", "Random", "triangular")
+            # Random()/Random(None) must seed from entropy, which the
+            # template constructor detects via a (void *)NULL argument
+            or self.library_func(funcs, "random", "Random", "__init__")
+            or self.library_func(funcs, "random", None, "choices")
+            or self.library_func(funcs, "random", "Random", "choices")
+            or self.library_func(funcs, "random", None, "sample")
+            or self.library_func(funcs, "random", "Random", "sample")
+            or self.library_func(funcs, "random", "SystemRandom", "__init__")
             # str(None)/repr(None) hit the same NULL-typed-as-a-plain-integer
             # overload ambiguity as the %-formatting case below (see
             # is_none_type's callers): a bare NULL argument binds to the
