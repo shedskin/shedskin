@@ -114,6 +114,29 @@ def test_sendfile():
     os.remove(fname)
 
 
+def test_socketpair():
+    # defaults only: CPython on POSIX gives an AF_UNIX pair, while shedskin
+    # (like CPython on Windows) emulates it with a connected AF_INET pair
+    a, b = socket.socketpair()
+    assert a.family == b.family
+    assert a.type == socket.SOCK_STREAM and b.type == socket.SOCK_STREAM
+    assert a.fileno() != b.fileno()
+    a.sendall(b'ping')
+    assert b.recv(4) == b'ping'
+    b.sendall(b'pong')
+    assert a.recv(4) == b'pong'
+    a.close()
+    b.close()
+
+    # non-zero proto: ValueError in shedskin (and CPython/Windows), OSError
+    # in CPython on POSIX
+    try:
+        socket.socketpair(proto=6)
+        assert False
+    except (ValueError, OSError):
+        pass
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -121,6 +144,7 @@ def test_all():
     test_detach_dup_fromfd()
     test_create_server()
     test_sendfile()
+    test_socketpair()
 
 
 if __name__ == '__main__':

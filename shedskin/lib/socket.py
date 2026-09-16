@@ -145,6 +145,9 @@ def create_server(address, family=2, backlog=-1, reuse_port=False, dualstack_ipv
 def has_dualstack_ipv6():
     return False
 
+def socketpair(family=2, type=1, proto=0):
+    return (socket(), socket())
+
 def getfqdn(name):
     return ''
 
