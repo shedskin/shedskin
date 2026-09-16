@@ -96,6 +96,10 @@ def test_groupby():
         res2.append((x, list(y)))
     assert res2 == [('-1', [1]), ('-2', [2, 2]), ('-3', [3]), ('-1', [1]), ('-2', [2])]
 
+    # groups not consumed: keys must be compared by value
+    words = ['Apple', 'apple', 'APPLE', 'Bob', 'bob', 'cat']
+    assert [k for k, g in itertools.groupby(words, key=lambda s: s.lower())] == ['apple', 'bob', 'cat']
+
 
 def test_islice():
     assert list(itertools.islice('ABCDEFG', 2)) == ['A', 'B']
@@ -179,6 +183,10 @@ def test_permutations():
     except ValueError:
         pass
 
+    # r=None with an iterator (no __len__)
+    assert list(itertools.permutations(iter([1, 2, 3]))) == [(1, 2, 3), (1, 3, 2), (2, 1, 3), (2, 3, 1), (3, 1, 2), (3, 2, 1)]
+    assert list(itertools.permutations(iter([]))) == [()]
+
 
 def test_combinations():
     assert list(itertools.combinations('ABDC', 0)) == [()]
@@ -228,6 +236,14 @@ def test_product():
     # assert list(itertools.product('AB', 'CD', repeat = 2)) ==  []
     assert list(itertools.product([.4, .42], [1, 2, 3])) == [(0.4, 1), (0.4, 2), (0.4, 3), (0.42, 1), (0.42, 2), (0.42, 3)]
     assert list(itertools.product('AB', [1, 2, 3])) == [('A', 1), ('A', 2), ('A', 3), ('B', 1), ('B', 2), ('B', 3)]
+
+    # single-element iterables in non-leading positions
+    assert list(itertools.product([1, 2], [3])) == [(1, 3), (2, 3)]
+    assert list(itertools.product([1], [2, 3], [4])) == [(1, 2, 4), (1, 3, 4)]
+    assert list(itertools.product([1, 2], [3], [4, 5])) == [(1, 3, 4), (1, 3, 5), (2, 3, 4), (2, 3, 5)]
+    assert list(itertools.product([1, 2], [3], repeat=2)) == [(1, 3, 1, 3), (1, 3, 2, 3), (2, 3, 1, 3), (2, 3, 2, 3)]
+    assert list(itertools.product([7], repeat=3)) == [(7, 7, 7)]
+    assert list(itertools.product([1, 2], repeat=0)) == [()]
 
 
 def test_product_repeat():
