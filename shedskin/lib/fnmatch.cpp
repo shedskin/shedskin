@@ -191,9 +191,10 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                 __GC_STR raw = p.substr(i, j - i); /* pat[i:j] */
 
                 if (raw.find('-') == __GC_STR::npos) {
-                    /* no ranges in this class: just double up backslashes */
+                    /* no ranges in this class: double up backslashes, and
+                       escape '[' (see below). */
                     for (size_t k = 0; k < raw.size(); k++) {
-                        if (raw[k] == '\\') stuff += '\\';
+                        if (raw[k] == '\\' || raw[k] == '[') stuff += '\\';
                         stuff += raw[k];
                     }
                 }
@@ -247,12 +248,13 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                        still form real ranges live *between* chunks, not
                        inside one, so they're untouched by this) then
                        rejoin with '-'; also escape the PCRE2/newer-regex
-                       set-operation chars &, ~, | for safety. */
+                       set-operation chars &, ~, | for safety, and '['
+                       (see below). */
                     for (size_t m = 0; m < chunks.size(); m++) {
                         if (m) stuff += '-';
                         for (size_t k2 = 0; k2 < chunks[m].size(); k2++) {
                             __ss_char ch = chunks[m][k2];
-                            if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|') {
+                            if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|' || ch == '[') {
                                 stuff += '\\';
                             }
                             stuff += ch;
@@ -260,6 +262,17 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                     }
                 }
 
+                /* A '[' inside a shell character class is a plain
+                   literal, and Python's re treats it that way too. PCRE2
+                   however parses "[:name:]", "[.x.]" and "[=x=]" inside a
+                   class as POSIX bracket expressions (there is no option
+                   to turn this off), so "[x[:alpha:]" either fails to
+                   compile or, if a later "]" happens to close it, silently
+                   swallows the following pattern text. Both engines agree
+                   that an escaped "\[" is a literal bracket that can never
+                   start a POSIX expression, so that is what we emit. Only
+                   difference with CPython is the extra backslash in the
+                   text returned by translate(). */
                 i = j + 1;
 
                 if (stuff.empty()) {
