@@ -7,6 +7,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <climits>
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -72,12 +73,6 @@ extern char **environ;
 #endif
 
 namespace __os__ {
-
-/* default argument value for popen/popen2/popen3/popen4/fdopen(mode='r');
-   see shedskin/lib/os/__init__.py. Numbering follows the order in which
-   ModuleVisitor registers non-literal defaults, so it shifts whenever a
-   default argument is added to the model. */
-str * default_5;
 
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
@@ -672,6 +667,8 @@ popen_pipe* popen(str* cmd, str* mode) {
 }
 
 popen_pipe* popen(str* cmd, str* mode, __ss_int) {
+    if(!mode)
+        mode = new str("r");
     FILE* fp = ::popen(cmd->c_str(), mode->c_str());
 
     if(!fp) throw new OSError(cmd);
@@ -720,18 +717,21 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
     return ret;
 }
 
-bytes *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
-    char c;
-    bytes *s = new bytes();
-    size_t nr;
-    for(__ss_int i=0; i<n; i++) {
-        nr = (size_t)::read((int)fd, &c, 1);
-        if(nr == std::string::npos)
-            throw new OSError(new str("os.read"));
-        if(nr == 0)
-            break;
-        s->unit += c;
+bytes *read(__ss_int fd, __ss_int n) {
+    /* like CPython: a single read(2), so we return whatever is available
+       (e.g. on a pipe) instead of blocking until n bytes have arrived */
+    if(n < 0) {
+        errno = EINVAL;
+        throw new OSError(new str("os.read"));
     }
+    if(n > INT_MAX)
+        n = INT_MAX;
+    bytes *s = new bytes();
+    s->unit.resize((size_t)n);
+    auto nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
+    if(nr < 0)
+        throw new OSError(new str("os.read"));
+    s->unit.resize((size_t)nr);
     return s;
 }
 
@@ -1588,10 +1588,6 @@ tuple<__ss_int>* pipe() {
 #endif
 
 void __init() {
-    str *const_1 = __char_cache['r'];
-
-    default_5 = const_1;
-
     cl___cstat = new class_("__cstat");
     cl_DirEntry = new class_("DirEntry");
 

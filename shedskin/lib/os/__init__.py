@@ -311,16 +311,16 @@ def unsetenv(var):
 def renames(old, new):
     pass
 
-def popen(cmd, mode='r', bufsize=-1):
-    return popen_pipe()
+def popen(cmd, mode=None, bufsize=-1):
+    return popen_pipe('')
 
-def popen2(cmd, mode='r', bufsize=-1):
+def popen2(cmd, mode=None, bufsize=-1):
     return ( file('/bin/sh'), file('/bin/sh') )
 
-def popen3(cmd, mode='r', bufsize=-1):
+def popen3(cmd, mode=None, bufsize=-1):
     return ( file('/bin/sh'), file('/bin/sh'), file('/bin/sh') )
 
-def popen4(cmd, mode='r', bufsize=-1):
+def popen4(cmd, mode=None, bufsize=-1):
     return ( file('/bin/sh'), file('/bin/sh') )
 
 def close(fd):
@@ -371,7 +371,7 @@ def read(fd, n):
 def write(fd, s):
     return 1
 
-def fdopen(fd, mode='r', bufsize=-1):
+def fdopen(fd, mode=None, bufsize=-1):
     return file('/bin/sh')
 
 def pipe():

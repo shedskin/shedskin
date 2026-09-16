@@ -10,8 +10,6 @@
 using namespace __shedskin__;
 namespace __os__ {
 
-extern str * default_5;
-
 extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;
 extern dict<str *, __ss_int> *pathconf_names, *confstr_names, *sysconf_names;
