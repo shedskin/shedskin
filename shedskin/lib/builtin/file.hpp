@@ -25,7 +25,7 @@ public:
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
-    file(FILE *g=0) : f(g) {}
+    file(FILE *g=0) : f(g), closed(0) {}
     file(str *name, str *mode=0);
 
     virtual void * close();
@@ -69,7 +69,7 @@ public:
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
-    file_binary(FILE *g=0) : f(g) {}
+    file_binary(FILE *g=0) : f(g), closed(0) {}
     file_binary(str *name, str *mode=0);
 
     virtual void * close();

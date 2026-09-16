@@ -403,7 +403,9 @@ list<str *> *str::splitlines(__ss_int keepends)
 {
     list<str *> *r = new list<str *>();
     size_t i, j, endlen;
-    __GC_STR ends = __gcs("\r\n");
+    /* same line boundaries as CPython's str.splitlines */
+    static const __ss_char ends_arr[] = {'\n', '\r', 0x0b, 0x0c, 0x1c, 0x1d, 0x1e, 0x85, 0x2028, 0x2029};
+    const __GC_STR ends(ends_arr, sizeof(ends_arr) / sizeof(ends_arr[0]));
 
     endlen = i = 0;
     do
@@ -413,7 +415,7 @@ list<str *> *str::splitlines(__ss_int keepends)
         if(i == std::string::npos) break;
 
         //for all we know the character sequence could change mid-way...
-        if(unit[i] == '\r' && unit[i + 1] == '\n') endlen = 2;
+        if(unit[i] == '\r' && i + 1 < unit.size() && unit[i + 1] == '\n') endlen = 2;
         else endlen = 1;
 
         r->append(new str(unit.substr(j, i - j + (keepends ? endlen : 0))));

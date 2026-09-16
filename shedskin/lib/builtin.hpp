@@ -464,7 +464,7 @@ private:
 
 #define WITH_VAR(e, v, n) {    \
     __With<decltype(e)> __with##n(e);      \
-    decltype(e) v = __with##n;
+    v = __with##n; /* v is declared by the caller, so it stays bound after the block */
 
 #define END_WITH }
 
