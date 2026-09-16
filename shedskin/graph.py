@@ -546,7 +546,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         result = []
         digits = ""
         for i, c in enumerate(fmt):
-            if c.isdigit():
+            if c in string.digits:  # not str.isdigit(), which accepts e.g. '²'
                 digits += c
             elif c in char_type:
                 rtype = {
@@ -579,7 +579,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Generate a fake tuple for struct unpack"""
         result: list[ast.expr] = []
         for o, c, t, d in info:
-            if d != 0 or c == "s":
+            if d != 0 or c in "sp":
                 if t == "int":
                     result.append(ast.Constant(1))
                 elif t == "bytes":
@@ -2066,7 +2066,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     rvalue2.args[1], infer.inode(self.gx, rvalue2.args[1]), func
                 )
                 tvar_pos = self.temp_var_int(rvalue2.args[0], func)
-                self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
+                base_name = None  # start position, for native alignment
+                if (isinstance(rvalue2.func, ast.Attribute) and rvalue2.func.attr == "unpack_from") or \
+                   (isinstance(rvalue2.func, ast.Name) and rvalue2.func.id == "unpack_from"):
+                    base_name = self.temp_var_int(rvalue2.func, func).name
+                self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name, base_name)
                 return
 
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)

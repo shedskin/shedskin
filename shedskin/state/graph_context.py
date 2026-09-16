@@ -4,7 +4,7 @@
 
 import ast
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from shedskin import python
@@ -47,7 +47,7 @@ class GraphBuildingContext:
     item_rvalue: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     assign_target: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     struct_unpack: Dict[
-        ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str]
+        ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str, Optional[str]]
     ] = field(default_factory=dict)
     augment: Set[ast.AST] = field(default_factory=set)
     parent_nodes: Dict[ast.AST, ast.AST] = field(default_factory=dict)

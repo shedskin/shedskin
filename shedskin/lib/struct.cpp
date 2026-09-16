@@ -2,6 +2,7 @@
 
 #include "struct.hpp"
 #include <stdio.h>
+#include <string.h>
 
 namespace __struct__ {
 
@@ -61,10 +62,10 @@ __ss_int padding(char o, __ss_int pos, unsigned int itemsize) {
     return 0;
 }
 
-__ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
+__ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos) {
     unsigned long long result;
     unsigned int itemsize = get_itemsize(o, c);
-    *pos += padding(o, *pos, itemsize);
+    *pos += padding(o, *pos-base, itemsize);
     if(d==0)
         return 0;
     result = 0;
@@ -97,7 +98,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
     return (__ss_int)result;
 }
 
-bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
+bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int, __ss_int *pos) {
     bytes *result = 0;
     unsigned int len;
     switch(c) {
@@ -111,9 +112,13 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
              break;
         case 'p':
              result = new bytes();
-             len = (unsigned char)data->unit[(size_t)(*pos)];
-             if(d > 0 and len > d-1)
-                 len = d-1;
+             if(d == 0) /* '0p' unpacks to b'' (as of CPython 3.15) */
+                 len = 0;
+             else {
+                 len = (unsigned char)data->unit[(size_t)(*pos)];
+                 if(len > d-1)
+                     len = d-1;
+             }
              for(unsigned i=0; i<len; i++)
                  result->unit += data->unit[(size_t)(*pos+(__ss_int)i+1)];
              break;
@@ -123,7 +128,7 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
     return result;
 }
 
-__ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int *pos) {
+__ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int, __ss_int *pos) {
     __ss_bool result;
     if(data->unit[(size_t)(*pos)] == '\x00')
         result = False;
@@ -134,10 +139,10 @@ __ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int *pos) {
     return result;
 }
 
-double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
+double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos) {
     double result;
     unsigned int itemsize = get_itemsize(o, c);
-    *pos += padding(o, *pos, itemsize);
+    *pos += padding(o, *pos-base, itemsize);
     if(d==0)
         return 0;
     if(swap_endian(o))
@@ -154,19 +159,19 @@ double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
     return result;
 }
 
-void unpack_pad(char, char, unsigned int d, bytes *, __ss_int *pos) {
+void unpack_pad(char, char, unsigned int d, bytes *, __ss_int, __ss_int *pos) {
     *pos += (__ss_int)d;
 }
 
-__ss_int calcsize(str *fmt) {
+template<class S> static __ss_int calcsize_impl(const S &fmt, size_t fmtlen) {
     __ss_int result = 0;
     char order = '@';
     unsigned int itemsize;
     __ss_int n = 0;
     __ss_int ndigits = -1;
 
-    for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
-        __ss_char c = fmt->unit[i];
+    for(size_t i=0; i<fmtlen; i++) {
+        __ss_char c = (__ss_char)fmt[i];
         switch(c) {
             case '@':
             case '=':
@@ -247,6 +252,38 @@ __ss_int calcsize(str *fmt) {
         }
     }
     return result;
+}
+
+__ss_int calcsize(str *fmt) {
+    return calcsize_impl(fmt->unit, (size_t)len(fmt));
+}
+
+__ss_int calcsize(const char *fmt) {
+    return calcsize_impl(fmt, strlen(fmt));
+}
+
+/* buffer size checks for (inlined) unpack/unpack_from, same messages as CPython;
+   return the (wrapped) start position */
+
+__ss_int unpack_pos(const char *fmt, bytes *data) {
+    __ss_int size = calcsize(fmt);
+    __ss_int buflen = len(data);
+    if(buflen != size)
+        throw new error(__mod6(new str("unpack requires a buffer of %d bytes"), 1, size));
+    return 0;
+}
+
+__ss_int unpack_from_pos(const char *fmt, bytes *data, __ss_int offset) {
+    __ss_int size = calcsize(fmt);
+    __ss_int buflen = len(data);
+    if(offset < 0) {
+        if(offset + buflen < 0)
+            throw new error(__mod6(new str("offset %d out of range for %d-byte buffer"), 2, offset, buflen));
+        offset += buflen;
+    }
+    if(buflen - offset < size)
+        throw new error(__mod6(new str("unpack_from requires a buffer of at least %d bytes for unpacking %d bytes at offset %d (actual buffer size is %d)"), 4, size+offset, size, offset, buflen));
+    return offset;
 }
 
 __ss_int calcitems(str *fmt) {

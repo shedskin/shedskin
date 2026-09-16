@@ -447,7 +447,7 @@ class GlobalInfo:
     @property
     def struct_unpack(
         self,
-    ) -> dict["ast.Assign", tuple[list[tuple[str, str, str, int]], str, str]]:
+    ) -> dict["ast.Assign", tuple[list[tuple[str, str, str, int]], str, str, Optional[str]]]:
         return self._graph_context.struct_unpack
 
     @property

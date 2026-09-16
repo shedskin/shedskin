@@ -3567,38 +3567,54 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a struct unpack operation"""
         struct_unpack = self.gx.struct_unpack.get(node)
         if struct_unpack:
-            sinfo, tvar, tvar_pos = struct_unpack
+            sinfo, tvar, tvar_pos, tvar_base = struct_unpack
             self.start()
             assert isinstance(node.value, ast.Call)
             self.visitm(tvar, " = ", node.value.args[1], func)
             self.eol()
-            offset_expr = None
-            if len(node.value.args) > 2:
-                offset_expr = node.value.args[2]
-            else:
-                for kw in node.value.keywords:
-                    if kw.arg == "offset":
-                        offset_expr = kw.value
-                        break
-            if offset_expr is not None:
+
+            # canonical format string (only ascii format chars/digits), used
+            # for buffer size checks at runtime
+            fmt = "".join("%d%c" % (d, c) for (o, c, t, d) in sinfo)
+            if sinfo:
+                fmt = sinfo[0][0] + fmt
+
+            if tvar_base is not None:  # unpack_from
+                offset_expr = None
+                if len(node.value.args) > 2:
+                    offset_expr = node.value.args[2]
+                else:
+                    for kw in node.value.keywords:
+                        if kw.arg == "offset":
+                            offset_expr = kw.value
+                            break
                 self.start()
-                self.visitm(tvar_pos, " = __wrap(", tvar, ", ", offset_expr, ")", func)
+                self.append('%s = __struct__::unpack_from_pos("%s", %s, ' % (tvar_pos, fmt, tvar))
+                if offset_expr is not None:
+                    self.visit(offset_expr, func)
+                else:
+                    self.append("0")
+                self.append(")")
                 self.eol()
+                self.output("%s = %s;" % (tvar_base, tvar_pos))
+                base = tvar_base
             else:
-                self.output("%s = 0;" % tvar_pos)
+                base = "0"
+                self.output('%s = __struct__::unpack_pos("%s", %s);' % (tvar_pos, fmt, tvar))
 
             hop = 0
             for o, c, t, d in sinfo:
                 self.start()
-                expr = "__struct__::unpack_%s('%c', '%c', %d, %s, &%s)" % (
+                expr = "__struct__::unpack_%s('%c', '%c', %d, %s, %s, &%s)" % (
                     t,
                     o,
                     c,
                     d,
                     tvar,
+                    base,
                     tvar_pos,
                 )
-                if c == "x" or (d == 0 and c != "s"):
+                if c == "x" or (d == 0 and c not in "sp"):
                     self.visitm(expr, func)
                 else:
                     assert isinstance(node.targets[0], (ast.List, ast.Tuple))
