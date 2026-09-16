@@ -9,6 +9,13 @@ def test_string_module():
     assert string.ascii_uppercase == 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     assert string.capwords('ik haat smurven') == 'Ik Haat Smurven'
     assert string.capwords('a,b,,c', sep=',') == 'A,B,,C'
+    assert string.capwords('  hello   wORLD  ') == 'Hello World'
+    assert string.capwords('a\tb\nc') == 'A B C'
+    assert string.capwords('a b', sep=None) == 'A B'
+    assert string.capwords('aXb--cDe--', '--') == 'Axb--Cde--'
+    assert string.capwords('') == ''
+    assert string.capwords('', ',') == ''
+    assert string.capwords('\xe9lan VITAL \xc9\xc9') == '\xc9lan Vital \xc9\xe9'
     try:
         string.capwords('anything', sep='')
         assert False, 'expected ValueError'
