@@ -151,6 +151,7 @@ socket *create_connection(socket::inet_address address, double timeout=-1, socke
 socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto=0);
 socket *create_server(socket::inet_address address, __ss_int family=2, __ss_int backlog=-1, __ss_bool reuse_port=False, __ss_bool dualstack_ipv6=False);
 __ss_bool has_dualstack_ipv6();
+tuple2<socket *, socket *> *socketpair(__ss_int family=2, __ss_int type=1, __ss_int proto=0);
 str *gethostbyname(str *hostname);
 str *inet_aton(str *x);
 str *inet_ntoa(str *x);

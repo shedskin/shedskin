@@ -789,6 +789,37 @@ __ss_bool has_dualstack_ipv6()
     return False;
 }
 
+tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int proto)
+{
+    /* Emulated on every platform the way CPython does it on Windows (no
+     * AF_UNIX support here either): a connected TCP loopback pair. */
+    if (family != __ss_AF_INET)
+        throw new ValueError(new str("Only AF_INET socket address family is supported"));
+    if (type != __ss_SOCK_STREAM)
+        throw new ValueError(new str("Only SOCK_STREAM socket type is supported"));
+    if (proto != 0)
+        throw new ValueError(new str("Only protocol zero is supported"));
+
+    socket *lsock = new socket(family, type, proto);
+    socket *csock = 0, *ssock = 0;
+    try {
+        lsock->bind(new tuple2<str *, __ss_int>(2, new str("127.0.0.1"), 0));
+        lsock->listen(1);
+        csock = new socket(family, type, proto);
+        /* a blocking connect to a local listening socket completes without
+         * anyone calling accept() yet, so no non-blocking dance is needed */
+        csock->connect(lsock->getsockname());
+        ssock = lsock->accept()->__getfirst__();
+    } catch (...) {
+        if (csock)
+            csock->close();
+        lsock->close();
+        throw;
+    }
+    lsock->close();
+    return new tuple2<socket *, socket *>(2, ssock, csock);
+}
+
 __ss_int _ss_htonl(__ss_int x) {
     return (__ss_int)htonl((uint32_t)x);
 }
