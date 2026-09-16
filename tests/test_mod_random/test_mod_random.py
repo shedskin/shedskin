@@ -306,6 +306,207 @@ def test_sample_errors():
     assert ok
 
 
+def test_wide_ranges():
+    # regression test: randrange()/randint() used random()*width, which only
+    # carries 53 bits, so for widths > 2**53 the low bits were always zero
+    random.seed(5)
+    low = 0
+    for i in range(100):
+        low |= random.randrange(1 << 60) & 127
+    assert low != 0
+    low = 0
+    for i in range(100):
+        low |= random.randint(0, 1 << 60) & 127
+    assert low != 0
+    low = 0
+    for i in range(100):
+        low |= random.randrange(-(1 << 60), 1 << 60) & 127
+    assert low != 0
+
+    # a width that does not fit in a signed 64-bit int
+    lo = -(1 << 62) * 2
+    hi = (1 << 62) - 1 + (1 << 62)
+    assert random.randint(lo, hi) != random.randint(lo, hi)
+
+    for i in range(1000):
+        assert random.randrange(-5, 5) in range(-5, 5)
+        assert random.randrange(10, -10, -3) in range(10, -10, -3)
+        assert random.randrange(0, 10, 4) in (0, 4, 8)
+        assert 1 <= random.randint(1, 3) <= 3
+        assert 0 <= random.randrange(7) < 7
+    assert sorted(set([random.randint(1, 3) for i in range(1000)])) == [1, 2, 3]
+
+    nums = list(range(50))
+    random.shuffle(nums)
+    assert sorted(nums) == list(range(50))
+
+    smp = random.sample(range(1000), 100)
+    assert len(set(smp)) == 100
+    assert sorted(random.sample(list(range(10)), 10)) == list(range(10))
+
+
+def test_range_errors():
+    msg = ''
+    try:
+        random.randrange(0)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'empty range for randrange()'
+
+    msg = ''
+    try:
+        random.randrange(5, 5)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'empty range in randrange(5, 5)'
+
+    msg = ''
+    try:
+        random.randrange(4, 2, 2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'empty range in randrange(4, 2, 2)'
+
+    msg = ''
+    try:
+        random.randrange(0, 10, 0)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'zero step for randrange()'
+
+    # (the exact message differs between CPython versions)
+    ok = False
+    try:
+        random.randint(3, 2)
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_triangular_degenerate():
+    # regression test: low == high used to give nan (CPython returns low)
+    assert random.triangular(1.0, 1.0, 1.0) == 1.0
+    assert random.triangular(2.0, 2.0, 7) == 2.0
+    assert random.triangular(3.0, 3.0) == 3.0
+
+
+def test_binomialvariate_args():
+    # regression test: invalid n and p were silently accepted
+    assert random.binomialvariate(5, 0.0) == 0
+    assert random.binomialvariate(5, 1.0) == 5
+
+    msg = ''
+    try:
+        random.binomialvariate(-1, 0.5)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'n must be non-negative'
+
+    for p in (1.5, -0.5):
+        msg = ''
+        try:
+            random.binomialvariate(5, p)
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'p must be in the range 0.0 <= p <= 1.0'
+
+
+def test_instance_seeding():
+    # regression test: Random() and Random(None) were always seeded with
+    # the same constant instead of from OS entropy
+    assert random.Random().random() != random.Random().random()
+    assert random.Random(None).random() != random.Random(None).random()
+
+    # Random(a) accepts the same seed types as seed()
+    assert random.Random('hi').random() == random.Random('hi').random()
+    assert random.Random(2.5).random() == random.Random(2.5).random()
+    assert random.Random(b'hi').random() == random.Random(b'hi').random()
+    assert random.Random(7).random() == random.Random(7).random()
+
+    sr = random.SystemRandom(3)
+    assert 0.0 <= sr.random() < 1.0
+
+
+def test_choices_weights():
+    pop = ['a', 'b', 'c']
+    assert set(random.choices(pop, [0, 1, 0], k=20)) == {'b'}
+    assert set(random.choices(pop, weights=(1, 0, 1), k=50)) == {'a', 'c'}
+    assert set(random.choices(pop, cum_weights=[0.0, 0.0, 2.5], k=20)) == {'c'}
+    assert len(random.choices(pop, weights=None, k=7)) == 7
+    assert random.choices(pop, [1, 1, 1])[0] in pop
+
+    rr = random.Random(3)
+    assert rr.choices(pop, [0.0, 0.0, 1.0], k=2) == ['c', 'c']
+    sr = random.SystemRandom()
+    assert sr.choices(pop, [1, 0, 0], k=2) == ['a', 'a']
+
+    msg = ''
+    try:
+        random.choices(pop, [1, 1], k=2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'The number of weights does not match the population'
+
+    msg = ''
+    try:
+        random.choices(pop, [0, 0, 0], k=2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Total of weights must be greater than zero'
+
+    msg = ''
+    try:
+        random.choices(pop, [1.0, float('inf'), 1.0], k=2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Total of weights must be finite'
+
+    msg = ''
+    try:
+        random.choices(pop, [1, 1, 1], cum_weights=[1, 2, 3], k=2)
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'Cannot specify both weights and cumulative weights'
+
+
+def test_sample_counts():
+    pop = ['a', 'b', 'c']
+    assert sorted(random.sample(pop, counts=[3, 0, 2], k=5)) == ['a', 'a', 'a', 'c', 'c']
+    assert sorted(random.Random(1).sample(['x', 'y'], 3, counts=(1, 2))) == ['x', 'y', 'y']
+    assert len(random.sample(pop, 2, counts=None)) == 2
+
+    msg = ''
+    try:
+        random.sample(pop, 2, counts=[1, 1])
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'The number of counts does not match the population'
+
+    msg = ''
+    try:
+        random.sample(pop, 4, counts=[1, 1, 1])
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Sample larger than population or is negative'
+
+    # (the exact message differs between CPython versions)
+    ok = False
+    try:
+        random.sample(pop, 2, counts=[-1, -1, -1])
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_choice_empty():
+    msg = ''
+    try:
+        random.choice('abc'[:0])
+    except IndexError as e:
+        msg = str(e)
+    assert msg == 'Cannot choose from an empty sequence'
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -319,6 +520,14 @@ def test_all():
     test_randbytes_range()
     test_getrandbits()
     test_systemrandom()
+    test_wide_ranges()
+    test_range_errors()
+    test_triangular_degenerate()
+    test_binomialvariate_args()
+    test_instance_seeding()
+    test_choices_weights()
+    test_sample_counts()
+    test_choice_empty()
 
 
 if __name__ == '__main__':

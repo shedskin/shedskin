@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 #include <cstring>
+#include <unordered_set>
+#include <bit>
 
 /*
     Random module implementation for Shed Skin copyright Jeff Miller.
@@ -81,12 +83,55 @@ void Random::_seed_state(uint64_t initial_seed) {
     this->_s[3] = next_splitmix64(&sm_state);
 }
 
+uint64_t Random::_randbelow(uint64_t n) {
+    if (n <= 1)
+        return 0;
+    /* rejection sampling on the top bit_length(n-1) bits of a word */
+    int shift = 64 - (int)std::bit_width(n - 1);
+    uint64_t r = this->_next_word() >> shift;
+    while (r >= n)
+        r = this->_next_word() >> shift;
+    return r;
+}
+
+std::vector<__ss_int> Random::_sample_indices(__ss_int n, __ss_int k) {
+    /* k distinct indices from range(n), in selection order */
+    if (k < 0 || k > n)
+        throw (new ValueError(new str("Sample larger than population or is negative")));
+
+    std::vector<__ss_int> result;
+    result.reserve((size_t)k);
+
+    if (n < 6*k) {
+        /* partial Fisher-Yates over an index pool */
+        std::vector<__ss_int> pool((size_t)n);
+        for (__ss_int i = 0; i < n; i++)
+            pool[(size_t)i] = i;
+        for (__ss_int i = 0; i < k; i++) {
+            __ss_int j = (__ss_int)this->_randbelow((uint64_t)(n - i));
+            result.push_back(pool[(size_t)j]);
+            pool[(size_t)j] = pool[(size_t)(n - i - 1)];
+        }
+    } else {
+        std::unordered_set<__ss_int> selected;
+        for (__ss_int i = 0; i < k; i++) {
+            __ss_int j = (__ss_int)this->_randbelow((uint64_t)n);
+            while (!selected.insert(j).second)
+                j = (__ss_int)this->_randbelow((uint64_t)n);
+            result.push_back(j);
+        }
+    }
+    return result;
+}
+
 /* Kept for source compatibility: seeds the module-level generator, i.e.
    the one behind random.seed()/random.random(). */
 void seed_xoshiro256(uint64_t initial_seed) {
     _inst->_seed_state(initial_seed);
 }
 
+str *const_choices_both, *const_choices_len, *const_choices_zero, *const_choices_finite;
+str *const_sample_counts_len, *const_sample_counts_neg;
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_4, *const_7, *const_8, *const_9;
 
 list<int> *mag01;
@@ -138,54 +183,52 @@ __ss_float Random::paretovariate(__ss_float alpha) {
     return (1.0/__power(u, (1.0/alpha)));
 }
 
+static str *__empty_range(const char *func, __ss_int a, __ss_int b, str *step=NULL) {
+    str *args = __str(a)->__add__(new str(", "))->__add__(__str(b));
+    if (step)
+        args = args->__add__(new str(", "))->__add__(step);
+    return (new str("empty range in "))->__add__(new str(func))->__add__(new str("("))->__add__(args)->__add__(new str(")"));
+}
+
+/* start + _randbelow(stop - start), for stop > start, in unsigned
+   arithmetic, as the width may exceed the __ss_int range */
+static inline __ss_int __randbetween(Random *r, __ss_int start, __ss_int stop) {
+    return (__ss_int)((uint64_t)start + r->_randbelow((uint64_t)stop - (uint64_t)start));
+}
+
 __ss_int Random::randrange(__ss_int stop) {
-    return this->randrange(0, stop, 1);
+    if (stop > 0)
+        return (__ss_int)this->_randbelow((uint64_t)stop);
+    throw (new ValueError(const_2));
 }
+
 __ss_int Random::randrange(__ss_int start, __ss_int stop) {
-    return this->randrange(start, stop, 1);
+    if (stop > start)
+        return __randbetween(this, start, stop);
+    throw (new ValueError(__empty_range("randrange", start, stop)));
 }
+
 __ss_int Random::randrange(__ss_int start, __ss_int stop, __ss_int step) {
     /**
     Choose a random item from range(start, stop[, step]).
-
-            This fixes the problem with randint() which includes the
-            endpoint; in Python this is usually not what you want.
-            Do not supply the 'int', 'default', and 'maxwidth' arguments.
     */
-    __ss_int istart, istep, istop, n, width;
-
-    istart = __int(start);
-    if (istart != start) {
-        throw (new ValueError(const_0));
+    if (step == 1)
+        return this->randrange(start, stop);
+    __ss_int width = stop - start;
+    __ss_int n;
+    if (step > 0) {
+        n = __floordiv(width + step - 1, step);
     }
-    istop = __int(stop);
-    if ((istop != stop)) {
-        throw (new ValueError(const_1));
-    }
-    width = (istop-istart);
-    if ((step == 1) && (width > 0)) {
-        return __int((istart+__int((this->random()*(__ss_float)width))));
-    }
-    if (step==1) {
-        throw (new ValueError(const_2));
-    }
-    istep = __int(step);
-    if (istep != step) {
-        throw (new ValueError(const_3));
-    }
-    if (istep > 0) {
-        n = (((width+istep)-1)/istep);
-    }
-    else if (istep < 0) {
-        n = (((width+istep)+1)/istep);
+    else if (step < 0) {
+        n = __floordiv(width + step + 1, step);
     }
     else {
         throw (new ValueError(const_4));
     }
-    if (n<=0) {
-        throw (new ValueError(const_2));
+    if (n <= 0) {
+        throw (new ValueError(__empty_range("randrange", start, stop, __str(step))));
     }
-    return (istart+(istep*__int((this->random()*(__ss_float)n))));
+    return start + step * (__ss_int)this->_randbelow((uint64_t)n);
 }
 
 __ss_float Random::betavariate(__ss_float alpha, __ss_float beta) {
@@ -252,6 +295,15 @@ __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
 }
 
 __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
+    if (n < 0)
+        throw (new ValueError(new str("n must be non-negative")));
+    if (p <= 0.0 || p >= 1.0) {
+        if (p == 0.0)
+            return 0;
+        if (p == 1.0)
+            return n;
+        throw (new ValueError(new str("p must be in the range 0.0 <= p <= 1.0")));
+    }
     __ss_int success = 0;
     for(__ss_int i=0; i<n; i++)
         if(random() < p)
@@ -259,31 +311,17 @@ __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
     return success;
 }
 
-Random::Random() { // : gen(7.0), distr(0.0, 1.0) {
-    this->__class__ = cl_Random;
-
+void Random::_init_instance() {
     memcpy(this->_s, default_state, sizeof(this->_s));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    this->seed((void *)NULL);
     this->VERSION = 2;
-
 }
 
-Random::Random(int a) {
-    /**
-    Initialize an instance.
-
-            Optional argument a controls seeding, as for Random.seed().
-            The seed, a, must be an integer.
-    */
+Random::Random() {
     this->__class__ = cl_Random;
-
-    memcpy(this->_s, default_state, sizeof(this->_s));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->seed(a);
-    this->VERSION = 2;
+    this->_init_instance();
+    this->seed((void *)NULL);
 }
 
 __ss_int Random::randint(__ss_int a, __ss_int b) {
@@ -291,7 +329,12 @@ __ss_int Random::randint(__ss_int a, __ss_int b) {
     Return random integer in range [a, b], including both end points.
     */
 
-    return this->randrange(a, (b+1), 1);
+    if (a > b)
+        throw (new ValueError(__empty_range("randint", a, b)));
+    uint64_t width = (uint64_t)b - (uint64_t)a + 1;
+    if (width == 0) /* the full 64-bit range */
+        return (__ss_int)this->_next_word();
+    return (__ss_int)((uint64_t)a + this->_randbelow(width));
 }
 
 __ss_float Random::vonmisesvariate(__ss_float mu, __ss_float kappa) {
@@ -427,12 +470,14 @@ __ss_float Random::triangular(__ss_float low, __ss_float high, __ss_float mode) 
     http://en.wikipedia.org/wiki/Triangular_distribution
 
     */
-    return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
+    __ss_float u = this->random();
+    if (high == low) /* CPython: ZeroDivisionError -> return low */
+        return low;
+    return __triangular(low, high, u, ((mode-low)/(high-low)));
 }
 
 __ss_float Random::triangular(__ss_float low, __ss_float high, __ss_int mode) {
-    __ss_float fmode = (__ss_float)mode;
-    return __triangular(low, high, this->random(), ((fmode-low)/(high-low)));
+    return this->triangular(low, high, (__ss_float)mode);
 }
 
 __ss_float Random::triangular(__ss_float low, __ss_float high, void *) {
@@ -664,14 +709,6 @@ SystemRandom::SystemRandom() {
     this->VERSION = 2;
 }
 
-SystemRandom::SystemRandom(int a) {
-    this->__class__ = cl_SystemRandom;
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    this->seed(a); /* no-op, see SystemRandom::seed() */
-    this->VERSION = 2;
-}
-
 uint64_t SystemRandom::_next_word() {
     /**
     Draw a uniformly random 64-bit word straight from the OS entropy
@@ -694,6 +731,13 @@ void *SystemRandom::setstate(bytes *state) {
 }
 
 void __init() {
+    const_choices_both = new str("Cannot specify both weights and cumulative weights");
+    const_choices_len = new str("The number of weights does not match the population");
+    const_choices_zero = new str("Total of weights must be greater than zero");
+    const_choices_finite = new str("Total of weights must be finite");
+    const_sample_counts_len = new str("The number of counts does not match the population");
+    const_sample_counts_neg = new str("Counts must be non-negative");
+
     const_0 = new str("non-integer arg 1 for randrange()");
     const_1 = new str("non-integer stop for randrange()");
     const_2 = new str("empty range for randrange()");
@@ -766,12 +810,12 @@ void *setstate(bytes *state) {
 
 __ss_int randrange(__ss_int stop) {
 
-    return _inst->randrange(0, stop, 1);
+    return _inst->randrange(stop);
 }
 
 __ss_int randrange(__ss_int start, __ss_int stop) {
 
-    return _inst->randrange(start, stop, 1);
+    return _inst->randrange(start, stop);
 }
 
 __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step) {
