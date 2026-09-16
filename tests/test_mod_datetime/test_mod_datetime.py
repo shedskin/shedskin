@@ -545,6 +545,61 @@ def test_class_attributes():
     assert datetime.timedelta.min < datetime.timedelta() < datetime.timedelta.max
 
 
+def test_timedelta_bool():
+    # timedelta had no __bool__, so 'if delta:' was always taken
+    assert not datetime.timedelta(0)
+    assert not bool(datetime.timedelta(days=0, seconds=0, microseconds=0))
+    assert datetime.timedelta(microseconds=1)
+    assert datetime.timedelta(days=-1)
+    assert bool(datetime.timedelta(days=1, hours=-24, microseconds=1))
+    assert not (datetime.timedelta(days=1) - datetime.timedelta(hours=24))
+
+def test_timedelta_fractional_args():
+    # the microseconds used to be derived from one combined float total and
+    # the seconds from a separately truncated total; for negative totals the
+    # two disagreed by a second
+    assert repr(datetime.timedelta(days=-1, seconds=1.5)) == 'datetime.timedelta(days=-1, seconds=1, microseconds=500000)'
+    assert datetime.timedelta(days=-1, seconds=1.5).total_seconds() == -86398.5
+    assert repr(datetime.timedelta(hours=-1, minutes=0.5)) == 'datetime.timedelta(days=-1, seconds=82830)'
+    assert repr(datetime.timedelta(days=-646.035, milliseconds=-20)) == 'datetime.timedelta(days=-647, seconds=83375, microseconds=980000)'
+    assert str(datetime.timedelta(hours=-90, days=357.647)) == '353 days, 21:31:40.800000'
+    assert repr(datetime.timedelta(days=-1.5)) == 'datetime.timedelta(days=-2, seconds=43200)'
+    assert repr(datetime.timedelta(days=0.1)) == 'datetime.timedelta(seconds=8640)'
+    assert repr(datetime.timedelta(hours=1.1)) == 'datetime.timedelta(seconds=3960)'
+    assert repr(datetime.timedelta(weeks=1.5, milliseconds=1.5)) == 'datetime.timedelta(days=10, seconds=43200, microseconds=1500)'
+    # whole parts of each argument must be combined exactly, even when the
+    # combined total does not fit in a double with microsecond precision
+    assert repr(datetime.timedelta(hours=-55695256, seconds=-909.352)) == 'datetime.timedelta(days=-2320636, seconds=27890, microseconds=648000)'
+    assert repr(datetime.timedelta(days=100000000, seconds=0.25)) == 'datetime.timedelta(days=100000000, microseconds=250000)'
+    assert repr(datetime.timedelta(seconds=0.1) * 3) == 'datetime.timedelta(microseconds=300000)'
+
+def test_timedelta_round_half_even():
+    # fractional microseconds are rounded half-to-even (on the total number
+    # of microseconds), like cpython; they used to be rounded half away from
+    # zero
+    assert repr(datetime.timedelta(microseconds=0.5)) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(microseconds=1.5)) == 'datetime.timedelta(microseconds=2)'
+    assert repr(datetime.timedelta(microseconds=2.5)) == 'datetime.timedelta(microseconds=2)'
+    assert repr(datetime.timedelta(microseconds=-0.5)) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(microseconds=-1.5)) == 'datetime.timedelta(days=-1, seconds=86399, microseconds=999998)'
+    assert repr(datetime.timedelta(microseconds=-2.5)) == 'datetime.timedelta(days=-1, seconds=86399, microseconds=999998)'
+    assert repr(datetime.timedelta(milliseconds=0.0005)) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(milliseconds=0.0015)) == 'datetime.timedelta(microseconds=2)'
+    assert repr(datetime.timedelta(microseconds=1, milliseconds=0.0005)) == 'datetime.timedelta(microseconds=2)'
+    assert repr(datetime.timedelta(microseconds=0.3)) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(microseconds=0.7)) == 'datetime.timedelta(microseconds=1)'
+    assert repr(datetime.timedelta(microseconds=-0.7)) == 'datetime.timedelta(days=-1, seconds=86399, microseconds=999999)'
+
+def test_datetime_fromtimestamp_round_half_even():
+    # same rounding rule for the fractional part of a timestamp
+    assert datetime.datetime.utcfromtimestamp(0.0000005).microsecond == 0
+    assert datetime.datetime.utcfromtimestamp(0.0000015).microsecond == 2
+    assert datetime.datetime.utcfromtimestamp(0.0000025).microsecond == 2
+    assert repr(datetime.datetime.utcfromtimestamp(-0.5)) == 'datetime.datetime(1969, 12, 31, 23, 59, 59, 500000)'
+    assert repr(datetime.datetime.utcfromtimestamp(1.9999999)) == 'datetime.datetime(1970, 1, 1, 0, 0, 2)'
+    assert repr(datetime.datetime.utcfromtimestamp(-1.0000001)) == 'datetime.datetime(1969, 12, 31, 23, 59, 59)'
+
+
 def test_all():
         test_date()
         test_date_ctime()
@@ -582,6 +637,10 @@ def test_all():
         test_time_sorting()
         test_timedelta_sorting()
         test_class_attributes()
+        test_timedelta_bool()
+        test_timedelta_fractional_args()
+        test_timedelta_round_half_even()
+        test_datetime_fromtimestamp_round_half_even()
 
 if __name__ == "__main__":
     test_all()
