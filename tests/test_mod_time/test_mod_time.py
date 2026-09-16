@@ -233,6 +233,107 @@ def test_sleep():
     t2 = time.time()
     assert t2 > t1
 
+def test_strptime_unconverted():
+    # regression test: trailing input not consumed by the format must raise,
+    # instead of being silently ignored
+    caught = False
+    try:
+        time.strptime("2024-01-01 junk", "%Y-%m-%d")
+    except ValueError:
+        caught = True
+    assert caught
+
+    caught = False
+    try:
+        time.strptime("x", "%Y")
+    except ValueError:
+        caught = True
+    assert caught
+
+def test_strptime_day_range():
+    # regression test: day must be valid for the given month
+    caught = False
+    try:
+        time.strptime("2023-02-29", "%Y-%m-%d")
+    except ValueError:
+        caught = True
+    assert caught
+    caught = False
+    try:
+        time.strptime("2000-04-31", "%Y-%m-%d")
+    except ValueError:
+        caught = True
+    assert caught
+    assert tuple(time.strptime("2024-02-29", "%Y-%m-%d")) == (2024, 2, 29, 0, 0, 0, 3, 60, -1)
+
+def test_strptime_defaults():
+    # regression test: without date fields, wday/yday correspond to the
+    # default date 1900-01-01 (a Monday, day 1), not Sunday/day 2
+    assert tuple(time.strptime("12:30", "%H:%M")) == (1900, 1, 1, 12, 30, 0, 0, 1, -1)
+    assert tuple(time.strptime("2001-03", "%Y-%m")) == (2001, 3, 1, 0, 0, 0, 3, 60, -1)
+    assert tuple(time.strptime("2024 060", "%Y %j")) == (2024, 2, 29, 0, 0, 0, 3, 60, -1)
+
+def test_strftime_range():
+    # regression test: zero month/day/yday means the lowest valid value
+    assert time.strftime("%Y %m %d %b %j", (2020, 0, 0, 0, 0, 0, 0, 0, 0)) == '2020 01 01 Jan 001'
+    # tm_wday is taken modulo 7 (-1 is sunday)
+    assert time.strftime("%a", (2020, 1, 1, 0, 0, 0, -1, 1, 0)) == 'Sun'
+    assert time.strftime("%a", (2020, 1, 1, 0, 0, 0, 7, 1, 0)) == 'Mon'
+    for t in [(2020, 13, 1, 0, 0, 0, 0, 1, 0), (2020, 1, 32, 0, 0, 0, 0, 1, 0),
+              (2020, 1, 1, 24, 0, 0, 0, 1, 0), (2020, 1, 1, 0, 60, 0, 0, 1, 0),
+              (2020, 1, 1, 0, 0, 62, 0, 1, 0), (2020, 1, 1, 0, 0, 0, -2, 1, 0),
+              (2020, 1, 1, 0, 0, 0, 0, 367, 0)]:
+        caught = False
+        try:
+            time.strftime("%a %b", t)
+        except ValueError:
+            caught = True
+        assert caught
+        caught = False
+        try:
+            time.asctime(time.struct_time(t))
+        except ValueError:
+            caught = True
+        assert caught
+
+def test_sleep_invalid():
+    # regression test: negative/nan sleep raises ValueError
+    for v in [-1.0, float('nan')]:
+        caught = False
+        try:
+            time.sleep(v)
+        except ValueError:
+            caught = True
+        assert caught
+
+def test_gmtime_out_of_range():
+    # regression test: previously segfaulted on a NULL struct tm
+    for v in [1e20, -1e20]:
+        caught = False
+        try:
+            time.gmtime(v)
+        except OverflowError:
+            caught = True
+        assert caught
+        caught = False
+        try:
+            time.localtime(v)
+        except OverflowError:
+            caught = True
+        assert caught
+    caught = False
+    try:
+        time.gmtime(1e18)
+    except OSError:
+        caught = True
+    assert caught
+    caught = False
+    try:
+        time.gmtime(float('nan'))
+    except ValueError:
+        caught = True
+    assert caught
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -262,6 +363,13 @@ def test_all():
     test_isdst_attribute()
     test_len()
     test_eq_and_ordering()
+    test_strptime_unconverted()
+    test_strptime_day_range()
+    test_strptime_defaults()
+    test_strftime_range()
+    test_sleep_invalid()
+    test_gmtime_out_of_range()
+    print('ok')
 
 if __name__ == '__main__':
     test_all() 
