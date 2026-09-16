@@ -6,6 +6,7 @@ class GetoptError(Exception):
     def __init__(self, msg, opt=''):
         self.msg = msg
         self.opt = opt
+        self.args = (msg, opt)
 
 class error(GetoptError):
     pass
