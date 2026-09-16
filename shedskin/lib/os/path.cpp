@@ -611,8 +611,13 @@ str *expanduser(str *path) {
         userhome = new str(pw->pw_dir);
     } else {
         userhome = __os__::getenv(const_21);
-        if (!userhome)
-            return path;
+        if (!userhome) {
+            /* no $HOME: fall back to the password database, like CPython */
+            struct passwd *pw = getpwuid(getuid());
+            if (!pw)
+                return path;
+            userhome = new str(pw->pw_dir);
+        }
     }
 
     userhome = userhome->rstrip(const_4);

@@ -346,6 +346,31 @@ def test_os_path_expanduser():
         assert expanduser("~definitelynotarealuser12345/bar") == "~definitelynotarealuser12345/bar"
 
 
+def test_os_path_expanduser_environ():
+    # expanduser() must see changes made through os.environ
+    if os.name == "nt":
+        return
+
+    old_home = os.getenv("HOME")
+
+    os.environ["HOME"] = "/hömé/shedskin/"
+    assert expanduser("~") == "/hömé/shedskin"
+    assert expanduser("~/foo") == "/hömé/shedskin/foo"
+
+    os.environ["HOME"] = "/"
+    assert expanduser("~") == "/"
+    assert expanduser("~/foo") == "/foo"
+
+    # without $HOME, CPython falls back to the password database
+    del os.environ["HOME"]
+    user = os.getenv("USER") or os.getenv("LOGNAME")
+    if user and expanduser("~" + user) != "~" + user:
+        assert expanduser("~/foo") == expanduser("~" + user + "/foo")
+
+    if old_home is not None:
+        os.environ["HOME"] = old_home
+
+
 def test_os_path_expanduser_windows_trailing_sep():
     # Regression test: os.path.expanduser() on Windows must not strip a
     # trailing separator from USERPROFILE, matching ntpath.expanduser.
@@ -356,33 +381,42 @@ def test_os_path_expanduser_windows_trailing_sep():
 
     old_userprofile = os.getenv("USERPROFILE")
 
-    os.putenv("USERPROFILE", "C:\\Users\\shedskin\\")
+    # (os.path reads os.environ; os.putenv() does not update it)
+    os.environ["USERPROFILE"] = "C:\\Users\\shedskin\\"
     assert expanduser("~") == "C:\\Users\\shedskin\\"
     assert expanduser("~/foo") == "C:\\Users\\shedskin\\/foo"
 
-    os.putenv("USERPROFILE", "C:\\")
+    os.environ["USERPROFILE"] = "C:\\"
     assert expanduser("~") == "C:\\"
 
     if old_userprofile is None:
-        os.unsetenv("USERPROFILE")
+        del os.environ["USERPROFILE"]
     else:
-        os.putenv("USERPROFILE", old_userprofile)
+        os.environ["USERPROFILE"] = old_userprofile
 
 
 def test_os_path_expandvars():
     old = os.getenv("SS_TEST_EXPANDVARS_VAR")
 
-    os.putenv("SS_TEST_EXPANDVARS_VAR", "value")
+    # (os.path reads os.environ; os.putenv() does not update it)
+    os.environ["SS_TEST_EXPANDVARS_VAR"] = "value"
     assert expandvars("$SS_TEST_EXPANDVARS_VAR/foo") == "value/foo"
     assert expandvars("${SS_TEST_EXPANDVARS_VAR}/foo") == "value/foo"
     # trailing alnum/underscore chars are absorbed into the var name (like
     # CPython's \w+ matching), so this name isn't set and stays literal
     assert expandvars("a$SS_TEST_EXPANDVARS_VARb") == "a$SS_TEST_EXPANDVARS_VARb"
 
+    os.putenv("SS_TEST_EXPANDVARS_VAR", "other")
+    assert expandvars("$SS_TEST_EXPANDVARS_VAR") == "value"
+
+    os.environ["SS_TEST_EXPANDVARS_VAR"] = "välüe"
+    assert expandvars("é${SS_TEST_EXPANDVARS_VAR}é") == "évälüeé"
+
     if old is None:
-        os.unsetenv("SS_TEST_EXPANDVARS_VAR")
+        del os.environ["SS_TEST_EXPANDVARS_VAR"]
+        assert expandvars("$SS_TEST_EXPANDVARS_VAR") == "$SS_TEST_EXPANDVARS_VAR"
     else:
-        os.putenv("SS_TEST_EXPANDVARS_VAR", old)
+        os.environ["SS_TEST_EXPANDVARS_VAR"] = old
 
     # unknown variables and edge cases are left unchanged
     assert expandvars("$SS_TEST_DEFINITELY_NOT_SET/foo") == "$SS_TEST_DEFINITELY_NOT_SET/foo"
@@ -431,6 +465,7 @@ def test_all():
     # calling it here breaks the Windows build even though it never runs
     # there. Same issue as test_setgroups_overflow() in test_mod_os.py.
     test_os_path_expanduser()
+    test_os_path_expanduser_environ()
     test_os_path_expanduser_windows_trailing_sep()
     test_os_path_expandvars()
     test_os_path_commonpath()
