@@ -158,6 +158,32 @@ def test_merge():
     assert list(heapq.merge(['Arie', 'ans', 'aap'], ['ANSJOVIS', 'ALAAF', 'alaaf'], key=lambda x:x.lower(), reverse=True)) == ['Arie', 'ANSJOVIS', 'ans', 'ALAAF', 'alaaf', 'aap']
 
 
+def logging_gen(log, tag, values):
+    for v in values:
+        log.append('%s%d' % (tag, v))
+        yield v
+
+
+def test_merge_lazy():
+    # regression test: merge must only advance the iterable that produced
+    # the previous item once it is resumed (like CPython), not eagerly
+    # before returning that item.
+    log = []
+    it = heapq.merge(logging_gen(log, 'a', [1, 3]), logging_gen(log, 'b', [2, 4]))
+    assert next(it) == 1
+    assert log == ['a1', 'b2']
+    assert next(it) == 2
+    assert log == ['a1', 'b2', 'a3']
+    assert list(it) == [3, 4]
+    assert log == ['a1', 'b2', 'a3', 'b4']
+
+    log2 = []
+    for x in heapq.merge(logging_gen(log2, 'a', [1, 2, 3])):
+        if x == 2:
+            break
+    assert log2 == ['a1', 'a2']
+
+
 def test_merge_stable_ties():
     # regression test: for equal elements, heapq.merge must preserve the
     # relative order of the input iterables (like CPython), not whatever
@@ -318,6 +344,7 @@ def test_all():
 
     test_merge()
     test_merge_stable_ties()
+    test_merge_lazy()
 
     test_nlargest()
     test_nsmallest()

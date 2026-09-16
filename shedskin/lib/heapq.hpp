@@ -236,6 +236,9 @@ public:
     bool reverse;
 
     bool exhausted;
+    bool started;
+    bool pending; /* refill from iters[last] on the next call (lazily, like CPython) */
+    size_t last;
     __GC_VECTOR(__iter<T> *) iters;
     std::vector<iter_heap> heap;
 
@@ -250,10 +253,16 @@ public:
 
 template<class T, class Key> inline mergeiter<T, Key>::mergeiter() {
     this->exhausted = true;
+    this->started = false;
+    this->pending = false;
+    this->last = 0;
     this->reverse = false;
 }
 template<class T, class Key> inline mergeiter<T, Key>::mergeiter(pyiter<T> *iterable, Key key, bool reverse) {
     this->exhausted = false;
+    this->started = false;
+    this->pending = false;
+    this->last = 0;
     this->key = key;
     this->reverse = reverse;
     this->push_iter(iterable);
@@ -268,7 +277,21 @@ template<class T, class Key> T mergeiter<T, Key>::__next__() {
         throw new StopIteration();
     }
 
-    if (!this->heap.size()) {
+    if (this->pending) {
+        /* only advance the iterable that produced the previously returned
+         * item now that we are resumed, matching CPython (which advances it
+         * after the yield). doing this eagerly consumed one item too many
+         * (visible with side effects, early break, or exception timing). */
+        this->pending = false;
+        try  {
+            if(reverse)
+                heappush<InvCmpSecond>(this->heap, iter_heap(this->last, this->iters[this->last]->__next__()), this->key);
+            else
+                heappush<CmpSecond>(this->heap, iter_heap(this->last, this->iters[this->last]->__next__()), this->key);
+        } catch (StopIteration *) {
+        }
+    } else if (!this->started) {
+        this->started = true;
         for (size_t i = 0; i < this->iters.size(); ++i) {
             try  {
                 if(reverse)
@@ -278,11 +301,11 @@ template<class T, class Key> T mergeiter<T, Key>::__next__() {
             } catch (StopIteration *) {
             }
         }
+    }
 
-        if (!this->heap.size()) {
-            this->exhausted = true;
-            throw new StopIteration();
-        }
+    if (!this->heap.size()) {
+        this->exhausted = true;
+        throw new StopIteration();
     }
 
     iter_heap it;
@@ -291,17 +314,8 @@ template<class T, class Key> T mergeiter<T, Key>::__next__() {
     else
         it = heappop<CmpSecond>(this->heap, this->key);
 
-    try  {
-        if(reverse)
-            heappush<InvCmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()), this->key);
-        else
-            heappush<CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()), this->key);
-    } catch (StopIteration *) {
-        if (!this->heap.size()) {
-            this->exhausted = true;
-        }
-    }
-
+    this->last = it.first;
+    this->pending = true;
     return it.second;
 }
 
