@@ -21,10 +21,13 @@ option involved with the exception.
 
 namespace __getopt__ {
 
-str *const_0, *const_1, *const_10, *const_11, *const_12, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 str *__name__;
 __ss_int __18;
+
+static __ss_int __long_has_args(str *opt, pyiter<str *> *longopts, str **match);
+static __ss_int __short_has_arg(str *opt, str *shortopts);
 
 static inline list<str *> *list_comp_0(str *opt, pyiter<str *> *longopts) {
     list<str *> *result = new list<str *>();
@@ -47,12 +50,21 @@ class_ *cl_GetoptError;
 
 GetoptError::GetoptError(str *message_, str *opt_) {
     __class__ = cl_GetoptError;
-    message = message_;
     msg = message_;
     if(opt_)
         opt = opt_;
     else
         opt = const_0;
+    Exception::__init__(msg); /* sets message, args = (msg,) */
+    args->units.push_back(opt); /* args = (msg, opt), as in CPython */
+}
+
+str *GetoptError::__str__() {
+    return msg;
+}
+
+str *GetoptError::__repr__() {
+    return __add_strs(2, __class__->__name__, repr(args));
 }
 
 void __init() {
@@ -65,10 +77,13 @@ void __init() {
     const_6 = new str("option --%s requires argument");
     const_7 = new str("option --%s must not have an argument");
     const_8 = new str("option --%s not recognized");
-    const_9 = new str("option --%s not a unique prefix");
+    const_9 = new str("option --%s not a unique prefix; possible options: %s");
     const_10 = new str("option -%s requires argument");
     const_11 = new str(":");
     const_12 = new str("option -%s not recognized");
+    const_13 = new str("=?");
+    const_14 = new str("::");
+    const_15 = new str("gnu_getopt: returning non-option arguments in order (shortopts starting with '-') is not supported");
 
     __name__ = new str("getopt");
 
@@ -165,6 +180,10 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
     opts = (new list<tuple2<str *, str *> *>());
     prog_args = (new list<str *>());
     longopts = new list<str *>(longopts);
+    if (shortopts->startswith(const_1)) {
+        /* CPython returns intermixed non-option arguments as (None, [args]) entries in opts, which cannot be typed */
+        throw new ValueError(const_15);
+    }
     if (shortopts->startswith(const_3)) {
         shortopts = shortopts->__slice__(1, 1, 0, 0);
         all_options_first = 1;
@@ -208,9 +227,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args) {
     list<str *> *__13;
     str *__12, *__14, *__8, *__9, *optarg;
-    __ss_int __10, i;
-    __ss_bool has_arg;
-    tuple2<__ss_bool, str *> *__11;
+    __ss_int __10, i, has_arg;
 
     try {
         __10 = 0;
@@ -225,11 +242,9 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
         opt = __8;
         optarg = __9;
     }
-    __11 = long_has_args(opt, longopts);
-    has_arg = __11->__getfirst__();
-    opt = __11->__getsecond__();
+    has_arg = __long_has_args(opt, longopts, &opt);
     if (has_arg) {
-        if (optarg == 0) {
+        if (optarg == 0 && has_arg != 2) {
             if ((!___bool(args))) {
                 throw ((new GetoptError(__mod6(const_6, 1, opt),opt)));
             }
@@ -246,36 +261,70 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
     return (new tuple2<list<tuple2<str *, str *> *> *, list<str *> *>(2, opts, args));
 }
 
-tuple2<__ss_bool, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
+/* CPython returns False/True/'?'; internally we use 0 (no argument), 1 (required), 2 (optional) */
+static __ss_int __long_has_args(str *opt, pyiter<str *> *longopts, str **match) {
     list<str *> *possibilities;
     str *unique_match;
-    __ss_bool has_arg;
 
     possibilities = list_comp_0(opt, longopts);
     if ((!___bool(possibilities))) {
         throw ((new GetoptError(__mod6(const_8, 1, opt),opt)));
     }
+    *match = opt;
     if (possibilities->__contains__(opt)) {
-        return (new tuple2<__ss_bool, str *>(2, False, opt));
+        return 0;
     }
     else if (possibilities->__contains__(opt->__add__(const_5))) {
-        return (new tuple2<__ss_bool, str *>(2, True, opt));
+        return 1;
+    }
+    else if (possibilities->__contains__(opt->__add__(const_13))) {
+        return 2;
     }
     if ((len(possibilities)>1)) {
-        throw ((new GetoptError(__mod6(const_9, 1, opt),opt)));
+        throw ((new GetoptError(__mod6(const_9, 2, opt, (new str(", "))->join(possibilities)),opt)));
     }
     ASSERT((len(possibilities)==1), 0);
     unique_match = possibilities->__getfast__(0);
-    has_arg = __mbool(unique_match->endswith(const_5));
-    if (has_arg) {
-        unique_match = unique_match->__slice__(2, 0, -1, 0);
+    if (unique_match->endswith(const_13)) {
+        *match = unique_match->__slice__(2, 0, -2, 0);
+        return 2;
     }
-    return (new tuple2<__ss_bool, str *>(2, has_arg, unique_match));
+    if (unique_match->endswith(const_5)) {
+        *match = unique_match->__slice__(2, 0, -1, 0);
+        return 1;
+    }
+    *match = unique_match;
+    return 0;
+}
+
+tuple2<__ss_bool, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
+    str *match;
+    __ss_int has_arg = __long_has_args(opt, longopts, &match);
+    return (new tuple2<__ss_bool, str *>(2, __mbool(has_arg != 0), match));
+}
+
+/* 0 (no argument), 1 (required), 2 (optional, '::') */
+static __ss_int __short_has_arg(str *opt, str *shortopts) {
+    str *__26;
+    __ss_int __24, __25, i;
+
+    FAST_FOR(i,0,len(shortopts),1,24,25)
+        if ((__eq(opt, (__26=shortopts->__getitem__(i)))&&__ne(__26, const_11))) {
+            if (!shortopts->startswith(const_11, (i+1)))
+                return 0;
+            if (shortopts->startswith(const_14, (i+1)))
+                return 2;
+            return 1;
+        }
+    END_FOR
+
+    throw ((new GetoptError(__mod6(const_12, 1, opt),opt)));
 }
 
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str *, str *> *> *opts, str *optstring, str *shortopts, list<str *> *args) {
     list<str *> *__22;
     str *__19, *__20, *__21, *__23, *opt, *optarg;
+    __ss_int has_arg;
 
 
     while(__ne(optstring, const_0)) {
@@ -283,8 +332,9 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
         __20 = optstring->__slice__(1, 1, 0, 0);
         opt = __19;
         optstring = __20;
-        if (short_has_arg(opt, shortopts)) {
-            if (__eq(optstring, const_0)) {
+        has_arg = __short_has_arg(opt, shortopts);
+        if (has_arg) {
+            if (__eq(optstring, const_0) && has_arg != 2) {
                 if ((!___bool(args))) {
                     throw ((new GetoptError(__mod6(const_10, 1, opt),opt)));
                 }
@@ -306,17 +356,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
 }
 
 __ss_bool short_has_arg(str *opt, str *shortopts) {
-    str *__26;
-    __ss_int __24, __25, i;
-
-
-    FAST_FOR(i,0,len(shortopts),1,24,25)
-        if ((__eq(opt, (__26=shortopts->__getitem__(i)))&&__ne(__26, const_11))) {
-            return __mbool(shortopts->startswith(const_11, (i+1)));
-        }
-    END_FOR
-
-    throw ((new GetoptError(__mod6(const_12, 1, opt),opt)));
+    return __mbool(__short_has_arg(opt, shortopts) != 0);
 }
 
 } // module namespace

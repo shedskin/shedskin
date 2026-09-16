@@ -10,7 +10,7 @@
 using namespace __shedskin__;
 namespace __getopt__ {
 
-extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 class GetoptError;
 
@@ -23,6 +23,9 @@ public:
     str *opt, *msg;
 
     GetoptError(str *message, str *opt=0);
+
+    str *__str__();
+    str *__repr__();
 };
 
 

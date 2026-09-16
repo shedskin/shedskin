@@ -98,7 +98,7 @@ def test_long_option_prefix_matching():
     except GetoptError as e:
         error_msg = e.msg
         error_opt = e.opt
-    assert error_msg == "option --fo not a unique prefix"
+    assert error_msg == "option --fo not a unique prefix; possible options: foo, foobar"
     assert error_opt == "fo"
 
 
@@ -218,6 +218,38 @@ def test_error_attribute_types():
     assert opt2.strip() == "foo"
 
 
+def test_optional_arguments():
+    # 3.14+: '::' marks an optional short argument, '=?' an optional long one
+    assert getopt(["-a"], "a::") == ([('-a', '')], [])
+    assert getopt(["-axyz"], "a::") == ([('-a', 'xyz')], [])
+    assert getopt(["-a", "x"], "a::b") == ([('-a', '')], ['x'])
+    assert getopt(["-ba", "-a:"], "a::b") == ([('-b', ''), ('-a', ''), ('-a', ':')], [])
+    assert getopt(["--foo"], "", ["foo=?"]) == ([('--foo', '')], [])
+    assert getopt(["--foo=bar"], "", ["foo=?"]) == ([('--foo', 'bar')], [])
+    assert getopt(["--fo=bar", "x"], "", ["foo=?"]) == ([('--foo', 'bar')], ['x'])
+    assert getopt(["--fo", "x"], "", ["foo=?"]) == ([('--foo', '')], ['x'])
+    assert gnu_getopt(["x", "--foo", "y", "-a"], "a::", ["foo=?"]) == ([('--foo', ''), ('-a', '')], ['x', 'y'])
+
+
+def test_error_str_args_repr():
+    msg = ''
+    args = ('',)
+    rep = ''
+    try:
+        getopt(["-z"], "a")
+    except GetoptError as e:
+        msg = str(e)
+        args = e.args
+        rep = repr(e)
+    assert msg == "option -z not recognized"
+    assert args == ("option -z not recognized", "z")
+    assert rep == "GetoptError('option -z not recognized', 'z')"
+
+    e2 = GetoptError("boom")
+    assert str(e2) == "boom"
+    assert e2.args == ("boom", "")
+
+
 def test_all():
     test_getopt()
     test_getopt_stops_at_first_nonoption()
@@ -233,6 +265,8 @@ def test_all():
     test_error_alias_catches_getopterror()
     test_posixly_correct_env()
     test_error_attribute_types()
+    test_optional_arguments()
+    test_error_str_args_repr()
 
 if __name__ == '__main__':
     test_all()
