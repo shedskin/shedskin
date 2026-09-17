@@ -1,4 +1,5 @@
 import sys
+import os
 
 
 def test_sys():
@@ -103,6 +104,42 @@ def test_implementation():
 def test_encode_errors():
     assert sys.getfilesystemencodeerrors() in ('surrogateescape', 'surrogatepass')
 
+def test_surrogateescape_roundtrip():
+    # getfilesystemencodeerrors() says 'surrogateescape': a non-utf-8 byte
+    # in argv, os.environ or a file name decodes to U+DC80..U+DCFF, and
+    # must encode back to the same byte (so open(sys.argv[1]) works)
+    if sys.platform == 'darwin':
+        # APFS/HFS+ only accept valid utf-8 file names: creating 'a\xff'
+        # fails with EILSEQ (errno 92) under CPython too, so the round
+        # trip through the filesystem cannot be tested here
+        return
+    d = 'test_mod_sys_surrogates'
+    if not os.path.exists(d):
+        os.mkdir(d)
+    path = os.path.join(d, 'a\udcff')
+    f = open(path, 'w')
+    f.write('hi')
+    f.close()
+    names = os.listdir(d)
+    assert names == ['a\udcff']
+    assert [ord(c) for c in names[0]] == [97, 0xdcff]
+    f = open(os.path.join(d, names[0]))
+    assert f.read() == 'hi'
+    f.close()
+    os.remove(path)
+    os.rmdir(d)
+
+def test_surrogateescape_error_message():
+    # a surrogate-escaped byte in a file name must survive into the OSError
+    # message (and, for an extension module, across the interpreter
+    # boundary) rather than being mangled or raising a decode error
+    try:
+        f = open('test_mod_sys_missing_\udcff')
+        f.close()
+        assert False, 'open() should have raised'
+    except OSError as e:
+        assert '\udcff' in str(e)
+
 def test_float_repr_style():
     assert sys.float_repr_style == 'short'
 
@@ -158,6 +195,8 @@ def test_all():
     test_float_info()
     test_implementation()
     test_encode_errors()
+    test_surrogateescape_roundtrip()
+    test_surrogateescape_error_message()
     test_float_repr_style()
     test_orig_argv()
     test_maxsize()

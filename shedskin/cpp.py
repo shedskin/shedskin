@@ -236,8 +236,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for value, name in self.cv.value_name.items():
             self.start(name + " = ")
             if isinstance(value, str):
-                if len(value) == 1 and ord(value) < 0x80:
+                if len(value) == 1 and ord(value) < 256:
                     self.append("__char_cache[%d]" % ord(value))
+                elif any(0xD800 <= ord(c) <= 0xDFFF for c in value):
+                    # lone surrogates have no utf-8 form: pass code points
+                    self.append(
+                        "new str(%s, %d)" % (self.codepoint_literal(value), len(value))
+                    )
                 else:
                     self.append('new str("%s"' % self.expand_special_chars(value))
                     if "\0" in value:
@@ -4694,6 +4699,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 node,
                 mv=self.mv,
             )
+
+    def codepoint_literal(self, val: str) -> str:
+        """Express a str as a C++ char32_t literal, one code point per piece"""
+        pieces = []
+        for c in val:
+            if 32 <= ord(c) <= 126 and c not in ('"', '\\', '?'):
+                pieces.append('U"%s"' % c)
+            else:
+                pieces.append('U"\\x%x"' % ord(c))
+        return " ".join(pieces)
 
     def expand_special_chars(self, val: Union[str, bytes]) -> str:
         """Expand special characters in a string"""

@@ -40,14 +40,21 @@ template<class T> PyObject *__to_py(T t) {
     return t->__to_py__();
 }
 
-/* set the CPython error for a caught shedskin exception */
+/* set the CPython error for a caught shedskin exception. the message is
+   passed as a str object rather than through PyErr_SetString: that decodes
+   the char* strictly as utf-8, so a surrogate-escaped byte (e.g. a
+   non-utf-8 file name in an OSError message) would turn into a
+   UnicodeDecodeError */
 inline void __ss_raise_py(Exception *e) {
     PyObject *args = e->__py_args__();
     if(args) {
         PyErr_SetObject(e->__to_py__(), args); /* type(*args) */
         Py_DECREF(args);
-    } else
-        PyErr_SetString(e->__to_py__(), (e->message ? e->message->c_str() : ""));
+    } else {
+        PyObject *msg = e->message ? e->message->__to_py__() : PyUnicode_FromStringAndSize("", 0);
+        PyErr_SetObject(e->__to_py__(), msg); /* does not steal msg */
+        Py_XDECREF(msg);
+    }
 }
 
 template<> PyObject *__to_py(int32_t i);

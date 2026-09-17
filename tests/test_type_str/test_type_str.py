@@ -728,6 +728,15 @@ def test_unicode_seq_conversion():
     assert '\u2192' in list(s)
 
 
+def test_surrogate_literals():
+    # lone surrogates have no utf-8 form; literals must keep them intact
+    assert [ord(c) for c in '\ud800'] == [0xd800]
+    assert len('a\ud83d\ude00b') == 4
+    assert '\udcff' == chr(0xdcff)
+    assert '\udcc3\udca9' != '\xe9'  # not merged into a utf-8 sequence
+    assert [ord(c) for c in 'q"?\\\0\udc80z'] == [113, 34, 63, 92, 0, 0xdc80, 122]
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -791,6 +800,7 @@ def test_all():
     test_str_id()
     test_bin()
     test_unicode_seq_conversion()
+    test_surrogate_literals()
 
 
 if __name__ == "__main__":

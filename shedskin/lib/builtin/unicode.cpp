@@ -388,8 +388,8 @@ __GC_STR __from_utf8(const char *s, size_t len) {
                 ((unsigned char)s[pos + 1] & 0xe0) == 0xa0 && ((unsigned char)s[pos + 2] & 0xc0) == 0x80) {
                 cp = 0xd000 | (((__ss_char)(unsigned char)s[pos + 1] & 0x3fu) << 6) | ((__ss_char)(unsigned char)s[pos + 2] & 0x3fu);
                 n = 3;
-            } else { /* lenient: invalid byte becomes one code point */
-                cp = b0;
+            } else { /* lenient: invalid byte escapes to U+DC80..U+DCFF (PEP 383 surrogateescape) */
+                cp = (__ss_char)(0xdc00u | b0);
                 n = 1;
             }
         }
@@ -412,10 +412,12 @@ __GC_BYTES __to_utf8(const __ss_char *s, size_t len) {
             cp = 0xfffd;
         if (cp < 0x80)
             out += (char)(unsigned char)cp;
+        else if (cp >= 0xdc80 && cp <= 0xdcff) /* surrogateescape: back to the original byte */
+            out += (char)(unsigned char)(cp & 0xffu);
         else if (cp < 0x800) {
             out += (char)(unsigned char)(0xc0u | (cp >> 6));
             out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-        } else if (cp < 0x10000) { /* note: surrogates pass through (wtf-8) */
+        } else if (cp < 0x10000) { /* note: other surrogates pass through (wtf-8) */
             out += (char)(unsigned char)(0xe0u | (cp >> 12));
             out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
             out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
