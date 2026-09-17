@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <climits>
 #include <cmath>
+#include <cstring>
 
 namespace __time__ {
 
@@ -1203,6 +1204,22 @@ static inline bool __ss_isleap(int year) {
     return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
 }
 
+/* does a strptime format contain one of the given conversion directives? */
+static bool __ss_strptime_has(const char *fmt, const char *directives) {
+    for (; *fmt; fmt++) {
+        if (*fmt != '%')
+            continue;
+        fmt++;
+        if (*fmt == 'E' || *fmt == 'O')
+            fmt++;
+        if (!*fmt)
+            break;
+        if (strchr(directives, *fmt))
+            return true;
+    }
+    return false;
+}
+
 struct_time *strptime(str *string, str *format) {
     /* CPython defaults: 1900-01-01 00:00:00, tm_isdst -1. tm_wday/tm_yday
        start out as -1 so we can tell whether the platform strptime filled
@@ -1227,19 +1244,47 @@ struct_time *strptime(str *string, str *format) {
 
     static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     int year = time_tuple.tm_year + 1900;
-    int mon = time_tuple.tm_mon;
-    int ndays = mdays[mon] + (mon == 1 && __ss_isleap(year));
-    if (time_tuple.tm_mday > ndays)
-        throw new ValueError(new str("day is out of range for month"));
 
-    if (time_tuple.tm_yday == -1) {
+    if (__ss_strptime_has(format->c_str(), "j") && time_tuple.tm_yday != -1) {
+        /* a parsed day of year (%j) determines month and day, as in CPython
+           (where it takes precedence over %m/%d). the bundled strptime used
+           on Windows only stores tm_yday for %j, and glibc keeps a
+           conflicting %m/%d, so derive tm_mon/tm_mday from it here. we go by
+           the format rather than by tm_yday having been set, since glibc
+           also fills that in from %m/%d (even for an invalid date). as in
+           CPython, day 366 of a common year rolls over into January of the
+           next year while tm_yday keeps its value. */
+        int yday = time_tuple.tm_yday;
+        if (yday >= 365 + __ss_isleap(year)) {
+            yday -= 365 + __ss_isleap(year);
+            year++;
+            time_tuple.tm_year++;
+        }
+        int m = 0;
+        while (m < 11 && yday >= mdays[m] + (m == 1 && __ss_isleap(year))) {
+            yday -= mdays[m] + (m == 1 && __ss_isleap(year));
+            m++;
+        }
+        time_tuple.tm_mon = m;
+        time_tuple.tm_mday = yday + 1;
+    } else {
+        int mon = time_tuple.tm_mon;
+        int ndays = mdays[mon] + (mon == 1 && __ss_isleap(year));
+        if (time_tuple.tm_mday > ndays)
+            throw new ValueError(new str("day is out of range for month"));
+
         int yday = time_tuple.tm_mday - 1;
         for (int m = 0; m < mon; m++)
             yday += mdays[m] + (m == 1 && __ss_isleap(year));
         time_tuple.tm_yday = yday;
     }
-    if (time_tuple.tm_wday == -1) {
-        /* Sakamoto's method, Sunday == 0 like struct tm */
+    int mon = time_tuple.tm_mon;
+    if (time_tuple.tm_wday == -1 || !__ss_strptime_has(format->c_str(), "aAwuc")) {
+        /* the weekday is kept only when the format parsed one (%a %A %w %u,
+           or %c which expands to %a), as in CPython. otherwise derive it from
+           the final date: glibc fills it in itself, but from the parsed %m/%d,
+           which %j may have just overridden. Sakamoto's method, Sunday == 0
+           like struct tm */
         static const int t[12] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
         int y = year - (mon < 2);
         int w = (y + y/4 - y/100 + y/400 + t[mon] + time_tuple.tm_mday) % 7;

@@ -273,6 +273,19 @@ def test_strptime_defaults():
     assert tuple(time.strptime("2001-03", "%Y-%m")) == (2001, 3, 1, 0, 0, 0, 3, 60, -1)
     assert tuple(time.strptime("2024 060", "%Y %j")) == (2024, 2, 29, 0, 0, 0, 3, 60, -1)
 
+def test_strptime_yday():
+    # regression test: %j determines month and day on every platform (the
+    # strptime bundled for windows only stores tm_yday), and like CPython it
+    # takes precedence over a conflicting %m/%d
+    assert tuple(time.strptime("060", "%j")) == (1900, 3, 1, 0, 0, 0, 3, 60, -1)
+    assert tuple(time.strptime("2023 001", "%Y %j")) == (2023, 1, 1, 0, 0, 0, 6, 1, -1)
+    assert tuple(time.strptime("2023 365", "%Y %j")) == (2023, 12, 31, 0, 0, 0, 6, 365, -1)
+    assert tuple(time.strptime("2024 366", "%Y %j")) == (2024, 12, 31, 0, 0, 0, 1, 366, -1)
+    assert tuple(time.strptime("2024-01-01 060", "%Y-%m-%d %j")) == (2024, 2, 29, 0, 0, 0, 3, 60, -1)
+    assert tuple(time.strptime("2024 Mon 060", "%Y %a %j")) == (2024, 2, 29, 0, 0, 0, 0, 60, -1)
+    # day 366 of a common year rolls over into the next year (CPython quirk)
+    assert tuple(time.strptime("2023 366", "%Y %j")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
+
 def test_strftime_range():
     # regression test: zero month/day/yday means the lowest valid value
     assert time.strftime("%Y %m %d %b %j", (2020, 0, 0, 0, 0, 0, 0, 0, 0)) == '2020 01 01 Jan 001'
@@ -366,6 +379,7 @@ def test_all():
     test_strptime_unconverted()
     test_strptime_day_range()
     test_strptime_defaults()
+    test_strptime_yday()
     test_strftime_range()
     test_sleep_invalid()
     test_gmtime_out_of_range()
