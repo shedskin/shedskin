@@ -1220,6 +1220,48 @@ static bool __ss_strptime_has(const char *fmt, const char *directives) {
     return false;
 }
 
+/* the day of year (0-based) given to the %j directive of a format that was
+   already parsed successfully, or -1 if there is none. we read it ourselves
+   rather than trust tm_yday: BSD libc (macOS) normalizes day 366 of a common
+   year into January 1st of the next year on its own, leaving no trace of the
+   parsed value. the format up to %j is parsed once more into a scratch
+   struct tm just to locate the field in the input. */
+static int __ss_strptime_yday(const char *string, const char *fmt) {
+    const char *p = fmt;
+    for (; *p; p++) {
+        if (*p != '%')
+            continue;
+        const char *d = p + 1;
+        if (*d == 'E' || *d == 'O')
+            d++;
+        if (!*d)
+            return -1;
+        if (*d == 'j')
+            break;
+        p = d;
+    }
+    if (!*p)
+        return -1;
+
+    std::string prefix(fmt, (size_t)(p - fmt));
+    tm scratch = {};
+    scratch.tm_mday = 1;
+    scratch.tm_isdst = -1;
+#ifdef WIN32
+    const char *pos = strptime(string, prefix.c_str(), &scratch);
+#else
+    const char *pos = ::strptime(string, prefix.c_str(), &scratch);
+#endif
+    if (!pos)
+        return -1;
+    while (*pos == ' ')  /* glibc allows leading spaces before the digits */
+        pos++;
+    int j = 0, n = 0;
+    for (; n < 3 && *pos >= '0' && *pos <= '9'; pos++, n++)
+        j = j * 10 + (*pos - '0');
+    return n ? j - 1 : -1;
+}
+
 struct_time *strptime(str *string, str *format) {
     /* CPython defaults: 1900-01-01 00:00:00, tm_isdst -1. tm_wday/tm_yday
        start out as -1 so we can tell whether the platform strptime filled
@@ -1255,6 +1297,16 @@ struct_time *strptime(str *string, str *format) {
            CPython, day 366 of a common year rolls over into January of the
            next year while tm_yday keeps its value. */
         int yday = time_tuple.tm_yday;
+        int parsed = __ss_strptime_yday(string->c_str(), format->c_str());
+        if (parsed != -1 && parsed != yday) {
+            /* BSD libc (macOS) already moved day 366 of a common year into
+               the next year and reset tm_yday; go back to what was parsed
+               so the rollover below produces the same result everywhere */
+            yday = parsed;
+            time_tuple.tm_yday = parsed;
+            year--;
+            time_tuple.tm_year--;
+        }
         if (yday >= 365 + __ss_isleap(year)) {
             yday -= 365 + __ss_isleap(year);
             year++;

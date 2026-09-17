@@ -285,6 +285,11 @@ def test_strptime_yday():
     assert tuple(time.strptime("2024 Mon 060", "%Y %a %j")) == (2024, 2, 29, 0, 0, 0, 0, 60, -1)
     # day 366 of a common year rolls over into the next year (CPython quirk)
     assert tuple(time.strptime("2023 366", "%Y %j")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
+    # (macOS libc does this rollover itself; check it comes out the same
+    # wherever %j sits in the format, and when %m/%d is given as well)
+    assert tuple(time.strptime("366 2023", "%j %Y")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
+    assert tuple(time.strptime("Mon 366 2023", "%a %j %Y")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
+    assert tuple(time.strptime("2023-01-01 366", "%Y-%m-%d %j")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
 
 def test_strftime_range():
     # regression test: zero month/day/yday means the lowest valid value
