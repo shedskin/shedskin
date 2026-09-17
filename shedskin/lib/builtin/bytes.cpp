@@ -963,14 +963,14 @@ str *bytes::decode(str *encoding, str *errors) {
     str *s = new str();
 
     if (enc == __SS_ENC_UTF8) {
-        size_t n = __utf8_decode_checked(unit.data(), unit.size(), 0); /* measure+validate */
+        size_t n = __utf8_decode_checked(this, 0); /* measure+validate */
         s->unit.resize(n);
         __utf8_decode(unit.data(), unit.size(), s->unit.data());
     } else if (enc == __SS_ENC_ASCII) {
         s->unit.resize(unit.size());
         __codec_result r = __ascii_decode(unit.data(), unit.size(), s->unit.data());
         if (!r.ok)
-            __throw_decode_error("ascii", (unsigned char)unit[r.errpos], r.errpos, r.errmsg);
+            __throw_decode_error("ascii", this, r.errpos, r.errpos + 1, r.errmsg);
     } else { /* latin-1: cannot fail */
         s->unit.resize(unit.size());
         __latin1_decode(unit.data(), unit.size(), s->unit.data());

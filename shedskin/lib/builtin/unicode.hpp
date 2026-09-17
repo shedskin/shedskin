@@ -69,21 +69,25 @@ __codec_result __latin1_decode(const char *src, size_t len, __ss_char *dst);
 __codec_result __latin1_encode(const __ss_char *src, size_t len, char *dst);
 
 #ifndef __SS_UNICODE_STANDALONE
-/* wrappers that raise ValueError with a CPython-style message (to become
-   UnicodeDecodeError/UnicodeEncodeError, which subclass ValueError, once
-   those exist). return the number of units produced. */
-size_t __utf8_decode_checked(const char *src, size_t len, __ss_char *dst);
-size_t __utf8_encode_checked(const __ss_char *src, size_t len, char *dst);
-
-void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const char *msg);
-void __throw_encode_error(const char *codec, __ss_char cp, size_t pos, const char *msg);
-
 /* supported encodings for str.encode/bytes.decode */
 enum __ss_encoding {
     __SS_ENC_UTF8,
     __SS_ENC_ASCII,
     __SS_ENC_LATIN1,
 };
+
+/* wrappers that raise UnicodeDecodeError/UnicodeEncodeError (with
+   CPython's message, start/end range and attributes) on failure. return
+   the number of units produced. */
+size_t __utf8_decode_checked(bytes *b, __ss_char *dst);
+size_t __utf8_encode_checked(str *s, char *dst);
+
+/* raise a UnicodeDecodeError for b[start:end] */
+void __throw_decode_error(const char *codec, bytes *b, size_t start, size_t end, const char *msg);
+/* raise a UnicodeEncodeError for the run of unencodable code points
+   starting at s[start] (CPython reports consecutive bad characters as
+   one range) */
+void __throw_encode_error(__ss_encoding enc, str *s, size_t start, const char *msg);
 
 /* normalize an encoding name (0 means the default, utf-8) to an
    __ss_encoding; raises LookupError for anything unsupported */
@@ -95,8 +99,8 @@ void __check_errors_arg(str *errors);
 /* internal conversions between the utf-8 boundary representation and
    the __ss_char code point representation used inside str. these never
    throw: invalid utf-8 bytes decode as one code point per byte, and
-   surrogate code points encode as normal 3-byte sequences (wtf-8), so
-   trusted internal sources (number formatting, literals) are safe. */
+   surrogate code points round-trip as normal 3-byte sequences (wtf-8),
+   so trusted internal sources (number formatting, literals) are safe. */
 __GC_STR __from_utf8(const char *s, size_t len);
 __GC_STR __from_utf8(const __GC_BYTES &b);
 __GC_BYTES __to_utf8(const __ss_char *s, size_t len);

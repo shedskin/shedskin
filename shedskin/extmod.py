@@ -510,7 +510,7 @@ class ExtensionModule:
         # convert exceptions
         write("    } catch (Exception *e) {")
         write(
-            '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));'
+            '        __ss_raise_py(e);'
         )
         write("        return 0;")
         write("    }")
@@ -706,7 +706,7 @@ class ExtensionModule:
             )
             write("    } catch (Exception *e) {")
             write(
-                '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));'
+                '        __ss_raise_py(e);'
             )
             write("        return -1;")
             write("    }")

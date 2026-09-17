@@ -1112,7 +1112,6 @@ bytes *str::encode(str *encoding, str *errors) {
             __latin1_encode(unit.data(), unit.size(), b->unit.data());
     }
     if (!r.ok)
-        __throw_encode_error(enc == __SS_ENC_UTF8 ? "utf-8" : enc == __SS_ENC_ASCII ? "ascii" : "latin-1",
-                             unit[r.errpos], r.errpos, r.errmsg);
+        __throw_encode_error(enc, this, r.errpos, r.errmsg);
     return b;
 }

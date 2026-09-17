@@ -40,6 +40,16 @@ template<class T> PyObject *__to_py(T t) {
     return t->__to_py__();
 }
 
+/* set the CPython error for a caught shedskin exception */
+inline void __ss_raise_py(Exception *e) {
+    PyObject *args = e->__py_args__();
+    if(args) {
+        PyErr_SetObject(e->__to_py__(), args); /* type(*args) */
+        Py_DECREF(args);
+    } else
+        PyErr_SetString(e->__to_py__(), (e->message ? e->message->c_str() : ""));
+}
+
 template<> PyObject *__to_py(int32_t i);
 template<> PyObject *__to_py(int64_t i);
 #ifdef __SS_INT128

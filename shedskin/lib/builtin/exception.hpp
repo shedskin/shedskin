@@ -93,7 +93,7 @@ static void print_traceback(FILE *out)
 #endif
 #endif
 
-extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror;
+extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
 
 class BaseException : public pyobj {
 public:
@@ -119,6 +119,10 @@ public:
 
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_Exception; }
+   /* constructor arguments for the CPython exception, as a new tuple
+      reference, for exceptions that cannot be created from just their
+      message (see __ss_raise_py in extmod.hpp); 0 means use message */
+   virtual PyObject *__py_args__() { return 0; }
 #endif
 };
 
@@ -318,6 +322,69 @@ public:
     ValueError(str *msg=0) : Exception(msg) { this->__class__ = cl_valueerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ValueError; }
+#endif
+};
+
+class UnicodeError : public ValueError {
+public:
+    UnicodeError(str *msg=0) : ValueError(msg) { this->__class__ = cl_unicodeerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnicodeError; }
+#endif
+};
+
+/* the three concrete unicode errors carry the CPython attributes
+   (encoding, object, start, end, reason); str()/repr() are derived from
+   those, as in CPython. start/end delimit the offending range
+   [start, end) in object. */
+
+class UnicodeDecodeError : public UnicodeError {
+public:
+    str *encoding;
+    bytes *_object; /* 'object' in python; the compiler mangles it to _object (class name) */
+    __ss_int start;
+    __ss_int end;
+    str *reason;
+
+    UnicodeDecodeError(str *encoding, bytes *object, __ss_int start, __ss_int end, str *reason);
+    str *__str__();
+    str *__repr__();
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnicodeDecodeError; }
+    PyObject *__py_args__();
+#endif
+};
+
+class UnicodeEncodeError : public UnicodeError {
+public:
+    str *encoding;
+    str *_object; /* see UnicodeDecodeError */
+    __ss_int start;
+    __ss_int end;
+    str *reason;
+
+    UnicodeEncodeError(str *encoding, str *object, __ss_int start, __ss_int end, str *reason);
+    str *__str__();
+    str *__repr__();
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnicodeEncodeError; }
+    PyObject *__py_args__();
+#endif
+};
+
+class UnicodeTranslateError : public UnicodeError {
+public:
+    str *_object; /* see UnicodeDecodeError */
+    __ss_int start;
+    __ss_int end;
+    str *reason;
+
+    UnicodeTranslateError(str *object, __ss_int start, __ss_int end, str *reason);
+    str *__str__();
+    str *__repr__();
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnicodeTranslateError; }
+    PyObject *__py_args__();
 #endif
 };
 

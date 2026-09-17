@@ -293,42 +293,50 @@ bool __ss_char_printable_nonascii(__ss_char c) {
 
 #ifndef __SS_UNICODE_STANDALONE
 
-void __throw_decode_error(const char *codec, unsigned char b, size_t pos, const char *msg) {
-    char buf[128];
-    snprintf(buf, sizeof(buf), "'%s' codec can't decode byte 0x%02x in position %zu: %s", codec, b, pos, msg);
-    throw new ValueError(new str(buf));
+void __throw_decode_error(const char *codec, bytes *b, size_t start, size_t end, const char *msg) {
+    throw new UnicodeDecodeError(new str(codec), b, (__ss_int)start, (__ss_int)end, new str(msg));
 }
 
-void __throw_encode_error(const char *codec, __ss_char cp, size_t pos, const char *msg) {
-    char crepr[16];
-    char buf[128];
-    if (cp < 0x100) /* character repr as CPython formats it */
-        snprintf(crepr, sizeof(crepr), "\\x%02x", (unsigned int)cp);
-    else if (cp < 0x10000)
-        snprintf(crepr, sizeof(crepr), "\\u%04x", (unsigned int)cp);
-    else
-        snprintf(crepr, sizeof(crepr), "\\U%08x", (unsigned int)cp);
-    snprintf(buf, sizeof(buf), "'%s' codec can't encode character '%s' in position %zu: %s", codec, crepr, pos, msg);
-    throw new ValueError(new str(buf));
+static inline bool __encodable(__ss_encoding enc, __ss_char cp) {
+    switch (enc) {
+        case __SS_ENC_ASCII: return cp < 0x80;
+        case __SS_ENC_LATIN1: return cp < 0x100;
+        default: return !(cp >= 0xd800 && cp <= 0xdfff) && cp <= __MAX_CODEPOINT;
+    }
 }
 
-size_t __utf8_decode_checked(const char *src, size_t len, __ss_char *dst) {
+void __throw_encode_error(__ss_encoding enc, str *s, size_t start, const char *msg) {
+    const char *codec = enc == __SS_ENC_UTF8 ? "utf-8" : enc == __SS_ENC_ASCII ? "ascii" : "latin-1";
+    size_t end = start + 1;
+    while (end < s->unit.size() && !__encodable(enc, s->unit[end]))
+        end++;
+    throw new UnicodeEncodeError(new str(codec), s, (__ss_int)start, (__ss_int)end, new str(msg));
+}
+
+size_t __utf8_decode_checked(bytes *b, __ss_char *dst) {
+    const char *src = b->unit.data();
+    size_t len = b->unit.size();
     __codec_result r = __utf8_decode(src, len, dst);
     if (!r.ok) {
+        size_t start = r.errpos, end = r.errpos + 1;
         if (r.errmsg == ERR_TRUNC) { /* errpos = start of the incomplete sequence */
-            char buf[128];
-            snprintf(buf, sizeof(buf), "'utf-8' codec can't decode bytes in position %zu-%zu: %s", r.errpos, len - 1, r.errmsg);
-            throw new ValueError(new str(buf));
+            end = len;
+        } else if (r.errmsg == ERR_CONT) { /* errpos = first bad continuation byte: back up over
+                                              the valid continuation bytes to the start byte */
+            end = r.errpos;
+            start = r.errpos - 1;
+            while (start > 0 && ((unsigned char)src[start] & 0xc0) == 0x80)
+                start--;
         }
-        __throw_decode_error("utf-8", (unsigned char)src[r.errpos], r.errpos, r.errmsg);
+        __throw_decode_error("utf-8", b, start, end, r.errmsg);
     }
     return r.units;
 }
 
-size_t __utf8_encode_checked(const __ss_char *src, size_t len, char *dst) {
-    __codec_result r = __utf8_encode(src, len, dst);
+size_t __utf8_encode_checked(str *s, char *dst) {
+    __codec_result r = __utf8_encode(s->unit.data(), s->unit.size(), dst);
     if (!r.ok)
-        __throw_encode_error("utf-8", src[r.errpos], r.errpos, r.errmsg);
+        __throw_encode_error(__SS_ENC_UTF8, s, r.errpos, r.errmsg);
     return r.units;
 }
 
@@ -374,9 +382,16 @@ __GC_STR __from_utf8(const char *s, size_t len) {
     while (pos < len) {
         __ss_char cp;
         size_t n = __utf8_decode_one(s, len, pos, &cp);
-        if (n == 0) { /* lenient: invalid byte becomes one code point */
-            cp = (__ss_char)(unsigned char)s[pos];
-            n = 1;
+        if (n == 0) {
+            unsigned char b0 = (unsigned char)s[pos];
+            if (b0 == 0xed && pos + 2 < len && /* wtf-8 surrogate (ed a0..bf 80..bf), as __to_utf8 emits */
+                ((unsigned char)s[pos + 1] & 0xe0) == 0xa0 && ((unsigned char)s[pos + 2] & 0xc0) == 0x80) {
+                cp = 0xd000 | (((__ss_char)(unsigned char)s[pos + 1] & 0x3fu) << 6) | ((__ss_char)(unsigned char)s[pos + 2] & 0x3fu);
+                n = 3;
+            } else { /* lenient: invalid byte becomes one code point */
+                cp = b0;
+                n = 1;
+            }
         }
         out += cp;
         pos += n;
