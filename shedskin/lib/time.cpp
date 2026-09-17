@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <climits>
 #include <cmath>
+#include <cstring>
 
 namespace __time__ {
 
@@ -123,6 +124,43 @@ tm* tuple2tm(struct_time* tuple) {
     time_tuple->tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
     time_tuple->tm_yday = (int)tuple->tm_yday - 1 ;
     time_tuple->tm_isdst = (int)tuple->tm_isdst;
+
+    return time_tuple;
+}
+
+/* CPython's gettmarg()+checktm(), used by strftime() and asctime(): zero is
+   accepted for tm_mon/tm_mday/tm_yday (meaning the lowest valid value),
+   tm_wday is taken modulo 7, and anything else out of range raises
+   ValueError instead of making libc index its name tables out of bounds
+   (printing '?') or return NULL. */
+tm* tuple2tm_checked(struct_time* tuple) {
+    tm *time_tuple = tuple2tm(tuple);
+
+    if (time_tuple->tm_mon == -1)
+        time_tuple->tm_mon = 0;
+    else if (time_tuple->tm_mon < 0 || time_tuple->tm_mon > 11)
+        throw new ValueError(new str("month out of range"));
+    if (time_tuple->tm_mday == 0)
+        time_tuple->tm_mday = 1;
+    else if (time_tuple->tm_mday < 0 || time_tuple->tm_mday > 31)
+        throw new ValueError(new str("day of month out of range"));
+    if (time_tuple->tm_hour < 0 || time_tuple->tm_hour > 23)
+        throw new ValueError(new str("hour out of range"));
+    if (time_tuple->tm_min < 0 || time_tuple->tm_min > 59)
+        throw new ValueError(new str("minute out of range"));
+    if (time_tuple->tm_sec < 0 || time_tuple->tm_sec > 61)
+        throw new ValueError(new str("seconds out of range"));
+    time_tuple->tm_wday = (int)((tuple->tm_wday + 1) % 7);
+    if (time_tuple->tm_wday < 0)
+        throw new ValueError(new str("day of week out of range"));
+    if (time_tuple->tm_yday == -1)
+        time_tuple->tm_yday = 0;
+    else if (time_tuple->tm_yday < 0 || time_tuple->tm_yday > 365)
+        throw new ValueError(new str("day of year out of range"));
+    if (time_tuple->tm_isdst < -1)
+        time_tuple->tm_isdst = -1;
+    else if (time_tuple->tm_isdst > 1)
+        time_tuple->tm_isdst = 1;
 
     return time_tuple;
 }
@@ -372,8 +410,16 @@ __ss_float clock_getres(__ss_int clk_id) {
 
 #endif
 
+static void __ss_check_sleep(__ss_float s) {
+    if (std::isnan(s))
+        throw new ValueError(new str("Invalid value NaN (not a number)"));
+    if (s < 0)
+        throw new ValueError(new str("sleep length must be non-negative"));
+}
+
 #ifndef WIN32
 void *sleep(__ss_float s) {
+    __ss_check_sleep(s);
     time_t seconds = time_t(s);
     __ss_float nanosecs = (s - (__ss_float)seconds) * 1000000000l;
 
@@ -393,6 +439,7 @@ void *sleep(__ss_float s) {
 }
 #else
 void *sleep(__ss_float s) {
+    __ss_check_sleep(s);
     Sleep(s*1000); // TODO ms resolution..
     return NULL;
     }
@@ -414,29 +461,55 @@ __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
    instead, which rounds negative fractional timestamps *up* to the wrong
    second (time.gmtime(-0.5) would incorrectly land on the epoch itself). */
 static inline time_t __ss_seconds_to_time_t(const __ss_float seconds) {
-    return static_cast<time_t>(std::floor(seconds));
+    if (std::isnan(seconds))
+        throw new ValueError(new str("Invalid value NaN (not a number)"));
+    /* like CPython, refuse timestamps that do not fit in time_t (the cast
+       would be undefined behaviour) */
+    double f = std::floor((double)seconds);
+    const double lim = std::ldexp(1.0, (int)(sizeof(time_t) * 8 - 1));
+    if (!(f >= -lim && f < lim))
+        throw new OverflowError(new str("timestamp out of range for platform time_t"));
+    return static_cast<time_t>(f);
 }
 
+/* ::localtime/::gmtime return NULL (errno EOVERFLOW) when the year does
+   not fit in struct tm; CPython raises OSError there. */
+static struct_time *__ss_localtime(time_t timet) {
+    errno = 0;
+    tm *tm_time = ::localtime(&timet);
+    if (!tm_time) {
+        if (errno == 0) errno = EINVAL;
+        throw new OSError();
+    }
+    return tm2tuple(tm_time);
+}
+
+static struct_time *__ss_gmtime(time_t timet) {
+    errno = 0;
+    tm *tm_time = ::gmtime(&timet);
+    if (!tm_time) {
+        if (errno == 0) errno = EINVAL;
+        throw new OSError();
+    }
+    return tm2tuple(tm_time);
+}
+
+/* the no-argument variants pass time_t straight through, rather than via
+   __ss_float, which under --float32 would lose ~2 minutes of precision */
 struct_time *localtime() {
-    time_t time = ::time(NULL);
-    return localtime((__ss_float)time);
+    return __ss_localtime(::time(NULL));
 }
 
 struct_time *localtime(const __ss_float timep) {
-    time_t timet = __ss_seconds_to_time_t(timep);
-    tm *tm_time = ::localtime(&timet);
-    return tm2tuple(tm_time);
+    return __ss_localtime(__ss_seconds_to_time_t(timep));
 }
 
 struct_time *gmtime() {
-    time_t time = ::time(NULL);
-    return gmtime((__ss_float)time);
+    return __ss_gmtime(::time(NULL));
 }
 
 struct_time *gmtime(const __ss_float seconds) {
-    time_t timet = __ss_seconds_to_time_t(seconds);
-    tm *tm_time = ::gmtime(&timet);
-    return tm2tuple(tm_time);
+    return __ss_gmtime(__ss_seconds_to_time_t(seconds));
 }
 
 str *asctime() {
@@ -445,7 +518,7 @@ str *asctime() {
 }
 
 str *asctime(struct_time *tuple) {
-    return (new str(::asctime(tuple2tm(tuple))))->__slice__(2, 0, -1, 0);
+    return (new str(::asctime(tuple2tm_checked(tuple))))->__slice__(2, 0, -1, 0);
 }
 
 str *ctime() {
@@ -457,7 +530,7 @@ str *ctime(const __ss_float seconds) {
 }
 
 str *strftime(str *format, struct_time* tuple) {
-    tm *time_tuple = tuple2tm(tuple);
+    tm *time_tuple = tuple2tm_checked(tuple);
     size_t size = format->unit.size();
     size_t n;
     char *buf;
@@ -1127,16 +1200,148 @@ find_string(const u_char *bp, int *tgt, const char * const *n1,
 
 #endif 
 
-struct_time *strptime(str *string, str *format) {
+static inline bool __ss_isleap(int year) {
+    return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
+}
+
+/* does a strptime format contain one of the given conversion directives? */
+static bool __ss_strptime_has(const char *fmt, const char *directives) {
+    for (; *fmt; fmt++) {
+        if (*fmt != '%')
+            continue;
+        fmt++;
+        if (*fmt == 'E' || *fmt == 'O')
+            fmt++;
+        if (!*fmt)
+            break;
+        if (strchr(directives, *fmt))
+            return true;
+    }
+    return false;
+}
+
+/* the day of year (0-based) given to the %j directive of a format that was
+   already parsed successfully, or -1 if there is none. we read it ourselves
+   rather than trust tm_yday: BSD libc (macOS) normalizes day 366 of a common
+   year into January 1st of the next year on its own, leaving no trace of the
+   parsed value. the format up to %j is parsed once more into a scratch
+   struct tm just to locate the field in the input. */
+static int __ss_strptime_yday(const char *string, const char *fmt) {
+    const char *p = fmt;
+    for (; *p; p++) {
+        if (*p != '%')
+            continue;
+        const char *d = p + 1;
+        if (*d == 'E' || *d == 'O')
+            d++;
+        if (!*d)
+            return -1;
+        if (*d == 'j')
+            break;
+        p = d;
+    }
+    if (!*p)
+        return -1;
+
+    std::string prefix(fmt, (size_t)(p - fmt));
+    tm scratch = {};
+    scratch.tm_mday = 1;
+    scratch.tm_isdst = -1;
 #ifdef WIN32
-    tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
-    if(!strptime(string->c_str(), format->c_str(), &time_tuple))
-        throw  new ValueError(new str(__gcs("time data did not match format:  data=")+string->unit+__gcs(" fmt=")+format->unit));
+    const char *pos = strptime(string, prefix.c_str(), &scratch);
 #else
-    tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
-    if(!::strptime(string->c_str(), format->c_str(), &time_tuple))
-        throw  new ValueError(new str(__gcs("time data did not match format:  data=")+string->unit+__gcs(" fmt=")+format->unit));
+    const char *pos = ::strptime(string, prefix.c_str(), &scratch);
 #endif
+    if (!pos)
+        return -1;
+    while (*pos == ' ')  /* glibc allows leading spaces before the digits */
+        pos++;
+    int j = 0, n = 0;
+    for (; n < 3 && *pos >= '0' && *pos <= '9'; pos++, n++)
+        j = j * 10 + (*pos - '0');
+    return n ? j - 1 : -1;
+}
+
+struct_time *strptime(str *string, str *format) {
+    /* CPython defaults: 1900-01-01 00:00:00, tm_isdst -1. tm_wday/tm_yday
+       start out as -1 so we can tell whether the platform strptime filled
+       them in (glibc does whenever a date field was parsed, others may not)
+       and derive them from the date otherwise, as CPython's _strptime does. */
+    tm time_tuple = {};
+    time_tuple.tm_mday = 1;
+    time_tuple.tm_wday = -1;
+    time_tuple.tm_yday = -1;
+    time_tuple.tm_isdst = -1;
+
+    const char *end;
+#ifdef WIN32
+    end = strptime(string->c_str(), format->c_str(), &time_tuple);
+#else
+    end = ::strptime(string->c_str(), format->c_str(), &time_tuple);
+#endif
+    if (!end)
+        throw new ValueError(__add_strs(4, new str("time data "), repr(string), new str(" does not match format "), repr(format)));
+    if (*end)
+        throw new ValueError(__add_strs(2, new str("unconverted data remains: "), new str(end)));
+
+    static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int year = time_tuple.tm_year + 1900;
+
+    if (__ss_strptime_has(format->c_str(), "j") && time_tuple.tm_yday != -1) {
+        /* a parsed day of year (%j) determines month and day, as in CPython
+           (where it takes precedence over %m/%d). the bundled strptime used
+           on Windows only stores tm_yday for %j, and glibc keeps a
+           conflicting %m/%d, so derive tm_mon/tm_mday from it here. we go by
+           the format rather than by tm_yday having been set, since glibc
+           also fills that in from %m/%d (even for an invalid date). as in
+           CPython, day 366 of a common year rolls over into January of the
+           next year while tm_yday keeps its value. */
+        int yday = time_tuple.tm_yday;
+        int parsed = __ss_strptime_yday(string->c_str(), format->c_str());
+        if (parsed != -1 && parsed != yday) {
+            /* BSD libc (macOS) already moved day 366 of a common year into
+               the next year and reset tm_yday; go back to what was parsed
+               so the rollover below produces the same result everywhere */
+            yday = parsed;
+            time_tuple.tm_yday = parsed;
+            year--;
+            time_tuple.tm_year--;
+        }
+        if (yday >= 365 + __ss_isleap(year)) {
+            yday -= 365 + __ss_isleap(year);
+            year++;
+            time_tuple.tm_year++;
+        }
+        int m = 0;
+        while (m < 11 && yday >= mdays[m] + (m == 1 && __ss_isleap(year))) {
+            yday -= mdays[m] + (m == 1 && __ss_isleap(year));
+            m++;
+        }
+        time_tuple.tm_mon = m;
+        time_tuple.tm_mday = yday + 1;
+    } else {
+        int mon = time_tuple.tm_mon;
+        int ndays = mdays[mon] + (mon == 1 && __ss_isleap(year));
+        if (time_tuple.tm_mday > ndays)
+            throw new ValueError(new str("day is out of range for month"));
+
+        int yday = time_tuple.tm_mday - 1;
+        for (int m = 0; m < mon; m++)
+            yday += mdays[m] + (m == 1 && __ss_isleap(year));
+        time_tuple.tm_yday = yday;
+    }
+    int mon = time_tuple.tm_mon;
+    if (time_tuple.tm_wday == -1 || !__ss_strptime_has(format->c_str(), "aAwuc")) {
+        /* the weekday is kept only when the format parsed one (%a %A %w %u,
+           or %c which expands to %a), as in CPython. otherwise derive it from
+           the final date: glibc fills it in itself, but from the parsed %m/%d,
+           which %j may have just overridden. Sakamoto's method, Sunday == 0
+           like struct tm */
+        static const int t[12] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+        int y = year - (mon < 2);
+        int w = (y + y/4 - y/100 + y/400 + t[mon] + time_tuple.tm_mday) % 7;
+        time_tuple.tm_wday = w < 0 ? w + 7 : w;
+    }
     return tm2tuple(&time_tuple);
 }
 
