@@ -800,8 +800,53 @@ def test_ascii85():
                 assert binascii.a2b_ascii85(e, foldspaces=foldspaces, adobe=adobe, ignorechars=b'\n') == input_bytes
 
 
+def test_incomplete():
+    # binascii.Incomplete is a leftover from the (removed in 3.11) hqx
+    # functions: CPython still exports it but never raises it anymore.
+    # We mirror that: the class exists, is a distinct Exception subclass
+    # from binascii.Error, and user code can raise/catch it.
+    try:
+        raise binascii.Incomplete("need more data")
+    except binascii.Incomplete as e:
+        assert str(e) == "need more data"
+
+    # it is an Exception subclass..
+    try:
+        raise binascii.Incomplete("x")
+    except Exception as e:
+        assert str(e) == "x"
+
+    # ..but not a binascii.Error, and vice versa
+    caught = ''
+    try:
+        raise binascii.Incomplete("y")
+    except binascii.Error:
+        caught = 'error'
+    except binascii.Incomplete:
+        caught = 'incomplete'
+    assert caught == 'incomplete'
+
+    caught = ''
+    try:
+        raise binascii.Error("z")
+    except binascii.Incomplete:
+        caught = 'incomplete'
+    except binascii.Error:
+        caught = 'error'
+    assert caught == 'error'
+
+    # the a2b_* decoders raise binascii.Error (not Incomplete) on short input
+    try:
+        binascii.a2b_base64(b'abc')
+    except binascii.Incomplete:
+        assert False
+    except binascii.Error:
+        pass
+
+
 def test_all():
     test_qp()
+    test_incomplete()
     test_b2a_qp_leading_dot_at_end()
     test_uu()
     test_a2b_uu_short_input()
