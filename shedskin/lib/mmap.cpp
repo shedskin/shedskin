@@ -298,12 +298,10 @@ const __ss_int
     MADV_FREE_REUSABLE = __MADV_FREE_REUSABLE,
     MADV_FREE_REUSE = __MADV_FREE_REUSE;
 
-// Default parameters.
+// mmap.py spells the flags/prot defaults as the literals 1 and 3.
 #ifndef WIN32 /* UNIX */
-__ss_int default_0 = MAP_SHARED,
-         default_1 = PROT_READ | PROT_WRITE;
-#else
-str *default_2;
+static_assert(MAP_SHARED == 1, "mmap.py: flags default must equal MAP_SHARED");
+static_assert((PROT_READ | PROT_WRITE) == 3, "mmap.py: prot default must equal PROT_READ | PROT_WRITE");
 #endif /* WIN32 */
 
 // Error messages.
@@ -1258,8 +1256,6 @@ void __init()
         SYSTEM_INFO si;
         GetSystemInfo(&si);
         ALLOCATIONGRANULARITY = si.dwAllocationGranularity;
-
-        default_2 = new str("");
 #endif /* WIN32 */
         const_0  = new str("mmap object is not open for reading");
         const_1  = new str("source, destination, or count out of range");

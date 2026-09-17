@@ -76,13 +76,6 @@ MADV_FREE_REUSE;
 extern str *__name__;
 extern class_ *cl_mmap;
 
-#ifndef WIN32 /* UNIX */
-extern __ss_int default_0,
-                default_1;
-#else
-extern str *default_2;
-#endif /* WIN32 */
-
 class __mmapiter;
 
 /**

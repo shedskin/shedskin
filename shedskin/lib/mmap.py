@@ -50,10 +50,13 @@ MADV_FREE_REUSABLE = -1
 MADV_FREE_REUSE = -1
 
 class mmap(pyiter):
-    def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
+    # flags/prot defaults are spelled as literals (MAP_SHARED, PROT_READ |
+    # PROT_WRITE), so no default_N variables are needed in mmap.cpp; the
+    # C++ side asserts at compile-time that these values match.
+    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0):
         self.closed = False
 
-    def __win32__init__(self, fileno, length, tagname='', access=0, offset=0):
+    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0):
         pass
 
     def close(self):
