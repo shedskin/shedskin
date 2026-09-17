@@ -175,12 +175,53 @@ def test_hi_out_of_range():
     assert bisect.bisect_left(xs, 1, 0, 6) == 0
 
 
+def test_insort_left_key():
+    # insort_left with a key that inverts the order
+    l = [5, 4, 3, 2, 1]
+    bisect.insort_left(l, 3, key=lambda a: -a)
+    assert l == [5, 4, 3, 3, 2, 1]
+
+    # left vs right placement among equal keys: the key only looks at
+    # 'x', so the inserted pair must land before (left) or after (right)
+    # the existing pairs with the same 'x'
+    ps = [Pair(1, 10), Pair(2, 20), Pair(3, 30)]
+    bisect.insort_left(ps, Pair(2, 99), key=lambda p: p.x)
+    assert [p.val for p in ps] == [(1, 10), (2, 99), (2, 20), (3, 30)]
+    bisect.insort_right(ps, Pair(2, 77), key=lambda p: p.x)
+    assert [p.val for p in ps] == [(1, 10), (2, 99), (2, 20), (2, 77), (3, 30)]
+    bisect.insort_left(ps, Pair(0, 0), key=lambda p: p.x)
+    bisect.insort_left(ps, Pair(4, 0), key=lambda p: p.x)
+    assert [p.x for p in ps] == [0, 1, 2, 2, 2, 3, 4]
+
+    # key returns a different type (str) than the list's element type (int)
+    l = [5, 4, 3, 2, 1]
+    bisect.insort_left(l, 3, key=lambda a: idx[a])
+    assert l == [5, 4, 3, 3, 2, 1]
+    bisect.insort_left(l, 1, key=lambda a: idx[a])
+    assert l == [5, 4, 3, 3, 2, 1, 1]
+
+    # named key function, with lo/hi
+    ks = [5, 4, 3, 2, 1]
+    bisect.insort_left(ks, 3, 0, -1, key=negate)
+    assert ks == [5, 4, 3, 3, 2, 1]
+    ks = [5, 4, 3, 2, 1]
+    bisect.insort_left(ks, 3, 3, 5, key=negate)
+    assert ks == [5, 4, 3, 3, 2, 1]
+    ks = [5, 4, 3, 2, 1]
+    bisect.insort_left(ks, 9, 0, 2, key=negate)
+    assert ks == [9, 5, 4, 3, 2, 1]
+    ks = [5, 4, 3, 2, 1]
+    bisect.insort_left(ks, 0, lo=2, key=negate)
+    assert ks == [5, 4, 3, 2, 1, 0]
+
+
 def test_all():
     test_bisect()
     test_bisect_insort()
     test_key()
     test_bounds()
     test_hi_out_of_range()
+    test_insort_left_key()
 
 
 if __name__ == '__main__':
