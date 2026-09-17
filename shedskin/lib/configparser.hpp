@@ -453,8 +453,6 @@ public:
     __iter<str *> *__iter__();
 };
 
-extern str * default_0;
-
 void __init();
 
 } // module namespace

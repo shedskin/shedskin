@@ -104,14 +104,6 @@ str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
 
-/* default argument value for Error.__init__(msg=''); see
-   shedskin/lib/configparser.py. Numbering follows the order in which
-   ModuleVisitor registers non-literal defaults, so it shifts whenever a
-   default argument is added to the model. All other defaults in this
-   module are either None (emitted as NULL) or __void (emitted as
-   __ss_void), so they need no global here. */
-str * default_0;
-
 /**
 class Error
 */
@@ -128,9 +120,12 @@ void *Error::__init__(str *msg) {
        so without this, str(e) prints "None" and repr(e) dereferences a
        null str* and segfaults. Setting args here, the same way the real
        constructor does, fixes both via the existing base implementations. */
-    message = msg;
-    this->args = new tuple<str *>(1, msg);
-    Exception::__init__(msg);
+    if(msg)
+        message = msg;
+    else
+        message = const_17;
+    this->args = new tuple<str *>(1, message);
+    Exception::__init__(message);
     return NULL;
 }
 
@@ -1408,7 +1403,6 @@ void __init() {
 
     DEFAULTSECT = const_53;
     MAX_INTERPOLATION_DEPTH = 10;
-    default_0 = const_17;
 }
 
 } // module namespace

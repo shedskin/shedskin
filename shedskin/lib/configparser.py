@@ -9,8 +9,8 @@ MAX_INTERPOLATION_DEPTH = 10
 __void = 0  # 'no fallback given' sentinel for the typed getters
 
 class Error(Exception):
-    def __init__(self, msg=''):
-        self.message = msg
+    def __init__(self, msg=None):
+        self.message = ''
 class NoSectionError(Error):
     def __init__(self, section):
         self.message = ''
