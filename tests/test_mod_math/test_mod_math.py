@@ -839,6 +839,54 @@ def test_log10():
     assert math.log10(1000.0) == 3.0
 
 
+def test_atan():
+    assert math.atan(0.0) == 0.0
+    assert '%.8f' % math.atan(1.0) == '0.78539816'
+    assert '%.8f' % math.atan(-1.0) == '-0.78539816'
+    assert '%.8f' % math.atan(0.5) == '0.46364761'
+    assert '%.8f' % math.atan(10.0) == '1.47112767'
+    assert math.atan(1.0) == math.pi / 4
+
+    # int argument
+    assert math.atan(1) == math.atan(1.0)
+
+    # saturates at +-pi/2 for infinite input
+    assert math.atan(math.inf) == math.pi / 2
+    assert math.atan(-math.inf) == -math.pi / 2
+    assert math.isnan(math.atan(math.nan))
+
+    # sign of zero is preserved
+    assert math.copysign(1.0, math.atan(-0.0)) == -1.0
+
+    # atan is odd
+    assert math.atan(-2.5) == -math.atan(2.5)
+
+
+def test_tanh():
+    assert math.tanh(0.0) == 0.0
+    assert '%.8f' % math.tanh(1.0) == '0.76159416'
+    assert '%.8f' % math.tanh(-1.0) == '-0.76159416'
+    assert '%.8f' % math.tanh(0.5) == '0.46211716'
+    assert '%.8f' % math.tanh(2.0) == '0.96402758'
+
+    # int argument
+    assert math.tanh(1) == math.tanh(1.0)
+
+    # saturates at +-1
+    assert math.tanh(math.inf) == 1.0
+    assert math.tanh(-math.inf) == -1.0
+    assert math.tanh(1000.0) == 1.0
+    assert math.tanh(-1000.0) == -1.0
+    assert math.isnan(math.tanh(math.nan))
+
+    # sign of zero is preserved
+    assert math.copysign(1.0, math.tanh(-0.0)) == -1.0
+
+    # tanh is odd, and bounded by (-1, 1)
+    assert math.tanh(-0.75) == -math.tanh(0.75)
+    assert -1.0 < math.tanh(-5.0) < math.tanh(5.0) < 1.0
+
+
 def test_all():
     test_fsum()
     test_pow()
@@ -863,6 +911,8 @@ def test_all():
     test_fabs()
     test_hypot()
     test_log10()
+    test_atan()
+    test_tanh()
 
 
 if __name__ == '__main__':

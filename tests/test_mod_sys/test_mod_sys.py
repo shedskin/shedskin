@@ -116,6 +116,34 @@ def test_orig_argv():
     else:  # extension module
         assert len(sys.orig_argv) == 0
 
+def test_maxsize():
+    # maxsize is the largest value of the native int type: 2**63-1 for
+    # the default 64-bit int, 2**31-1 for a 32-bit build
+    assert sys.maxsize in (2**31 - 1, 2**63 - 1)
+    assert sys.maxsize > 0
+    assert sys.maxsize % 2 == 1
+    # the corresponding minimum is representable and one bit larger
+    # in magnitude
+    assert -sys.maxsize - 1 < -sys.maxsize
+    assert sys.maxsize.bit_length() in (31, 63)
+    assert 'maxsize=%d' % sys.maxsize == 'maxsize=' + str(sys.maxsize)
+
+def test_std_streams():
+    # inspect the standard streams without reading from stdin, since
+    # the test may run without an attached input
+    assert sys.stdin.fileno() == 0
+    assert sys.stdout.fileno() == 1
+    assert sys.stderr.fileno() == 2
+    assert sys.stdin.name == '<stdin>'
+    assert sys.stdout.name == '<stdout>'
+    assert sys.stderr.name == '<stderr>'
+    assert not sys.stdin.closed
+    assert not sys.stdout.closed
+    assert not sys.stderr.closed
+    assert sys.stdin.isatty() in (True, False)
+    assert sys.stdin is not sys.stdout
+    assert sys.stdout is not sys.stderr
+
 def test_all():
     test_sys()
     test_version_consistency()
@@ -132,6 +160,8 @@ def test_all():
     test_encode_errors()
     test_float_repr_style()
     test_orig_argv()
+    test_maxsize()
+    test_std_streams()
 
 if __name__ == '__main__':
     test_all()
