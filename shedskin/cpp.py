@@ -236,7 +236,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for value, name in self.cv.value_name.items():
             self.start(name + " = ")
             if isinstance(value, str):
-                if len(value.encode("utf-8")) == 1:  # TODO ord < 256?
+                if len(value) == 1 and ord(value) < 0x80:
                     self.append("__char_cache[%d]" % ord(value))
                 else:
                     self.append('new str("%s"' % self.expand_special_chars(value))
@@ -4709,9 +4709,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 result.append(val)
                 continue
             if not is_bytes and ord_val > 127:
-                # str is internally utf-8 encoded: emit all non-ascii code
-                # points as utf-8 bytes, so that e.g. '\xe9' == 'é' holds
-                for i in val.encode('utf8'):
+                # str literals cross the C++ boundary as utf-8: emit all
+                # non-ascii code points as utf-8 bytes, so that e.g. '\xe9'
+                # == 'é' holds. surrogates are passed through (wtf-8), which
+                # the lenient __from_utf8 in the runtime decodes back to the
+                # same code points.
+                for i in val.encode('utf8', 'surrogatepass'):
                     result.append('\\' + oct(i)[2:].zfill(3))
             else:
                 result.append('\\' + oct(ord_val)[2:].zfill(3))

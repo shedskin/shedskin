@@ -947,6 +947,31 @@ class StopIteration(Exception): pass
 class TypeError(Exception): pass
 class ValueError(Exception): pass
 
+class UnicodeError(ValueError): pass
+
+class UnicodeDecodeError(UnicodeError):
+    def __init__(self, encoding, object, start, end, reason):
+        self.encoding = ''
+        self.object = b''
+        self.start = 1
+        self.end = 1
+        self.reason = ''
+
+class UnicodeEncodeError(UnicodeError):
+    def __init__(self, encoding, object, start, end, reason):
+        self.encoding = ''
+        self.object = ''
+        self.start = 1
+        self.end = 1
+        self.reason = ''
+
+class UnicodeTranslateError(UnicodeError):
+    def __init__(self, object, start, end, reason):
+        self.object = ''
+        self.start = 1
+        self.end = 1
+        self.reason = ''
+
 class ArithmeticError(Exception): pass
 class FloatingPointError(ArithmeticError): pass
 class OverflowError(ArithmeticError): pass

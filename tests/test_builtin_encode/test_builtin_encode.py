@@ -33,7 +33,7 @@ def test_encode_ascii():
     caught = 0
     try:
         'caf\xe9'.encode('ascii')
-    except ValueError:  # UnicodeEncodeError, eventually
+    except UnicodeEncodeError:
         caught += 1
     assert caught == 1
 
@@ -44,7 +44,7 @@ def test_decode_ascii():
     caught = 0
     try:
         b'caf\xe9'.decode('ascii')
-    except ValueError:  # UnicodeDecodeError, eventually
+    except UnicodeDecodeError:
         caught += 1
     assert caught == 1
 
@@ -119,6 +119,191 @@ def test_bytearray_decode():
     assert bytearray(b'caf\xe9').decode('latin-1') == 'caf\xe9'
 
 
+def test_unicode_error_hierarchy():
+    # UnicodeError subclasses ValueError; the concrete errors subclass UnicodeError
+    caught = 0
+    try:
+        b'\xff'.decode()
+    except UnicodeError:
+        caught += 1
+    try:
+        '\xe9'.encode('ascii')
+    except UnicodeError:
+        caught += 1
+    assert caught == 2
+
+    caught = 0
+    try:
+        b'\xff'.decode()
+    except ValueError:
+        caught += 1
+    try:
+        '\xe9'.encode('ascii')
+    except ValueError:
+        caught += 1
+    assert caught == 2
+
+    # a decode error is not an encode error (and vice versa)
+    caught = 0
+    try:
+        try:
+            b'\xff'.decode()
+        except UnicodeEncodeError:
+            assert False
+    except UnicodeDecodeError:
+        caught += 1
+    try:
+        try:
+            '\xe9'.encode('ascii')
+        except UnicodeDecodeError:
+            assert False
+    except UnicodeEncodeError:
+        caught += 1
+    assert caught == 2
+
+
+def test_decode_error_attrs():
+    data = b'ab\xffcd'
+    try:
+        data.decode()
+        assert False
+    except UnicodeDecodeError as e:
+        assert e.encoding == 'utf-8'
+        assert e.object == data
+        assert e.start == 2
+        assert e.end == 3
+        assert e.reason == 'invalid start byte'
+        assert str(e) == "'utf-8' codec can't decode byte 0xff in position 2: invalid start byte"
+        assert repr(e) == "UnicodeDecodeError('utf-8', b'ab\\xffcd', 2, 3, 'invalid start byte')"
+
+    # start byte plus valid continuation bytes are reported as one range
+    # (parallel lists: shedskin has no 4-element mixed-type tuples)
+    datas = [b'\xe2\x28\xa1', b'\xe2\x82\x28', b'\xe0\x80', b'\xed\xa0\x80', b'\xf4\x90\x80\x80', b'\xc0\xaf', b'ab\xe2\x82', b'\xe2', b'\xf0\x9f\x98']
+    ranges = [(0, 1), (0, 2), (0, 1), (0, 1), (0, 1), (0, 1), (2, 4), (0, 1), (0, 3)]
+    reasons = ['invalid continuation byte'] * 5 + ['invalid start byte'] + ['unexpected end of data'] * 3
+    for i in range(len(datas)):
+        try:
+            datas[i].decode('utf-8')
+            assert False
+        except UnicodeDecodeError as e:
+            assert (e.start, e.end) == ranges[i]
+            assert e.reason == reasons[i]
+    try:
+        b'ab\xe2\x82'.decode()
+        assert False
+    except UnicodeDecodeError as e:
+        assert str(e) == "'utf-8' codec can't decode bytes in position 2-3: unexpected end of data"
+
+    try:
+        b'caf\xe9\xe9'.decode('ascii')
+        assert False
+    except UnicodeDecodeError as e:
+        assert e.encoding == 'ascii'
+        assert (e.start, e.end) == (3, 4)  # ascii decode does not coalesce
+        assert e.reason == 'ordinal not in range(128)'
+        assert str(e) == "'ascii' codec can't decode byte 0xe9 in position 3: ordinal not in range(128)"
+
+
+def test_encode_error_attrs():
+    s = 'caf\xe9'
+    try:
+        s.encode('ascii')
+        assert False
+    except UnicodeEncodeError as e:
+        assert e.encoding == 'ascii'
+        assert e.object == s
+        assert (e.start, e.end) == (3, 4)
+        assert e.reason == 'ordinal not in range(128)'
+        assert str(e) == "'ascii' codec can't encode character '\\xe9' in position 3: ordinal not in range(128)"
+        assert repr(e) == "UnicodeEncodeError('ascii', 'caf\xe9', 3, 4, 'ordinal not in range(128)')"
+
+    # consecutive unencodable characters form one range, as in cpython
+    try:
+        'ab\xe9\xe9c'.encode('ascii')
+        assert False
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end) == (2, 4)
+        assert str(e) == "'ascii' codec can't encode characters in position 2-3: ordinal not in range(128)"
+    try:
+        '\u20ac\u20acx'.encode('latin-1')
+        assert False
+    except UnicodeEncodeError as e:
+        assert e.encoding == 'latin-1'
+        assert (e.start, e.end) == (0, 2)
+        assert e.reason == 'ordinal not in range(256)'
+    try:
+        '\u20ac'.encode('latin-1')
+        assert False
+    except UnicodeEncodeError as e:
+        assert str(e) == "'latin-1' codec can't encode character '\\u20ac' in position 0: ordinal not in range(256)"
+    try:
+        '\U0001f600'.encode('ascii')
+        assert False
+    except UnicodeEncodeError as e:
+        assert str(e) == "'ascii' codec can't encode character '\\U0001f600' in position 0: ordinal not in range(128)"
+    try:
+        'x\ud800\ud800y'.encode()
+        assert False
+    except UnicodeEncodeError as e:
+        assert e.encoding == 'utf-8'
+        assert (e.start, e.end) == (1, 3)
+        assert e.reason == 'surrogates not allowed'
+        assert str(e) == "'utf-8' codec can't encode characters in position 1-2: surrogates not allowed"
+
+
+def test_unicode_error_construct():
+    # the exceptions can also be raised from python code
+    caught = 0
+    try:
+        raise UnicodeDecodeError('utf-8', b'\xff', 0, 1, 'bad')
+    except UnicodeDecodeError as e1:
+        assert str(e1) == "'utf-8' codec can't decode byte 0xff in position 0: bad"
+        caught += 1
+    try:
+        raise UnicodeEncodeError('ascii', 'x\xe9y', 0, 3, 'bad')
+    except UnicodeEncodeError as e2:
+        assert str(e2) == "'ascii' codec can't encode characters in position 0-2: bad"
+        assert repr(e2) == "UnicodeEncodeError('ascii', 'x\xe9y', 0, 3, 'bad')"
+        caught += 1
+    try:
+        raise UnicodeTranslateError('x\xe9y', 1, 2, 'bad')
+    except UnicodeTranslateError as e3:
+        assert e3.object == 'x\xe9y'
+        assert (e3.start, e3.end) == (1, 2)
+        assert e3.reason == 'bad'
+        assert str(e3) == "can't translate character '\\xe9' in position 1: bad"
+        assert repr(e3) == "UnicodeTranslateError('x\xe9y', 1, 2, 'bad')"
+        caught += 1
+    try:
+        raise UnicodeTranslateError('xy', 0, 2, 'bad')
+    except UnicodeError as e4:
+        assert str(e4) == "can't translate characters in position 0-1: bad"
+        caught += 1
+    try:
+        raise UnicodeError('plain')
+    except ValueError as e5:
+        assert str(e5) == 'plain'
+        assert repr(e5) == "UnicodeError('plain')"
+        caught += 1
+    assert caught == 5
+
+
+def test_surrogate_literals():
+    # a surrogate code point in a str literal survives translation as one
+    # code point (wtf-8 across the c++ boundary), and only fails at encode
+    s = 'x\ud800\udfffy'
+    assert len(s) == 4
+    assert [ord(c) for c in s] == [120, 0xd800, 0xdfff, 121]
+    assert s == 'x' + chr(0xd800) + chr(0xdfff) + 'y'
+    caught = 0
+    try:
+        s.encode()
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end) == (1, 3)
+        caught += 1
+    assert caught == 1
+
+
 def test_all():
     test_encode_utf8()
     test_decode_utf8()
@@ -131,6 +316,11 @@ def test_all():
     test_errors_arg()
     test_literal_consistency()
     test_bytearray_decode()
+    test_unicode_error_hierarchy()
+    test_decode_error_attrs()
+    test_encode_error_attrs()
+    test_unicode_error_construct()
+    test_surrogate_literals()
 
 
 if __name__ == '__main__':

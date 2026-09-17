@@ -15,7 +15,7 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_frozendict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange, *cl_bytes, *cl_bytearray;
 
-class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror;
+class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 bytes *bsp;
@@ -158,6 +158,10 @@ void __init() {
     cl_systemexit = new class_("SystemExit");
     cl_arithmeticerror = new class_("ArithmeticError");
     cl_lookuperror = new class_("LookupError");
+    cl_unicodeerror = new class_("UnicodeError");
+    cl_unicodedecodeerror = new class_("UnicodeDecodeError");
+    cl_unicodeencodeerror = new class_("UnicodeEncodeError");
+    cl_unicodetranslateerror = new class_("UnicodeTranslateError");
 
 }
 
