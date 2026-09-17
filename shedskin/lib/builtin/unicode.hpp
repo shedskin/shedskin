@@ -98,9 +98,12 @@ void __check_errors_arg(str *errors);
 
 /* internal conversions between the utf-8 boundary representation and
    the __ss_char code point representation used inside str. these never
-   throw: invalid utf-8 bytes decode as one code point per byte, and
-   surrogate code points round-trip as normal 3-byte sequences (wtf-8),
-   so trusted internal sources (number formatting, literals) are safe. */
+   throw: like CPython's filesystem encoding (utf-8 + surrogateescape,
+   PEP 383), an invalid utf-8 byte b decodes as the lone surrogate
+   U+DC00+b, and those surrogates encode back to the original byte, so
+   argv, environment and path bytes survive a round trip. other surrogate
+   code points round-trip as normal 3-byte sequences (wtf-8). trusted
+   internal sources (number formatting, literals) are unaffected. */
 __GC_STR __from_utf8(const char *s, size_t len);
 __GC_STR __from_utf8(const __GC_BYTES &b);
 __GC_BYTES __to_utf8(const __ss_char *s, size_t len);

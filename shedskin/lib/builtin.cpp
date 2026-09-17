@@ -297,9 +297,10 @@ void throw_exception() {
     if (pvalue) {
         PyObject *pystr = PyObject_Str(pvalue);
         if (pystr) {
-            const char *msg = PyUnicode_AsUTF8(pystr);
-            if (msg)
-                message = new str(msg);
+            /* str(PyObject *) copies code points, so a message holding a
+             * lone surrogate is kept as-is (PyUnicode_AsUTF8 would fail on
+             * it and leave a UnicodeEncodeError set) */
+            message = new str(pystr);
             Py_DECREF(pystr);
         } else {
             PyErr_Clear();

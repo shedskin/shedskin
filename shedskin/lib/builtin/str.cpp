@@ -907,21 +907,21 @@ str::str(PyObject *p) : hash(-1) {
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
     __class__ = cl_str_;
-    Py_ssize_t sz;
-    const char *data = PyUnicode_AsUTF8AndSize(p, &sz);
-    unit = __from_utf8(data, (size_t)sz);
-
-    // unit = __GC_STRING(PyUnicode_AsUTF8(p), PyUnicode_GET_SIZE(p));
-    // unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
-    // unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
+    /* copy code points directly: going through utf-8 would fail for lone
+       surrogates (PyUnicode_AsUTF8AndSize raises UnicodeEncodeError), and
+       CPython strings from os.listdir/sys.argv can contain those (PEP 383) */
+    Py_ssize_t sz = PyUnicode_GET_LENGTH(p);
+    int kind = PyUnicode_KIND(p);
+    const void *data = PyUnicode_DATA(p);
+    unit.resize((size_t)sz);
+    for (Py_ssize_t i = 0; i < sz; i++)
+        unit[(size_t)i] = (__ss_char)PyUnicode_READ(kind, data, i);
 }
 
 PyObject *str::__to_py__() {
-//    return PyBytes_FromStringAndSize("bla", 3);
-    // return PyString_FromStringAndSize(c_str(), size());
-    // return PyBytes_FromStringAndSize(c_str(), size());
-    __GC_BYTES b = __to_utf8(unit);
-    return PyUnicode_DecodeUTF8(b.data(), (Py_ssize_t)b.size(), "");
+    /* code points straight in (no utf-8 round trip), so that surrogate
+       escapes in e.g. file names or error messages survive the crossing */
+    return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, unit.data(), (Py_ssize_t)unit.size());
 }
 #endif
 
