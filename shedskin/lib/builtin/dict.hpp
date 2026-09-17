@@ -16,6 +16,7 @@ public:
     K __next__();
 
     inline str *__str__() { return new str("dict_keys"); }
+    inline __ss_int __len__() { return p->__len__(); } /* view is live: reflects the dict's current size */
 };
 
 template <class K, class V> class __dictitervalues : public __iter<V> {
@@ -27,6 +28,7 @@ public:
     V __next__();
 
     inline str *__str__() { return new str("dict_values"); }
+    inline __ss_int __len__() { return p->__len__(); } /* view is live: reflects the dict's current size */
 };
 
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
@@ -38,6 +40,7 @@ public:
     tuple2<K, V> *__next__();
 
     inline str *__str__() { return new str("dict_items"); }
+    inline __ss_int __len__() { return p->__len__(); } /* view is live: reflects the dict's current size */
 };
 
 template <class K, class V> class dict : public pyiter<K> {

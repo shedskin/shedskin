@@ -149,6 +149,90 @@ def test_defaultdict_fromkeys_no_value():
     assert list(sorted(d.items())) == [('x', None), ('y', None)]
 
 
+def test_defaultdict_get():
+    # get() does NOT call __missing__: a missing key yields the default
+    # argument (None), the factory is not invoked and nothing is inserted
+    d = defaultdict(list)
+    d['a'].append(1)
+    assert d.get('a') == [1]
+    assert d.get('b') is None
+    assert d.get('b', [9]) == [9]
+    assert 'b' not in d
+    assert len(d) == 1
+
+    e = defaultdict(int)
+    e['x'] += 2
+    assert e.get('x', 0) == 2
+    assert e.get('y', -1) == -1
+    assert 'y' not in e
+
+
+def test_defaultdict_setdefault():
+    # setdefault() is plain dict behaviour: it inserts the given default,
+    # not the factory value, and leaves existing keys alone
+    d = defaultdict(int)
+    assert d.setdefault('a', 5) == 5
+    assert d['a'] == 5
+    assert d.setdefault('a', 7) == 5
+    assert d['a'] == 5
+    # subscript on a missing key still uses the factory
+    assert d['b'] == 0
+    assert sorted(d.items()) == [('a', 5), ('b', 0)]
+
+    e = defaultdict(list)
+    e.setdefault('k', [0]).append(1)
+    e.setdefault('k', [9]).append(2)
+    assert e['k'] == [0, 1, 2]
+    # the factory still applies to subscript access on other keys
+    e['j'].append(3)
+    assert e['j'] == [3]
+    assert e.setdefault('j', [8]) == [3]
+
+
+def test_defaultdict_popitem():
+    d = defaultdict(int)
+    d['a'] = 1
+    d['b'] = 2
+    seen = []
+    k, v = d.popitem()
+    seen.append((k, v))
+    k, v = d.popitem()
+    seen.append((k, v))
+    assert sorted(seen) == [('a', 1), ('b', 2)]
+    assert len(d) == 0
+
+    raised = False
+    try:
+        d.popitem()
+    except KeyError:
+        raised = True
+    assert raised
+
+    # popped keys are gone, but the factory still works afterwards
+    assert d['c'] == 0
+    assert list(d.keys()) == ['c']
+
+
+def test_defaultdict_values():
+    d = defaultdict(list)
+    d['a'].append(1)
+    d['b'].append(2)
+    d['b'].append(3)
+    vals = sorted(d.values())
+    assert vals == [[1], [2, 3]]
+    assert len(d.values()) == 2
+    # values() is a live view: mutation shows through
+    d['c'].append(4)
+    assert len(d.values()) == 3
+    assert sum(len(v) for v in d.values()) == 4
+
+    e = defaultdict(int)
+    assert list(e.values()) == []
+    # a lookup inserts, so the factory value shows up in values()
+    e['z']
+    assert list(e.values()) == [0]
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -675,6 +759,72 @@ def test_counter_ixor():
     assert sorted(c.items()) == [('a', 1), ('b', 2)]
 
 
+def test_counter_get():
+    # get() does NOT go through __missing__: a missing key yields the
+    # default argument, not 0, and nothing is inserted. (no-default
+    # get() would mix None with the int counts, so it isn't exercised here)
+    c = Counter('aab')
+    assert c.get('a', 0) == 2
+    assert c.get('b', 99) == 1
+    assert c.get('z', 0) == 0
+    assert c.get('z', -1) == -1
+    assert 'z' not in c
+    assert len(c) == 2
+
+
+def test_counter_setdefault():
+    c = Counter('aab')
+    assert c.setdefault('a', 100) == 2
+    assert c['a'] == 2
+    # a missing key is inserted with the given default, not 0
+    assert c.setdefault('z', 7) == 7
+    assert c['z'] == 7
+    assert sorted(c.items()) == [('a', 2), ('b', 1), ('z', 7)]
+    # inserted count participates in the multiset ops like any other
+    assert c.total() == 10
+    assert sorted((c - Counter('z')).items()) == [('a', 2), ('b', 1), ('z', 6)]
+
+
+def test_counter_popitem():
+    c = Counter('aab')
+    seen = []
+    k, v = c.popitem()
+    seen.append((k, v))
+    k, v = c.popitem()
+    seen.append((k, v))
+    assert sorted(seen) == [('a', 2), ('b', 1)]
+    assert len(c) == 0
+    assert c.total() == 0
+
+    raised = False
+    try:
+        c.popitem()
+    except KeyError:
+        raised = True
+    assert raised
+
+    # still a Counter afterwards: missing keys read as 0 without insertion
+    assert c['q'] == 0
+    assert len(c) == 0
+    assert repr(c) == 'Counter()'
+
+
+def test_counter_values():
+    c = Counter('mississippi')
+    assert sorted(c.values()) == [1, 2, 4, 4]
+    assert sum(c.values()) == 11
+    assert sum(c.values()) == c.total()
+    assert len(c.values()) == 4
+    # a missing-key lookup does not add a value
+    c['zzz']
+    assert len(c.values()) == 4
+    # values() is a live view, and zero/negative counts are included
+    c['zzz'] = 0
+    c.subtract('m')
+    assert sorted(c.values()) == [0, 0, 2, 4, 4]
+    assert list(Counter().values()) == []
+
+
 def test_all():
     test_defaultdict1()
     test_defaultdict2()
@@ -685,6 +835,10 @@ def test_all():
     test_defaultdict_type_identity()
     test_defaultdict_fromkeys()
     test_defaultdict_fromkeys_no_value()
+    test_defaultdict_get()
+    test_defaultdict_setdefault()
+    test_defaultdict_popitem()
+    test_defaultdict_values()
     test_deque1()
     test_deque2()
     test_deque_rotate_default()
@@ -731,6 +885,10 @@ def test_all():
     test_counter_xor_operator()
     test_counter_xor_negative_counts()
     test_counter_ixor()
+    test_counter_get()
+    test_counter_setdefault()
+    test_counter_popitem()
+    test_counter_values()
 
 
 if __name__ == '__main__':

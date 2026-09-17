@@ -208,6 +208,33 @@ def test_frozendict():
     # abstract TODO
 
 
+def test_view_len_bool():
+    # regression test: the keys()/values()/items() views never overrode
+    # __len__, so they fell back to pyobj's default of 1 (and so were
+    # always truthy)
+    d = {'a': 1, 'b': 2, 'c': 3}
+    assert len(d.keys()) == 3
+    assert len(d.values()) == 3
+    assert len(d.items()) == 3
+    assert bool(d.keys()) and bool(d.values()) and bool(d.items())
+
+    e = {'x': 1}
+    del e['x']
+    assert len(e.keys()) == 0
+    assert len(e.values()) == 0
+    assert len(e.items()) == 0
+    assert not e.keys()
+    assert not e.values()
+    assert not e.items()
+
+    # views are live
+    e['y'] = 2
+    e['z'] = 3
+    assert len(e.keys()) == 2
+    assert len(e.items()) == 2
+    assert e.values()
+
+
 def test_all():
     test_dict()
     test_dict_get()
@@ -224,6 +251,7 @@ def test_all():
     test_update()
     test_merge()
     test_frozendict()
+    test_view_len_bool()
 
 
 if __name__ == "__main__":
