@@ -83,6 +83,67 @@ def test_validate():
     assert base64.b64decode(bad) == b'Hello!'
 
 
+def b64_error(f, msg=None):
+    ok = False
+    try:
+        f()
+    except binascii.Error as e:
+        ok = True
+        if msg is not None:
+            assert str(e) == msg, str(e)
+    assert ok
+
+
+def test_b64decode_ignorechars():
+    # giving ignorechars turns validation on by default (CPython 3.15)
+    assert base64.b64decode(b'aG\nk=', ignorechars=b'\n') == b'hi'
+    b64_error(lambda: base64.b64decode(b'aG\nk=', ignorechars=b' '), 'Only base64 data is allowed')
+    b64_error(lambda: base64.b64decode(b'aGk=\n', ignorechars=b''), 'Only base64 data is allowed')
+    assert base64.b64decode(b'aGk=', ignorechars=b'') == b'hi'
+    # ... unless validate is explicitly False
+    assert base64.b64decode(b'aG\nk=', ignorechars=b' ', validate=False) == b'hi'
+    assert base64.b64decode(b'aG\nk=', ignorechars=b'\n', validate=True) == b'hi'
+    # ignoring '=' allows misplaced/excess padding
+    b64_error(lambda: base64.b64decode(b'AAAA=', validate=True), 'Excess padding not allowed')
+    assert base64.b64decode(b'AAAA=', ignorechars=b'=') == b'\x00\x00\x00'
+    assert base64.b64decode(b'QQ==QQ==', ignorechars=b'=') == b'A\x04\x10'
+    assert base64.b64decode(b'aGk=', padded=False, ignorechars=b'=') == b'hi'
+    b64_error(lambda: base64.b64decode(b'aGk=', padded=False, ignorechars=b'\n'), 'Padding not allowed')
+
+    # with altchars, ignorechars switches to the strict alternative
+    # alphabet: '+' and '/' are then no longer accepted
+    data = bytes([251, 255, 191, 62])
+    assert base64.b64decode(b'-_-_Pg==', altchars=b'-_', ignorechars=b'\n') == data
+    assert base64.b64decode(b'-_-_\nPg==\n', altchars=b'-_', ignorechars=b'\n') == data
+    assert base64.b64decode(b'+/+/Pg==', altchars=b'-_') == data
+    b64_error(lambda: base64.b64decode(b'+/+/Pg==', altchars=b'-_', ignorechars=b'\n'), 'Only base64 data is allowed')
+    assert base64.b64decode(b'+/+/Pg==', altchars=b'-_', ignorechars=b'\n', validate=False) == b'>'
+
+    # canonical is independent of everything else
+    assert base64.b64decode(b'aGk=', canonical=True) == b'hi'
+    b64_error(lambda: base64.b64decode(b'aGl=', canonical=True), 'Non-zero padding bits')
+    b64_error(lambda: base64.b64decode(b'aG\nl=', ignorechars=b'\n', canonical=True), 'Non-zero padding bits')
+    b64_error(lambda: base64.b64decode(b'aGl', padded=False, canonical=True), 'Non-zero padding bits')
+
+
+def test_b16decode_ignorechars():
+    assert base64.b16decode(b'61 62', ignorechars=b' ') == b'ab'
+    assert base64.b16decode(b'61\n62\n', ignorechars=b'\n') == b'ab'
+    assert base64.b16decode(b'6162', ignorechars=b'') == b'ab'
+    assert base64.b16decode(b'6a 6b', casefold=True, ignorechars=b' ') == b'jk'
+    b64_error(lambda: base64.b16decode(b'61 62'), 'Non-hexadecimal digit found')
+    b64_error(lambda: base64.b16decode(b'61 62', ignorechars=b'\n'), 'Non-hexadecimal digit found')
+    b64_error(lambda: base64.b16decode(b'616', ignorechars=b' '), 'Odd number of hexadecimal digits')
+    # lowercase digits are only allowed (and then dropped) if ignored
+    b64_error(lambda: base64.b16decode(b'6a', ignorechars=b' '), 'Non-base16 digit found')
+    b64_error(lambda: base64.b16decode(b'4a4b', ignorechars=b'a'), 'Non-base16 digit found')
+    assert base64.b16decode(b'4a4b', ignorechars=b'ab') == b'D'
+    b64_error(lambda: base64.b16decode(b'4a', ignorechars=b'a'), 'Odd number of hexadecimal digits')
+    # (all lowercase digits are dropped once any is ignored, like base64.py)
+    b64_error(lambda: base64.b16decode(b'4A4b', ignorechars=b'b'), 'Odd number of hexadecimal digits')
+    assert base64.b16decode(b'4Ab4C', ignorechars=b'b') == b'JL'
+
+
 def test_padded():
     # encoding without padding
     assert base64.b64encode(b'abcde', padded=False) == b'YWJjZGU'
@@ -432,6 +493,8 @@ def test_all():
     test_name()
     test_validate()
     test_decode_bad_padding()
+    test_b64decode_ignorechars()
+    test_b16decode_ignorechars()
     test_padded()
     test_b16()
     test_asan_regression()

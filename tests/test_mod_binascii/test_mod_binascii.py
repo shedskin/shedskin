@@ -213,15 +213,23 @@ def test_base64_strict_mode():
     # empty input is fine in strict mode
     assert binascii.a2b_base64(b'', strict_mode=True) == b''
 
-    # regression: trailing padding right after an already-complete group
-    # (quad_pos == 0) must be *accepted* in strict mode, not rejected as
-    # "discontinuous". CPython tolerates any number of these.
-    assert binascii.a2b_base64(b'wK8j=', strict_mode=True) == b'\xc0\xaf#'
-    assert binascii.a2b_base64(b'wK8j==', strict_mode=True) == b'\xc0\xaf#'
-    assert binascii.a2b_base64(b'AAAA=', strict_mode=True) == b'\x00\x00\x00'
-    assert binascii.a2b_base64(b'AAAA====', strict_mode=True) == b'\x00\x00\x00'
+    # trailing padding right after an already-complete group (quad_pos
+    # == 0) is tolerated in non-strict mode, but since CPython 3.15 it is
+    # rejected as excess padding in strict mode (RFC 4648 section 3.3)
+    for excess in (b'wK8j=', b'wK8j==', b'AAAA=', b'AAAA====', b'QQ==='):
+        ok = False
+        try:
+            binascii.a2b_base64(excess, strict_mode=True)
+        except binascii.Error as e:
+            ok = True
+            assert str(e) == 'Excess padding not allowed'
+        assert ok
+    assert binascii.a2b_base64(b'wK8j=') == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'wK8j==') == b'\xc0\xaf#'
+    assert binascii.a2b_base64(b'AAAA====') == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'QQ===') == b'A'
 
-    # ... but real data after that trailing padding is still rejected
+    # ... and real data after that trailing padding is rejected too
     ok = False
     try:
         binascii.a2b_base64(b'AAAA=BBBB', strict_mode=True)
@@ -251,6 +259,130 @@ def test_base64_strict_mode():
     assert ok
 
 
+def expect_error_msg(f, msg=None):
+    ok = False
+    try:
+        f()
+    except binascii.Error as e:
+        ok = True
+        if msg is not None:
+            assert str(e) == msg, str(e)
+    assert ok
+
+
+def test_base64_ignorechars():
+    # ignorechars only matters in strict mode, and giving it makes strict
+    # mode the default (CPython 3.15 semantics) ...
+    assert binascii.a2b_base64(b'aG\nk=', ignorechars=b'\n') == b'hi'
+    assert binascii.a2b_base64(b'aG k=\r\n', ignorechars=b' \r\n') == b'hi'
+    expect_error_msg(lambda: binascii.a2b_base64(b'aG\nk=', ignorechars=b' '),
+                 'Only base64 data is allowed')
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGk=\n', ignorechars=b''),
+                 'Only base64 data is allowed')
+    assert binascii.a2b_base64(b'aGk=', ignorechars=b'') == b'hi'
+    # ... unless strict_mode is explicitly turned off again
+    assert binascii.a2b_base64(b'aG\nk=', ignorechars=b' ', strict_mode=False) == b'hi'
+    assert binascii.a2b_base64(b'aGk=\n', ignorechars=b'', strict_mode=False) == b'hi'
+    # and explicitly turning it on is the same as the default
+    assert binascii.a2b_base64(b'aG\nk=', ignorechars=b'\n', strict_mode=True) == b'hi'
+
+    # ignoring the pad character makes misplaced/excess padding acceptable
+    expect_error_msg(lambda: binascii.a2b_base64(b'AAAA=', strict_mode=True),
+                 'Excess padding not allowed')
+    assert binascii.a2b_base64(b'AAAA=', ignorechars=b'=') == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'AAAA==', ignorechars=b'=') == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'aG=k=', ignorechars=b'=') == b'hi'
+    assert binascii.a2b_base64(b'=AAAA', ignorechars=b'=') == b'\x00\x00\x00'
+    assert binascii.a2b_base64(b'QQ==QQ==', ignorechars=b'=') == b'A\x04\x10'
+    expect_error_msg(lambda: binascii.a2b_base64(b'aG=k=', ignorechars=b'\n'),
+                 'Discontinuous padding not allowed')
+    expect_error_msg(lambda: binascii.a2b_base64(b'QQ==QQ==', ignorechars=b'\n'),
+                 'Excess data after padding')
+    # ... but a missing closing pad is still an error
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGk', ignorechars=b'='),
+                 'Incorrect padding')
+    # and so is a lone data character
+    expect_error_msg(lambda: binascii.a2b_base64(b'A=', ignorechars=b'='))
+    expect_error_msg(lambda: binascii.a2b_base64(b'AAAAA', ignorechars=b'='))
+
+    # with padded=False the pad character is just another non-alphabet char
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGk=', padded=False, ignorechars=b'\n'),
+                 'Padding not allowed')
+    assert binascii.a2b_base64(b'aGk=', padded=False, ignorechars=b'=') == b'hi'
+    assert binascii.a2b_base64(b'aG=k', padded=False, ignorechars=b'=') == b'hi'
+
+    # high bytes can be ignored too
+    assert binascii.a2b_base64(b'aGk=\x80', ignorechars=b'\x80') == b'hi'
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGk=\x80', ignorechars=b'\n'),
+                 'Only base64 data is allowed')
+
+    # empty input is fine either way
+    assert binascii.a2b_base64(b'', ignorechars=b'=\n') == b''
+
+
+def test_base64_alphabet():
+    data = bytes(range(256))
+    for alphabet in (binascii.BASE64_ALPHABET, binascii.URLSAFE_BASE64_ALPHABET,
+                     binascii.UU_ALPHABET, binascii.CRYPT_ALPHABET,
+                     binascii.BINHEX_ALPHABET):
+        enc = binascii.b2a_base64(data, alphabet=alphabet, newline=False)
+        assert len(enc) == 344
+        assert enc.endswith(b'==')
+        unpadded = binascii.b2a_base64(data, alphabet=alphabet, padded=False, newline=False)
+        assert len(unpadded) == 342
+        assert binascii.b2a_base64(b'', alphabet=alphabet, newline=False) == b''
+        if alphabet != binascii.UU_ALPHABET:
+            # (UU_ALPHABET contains '=', which CPython always treats as
+            # the pad character, so arbitrary data does not round-trip)
+            assert binascii.a2b_base64(enc, alphabet=alphabet) == data
+            assert binascii.a2b_base64(enc, alphabet=alphabet, strict_mode=True) == data
+            assert binascii.a2b_base64(enc + b'\n', alphabet=alphabet, ignorechars=b'\n') == data
+            assert binascii.a2b_base64(unpadded, alphabet=alphabet, padded=False) == data
+            assert binascii.a2b_base64(unpadded + b'\n', alphabet=alphabet, padded=False, ignorechars=b'\n') == data
+
+    # spot checks against CPython 3.15
+    assert binascii.b2a_base64(b'hi', alphabet=binascii.UU_ALPHABET, newline=False) == b':&D='
+    assert binascii.a2b_base64(b':&D', alphabet=binascii.UU_ALPHABET, padded=False) == b'hi'
+    assert binascii.a2b_base64(b':&D=', alphabet=binascii.UU_ALPHABET) == b'hi'
+    assert binascii.b2a_base64(b'hi', alphabet=binascii.CRYPT_ALPHABET, newline=False) == b'O4Y='
+    assert binascii.b2a_base64(b'hi', alphabet=binascii.BINHEX_ALPHABET, newline=False) == b"D'N="
+    assert binascii.b2a_base64(bytes([251, 255, 191, 62]), alphabet=binascii.URLSAFE_BASE64_ALPHABET, newline=False) == b'-_-_Pg=='
+    assert binascii.a2b_base64(b'-_-_Pg==', alphabet=binascii.URLSAFE_BASE64_ALPHABET) == bytes([251, 255, 191, 62])
+
+    # with an explicit alphabet, the standard '+' and '/' are not special
+    expect_error_msg(lambda: binascii.a2b_base64(b'+/+/Pg==', alphabet=binascii.URLSAFE_BASE64_ALPHABET, strict_mode=True),
+                 'Only base64 data is allowed')
+    assert binascii.a2b_base64(b'+/+/Pg==', alphabet=binascii.URLSAFE_BASE64_ALPHABET) == b'>'
+
+    for bad in (b'', b'abc', binascii.BASE64_ALPHABET + b'x'):
+        ok = False
+        try:
+            binascii.b2a_base64(b'hi', alphabet=bad)
+        except ValueError:
+            ok = True
+        assert ok
+        ok = False
+        try:
+            binascii.a2b_base64(b'aGk=', alphabet=bad)
+        except ValueError:
+            ok = True
+        assert ok
+
+
+def test_base64_canonical():
+    # 'k' (36) has zero padding bits, 'l' (37) does not
+    assert binascii.a2b_base64(b'aGk=', canonical=True) == b'hi'
+    assert binascii.a2b_base64(b'aGl=') == b'hi'
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGl=', canonical=True), 'Non-zero padding bits')
+    assert binascii.a2b_base64(b'QQ==', canonical=True) == b'A'
+    expect_error_msg(lambda: binascii.a2b_base64(b'QR==', canonical=True), 'Non-zero padding bits')
+    assert binascii.a2b_base64(b'QUJD', canonical=True) == b'ABC'
+    # independent of strict_mode and padded
+    expect_error_msg(lambda: binascii.a2b_base64(b'aGl', canonical=True, padded=False), 'Non-zero padding bits')
+    assert binascii.a2b_base64(b'aGk', canonical=True, padded=False) == b'hi'
+    expect_error_msg(lambda: binascii.a2b_base64(b'aG\nl=', canonical=True, ignorechars=b'\n'), 'Non-zero padding bits')
+
+
 def test_base64_padding_errors():
     # a lone data character, or any leftover bits with no closing pad,
     # must raise -- not silently decode to truncated/fabricated bytes.
@@ -278,6 +410,24 @@ def test_base64_padding_errors():
         assert str(e) == (
             'Invalid base64-encoded string: number of data characters '
             '(5) cannot be 1 more than a multiple of 4')
+
+
+def test_hex_ignorechars():
+    assert binascii.a2b_hex(b'61 62', ignorechars=b' ') == b'ab'
+    assert binascii.unhexlify(b'61\n62\n', ignorechars=b'\n') == b'ab'
+    assert binascii.unhexlify(b'--61-62--', ignorechars=b'-') == b'ab'
+    assert binascii.a2b_hex(b' ', ignorechars=b' ') == b''
+    assert binascii.a2b_hex(b'6162', ignorechars=b'') == b'ab'
+    assert binascii.a2b_hex(b'\x8061', ignorechars=b'\x80') == b'a'
+    # hex digits are always consumed as digits, even if 'ignored'
+    assert binascii.a2b_hex(b'6162', ignorechars=b'6') == b'ab'
+    # non-ignored non-hex characters and odd digit counts still fail,
+    # with the CPython 3.15 messages
+    expect_error_msg(lambda: binascii.a2b_hex(b'61 62'), 'Non-hexadecimal digit found')
+    expect_error_msg(lambda: binascii.a2b_hex(b'61 62', ignorechars=b'\n'), 'Non-hexadecimal digit found')
+    expect_error_msg(lambda: binascii.unhexlify(b'616'), 'Odd number of hexadecimal digits')
+    expect_error_msg(lambda: binascii.unhexlify(b'61 6', ignorechars=b' '), 'Odd number of hexadecimal digits')
+    expect_error_msg(lambda: binascii.a2b_hex(b'6g'), 'Non-hexadecimal digit found')
 
 
 def test_hex():  # b2a_hex == hexlify
@@ -442,6 +592,14 @@ def a2b_base85_fails(s):
 def test_alphabets():
     assert len(binascii.BASE64_ALPHABET) == 64
     assert len(binascii.URLSAFE_BASE64_ALPHABET) == 64
+    assert len(binascii.UU_ALPHABET) == 64
+    assert len(binascii.CRYPT_ALPHABET) == 64
+    assert len(binascii.BINHEX_ALPHABET) == 64
+    assert binascii.UU_ALPHABET == bytes(range(32, 96))
+    assert binascii.CRYPT_ALPHABET == b'./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    assert binascii.BINHEX_ALPHABET == b'!"#$%&\'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr'
+    for alphabet in (binascii.BASE64_ALPHABET, binascii.URLSAFE_BASE64_ALPHABET, binascii.UU_ALPHABET, binascii.CRYPT_ALPHABET, binascii.BINHEX_ALPHABET):
+        assert len(set(alphabet)) == 64
     assert len(binascii.BASE85_ALPHABET) == 85
     assert len(binascii.ASCII85_ALPHABET) == 85
     assert len(binascii.Z85_ALPHABET) == 85
@@ -651,7 +809,11 @@ def test_all():
     test_base64()
     test_b2a_uu_and_b2a_base64_no_signed_overflow_on_long_input()
     test_base64_strict_mode()
+    test_base64_ignorechars()
+    test_base64_alphabet()
+    test_base64_canonical()
     test_base64_padding_errors()
+    test_hex_ignorechars()
     test_hex()
     test_unhexlify_high_bit_bytes_rejected()
     test_hex_bytes_per_sep_zero()

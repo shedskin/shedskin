@@ -2,25 +2,40 @@
 
 #include "base64.hpp"
 #include "binascii.hpp"
+#include <cstring>
 
 namespace __base64__ {
 
 str *__name__;
 
 /* Non-trivial argument defaults from base64.py, numbered in definition
- * order by the compiler (keep in sync when editing the model):
- *   default_3: b32decode(ignorechars=b'')
- *   default_4: b32hexdecode(ignorechars=b'')
- *   default_5: a85decode(ignorechars=b' \t\n\r\v')
- *   default_6: b85decode(ignorechars=b'')
- *   default_7: z85decode(ignorechars=b'')
+ * order by the compiler (every non-numeric, non-bool default counts, so
+ * None and __void defaults take up numbers too; keep in sync when editing
+ * the model):
+ *   default_4:  b16decode(ignorechars=b'')
+ *   default_6:  b32decode(ignorechars=b'')
+ *   default_7:  b32hexdecode(ignorechars=b'')
+ *   default_8:  a85decode(ignorechars=b' \t\n\r\v')
+ *   default_9:  b85decode(ignorechars=b'')
+ *   default_10: z85decode(ignorechars=b'')
  */
-bytes *default_3, *default_4, *default_5, *default_6, *default_7;
+bytes *default_4, *default_6, *default_7, *default_8, *default_9, *default_10;
+
+/* BASE64_ALPHABET[:-2] + altchars, as base64.py does it */
+static bytes *alt_alphabet(bytes *altchars) {
+    bytes *alphabet = new bytes(__binascii__::BASE64_ALPHABET);
+    alphabet->unit[62] = altchars->unit[0];
+    alphabet->unit[63] = altchars->unit[1];
+    return alphabet;
+}
 
 bytes *b64encode(bytes *s, bytes *altchars, __ss_bool padded, __ss_int wrapcol) {
-    if (altchars && altchars->unit.size() != 2)
-        throw new ValueError(new str("invalid altchars"));
-    return __binascii__::b2a_base64(s, False, wrapcol, padded, altchars);
+    if (altchars) {
+        if (altchars->unit.size() != 2)
+            throw new ValueError(new str("invalid altchars"));
+        return __binascii__::b2a_base64(s, False, wrapcol, padded, alt_alphabet(altchars));
+    }
+    return __binascii__::b2a_base64(s, False, wrapcol, padded);
 }
 
 bytes *standard_b64encode(bytes *s) {
@@ -31,10 +46,28 @@ bytes *urlsafe_b64encode(bytes *s, __ss_bool padded) {
     return b64encode(s, new bytes("-_"), padded);
 }
 
-bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate, __ss_bool padded) {
-    if (altchars && altchars->unit.size() != 2)
-        throw new ValueError(new str("invalid altchars"));
-    return __binascii__::a2b_base64(s, validate, padded, altchars);
+bytes *__b64decode(bytes *s, bytes *altchars, int validate, __ss_bool padded, bytes *ignorechars, __ss_bool canonical) {
+    if (validate == -1)
+        validate = (ignorechars != NULL);
+    if (altchars) {
+        if (altchars->unit.size() != 2)
+            throw new ValueError(new str("invalid altchars"));
+        if (ignorechars == NULL) {
+            /* Legacy behaviour (deprecated in CPython 3.15 but still in
+            ** effect): base64.py translates altchars onto '+'/'/' before
+            ** decoding, so literal '+' and '/' stay valid data alongside
+            ** the altchars. Emulate that with a reverse table that has
+            ** both mappings, rather than translating a copy of s. */
+            unsigned char table[256];
+            memcpy(table, __binascii__::__a2b_base64_table(), 256);
+            table[(unsigned char)altchars->unit[0]] = 62;
+            table[(unsigned char)altchars->unit[1]] = 63;
+            return __binascii__::__a2b_base64(s, validate, padded, (const unsigned char *)table, (bytes *)NULL, canonical);
+        }
+        /* New-style: '+'/'/' are only valid if they are the altchars. */
+        return __binascii__::__a2b_base64(s, validate, padded, alt_alphabet(altchars), ignorechars, canonical);
+    }
+    return __binascii__::__a2b_base64(s, validate, padded, (bytes *)NULL, ignorechars, canonical);
 }
 
 bytes *standard_b64decode(bytes *s) {
@@ -50,14 +83,33 @@ bytes *b16encode(bytes *s) {
     return __binascii__::hexlify(s)->upper();
 }
 
-bytes *b16decode(bytes *s, __ss_bool casefold) {
-    bytes *t = casefold ? s->upper() : s;
-    for (size_t i = 0; i < t->unit.size(); i++) {
-        char c = t->unit[i];
-        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')))
-            throw new __binascii__::Error(new str("Non-base16 digit found"));
+bytes *b16decode(bytes *s, __ss_bool casefold, bytes *ignorechars) {
+    /* mirrors base64.py: without casefold, lowercase hex digits are only
+    ** acceptable if they are in ignorechars (and are then dropped before
+    ** unhexlify gets to see them) */
+    if (!casefold) {
+        bool has_ignore = ignorechars && !ignorechars->unit.empty();
+        bool lower_seen = false;
+        for (size_t i = 0; i < s->unit.size(); i++) {
+            char c = s->unit[i];
+            if (c >= 'a' && c <= 'f') {
+                if (!has_ignore || ignorechars->unit.find(c) == std::string::npos)
+                    throw new __binascii__::Error(new str("Non-base16 digit found"));
+                lower_seen = true;
+            }
+        }
+        if (has_ignore && lower_seen) {
+            bytes *t = new bytes(1);
+            t->unit.reserve(s->unit.size());
+            for (size_t i = 0; i < s->unit.size(); i++) {
+                char c = s->unit[i];
+                if (!(c >= 'a' && c <= 'f'))
+                    t->unit.push_back(c);
+            }
+            s = t;
+        }
     }
-    return __binascii__::unhexlify(t);
+    return __binascii__::unhexlify(s, ignorechars);
 }
 
 /* ---------------------------------------------------------------------
@@ -181,8 +233,8 @@ void *decode(file_binary *input, file_binary *output) {
 void __init() {
     __name__ = new str("base64");
 
-    default_3 = default_4 = default_6 = default_7 = new bytes();
-    default_5 = new bytes(" \t\n\r\v");
+    default_4 = default_6 = default_7 = default_9 = default_10 = new bytes();
+    default_8 = new bytes(" \t\n\r\v");
 }
 
 }

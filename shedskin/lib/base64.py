@@ -2,6 +2,7 @@
 
 import binascii
 
+__void = 0  # 'validate not given' sentinel (defaults to True iff ignorechars is given)
 
 def b64encode(s, altchars=None, padded=True, wrapcol=0):
     return b''
@@ -12,7 +13,7 @@ def standard_b64encode(s):
 def urlsafe_b64encode(s, padded=True):
     return b''
 
-def b64decode(s, altchars=None, validate=False, padded=True):
+def b64decode(s, altchars=None, validate=__void, padded=True, ignorechars=None, canonical=False):
     return b''
 
 def standard_b64decode(s):
@@ -24,7 +25,7 @@ def urlsafe_b64decode(s, padded=False):
 def b16encode(s):
     return b''
 
-def b16decode(s, casefold=False):
+def b16decode(s, casefold=False, ignorechars=b''):
     return b''
 
 def b32encode(s, padded=True, wrapcol=0):
