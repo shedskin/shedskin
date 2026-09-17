@@ -483,6 +483,31 @@ def test_set_name_file_backed():
     tearDown(m)
 
 
+def test_default_flags_prot():
+    # omitted flags/prot must mean MAP_SHARED, PROT_READ | PROT_WRITE
+    m = mmap.mmap(-1, mmap.PAGESIZE)
+    m.write(b"abc")
+    assert m[:3] == b"abc"
+    m.close()
+
+    # ..so access= combines with omitted or explicitly-default flags/prot
+    m = mmap.mmap(-1, mmap.PAGESIZE, access=mmap.ACCESS_READ)
+    assert m.read(3) == b"\x00\x00\x00"
+    m.close()
+    # (keyword args: on win32 the positional slots are (fileno, length, tagname, ..))
+    m = mmap.mmap(-1, mmap.PAGESIZE, flags=mmap.MAP_SHARED, prot=mmap.PROT_READ | mmap.PROT_WRITE, access=mmap.ACCESS_WRITE)
+    m.write(b"x")
+    m.close()
+
+    # ..but not with non-default ones
+    error = False
+    try:
+        mmap.mmap(-1, mmap.PAGESIZE, prot=mmap.PROT_READ, access=mmap.ACCESS_READ)
+    except ValueError:
+        error = True
+    assert error, "access= with non-default prot should raise ValueError"
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -499,6 +524,7 @@ def test_all():
         test_seekable()
         test_set_name()
         test_set_name_file_backed()
+        test_default_flags_prot()
 
 if __name__ == '__main__':
     test_all()
