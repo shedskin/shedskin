@@ -250,6 +250,46 @@ def test_error_str_args_repr():
     assert e2.args == ("boom", "")
 
 
+def test_error_constructor_opt():
+    # explicit 'opt' argument, positional and by keyword
+    e = GetoptError("bad option", "x")
+    assert e.msg == "bad option"
+    assert e.opt == "x"
+    assert e.args == ("bad option", "x")
+    assert str(e) == "bad option"
+    assert repr(e) == "GetoptError('bad option', 'x')"
+
+    e2 = GetoptError("bad long option", opt="foo")
+    assert e2.opt == "foo"
+    assert e2.args == ("bad long option", "foo")
+
+    e3 = GetoptError(msg="kw", opt="k")
+    assert e3.msg == "kw"
+    assert e3.opt == "k"
+
+    # explicit empty opt behaves like the default
+    e4 = GetoptError("empty", "")
+    assert e4.opt == ""
+    assert e4.args == ("empty", "")
+
+    # the 'error' alias takes the same arguments
+    e5 = error("alias", "a")
+    assert e5.msg == "alias"
+    assert e5.opt == "a"
+    assert str(e5) == "alias"
+
+    # a user-constructed error can be raised and caught like a getopt one
+    opt = ''
+    msg = ''
+    try:
+        raise GetoptError("raised", "r")
+    except GetoptError as e6:
+        opt = e6.opt
+        msg = e6.msg
+    assert opt == "r"
+    assert msg == "raised"
+
+
 def test_all():
     test_getopt()
     test_getopt_stops_at_first_nonoption()
@@ -267,6 +307,7 @@ def test_all():
     test_error_attribute_types()
     test_optional_arguments()
     test_error_str_args_repr()
+    test_error_constructor_opt()
 
 if __name__ == '__main__':
     test_all()
