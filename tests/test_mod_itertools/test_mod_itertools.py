@@ -382,11 +382,61 @@ def test_batched():
     batches = list(itertools.batched(range(9), 3))
     assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
 
-    batches = list(itertools.batched(range(10), 3))  #  TODO test strict kw arg
+    batches = list(itertools.batched(range(10), 3))
     assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
+
+    # strict is keyword-only in CPython; strict=False (explicit) allows a short final batch
+    batches = list(itertools.batched(range(10), 3, strict=False))
+    assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]
+
+    # strict=True: fine when the length is a multiple of n
+    batches = list(itertools.batched(range(9), 3, strict=True))
+    assert batches == [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
+    assert list(itertools.batched('abcdef', 2, strict=True)) == [('a', 'b'), ('c', 'd'), ('e', 'f')]
+    assert list(itertools.batched([], 3, strict=True)) == []
+
+    # strict=True: incomplete final batch raises ValueError
+    try:
+        list(itertools.batched(range(10), 3, strict=True))
+        assert False
+    except ValueError as e:
+        assert str(e) == 'batched(): incomplete batch'
+
+    try:
+        list(itertools.batched([1.0, 2.0, 3.0, 4.0, 5.0], 4, strict=True))
+        assert False
+    except ValueError:
+        pass
+
+    # complete batches are yielded before the error is raised
+    seen = []
+    try:
+        for batch in itertools.batched(range(7), 3, strict=True):
+            seen.append(batch)
+        assert False
+    except ValueError:
+        pass
+    assert seen == [(0, 1, 2), (3, 4, 5)]
+
+    # once exhausted (with or without an error) the iterator stays exhausted
+    it = itertools.batched(range(7), 3, strict=True)
+    assert next(it) == (0, 1, 2)
+    assert next(it) == (3, 4, 5)
+    try:
+        next(it)
+        assert False
+    except ValueError:
+        pass
+    assert list(it) == []
 
     try:
         list(itertools.batched(range(9), 0))
+        assert False
+    except ValueError:
+        pass
+
+    try:
+        list(itertools.batched(range(9), 0, strict=True))
         assert False
     except ValueError:
         pass
