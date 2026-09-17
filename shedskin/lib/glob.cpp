@@ -1,6 +1,14 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "glob.hpp"
+
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <unistd.h>
+#endif
 
 /**
 Filename globbing utility.
@@ -69,7 +77,7 @@ static inline list<str *> *list_comp_1(str *dirname, list<str *> *names) {
     return __ss_result;
 }
 
-list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir) {
+list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir, __ss_int dir_fd) {
     /**
     Return a list of paths matching a pathname pattern.
 
@@ -88,11 +96,15 @@ list<str *> *glob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, 
     directory for searching. It has the same effect as changing the current
     directory before calling it. If pathname is relative, the result will
     contain paths relative to `root_dir`.
+
+    If `dir_fd` is not None, it should be a file descriptor open to a
+    directory, and relative paths (the pattern as well as `root_dir`) are
+    resolved against that directory instead of the current directory.
     */
-    return (new list<str *>(iglob(pathname, recursive, include_hidden, root_dir)));
+    return (new list<str *>(iglob(pathname, recursive, include_hidden, root_dir, dir_fd)));
 }
 
-__iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir) {
+__iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidden, str *root_dir, __ss_int dir_fd) {
     /**
     Return an iterator which yields the paths matching a pathname pattern.
 
@@ -108,7 +120,7 @@ __iter<str *> *iglob(str *pathname, __ss_bool recursive, __ss_bool include_hidde
 
     if (!root_dir)
         root_dir = const_3;
-    it = _iglob(pathname, root_dir, recursive, False, include_hidden);
+    it = _iglob(pathname, root_dir, dir_fd, recursive, False, include_hidden);
     if ((__NOT(___bool(pathname)) or (recursive and _isrecursive(pathname->__slice__(__ss_int(2LL), __ss_int(0LL), __ss_int(2LL), __ss_int(0LL)))))) {
         return _skip_empty(it);
     }
@@ -169,6 +181,7 @@ public:
     str *basename, *dirname, *name, *pathname, *root_dir;
     pyiter<str *> *__26, *__34, *__42, *dirs;
     __ss_bool __12, __13, __22, __23, __24, __25, dironly, include_hidden, recursive;
+    __ss_int dir_fd;
     tuple<str *> *__11;
     __iter<str *> *__14, *__15, *__19, *__27, *__30, *__31, *__35, *__39, *__43, *__47;
     __ss_int __16, __20, __28, __32, __36, __40, __44, __48;
@@ -179,9 +192,10 @@ public:
 
     int __last_yield;
 
-    __gen__iglob(str *pathname,str *root_dir,__ss_bool recursive,__ss_bool dironly,__ss_bool include_hidden) {
+    __gen__iglob(str *pathname,str *root_dir,__ss_int dir_fd,__ss_bool recursive,__ss_bool dironly,__ss_bool include_hidden) {
         this->pathname = pathname;
         this->root_dir = root_dir;
+        this->dir_fd = dir_fd;
         this->recursive = recursive;
         this->dironly = dironly;
         this->include_hidden = include_hidden;
@@ -208,14 +222,14 @@ public:
         basename = __11->__getsecond__();
         if (__NOT(has_magic(pathname))) {
             if (___bool(basename)) {
-                if (__os__::__path__::lexists(_join(root_dir, pathname))) {
+                if (_lexists(_join(root_dir, pathname), dir_fd)) {
                     __last_yield = 0;
                     __result = pathname;
                     return __result;
                     __after_yield_0:;
                 }
             }
-            else if (__os__::__path__::isdir(_join(root_dir, dirname))) {
+            else if (_isdir(_join(root_dir, dirname), dir_fd)) {
                 __last_yield = 1;
                 __result = pathname;
                 return __result;
@@ -227,7 +241,7 @@ public:
         if (__NOT(___bool(dirname))) {
             if ((recursive and _isrecursive(basename))) {
 
-                FOR_IN(name,_glob2(root_dir, basename, dironly, include_hidden),14,16,17)
+                FOR_IN(name,_glob2(root_dir, basename, dir_fd, dironly, include_hidden),14,16,17)
                     __last_yield = 2;
                     __result = name;
                     return __result;
@@ -237,7 +251,7 @@ public:
             }
             else {
 
-                FOR_IN(name,_glob1(root_dir, basename, dironly, include_hidden),18,20,21)
+                FOR_IN(name,_glob1(root_dir, basename, dir_fd, dironly, include_hidden),18,20,21)
                     __last_yield = 3;
                     __result = name;
                     return __result;
@@ -249,7 +263,7 @@ public:
             return __zero<str *>();
         }
         if ((__ne(dirname, pathname) and has_magic(dirname))) {
-            dirs = ((pyiter<str *> *)(_iglob(dirname, root_dir, recursive, True, include_hidden)));
+            dirs = ((pyiter<str *> *)(_iglob(dirname, root_dir, dir_fd, recursive, True, include_hidden)));
         }
         else {
             dirs = (new list<str *>(1,dirname));
@@ -259,7 +273,7 @@ public:
 
                 FOR_IN(dirname,dirs,26,28,29)
 
-                    FOR_IN(name,_glob2(_join(root_dir, dirname), basename, dironly, include_hidden),30,32,33)
+                    FOR_IN(name,_glob2(_join(root_dir, dirname), basename, dir_fd, dironly, include_hidden),30,32,33)
                         __last_yield = 4;
                         __result = __os__::__path__::join(2, dirname, name);
                         return __result;
@@ -273,7 +287,7 @@ public:
 
                 FOR_IN(dirname,dirs,34,36,37)
 
-                    FOR_IN(name,_glob1(_join(root_dir, dirname), basename, dironly, include_hidden),38,40,41)
+                    FOR_IN(name,_glob1(_join(root_dir, dirname), basename, dir_fd, dironly, include_hidden),38,40,41)
                         __last_yield = 5;
                         __result = __os__::__path__::join(2, dirname, name);
                         return __result;
@@ -288,7 +302,7 @@ public:
 
             FOR_IN(dirname,dirs,42,44,45)
 
-                FOR_IN(name,_glob0(_join(root_dir, dirname), basename, dironly, include_hidden),46,48,49)
+                FOR_IN(name,_glob0(_join(root_dir, dirname), basename, dir_fd, dironly, include_hidden),46,48,49)
                     __last_yield = 6;
                     __result = __os__::__path__::join(2, dirname, name);
                     return __result;
@@ -304,29 +318,29 @@ public:
 
 };
 
-__iter<str *> *_iglob(str *pathname, str *root_dir, __ss_bool recursive, __ss_bool dironly, __ss_bool include_hidden) {
-    return new __gen__iglob(pathname,root_dir,recursive,dironly,include_hidden);
+__iter<str *> *_iglob(str *pathname, str *root_dir, __ss_int dir_fd, __ss_bool recursive, __ss_bool dironly, __ss_bool include_hidden) {
+    return new __gen__iglob(pathname,root_dir,dir_fd,recursive,dironly,include_hidden);
 
 }
 
-list<str *> *_glob1(str *dirname, str *pattern, __ss_bool dironly, __ss_bool include_hidden) {
+list<str *> *_glob1(str *dirname, str *pattern, __ss_int dir_fd, __ss_bool dironly, __ss_bool include_hidden) {
     list<str *> *names;
     __ss_bool __50, __51;
 
-    names = _listdir(dirname, dironly);
+    names = _listdir(dirname, dir_fd, dironly);
     if (__NOT((include_hidden or _ishidden(pattern)))) {
         names = list_comp_0(names);
     }
     return __fnmatch__::filter(names, pattern);
 }
 
-list<str *> *_glob0(str *dirname, str *basename, __ss_bool dironly, __ss_bool include_hidden) {
+list<str *> *_glob0(str *dirname, str *basename, __ss_int dir_fd, __ss_bool dironly, __ss_bool include_hidden) {
     if (___bool(basename)) {
-        if (__os__::__path__::lexists(__os__::__path__::join(2, dirname, basename))) {
+        if (_lexists(_join(dirname, basename), dir_fd)) {
             return (new list<str *>(1,basename));
         }
     }
-    else if (__os__::__path__::isdir(dirname)) {
+    else if (_isdir(dirname, dir_fd)) {
         return (new list<str *>(1,basename));
     }
     return (__ss_list<str *, 0>());
@@ -336,15 +350,17 @@ class __gen__glob2 : public __iter<str *> {
 public:
     str *dirname, *name, *pattern;
     __ss_bool __56, __57, dironly, include_hidden;
+    __ss_int dir_fd;
     __iter<str *> *__58, *__59;
     __ss_int __60;
     __iter<str *>::for_in_loop __61;
 
     int __last_yield;
 
-    __gen__glob2(str *dirname,str *pattern,__ss_bool dironly,__ss_bool include_hidden) {
+    __gen__glob2(str *dirname,str *pattern,__ss_int dir_fd,__ss_bool dironly,__ss_bool include_hidden) {
         this->dirname = dirname;
         this->pattern = pattern;
+        this->dir_fd = dir_fd;
         this->dironly = dironly;
         this->include_hidden = include_hidden;
         __last_yield = -1;
@@ -359,14 +375,14 @@ public:
             case 1: goto __after_yield_1;
             default: break;
         }
-        if ((__NOT(___bool(dirname)) or __os__::__path__::isdir(dirname))) {
+        if ((__NOT(___bool(dirname)) or _isdir(dirname, dir_fd))) {
             __last_yield = 0;
             __result = const_3;
             return __result;
             __after_yield_0:;
         }
 
-        FOR_IN(name,_rlistdir(dirname, dironly, include_hidden),58,60,61)
+        FOR_IN(name,_rlistdir(dirname, dir_fd, dironly, include_hidden),58,60,61)
             __last_yield = 1;
             __result = name;
             return __result;
@@ -379,14 +395,102 @@ public:
 
 };
 
-__iter<str *> *_glob2(str *dirname, str *pattern, __ss_bool dironly, __ss_bool include_hidden) {
-    return new __gen__glob2(dirname,pattern,dironly,include_hidden);
+__iter<str *> *_glob2(str *dirname, str *pattern, __ss_int dir_fd, __ss_bool dironly, __ss_bool include_hidden) {
+    return new __gen__glob2(dirname,pattern,dir_fd,dironly,include_hidden);
 
 }
 
-list<str *> *_listdir(str *dirname, __ss_bool dironly) {
+/* --- dir_fd support (see glob.hpp) */
+
+static inline bool _has_dir_fd(__ss_int dir_fd) {
+    return dir_fd > 0;
+}
+
+#ifdef WIN32
+static void _dir_fd_unsupported() {
+    throw new NotImplementedError(new str("dir_fd unavailable on this platform"));
+}
+#endif
+
+__ss_bool _lexists(str *pathname, __ss_int dir_fd) {
+    /* Same as os.path.lexists(), but with dir_fd */
+    if (!_has_dir_fd(dir_fd))
+        return __os__::__path__::lexists(pathname);
+#ifdef WIN32
+    _dir_fd_unsupported();
+    return False;
+#else
+    struct stat st;
+    return __mbool(::fstatat((int)dir_fd, pathname->c_str(), &st, AT_SYMLINK_NOFOLLOW) == 0);
+#endif
+}
+
+__ss_bool _isdir(str *pathname, __ss_int dir_fd) {
+    /* Same as os.path.isdir(), but with dir_fd */
+    if (!_has_dir_fd(dir_fd))
+        return __os__::__path__::isdir(pathname);
+#ifdef WIN32
+    _dir_fd_unsupported();
+    return False;
+#else
+    struct stat st;
+    if (::fstatat((int)dir_fd, pathname->c_str(), &st, 0) != 0)
+        return False;
+    return __mbool(S_ISDIR(st.st_mode));
+#endif
+}
+
+#ifndef WIN32
+/* os.scandir() of `dirname` relative to `dir_fd` (or of `dir_fd` itself when
+   `dirname` is empty), as a list of names; like CPython, any OSError along
+   the way simply yields an empty list. */
+static list<str *> *_listdir_at(str *dirname, __ss_int dir_fd, __ss_bool dironly) {
+    list<str *> *names = new list<str *>();
+    int fd;
+
+    if (___bool(dirname))
+        fd = ::openat((int)dir_fd, dirname->c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    else
+        fd = ::dup((int)dir_fd); /* fdopendir() takes ownership */
+    if (fd == -1)
+        return names;
+
+    DIR *dir = ::fdopendir(fd);
+    if (!dir) {
+        ::close(fd);
+        return names;
+    }
+    ::rewinddir(dir); /* a dup()ed descriptor shares its offset with dir_fd */
+
+    struct dirent *entry;
+    while ((entry = ::readdir(dir)) != NULL) {
+        const char *name = entry->d_name;
+        if (name[0] == '.' && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0')))
+            continue;
+        if (dironly) {
+            /* DirEntry.is_dir() follows symlinks; an entry whose stat fails is skipped */
+            struct stat st;
+            if (::fstatat(fd, name, &st, 0) != 0 || !S_ISDIR(st.st_mode))
+                continue;
+        }
+        names->append(new str(name));
+    }
+    ::closedir(dir); /* also closes fd */
+    return names;
+}
+#endif
+
+list<str *> *_listdir(str *dirname, __ss_int dir_fd, __ss_bool dironly) {
     list<str *> *names;
 
+    if (_has_dir_fd(dir_fd)) {
+#ifdef WIN32
+        _dir_fd_unsupported();
+        return (__ss_list<str *, 1>());
+#else
+        return _listdir_at(dirname, dir_fd, dironly);
+#endif
+    }
     if (__NOT(___bool(dirname))) {
         dirname = __os__::curdir;
     }
@@ -406,6 +510,7 @@ public:
     list<str *> *__67, *names;
     str *dirname, *path, *x, *y;
     __ss_bool __71, __72, dironly, include_hidden;
+    __ss_int dir_fd;
     __iter<str *> *__68, *__73, *__74;
     __ss_int __69, __75;
     list<str *>::for_in_loop __70;
@@ -413,8 +518,9 @@ public:
 
     int __last_yield;
 
-    __gen__rlistdir(str *dirname,__ss_bool dironly,__ss_bool include_hidden) {
+    __gen__rlistdir(str *dirname,__ss_int dir_fd,__ss_bool dironly,__ss_bool include_hidden) {
         this->dirname = dirname;
+        this->dir_fd = dir_fd;
         this->dironly = dironly;
         this->include_hidden = include_hidden;
         __last_yield = -1;
@@ -429,7 +535,7 @@ public:
             case 1: goto __after_yield_1;
             default: break;
         }
-        names = _listdir(dirname, dironly);
+        names = _listdir(dirname, dir_fd, dironly);
 
         FOR_IN(x,names,67,69,70)
             if ((include_hidden or __NOT(_ishidden(x)))) {
@@ -444,7 +550,7 @@ public:
                     path = x;
                 }
 
-                FOR_IN(y,_rlistdir(path, dironly, include_hidden),73,75,76)
+                FOR_IN(y,_rlistdir(path, dir_fd, dironly, include_hidden),73,75,76)
                     __last_yield = 1;
                     __result = __os__::__path__::join(2, x, y);
                     return __result;
@@ -460,8 +566,8 @@ public:
 
 };
 
-__iter<str *> *_rlistdir(str *dirname, __ss_bool dironly, __ss_bool include_hidden) {
-    return new __gen__rlistdir(dirname,dironly,include_hidden);
+__iter<str *> *_rlistdir(str *dirname, __ss_int dir_fd, __ss_bool dironly, __ss_bool include_hidden) {
+    return new __gen__rlistdir(dirname,dir_fd,dironly,include_hidden);
 
 }
 
