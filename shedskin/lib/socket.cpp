@@ -13,6 +13,7 @@
 #include "socket.hpp"
 #include <climits>
 #include <fcntl.h>
+#include <cerrno>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -34,11 +35,11 @@ typedef u_short sa_family_t;
 #else /* ! WIN32 */
 
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <cerrno>
 #define CLOSE close
 #define SOCKET_ERROR -1
 #define SOCKOPT_CAST
@@ -103,27 +104,428 @@ __ss_int __ss_AF_INET = AF_INET;
 __ss_int __ss_AF_UNIX = AF_UNIX;
 __ss_int __ss_SOCK_STREAM = SOCK_STREAM;
 __ss_int __ss_SOCK_DGRAM = SOCK_DGRAM;
-#ifndef WIN32
+#ifdef AI_PASSIVE
 __ss_int __ss_AI_PASSIVE = AI_PASSIVE;
-#ifndef __APPLE__
-#ifndef __sun
-#ifndef __FreeBSD__
+#endif
+#ifdef SOL_IP
 __ss_int __ss_SOL_IP = SOL_IP;
 #endif
-#endif
-#endif
+#ifdef IP_TOS
 __ss_int __ss_IP_TOS = IP_TOS;
-__ss_int __ss_IP_TTL = IP_TTL;
 #endif
 __ss_int __ss_SOL_SOCKET = SOL_SOCKET;
 __ss_int __ss_SO_REUSEADDR = SO_REUSEADDR;
 __ss_int __ss_INADDR_ANY = INADDR_ANY;
 __ss_int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
-#ifndef __sun
-__ss_int __ss_INADDR_NULL = (__ss_int)INADDR_NONE;
+#ifdef INADDR_NONE
+__ss_int __ss_INADDR_NONE = (__ss_int)INADDR_NONE;
+#else
+__ss_int __ss_INADDR_NONE = (__ss_int)0xffffffff;
 #endif
 __ss_int __ss_INADDR_BROADCAST = (__ss_int)INADDR_BROADCAST;
 __ss_int __ss_SOMAXCONN = SOMAXCONN;
+/* CPython defines these itself, so no header lookup */
+__ss_int __ss_SHUT_RD = 0;
+__ss_int __ss_SHUT_WR = 1;
+__ss_int __ss_SHUT_RDWR = 2;
+
+/* address families */
+#ifdef AF_APPLETALK
+__ss_int __ss_AF_APPLETALK = AF_APPLETALK;
+#endif
+#ifdef AF_DECnet
+__ss_int __ss_AF_DECnet = AF_DECnet;
+#endif
+#ifdef AF_IPX
+__ss_int __ss_AF_IPX = AF_IPX;
+#endif
+#ifdef AF_SNA
+__ss_int __ss_AF_SNA = AF_SNA;
+#endif
+#ifdef AF_UNSPEC
+__ss_int __ss_AF_UNSPEC = AF_UNSPEC;
+#endif
+
+/* getaddrinfo() flags */
+#ifdef AI_ADDRCONFIG
+__ss_int __ss_AI_ADDRCONFIG = AI_ADDRCONFIG;
+#endif
+#ifdef AI_ALL
+__ss_int __ss_AI_ALL = AI_ALL;
+#endif
+#ifdef AI_CANONNAME
+__ss_int __ss_AI_CANONNAME = AI_CANONNAME;
+#endif
+#ifdef AI_NUMERICHOST
+__ss_int __ss_AI_NUMERICHOST = AI_NUMERICHOST;
+#endif
+#ifdef AI_NUMERICSERV
+__ss_int __ss_AI_NUMERICSERV = AI_NUMERICSERV;
+#endif
+#ifdef AI_V4MAPPED
+__ss_int __ss_AI_V4MAPPED = AI_V4MAPPED;
+#endif
+
+/* getaddrinfo() error codes */
+#ifdef EAI_AGAIN
+__ss_int __ss_EAI_AGAIN = EAI_AGAIN;
+#endif
+#ifdef EAI_BADFLAGS
+__ss_int __ss_EAI_BADFLAGS = EAI_BADFLAGS;
+#endif
+#ifdef EAI_FAIL
+__ss_int __ss_EAI_FAIL = EAI_FAIL;
+#endif
+#ifdef EAI_FAMILY
+__ss_int __ss_EAI_FAMILY = EAI_FAMILY;
+#endif
+#ifdef EAI_MEMORY
+__ss_int __ss_EAI_MEMORY = EAI_MEMORY;
+#endif
+#ifdef EAI_NODATA
+__ss_int __ss_EAI_NODATA = EAI_NODATA;
+#endif
+#ifdef EAI_NONAME
+__ss_int __ss_EAI_NONAME = EAI_NONAME;
+#endif
+#ifdef EAI_SERVICE
+__ss_int __ss_EAI_SERVICE = EAI_SERVICE;
+#endif
+#ifdef EAI_SOCKTYPE
+__ss_int __ss_EAI_SOCKTYPE = EAI_SOCKTYPE;
+#endif
+
+/* reserved port ranges */
+#ifdef IPPORT_RESERVED
+__ss_int __ss_IPPORT_RESERVED = IPPORT_RESERVED;
+#else
+__ss_int __ss_IPPORT_RESERVED = 1024;
+#endif
+#ifdef IPPORT_USERRESERVED
+__ss_int __ss_IPPORT_USERRESERVED = IPPORT_USERRESERVED;
+#else
+__ss_int __ss_IPPORT_USERRESERVED = 5000;
+#endif
+
+/* multicast address constants */
+#ifdef INADDR_ALLHOSTS_GROUP
+__ss_int __ss_INADDR_ALLHOSTS_GROUP = (__ss_int)INADDR_ALLHOSTS_GROUP;
+#else
+__ss_int __ss_INADDR_ALLHOSTS_GROUP = (__ss_int)0xe0000001;
+#endif
+#ifdef INADDR_MAX_LOCAL_GROUP
+__ss_int __ss_INADDR_MAX_LOCAL_GROUP = (__ss_int)INADDR_MAX_LOCAL_GROUP;
+#else
+__ss_int __ss_INADDR_MAX_LOCAL_GROUP = (__ss_int)0xe00000ff;
+#endif
+#ifdef INADDR_UNSPEC_GROUP
+__ss_int __ss_INADDR_UNSPEC_GROUP = (__ss_int)INADDR_UNSPEC_GROUP;
+#else
+__ss_int __ss_INADDR_UNSPEC_GROUP = (__ss_int)0xe0000000;
+#endif
+
+/* IP protocols */
+#ifdef IPPROTO_AH
+__ss_int __ss_IPPROTO_AH = IPPROTO_AH;
+#endif
+#ifdef IPPROTO_DSTOPTS
+__ss_int __ss_IPPROTO_DSTOPTS = IPPROTO_DSTOPTS;
+#endif
+#ifdef IPPROTO_EGP
+__ss_int __ss_IPPROTO_EGP = IPPROTO_EGP;
+#endif
+#ifdef IPPROTO_ESP
+__ss_int __ss_IPPROTO_ESP = IPPROTO_ESP;
+#endif
+#ifdef IPPROTO_FRAGMENT
+__ss_int __ss_IPPROTO_FRAGMENT = IPPROTO_FRAGMENT;
+#endif
+#ifdef IPPROTO_HOPOPTS
+__ss_int __ss_IPPROTO_HOPOPTS = IPPROTO_HOPOPTS;
+#endif
+#ifdef IPPROTO_ICMP
+__ss_int __ss_IPPROTO_ICMP = IPPROTO_ICMP;
+#endif
+#ifdef IPPROTO_ICMPV6
+__ss_int __ss_IPPROTO_ICMPV6 = IPPROTO_ICMPV6;
+#endif
+#ifdef IPPROTO_IDP
+__ss_int __ss_IPPROTO_IDP = IPPROTO_IDP;
+#endif
+#ifdef IPPROTO_IGMP
+__ss_int __ss_IPPROTO_IGMP = IPPROTO_IGMP;
+#endif
+#ifdef IPPROTO_IP
+__ss_int __ss_IPPROTO_IP = IPPROTO_IP;
+#endif
+#ifdef IPPROTO_IPV6
+__ss_int __ss_IPPROTO_IPV6 = IPPROTO_IPV6;
+#endif
+#ifdef IPPROTO_NONE
+__ss_int __ss_IPPROTO_NONE = IPPROTO_NONE;
+#endif
+#ifdef IPPROTO_PIM
+__ss_int __ss_IPPROTO_PIM = IPPROTO_PIM;
+#endif
+#ifdef IPPROTO_PUP
+__ss_int __ss_IPPROTO_PUP = IPPROTO_PUP;
+#endif
+#ifdef IPPROTO_RAW
+__ss_int __ss_IPPROTO_RAW = IPPROTO_RAW;
+#endif
+#ifdef IPPROTO_ROUTING
+__ss_int __ss_IPPROTO_ROUTING = IPPROTO_ROUTING;
+#endif
+#ifdef IPPROTO_SCTP
+__ss_int __ss_IPPROTO_SCTP = IPPROTO_SCTP;
+#endif
+#ifdef IPPROTO_TCP
+__ss_int __ss_IPPROTO_TCP = IPPROTO_TCP;
+#endif
+#ifdef IPPROTO_UDP
+__ss_int __ss_IPPROTO_UDP = IPPROTO_UDP;
+#endif
+
+/* IP socket options */
+#ifdef IP_ADD_MEMBERSHIP
+__ss_int __ss_IP_ADD_MEMBERSHIP = IP_ADD_MEMBERSHIP;
+#endif
+#ifdef IP_ADD_SOURCE_MEMBERSHIP
+__ss_int __ss_IP_ADD_SOURCE_MEMBERSHIP = IP_ADD_SOURCE_MEMBERSHIP;
+#endif
+#ifdef IP_BLOCK_SOURCE
+__ss_int __ss_IP_BLOCK_SOURCE = IP_BLOCK_SOURCE;
+#endif
+#ifdef IP_DROP_MEMBERSHIP
+__ss_int __ss_IP_DROP_MEMBERSHIP = IP_DROP_MEMBERSHIP;
+#endif
+#ifdef IP_DROP_SOURCE_MEMBERSHIP
+__ss_int __ss_IP_DROP_SOURCE_MEMBERSHIP = IP_DROP_SOURCE_MEMBERSHIP;
+#endif
+#ifdef IP_HDRINCL
+__ss_int __ss_IP_HDRINCL = IP_HDRINCL;
+#endif
+#ifdef IP_MULTICAST_IF
+__ss_int __ss_IP_MULTICAST_IF = IP_MULTICAST_IF;
+#endif
+#ifdef IP_MULTICAST_LOOP
+__ss_int __ss_IP_MULTICAST_LOOP = IP_MULTICAST_LOOP;
+#endif
+#ifdef IP_MULTICAST_TTL
+__ss_int __ss_IP_MULTICAST_TTL = IP_MULTICAST_TTL;
+#endif
+#ifdef IP_OPTIONS
+__ss_int __ss_IP_OPTIONS = IP_OPTIONS;
+#endif
+#ifdef IP_PKTINFO
+__ss_int __ss_IP_PKTINFO = IP_PKTINFO;
+#endif
+#ifdef IP_RECVTOS
+__ss_int __ss_IP_RECVTOS = IP_RECVTOS;
+#endif
+#ifdef IP_RECVTTL
+__ss_int __ss_IP_RECVTTL = IP_RECVTTL;
+#endif
+#ifdef IP_TTL
+__ss_int __ss_IP_TTL = IP_TTL;
+#endif
+#ifdef IP_UNBLOCK_SOURCE
+__ss_int __ss_IP_UNBLOCK_SOURCE = IP_UNBLOCK_SOURCE;
+#endif
+
+/* IPv6 socket options */
+#ifdef IPV6_CHECKSUM
+__ss_int __ss_IPV6_CHECKSUM = IPV6_CHECKSUM;
+#endif
+#ifdef IPV6_HOPLIMIT
+__ss_int __ss_IPV6_HOPLIMIT = IPV6_HOPLIMIT;
+#endif
+#ifdef IPV6_HOPOPTS
+__ss_int __ss_IPV6_HOPOPTS = IPV6_HOPOPTS;
+#endif
+#ifdef IPV6_JOIN_GROUP
+__ss_int __ss_IPV6_JOIN_GROUP = IPV6_JOIN_GROUP;
+#endif
+#ifdef IPV6_LEAVE_GROUP
+__ss_int __ss_IPV6_LEAVE_GROUP = IPV6_LEAVE_GROUP;
+#endif
+#ifdef IPV6_MULTICAST_HOPS
+__ss_int __ss_IPV6_MULTICAST_HOPS = IPV6_MULTICAST_HOPS;
+#endif
+#ifdef IPV6_MULTICAST_IF
+__ss_int __ss_IPV6_MULTICAST_IF = IPV6_MULTICAST_IF;
+#endif
+#ifdef IPV6_MULTICAST_LOOP
+__ss_int __ss_IPV6_MULTICAST_LOOP = IPV6_MULTICAST_LOOP;
+#endif
+#ifdef IPV6_PKTINFO
+__ss_int __ss_IPV6_PKTINFO = IPV6_PKTINFO;
+#endif
+#ifdef IPV6_RECVRTHDR
+__ss_int __ss_IPV6_RECVRTHDR = IPV6_RECVRTHDR;
+#endif
+#ifdef IPV6_RECVTCLASS
+__ss_int __ss_IPV6_RECVTCLASS = IPV6_RECVTCLASS;
+#endif
+#ifdef IPV6_RTHDR
+__ss_int __ss_IPV6_RTHDR = IPV6_RTHDR;
+#endif
+#ifdef IPV6_TCLASS
+__ss_int __ss_IPV6_TCLASS = IPV6_TCLASS;
+#endif
+#ifdef IPV6_UNICAST_HOPS
+__ss_int __ss_IPV6_UNICAST_HOPS = IPV6_UNICAST_HOPS;
+#endif
+#ifdef IPV6_V6ONLY
+__ss_int __ss_IPV6_V6ONLY = IPV6_V6ONLY;
+#endif
+
+/* send()/recv() flags */
+#ifdef MSG_CTRUNC
+__ss_int __ss_MSG_CTRUNC = MSG_CTRUNC;
+#endif
+#ifdef MSG_DONTROUTE
+__ss_int __ss_MSG_DONTROUTE = MSG_DONTROUTE;
+#endif
+#ifdef MSG_OOB
+__ss_int __ss_MSG_OOB = MSG_OOB;
+#endif
+#ifdef MSG_PEEK
+__ss_int __ss_MSG_PEEK = MSG_PEEK;
+#endif
+#ifdef MSG_TRUNC
+__ss_int __ss_MSG_TRUNC = MSG_TRUNC;
+#endif
+#ifdef MSG_WAITALL
+__ss_int __ss_MSG_WAITALL = MSG_WAITALL;
+#endif
+
+/* getnameinfo() flags */
+#ifdef NI_DGRAM
+__ss_int __ss_NI_DGRAM = NI_DGRAM;
+#endif
+#ifdef NI_MAXHOST
+__ss_int __ss_NI_MAXHOST = NI_MAXHOST;
+#endif
+#ifdef NI_MAXSERV
+__ss_int __ss_NI_MAXSERV = NI_MAXSERV;
+#endif
+#ifdef NI_NAMEREQD
+__ss_int __ss_NI_NAMEREQD = NI_NAMEREQD;
+#endif
+#ifdef NI_NOFQDN
+__ss_int __ss_NI_NOFQDN = NI_NOFQDN;
+#endif
+#ifdef NI_NUMERICHOST
+__ss_int __ss_NI_NUMERICHOST = NI_NUMERICHOST;
+#endif
+#ifdef NI_NUMERICSERV
+__ss_int __ss_NI_NUMERICSERV = NI_NUMERICSERV;
+#endif
+
+/* socket types */
+#ifdef SOCK_RAW
+__ss_int __ss_SOCK_RAW = SOCK_RAW;
+#endif
+#ifdef SOCK_RDM
+__ss_int __ss_SOCK_RDM = SOCK_RDM;
+#endif
+#ifdef SOCK_SEQPACKET
+__ss_int __ss_SOCK_SEQPACKET = SOCK_SEQPACKET;
+#endif
+
+/* socket option levels */
+#ifdef SOL_TCP
+__ss_int __ss_SOL_TCP = SOL_TCP;
+#else
+__ss_int __ss_SOL_TCP = 6;
+#endif
+#ifdef SOL_UDP
+__ss_int __ss_SOL_UDP = SOL_UDP;
+#else
+__ss_int __ss_SOL_UDP = 17;
+#endif
+
+/* socket options */
+#ifdef SO_ACCEPTCONN
+__ss_int __ss_SO_ACCEPTCONN = SO_ACCEPTCONN;
+#endif
+#ifdef SO_BROADCAST
+__ss_int __ss_SO_BROADCAST = SO_BROADCAST;
+#endif
+#ifdef SO_DEBUG
+__ss_int __ss_SO_DEBUG = SO_DEBUG;
+#endif
+#ifdef SO_DONTROUTE
+__ss_int __ss_SO_DONTROUTE = SO_DONTROUTE;
+#endif
+#ifdef SO_ERROR
+__ss_int __ss_SO_ERROR = SO_ERROR;
+#endif
+#ifdef SO_KEEPALIVE
+__ss_int __ss_SO_KEEPALIVE = SO_KEEPALIVE;
+#endif
+#ifdef SO_LINGER
+__ss_int __ss_SO_LINGER = SO_LINGER;
+#endif
+#ifdef SO_OOBINLINE
+__ss_int __ss_SO_OOBINLINE = SO_OOBINLINE;
+#endif
+#ifdef SO_RCVBUF
+__ss_int __ss_SO_RCVBUF = SO_RCVBUF;
+#endif
+#ifdef SO_RCVLOWAT
+__ss_int __ss_SO_RCVLOWAT = SO_RCVLOWAT;
+#endif
+#ifdef SO_RCVTIMEO
+__ss_int __ss_SO_RCVTIMEO = SO_RCVTIMEO;
+#endif
+#ifdef SO_SNDBUF
+__ss_int __ss_SO_SNDBUF = SO_SNDBUF;
+#endif
+#ifdef SO_SNDLOWAT
+__ss_int __ss_SO_SNDLOWAT = SO_SNDLOWAT;
+#endif
+#ifdef SO_SNDTIMEO
+__ss_int __ss_SO_SNDTIMEO = SO_SNDTIMEO;
+#endif
+#ifdef SO_TYPE
+__ss_int __ss_SO_TYPE = SO_TYPE;
+#endif
+
+/* TCP socket options */
+#ifdef TCP_FASTOPEN
+__ss_int __ss_TCP_FASTOPEN = TCP_FASTOPEN;
+#endif
+#ifdef TCP_KEEPCNT
+__ss_int __ss_TCP_KEEPCNT = TCP_KEEPCNT;
+#endif
+#ifdef TCP_KEEPINTVL
+__ss_int __ss_TCP_KEEPINTVL = TCP_KEEPINTVL;
+#endif
+#ifdef TCP_MAXSEG
+__ss_int __ss_TCP_MAXSEG = TCP_MAXSEG;
+#endif
+#ifdef TCP_NODELAY
+__ss_int __ss_TCP_NODELAY = TCP_NODELAY;
+#endif
+
+/* errno values */
+#ifdef EAGAIN
+__ss_int __ss_EAGAIN = EAGAIN;
+#else
+__ss_int __ss_EAGAIN = 11;
+#endif
+#ifdef EBADF
+__ss_int __ss_EBADF = EBADF;
+#else
+__ss_int __ss_EBADF = 9;
+#endif
+#ifdef EWOULDBLOCK
+__ss_int __ss_EWOULDBLOCK = EWOULDBLOCK;
+#else
+__ss_int __ss_EWOULDBLOCK = 11;
+#endif
 
 double __ss_default_timeout = -1.0;
 
