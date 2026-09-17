@@ -164,6 +164,105 @@ def test_filemode():
     assert stat.filemode(stat.S_IFDIR | 0o1777) == 'drwxrwxrwt'
 
 
+def test_stat_indices():
+    # indices into the tuple returned by os.stat(), fixed by cpython
+    assert stat.ST_MODE == 0
+    assert stat.ST_INO == 1
+    assert stat.ST_DEV == 2
+    assert stat.ST_NLINK == 3
+    assert stat.ST_UID == 4
+    assert stat.ST_GID == 5
+    assert stat.ST_SIZE == 6
+    assert stat.ST_ATIME == 7
+    assert stat.ST_MTIME == 8
+    assert stat.ST_CTIME == 9
+
+
+def test_file_type_constants():
+    # the S_IF* values are the same on every platform cpython runs on
+    assert stat.S_IFDIR == 0o040000
+    assert stat.S_IFCHR == 0o020000
+    assert stat.S_IFBLK == 0o060000
+    assert stat.S_IFREG == 0o100000
+    assert stat.S_IFIFO == 0o010000
+    assert stat.S_IFLNK == 0o120000
+    assert stat.S_IFSOCK == 0o140000
+
+    # all distinct, and all covered by the file type mask
+    types = [stat.S_IFDIR, stat.S_IFCHR, stat.S_IFBLK, stat.S_IFREG,
+             stat.S_IFIFO, stat.S_IFLNK, stat.S_IFSOCK]
+    assert len(set(types)) == len(types)
+    for t in types:
+        assert t & 0o170000 == t
+        assert stat.S_IFMT(t) == t
+        assert stat.S_IMODE(t) == 0
+
+
+def test_permission_constants():
+    assert stat.S_ISUID == 0o4000
+    assert stat.S_ISGID == 0o2000
+    assert stat.S_ENFMT == 0o2000
+    assert stat.S_ISVTX == 0o1000
+    assert stat.S_IREAD == 0o0400
+    assert stat.S_IWRITE == 0o0200
+    assert stat.S_IEXEC == 0o0100
+    assert stat.S_IRWXU == 0o0700
+    assert stat.S_IRUSR == 0o0400
+    assert stat.S_IWUSR == 0o0200
+    assert stat.S_IXUSR == 0o0100
+    assert stat.S_IRWXG == 0o0070
+    assert stat.S_IRGRP == 0o0040
+    assert stat.S_IWGRP == 0o0020
+    assert stat.S_IXGRP == 0o0010
+    assert stat.S_IRWXO == 0o0007
+    assert stat.S_IROTH == 0o0004
+    assert stat.S_IWOTH == 0o0002
+    assert stat.S_IXOTH == 0o0001
+
+    # the legacy names alias the owner bits, and S_ENFMT the setgid bit
+    assert stat.S_IREAD == stat.S_IRUSR
+    assert stat.S_IWRITE == stat.S_IWUSR
+    assert stat.S_IEXEC == stat.S_IXUSR
+    assert stat.S_ENFMT == stat.S_ISGID
+
+    # the rwx masks are the union of their bits
+    assert stat.S_IRWXU == stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+    assert stat.S_IRWXG == stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
+    assert stat.S_IRWXO == stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
+    assert stat.S_IRWXU & stat.S_IRWXG == 0
+    assert stat.S_IRWXG & stat.S_IRWXO == 0
+
+    # each permission bit is a single, distinct bit
+    bits = [stat.S_ISUID, stat.S_ISGID, stat.S_ISVTX,
+            stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
+            stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,
+            stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH]
+    assert len(set(bits)) == len(bits)
+    total = 0
+    for bit in bits:
+        assert bit > 0
+        assert bit & (bit - 1) == 0
+        total |= bit
+    assert total == 0o7777
+
+
+def test_s_imode_s_ifmt():
+    mode = stat.S_IFREG | stat.S_ISUID | stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH
+    assert stat.S_IFMT(mode) == stat.S_IFREG
+    assert stat.S_IMODE(mode) == 0o4744
+    assert stat.S_IFMT(mode) | stat.S_IMODE(mode) == mode
+
+    # S_IMODE strips the type bits, S_IFMT strips the permission bits
+    assert stat.S_IMODE(stat.S_IFDIR | 0o1777) == 0o1777
+    assert stat.S_IFMT(stat.S_IFDIR | 0o1777) == stat.S_IFDIR
+    assert stat.S_IMODE(0) == 0
+    assert stat.S_IFMT(0) == 0
+
+    # the predicates agree with the mask
+    assert stat.S_ISREG(mode) == (stat.S_IFMT(mode) == stat.S_IFREG)
+    assert stat.S_ISDIR(mode) == (stat.S_IFMT(mode) == stat.S_IFDIR)
+
+
 def test_all():
     test_s_isdir()
     test_s_isreg()
@@ -178,6 +277,10 @@ def test_all():
     test_file_attributes()
     test_statx_attributes()
     test_filemode()
+    test_stat_indices()
+    test_file_type_constants()
+    test_permission_constants()
+    test_s_imode_s_ifmt()
 
 
 test_all()
