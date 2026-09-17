@@ -10,18 +10,31 @@ using namespace __shedskin__;
 namespace __base64__ {
 
 extern str *__name__;
-extern bytes *default_3, *default_4, *default_5, *default_6, *default_7;
+extern bytes *default_4, *default_6, *default_7, *default_8, *default_9, *default_10;
 
 bytes *b64encode(bytes *s, bytes *altchars, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *standard_b64encode(bytes *s);
 bytes *urlsafe_b64encode(bytes *s, __ss_bool padded=True);
 
-bytes *b64decode(bytes *s, bytes *altchars, __ss_bool validate, __ss_bool padded=True);
+/* validate is tri-state: -1 = not given (True iff ignorechars is given) */
+bytes *__b64decode(bytes *s, bytes *altchars, int validate, __ss_bool padded, bytes *ignorechars, __ss_bool canonical);
+
+/* validate is __ss_void_struct when omitted by the caller (model default
+ * __void), otherwise an __ss_bool (or int). */
+template<class V>
+bytes *b64decode(bytes *s, bytes *altchars, V validate, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) {
+    int v;
+    if constexpr (std::is_same_v<V, __ss_void_struct>)
+        v = -1;
+    else
+        v = (bool)validate ? 1 : 0;
+    return __b64decode(s, altchars, v, padded, ignorechars, canonical);
+}
 bytes *standard_b64decode(bytes *s);
 bytes *urlsafe_b64decode(bytes *s, __ss_bool padded=False);
 
 bytes *b16encode(bytes *s);
-bytes *b16decode(bytes *s, __ss_bool casefold);
+bytes *b16decode(bytes *s, __ss_bool casefold, bytes *ignorechars=0);
 
 bytes *b32encode(bytes *s, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *b32decode(bytes *s, __ss_bool casefold=False, bytes *map01=0, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False);

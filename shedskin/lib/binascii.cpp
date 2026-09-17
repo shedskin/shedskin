@@ -10,14 +10,22 @@ namespace __binascii__ {
 str *__name__;
 
 /* Non-trivial argument defaults from binascii.py, numbered in definition
- * order by the compiler (keep in sync when editing the model):
- *   default_0: a2b_ascii85(ignorechars=b'')
- *   default_2: a2b_base85(ignorechars=b'')
- *   default_5: a2b_base32(ignorechars=b'')
+ * order by the compiler (every non-numeric, non-bool default counts, so
+ * None and __void defaults take up numbers too; keep in sync when editing
+ * the model):
+ *   default_4:  a2b_ascii85(ignorechars=b'')
+ *   default_6:  a2b_base85(ignorechars=b'')
+ *   default_9:  a2b_base32(ignorechars=b'')
+ *   default_12: a2b_hex(ignorechars=b'')
+ *   default_14: unhexlify(ignorechars=b'')
  */
-bytes *default_0, *default_2, *default_5;
+bytes *default_4, *default_6, *default_9, *default_12, *default_14;
 
-bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
+bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *UU_ALPHABET, *CRYPT_ALPHABET, *BINHEX_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
+
+/* forward declarations for the shared codec helpers defined further down */
+static void build_reverse_table(bytes *alphabet, int size, int padchar, unsigned char *out);
+static inline bool ignorechar(unsigned char c, bytes *ignorechars);
 
 #ifndef PY_SSIZE_T_MAX
 #define PY_SSIZE_T_MAX INT_MAX 
@@ -84,27 +92,46 @@ static signed char table_a2b_hex[] = {
 };
 
 
-bytes *unhexlify(bytes *hex) {
-    // output will be half as long
-    __ss_int len = hex->__len__();
-    if ( len&1 ) throw new Error(new str("Odd-length string"));
-    bytes *data = new bytes(1);
-    data->unit.resize(len>>1);
+bytes *unhexlify(bytes *hex, bytes *ignorechars) {
+    /* ported from CPython 3.15 binascii_a2b_hex_impl */
+    const unsigned char *ascii_data = (const unsigned char *)hex->unit.data();
+    size_t ascii_len = hex->unit.size();
 
-    char * curdata = &data->unit[0];
-    char * curhex = &hex->unit[0];
-    char * end = curhex+len;
-    char top,bot;
-    // from python's implementation (2.7.1, if it matters), but way better :)
-    while(curhex <= end-2) // must be two characters left
-    {
-        top = table_a2b_hex[(unsigned char)*(curhex++)];
-        bot = table_a2b_hex[(unsigned char)*(curhex++)];
-        if (top==(char)-1 || bot==(char)-1)
-            throw new Error(new str("Invalid hex"));
-        *(curdata++) = (char)((top<<4) + bot);
+    if (ignorechars && ignorechars->unit.empty())
+        ignorechars = NULL;
+
+    bytes *binary = new bytes(1);
+    binary->unit.resize(ascii_len / 2);
+    unsigned char *bin_data = (unsigned char *)&binary->unit[0];
+    size_t bin_len = 0;
+
+    int pair_pos = 0;
+    unsigned char leftchar = 0;
+    for (; ascii_len; ascii_data++, ascii_len--) {
+        unsigned char this_ch = *ascii_data;
+        signed char this_digit = table_a2b_hex[this_ch];
+        if (this_digit < 0) {
+            // See RFC 4648, section 3.3.
+            if (!ignorechar(this_ch, ignorechars))
+                throw new Error(new str("Non-hexadecimal digit found"));
+            continue;
+        }
+        if (!pair_pos) {
+            pair_pos = 1;
+            leftchar = (unsigned char)this_digit;
+        } else {
+            pair_pos = 0;
+            bin_data[bin_len++] = (unsigned char)((leftchar << 4) | (unsigned char)this_digit);
+        }
     }
-    return data;
+    if (pair_pos)
+        throw new Error(new str("Odd number of hexadecimal digits"));
+
+    if (bin_len > 0)
+        binary->unit.resize(bin_len);
+    else
+        binary = new bytes("");
+    return binary;
 }
 
 
@@ -275,222 +302,152 @@ int find_valid(char *s, size_t slen, int num, signed char *table_a2b_base64)
     return ret;
 }
 
-// from python 2.7.1
-bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, __ss_bool padded, bytes *altchars) {
-    signed char table_a2b_base64[] = {
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1, /* Note PAD->0 */
-        -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
-        15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
-        -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-        41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1,
-        /* 0x80-0xff: never valid base64 data, but must still be present
-        ** so that indexing with (unsigned char)c for c > 0x7f (e.g. a
-        ** high-byte altchars character) can't write/read past the end
-        ** of this array. Previously sized to 128 entries (0x00-0x7f
-        ** only); a caller-supplied altchars byte >= 0x80 caused an
-        ** out-of-bounds stack write here.
-        */
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-        -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1
-    };
+/* Standard base64 reverse table: entries >= 64 are invalid (0xff), the
+** pad character maps to 64 (so it is "invalid" unless intercepted first).
+*/
+static const unsigned char table_a2b_base64[256] = {
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,62,   0xff,0xff,0xff,63,
+    52,53,54,55, 56,57,58,59, 60,61,0xff,0xff, 0xff,64,0xff,0xff, /* Note PAD->64 */
+    0xff, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
+    15,16,17,18, 19,20,21,22, 23,24,25,0xff, 0xff,0xff,0xff,0xff,
+    0xff,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
+    41,42,43,44, 45,46,47,48, 49,50,51,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,
+};
 
-    /* The table above maps BASE64_PAD to 0 ("Note PAD->0"), which is only
-    ** safe because the padded branch below intercepts '=' before the table
-    ** is ever consulted. With padded=False there is no such branch, so '='
-    ** has to become genuinely invalid here, or it would silently decode as
-    ** a zero sextet. Do this before the altchars assignment, so an (exotic)
-    ** altchars containing '=' still wins.
-    */
-    if (!padded)
-        table_a2b_base64[BASE64_PAD] = -1;
+static const unsigned char table_b2a_base64[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    // Standard '+' and '/' must remain valid regardless of altchars: base64.py's
-    // altchars support works by translating the altchars onto '+'/'/' before
-    // decoding, which leaves any literal '+'/'/' already present untouched (and
-    // still valid data). Previously this was an if/else, so passing altchars
-    // (e.g. via urlsafe_b64decode) silently made '+' and '/' invalid instead of
-    // adding '-'/'_' as extra encodings of 62/63.
-    table_a2b_base64['+'] = 62;
-    table_a2b_base64['/'] = 63;
-    if(altchars) { // TODO check len
-        table_a2b_base64[(unsigned char)altchars->unit[0]] = 62;
-        table_a2b_base64[(unsigned char)altchars->unit[1]] = 63;
-    }
+const unsigned char *__a2b_base64_table() {
+    return table_a2b_base64;
+}
 
-    if(padded && strict_mode && pascii->unit.size() > 0 && pascii->unit[0] == BASE64_PAD)
-        throw new Error(new str("Leading padding not allowed"));
-
-    char * ascii_data = &pascii->unit[0];
+/* ported from CPython 3.15 binascii_a2b_base64_impl (its "slow path", which
+** handles all input; the SIMD-ish fast path for complete quads is omitted) */
+bytes *__a2b_base64(bytes *pascii, int strict_mode, __ss_bool padded, const unsigned char *table_a2b, bytes *ignorechars, __ss_bool canonical) {
+    const unsigned char *ascii_data = (const unsigned char *)pascii->unit.data();
     size_t ascii_len = pascii->unit.size();
-    if (ascii_len > PY_SSIZE_T_MAX-3) {
+
+    if (strict_mode == -1)
+        strict_mode = (ignorechars != NULL);
+    if (!strict_mode || ignorechars == NULL || ignorechars->unit.empty())
+        ignorechars = NULL;
+
+    if (ascii_len > PY_SSIZE_T_MAX-3)
         throw new Error(0);
-    }
 
-    int quad_pos = 0;
-    int leftbits = 0;
-    unsigned char this_ch;
-    unsigned int leftchar = 0;
-    bool complete = false; /* true once a valid closing pad has been seen */
-    bool pad_after_complete = false; /* true once excess/trailing padding has
-                                      ** been seen right at a quad boundary
-                                      ** (quad_pos == 0); further padding is
-                                      ** harmless, but further *data* is not */
-    bool seen_pad_at_2 = false; /* true once a first (unmatched) pad has
-                                 ** been seen at quad_pos == 2, awaiting a
-                                 ** second pad to close the group */
-    __ss_int data_chars = 0; /* count of actual base64 data characters seen,
-                              ** for error messages */
-
+    /* Allocate the buffer */
     size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
     bytes *binary = new bytes(1);
     binary->unit.resize(bin_len);
-    char * bin_data = &binary->unit[0];
-    bin_len = 0;
+    unsigned char *bin_data_start = (unsigned char *)&binary->unit[0];
+    unsigned char *bin_data = bin_data_start;
 
-    for( ; ascii_len > 0; ascii_len--, ascii_data++) {
-        this_ch = (unsigned char)(*ascii_data);
-
-        /* In strict mode, nothing (not even whitespace) may follow
-        ** a valid closing pad sequence.
-        */
-        if (complete) {
-            if (strict_mode)
-                throw new Error(new str("Excess data after padding"));
-            continue;
-        }
-
-        if (this_ch > 0x7f ||
-            this_ch == '\r' || this_ch == '\n' || this_ch == ' ') {
-            if (strict_mode)
-                throw new Error(new str("Only base64 data is allowed"));
-            continue;
-        }
+    int quad_pos = 0;
+    unsigned char leftchar = 0;
+    int pads = 0;
+    for (; ascii_len; ascii_data++, ascii_len--) {
+        unsigned char this_ch = *ascii_data;
 
         /* Check for pad sequences and ignore
         ** the invalid ones.
         */
         if (padded && this_ch == BASE64_PAD) {
-            if (quad_pos == 2 && !seen_pad_at_2) {
-                /* First pad closing a quad_pos == 2 group: this only
-                ** completes the group once a *second* pad is reached.
-                ** We deliberately don't look ahead past any whitespace
-                ** or junk in between here -- doing so would let us jump
-                ** straight to that second pad (or to real data further
-                ** along) before the character(s) in between get their
-                ** own normal per-character handling, which in strict
-                ** mode would report the wrong error (e.g. reporting
-                ** "discontinuous padding" for what should be reported as
-                ** embedded whitespace). Instead, just wait for the loop
-                ** to naturally reach whatever comes next.
-                */
-                seen_pad_at_2 = true;
-                pad_after_complete = true;
+            pads++;
+            if (quad_pos >= 2 && quad_pos + pads <= 4) {
                 continue;
             }
-            if (quad_pos < 2) {
-                /* quad_pos == 0: a pad right at a quad boundary is
-                ** either leading padding (already rejected above, before
-                ** the loop) or harmless excess/trailing padding after an
-                ** already-complete group -- CPython accepts any number
-                ** of these, even in strict mode.
-                **
-                ** quad_pos == 1: a single dangling data character can
-                ** never be turned into a whole byte, padded or not.
-                ** CPython doesn't error out here either; if nothing but
-                ** padding/whitespace follows, this is reported once the
-                ** whole input has been scanned, by the leftover-bits
-                ** check below.
-                **
-                ** Either way, remember that we've seen a pad here so
-                ** that, in strict mode, any further *data* (as opposed
-                ** to more padding or whitespace) can still be flagged as
-                ** discontinuous below.
-                */
-                pad_after_complete = true;
+            // See RFC 4648, section 3.3: "specifications MAY ignore the
+            // pad character, "=", treating it as non-alphabet data, if
+            // it is present before the end of the encoded data" and
+            // "the excess pad characters MAY also be ignored."
+            if (!strict_mode || ignorechar(BASE64_PAD, ignorechars)) {
                 continue;
             }
-
-            /* quad_pos == 3 (a single pad always closes the group), or
-            ** quad_pos == 2 with seen_pad_at_2 already set (this is the
-            ** second pad closing the group). Either way, no more input
-            ** is expected; we've already interpreted the data from the
-            ** quad at this point.
-            */
-            leftbits = 0;
-            complete = true;
-            continue;
+            if (quad_pos == 1) {
+                /* Set an error below. */
+                break;
+            }
+            throw new Error(new str(
+                (quad_pos == 0 && bin_data == bin_data_start)
+                ? "Leading padding not allowed"
+                : "Excess padding not allowed"));
         }
 
-        this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
-        if ( this_ch == (unsigned char) -1 ) {
-            if (strict_mode)
+        unsigned char v = table_a2b[this_ch];
+        if (v >= 64) {
+            // See RFC 4648, section 3.3.
+            if (strict_mode && !ignorechar(this_ch, ignorechars)) {
                 throw new Error(new str(
-                    (*ascii_data == BASE64_PAD) ? "Padding not allowed"
-                                                : "Only base64 data is allowed"));
+                    (this_ch == BASE64_PAD)
+                    ? "Padding not allowed"
+                    : "Only base64 data is allowed"));
+            }
             continue;
         }
 
-        /* Real data seen: any pending lone pad at a quad boundary was
-        ** just noise/ignorable rather than the start of a genuine
-        ** closing sequence.
-        */
-        seen_pad_at_2 = false;
+        // Characters that are not '=', in the middle of the padding, are
+        // not allowed (except when they are). See RFC 4648, section 3.3.
+        if (pads && strict_mode && !ignorechar(BASE64_PAD, ignorechars)) {
+            throw new Error(new str((quad_pos + pads == 4)
+                ? "Excess data after padding"
+                : "Discontinuous padding not allowed"));
+        }
+        pads = 0;
 
-        if (strict_mode && pad_after_complete)
-            throw new Error(new str("Discontinuous padding not allowed"));
-
-        /*
-        ** Shift it in on the low end, and see if there's
-        ** a byte ready for output.
-        */
-        data_chars++;
-        quad_pos = (quad_pos + 1) & 0x03;
-        leftchar = (leftchar << 6) | (this_ch);
-        leftbits += 6;
-
-        if ( leftbits >= 8 ) {
-            leftbits -= 8;
-            *bin_data++ = (char)((leftchar >> leftbits) & 0xff);
-            bin_len++;
-            leftchar &= (unsigned int)((1 << leftbits) - 1);
+        switch (quad_pos) {
+            case 0:
+                quad_pos = 1;
+                leftchar = v;
+                break;
+            case 1:
+                quad_pos = 2;
+                *bin_data++ = (unsigned char)((leftchar << 2) | (v >> 4));
+                leftchar = v & 0x0f;
+                break;
+            case 2:
+                quad_pos = 3;
+                *bin_data++ = (unsigned char)((leftchar << 4) | (v >> 2));
+                leftchar = v & 0x03;
+                break;
+            case 3:
+                quad_pos = 0;
+                *bin_data++ = (unsigned char)((leftchar << 6) | (v));
+                leftchar = 0;
+                break;
         }
     }
 
-    /* Check that we ended up in a valid state: no dangling data
-    ** characters without proper padding. A single leftover data
-    ** character (leftbits == 6) can never represent a whole byte;
-    ** any other nonzero leftover means the input was truncated
-    ** before a terminating pad was reached.
-    */
-    if (!complete && leftbits != 0) {
-        /* A single leftover data character can never represent a whole byte,
-        ** padded or not, so that one stays unconditional. The plain
-        ** "Incorrect padding" case is exactly what padded=False is for: a
-        ** truncated final group is then a valid, unpadded encoding.
+    if (quad_pos == 1) {
+        /* There is exactly one extra valid, non-padding, base64 character.
+        ** This is an invalid length, as there is no possible input that
+        ** could encoded into such a base64 string.
         */
-        if (leftbits == 6)
-            throw new Error(__add_strs(3,
-                new str("Invalid base64-encoded string: number of data "
-                        "characters ("),
-                __str(data_chars),
-                new str(") cannot be 1 more than a multiple of 4")));
-        if (padded)
-            throw new Error(new str("Incorrect padding"));
+        throw new Error(__add_strs(3,
+            new str("Invalid base64-encoded string: number of data "
+                    "characters ("),
+            __str((__ss_int)((bin_data - bin_data_start) / 3 * 4 + 1)),
+            new str(") cannot be 1 more than a multiple of 4")));
     }
 
-    /* And set string size correctly. If the result string is empty
-    ** (because the input was all invalid) return the shared empty
-    ** string instead; _PyString_Resize() won't do this for us.
-    */
+    if (padded && quad_pos != 0 && quad_pos + pads < 4)
+        throw new Error(new str("Incorrect padding"));
+
+    /* https://datatracker.ietf.org/doc/html/rfc4648.html#section-3.5
+     * Decoders MAY reject non-zero padding bits. */
+    if (canonical && leftchar != 0)
+        throw new Error(new str("Non-zero padding bits"));
+
+    bin_len = (size_t)(bin_data - bin_data_start);
     if (bin_len > 0) {
         binary->unit.resize(bin_len);
     } else {
@@ -500,13 +457,20 @@ bytes *a2b_base64(bytes *pascii, __ss_bool strict_mode, __ss_bool padded, bytes 
     return binary;
 }
 
-bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, __ss_bool padded, bytes *altchars) {
-    unsigned char table_b2a_base64[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+bytes *__a2b_base64(bytes *pascii, int strict_mode, __ss_bool padded, bytes *alphabet, bytes *ignorechars, __ss_bool canonical) {
+    if (!alphabet)
+        return __a2b_base64(pascii, strict_mode, padded, table_a2b_base64, ignorechars, canonical);
+    unsigned char table[256];
+    build_reverse_table(alphabet, 64, BASE64_PAD, table);
+    return __a2b_base64(pascii, strict_mode, padded, table, ignorechars, canonical);
+}
 
-    if(altchars) { // TODO check len
-        table_b2a_base64[62] = altchars->unit[0];
-        table_b2a_base64[63] = altchars->unit[1];
+bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, __ss_bool padded, bytes *alphabet) {
+    const unsigned char *table = table_b2a_base64;
+    if (alphabet) {
+        if (alphabet->unit.size() != 64)
+            throw new ValueError(new str("alphabet must have length 64"));
+        table = (const unsigned char *)alphabet->unit.data();
     }
 
     __ss_int bin_len = binary->__len__();
@@ -537,7 +501,7 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, __ss_bool 
             ** (signed) for any input longer than a handful of bytes.
             */
             leftchar &= ((1 << leftbits) - 1);
-            *ascii_data++ = (char)table_b2a_base64[(unsigned char)this_ch];
+            *ascii_data++ = (char)table[(unsigned char)this_ch];
         }
     }
     /* Padding only ever lands in the final quad, and wrapcol is rounded to a
@@ -545,13 +509,13 @@ bytes *b2a_base64(bytes *binary, __ss_bool newline, __ss_int wrapcol, __ss_bool 
     ** matches CPython for every combination of padded and wrapcol.
     */
     if ( leftbits == 2 ) {
-        *ascii_data++ = (char)table_b2a_base64[(leftchar&3) << 4];
+        *ascii_data++ = (char)table[(leftchar&3) << 4];
         if (padded) {
             *ascii_data++ = BASE64_PAD;
             *ascii_data++ = BASE64_PAD;
         }
     } else if ( leftbits == 4 ) {
-        *ascii_data++ = (char)table_b2a_base64[(leftchar&0xf) << 2];
+        *ascii_data++ = (char)table[(leftchar&0xf) << 2];
         if (padded)
             *ascii_data++ = BASE64_PAD;
     }
@@ -985,9 +949,9 @@ bytes *b2a_hex(bytes *data, str*sep, __ss_int bytes_per_sep) {
     return hexlify(data, sep, bytes_per_sep);
 }
 
-bytes *a2b_hex(bytes *data) {
+bytes *a2b_hex(bytes *data, bytes *ignorechars) {
 
-    return unhexlify(data);
+    return unhexlify(data, ignorechars);
 }
 
 
@@ -1531,10 +1495,13 @@ bytes *b2a_base32(bytes *data, __ss_bool padded, bytes *alphabet, __ss_int wrapc
 void __init() {
     __name__ = new str("binascii");
 
-    default_0 = default_2 = default_5 = new bytes();
+    default_4 = default_6 = default_9 = default_12 = default_14 = new bytes();
 
-    BASE64_ALPHABET = new bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    BASE64_ALPHABET = new bytes((const char *)table_b2a_base64, (size_t)64);
     URLSAFE_BASE64_ALPHABET = new bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+    UU_ALPHABET = new bytes(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_");
+    CRYPT_ALPHABET = new bytes("./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+    BINHEX_ALPHABET = new bytes("!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr");
     BASE85_ALPHABET = new bytes((const char *)table_b2a_base85, (size_t)85);
     ASCII85_ALPHABET = new bytes((const char *)table_b2a_base85_a85, (size_t)85);
     Z85_ALPHABET = new bytes("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#");

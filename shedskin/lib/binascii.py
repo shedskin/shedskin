@@ -1,6 +1,8 @@
 # Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE)
 
-BASE64_ALPHABET = URLSAFE_BASE64_ALPHABET = BASE85_ALPHABET = ASCII85_ALPHABET = Z85_ALPHABET = BASE32_ALPHABET = BASE32HEX_ALPHABET = b''
+BASE64_ALPHABET = URLSAFE_BASE64_ALPHABET = UU_ALPHABET = CRYPT_ALPHABET = BINHEX_ALPHABET = BASE85_ALPHABET = ASCII85_ALPHABET = Z85_ALPHABET = BASE32_ALPHABET = BASE32HEX_ALPHABET = b''
+
+__void = 0  # 'strict_mode not given' sentinel (defaults to True iff ignorechars is given)
 
 class Error(Exception):
     pass
@@ -13,9 +15,9 @@ def a2b_uu(data):
 def b2a_uu(data, backtick=False):
     return b''
 
-def a2b_base64(data, strict_mode=False, padded=True):
+def a2b_base64(data, strict_mode=__void, padded=True, alphabet=None, ignorechars=None, canonical=False):
     return b''
-def b2a_base64(data, newline=True, wrapcol=0, padded=True):
+def b2a_base64(data, newline=True, wrapcol=0, padded=True, alphabet=None):
     return b''
 
 def a2b_ascii85(data, foldspaces=False, adobe=False, ignorechars=b'', canonical=False):
@@ -40,11 +42,11 @@ def b2a_qp(data, quotetabs=False, istext=True, header=False):
 
 def b2a_hex(data, sep=None, bytes_per_sep=1):
     return b''
-def a2b_hex(hexstr):
+def a2b_hex(hexstr, ignorechars=b''):
     return b''
 def hexlify(data, sep=None, bytes_per_sep=1):
     return b''
-def unhexlify(hexstr):
+def unhexlify(hexstr, ignorechars=b''):
     return b''
 
 def crc_hqx(data, crc):
