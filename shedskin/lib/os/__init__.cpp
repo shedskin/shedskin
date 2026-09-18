@@ -45,6 +45,7 @@
 #endif
 #endif
 #include <windows.h>
+#include <tlhelp32.h>
 #include <io.h>
 #endif
 
@@ -954,8 +955,6 @@ void *setegid(__ss_int egid) {
     return NULL;
 }
 
-__ss_int getppid() { return (__ss_int)::getppid(); }
-
 void *setreuid(__ss_int ruid, __ss_int euid) {
     if(::setreuid((unsigned)ruid, (unsigned)euid) == -1)
         throw new OSError(new str("os.setreuid"));
@@ -987,12 +986,6 @@ __ss_int fork() {
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
-}
-
-void *ftruncate(__ss_int fd, __ss_int n) {
-    if (::ftruncate((int)fd, n) == -1)
-        throw new OSError(new str("os.ftruncate"));
-    return NULL;
 }
 
 #if !defined(__sun)
@@ -1278,13 +1271,99 @@ __vfsstat *fstatvfs(__ss_int fd) {
     return new __vfsstat(fd);
 }
 
+#endif /* WIN32 */
+
+/* getpid/getppid/access/fsync/ftruncate/times are declared unconditionally
+   in __init__.hpp: posix versions first, then the win32 equivalents. */
+#ifndef WIN32
+
+__ss_int getpid() { return (__ss_int)::getpid(); }
+__ss_int getppid() { return (__ss_int)::getppid(); }
+
+__ss_bool access(str *path, __ss_int mode) {
+    return __mbool(::access(path->c_str(), (int)mode) == 0);
+}
+
 void *fsync(__ss_int fd) {
     if(::fsync((int)fd) == -1)
         throw new OSError(new str("os.fsync"));
     return NULL;
 }
 
-#endif /* WIN32 */
+void *ftruncate(__ss_int fd, __ss_int n) {
+    if (::ftruncate((int)fd, n) == -1)
+        throw new OSError(new str("os.ftruncate"));
+    return NULL;
+}
+
+tuple<__ss_float> *times() {
+    struct tms buf;
+    clock_t c;
+    double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
+    if((c = ::times(&buf)) == -1)
+        throw new OSError(new str("os.times"));
+    return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
+}
+
+#else /* WIN32 */
+
+__ss_int getpid() { return (__ss_int)GetCurrentProcessId(); }
+
+/* like cpython: walk the process snapshot to find our parent's id */
+__ss_int getppid() {
+    DWORD pid = GetCurrentProcessId();
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap == INVALID_HANDLE_VALUE)
+        throw new OSError(new str("os.getppid"));
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(pe);
+    __ss_int ppid = -1;
+    if (Process32First(snap, &pe)) {
+        do {
+            if (pe.th32ProcessID == pid) {
+                ppid = (__ss_int)pe.th32ParentProcessID;
+                break;
+            }
+        } while (Process32Next(snap, &pe));
+    }
+    CloseHandle(snap);
+    if (ppid == -1)
+        throw new OSError(new str("os.getppid"));
+    return ppid;
+}
+
+/* _access() knows 0 (exists), 2 (write), 4 (read) and 6 (read+write); like
+   cpython, treat X_OK as 'exists'. */
+__ss_bool access(str *path, __ss_int mode) {
+    int m = (int)mode & (__ss_R_OK | __ss_W_OK);
+    return __mbool(::_access(path->c_str(), m) == 0);
+}
+
+void *fsync(__ss_int fd) {
+    if(::_commit((int)fd) == -1)
+        throw new OSError(new str("os.fsync"));
+    return NULL;
+}
+
+void *ftruncate(__ss_int fd, __ss_int n) {
+    if (::_chsize_s((int)fd, (__int64)n) != 0)
+        throw new OSError(new str("os.ftruncate"));
+    return NULL;
+}
+
+/* like cpython: (user, system, children_user=0, children_system=0, elapsed) */
+tuple<__ss_float> *times() {
+    FILETIME create, exit_, kernel, user;
+    if (!GetProcessTimes(GetCurrentProcess(), &create, &exit_, &kernel, &user))
+        throw new OSError(new str("os.times"));
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime; k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime; u.HighPart = user.dwHighDateTime;
+    __ss_float elapsed = (__ss_float)GetTickCount64() / 1000.0;
+    return new tuple<__ss_float>(5, (__ss_float)u.QuadPart / 1e7, (__ss_float)k.QuadPart / 1e7, (__ss_float)0.0, (__ss_float)0.0, elapsed);
+}
+
+#endif
 
 /* lseek is declared unconditionally in __init__.hpp (it's cross-platform,
    unlike the UNIX-only functionality above and below), so it must be
@@ -1318,19 +1397,6 @@ list<str *> *get_exec_path(dict<str *, str *> *env) {
 }
 
 #ifndef WIN32
-
-__ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(path->c_str(), (int)mode) == 0);
-}
-
-tuple<__ss_float> *times() {
-    struct tms buf;
-    clock_t c;
-    double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
-    if((c = ::times(&buf)) == -1)
-        throw new OSError(new str("os.utime"));
-    return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
-}
 
 __ss_int __ss_makedev(__ss_int major, __ss_int minor) {
     return (__ss_int)makedev((unsigned)major, (unsigned)minor);
@@ -1461,11 +1527,6 @@ __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *
     return pid;
 }
 
-__ss_int getpid() {
-    //return GetCurrentProcessId();
-    return ::getpid();
-}
-
 tuple<file *> *popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
@@ -1585,11 +1646,18 @@ tuple<file *> * popen4(str* cmd, str*, __ss_int) {
 
 }
 
+#endif
+
+/* pipe is declared unconditionally in __init__.hpp */
 tuple<__ss_int>* pipe() {
     int fds[2];
     __ss_int ret;
 
+#ifdef WIN32
+    ret = ::_pipe(fds, 4096, _O_BINARY);
+#else
     ret = ::pipe(fds);
+#endif
 
     if(ret != 0) {
         str* s = new str("os.pipe failed");
@@ -1599,7 +1667,6 @@ tuple<__ss_int>* pipe() {
 
     return new tuple<__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);
 }
-#endif
 
 void __init() {
     cl___cstat = new class_("__cstat");
@@ -1632,6 +1699,12 @@ void __init() {
     altsep = __path__::altsep;
     devnull = __path__::devnull;
 
+#ifdef WIN32
+    __ss_F_OK = 0;
+    __ss_R_OK = 4;
+    __ss_W_OK = 2;
+    __ss_X_OK = 1;
+#else
 #ifdef F_OK
     __ss_F_OK = F_OK;
 #endif
@@ -1643,6 +1716,7 @@ void __init() {
 #endif
 #ifdef X_OK
     __ss_X_OK = X_OK;
+#endif
 #endif
 #ifdef NGROUPS_MAX
     __ss_NGROUPS_MAX = NGROUPS_MAX;

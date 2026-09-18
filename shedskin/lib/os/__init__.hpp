@@ -151,6 +151,14 @@ __ss_bool isatty(__ss_int fd);
 void *unsetenv(str* var);
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
+/* available on both posix and windows (windows versions in __init__.cpp) */
+__ss_int getpid();
+__ss_int getppid();
+void *ftruncate(__ss_int fd, __ss_int n);
+void *fsync(__ss_int fd);
+__ss_bool access(str *path, __ss_int mode);
+tuple<__ss_float> *times();
+
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
 __ss_int __ss_WEXITSTATUS(__ss_int status);
@@ -225,7 +233,6 @@ template <class ... Args> __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file
     return spawnvpe(mode, file, vals, env);
 }
 
-__ss_int getpid();
 
 tuple2<file*,file*>* popen2(str* cmd);
 tuple2<file*,file*>* popen2(str* cmd, str* mode, __ss_int bufsize);
@@ -267,7 +274,6 @@ __ss_int getpgid(__ss_int pid);
 void *setpgid(__ss_int pid, __ss_int pgrp);
 __ss_int getpgrp();
 void *setpgrp();
-__ss_int getppid();
 void *setreuid(__ss_int ruid, __ss_int euid);
 void *setregid(__ss_int rgid, __ss_int egid);
 __ss_int getsid(__ss_int pid);
@@ -316,15 +322,11 @@ str *confstr(__ss_int name_);
 __ss_int sysconf(str *name_);
 __ss_int sysconf(__ss_int name_);
 
-void *ftruncate(__ss_int fd, __ss_int n);
 
 tuple2<__ss_float, __ss_float> *getloadavg();
 void *mkfifo(str *path, __ss_int mode=438);
 
-void *fsync(__ss_int fd);
 
-__ss_bool access(str *path, __ss_int mode);
-tuple2<__ss_float, __ss_float> *times();
 
 __ss_int __ss_makedev(__ss_int major, __ss_int minor);
 __ss_int __ss_major(__ss_int dev);
