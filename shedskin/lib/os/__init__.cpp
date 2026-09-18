@@ -4,6 +4,7 @@
 #include "path.hpp"
 
 #include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -305,6 +306,25 @@ __cstat::__cstat(str *path, __ss_int t) {
         r = ::lstat(path->c_str(), &sbuf);
 #endif
     }
+#ifdef WIN32
+    if (r == -1) {
+        /* The CRT stat() fails on device names such as 'nul' or 'con'.
+           Like CPython (since 3.8), fall back to opening the path and
+           reporting it as a character device/pipe. */
+        HANDLE h = CreateFileA(path->c_str(), 0,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                               NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        if (h != INVALID_HANDLE_VALUE) {
+            DWORD type = GetFileType(h);
+            CloseHandle(h);
+            if (type == FILE_TYPE_CHAR || type == FILE_TYPE_PIPE) {
+                memset(&sbuf, 0, sizeof(sbuf));
+                sbuf.st_mode = (type == FILE_TYPE_CHAR) ? _S_IFCHR : _S_IFIFO;
+                r = 0;
+            }
+        }
+    }
+#endif
     if (r == -1) {
         if (errno == ENOENT)
             throw new FileNotFoundError(path);

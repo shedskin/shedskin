@@ -1137,12 +1137,12 @@ void *mmap::__raise_if_closed_or_not_readable()
     __raise_if_closed();
 #ifndef WIN32
     if ((prot & PROT_READ) == 0)
-#else /* WIN32 */
-    if (access and access != ACCESS_READ)
-#endif /* WIN32 */
     {
         throw new TypeError(const_0);
     }
+#endif /* WIN32 */
+    /* On WIN32 every access mode (READ, WRITE, COPY and DEFAULT) maps the
+       view readable, so, like CPython, there is nothing to check. */
     return NULL;
 }
 

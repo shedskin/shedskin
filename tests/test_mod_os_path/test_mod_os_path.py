@@ -476,6 +476,9 @@ def test_os_path_constants():
     assert normpath(join("a", os.path.curdir, "b")) == "a" + os.path.sep + "b"
     assert normpath(join("a", os.path.pardir, "b")) == "b"
     assert exists(os.path.devnull)
+    # ..exists as a device, not as a regular file or a directory
+    assert not isfile(os.path.devnull)
+    assert not isdir(os.path.devnull)
     assert os.path.pathsep in os.path.defpath
 
 
