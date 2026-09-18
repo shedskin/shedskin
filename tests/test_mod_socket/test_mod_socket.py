@@ -1,5 +1,6 @@
 import os
 import socket
+import sys
 
 
 def test_socket_loopback():
@@ -137,6 +138,83 @@ def test_socketpair():
         pass
 
 
+def test_constants():
+    # touch every module constant, so a missing definition breaks the build
+    consts = [
+        socket.AF_APPLETALK, socket.AF_DECnet, socket.AF_IPX, socket.AF_SNA,
+        socket.AF_UNSPEC, socket.AI_ADDRCONFIG, socket.AI_ALL, socket.AI_CANONNAME,
+        socket.AI_NUMERICHOST, socket.AI_NUMERICSERV, socket.AI_PASSIVE, socket.AI_V4MAPPED,
+        socket.EAGAIN, socket.EAI_AGAIN, socket.EAI_BADFLAGS, socket.EAI_FAIL,
+        socket.EAI_FAMILY, socket.EAI_MEMORY, socket.EAI_NODATA, socket.EAI_NONAME,
+        socket.EAI_SERVICE, socket.EAI_SOCKTYPE, socket.EBADF, socket.EWOULDBLOCK,
+        socket.INADDR_ALLHOSTS_GROUP, socket.INADDR_MAX_LOCAL_GROUP, socket.INADDR_NONE, socket.INADDR_UNSPEC_GROUP,
+        socket.IPPORT_RESERVED, socket.IPPORT_USERRESERVED, socket.IPPROTO_AH, socket.IPPROTO_DSTOPTS,
+        socket.IPPROTO_EGP, socket.IPPROTO_ESP, socket.IPPROTO_FRAGMENT, socket.IPPROTO_HOPOPTS,
+        socket.IPPROTO_ICMP, socket.IPPROTO_ICMPV6, socket.IPPROTO_IDP, socket.IPPROTO_IGMP,
+        socket.IPPROTO_IP, socket.IPPROTO_IPV6, socket.IPPROTO_NONE, socket.IPPROTO_PIM,
+        socket.IPPROTO_PUP, socket.IPPROTO_RAW, socket.IPPROTO_ROUTING, socket.IPPROTO_SCTP,
+        socket.IPPROTO_TCP, socket.IPPROTO_UDP, socket.IPV6_CHECKSUM, socket.IPV6_HOPLIMIT,
+        socket.IPV6_HOPOPTS, socket.IPV6_JOIN_GROUP, socket.IPV6_LEAVE_GROUP, socket.IPV6_MULTICAST_HOPS,
+        socket.IPV6_MULTICAST_IF, socket.IPV6_MULTICAST_LOOP, socket.IPV6_PKTINFO, socket.IPV6_RECVRTHDR,
+        socket.IPV6_RECVTCLASS, socket.IPV6_RTHDR, socket.IPV6_TCLASS, socket.IPV6_UNICAST_HOPS,
+        socket.IPV6_V6ONLY, socket.IP_ADD_MEMBERSHIP, socket.IP_ADD_SOURCE_MEMBERSHIP, socket.IP_BLOCK_SOURCE,
+        socket.IP_DROP_MEMBERSHIP, socket.IP_DROP_SOURCE_MEMBERSHIP, socket.IP_HDRINCL, socket.IP_MULTICAST_IF,
+        socket.IP_MULTICAST_LOOP, socket.IP_MULTICAST_TTL, socket.IP_OPTIONS, socket.IP_PKTINFO,
+        socket.IP_RECVTOS, socket.IP_TOS, socket.IP_TTL,  # IP_RECVTTL: CPython >= 3.14 only
+        socket.IP_UNBLOCK_SOURCE, socket.MSG_CTRUNC, socket.MSG_DONTROUTE, socket.MSG_OOB,
+        socket.MSG_PEEK, socket.MSG_TRUNC, socket.MSG_WAITALL, socket.NI_DGRAM,
+        socket.NI_MAXHOST, socket.NI_MAXSERV, socket.NI_NAMEREQD, socket.NI_NOFQDN,
+        socket.NI_NUMERICHOST, socket.NI_NUMERICSERV, socket.SHUT_RD, socket.SHUT_RDWR,
+        socket.SHUT_WR, socket.SOCK_RAW, socket.SOCK_RDM, socket.SOCK_SEQPACKET,
+        socket.SOL_IP, socket.SOL_TCP, socket.SOL_UDP, socket.SO_ACCEPTCONN,
+        socket.SO_BROADCAST, socket.SO_DEBUG, socket.SO_DONTROUTE, socket.SO_ERROR,
+        socket.SO_KEEPALIVE, socket.SO_LINGER, socket.SO_OOBINLINE, socket.SO_RCVBUF,
+        socket.SO_RCVLOWAT, socket.SO_RCVTIMEO, socket.SO_SNDBUF, socket.SO_SNDLOWAT,
+        socket.SO_SNDTIMEO, socket.SO_TYPE, socket.TCP_FASTOPEN, socket.TCP_KEEPCNT,
+        socket.TCP_KEEPINTVL, socket.TCP_MAXSEG, socket.TCP_NODELAY,
+    ]
+    assert len(consts) == 122
+
+    # values fixed by IANA or by CPython itself, so the same on all platforms
+    assert socket.AF_UNSPEC == 0
+    assert socket.IPPROTO_IP == 0
+    assert socket.IPPROTO_ICMP == 1
+    assert socket.IPPROTO_TCP == 6
+    assert socket.IPPROTO_UDP == 17
+    assert socket.IPPROTO_IPV6 == 41
+    assert socket.IPPROTO_ICMPV6 == 58
+    assert socket.IPPROTO_RAW == 255
+    assert socket.SOL_TCP == socket.IPPROTO_TCP
+    assert socket.SOL_UDP == socket.IPPROTO_UDP
+    assert socket.MSG_OOB == 1
+    assert socket.MSG_PEEK == 2
+    assert socket.SHUT_RD == 0
+    assert socket.SHUT_WR == 1
+    assert socket.SHUT_RDWR == 2
+    assert socket.INADDR_NONE == 0xffffffff
+    assert socket.INADDR_UNSPEC_GROUP == 0xe0000000
+    assert socket.INADDR_ALLHOSTS_GROUP == 0xe0000001
+    assert socket.INADDR_MAX_LOCAL_GROUP == 0xe00000ff
+    assert socket.IPPORT_RESERVED == 1024
+    assert socket.EBADF == 9
+    # errno values differ per platform: linux/windows CRT use 11, BSD/macOS 35
+    if sys.platform == 'darwin':
+        assert socket.EAGAIN == 35
+    else:
+        assert socket.EAGAIN == 11
+    # equal on POSIX; on windows CPython uses WSAEWOULDBLOCK (10035) instead
+    if sys.platform == 'win32':
+        assert socket.EWOULDBLOCK == 10035
+    else:
+        assert socket.EWOULDBLOCK == socket.EAGAIN
+
+    # actually usable as socket options
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    s.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -145,6 +223,7 @@ def test_all():
     test_create_server()
     test_sendfile()
     test_socketpair()
+    test_constants()
 
 
 if __name__ == '__main__':
