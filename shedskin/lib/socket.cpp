@@ -10,6 +10,12 @@
  * - can't call socket.settimeout(None)
  */
 
+/* macOS only exposes the RFC 3542 IPv6 socket options (IPV6_HOPOPTS,
+ * IPV6_RTHDR, IPV6_PKTINFO, ...) with this defined, as CPython does */
+#ifdef __APPLE__
+#define __APPLE_USE_RFC_3542 1
+#endif
+
 #include "socket.hpp"
 #include <climits>
 #include <fcntl.h>
@@ -31,6 +37,28 @@ typedef u_short sa_family_t;
 
 
 #define ERRNO WSAGetLastError()
+
+/* ws2def.h defines these as enum values rather than macros, so make the
+ * #ifdef tests below see them (a self-referencing macro is harmless) */
+#define IPPROTO_AH IPPROTO_AH
+#define IPPROTO_DSTOPTS IPPROTO_DSTOPTS
+#define IPPROTO_EGP IPPROTO_EGP
+#define IPPROTO_ESP IPPROTO_ESP
+#define IPPROTO_FRAGMENT IPPROTO_FRAGMENT
+#define IPPROTO_HOPOPTS IPPROTO_HOPOPTS
+#define IPPROTO_ICMP IPPROTO_ICMP
+#define IPPROTO_ICMPV6 IPPROTO_ICMPV6
+#define IPPROTO_IDP IPPROTO_IDP
+#define IPPROTO_IGMP IPPROTO_IGMP
+#define IPPROTO_IPV6 IPPROTO_IPV6
+#define IPPROTO_NONE IPPROTO_NONE
+#define IPPROTO_PIM IPPROTO_PIM
+#define IPPROTO_PUP IPPROTO_PUP
+#define IPPROTO_RAW IPPROTO_RAW
+#define IPPROTO_ROUTING IPPROTO_ROUTING
+#define IPPROTO_SCTP IPPROTO_SCTP
+#define IPPROTO_TCP IPPROTO_TCP
+#define IPPROTO_UDP IPPROTO_UDP
 
 #else /* ! WIN32 */
 
@@ -109,6 +137,8 @@ __ss_int __ss_AI_PASSIVE = AI_PASSIVE;
 #endif
 #ifdef SOL_IP
 __ss_int __ss_SOL_IP = SOL_IP;
+#else
+__ss_int __ss_SOL_IP = 0; /* as CPython does */
 #endif
 #ifdef IP_TOS
 __ss_int __ss_IP_TOS = IP_TOS;
