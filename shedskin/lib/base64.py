@@ -22,7 +22,7 @@ def standard_b64decode(s):
 def urlsafe_b64decode(s, padded=False):
     return b''
 
-def b16encode(s):
+def b16encode(s, wrapcol=0):
     return b''
 
 def b16decode(s, casefold=False, ignorechars=b''):
