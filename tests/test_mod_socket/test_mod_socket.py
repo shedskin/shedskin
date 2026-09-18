@@ -196,8 +196,12 @@ def test_constants():
     assert socket.INADDR_ALLHOSTS_GROUP == 0xe0000001
     assert socket.INADDR_MAX_LOCAL_GROUP == 0xe00000ff
     assert socket.IPPORT_RESERVED == 1024
-    assert socket.EAGAIN == 11
     assert socket.EBADF == 9
+    # errno values differ per platform: linux/windows CRT use 11, BSD/macOS 35
+    if sys.platform == 'darwin':
+        assert socket.EAGAIN == 35
+    else:
+        assert socket.EAGAIN == 11
     # equal on POSIX; on windows CPython uses WSAEWOULDBLOCK (10035) instead
     if sys.platform == 'win32':
         assert socket.EWOULDBLOCK == 10035

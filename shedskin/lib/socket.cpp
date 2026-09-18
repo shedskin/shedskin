@@ -771,7 +771,11 @@ socket *socket::bind(socket::inet_address address)
 }
 
 socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
-    if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &value, sizeof(value)) == SOCKET_ERROR)
+    /* pass a plain int, as CPython does: __ss_int is 64-bit by default, and
+     * some option handlers (winsock TCP_*, big-endian kernels) do not accept
+     * or misread a wider buffer */
+    int v = (int)value;
+    if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
         throw new error(make_errstring("setsockopt"));
 
     return this;
