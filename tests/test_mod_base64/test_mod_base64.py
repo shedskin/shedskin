@@ -485,6 +485,184 @@ def test_stream_encode_decode():
     assert out.getvalue() == b''
 
 
+def b16decode_fails(s):
+    ok = False
+    try:
+        base64.b16decode(s)
+    except binascii.Error:
+        ok = True
+    assert ok
+
+
+def test_b16encode_wrapcol():
+    data = bytes(range(8))
+    assert base64.b16encode(data) == b'0001020304050607'
+    assert base64.b16encode(data, wrapcol=0) == b'0001020304050607'
+    assert base64.b16encode(data, wrapcol=4) == b'0001\n0203\n0405\n0607'
+    assert base64.b16encode(data, wrapcol=6) == b'000102\n030405\n0607'
+    assert base64.b16encode(data, wrapcol=16) == b'0001020304050607'
+    assert base64.b16encode(data, wrapcol=100) == b'0001020304050607'
+    # odd wrapcol rounds down to a whole number of bytes per line
+    assert base64.b16encode(data, wrapcol=5) == b'0001\n0203\n0405\n0607'
+    # wrapcol=1 is treated as 2
+    assert base64.b16encode(b'\xab\xcd', wrapcol=1) == b'AB\nCD'
+    assert base64.b16encode(b'\xab\xcd', wrapcol=2) == b'AB\nCD'
+    assert base64.b16encode(b'\xab\xcd', wrapcol=3) == b'AB\nCD'
+    assert base64.b16encode(b'', wrapcol=4) == b''
+    assert base64.b16encode(b'\xff', wrapcol=4) == b'FF'
+    # output is uppercase, and decodes back if the newlines are ignored
+    e = base64.b16encode(bytes(range(256)), wrapcol=32)
+    assert e == e.upper()
+    assert max(len(line) for line in e.split(b'\n')) == 32
+    assert base64.b16decode(e, ignorechars=b'\n') == bytes(range(256))
+    b16decode_fails(e)
+    ok = False
+    try:
+        base64.b16encode(data, wrapcol=-1)
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_b32_padded_wrapcol():
+    # padded=False drops the trailing '='
+    assert base64.b32encode(b'f', padded=False) == b'MY'
+    assert base64.b32encode(b'fo', padded=False) == b'MZXQ'
+    assert base64.b32encode(b'fooba', padded=False) == b'MZXW6YTB'
+    assert base64.b32encode(b'', padded=False) == b''
+    assert base64.b32hexencode(b'f', padded=False) == b'CO'
+    assert base64.b32hexencode(b'foobar', padded=False) == b'CPNMUOJ1E8'
+
+    # wrapcol
+    # (like binascii, wrapcol is rounded down to a multiple of 8, min 8)
+    assert base64.b32encode(b'foobar', wrapcol=8) == b'MZXW6YTB\nOI======'
+    assert base64.b32encode(b'foobar', wrapcol=8, padded=False) == b'MZXW6YTB\nOI'
+    assert base64.b32encode(b'foobar', wrapcol=4) == b'MZXW6YTB\nOI======'
+    assert base64.b32encode(b'foobar', wrapcol=15) == b'MZXW6YTB\nOI======'
+    assert base64.b32encode(b'foobar', wrapcol=16) == b'MZXW6YTBOI======'
+    assert base64.b32encode(b'foobar', wrapcol=100) == b'MZXW6YTBOI======'
+    assert base64.b32encode(b'', wrapcol=4) == b''
+    assert base64.b32encode(bytes(range(20)), wrapcol=16) == b'AAAQEAYEAUDAOCAJ\nBIFQYDIOB4IBCEQT'
+    assert base64.b32hexencode(b'foobar', wrapcol=8) == b'CPNMUOJ1\nE8======'
+    assert base64.b32hexencode(b'foobar', wrapcol=8, padded=False) == b'CPNMUOJ1\nE8'
+    assert base64.b32hexencode(bytes(range(20)), wrapcol=16) == b'000G40O40K30E209\n185GO38E1S8124GJ'
+
+    # decoding unpadded input
+    assert base64.b32decode(b'MY', padded=False) == b'f'
+    assert base64.b32decode(b'MZXW6YTBOI', padded=False) == b'foobar'
+    expect_error(lambda: base64.b32decode(b'MY======', padded=False))
+    assert base64.b32decode(b'MY======', padded=False, ignorechars=b'=') == b'f'
+    assert base64.b32decode(b'my', casefold=True, padded=False) == b'f'
+    assert base64.b32hexdecode(b'CO', padded=False) == b'f'
+    assert base64.b32hexdecode(b'CPNMUOJ1E8', padded=False) == b'foobar'
+    assert base64.b32hexdecode(b'co', casefold=True, padded=False) == b'f'
+    expect_error(lambda: base64.b32decode(b'MY'))
+    expect_error(lambda: base64.b32hexdecode(b'CO'))
+    expect_error(lambda: base64.b32decode(b'M', padded=False))
+
+    # ignorechars
+    assert base64.b32decode(b'MZXW6YTB\nOI======', ignorechars=b'\n') == b'foobar'
+    assert base64.b32decode(b'MZXW 6YTB OI', padded=False, ignorechars=b' ') == b'foobar'
+    assert base64.b32decode(b'MZXW6YTBOI======', ignorechars=b'') == b'foobar'
+    assert base64.b32hexdecode(b'CPNMUOJ1\nE8======', ignorechars=b'\n') == b'foobar'
+    assert base64.b32hexdecode(b'cpnm\nuoj1\ne8', casefold=True, padded=False, ignorechars=b'\n') == b'foobar'
+    expect_error(lambda: base64.b32decode(b'MZXW6YTB\nOI======'))
+    expect_error(lambda: base64.b32decode(b'MZXW6YTB\nOI======', ignorechars=b' '))
+    expect_error(lambda: base64.b32hexdecode(b'CPNMUOJ1\nE8======'))
+
+    # canonical: non-zero padding bits are rejected
+    assert base64.b32decode(b'MY======', canonical=True) == b'f'
+    assert base64.b32decode(b'MY', padded=False, canonical=True) == b'f'
+    assert base64.b32decode(b'MZ======') == b'f'
+    expect_error(lambda: base64.b32decode(b'MZ======', canonical=True))
+    expect_error(lambda: base64.b32decode(b'MZ', padded=False, canonical=True))
+    assert base64.b32decode(b'M\nY======', ignorechars=b'\n', canonical=True) == b'f'
+    assert base64.b32hexdecode(b'CO======', canonical=True) == b'f'
+    assert base64.b32hexdecode(b'CP======') == b'f'
+    expect_error(lambda: base64.b32hexdecode(b'CP======', canonical=True))
+    expect_error(lambda: base64.b32hexdecode(b'CP', padded=False, canonical=True))
+
+    # round trips
+    data = bytes(range(256))
+    for n in range(0, 24):
+        chunk = data[:n]
+        for padded in (False, True):
+            e = base64.b32encode(chunk, padded=padded, wrapcol=7)
+            assert base64.b32decode(e, padded=padded, ignorechars=b'\n', canonical=True) == chunk
+            e = base64.b32hexencode(chunk, padded=padded, wrapcol=7)
+            assert base64.b32hexdecode(e, padded=padded, ignorechars=b'\n', canonical=True) == chunk
+
+
+def test_b85_wrapcol_ignorechars_canonical():
+    # wrapcol
+    assert base64.b85encode(b'www.python.org', wrapcol=5) == b'cXxL#\naCvlS\nZ*DGc\na%T'
+    # (like binascii, wrapcol is rounded down to a multiple of 5, min 5)
+    assert base64.b85encode(b'www.python.org', wrapcol=9) == b'cXxL#\naCvlS\nZ*DGc\na%T'
+    assert base64.b85encode(b'www.python.org', wrapcol=10) == b'cXxL#aCvlS\nZ*DGca%T'
+    assert base64.b85encode(b'www.python.org', wrapcol=100) == b'cXxL#aCvlSZ*DGca%T'
+    assert base64.b85encode(b'f', pad=True, wrapcol=2) == b'W&i*H'
+    assert base64.b85encode(b'foobar', pad=True, wrapcol=2) == b'W^Zp|\nVR8Tf'
+    assert base64.b85encode(b'', wrapcol=5) == b''
+    assert base64.z85encode(b'www.python.org', wrapcol=5) == b'CxXl-\nAcVLs\nz/dgC\nA+t'
+    assert base64.z85encode(b'www.python.org', wrapcol=10) == b'CxXl-AcVLs\nz/dgCA+t'
+    assert base64.z85encode(b'foobar', pad=True, wrapcol=2) == b'w]zP%\nvr8tF'
+    assert base64.z85encode(b'', wrapcol=5) == b''
+
+    # ignorechars (nothing is ignored by default)
+    assert base64.b85decode(b'cXxL#\naCvlS\nZ*DGc\na%T', ignorechars=b'\n') == b'www.python.org'
+    assert base64.b85decode(b'cXxL# aCvlS\nZ*DGc a%T', ignorechars=b' \n') == b'www.python.org'
+    assert base64.b85decode(b'cXxL#aCvlSZ*DGca%T', ignorechars=b'') == b'www.python.org'
+    expect_error(lambda: base64.b85decode(b'cXxL#\naCvlS\nZ*DGc\na%T'))
+    expect_error(lambda: base64.b85decode(b'cXxL#\naCvlS\nZ*DGc\na%T', ignorechars=b' '))
+    assert base64.z85decode(b'CxXl-\nAcVLs\nz/dgC\nA+t', ignorechars=b'\n') == b'www.python.org'
+    assert base64.z85decode(b'Hello World', ignorechars=b' ') == b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b'
+    expect_error(lambda: base64.z85decode(b'Hello World'))
+    expect_error(lambda: base64.z85decode(b'CxXl-\nAcVLs\nz/dgC\nA+t'))
+
+    # canonical: a partial final group must be the encoder's output
+    assert base64.b85decode(b'W&', canonical=True) == b'f'
+    assert base64.b85decode(b'W(') == b'f'
+    expect_error(lambda: base64.b85decode(b'W(', canonical=True))
+    assert base64.b85decode(b'W&i*H', canonical=True) == b'f\x00\x00\x00'
+    assert base64.b85decode(b'W\n&', ignorechars=b'\n', canonical=True) == b'f'
+    assert base64.z85decode(b'w=', canonical=True) == b'f'
+    assert base64.z85decode(b'w>') == b'f'
+    expect_error(lambda: base64.z85decode(b'w>', canonical=True))
+    assert base64.z85decode(b'HelloWorld', canonical=True) == b'\x86\x4f\xd2\x6f\xb5\x59\xf7\x5b'
+
+    # round trips
+    data = bytes(range(256))
+    for n in range(0, 24):
+        chunk = data[:n]
+        for pad in (False, True):
+            e = base64.b85encode(chunk, pad=pad, wrapcol=7)
+            assert base64.b85decode(e, ignorechars=b'\n', canonical=True) == (chunk if not pad else chunk + b'\x00' * (-n % 4))
+            e = base64.z85encode(chunk, pad=pad, wrapcol=7)
+            assert base64.z85decode(e, ignorechars=b'\n', canonical=True) == (chunk if not pad else chunk + b'\x00' * (-n % 4))
+
+
+def test_a85_canonical():
+    assert base64.a85decode(b'z', canonical=True) == b'\x00\x00\x00\x00'
+    assert base64.a85decode(b'!!!!!') == b'\x00\x00\x00\x00'
+    expect_error(lambda: base64.a85decode(b'!!!!!', canonical=True))
+    assert base64.a85decode(b'Ac', canonical=True) == b'f'
+    assert base64.a85decode(b'Ad') == b'f'
+    expect_error(lambda: base64.a85decode(b'Ad', canonical=True))
+    # whitespace is still ignored, and the other flags still apply
+    assert base64.a85decode(b'A c', canonical=True) == b'f'
+    assert base64.a85decode(b'y', foldspaces=True, canonical=True) == b'    '
+    assert base64.a85decode(b'<~Ac~>', adobe=True, canonical=True) == b'f'
+    expect_error(lambda: base64.a85decode(b'<~Ad~>', adobe=True, canonical=True))
+    assert base64.a85decode(b'<~Ad~>', adobe=True) == b'f'
+
+    data = bytes(range(256))
+    for n in range(0, 24):
+        chunk = data[:n]
+        for foldspaces in (False, True):
+            e = base64.a85encode(chunk, foldspaces=foldspaces, wrapcol=7)
+            assert base64.a85decode(e, foldspaces=foldspaces, canonical=True) == chunk
+
+
 def test_all():
     test_basic()
     test_altchars()
@@ -505,6 +683,10 @@ def test_all():
     test_z85()
     test_encodebytes()
     test_stream_encode_decode()
+    test_b16encode_wrapcol()
+    test_b32_padded_wrapcol()
+    test_b85_wrapcol_ignorechars_canonical()
+    test_a85_canonical()
 
 
 if __name__ == '__main__':

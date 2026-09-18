@@ -33,7 +33,7 @@ bytes *b64decode(bytes *s, bytes *altchars, V validate, __ss_bool padded=True, b
 bytes *standard_b64decode(bytes *s);
 bytes *urlsafe_b64decode(bytes *s, __ss_bool padded=False);
 
-bytes *b16encode(bytes *s);
+bytes *b16encode(bytes *s, __ss_int wrapcol=0);
 bytes *b16decode(bytes *s, __ss_bool casefold, bytes *ignorechars=0);
 
 bytes *b32encode(bytes *s, __ss_bool padded=True, __ss_int wrapcol=0);

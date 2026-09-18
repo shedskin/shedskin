@@ -79,8 +79,15 @@ bytes *urlsafe_b64decode(bytes *s, __ss_bool padded) {
     return b64decode(s, new bytes("-_"), False, padded);
 }
 
-bytes *b16encode(bytes *s) {
-    return __binascii__::hexlify(s)->upper();
+bytes *b16encode(bytes *s, __ss_int wrapcol) {
+    /* mirrors base64.py: hexlify(s, bytes_per_sep=-(wrapcol//2), sep=b'\n') */
+    if (!wrapcol)
+        return __binascii__::hexlify(s)->upper();
+    if (wrapcol < 0)
+        throw new ValueError(new str("Negative wrapcol"));
+    if (wrapcol < 2)
+        wrapcol = 2;
+    return __binascii__::hexlify(s, new str("\n"), -(wrapcol / 2))->upper();
 }
 
 bytes *b16decode(bytes *s, __ss_bool casefold, bytes *ignorechars) {
