@@ -586,6 +586,11 @@ def test_unsetenv():
         p = os.popen('echo "[$SHEDSKIN_UNSETENV_TEST]"')
         assert p.read() == '[]\n'
         p.close()
+    else:
+        # cmd.exe echoes unset %VAR% literally, so just check popen works
+        p = os.popen('echo hi')
+        assert p.read().strip() == 'hi'
+        p.close()
     # os.environ is a separate mapping in shedskin, so keep it in step by hand
     os.environ['SHEDSKIN_UNSETENV_TEST'] = 'set'
     del os.environ['SHEDSKIN_UNSETENV_TEST']

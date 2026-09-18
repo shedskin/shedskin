@@ -659,11 +659,27 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
-#ifndef _MSC_VER
+/* popen is declared unconditionally in __init__.hpp; msvc spells it _popen */
+static FILE *__ss_popen(const char *cmd, const char *mode) {
+#ifdef _MSC_VER
+    return ::_popen(cmd, mode);
+#else
+    return ::popen(cmd, mode);
+#endif
+}
+
+static int __ss_pclose(FILE *f) {
+#ifdef _MSC_VER
+    return ::_pclose(f);
+#else
+    return ::pclose(f);
+#endif
+}
+
 popen_pipe::popen_pipe(str *cmd, str *flags) {
     if(flags == 0)
         flags = new str("r");
-    f = ::popen(cmd->c_str(), flags->c_str());
+    f = __ss_popen(cmd->c_str(), flags->c_str());
     if(f == 0)
         throw new OSError(cmd);
     name = cmd;
@@ -671,7 +687,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
 }
 
 void *popen_pipe::close() {
-    pclose(f);
+    __ss_pclose(f);
     closed = 1;
     return NULL;
 }
@@ -687,12 +703,11 @@ popen_pipe* popen(str* cmd, str* mode) {
 popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
-    FILE* fp = ::popen(cmd->c_str(), mode->c_str());
+    FILE* fp = __ss_popen(cmd->c_str(), mode->c_str());
 
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
 }
-#endif
 
 __ss_int dup(__ss_int f1) {
     __ss_int f2 = ::dup((int)f1);
@@ -1145,11 +1160,6 @@ void *link(str *src, str *dst) {
     return NULL;
 }
 
-void *symlink(str *src, str *dst) {
-    if(::symlink(src->c_str(), dst->c_str()) == -1)
-        throw new OSError(new str("os.symlink"));
-    return NULL;
-}
 
 __ss_int pathconf(str *path, str *name_) {
     if(!pathconf_names->__contains__(name_))
@@ -1381,6 +1391,28 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     if(r == -1)
         throw new OSError(new str("os.lseek"));
     return (__ss_int)r;
+}
+#endif
+
+/* symlink is declared unconditionally in __init__.hpp */
+#ifdef WIN32
+void *symlink(str *src, str *dst) {
+    /* like cpython: pick the directory flag when the target is a directory */
+    std::error_code ec;
+    std::filesystem::path target = std::filesystem::path(dst->unit).parent_path() / src->unit;
+    DWORD flags = std::filesystem::is_directory(target, ec) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
+#ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+    flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+#endif
+    if(!CreateSymbolicLinkA(dst->c_str(), src->c_str(), flags))
+        throw new OSError(new str("os.symlink"));
+    return NULL;
+}
+#else
+void *symlink(str *src, str *dst) {
+    if(::symlink(src->c_str(), dst->c_str()) == -1)
+        throw new OSError(new str("os.symlink"));
+    return NULL;
 }
 #endif
 

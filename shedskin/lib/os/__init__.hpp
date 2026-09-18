@@ -152,6 +152,7 @@ void *unsetenv(str* var);
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
 /* available on both posix and windows (windows versions in __init__.cpp) */
+void *symlink(str *src, str *dst);
 __ss_int getpid();
 __ss_int getppid();
 void *ftruncate(__ss_int fd, __ss_int n);
@@ -283,7 +284,6 @@ void *tcsetpgrp(__ss_int fd, __ss_int pg);
 
 void *lchown(str *path, __ss_int uid, __ss_int gid);
 void *link(str *src, str *dst);
-void *symlink(str *src, str *dst);
 
 list<__ss_int> *getgroups();
 void *setgroups(pyseq<__ss_int> *groups);
