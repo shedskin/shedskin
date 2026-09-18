@@ -494,8 +494,9 @@ def test_os_path_split():
     assert split("a//b") == ("a", "b")
     assert split("/a/b//") == ("/a/b", "")
     # head + sep + tail gives the path back, modulo duplicate separators
+    # (join inserts os.sep, so on windows this is 'x/y\\z')
     head, tail = split("x/y/z")
-    assert join(head, tail) == "x/y/z"
+    assert join(head, tail) == "x/y" + os.sep + "z"
     if os.name == "nt":
         assert split("c:\\a\\b") == ("c:\\a", "b")
         assert split("c:/a") == ("c:/", "a")
