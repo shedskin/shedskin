@@ -243,7 +243,7 @@ class_ *cl_InterpolationDepthError;
 void *InterpolationDepthError::__init__(str *option_, str *section_, str *rawval) {
     str *msg;
 
-    msg = __mod6(const_7, 3, section_, option_, rawval);
+    msg = __mod6(const_7, 4, option_, section_, MAX_INTERPOLATION_DEPTH, rawval);
     InterpolationError::__init__(option_, section_, msg);
     return NULL;
 }
@@ -1315,7 +1315,7 @@ void __init() {
     const_4 = new str("Section %r already exists");
     const_5 = new str("No option %r in section: %r");
     const_6 = new str("Bad value substitution:\n\tsection: [%s]\n\toption : %s\n\tkey    : %s\n\trawval : %s\n");
-    const_7 = new str("Value interpolation too deeply recursive:\n\tsection: [%s]\n\toption : %s\n\trawval : %s\n");
+    const_7 = new str("Recursion limit exceeded in value substitution: option %r in section %r contains an interpolation key which cannot be substituted in %d steps. Raw value: %r");
     const_8 = new str("File contains parsing errors: %s");
     const_9 = new str("\n\t[line %2d]: %s");
     const_10 = new str("File contains no section headers.\nfile: %s, line: %d\n%r");

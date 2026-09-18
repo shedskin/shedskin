@@ -369,11 +369,325 @@ def test_system():
     assert os.system('ls') == 0
 
 
+
+def test_access():
+    assert os.F_OK == 0
+    assert os.X_OK == 1
+    assert os.W_OK == 2
+    assert os.R_OK == 4
+
+    path = 'shedskin_test_access.txt'
+    with open(path, 'w') as f:
+        f.write('x')
+    assert os.access(path, os.F_OK)
+    assert os.access(path, os.R_OK)
+    assert os.access(path, os.W_OK)
+    assert os.access(path, os.R_OK | os.W_OK)
+    assert not os.access('shedskin_does_not_exist.txt', os.F_OK)
+    assert not os.access('shedskin_does_not_exist.txt', os.R_OK)
+    os.remove(path)
+
+
+def test_open_flags():
+    path = 'shedskin_test_open_flags.txt'
+    if os.path.exists(path):
+        os.remove(path)
+
+    # O_CREAT|O_EXCL creates, and refuses to create twice
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    assert os.write(fd, b'abc') == 3
+    os.close(fd)
+    try:
+        os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        assert False
+    except OSError as e:  # FileExistsError
+        assert e.errno == 17  # EEXIST
+
+    # O_APPEND writes go to the end
+    fd = os.open(path, os.O_WRONLY | os.O_APPEND)
+    os.write(fd, b'def')
+    os.close(fd)
+    with open(path, 'rb') as f:
+        assert f.read() == b'abcdef'
+
+    # O_TRUNC empties the file first
+    fd = os.open(path, os.O_WRONLY | os.O_TRUNC)
+    os.write(fd, b'z')
+    os.close(fd)
+    with open(path, 'rb') as f:
+        assert f.read() == b'z'
+
+    # O_WRONLY really is write-only
+    fd = os.open(path, os.O_WRONLY)
+    try:
+        os.read(fd, 1)
+        assert False
+    except OSError:
+        pass
+    os.close(fd)
+
+    os.remove(path)
+
+
+def test_fd_ops():
+    path = 'shedskin_test_fd_ops.txt'
+    fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.write(fd, b'0123456789')
+    os.fsync(fd)
+    assert os.fstat(fd).st_size == 10
+
+    # dup: a second descriptor sharing the same open file (and offset)
+    fd2 = os.dup(fd)
+    assert fd2 != fd
+    assert os.fstat(fd2).st_size == 10
+    os.lseek(fd, 2, os.SEEK_SET)
+    assert os.read(fd2, 3) == b'234'
+    os.close(fd2)
+
+    # dup2: reuse an explicit target descriptor number
+    fd3 = os.open(os.devnull, os.O_RDONLY)
+    assert os.dup2(fd, fd3) == fd3
+    os.lseek(fd3, 0, os.SEEK_SET)
+    assert os.read(fd3, 2) == b'01'
+    os.close(fd3)
+
+    # ftruncate shrinks and grows
+    os.ftruncate(fd, 4)
+    assert os.fstat(fd).st_size == 4
+    os.ftruncate(fd, 6)
+    assert os.fstat(fd).st_size == 6
+    os.lseek(fd, 0, os.SEEK_SET)
+    assert os.read(fd, 10) == b'0123\0\0'
+    os.close(fd)
+
+    assert os.stat(path).st_size == 6
+    os.remove(path)
+
+
+def test_pipe_fdopen():
+    r, w = os.pipe()
+    assert r != w
+    assert os.write(w, b'through the pipe') == 16
+    os.close(w)
+    assert os.read(r, 100) == b'through the pipe'
+    assert os.read(r, 100) == b''  # writer closed: EOF
+    os.close(r)
+
+    # fdopen wraps a descriptor in a file object
+    path = 'shedskin_test_fdopen.txt'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    f = os.fdopen(fd, 'w')
+    f.write('hello fdopen\n')
+    f.close()
+    fd = os.open(path, os.O_RDONLY)
+    f = os.fdopen(fd, 'r')
+    assert f.read() == 'hello fdopen\n'
+    f.close()
+    os.remove(path)
+
+
+def test_pids():
+    pid = os.getpid()
+    ppid = os.getppid()
+    assert pid > 0
+    assert ppid > 0
+    assert pid != ppid
+    # signal 0 only checks that the process exists
+    os.kill(pid, 0)
+    try:
+        os.kill(2 ** 22 + 12345, 0)
+        assert False, 'expected an error for a non-existent pid'
+    except OSError as e:  # ProcessLookupError
+        assert e.errno == 3  # ESRCH
+
+
+def test_link_unlink_lstat_readlink():
+    if os.name == 'nt':
+        return  # hard links and symlinks need privileges on Windows
+
+    base = 'shedskin_test_link_dir'
+    os.system('rm -rf ' + base)
+    os.mkdir(base)
+    target = os.path.join(base, 'target.txt')
+    hard = os.path.join(base, 'hard.txt')
+    soft = os.path.join(base, 'soft.txt')
+    with open(target, 'w') as f:
+        f.write('data')
+
+    os.link(target, hard)
+    assert os.stat(hard).st_ino == os.stat(target).st_ino
+    assert os.stat(target).st_nlink == 2
+    with open(hard) as f:
+        assert f.read() == 'data'
+
+    os.symlink('target.txt', soft)
+    assert os.readlink(soft) == 'target.txt'
+    # lstat looks at the link itself, stat follows it
+    assert os.lstat(soft).st_ino != os.stat(soft).st_ino
+    assert os.stat(soft).st_ino == os.stat(target).st_ino
+    assert os.lstat(target).st_ino == os.stat(target).st_ino
+
+    os.unlink(soft)
+    assert not os.path.lexists(soft)
+    os.unlink(hard)
+    assert os.stat(target).st_nlink == 1
+    try:
+        os.unlink(hard)
+        assert False
+    except FileNotFoundError:
+        pass
+
+    os.unlink(target)
+    os.rmdir(base)
+
+
+def test_rename_renames():
+    src = 'shedskin_test_rename_src.txt'
+    dst = 'shedskin_test_rename_dst.txt'
+    with open(src, 'w') as f:
+        f.write('moved')
+    os.rename(src, dst)
+    assert not os.path.exists(src)
+    with open(dst) as f:
+        assert f.read() == 'moved'
+
+    # renames creates missing intermediate directories..
+    deep = os.path.join('shedskin_test_renames_dir', 'a', 'b', 'file.txt')
+    os.renames(dst, deep)
+    assert not os.path.exists(dst)
+    assert os.path.isfile(deep)
+    # ..and prunes directories left empty by the move
+    os.renames(deep, dst)
+    assert not os.path.exists('shedskin_test_renames_dir')
+    assert os.path.isfile(dst)
+    os.remove(dst)
+
+    try:
+        os.rename('shedskin_does_not_exist.txt', dst)
+        assert False
+    except FileNotFoundError:
+        pass
+
+
+def test_chmod_utime():
+    path = 'shedskin_test_chmod_utime.txt'
+    with open(path, 'w') as f:
+        f.write('x')
+
+    os.chmod(path, 0o600)
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    os.chmod(path, 0o644)
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o644
+
+    os.utime(path, (1000000000, 1234567890))
+    st = os.stat(path)
+    assert int(st.st_atime) == 1000000000
+    assert int(st.st_mtime) == 1234567890
+    os.utime(path, (1000000000.5, 1234567890.25))
+    assert int(os.stat(path).st_mtime) == 1234567890
+
+    os.remove(path)
+
+
+def test_strerror_error():
+    assert len(os.strerror(2)) > 0
+    assert os.strerror(2) != os.strerror(13)
+    # matches what OSError carries for the same errno
+    try:
+        os.stat('shedskin_does_not_exist.txt')
+        assert False
+    except FileNotFoundError as e:
+        assert os.strerror(e.errno) == e.strerror
+
+    # os.error is OSError
+    caught = False
+    try:
+        os.stat('shedskin_does_not_exist.txt')
+    except os.error:
+        caught = True
+    assert caught
+
+
+def test_times():
+    t = os.times()
+    assert len(t) == 5
+    for x in t:
+        assert x >= 0.0
+    # burn a little cpu, so user time can only have gone up
+    total = 0
+    for i in range(200000):
+        total += i * i
+    assert total > 0
+    t2 = os.times()
+    assert t2[0] >= t[0]
+    assert t2[4] >= t[4]
+
+
+def test_popen_spawn():
+    if os.name == 'nt':
+        return  # posix shell commands below
+
+    p = os.popen('echo hello popen')
+    assert p.read() == 'hello popen\n'
+    p.close()
+
+    p = os.popen('printf "a\\nb\\n"', 'r')
+    assert p.readlines() == ['a\n', 'b\n']
+    p.close()
+
+    assert os.P_WAIT == 0
+    assert os.P_NOWAIT == 1
+    assert os.P_NOWAITO == os.P_NOWAIT  # same thing on posix
+
+    # P_WAIT: the return value is the exit status
+    assert os.spawnv(os.P_WAIT, '/bin/sh', ['sh', '-c', 'exit 0']) == 0
+    assert os.spawnv(os.P_WAIT, '/bin/sh', ['sh', '-c', 'exit 3']) == 3
+
+    # P_NOWAIT: the return value is a pid, to be collected with waitpid
+    pid = os.spawnv(os.P_NOWAIT, '/bin/sh', ['sh', '-c', 'exit 7'])
+    assert pid > 0
+    wpid, status = os.waitpid(pid, 0)
+    assert wpid == pid
+    assert os.WIFEXITED(status)
+    assert os.WEXITSTATUS(status) == 7
+
+
+def test_misc_constants():
+    assert os.EX_OK == 0
+    assert os.TMP_MAX > 0
+
+
+def test_unsetenv():
+    os.putenv('SHEDSKIN_UNSETENV_TEST', 'set')
+    os.unsetenv('SHEDSKIN_UNSETENV_TEST')
+    # the process environment no longer has it, so a child does not see it
+    if os.name != 'nt':
+        p = os.popen('echo "[$SHEDSKIN_UNSETENV_TEST]"')
+        assert p.read() == '[]\n'
+        p.close()
+    # os.environ is a separate mapping in shedskin, so keep it in step by hand
+    os.environ['SHEDSKIN_UNSETENV_TEST'] = 'set'
+    del os.environ['SHEDSKIN_UNSETENV_TEST']
+    assert os.getenv('SHEDSKIN_UNSETENV_TEST') is None
+
 def test_all():
     test_getcwd()
     test_chdir()
     test_exceptions()
     test_listdir()
+    test_access()
+    test_open_flags()
+    test_fd_ops()
+    test_pipe_fdopen()
+    test_pids()
+    test_link_unlink_lstat_readlink()
+    test_rename_renames()
+    test_chmod_utime()
+    test_strerror_error()
+    test_times()
+    test_popen_spawn()
+    test_misc_constants()
+    test_unsetenv()
 
     test_makedirs_exist_ok()
     test_cpu_count()

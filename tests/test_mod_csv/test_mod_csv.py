@@ -741,6 +741,22 @@ def test_unicode_roundtrip():
     assert list(csv.DictReader(io.StringIO(s.getvalue()))) == [{'名前': 'x', 'värde': 'ÿ'}]
 
 
+
+def test_quote_nonnumeric_writer():
+    # csv fields are always str (or None) here, so QUOTE_NONNUMERIC quotes
+    # every field, including the empty string a None field turns into
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
+        writer.writerow(['hello', None, 'world'])
+        writer.writerow(['1', '2.5', ''])
+    lines = list(open('test_out.csv'))
+    assert lines[0].strip() == '"hello","","world"'
+    assert lines[1].strip() == '"1","2.5",""'
+
+    # the quoting constants are distinct from each other
+    quotings = [csv.QUOTE_MINIMAL, csv.QUOTE_ALL, csv.QUOTE_NONNUMERIC, csv.QUOTE_NONE]
+    assert len(set(quotings)) == 4
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -770,6 +786,7 @@ def test_all():
     test_dialect_instance_honored()
     test_non_ascii_fields()
     test_unicode_roundtrip()
+    test_quote_nonnumeric_writer()
 
 
 if __name__ == "__main__":

@@ -362,7 +362,7 @@ def spawnve(mode, path, args, env):
 def spawnvpe(mode, path, args, env):
     return 1
 
-def open(name, flags):
+def open(name, flags, mode=0o777):
     return 1
 
 def read(fd, n):
@@ -381,7 +381,7 @@ def dup(f1):
     return 1
 
 def dup2(f1,f2):
-    pass
+    return 1
 
 def fchdir(f1):
     pass

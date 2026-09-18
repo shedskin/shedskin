@@ -373,6 +373,38 @@ def test_close():
     assert f.closed
 
 
+
+def test_module_constants():
+    assert io.DEFAULT_BUFFER_SIZE == 8192
+    assert io.SEEK_SET == 0
+    assert io.SEEK_CUR == 1
+    assert io.SEEK_END == 2
+    assert io.SEEK_SET == os.SEEK_SET
+    assert io.SEEK_CUR == os.SEEK_CUR
+    assert io.SEEK_END == os.SEEK_END
+
+    b = io.BytesIO(b'0123456789')
+    assert b.seek(-2, io.SEEK_END) == 8
+    assert b.read() == b'89'
+    assert b.seek(-4, io.SEEK_CUR) == 6
+    assert b.seek(1, io.SEEK_SET) == 1
+    assert b.read(2) == b'12'
+
+    s = io.StringIO('abcdef')
+    assert s.seek(0, io.SEEK_END) == 6
+    assert s.seek(0, io.SEEK_SET) == 0
+    assert s.read(1) == 'a'
+    assert s.seek(0, io.SEEK_CUR) == 1
+
+    # DEFAULT_BUFFER_SIZE is a usable chunk size for a real file
+    with open('io_bufsize_testdata.bin', 'wb') as f:
+        f.write(b'x' * (io.DEFAULT_BUFFER_SIZE + 1))
+    with open('io_bufsize_testdata.bin', 'rb') as f:
+        chunk = f.read(io.DEFAULT_BUFFER_SIZE)
+        assert len(chunk) == io.DEFAULT_BUFFER_SIZE
+        assert f.read() == b'x'
+    os.remove('io_bufsize_testdata.bin')
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -397,6 +429,7 @@ def test_all():
     test_stringio_seek_whence()
     test_unicode_positions()
     test_close()
+    test_module_constants()
 
 
 if __name__ == '__main__':

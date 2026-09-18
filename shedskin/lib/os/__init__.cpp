@@ -142,8 +142,11 @@ str *getenv(str *name_, str *default_) {
 }
 
 void *rename(str *a, str *b) {
-    if(std::rename(a->c_str(), b->c_str()) == -1)
+    if(std::rename(a->c_str(), b->c_str()) == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(a);
         throw new OSError(a);
+    }
     return NULL;
 }
 
@@ -178,8 +181,11 @@ __ss_int cpu_count() {
 }
 
 void *remove(str *path) {
-    if(std::remove(path->c_str()) == -1)
+    if(std::remove(path->c_str()) == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(path);
         throw new OSError(path);
+    }
     return NULL;
 }
 
@@ -290,14 +296,18 @@ class_ *cl___cstat;
 __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
+    int r = -1;
     if(t==1) {
-        if(::stat(path->c_str(), &sbuf) == -1)
-            throw new OSError(path);
+        r = ::stat(path->c_str(), &sbuf);
     } else if (t==2) {
 #ifndef WIN32
-        if(::lstat(path->c_str(), &sbuf) == -1)
+        r = ::lstat(path->c_str(), &sbuf);
 #endif
-            throw new OSError(path);
+    }
+    if (r == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(path);
+        throw new OSError(path);
     }
 
     fill_er_up();
@@ -690,10 +700,10 @@ __ss_int dup(__ss_int f1) {
     return f2;
 }
 
-void *dup2(__ss_int f1, __ss_int f2) {
+__ss_int dup2(__ss_int f1, __ss_int f2) {
     if (::dup2((int)f1,(int)f2) == -1)
         throw new OSError(new str("os.dup2 failed"));
-    return NULL;
+    return f2;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
@@ -704,8 +714,8 @@ void *fdatasync(__ss_int f1) {
 }
 #endif
 
-__ss_int open(str *name_, __ss_int flags) { /* XXX mode argument */
-    __ss_int fp = ::open(name_->c_str(), (int)flags);
+__ss_int open(str *name_, __ss_int flags, __ss_int mode) {
+    __ss_int fp = ::open(name_->c_str(), (int)flags, (int)mode);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
@@ -1406,51 +1416,48 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     throw new OSError(new str("os.execvpe"));
 }
 
+/* like CPython: P_WAIT gives the exit code, or -signal for a killed child */
+static __ss_int __spawn_wait_result(__ss_int pid) {
+    tuple<__ss_int> *t = waitpid(pid, 0);
+    __ss_int status = t->__getsecond__();
+    if (WIFSIGNALED(status))
+        return -WTERMSIG(status);
+    return WEXITSTATUS(status);
+}
+
 __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execv(file, args);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvp(file, args);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execve(file, args, env);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvpe(file, args, env);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 

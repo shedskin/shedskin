@@ -508,6 +508,43 @@ def test_default_flags_prot():
     assert error, "access= with non-default prot should raise ValueError"
 
 
+
+def test_module_constants():
+    assert mmap.ACCESS_DEFAULT == 0
+    assert mmap.ACCESS_READ == 1
+    assert mmap.ACCESS_WRITE == 2
+    assert mmap.ACCESS_COPY == 3
+    assert mmap.ALLOCATIONGRANULARITY > 0
+    # the granularity is a whole number of pages on every platform
+    assert mmap.ALLOCATIONGRANULARITY % mmap.PAGESIZE == 0
+
+    # ACCESS_DEFAULT is the same as not passing access= at all
+    m = mmap.mmap(-1, mmap.PAGESIZE, access=mmap.ACCESS_DEFAULT)
+    m.write(b'hello')
+    m.seek(0)
+    assert m.read(5) == b'hello'
+    m.close()
+
+
+def test_access_copy():
+    setUp()
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'original!')
+    f = open(TESTFILE_OUT, 'r+b')
+    m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
+    assert m.read(8) == b'original'
+    # writes are visible through the mapping..
+    m.seek(0)
+    m.write(b'changed')
+    m.seek(0)
+    assert m.read(9) == b'changedl!'
+    m.flush()
+    f.close()
+    # ..but never reach the file
+    with open(TESTFILE_OUT, 'rb') as g:
+        assert g.read() == b'original!'
+    tearDown(m)
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -525,6 +562,8 @@ def test_all():
         test_set_name()
         test_set_name_file_backed()
         test_default_flags_prot()
+    test_module_constants()
+    test_access_copy()
 
 if __name__ == '__main__':
     test_all()

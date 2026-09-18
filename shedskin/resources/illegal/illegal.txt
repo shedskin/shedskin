@@ -331,6 +331,10 @@ void
 volatile
 wchar_t
 WCONTINUED
+WEXITSTATUS
+WIFCONTINUED
+WIFEXITED
+WIFSTOPPED
 WITH
 WITH_VAR
 WNOHANG
@@ -365,6 +369,10 @@ reflexpr
 requires
 static_assert
 thread_local
+WCOREDUMP
+WIFSIGNALED
+WSTOPSIG
+WTERMSIG
 xor
 xor_eq
 synchronized
