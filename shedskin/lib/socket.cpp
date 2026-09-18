@@ -551,7 +551,12 @@ __ss_int __ss_EBADF = EBADF;
 #else
 __ss_int __ss_EBADF = 9;
 #endif
-#ifdef EWOULDBLOCK
+#ifdef WIN32
+/* the MSVC CRT defines EWOULDBLOCK as 140, but CPython's errno module
+ * replaces it with WSAEWOULDBLOCK (10035), which is what winsock actually
+ * reports; so on windows EAGAIN (11) != EWOULDBLOCK, unlike on POSIX */
+__ss_int __ss_EWOULDBLOCK = WSAEWOULDBLOCK;
+#elif defined(EWOULDBLOCK)
 __ss_int __ss_EWOULDBLOCK = EWOULDBLOCK;
 #else
 __ss_int __ss_EWOULDBLOCK = 11;

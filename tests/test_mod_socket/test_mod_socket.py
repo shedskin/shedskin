@@ -1,5 +1,6 @@
 import os
 import socket
+import sys
 
 
 def test_socket_loopback():
@@ -195,7 +196,13 @@ def test_constants():
     assert socket.INADDR_ALLHOSTS_GROUP == 0xe0000001
     assert socket.INADDR_MAX_LOCAL_GROUP == 0xe00000ff
     assert socket.IPPORT_RESERVED == 1024
-    assert socket.EAGAIN == socket.EWOULDBLOCK
+    assert socket.EAGAIN == 11
+    assert socket.EBADF == 9
+    # equal on POSIX; on windows CPython uses WSAEWOULDBLOCK (10035) instead
+    if sys.platform == 'win32':
+        assert socket.EWOULDBLOCK == 10035
+    else:
+        assert socket.EWOULDBLOCK == socket.EAGAIN
 
     # actually usable as socket options
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
