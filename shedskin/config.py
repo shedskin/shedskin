@@ -735,6 +735,8 @@ def get_user_cache_dir() -> Path:
         return Path("~/Library/Caches/shedskin").expanduser()
     if PLATFORM == "Linux":
         return Path("~/.cache/shedskin").expanduser()
+    if PLATFORM == "FreeBSD":
+        return Path("~/.cache/shedskin").expanduser()
     if PLATFORM == "Windows":
         profile = os.getenv("USERPROFILE")
         if not profile:
