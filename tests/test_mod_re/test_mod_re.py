@@ -504,6 +504,74 @@ def test_re_escape_only_special():
     assert re.match(re.escape('1+1=2?'), '1+1=2?') is not None
 
 
+
+def test_flag_aliases():
+    assert re.A == re.ASCII
+    assert re.I == re.IGNORECASE
+    assert re.L == re.LOCALE
+    assert re.M == re.MULTILINE
+    assert re.S == re.DOTALL
+    assert re.U == re.UNICODE
+    assert re.X == re.VERBOSE
+    flags = [re.A, re.I, re.L, re.M, re.S, re.U, re.X]
+    assert len(set(flags)) == 7  # all distinct bits
+
+    # S: '.' matches a newline
+    assert re.search('a.b', 'a\nb') is None
+    assert re.search('a.b', 'a\nb', re.S) is not None
+    assert re.compile('a.b', re.S).match('a\nb') is not None
+
+    # X: whitespace and comments in the pattern are ignored
+    verbose = re.compile(r"""
+        (\d+)   # digits
+        -        # a dash
+        ([a-z]+) # letters
+    """, re.X)
+    m = verbose.match('12-ab')
+    assert m is not None
+    assert m.group(1) == '12'
+    assert m.group(2) == 'ab'
+    assert re.match(r'a b', 'ab', re.X) is not None
+    assert re.match(r'a b', 'a b', re.X) is None
+
+    # A: \w and \d only match ASCII
+    assert re.match(r'\w', 'é') is not None
+    assert re.match(r'\w', 'é', re.A) is None
+    assert re.match(r'\d', '٣') is not None
+    assert re.match(r'\d', '٣', re.A) is None
+
+    # U is the default for str patterns, so passing it changes nothing
+    assert re.match(r'\w+', 'héllo', re.U).group(0) == 'héllo'
+
+    # flags combine
+    assert re.search('A.B', 'a\nb', re.S | re.I) is not None
+
+
+def test_pattern_error():
+    raised = False
+    try:
+        re.compile('(unclosed')
+    except re.PatternError as e:
+        raised = True
+        assert len(str(e)) > 0
+    assert raised
+
+    # the old re.error name still works for the same exception
+    raised = False
+    try:
+        re.compile('[unclosed')
+    except re.error:
+        raised = True
+    assert raised
+
+    # it is a regular Exception
+    raised = False
+    try:
+        re.compile('a{2,1}')
+    except Exception:
+        raised = True
+    assert raised
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -550,6 +618,8 @@ def test_all():
     test_re_start_of_unmatched_group()
     test_re_template_escapes()
     test_re_escape_only_special()
+    test_flag_aliases()
+    test_pattern_error()
 
 
 if __name__ == "__main__":

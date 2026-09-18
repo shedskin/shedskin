@@ -4,6 +4,7 @@
 #include "path.hpp"
 
 #include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -45,6 +46,7 @@
 #endif
 #endif
 #include <windows.h>
+#include <tlhelp32.h>
 #include <io.h>
 #endif
 
@@ -142,8 +144,11 @@ str *getenv(str *name_, str *default_) {
 }
 
 void *rename(str *a, str *b) {
-    if(std::rename(a->c_str(), b->c_str()) == -1)
+    if(std::rename(a->c_str(), b->c_str()) == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(a);
         throw new OSError(a);
+    }
     return NULL;
 }
 
@@ -178,8 +183,11 @@ __ss_int cpu_count() {
 }
 
 void *remove(str *path) {
-    if(std::remove(path->c_str()) == -1)
+    if(std::remove(path->c_str()) == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(path);
         throw new OSError(path);
+    }
     return NULL;
 }
 
@@ -290,14 +298,37 @@ class_ *cl___cstat;
 __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
+    int r = -1;
     if(t==1) {
-        if(::stat(path->c_str(), &sbuf) == -1)
-            throw new OSError(path);
+        r = ::stat(path->c_str(), &sbuf);
     } else if (t==2) {
 #ifndef WIN32
-        if(::lstat(path->c_str(), &sbuf) == -1)
+        r = ::lstat(path->c_str(), &sbuf);
 #endif
-            throw new OSError(path);
+    }
+#ifdef WIN32
+    if (r == -1) {
+        /* The CRT stat() fails on device names such as 'nul' or 'con'.
+           Like CPython (since 3.8), fall back to opening the path and
+           reporting it as a character device/pipe. */
+        HANDLE h = CreateFileA(path->c_str(), 0,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                               NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        if (h != INVALID_HANDLE_VALUE) {
+            DWORD type = GetFileType(h);
+            CloseHandle(h);
+            if (type == FILE_TYPE_CHAR || type == FILE_TYPE_PIPE) {
+                memset(&sbuf, 0, sizeof(sbuf));
+                sbuf.st_mode = (type == FILE_TYPE_CHAR) ? _S_IFCHR : _S_IFIFO;
+                r = 0;
+            }
+        }
+    }
+#endif
+    if (r == -1) {
+        if (errno == ENOENT)
+            throw new FileNotFoundError(path);
+        throw new OSError(path);
     }
 
     fill_er_up();
@@ -648,11 +679,27 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
-#ifndef _MSC_VER
+/* popen is declared unconditionally in __init__.hpp; msvc spells it _popen */
+static FILE *__ss_popen(const char *cmd, const char *mode) {
+#ifdef _MSC_VER
+    return ::_popen(cmd, mode);
+#else
+    return ::popen(cmd, mode);
+#endif
+}
+
+static int __ss_pclose(FILE *f) {
+#ifdef _MSC_VER
+    return ::_pclose(f);
+#else
+    return ::pclose(f);
+#endif
+}
+
 popen_pipe::popen_pipe(str *cmd, str *flags) {
     if(flags == 0)
         flags = new str("r");
-    f = ::popen(cmd->c_str(), flags->c_str());
+    f = __ss_popen(cmd->c_str(), flags->c_str());
     if(f == 0)
         throw new OSError(cmd);
     name = cmd;
@@ -660,7 +707,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
 }
 
 void *popen_pipe::close() {
-    pclose(f);
+    __ss_pclose(f);
     closed = 1;
     return NULL;
 }
@@ -676,12 +723,11 @@ popen_pipe* popen(str* cmd, str* mode) {
 popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
-    FILE* fp = ::popen(cmd->c_str(), mode->c_str());
+    FILE* fp = __ss_popen(cmd->c_str(), mode->c_str());
 
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
 }
-#endif
 
 __ss_int dup(__ss_int f1) {
     __ss_int f2 = ::dup((int)f1);
@@ -690,10 +736,10 @@ __ss_int dup(__ss_int f1) {
     return f2;
 }
 
-void *dup2(__ss_int f1, __ss_int f2) {
+__ss_int dup2(__ss_int f1, __ss_int f2) {
     if (::dup2((int)f1,(int)f2) == -1)
         throw new OSError(new str("os.dup2 failed"));
-    return NULL;
+    return f2;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
@@ -704,8 +750,8 @@ void *fdatasync(__ss_int f1) {
 }
 #endif
 
-__ss_int open(str *name_, __ss_int flags) { /* XXX mode argument */
-    __ss_int fp = ::open(name_->c_str(), (int)flags);
+__ss_int open(str *name_, __ss_int flags, __ss_int mode) {
+    __ss_int fp = ::open(name_->c_str(), (int)flags, (int)mode);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
@@ -944,8 +990,6 @@ void *setegid(__ss_int egid) {
     return NULL;
 }
 
-__ss_int getppid() { return (__ss_int)::getppid(); }
-
 void *setreuid(__ss_int ruid, __ss_int euid) {
     if(::setreuid((unsigned)ruid, (unsigned)euid) == -1)
         throw new OSError(new str("os.setreuid"));
@@ -977,12 +1021,6 @@ __ss_int fork() {
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
-}
-
-void *ftruncate(__ss_int fd, __ss_int n) {
-    if (::ftruncate((int)fd, n) == -1)
-        throw new OSError(new str("os.ftruncate"));
-    return NULL;
 }
 
 #if !defined(__sun)
@@ -1142,11 +1180,6 @@ void *link(str *src, str *dst) {
     return NULL;
 }
 
-void *symlink(str *src, str *dst) {
-    if(::symlink(src->c_str(), dst->c_str()) == -1)
-        throw new OSError(new str("os.symlink"));
-    return NULL;
-}
 
 __ss_int pathconf(str *path, str *name_) {
     if(!pathconf_names->__contains__(name_))
@@ -1268,13 +1301,99 @@ __vfsstat *fstatvfs(__ss_int fd) {
     return new __vfsstat(fd);
 }
 
+#endif /* WIN32 */
+
+/* getpid/getppid/access/fsync/ftruncate/times are declared unconditionally
+   in __init__.hpp: posix versions first, then the win32 equivalents. */
+#ifndef WIN32
+
+__ss_int getpid() { return (__ss_int)::getpid(); }
+__ss_int getppid() { return (__ss_int)::getppid(); }
+
+__ss_bool access(str *path, __ss_int mode) {
+    return __mbool(::access(path->c_str(), (int)mode) == 0);
+}
+
 void *fsync(__ss_int fd) {
     if(::fsync((int)fd) == -1)
         throw new OSError(new str("os.fsync"));
     return NULL;
 }
 
-#endif /* WIN32 */
+void *ftruncate(__ss_int fd, __ss_int n) {
+    if (::ftruncate((int)fd, n) == -1)
+        throw new OSError(new str("os.ftruncate"));
+    return NULL;
+}
+
+tuple<__ss_float> *times() {
+    struct tms buf;
+    clock_t c;
+    double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
+    if((c = ::times(&buf)) == -1)
+        throw new OSError(new str("os.times"));
+    return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
+}
+
+#else /* WIN32 */
+
+__ss_int getpid() { return (__ss_int)GetCurrentProcessId(); }
+
+/* like cpython: walk the process snapshot to find our parent's id */
+__ss_int getppid() {
+    DWORD pid = GetCurrentProcessId();
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap == INVALID_HANDLE_VALUE)
+        throw new OSError(new str("os.getppid"));
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(pe);
+    __ss_int ppid = -1;
+    if (Process32First(snap, &pe)) {
+        do {
+            if (pe.th32ProcessID == pid) {
+                ppid = (__ss_int)pe.th32ParentProcessID;
+                break;
+            }
+        } while (Process32Next(snap, &pe));
+    }
+    CloseHandle(snap);
+    if (ppid == -1)
+        throw new OSError(new str("os.getppid"));
+    return ppid;
+}
+
+/* _access() knows 0 (exists), 2 (write), 4 (read) and 6 (read+write); like
+   cpython, treat X_OK as 'exists'. */
+__ss_bool access(str *path, __ss_int mode) {
+    int m = (int)mode & (__ss_R_OK | __ss_W_OK);
+    return __mbool(::_access(path->c_str(), m) == 0);
+}
+
+void *fsync(__ss_int fd) {
+    if(::_commit((int)fd) == -1)
+        throw new OSError(new str("os.fsync"));
+    return NULL;
+}
+
+void *ftruncate(__ss_int fd, __ss_int n) {
+    if (::_chsize_s((int)fd, (__int64)n) != 0)
+        throw new OSError(new str("os.ftruncate"));
+    return NULL;
+}
+
+/* like cpython: (user, system, children_user=0, children_system=0, elapsed) */
+tuple<__ss_float> *times() {
+    FILETIME create, exit_, kernel, user;
+    if (!GetProcessTimes(GetCurrentProcess(), &create, &exit_, &kernel, &user))
+        throw new OSError(new str("os.times"));
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime; k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime; u.HighPart = user.dwHighDateTime;
+    __ss_float elapsed = (__ss_float)GetTickCount64() / 1000.0;
+    return new tuple<__ss_float>(5, (__ss_float)u.QuadPart / 1e7, (__ss_float)k.QuadPart / 1e7, (__ss_float)0.0, (__ss_float)0.0, elapsed);
+}
+
+#endif
 
 /* lseek is declared unconditionally in __init__.hpp (it's cross-platform,
    unlike the UNIX-only functionality above and below), so it must be
@@ -1295,6 +1414,28 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
 }
 #endif
 
+/* symlink is declared unconditionally in __init__.hpp */
+#ifdef WIN32
+void *symlink(str *src, str *dst) {
+    /* like cpython: pick the directory flag when the target is a directory */
+    std::error_code ec;
+    std::filesystem::path target = std::filesystem::path(dst->unit).parent_path() / src->unit;
+    DWORD flags = std::filesystem::is_directory(target, ec) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
+#ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+    flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+#endif
+    if(!CreateSymbolicLinkA(dst->c_str(), src->c_str(), flags))
+        throw new OSError(new str("os.symlink"));
+    return NULL;
+}
+#else
+void *symlink(str *src, str *dst) {
+    if(::symlink(src->c_str(), dst->c_str()) == -1)
+        throw new OSError(new str("os.symlink"));
+    return NULL;
+}
+#endif
+
 list<str *> *get_exec_path(dict<str *, str *> *env) {
     if(!env)
         env = __ss_environ;
@@ -1308,19 +1449,6 @@ list<str *> *get_exec_path(dict<str *, str *> *env) {
 }
 
 #ifndef WIN32
-
-__ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(path->c_str(), (int)mode) == 0);
-}
-
-tuple<__ss_float> *times() {
-    struct tms buf;
-    clock_t c;
-    double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
-    if((c = ::times(&buf)) == -1)
-        throw new OSError(new str("os.utime"));
-    return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
-}
 
 __ss_int __ss_makedev(__ss_int major, __ss_int minor) {
     return (__ss_int)makedev((unsigned)major, (unsigned)minor);
@@ -1406,57 +1534,49 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     throw new OSError(new str("os.execvpe"));
 }
 
+/* like CPython: P_WAIT gives the exit code, or -signal for a killed child */
+static __ss_int __spawn_wait_result(__ss_int pid) {
+    tuple<__ss_int> *t = waitpid(pid, 0);
+    __ss_int status = t->__getsecond__();
+    if (WIFSIGNALED(status))
+        return -WTERMSIG(status);
+    return WEXITSTATUS(status);
+}
+
 __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execv(file, args);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvp(file, args);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execve(file, args, env);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __ss_int pid;
-    tuple<__ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvpe(file, args, env);
-    else if (mode == __ss_P_WAIT) {
-        t = waitpid(pid, 0);
-        return t->__getsecond__();
-    }
+    else if (mode == __ss_P_WAIT)
+        return __spawn_wait_result(pid);
     return pid;
-}
-
-__ss_int getpid() {
-    //return GetCurrentProcessId();
-    return ::getpid();
 }
 
 tuple<file *> *popen2(str* cmd) {
@@ -1578,11 +1698,18 @@ tuple<file *> * popen4(str* cmd, str*, __ss_int) {
 
 }
 
+#endif
+
+/* pipe is declared unconditionally in __init__.hpp */
 tuple<__ss_int>* pipe() {
     int fds[2];
     __ss_int ret;
 
+#ifdef WIN32
+    ret = ::_pipe(fds, 4096, _O_BINARY);
+#else
     ret = ::pipe(fds);
+#endif
 
     if(ret != 0) {
         str* s = new str("os.pipe failed");
@@ -1592,7 +1719,6 @@ tuple<__ss_int>* pipe() {
 
     return new tuple<__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);
 }
-#endif
 
 void __init() {
     cl___cstat = new class_("__cstat");
@@ -1625,6 +1751,12 @@ void __init() {
     altsep = __path__::altsep;
     devnull = __path__::devnull;
 
+#ifdef WIN32
+    __ss_F_OK = 0;
+    __ss_R_OK = 4;
+    __ss_W_OK = 2;
+    __ss_X_OK = 1;
+#else
 #ifdef F_OK
     __ss_F_OK = F_OK;
 #endif
@@ -1636,6 +1768,7 @@ void __init() {
 #endif
 #ifdef X_OK
     __ss_X_OK = X_OK;
+#endif
 #endif
 #ifdef NGROUPS_MAX
     __ss_NGROUPS_MAX = NGROUPS_MAX;

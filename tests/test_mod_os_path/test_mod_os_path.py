@@ -445,6 +445,92 @@ def test_os_path_commonpath():
         pass
 
 
+
+def test_os_path_constants():
+    # os.path re-exports the separator constants of the os module
+    assert os.path.sep == os.sep
+    assert os.path.altsep == os.altsep
+    assert os.path.curdir == os.curdir
+    assert os.path.pardir == os.pardir
+    assert os.path.extsep == os.extsep
+    assert os.path.pathsep == os.pathsep
+    assert os.path.defpath == os.defpath
+    assert os.path.devnull == os.devnull
+
+    if os.name == "nt":
+        assert os.path.sep == "\\"
+        assert os.path.altsep == "/"
+        assert os.path.pathsep == ";"
+    else:
+        assert os.path.sep == "/"
+        assert os.path.altsep is None
+        assert os.path.pathsep == ":"
+        assert os.path.devnull == "/dev/null"
+    assert os.path.curdir == "."
+    assert os.path.pardir == ".."
+    assert os.path.extsep == "."
+    assert len(os.path.defpath) > 0
+
+    # ..and they are consistent with what the path functions do
+    assert join("a", "b") == "a" + os.path.sep + "b"
+    assert normpath(join("a", os.path.curdir, "b")) == "a" + os.path.sep + "b"
+    assert normpath(join("a", os.path.pardir, "b")) == "b"
+    assert exists(os.path.devnull)
+    # ..exists as a device, not as a regular file or a directory
+    assert not isfile(os.path.devnull)
+    assert not isdir(os.path.devnull)
+    assert os.path.pathsep in os.path.defpath
+
+
+def test_os_path_split():
+    assert split("a/b") == ("a", "b")
+    assert split("a/b/") == ("a/b", "")
+    assert split("a") == ("", "a")
+    assert split("") == ("", "")
+    assert split("/a") == ("/", "a")
+    assert split("/") == ("/", "")
+    assert split("//a") == ("//", "a")
+    assert split("a/b/c.txt") == ("a/b", "c.txt")
+    assert split("a//b") == ("a", "b")
+    assert split("/a/b//") == ("/a/b", "")
+    # head + sep + tail gives the path back, modulo duplicate separators
+    # (join inserts os.sep, so on windows this is 'x/y\\z')
+    head, tail = split("x/y/z")
+    assert join(head, tail) == "x/y" + os.sep + "z"
+    if os.name == "nt":
+        assert split("c:\\a\\b") == ("c:\\a", "b")
+        assert split("c:/a") == ("c:/", "a")
+
+
+def test_os_path_islink_samestat():
+    if os.name == "nt":
+        return  # os.symlink needs elevated privileges on Windows
+
+    base = "/tmp/shedskin_test_islink_samestat"
+    os.system("rm -rf " + base)
+    os.mkdir(base)
+    target = join(base, "file.txt")
+    link = join(base, "link.txt")
+    with open(target, "w") as f:
+        f.write("hi")
+    os.symlink("file.txt", link)
+
+    assert islink(link) is True
+    assert islink(target) is False
+    assert islink(base) is False
+    assert islink(join(base, "missing")) is False
+
+    s1 = os.stat(target)
+    s2 = os.stat(link)  # follows the link
+    s3 = os.lstat(link)  # does not
+    s4 = os.stat(base)
+    assert samestat(s1, s2) is True
+    assert samestat(s1, s1) is True
+    assert samestat(s1, s3) is False
+    assert samestat(s1, s4) is False
+
+    os.system("rm -rf " + base)
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -469,6 +555,9 @@ def test_all():
     test_os_path_expanduser_windows_trailing_sep()
     test_os_path_expandvars()
     test_os_path_commonpath()
+    test_os_path_constants()
+    test_os_path_split()
+    test_os_path_islink_samestat()
 
 if __name__ == '__main__':
     test_all()

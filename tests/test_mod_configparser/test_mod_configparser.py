@@ -712,6 +712,52 @@ def test_basic_interpolation_syntax_errors():
     assert config.get('p', 'fine') == '100% sure'
 
 
+
+def test_module_constants():
+    assert configparser.DEFAULTSECT == 'DEFAULT'
+    assert configparser.MAX_INTERPOLATION_DEPTH == 10
+
+    # DEFAULTSECT names the section whose values every other section
+    # inherits, but is never listed as a section itself
+    config = configparser.ConfigParser()
+    config.read_string('[DEFAULT]\nshared = 1\n[main]\nown = 2\n')
+    assert config.sections() == ['main']
+    assert configparser.DEFAULTSECT not in config.sections()
+    assert config.has_option('main', 'shared')
+    assert config.get('main', 'shared') == '1'
+    assert config.has_section(configparser.DEFAULTSECT) is False
+
+
+def test_interpolation_depth_error():
+    config = configparser.ConfigParser()
+    config.read_string('[s]\na = %(b)s\nb = %(a)s\nc = %(a)s\n')
+    raised = False
+    try:
+        config.get('s', 'a')
+    except configparser.InterpolationDepthError as e:
+        raised = True
+        assert e.option == 'a'
+        assert e.section == 's'
+        assert 'Recursion limit exceeded' in str(e)
+        assert "'%(b)s'" in str(e)  # raw value is part of the message
+    assert raised
+
+    # a chain that stays within MAX_INTERPOLATION_DEPTH is fine
+    config.set('s', 'b', 'end')
+    assert config.get('s', 'c') == 'end'
+
+    # ..and it is an InterpolationError, so the generic handlers still catch it
+    config.set('s', 'b', '%(a)s')
+    raised = False
+    try:
+        config.get('s', 'c')
+    except configparser.InterpolationError:
+        raised = True
+    assert raised
+
+    # raw access never interpolates, so never hits the limit
+    assert config.get('s', 'a', raw=True) == '%(b)s'
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -748,6 +794,8 @@ def test_all():
     test_interpolation_kwarg()
     test_extended_interpolation()
     test_basic_interpolation_syntax_errors()
+    test_module_constants()
+    test_interpolation_depth_error()
 
 if __name__ == '__main__':
     test_all()

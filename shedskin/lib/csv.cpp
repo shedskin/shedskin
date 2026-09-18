@@ -128,8 +128,6 @@ Dialect *_make_dialect(
     if ((quoting!=(-1))) {
         if(quoting > 5)
             throw new TypeError(new str("bad \"quoting\" value"));
-        if (quoting == QUOTE_NONNUMERIC)
-            throw new ValueError(new str("QUOTE_NONNUMERIC is not supported"));
         dialect->quoting = quoting;
     }
     if ((escapechar!=NULL)) {
@@ -229,6 +227,9 @@ void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, str *delim
     this->input_iter = input_iter_->__iter__();
     this->line_num = 0;
     this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    /* fields are always str here, so a reader cannot turn unquoted fields into floats */
+    if (this->dialect->quoting == QUOTE_NONNUMERIC)
+        throw new ValueError(new str("QUOTE_NONNUMERIC is not supported by csv.reader"));
     return NULL;
 }
 
@@ -583,7 +584,8 @@ void *writer::writerow(list<str *> *seq) {
     this->join_reset();
 
     FOR_IN(field,seq,24,26,123)
-        if (dialect->quoting == QUOTE_ALL)
+        /* fields are always str (or None) here, so QUOTE_NONNUMERIC quotes them all */
+        if (dialect->quoting == QUOTE_ALL || dialect->quoting == QUOTE_NONNUMERIC)
             quoted = 1;
         else if (dialect->quoting == QUOTE_NOTNULL || dialect->quoting == QUOTE_STRINGS)
             quoted = field ? 1 : 0;

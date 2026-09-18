@@ -237,6 +237,179 @@ def test_custom_salary_error():
     assert error
 
 
+
+def test_builtin_exception_hierarchy():
+    # ArithmeticError is the base of the numeric errors
+    caught = ''
+    try:
+        1 / 0
+    except ArithmeticError as e:
+        caught = str(e)
+    assert caught == 'division by zero'
+
+    caught = ''
+    try:
+        1 % 0
+    except ZeroDivisionError as e:
+        caught = str(e)
+    assert caught == 'integer modulo by zero'
+
+    caught = ''
+    try:
+        raise OverflowError('too big')
+    except ArithmeticError as e:
+        caught = str(e)
+    assert caught == 'too big'
+
+    caught = ''
+    try:
+        raise FloatingPointError('fp')
+    except ArithmeticError as e:
+        caught = str(e)
+    assert caught == 'fp'
+
+    # PythonFinalizationError is a RuntimeError
+    caught = ''
+    try:
+        raise PythonFinalizationError('finalizing')
+    except RuntimeError as e:
+        caught = str(e)
+    assert caught == 'finalizing'
+
+    # FileNotFoundError is an OSError with errno/filename
+    caught = ''
+    try:
+        open('shedskin_no_such_file.txt')
+    except FileNotFoundError as fnf:
+        caught = fnf.filename
+        assert fnf.errno == 2
+    assert caught == 'shedskin_no_such_file.txt'
+    ok = False
+    try:
+        os.stat('shedskin_no_such_file.txt')
+    except OSError:
+        ok = True
+    assert ok
+
+    # KeyboardInterrupt and GeneratorExit are BaseExceptions, not Exceptions
+    caught = ''
+    try:
+        raise KeyboardInterrupt('ctrl-c')
+    except BaseException as e:
+        caught = str(e)
+    assert caught == 'ctrl-c'
+    caught = ''
+    try:
+        try:
+            raise GeneratorExit('gen')
+        except Exception:
+            caught = 'wrong'
+    except GeneratorExit as e:
+        caught = str(e)
+    assert caught == 'gen'
+    caught = ''
+    try:
+        try:
+            raise KeyboardInterrupt()
+        except Exception:
+            caught = 'wrong'
+    except KeyboardInterrupt:
+        caught = 'right'
+    assert caught == 'right'
+
+
+def test_builtin_exception_raise_catch():
+    # the remaining plain exceptions: raise, catch by exact type, and by
+    # Exception, with args/str preserved
+    caught = ''
+    try:
+        raise EOFError('eof')
+    except EOFError as e:
+        caught = str(e)
+    assert caught == 'eof'
+
+    caught = ''
+    try:
+        raise MemoryError('oom')
+    except MemoryError as e:
+        caught = str(e)
+    assert caught == 'oom'
+
+    caught = ''
+    try:
+        raise NameError('name')
+    except NameError as e:
+        caught = str(e)
+    assert caught == 'name'
+
+    caught = ''
+    try:
+        raise SyntaxError('syntax')
+    except SyntaxError as e:
+        caught = str(e)
+    assert caught == 'syntax'
+
+    caught = ''
+    try:
+        raise SystemError('system')
+    except SystemError as e:
+        caught = str(e)
+    assert caught == 'system'
+
+    caught = ''
+    try:
+        raise RuntimeError('runtime')
+    except RuntimeError as e:
+        caught = str(e)
+    assert caught == 'runtime'
+
+    caught = ''
+    try:
+        raise FloatingPointError('fpe')
+    except FloatingPointError as e:
+        caught = str(e)
+    assert caught == 'fpe'
+
+    caught = ''
+    try:
+        raise ZeroDivisionError('zde')
+    except ZeroDivisionError as e:
+        caught = str(e)
+    assert caught == 'zde'
+
+    caught = ''
+    try:
+        raise ArithmeticError('arith')
+    except ArithmeticError as e:
+        caught = str(e)
+    assert caught == 'arith'
+
+    # all of these are plain Exceptions with an empty str() when no args
+    # (SyntaxError is the odd one out: its str() is 'None' without args)
+    for i in range(6):
+        caught = 'unset'
+        try:
+            if i == 0:
+                raise EOFError()
+            elif i == 1:
+                raise MemoryError()
+            elif i == 2:
+                raise NameError()
+            elif i == 3:
+                raise SystemError()
+            elif i == 4:
+                raise RuntimeError()
+            else:
+                raise ArithmeticError()
+        except Exception as e:
+            caught = str(e)
+        assert caught == ''
+
+    # repr shows the class name and args
+    assert repr(EOFError('x')) == "EOFError('x')"
+    assert repr(NameError()) == 'NameError()'
+    assert repr(SystemError('sys')) == "SystemError('sys')"
+
 def test_all():
     test_key_error()
     test_assert_error()
@@ -253,6 +426,8 @@ def test_all():
     test_args_empty()
     test_repr_result_is_str()
     test_else()
+    test_builtin_exception_hierarchy()
+    test_builtin_exception_raise_catch()
 
 
 if __name__ == '__main__':
