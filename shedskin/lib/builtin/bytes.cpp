@@ -821,6 +821,31 @@ void *bytes::resize(__ss_int size) {
     return NULL;
 }
 
+/* CPython 3.15 bytearray.take_bytes: CPython can hand over its internal
+   buffer without copying, using refcounting. we get the same effect for the
+   full case by moving the underlying string; a partial take copies the
+   prefix and erases it (as CPython also has to do). */
+
+bytes *bytes::take_bytes(void *) {
+    bytes *b = new bytes(1);
+    b->unit = std::move(unit);
+    unit.clear(); /* moved-from state is valid but unspecified */
+    return b;
+}
+
+bytes *bytes::take_bytes(__ss_int n) {
+    __ss_int len = (__ss_int)unit.size();
+    if(n < 0)
+        n += len;
+    if(n < 0 || n > len)
+        throw new IndexError(new str(("can't take " + std::to_string(n) + " bytes outside size " + std::to_string(len)).c_str()));
+    if(n == len)
+        return take_bytes((void *)NULL); /* plain NULL would pick the __ss_int overload */
+    bytes *b = new bytes(unit.data(), (size_t)n, 1);
+    unit.erase(0, (size_t)n);
+    return b;
+}
+
 void *bytes::append(__ss_int i) {
     unit += (char)i;
     return NULL;

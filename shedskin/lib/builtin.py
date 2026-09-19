@@ -653,6 +653,9 @@ class bytes_(pyseq):
     def resize(self, size):
         pass
 
+    def take_bytes(self, n=None):
+        return b''
+
     def append(self, x):
         pass
 

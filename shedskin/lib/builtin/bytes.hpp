@@ -137,6 +137,8 @@ public:
 
     void *clear();
     void *resize(__ss_int size);
+    bytes *take_bytes(void *n=NULL); /* n=None: take all */
+    bytes *take_bytes(__ss_int n);
     void *append(__ss_int i);
     __ss_int pop(__ss_int i=-1);
     bytes *copy();
