@@ -11,7 +11,7 @@
 using namespace __shedskin__;
 namespace __fnmatch__ {
 
-extern dict<str *, __re__::re_object *> *_cache;
+extern dict<str *, __re__::Pattern *> *_cache;
 extern str *__name__;
 
 __ss_bool fnmatch(str *name, str *pat);

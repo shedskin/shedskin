@@ -238,26 +238,28 @@ def test_re_split_zero_width_matches():
 
 
 def test_re_locale_rejected():
+    # like CPython, this is a ValueError (not re.error)
     error = ''
     try:
         re.compile('a', re.LOCALE)
-    except re.error as e:
+    except ValueError as e:
         error = str(e)
     assert error == 'cannot use LOCALE flag with a str pattern'
 
 
 def test_re_compile_error_message():
-    # a real syntax error positioned well past byte 5, so the old
-    # "char " + erroroffset pointer-arithmetic bug would have produced
-    # garbage instead of a proper "char <N>:..." message
+    # a real syntax error positioned well past the start; the message has
+    # CPython's "<msg> at position <N>" form (the exact PCRE2 wording and
+    # offset differ from CPython's)
     error = ''
     try:
         re.compile('aaaaaaaaaa(')
     except re.error as e:
         error = str(e)
-    assert error.startswith('char ')
-    offset = error[5:].split(':')[0]
+    assert ' at position ' in error
+    offset = error.split(' at position ')[1]
     assert offset.isdigit()
+    assert int(offset) >= 10
 
 
 def test_re_groups_count():
@@ -303,9 +305,8 @@ def test_re_pattern_match_annotations():
 
 def test_re_pattern_match_instantiate():
     # unlike CPython (which raises TypeError), shedskin has no way to
-    # forbid construction; Pattern/Match are deliberately separate,
-    # state-free stub classes so this stays harmless instead of touching
-    # uninitialized PCRE2 state the way re_object()/match_object() would.
+    # forbid construction; all Pattern/Match members are default-initialized
+    # so that this stays harmless.
     p = re.Pattern()
     m = re.Match()
     assert str(p) == '<Pattern object>'
@@ -572,6 +573,146 @@ def test_pattern_error():
         raised = True
     assert raised
 
+def test_re_module_funcs_flags():
+    assert re.fullmatch('ab', 'AB') is None
+    assert re.fullmatch('ab', 'AB', re.I) is not None
+    assert re.fullmatch('ab', 'AB', flags=re.I).group() == 'AB'
+    assert re.fullmatch('a.b', 'a\nb', re.S) is not None
+    assert re.fullmatch('a.b', 'a\nb') is None
+
+    assert re.prefixmatch('ab', 'ABC') is None
+    assert re.prefixmatch('ab', 'ABC', re.I).group() == 'AB'
+    assert re.prefixmatch('^b', 'a\nb', flags=re.M) is None  # no search
+
+    assert re.sub('a', 'x', 'AaA') == 'AxA'
+    assert re.sub('a', 'x', 'AaA', flags=re.I) == 'xxx'
+    assert re.sub('a', 'x', 'AaA', 2, re.I) == 'xxA'
+    assert re.sub('^a', 'x', 'a\na', flags=re.M) == 'x\nx'
+
+    assert re.subn('a', 'x', 'AaA', flags=re.I) == ('xxx', 3)
+    assert re.subn('a', 'x', 'AaA', 1, re.I) == ('xaA', 1)
+    assert re.subn('^a', 'x', 'a\na', flags=re.M) == ('x\nx', 2)
+
+
+def test_re_error_attributes():
+    # compile errors: pattern/pos (PCRE2 offsets can differ from CPython's)
+    pos = -1
+    try:
+        re.compile('ab\n(c')
+    except re.error as e:
+        assert e.pattern == 'ab\n(c'
+        assert e.msg != ''
+        pos = e.pos
+        assert e.lineno == 2
+        assert e.colno == pos - 2
+        assert str(e) == '%s at position %d (line 2, column %d)' % (e.msg, pos, pos - 2)
+    assert pos >= 3
+
+    # template errors match CPython exactly
+    msg = ''
+    try:
+        re.sub('a', 'x\\q', 'a')
+    except re.PatternError as e:
+        msg = str(e)
+        assert e.msg == 'bad escape \\q'
+        assert e.pattern == 'x\\q'
+        assert (e.pos, e.lineno, e.colno) == (1, 1, 2)
+    assert msg == 'bad escape \\q at position 1'
+
+    msg = ''
+    try:
+        re.sub('(a)', 'ab\ncd\\5', 'a')
+    except re.error as e:
+        msg = str(e)
+        assert e.msg == 'invalid group reference 5'
+        assert (e.pos, e.lineno, e.colno) == (6, 2, 4)
+    assert msg == 'invalid group reference 5 at position 6 (line 2, column 4)'
+
+    for tpl, err in [
+        ('\\', 'bad escape (end of pattern) at position 0'),
+        ('x\\ga', 'missing < at position 3'),
+        ('x\\g<a', 'missing >, unterminated name at position 4'),
+        ('x\\g<>', 'missing group name at position 4'),
+        ('x\\g<1a>', "bad character in group name '1a' at position 4"),
+        ('x\\g<9>', 'invalid group reference 9 at position 4'),
+        ('x\\777', 'octal escape value \\777 outside of range 0-0o377 at position 1'),
+        ('x\\15', 'invalid group reference 15 at position 2'),
+    ]:
+        msg = ''
+        try:
+            re.sub('(?P<n>a)', tpl, 'a')
+        except re.error as e:
+            msg = str(e)
+        assert msg == err
+
+    # expand() goes through the same template code
+    msg = ''
+    try:
+        re.match('(a)', 'a').expand('\\2')
+    except re.error as e:
+        msg = str(e)
+    assert msg == 'invalid group reference 2 at position 1'
+
+    # constructing one directly
+    exc = re.error('boom')
+    assert exc.msg == 'boom'
+    assert exc.pattern is None
+    assert str(exc) == 'boom'
+    err2 = re.PatternError('boom', 'abc', 2)
+    assert (err2.msg, err2.pattern) == ('boom', 'abc')
+    assert (err2.pos, err2.lineno, err2.colno) == (2, 1, 3)
+    assert str(err2) == 'boom at position 2'
+
+
+def test_re_match_pattern_attributes():
+    p = re.compile(r'(?P<first>\w+) (?P<last>\w+)(x)?', re.I)
+    assert p.pattern == r'(?P<first>\w+) (?P<last>\w+)(x)?'
+    assert p.flags & re.I
+    assert p.groups == 3
+    assert p.groupindex == {'first': 1, 'last': 2}
+
+    m = p.search('>> Jane Doe', 1, 11)
+    assert m is not None
+    assert m.re is p
+    assert m.string == '>> Jane Doe'
+    assert (m.pos, m.endpos) == (1, 11)
+    assert m.lastindex == 2
+    assert m.lastgroup == 'last'
+    assert m.groupdict() == {'first': 'Jane', 'last': 'Doe'}
+    assert m.groups() == ('Jane', 'Doe', None)
+    assert m.groups('-') == ('Jane', 'Doe', '-')
+    assert m.group('first', 2) == ('Jane', 'Doe')
+    assert m.span('last') == (8, 11)
+    assert m.start(2) == 8
+    assert m.end('first') == 7
+    assert m.expand(r'\g<last>, \1') == 'Doe, Jane'
+
+    m = re.match(r'(?P<a>a)(?P<b>b)?', 'a')
+    assert m.groupdict() == {'a': 'a', 'b': None}
+    assert m.groupdict('?') == {'a': 'a', 'b': '?'}
+    assert m.lastgroup == 'a'
+
+    p = re.compile('[,;]')
+    assert p.split('a,b;c') == ['a', 'b', 'c']
+    assert p.split('a,b;c', 1) == ['a', 'b;c']
+    assert p.split('a,b;c', maxsplit=1) == ['a', 'b;c']
+    assert p.sub('-', 'a,b;c', 1) == 'a-b;c'
+    assert p.subn('-', 'a,b;c', count=1) == ('a-b;c', 1)
+
+    p = re.compile('a+')
+    assert p.fullmatch('xaax', 1, 3).group() == 'aa'
+    assert p.match('xaa', 1).group() == 'aa'
+    assert [m.span() for m in p.finditer('aa-a-aa', 2, 6)] == [(3, 4), (5, 6)]
+
+
+def test_re_findall_empty_window():
+    # endpos < pos used to raise re.error; CPython just finds nothing
+    p = re.compile('a')
+    assert p.findall('aaa', 2, 1) == []
+    assert p.search('aaa', 2, 1) is None
+    assert list(p.finditer('aaa', 2, 1)) == []
+
+
 def test_all():
     test_re_search()
     test_re_match()
@@ -608,6 +749,10 @@ def test_all():
     test_purge()
     test_re_pattern_match_annotations()
     test_re_pattern_match_instantiate()
+    test_re_module_funcs_flags()
+    test_re_error_attributes()
+    test_re_match_pattern_attributes()
+    test_re_findall_empty_window()
     test_re_escape()
     test_re_finditer_empty_string()
     test_re_pattern_findall()

@@ -1,18 +1,8 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
-# NOTE: re_object/match_object are shedskin's internal type-inference stubs
-# for compiled patterns and match results; the real logic lives in re.cpp.
-# CPython exposes these as re.Pattern/re.Match (since 3.8), but shedskin
-# can't just do `Pattern = re_object` (class aliasing isn't resolved by the
-# analyzer), so Pattern/Match below are separate marker classes purely so
-# that annotations and isinstance() checks using those public names resolve
-# instead of silently degrading to "no type". They are deliberately NOT
-# related to re_object/match_object: unlike those, they carry no internal
-# state, so instantiating them directly (which CPython itself disallows,
-# raising TypeError) is harmless here instead of touching uninitialized
-# PCRE2 state.
-# TODO fix re_object.groups, rename re_object to Pattern
+# NOTE: Pattern/Match are shedskin's type-inference stubs for compiled
+# patterns and match results; the real logic lives in re.cpp.
 
 NOFLAG = 0
 I = IGNORECASE = 2
@@ -24,18 +14,24 @@ X = VERBOSE = 64
 DEBUG = 128
 A = ASCII = 256
 
-class PatternError(Exception): pass
+class PatternError(Exception):
+    def __init__(self, msg, pattern=None, pos=-1):
+        self.msg = msg
+        self.pattern = pattern
+        self.pos = pos
+        self.lineno = 0
+        self.colno = 0
 
-class error(Exception): pass  # deprecated alias for PatternError
+class error(PatternError): pass  # deprecated alias for PatternError (C++: using)
 
 
-class match_object:
+class Match:
     def __init__(self):
         self.pos = 0
         self.endpos = 0
         self.lastindex = 0
         self.lastgroup = ''
-        self.re = re_object()
+        self.re = Pattern()
         self.string = ''
 
     def expand(self, template):
@@ -69,46 +65,38 @@ class match_object:
     def __repr__(self):
         return ''
 
-class Match:
-    """Marker class so `re.Match` resolves in annotations/isinstance checks.
-
-    Not the actual type of objects returned by match/search/etc (that's
-    match_object); see the note above class match_object.
-    """
-    pass
-
-class re_object:
-    def __init__(self):  # TODO .groups
+class Pattern:
+    def __init__(self):
         self.flags = 0
         self.groups = 0
         self.groupindex = {'' : ''}
         self.pattern = ''
 
     def prefixmatch(self, string, pos=0, endpos=-1):
-        return match_object()
+        return Match()
 
     def match(self, string, pos=0, endpos=-1):
-        return match_object()
+        return Match()
 
     def fullmatch(self, string, pos=0, endpos=-1):
-        return match_object()
+        return Match()
 
     def search(self, string, pos=0, endpos=-1):
-        return match_object()
+        return Match()
 
     def split(self, string, maxsplit=0):
         return ['']
 
     def sub(self, repl, string, count=0):
-        repl(match_object())
+        repl(Match())
         return ''
 
     def subn(self, repl, string, count=0):
-        repl(match_object())
+        repl(Match())
         return ('', 0)
 
     def finditer(self, string, pos=0, endpos=-1):
-        return __iter(match_object())
+        return __iter(Match())
 
     def findall(self, string, pos=0, endpos=-1):
         return ['']
@@ -116,42 +104,34 @@ class re_object:
     def __repr__(self):
         return ''
 
-class Pattern:
-    """Marker class so `re.Pattern` resolves in annotations/isinstance checks.
-
-    Not the actual type of objects returned by compile() (that's
-    re_object); see the note above class match_object.
-    """
-    pass
-
 def compile(pattern, flags=0):
-    return re_object()
+    return Pattern()
 
 def match(pattern, string, flags=0):
-    return match_object()
+    return Match()
 
 def prefixmatch(pattern, string, flags=0):
-    return match_object()
+    return Match()
 
 def fullmatch(pattern, string, flags=0):
-    return match_object()
+    return Match()
 
 def search(pattern, string, flags=0):
-    return match_object()
+    return Match()
 
 def split(pattern, string, maxsplit=0, flags=0):
     return ['']
 
 def sub(pattern, repl, string, count=0, flags=0):
-    repl(match_object())
+    repl(Match())
     return ''
 
 def subn(pattern, repl, string, count=0, flags=0):
-    repl(match_object())
+    repl(Match())
     return ('', 0)
 
 def finditer(pattern, string, flags=0):
-    return __iter(match_object())
+    return __iter(Match())
 
 def findall(pattern, string, flags=0):
     return ['']

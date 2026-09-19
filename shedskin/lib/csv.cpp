@@ -834,8 +834,8 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
         "(?:^|\\n)(?P<quote>[\"']).*?(?P=quote)(?:$|\\n)"
     };
 
-    __re__::re_object *regexp = NULL;
-    std::vector<__re__::match_object *> matches;
+    __re__::Pattern *regexp = NULL;
+    std::vector<__re__::Match *> matches;
 
     __qd_result result;
     result.doublequote = false;
@@ -848,7 +848,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
     for (int p = 0; p < 4; p++) {
         regexp = __re__::compile(new str(patterns[p]), __re__::DOTALL | __re__::MULTILINE);
         matches.clear();
-        __iter<__re__::match_object *> *it = regexp->finditer(data);
+        __iter<__re__::Match *> *it = regexp->finditer(data);
         while (1) {
             try {
                 matches.push_back(it->__next__());
@@ -874,7 +874,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
     int spaces = 0;
 
     for (size_t i = 0; i < matches.size(); i++) {
-        __re__::match_object *m = matches[i];
+        __re__::Match *m = matches[i];
 
         str *qstr = m->group(0, new str("quote"));
         if (qstr != NULL && qstr->unit.size() > 0) {
@@ -950,9 +950,9 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
         "((" + escaped_delim + ")|^)\\W*" + qc + "[^" + escaped_delim + "\\n]*" +
         qc + "[^" + escaped_delim + "\\n]*" + qc + "\\W*((" + escaped_delim + ")|$)";
 
-    __re__::re_object *dq_regexp = __re__::compile(
+    __re__::Pattern *dq_regexp = __re__::compile(
         new str(dq_pattern.c_str(), dq_pattern.size()), __re__::MULTILINE);
-    __re__::match_object *dqm = dq_regexp->search(data);
+    __re__::Match *dqm = dq_regexp->search(data);
     result.doublequote = (dqm != NULL);
 
     return result;
