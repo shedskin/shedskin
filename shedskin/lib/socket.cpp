@@ -23,6 +23,15 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <net/if.h>
+#endif
+
+#ifdef WIN32
+/* if_nametoindex()/if_indextoname()/GetAdaptersAddresses() */
+#include <iphlpapi.h>
+#ifdef _MSC_VER
+#pragma comment(lib, "iphlpapi.lib")
+#endif
 #endif
 
 #ifdef WIN32
@@ -581,11 +590,59 @@ std::string strerror(int e)
 }
 #endif
 
-str* make_errstring(const char *prefix)
+/* socket.error carrying the errno of the failed call, like OSError.errno.
+ * Pass the errno explicitly when other calls (e.g. restoring blocking mode,
+ * which on Windows resets WSAGetLastError()) come between the failure and
+ * the throw. */
+static error *make_error(const char *prefix, int e)
 {
     std::ostringstream os;
-    os << prefix << ": " << strerror(ERRNO) << " (errno " << ERRNO << ")";
-    return new str( os.str().c_str() );
+    os << prefix << ": " << strerror(e) << " (errno " << e << ")";
+    error *err = new error(new str(os.str().c_str()));
+    err->__ss_errno = e;
+    err->strerror = new str(std::string(strerror(e)).c_str());
+    return err;
+}
+
+static error *make_error(const char *prefix)
+{
+    return make_error(prefix, ERRNO);
+}
+
+static timeout *make_timeout()
+{
+    return new timeout(timed_out);
+}
+
+/* CPython makes every socket it creates non-inheritable (PEP 446) */
+static void set_fd_inheritable(socket_type fd, bool inheritable)
+{
+#ifdef WIN32
+    if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, inheritable ? HANDLE_FLAG_INHERIT : 0))
+        throw make_error("set_inheritable");
+#else
+    int flags = ::fcntl(fd, F_GETFD);
+    if (flags == -1)
+        throw make_error("set_inheritable");
+    flags = inheritable ? (flags & ~FD_CLOEXEC) : (flags | FD_CLOEXEC);
+    if (::fcntl(fd, F_SETFD, flags) == -1)
+        throw make_error("set_inheritable");
+#endif
+}
+
+static bool get_fd_inheritable(socket_type fd)
+{
+#ifdef WIN32
+    DWORD flags;
+    if (!GetHandleInformation((HANDLE)fd, &flags))
+        throw make_error("get_inheritable");
+    return (flags & HANDLE_FLAG_INHERIT) != 0;
+#else
+    int flags = ::fcntl(fd, F_GETFD);
+    if (flags == -1)
+        throw make_error("get_inheritable");
+    return (flags & FD_CLOEXEC) == 0;
+#endif
 }
 
 static socket_type dup_socket_fd(socket_type fd)
@@ -595,17 +652,17 @@ static socket_type dup_socket_fd(socket_type fd)
      * duplicate the underlying socket the way CPython does. */
     WSAPROTOCOL_INFOW info;
     if (WSADuplicateSocketW(fd, GetCurrentProcessId(), &info) == SOCKET_ERROR)
-        throw new error(make_errstring("dup"));
+        throw make_error("dup");
     socket_type r = WSASocketW(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &info, 0, WSA_FLAG_OVERLAPPED);
     if (r == INVALID_SOCKET)
-        throw new error(make_errstring("dup"));
-    return r;
+        throw make_error("dup");
 #else
     int r = ::dup(fd);
     if (r == SOCKET_ERROR)
-        throw new error(make_errstring("dup"));
-    return r;
+        throw make_error("dup");
 #endif
+    set_fd_inheritable(r, false);
+    return r;
 }
 
 socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int type_, __ss_int proto_) {
@@ -614,8 +671,7 @@ socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int t
     this->type = type_;
     this->proto = proto_;
     _fd = fd;
-    _timeout = __ss_default_timeout;
-    _blocking = true;
+    apply_timeout(__ss_default_timeout);
 }
 
 str *socket::__repr__() {
@@ -642,8 +698,7 @@ __ss_int socket::detach() {
 
 socket *socket::dup() {
     socket *sock = new socket(wrap_fd_tag(), dup_socket_fd(_fd), family, type, proto);
-    sock->_blocking = _blocking;
-    sock->_timeout = _timeout;
+    sock->apply_timeout(_timeout);
     return sock;
 }
 
@@ -676,14 +731,32 @@ __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
 }
 
 
-str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
-    socklen_t buflen = (socklen_t)value;
-    std::vector<char> buf(buflen);
+__ss_int socket::getsockopt(__ss_int level, __ss_int optname) {
+    int v = 0;
+    socklen_t buflen = sizeof(v);
+    if (::getsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, &buflen) == SOCKET_ERROR)
+        throw make_error("getsockopt");
+    return (__ss_int)v;
+}
 
-    if (::getsockopt(_fd, (int)level, (int)optname, buf.data(), &buflen) == SOCKET_ERROR)
-        throw new error(make_errstring("getsockopt"));
+__ss_int socket::connect_ex(socket::inet_address address) {
+    try {
+        connect(address);
+    } catch (error *e) {
+        return (__ss_int)e->__ss_errno;
+    } catch (timeout *) {
+        return __ss_EWOULDBLOCK;
+    }
+    return 0;
+}
 
-    return new str(buf.data(), buflen);
+__ss_bool socket::get_inheritable() {
+    return __mbool(get_fd_inheritable(_fd));
+}
+
+void *socket::set_inheritable(__ss_bool inheritable) {
+    set_fd_inheritable(_fd, inheritable);
+    return NULL;
 }
 
 file *socket::makefile(str *mode) {
@@ -707,7 +780,7 @@ file *socket::makefile(str *mode) {
 		/*if (fd >= 0)
 			SOCKETCLOSE(fd);
 		return s->errorhandler(); */
-        throw new error(make_errstring("makefile"));
+        throw make_error("makefile");
 	}
     file *f = new file(fp);
     f->name = new str("<socket>");
@@ -718,7 +791,7 @@ file *socket::makefile(str *mode) {
 socket *socket::bind(const sockaddr *sa, socklen_t salen)
 {
     if (::bind(_fd, sa, salen) == SOCKET_ERROR) {
-        throw new error(make_errstring("bind"));
+        throw make_error("bind");
     }
     return this;
 }
@@ -746,7 +819,7 @@ static unsigned long int string_to_addr(const char *s)
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
     if (!he)
-        throw new herror(host_not_found);
+        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
     return * reinterpret_cast<unsigned long *>( he->h_addr_list[0] );
 }
 
@@ -776,7 +849,7 @@ socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
      * or misread a wider buffer */
     int v = (int)value;
     if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
-        throw new error(make_errstring("setsockopt"));
+        throw make_error("setsockopt");
 
     return this;
 }
@@ -823,7 +896,7 @@ static void set_blocking(socket_type fd)
         if (::fcntl(fd, F_SETFL, 0) == SOCKET_ERROR)
 #endif
         {
-            throw new error(make_errstring("fcntl"));
+            throw make_error("fcntl");
         }
 }
 
@@ -836,7 +909,7 @@ static void set_nonblocking(socket_type fd)
         if (::fcntl(fd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
 #endif
         {
-            throw new error(make_errstring("fcntl"));
+            throw make_error("fcntl");
         }
 }
 socket *socket::connect(const sockaddr *sa, socklen_t salen)
@@ -847,10 +920,19 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
     }
 
     if (::connect(_fd, sa, salen) == SOCKET_ERROR) {
-	if (ERRNO != EINPROGRESS) {
+        /* read the error before anything else: on Windows a successful call
+         * such as ioctlsocket() resets WSAGetLastError() to 0 */
+        int e = ERRNO;
+        bool in_progress = (e == EINPROGRESS);
+#ifdef WIN32
+        /* winsock reports a non-blocking connect in progress as WSAEWOULDBLOCK */
+        in_progress = in_progress || (e == WSAEWOULDBLOCK);
+#endif
+	if (!in_progress) {
+	    error *err = make_error("connect", e);
 	    if (_blocking && _timeout > 0)
 		set_blocking(_fd); // turn blocking back on
-	    throw new error(make_errstring("connect"));
+	    throw err;
 	}
     }
 
@@ -858,53 +940,75 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
+#ifdef WIN32
+        /* winsock signals a failed non-blocking connect through the
+         * exceptfds set rather than by marking the socket writable (as
+         * CPython's internal_select() also allows for) */
+        fd_set x;
+        FD_ZERO(&x);
+        FD_SET(_fd, &x);
+        fd_set *exceptfds = &x;
+#else
+        fd_set *exceptfds = 0;
+#endif
 
         timeval to;
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
 
-        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR) {
+        if (::select(_fd+1, 0, &s, exceptfds, &to) == SOCKET_ERROR) {
+            error *err = make_error("select");
 	    set_blocking(_fd); // turn blocking back on
-            throw new error(make_errstring("select"));
+            throw err;
 	}
-        if (! FD_ISSET(_fd, &s)) {
+        bool ready = FD_ISSET(_fd, &s);
+#ifdef WIN32
+        ready = ready || FD_ISSET(_fd, &x);
+#endif
+        if (!ready) {
 	    set_blocking(_fd); // turn blocking back on
-	    throw new timeout(timed_out);
+	    throw make_timeout();
 	}
 
         // get connection status
         int err = 0;
         socklen_t errsize = sizeof(err);
         if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR) {
+            error *e2 = make_error("getsockopt");
 	    set_blocking(_fd); // turn blocking back on
-            throw new error(make_errstring("getsockopt"));
+            throw e2;
 	}
 
         set_blocking(_fd); // turn blocking back on
 
-        if (err != 0) {
-            std::ostringstream os;
-            os << "connect: " << strerror(err) << " (errno " << err << ")";
-            const std::string& s2 = os.str();
-            throw new error(new str( s2.c_str() ));
-        }
+        if (err != 0)
+            throw make_error("connect", err);
     }
 
     return this;
 }
 
-socket *socket::setblocking(__ss_int flag)
+/* Put the socket in the mode a timeout value means in CPython: 0.0 is
+ * non-blocking, a positive value is blocking with a timeout, and a negative
+ * value (None) is blocking without one. Always sets the fd's blocking flag
+ * explicitly, as BSD/macOS accept()ed sockets inherit O_NONBLOCK. */
+void socket::apply_timeout(double val)
 {
-    if (flag)  {
-        //blocking mode
-        _blocking = true;
-	_timeout = __ss_default_timeout;	// use default value set by socket.setdefaulttimeout()
-        set_blocking(_fd);
-    } else {
-        //non-blocking
+    if (val == 0) {
         set_nonblocking(_fd);
         _blocking = false;
+        _timeout = 0;
+    } else {
+        set_blocking(_fd);
+        _blocking = true;
+        _timeout = val < 0 ? -1 : val;
     }
+}
+
+socket *socket::setblocking(__ss_int flag)
+{
+    /* setblocking(True) is settimeout(None), setblocking(False) is settimeout(0.0) */
+    apply_timeout(flag ? -1 : 0);
     return this;
 }
 
@@ -912,28 +1016,20 @@ socket *socket::settimeout(double val)
 {
     if (val < 0)
 	throw new ValueError(new str("Timeout value out of range"));
-
-    if (val == 0) { // s.settimeout(0.0) is equivalent to s.setblocking(0)
-        set_nonblocking(_fd);
-	_blocking = false;
-    } else {
-        set_blocking(_fd);
-	_blocking = true;
-	_timeout = val;
-    }
+    apply_timeout(val);
     return this;
 }
 
 socket *socket::shutdown(__ss_int how)
 {
     if (::shutdown(_fd, (int)how) == SOCKET_ERROR)
-        throw new error(make_errstring("shutdown"));
+        throw make_error("shutdown");
     return this;
 }
 
 void socket::write_wait()
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -941,9 +1037,9 @@ void socket::write_wait()
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
-            throw new error(make_errstring("select"));
+            throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
 }
 
@@ -953,7 +1049,7 @@ size_t socket::send(const char *s, size_t len, int flags)
 
     ssize_t r = ::send(_fd, s, len, flags);
     if (r == SOCKET_ERROR)
-        throw new error(make_errstring("send"));
+        throw make_error("send");
     return (size_t)r;
 }
 
@@ -990,7 +1086,7 @@ __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 
     ssize_t len = ::sendto(_fd, buf, buflen, (int)flags, sa, salen);
     if (len == SOCKET_ERROR)
-        throw new error(make_errstring("sendto"));
+        throw make_error("sendto");
 
     return (__ss_int)len;
 }
@@ -1007,7 +1103,7 @@ socket *socket::close()
         _fd = SS_INVALID_SOCKET;
         if (::CLOSE(fd) == SOCKET_ERROR)
 #define STRINGIFY(x) #x
-            throw new error(make_errstring(STRINGIFY(CLOSE)));
+            throw make_error(STRINGIFY(CLOSE));
 #undef STRINGIFY
     }
     return this;
@@ -1015,7 +1111,7 @@ socket *socket::close()
 
 void socket::read_wait()
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1023,9 +1119,9 @@ void socket::read_wait()
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-            throw new error(make_errstring("select"));
+            throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
 }
 
@@ -1036,24 +1132,22 @@ bytes *socket::recv(__ss_int bufsize, __ss_int flags)
     std::vector<char> buf((size_t)bufsize);
     ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, (int)flags);
     if (len == SOCKET_ERROR)
-        throw new error(make_errstring("recv"));
+        throw make_error("recv");
     return new bytes(buf.data(), (size_t)len);
 }
 
-#ifdef WIN32
-void inet_ntop(int proto, const in_addr *addr, char *dst, size_t len)
+/* dotted-quad string for an IPv4 address (winsock wants a non-const void *) */
+static str *in_addr_to_str(const in_addr *addr)
 {
-    int v = ntohl(addr->s_addr);
-    sprintf(dst, "%d.%d.%d.%d", ((v>> 24) & 0xff) ,((v >> 16) & 0xff) ,((v >> 8) & 0xff) ,((v) & 0xff));
+    char ip[INET_ADDRSTRLEN];
+    if (!::inet_ntop(AF_INET, (void *)addr, ip, sizeof(ip)))
+        throw make_error("inet_ntop");
+    return new str(ip);
 }
-#endif
 
 static socket::inet_address sin_addr_to_tuple(const sockaddr_in *sin)
 {
-    char ip[sizeof("xxx.xxx.xxx.xxx")];
-    inet_ntop(AF_INET, &sin->sin_addr, ip, sizeof(ip));
-    socket::inet_address addr = new tuple2<str *, __ss_int>(2, new str(ip), static_cast<__ss_int>(ntohs(sin->sin_port)));
-    return addr;
+    return new tuple2<str *, __ss_int>(2, in_addr_to_str(&sin->sin_addr), static_cast<__ss_int>(ntohs(sin->sin_port)));
 }
 
 size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, socklen_t *salen)
@@ -1061,7 +1155,7 @@ size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, sock
     read_wait();
     ssize_t len = ::recvfrom(_fd, buf, bufsize, flags, sa, salen);
     if (len == SOCKET_ERROR)
-        throw new error(make_errstring("recvfrom"));
+        throw make_error("recvfrom");
     return (size_t)len;
 }
 
@@ -1074,17 +1168,72 @@ tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_i
     return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
-socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_) {
+socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int fileno) {
     this->__class__ = cl_socket;
+    _timeout = __ss_default_timeout;
+    _blocking = true;
 
+    if (fileno >= 0) {
+        /* wrap an existing fd; like CPython, detect what wasn't given */
+        _fd = (socket_type)fileno;
+#ifdef WIN32
+        /* getsockname() fails with WSAEINVAL on an unbound socket on
+         * Windows, so (like CPython) ask winsock for the protocol info
+         * instead, which also gives us the type and protocol */
+        if (family_ < 0 || type_ < 0 || proto_ < 0) {
+            WSAPROTOCOL_INFOW info;
+            socklen_t len = sizeof(info);
+            if (::getsockopt(_fd, SOL_SOCKET, SO_PROTOCOL_INFOW, SOCKOPT_CAST &info, &len) == SOCKET_ERROR)
+                throw make_error("socket");
+            if (family_ < 0)
+                family_ = info.iAddressFamily;
+            if (type_ < 0)
+                type_ = info.iSocketType;
+            if (proto_ < 0)
+                proto_ = info.iProtocol;
+        }
+#else
+        if (family_ < 0) {
+            sockaddr_storage ss;
+            socklen_t len = sizeof(ss);
+            memset(&ss, 0, sizeof(ss));
+            if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&ss), &len) == SOCKET_ERROR)
+                throw make_error("socket");
+            family_ = ss.ss_family;
+        }
+        if (type_ < 0) {
+            int v = 0;
+            socklen_t len = sizeof(v);
+            if (::getsockopt(_fd, SOL_SOCKET, SO_TYPE, SOCKOPT_CAST &v, &len) == SOCKET_ERROR)
+                throw make_error("socket");
+            type_ = v;
+        }
+        if (proto_ < 0) {
+            proto_ = 0;
+#ifdef SO_PROTOCOL
+            int v = 0;
+            socklen_t len = sizeof(v);
+            if (::getsockopt(_fd, SOL_SOCKET, SO_PROTOCOL, SOCKOPT_CAST &v, &len) != SOCKET_ERROR)
+                proto_ = v;
+#endif
+        }
+#endif /* WIN32 */
+    } else {
+        if (family_ < 0)
+            family_ = AF_INET;
+        if (type_ < 0)
+            type_ = SOCK_STREAM;
+        if (proto_ < 0)
+            proto_ = 0;
+        _fd = ::socket((int)family_, (int)type_, (int)proto_);
+        if (_fd == SS_INVALID_SOCKET)
+            throw make_error("socket");
+        set_fd_inheritable(_fd, false);
+    }
     this->family = family_;
     this->type = type_;
     this->proto = proto_;
-    _fd = ::socket((int)family_, (int)type_, (int)proto_);
-    if (_fd == SOCKET_ERROR)
-        throw new error(make_errstring("socket"));
-    _timeout = __ss_default_timeout;
-    _blocking = true;
+    apply_timeout(__ss_default_timeout);
 }
 
 socket::~socket()
@@ -1096,13 +1245,13 @@ socket::~socket()
 socket *socket::listen(__ss_int backlog)
 {
     if(::listen(_fd, (int)backlog) == SOCKET_ERROR)
-        throw new error(make_errstring("listen"));
+        throw make_error("listen");
     return this;
 }
 
 socket* socket::accept(sockaddr *sa, socklen_t *salen)
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1110,14 +1259,14 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-            throw new error(make_errstring("select"));
+            throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
-    int r;
-    if ((r = ::accept(_fd, sa, salen)) == SOCKET_ERROR) {
-        throw new error(make_errstring("accept"));
-    }
+    socket_type r = ::accept(_fd, sa, salen);
+    if (r == SS_INVALID_SOCKET)
+        throw make_error("accept");
+    set_fd_inheritable(r, false);
     return new socket(wrap_fd_tag(), r, family, type, proto);
 }
 
@@ -1163,7 +1312,7 @@ socket::inet_address socket::getpeername()
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     if (::getpeername(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
-        throw new error(make_errstring("getpeername"));
+        throw make_error("getpeername");
     return sin_addr_to_tuple(&addr);
 }
 
@@ -1172,7 +1321,7 @@ socket::inet_address socket::getsockname()
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
-        throw new error(make_errstring("getsockname"));
+        throw make_error("getsockname");
     return sin_addr_to_tuple(&addr);
 }
 
@@ -1180,12 +1329,14 @@ str *gethostname()
 {
     char name[HOST_NAME_MAX];
     if (::gethostname(name, sizeof(name)) == -1)
-        throw new herror(make_errstring("gethostname"));
+        throw make_error("gethostname");
     return new str(name);
 }
 
-socket *create_connection(socket::inet_address address, double timeout, socket::inet_address source_address)
+socket *create_connection(socket::inet_address address, double timeout, socket::inet_address source_address, __ss_bool all_errors)
 {
+    /* only one address is ever tried here, so all_errors makes no difference */
+    (void)all_errors;
     socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
     if (timeout >= 0)
         s->settimeout(timeout);
@@ -1244,9 +1395,14 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
     socket *lsock = new socket(family, type, proto);
     socket *csock = 0, *ssock = 0;
     try {
+        /* the handshake is done in blocking mode whatever the default
+         * timeout is; the pair returned gets the default timeout like any
+         * newly created socket */
+        lsock->setblocking(1);
         lsock->bind(new tuple2<str *, __ss_int>(2, new str("127.0.0.1"), 0));
         lsock->listen(1);
         csock = new socket(family, type, proto);
+        csock->setblocking(1);
         /* a blocking connect to a local listening socket completes without
          * anyone calling accept() yet, so no non-blocking dance is needed */
         csock->connect(lsock->getsockname());
@@ -1258,22 +1414,23 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
         throw;
     }
     lsock->close();
+    csock->apply_timeout(__ss_default_timeout);
     return new tuple2<socket *, socket *>(2, ssock, csock);
 }
 
-__ss_int _ss_htonl(__ss_int x) {
+__ss_int __ss_htonl(__ss_int x) {
     return (__ss_int)htonl((uint32_t)x);
 }
 
-__ss_int _ss_htons(__ss_int x) {
+__ss_int __ss_htons(__ss_int x) {
     return (__ss_int)htons((uint16_t)x);
 }
 
-__ss_int _ss_ntohl(__ss_int x) {
+__ss_int __ss_ntohl(__ss_int x) {
     return (__ss_int)ntohl((uint32_t)x);
 }
 
-__ss_int _ss_ntohs(__ss_int x) {
+__ss_int __ss_ntohs(__ss_int x) {
     return (__ss_int)ntohs((uint16_t)x);
 }
 
@@ -1330,36 +1487,227 @@ void __exit()
 #endif
 }
 
+/* (hostname, aliaslist, ipaddrlist) from a hostent, as gethostby*() return */
+static __host_tuple *hostent_to_tuple(const hostent *he)
+{
+    list<str *> *aliases = new list<str *>();
+    for (char **a = he->h_aliases; a && *a; a++)
+        aliases->append(new str(*a));
+    list<str *> *addrs = new list<str *>();
+    if (he->h_addrtype == AF_INET)
+        for (char **a = he->h_addr_list; a && *a; a++)
+            addrs->append(in_addr_to_str(reinterpret_cast<const in_addr *>(*a)));
+    return new __host_tuple(3, new str(he->h_name), aliases, addrs);
+}
+
 str *gethostbyname(str *hostname)
 {
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
+        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
+    return in_addr_to_str(reinterpret_cast<const in_addr *>(he->h_addr_list[0]));
+}
+
+__host_tuple *gethostbyname_ex(str *hostname)
+{
+    hostent *he = ::gethostbyname(hostname->c_str());
+    if (!he)
+        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
+    return hostent_to_tuple(he);
+}
+
+__host_tuple *gethostbyaddr(str *ip_address)
+{
+    /* like CPython, a hostname is resolved first */
+    in_addr addr;
+    addr.s_addr = (in_addr_t)string_to_addr(ip_address->c_str());
+    hostent *he = ::gethostbyaddr(SOCKOPT_CAST &addr, sizeof(addr), AF_INET);
+    if (!he)
         throw new herror(host_not_found);
-    char ip[sizeof("xxx.xxx.xxx.xxx")];
-    uint32_t addr = htonl((uint32_t)(*((int *) he->h_addr_list[0])) );
-    sprintf(ip, "%d.%d.%d.%d", ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), (addr & 0xff));
+    return hostent_to_tuple(he);
+}
+
+str *getfqdn(str *name)
+{
+    str *n = name ? name->strip() : new str("");
+    if (n->__len__() == 0)
+        n = gethostname();
+    try {
+        __host_tuple *t = gethostbyaddr(n);
+        str *hostname = t->__getfirst__();
+        str *dot = new str(".");
+        if (hostname->find(dot) != -1)
+            return hostname;
+        list<str *> *aliases = t->__getsecond__();
+        for (size_t i = 0; i < aliases->units.size(); i++)
+            if (aliases->units[i]->find(dot) != -1)
+                return aliases->units[i];
+        return hostname;
+    } catch (OSError *) {
+        return n;
+    }
+}
+
+tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags)
+{
+    sockaddr_in sin;
+    tuple_to_sin_addr(&sin, sockaddr_);
+    char host[NI_MAXHOST], serv[NI_MAXSERV];
+    int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), (int)flags);
+    if (r != 0) {
+        gaierror *e = new gaierror(new str(gai_strerror(r)));
+        e->__ss_errno = r;
+        throw e;
+    }
+    return new tuple2<str *, str *>(2, new str(host), new str(serv));
+}
+
+__ss_int getprotobyname(str *protocolname)
+{
+    protoent *pe = ::getprotobyname(protocolname->c_str());
+    if (!pe)
+        throw new error(new str("protocol not found"));
+    return pe->p_proto;
+}
+
+__ss_int getservbyname(str *servicename, str *protocolname)
+{
+    servent *se = ::getservbyname(servicename->c_str(), protocolname ? protocolname->c_str() : NULL);
+    if (!se)
+        throw new error(new str("service/proto not found"));
+    return ntohs((uint16_t)se->s_port);
+}
+
+str *getservbyport(__ss_int port, str *protocolname)
+{
+    if (port < 0 || port > 0xffff)
+        throw new OverflowError(new str("getservbyport: port must be 0-65535."));
+    servent *se = ::getservbyport(htons((uint16_t)port), protocolname ? protocolname->c_str() : NULL);
+    if (!se)
+        throw new error(new str("port/proto not found"));
+    return new str(se->s_name);
+}
+
+list<tuple2<__ss_int, str *> *> *if_nameindex()
+{
+    list<tuple2<__ss_int, str *> *> *result = new list<tuple2<__ss_int, str *> *>();
+#ifdef WIN32
+    /* as CPython does: walk the adapters and name each one via if_indextoname() */
+    ULONG size = 15000;
+    std::vector<char> buf;
+    IP_ADAPTER_ADDRESSES *adapters;
+    ULONG r;
+    do {
+        buf.resize(size);
+        adapters = reinterpret_cast<IP_ADAPTER_ADDRESSES *>(buf.data());
+        r = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER, NULL, adapters, &size);
+    } while (r == ERROR_BUFFER_OVERFLOW);
+    if (r != ERROR_SUCCESS)
+        throw new error(new str("if_nameindex: GetAdaptersAddresses failed"));
+    for (IP_ADAPTER_ADDRESSES *a = adapters; a; a = a->Next) {
+        char name[IF_NAMESIZE + 1];
+        if (::if_indextoname(a->IfIndex, name))
+            result->append(new tuple2<__ss_int, str *>(2, (__ss_int)a->IfIndex, new str(name)));
+    }
+#else
+    struct if_nameindex *ni = ::if_nameindex();
+    if (!ni)
+        throw make_error("if_nameindex");
+    for (struct if_nameindex *i = ni; i->if_index != 0; i++)
+        result->append(new tuple2<__ss_int, str *>(2, (__ss_int)i->if_index, new str(i->if_name)));
+    ::if_freenameindex(ni);
+#endif
+    return result;
+}
+
+__ss_int if_nametoindex(str *name)
+{
+    unsigned int index = ::if_nametoindex(name->c_str());
+    if (index == 0)
+        throw new error(new str("no interface with this name"));
+    return (__ss_int)index;
+}
+
+str *if_indextoname(__ss_int index)
+{
+    if (index < 0 || index > (__ss_int)UINT_MAX)
+        throw new OverflowError(new str("index is out of range"));
+    char name[IF_NAMESIZE + 1];
+    if (!::if_indextoname((unsigned int)index, name))
+        throw new error(new str("no interface with this index"));
+    return new str(name);
+}
+
+bytes *inet_aton(str *ip_string)
+{
+    in_addr addr;
+#ifdef WIN32
+    /* winsock has no inet_aton(); inet_addr() returns INADDR_NONE both for
+     * errors and for 255.255.255.255, as CPython special-cases too */
+    if (strcmp(ip_string->c_str(), "255.255.255.255") == 0)
+        addr.s_addr = INADDR_NONE;
+    else if ((addr.s_addr = inet_addr(ip_string->c_str())) == INADDR_NONE)
+        throw new error(new str("illegal IP address string passed to inet_aton"));
+#else
+    if (!::inet_aton(ip_string->c_str(), &addr))
+        throw new error(new str("illegal IP address string passed to inet_aton"));
+#endif
+    return new bytes(reinterpret_cast<const char *>(&addr.s_addr), sizeof(addr.s_addr));
+}
+
+str *inet_ntoa(bytes *packed_ip)
+{
+    if (packed_ip->unit.size() != sizeof(in_addr))
+        throw new error(new str("packed IP wrong length for inet_ntoa"));
+    in_addr addr;
+    memcpy(&addr, packed_ip->unit.data(), sizeof(addr));
+    return in_addr_to_str(&addr);
+}
+
+bytes *inet_pton(__ss_int address_family, str *ip_string)
+{
+    unsigned char packed[sizeof(in6_addr)];
+    /* like CPython, an unsupported family is left to inet_pton() (OSError) */
+    int r = ::inet_pton((int)address_family, ip_string->c_str(), packed);
+    if (r == 0)
+        throw new error(new str("illegal IP address string passed to inet_pton"));
+    if (r < 0)
+        throw make_error("inet_pton");
+    return new bytes(reinterpret_cast<const char *>(packed), address_family == AF_INET ? sizeof(in_addr) : sizeof(in6_addr));
+}
+
+str *inet_ntop(__ss_int address_family, bytes *packed_ip)
+{
+    size_t len;
+    if (address_family == AF_INET)
+        len = sizeof(in_addr);
+    else if (address_family == AF_INET6)
+        len = sizeof(in6_addr);
+    else
+        throw new ValueError(new str("unknown address family"));
+    if (packed_ip->unit.size() != len)
+        throw new ValueError(new str("invalid length of packed IP address string"));
+    unsigned char packed[sizeof(in6_addr)];
+    memcpy(packed, packed_ip->unit.data(), len);
+    char ip[INET6_ADDRSTRLEN];
+    if (!::inet_ntop((int)address_family, (void *)packed, ip, sizeof(ip)))
+        throw make_error("inet_ntop");
     return new str(ip);
 }
 
-str *inet_aton(str *x)
+void *close(__ss_int fd)
 {
-    unsigned long int addr = string_to_addr(x->c_str());
-    return new str((char *) &addr, 4);
+    if (::CLOSE((socket_type)fd) == SOCKET_ERROR)
+        throw make_error("close");
+    return NULL;
 }
 
-str *inet_ntoa(str *x)
+__ss_int dup(__ss_int fd)
 {
-    const char *s = x->c_str();
-    int addr = *((int *) s);
-    char ip[sizeof("xxx.xxx.xxx.xxx")];
-    sprintf(ip, "%d.%d.%d.%d", ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), (addr & 0xff));
-    return new str(ip);
+    return (__ss_int)dup_socket_fd((socket_type)fd);
 }
 
-__ss_bool has_ipv6()
-{
-    return False;
-}
+__ss_bool has_ipv6 = True;
 
 } // module namespace
 

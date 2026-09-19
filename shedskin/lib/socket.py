@@ -176,15 +176,30 @@ EAGAIN=11
 EBADF=9
 EWOULDBLOCK=11
 
-class error(Exception): pass
-class herror(Exception): pass
-class gaierror(Exception): pass
-class timeout(Exception): pass
+has_ipv6 = True
 
-# NOTE literal defaults (AF_INET=2, SOCK_STREAM=1, the same on all supported
-# platforms) so the compiler emits them directly instead of default_N globals
+# CPython: error is OSError itself, and timeout is TimeoutError (an OSError
+# subclass); shedskin has no TimeoutError, so both are OSError subclasses here
+class error(OSError): pass
+class herror(OSError): pass
+class gaierror(OSError): pass
+class timeout(OSError): pass
+
+# so the compiler knows the inherited OSError attributes (see builtin.py)
+__exception = error('')
+__exception = herror('')
+__exception = gaierror('')
+__exception = timeout('')
+__exception.errno = 0
+__exception.filename = ''
+__exception.strerror = ''
+
+# NOTE CPython defaults are -1 (meaning AF_INET/SOCK_STREAM/0) and fileno=None;
+# a negative fileno means 'create a new socket' instead (the convention for
+# None used throughout this module). literal defaults, so the compiler emits
+# them directly instead of default_N globals
 class socket(object):
-    def __init__(self, family=2, type=1, proto=0):
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=-1):
         self.family = family
         self.type = type
         self.proto = proto
@@ -244,14 +259,25 @@ class socket(object):
     def setsockopt(self, level, optname, value):
         return self
 
-    def getsockopt(self, level, optname, value=0):
-        return ''
+    # NOTE only the int-returning form; the buflen form (returning bytes) is
+    # not supported, as a method can only have one return type
+    def getsockopt(self, level, optname):
+        return 0
 
     def bind(self, address):
         return self
 
     def connect(self, address):
         return self
+
+    def connect_ex(self, address):
+        return 0
+
+    def get_inheritable(self):
+        return False
+
+    def set_inheritable(self, inheritable):
+        pass
 
     def recv(self, bufsize, flags=0):
         return b''
@@ -271,14 +297,21 @@ class socket(object):
     def recvfrom(self, bufsize, flags=0):
         return (b'', ('', 0))
 
-    def sendto(self, bufsize, flags=0, address=0):
+    # sendto(data, address) or sendto(data, flags, address)
+    def sendto(self, data, flags=0, address=0):
         return 0
 
 # FIXME CPython default is timeout=None; like settimeout()/setdefaulttimeout()
 # elsewhere in this module, None isn't supported so a negative value means
 # "no timeout given" instead.
-def create_connection(address, timeout=-1, source_address=None):
+def create_connection(address, timeout=-1, source_address=None, all_errors=False):
     return socket()
+
+def close(fd):
+    pass
+
+def dup(fd):
+    return 0
 
 def fromfd(fd, family, type, proto=0):
     return socket()
@@ -294,13 +327,41 @@ def has_dualstack_ipv6():
 def socketpair(family=2, type=1, proto=0):
     return (socket(), socket())
 
-def getfqdn(name):
+def getfqdn(name=None):
     return ''
 
 def gethostname():
     return ''
 
 def gethostbyname(hostname):
+    return ''
+
+def gethostbyname_ex(hostname):
+    return ('', [''], [''])
+
+def gethostbyaddr(ip_address):
+    return ('', [''], [''])
+
+# NOTE sockaddr is an (host, port) AF_INET address
+def getnameinfo(sockaddr, flags):
+    return ('', '')
+
+def getprotobyname(protocolname):
+    return 0
+
+def getservbyname(servicename, protocolname=None):
+    return 0
+
+def getservbyport(port, protocolname=None):
+    return ''
+
+def if_nameindex():
+    return [(0, '')]
+
+def if_nametoindex(name):
+    return 0
+
+def if_indextoname(index):
     return ''
 
 def ntohs(x):
@@ -315,14 +376,17 @@ def ntohl(x):
 def htonl(x):
     return 0
 
-def inet_aton(x):
+def inet_aton(ip_string):
+    return b''
+
+def inet_ntoa(packed_ip):
     return ''
 
-def inet_ntoa(x):
-    return ''
+def inet_pton(address_family, ip_string):
+    return b''
 
-def has_ipv6():
-    return True
+def inet_ntop(address_family, packed_ip):
+    return ''
 
 def getdefaulttimeout():
     return 0.0
