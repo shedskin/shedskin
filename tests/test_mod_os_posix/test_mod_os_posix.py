@@ -12,7 +12,7 @@ def test_kill():
     try:
         os.kill(2 ** 22 + 12345, 0)
         assert False, 'expected an error for a non-existent pid'
-    except OSError as e:  # ProcessLookupError
+    except ProcessLookupError as e:
         assert e.errno == 3  # ESRCH
 
 
@@ -103,6 +103,45 @@ def test_misc_constants():
     assert os.EX_OK == 0
 
 
+def test_oserror_subclasses():
+    ok = False
+    try:
+        os.waitpid(-1, 0)  # no children
+    except ChildProcessError as e:
+        ok = e.errno == 10  # ECHILD
+    assert ok
+
+    ok = False
+    try:
+        open('.')
+    except IsADirectoryError as e:
+        ok = e.filename == '.'
+    assert ok
+
+    path = 'shedskin_test_notadir.txt'
+    with open(path, 'w') as f:
+        f.write('x')
+    ok = False
+    try:
+        os.listdir(path)
+    except NotADirectoryError:
+        ok = True
+    assert ok
+    ok = False
+    try:
+        os.chdir(path)
+    except NotADirectoryError:
+        ok = True
+    assert ok
+    ok = False
+    try:
+        open(path + '/x')
+    except NotADirectoryError:
+        ok = True
+    assert ok
+    os.remove(path)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -110,6 +149,7 @@ def test_all():
     test_popen_spawn()
     test_times_children()
     test_misc_constants()
+    test_oserror_subclasses()
 
 
 if __name__ == '__main__':

@@ -369,14 +369,14 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         fd = dup(__ss_fileno_);
         if (fd == -1)
         {
-            throw new OSError();
+            __throw_oserror();
         }
         if(length_ == 0)
         {
             struct stat buf;
             if (fstat(fd, &buf) == -1)
             {
-                throw new OSError();
+                __throw_oserror();
             }
             length_ = (__ss_int)buf.st_size;
         }
@@ -386,7 +386,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
 
     if (temp == MAP_FAILED)
     {
-        throw OSError();
+        __throw_oserror();
     }
 
     m_begin = static_cast<iterator>(temp);
@@ -421,7 +421,7 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
     __raise_if_closed();
     if (::msync(m_begin + offset, __subscript(size), MS_SYNC) == -1)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     return 0;
 }
@@ -443,7 +443,7 @@ void *mmap::resize(__ss_int new_size)
        the virtual mapping and never touches the underlying file. */
     if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
     {
-        throw new OSError();
+        __throw_oserror();
     }
 #if defined(__NetBSD__)
     void *temp = ::mremap(m_begin, __size(),
@@ -463,7 +463,7 @@ void *mmap::resize(__ss_int new_size)
 #endif // __NetBSD__
     if (temp == MAP_FAILED)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     m_begin = static_cast<iterator>(temp);
     m_end = m_begin + size_t(new_size);
@@ -477,16 +477,16 @@ void *mmap::resize(__ss_int new_size)
        so m_begin/m_end/m_position are updated accordingly. */
     if (fd != -1 and ftruncate(fd, offset + (off_t)new_size) == -1)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     if (::munmap(m_begin, __size()) == -1)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     void *temp = ::mmap(0, (size_t)new_size, prot, flags, fd, offset);
     if (temp == MAP_FAILED)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     m_begin = static_cast<iterator>(temp);
     m_end = m_begin + size_t(new_size);
@@ -890,7 +890,7 @@ void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
     }
     if (::madvise(m_begin + start, (size_t)length, (int)option) != 0)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     return NULL;
 #else /* !HAVE_MADVISE */
@@ -937,7 +937,7 @@ void *mmap::set_name(str *name)
     if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME,
               (unsigned long)m_begin, __size(), (unsigned long)buf) < 0)
     {
-        throw new OSError();
+        __throw_oserror();
     }
     return NULL;
 #else /* !HAVE_ANON_VMA_NAME */
@@ -961,7 +961,7 @@ __ss_int mmap::size()
                when indeed its size equals INVALID_FILE_SIZE */
             DWORD error = GetLastError();
             if (error != NO_ERROR)
-                throw OSError();
+                throw new OSError();
         }
         size = (((uint64_t)high)<<32) + low;
         return __ss_int(size);
@@ -980,7 +980,7 @@ __ss_int mmap::size()
         struct stat buf;
         if (fstat(fd, &buf) == -1)
         {
-            throw new OSError();
+            __throw_oserror();
         }
         return (__ss_int)buf.st_size;
     }

@@ -403,8 +403,9 @@ def test_open_flags():
     try:
         os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
         assert False
-    except OSError as e:  # FileExistsError
+    except FileExistsError as e:
         assert e.errno == 17  # EEXIST
+        assert e.filename == path
 
     # O_APPEND writes go to the end
     fd = os.open(path, os.O_WRONLY | os.O_APPEND)
@@ -596,6 +597,51 @@ def test_unsetenv():
     del os.environ['SHEDSKIN_UNSETENV_TEST']
     assert os.getenv('SHEDSKIN_UNSETENV_TEST') is None
 
+def test_oserror_subclasses():
+    # failed calls raise the OSError subclass matching errno, like CPython
+    ok = False
+    try:
+        os.mkdir('.')
+    except FileExistsError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        os.rmdir('shedskin_no_such_dir')
+    except FileNotFoundError as e:
+        ok = e.filename == 'shedskin_no_such_dir'
+    assert ok
+
+    ok = False
+    try:
+        os.listdir('shedskin_no_such_dir')
+    except FileNotFoundError as e:
+        ok = e.errno == 2 and e.filename == 'shedskin_no_such_dir'
+    assert ok
+
+    ok = False
+    try:
+        os.scandir('shedskin_no_such_dir')
+    except FileNotFoundError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        os.chdir('shedskin_no_such_dir')
+    except FileNotFoundError:
+        ok = True
+    assert ok
+
+    ok = False
+    try:
+        os.open('shedskin_no_such_dir/x', os.O_RDONLY)
+    except FileNotFoundError as e:
+        ok = e.filename == 'shedskin_no_such_dir/x'
+    assert ok
+
+
 def test_all():
     test_getcwd()
     test_chdir()
@@ -621,6 +667,7 @@ def test_all():
     test_scandir()
     test_scandir_name_path()
     test_walk()
+    test_oserror_subclasses()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()

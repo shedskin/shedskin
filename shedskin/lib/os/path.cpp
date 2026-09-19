@@ -572,14 +572,18 @@ str *realpath(str *filename, __ss_bool strict) {
         component = joinl(bits->__slice__(3, 0, i, 0));
         if (strict.value && (!allow_missing.value) && (!lexists(component).value)) {
             if (!(all_but_last.value && (i == len(bits)))) {
-                throw new FileNotFoundError(component);
+                errno = ENOENT;
+                __throw_oserror(component);
             }
         }
         if (islink(component)) {
             resolved = _resolve_link(component);
             if (resolved==0) {
                 if (strict.value) { /* symlink loop: not ignored by ALLOW_MISSING */
-                    throw new OSError(component);
+#ifdef ELOOP
+                    errno = ELOOP;
+#endif
+                    __throw_oserror(component);
                 }
                 return abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0))));
             }
@@ -1138,11 +1142,13 @@ __ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
     _set_thread_local_invalid_parameter_handler(old_iph);
 
     if (h1 == INVALID_HANDLE_VALUE || h2 == INVALID_HANDLE_VALUE) {
-        throw new OSError(new str("Bad file descriptor"));
+        errno = EBADF;
+        __throw_oserror();
     }
 
     if (!GetFileInformationByHandle(h1, &info1) || !GetFileInformationByHandle(h2, &info2)) {
-        throw new OSError(new str("Bad file descriptor"));
+        errno = EBADF;
+        __throw_oserror();
     }
     return __mbool((info1.dwVolumeSerialNumber == info2.dwVolumeSerialNumber) &&
                    (info1.nFileIndexHigh == info2.nFileIndexHigh) &&
@@ -1361,7 +1367,8 @@ str *realpath(str *path, __ss_bool strict) {
     if (strict.value && (strict.value != ALLOW_MISSING.value)) {
         if (!exists(path).value) {
             if (!((strict.value == ALL_BUT_LAST.value) && exists(dirname(abspath(path))).value)) {
-                throw new FileNotFoundError(path);
+                errno = ENOENT;
+                __throw_oserror(path);
             }
         }
     }

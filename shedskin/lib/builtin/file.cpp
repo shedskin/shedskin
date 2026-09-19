@@ -13,7 +13,7 @@
  * a directory path, but subsequent reads/writes through the FILE* invoke
  * undefined behavior (observed as a segfault) instead of failing cleanly.
  * CPython's io layer proactively stat()s the path and raises
- * IsADirectoryError; mirror that here using the existing OSError type. */
+ * IsADirectoryError; mirror that here. */
 static inline void __check_not_directory(FILE *f, str *file_name) {
 #ifndef WIN32
     if (f) {
@@ -21,7 +21,7 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
         if (fstat(fileno(f), &st) == 0 and S_ISDIR(st.st_mode)) {
             fclose(f);
             errno = EISDIR;
-            throw new OSError(file_name);
+            __throw_oserror(file_name);
         }
     }
 #endif
@@ -60,7 +60,7 @@ file::file(str *file_name, str *flags) {
         flags = __char_cache['r'];
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
-        throw new FileNotFoundError(file_name);
+        __throw_oserror(file_name);
     __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
@@ -82,7 +82,7 @@ __ss_int file::write(str *s) {
     if(f) {
         __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
         if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
-            throw new OSError();
+            __throw_oserror();
         size = (__ss_int)s->unit.size(); /* characters written, as CPython */
     }
     return size;
@@ -105,7 +105,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
         if((pos = fseek(f, i, (int)w)) == -1)
-            throw new OSError();
+            __throw_oserror();
     }
     return pos;
 }
@@ -115,7 +115,7 @@ __ss_int file::tell() {
     if(f) {
         long status = ftell(f);
         if(status == -1)
-            throw new OSError();
+            __throw_oserror();
         return __ss_int(status);
     }
     return -1;
@@ -156,13 +156,13 @@ str *file::readline(__ss_int n) {
         }
     }
     if(__error())
-        throw new OSError();
+        __throw_oserror();
 
     return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
 }
 
 static void __throw_io_error() {
-    throw new OSError();
+    __throw_oserror();
 }
 
 /* a utf-8 continuation byte never starts a character, so counting
@@ -250,7 +250,7 @@ void *file::close() {
     if(f and not closed) {
         flush();
         if(fclose(f))
-            throw new OSError();
+            __throw_oserror();
         closed = 1;
     }
     return NULL;
@@ -260,7 +260,7 @@ void *file::flush() {
     __check_closed();
     if(f)
         if(FFLUSH(f))
-            throw new OSError();
+            __throw_oserror();
     return NULL;
 }
 
@@ -287,10 +287,10 @@ __ss_int file::truncate(__ss_int size) {
         size = tell();
 #ifdef WIN32
     if(_chsize((int)__ss_fileno(), size) == -1)
-        throw new OSError();
+        __throw_oserror();
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
-        throw new OSError();
+        __throw_oserror();
 #endif
     return size;
 }
@@ -341,7 +341,7 @@ file_binary::file_binary(str *file_name, str *flags) {
         flags = __char_cache['r'];
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
-        throw new FileNotFoundError(file_name);
+        __throw_oserror(file_name);
     __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
@@ -361,7 +361,7 @@ __ss_int file_binary::write(bytes *s) {
     if(f) {
         size_t s_size = s->unit.size();
         if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
-            throw new OSError();
+            __throw_oserror();
         size = (__ss_int)s_size;
     }
     return size;
@@ -384,7 +384,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
         if((pos = fseek(f, i, (int)w)) == -1)
-            throw new OSError();
+            __throw_oserror();
     }
     return pos;
 }
@@ -394,7 +394,7 @@ __ss_int file_binary::tell() {
     if(f) {
         long status = ftell(f);
         if(status == -1)
-            throw new OSError();
+            __throw_oserror();
         return __ss_int(status);
     }
     return -1;
@@ -435,7 +435,7 @@ bytes *file_binary::readline(__ss_int n) {
         }
     }
     if(__error())
-        throw new OSError();
+        __throw_oserror();
 
     bytes *b = new bytes(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
     b->frozen = 1;
@@ -483,7 +483,7 @@ void *file_binary::close() {
     if(f and not closed) {
         flush();
         if(fclose(f))
-            throw new OSError();
+            __throw_oserror();
         closed = 1;
     }
     return NULL;
@@ -493,7 +493,7 @@ void *file_binary::flush() {
     __check_closed();
     if(f)
         if(FFLUSH(f))
-            throw new OSError();
+            __throw_oserror();
     return NULL;
 }
 
@@ -520,10 +520,10 @@ __ss_int file_binary::truncate(__ss_int size) {
         size = tell();
 #ifdef WIN32
     if(_chsize((int)__ss_fileno(), size) == -1)
-        throw new OSError();
+        __throw_oserror();
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
-        throw new OSError();
+        __throw_oserror();
 #endif
     return size;
 }
