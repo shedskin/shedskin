@@ -759,6 +759,118 @@ def test_fold():
         error = str(e)
     assert error == 'fold must be either 0 or 1, not 3'
 
+def test_accessors():
+    d = datetime.date(2024, 2, 29)
+    assert (d.year, d.month, d.day) == (2024, 2, 29)
+    dt = datetime.datetime(2024, 12, 31, 13, 5, 7, 12345)
+    assert (dt.year, dt.month, dt.day) == (2024, 12, 31)
+    assert (dt.hour, dt.minute, dt.second, dt.microsecond) == (13, 5, 7, 12345)
+    assert dt.tzinfo is None
+    t = datetime.time(1, 2, 3, 4)
+    assert (t.hour, t.minute, t.second, t.microsecond) == (1, 2, 3, 4)
+    assert t.tzinfo is None
+    assert dt.date() == datetime.date(2024, 12, 31)
+    assert dt.time() == datetime.time(13, 5, 7, 12345)
+    assert dt.timetz() == datetime.time(13, 5, 7, 12345)
+
+def test_naive_tz_methods():
+    dt = datetime.datetime(2024, 12, 31, 13, 5, 7)
+    assert dt.utcoffset() is None
+    assert dt.dst() is None
+    assert dt.tzname() is None
+    t = datetime.time(1, 2, 3)
+    assert t.utcoffset() is None
+    assert t.dst() is None
+    assert t.tzname() is None
+
+def test_ordinal():
+    assert datetime.date(1, 1, 1).toordinal() == 1
+    assert datetime.date(9999, 12, 31).toordinal() == 3652059
+    assert datetime.date(2024, 2, 29).toordinal() == 738945
+    assert datetime.datetime(2024, 12, 31, 13, 5).toordinal() == 739251
+    assert datetime.date.fromordinal(738945) == datetime.date(2024, 2, 29)
+    assert datetime.date.fromordinal(3652059) == datetime.date.max
+    assert datetime.datetime.fromordinal(738945) == datetime.datetime(2024, 2, 29)
+    assert datetime.datetime.fromordinal(1) == datetime.datetime.min
+    for o in [1, 59, 60, 366, 730120, 738945, 3652059]:
+        assert datetime.date.fromordinal(o).toordinal() == o
+
+    # used to raise OverflowError
+    for o in [0, -1]:
+        error = ''
+        try:
+            datetime.date.fromordinal(o)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'ordinal must be >= 1'
+        error = ''
+        try:
+            datetime.datetime.fromordinal(o)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'ordinal must be >= 1'
+    error = ''
+    try:
+        datetime.date.fromordinal(3652060)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'year 10000 is out of range'
+    error = ''
+    try:
+        datetime.datetime.fromordinal(1000000000)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'year 2737908 is out of range'
+
+def test_weekday():
+    assert [datetime.date(2024, 9, d).weekday() for d in range(16, 23)] == [0, 1, 2, 3, 4, 5, 6]
+    assert [datetime.date(2024, 9, d).isoweekday() for d in range(16, 23)] == [1, 2, 3, 4, 5, 6, 7]
+    dt = datetime.datetime(2024, 12, 31, 23, 59)
+    assert (dt.weekday(), dt.isoweekday()) == (1, 2)
+
+def test_timetuple():
+    tt = datetime.date(2024, 2, 29).timetuple()
+    assert tuple(tt) == (2024, 2, 29, 0, 0, 0, 3, 60, -1)
+    assert (tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_wday, tt.tm_yday) == (2024, 2, 29, 3, 60)
+    dt = datetime.datetime(2024, 12, 31, 13, 5, 7, 12345)
+    assert tuple(dt.timetuple()) == (2024, 12, 31, 13, 5, 7, 1, 366, -1)
+    assert tuple(dt.utctimetuple()) == (2024, 12, 31, 13, 5, 7, 1, 366, 0)
+
+def test_today():
+    d = datetime.date.today()
+    assert d.year >= 2024
+    assert datetime.date.fromordinal(d.toordinal()) == d
+    dt = datetime.datetime.today()
+    assert dt.year >= 2024
+    assert abs((datetime.datetime.now() - dt).total_seconds()) < 60
+
+def test_strftime():
+    d = datetime.date(2024, 2, 29)
+    dt = datetime.datetime(2024, 12, 31, 13, 5, 7, 12345)
+    t = datetime.time(1, 2, 3, 4)
+    assert d.strftime('%Y-%m-%d %a %A %b %B %j %U %W %y') == '2024-02-29 Thu Thursday Feb February 060 08 09 24'
+    assert d.strftime('%H:%M:%S') == '00:00:00'
+    assert d.strftime('') == ''
+    assert dt.strftime('%H:%M:%S %I %p %j') == '13:05:07 01 PM 366'
+    assert datetime.datetime(2024, 1, 1).strftime('%I %p') == '12 AM'
+    assert t.strftime('%H:%M:%S %Y-%m-%d %j') == '01:02:03 1900-01-01 001'
+
+    # %f (used to be left alone)
+    assert d.strftime('%f') == '000000'
+    assert dt.strftime('%H:%M:%S.%f') == '13:05:07.012345'
+    assert t.strftime('%f') == '000004'
+
+    # escaped percent signs (%%z used to turn into '% ')
+    assert d.strftime('%%f %%%f') == '%f %000000'
+    assert dt.strftime('%%f %%%f') == '%f %012345'
+    assert dt.strftime('%%z %%Z 100%%') == '%z %Z 100%'
+    assert t.strftime('%%z %%Z') == '%z %Z'
+
+    # naive: %z and %Z expand to nothing
+    assert d.strftime('%z|%Z') == '|'
+    assert dt.strftime('%z|%Z') == '|'
+    assert t.strftime('%z|%Z') == '|'
+
 
 def test_all():
         test_date()
@@ -805,6 +917,13 @@ def test_all():
         test_date_time_strptime()
         test_isoformat_timespec()
         test_fold()
+        test_accessors()
+        test_naive_tz_methods()
+        test_ordinal()
+        test_weekday()
+        test_timetuple()
+        test_today()
+        test_strftime()
 
 if __name__ == "__main__":
     test_all()
