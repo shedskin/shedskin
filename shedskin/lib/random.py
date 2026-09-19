@@ -16,9 +16,9 @@ UPPER = 1
 LOWER = 1
 
 class Random:
-    def __init__(self, a=None):
-        a.__hash__()
-    def seed(self, a=None):
+    def __init__(self, x=None):
+        x.__hash__()
+    def seed(self, a=None, version=2):
         a.__hash__()
     def random(self): return 1.0
     def getstate(self): return b''
@@ -53,19 +53,19 @@ class Random:
 
 
 class SystemRandom(Random):
-    def __init__(self, a=None):
-        a.__hash__()
+    def __init__(self, x=None):
+        x.__hash__()
     def random(self): return 1.0
     def getrandbits(self, k): return 1
     def randbytes(self, n): return b''
-    def seed(self, a=None): pass
+    def seed(self, a=None, version=2): pass
     def getstate(self): return b''
     def setstate(self, state): pass
 
 
 _inst = Random()
-def seed(a=None):
-    _inst.seed(a)
+def seed(a=None, version=2):
+    _inst.seed(a, version)
 def random(): return 1.0
 def getstate(): return b''
 def setstate(state): pass

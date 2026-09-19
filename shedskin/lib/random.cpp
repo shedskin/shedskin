@@ -318,6 +318,35 @@ void Random::_init_instance() {
     this->VERSION = 2;
 }
 
+/* CPython's version-1 string seeding (random.py, seed()):
+       x = ord(a[0]) << 7 if a else 0
+       for c in map(ord, a): x = ((1000003 * x) ^ c) & 0xFFFFFFFFFFFFFFFF
+       x ^= len(a)
+       a = -2 if x == -1 else x
+   (bytes are decoded as latin-1 first, so each byte is its own code point) */
+static uint64_t __seed_v1_units(const uint32_t *p, size_t n) {
+    uint64_t x = n ? ((uint64_t)p[0] << 7) : 0;
+    for(size_t i = 0; i < n; i++)
+        x = (1000003ULL * x) ^ (uint64_t)p[i];
+    x ^= (uint64_t)n;
+    if(x == (uint64_t)-1)
+        x = (uint64_t)-2;
+    return x;
+}
+
+uint64_t __seed_v1(str *s) {
+    std::vector<uint32_t> cps(s->unit.begin(), s->unit.end());
+    return __seed_v1_units(cps.data(), cps.size());
+}
+
+uint64_t __seed_v1(bytes *b) {
+    std::vector<uint32_t> cps;
+    cps.reserve(b->unit.size());
+    for(unsigned char c : b->unit)
+        cps.push_back(c);
+    return __seed_v1_units(cps.data(), cps.size());
+}
+
 Random::Random() {
     this->__class__ = cl_Random;
     this->_init_instance();

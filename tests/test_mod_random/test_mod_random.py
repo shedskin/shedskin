@@ -422,6 +422,8 @@ def test_instance_seeding():
     assert random.Random(2.5).random() == random.Random(2.5).random()
     assert random.Random(b'hi').random() == random.Random(b'hi').random()
     assert random.Random(7).random() == random.Random(7).random()
+    assert random.Random(x=7).random() == random.Random(7).random()
+    assert 0.0 <= random.SystemRandom(x=7).random() < 1.0
 
     sr = random.SystemRandom(3)
     assert 0.0 <= sr.random() < 1.0
@@ -507,6 +509,156 @@ def test_choice_empty():
     assert msg == 'Cannot choose from an empty sequence'
 
 
+def check_variates(r):
+    # exercise every distribution on a Random (or SystemRandom) instance
+    # and check that each result lies in the distribution's support
+    for i in range(50):
+        assert 0.0 <= r.uniform(0.0, 1.0) <= 1.0
+        assert -3.0 <= r.uniform(-3, 2) <= 2.0
+        assert 1.0 <= r.triangular(1.0, 4.0, 2.5) <= 4.0
+        assert 0.0 <= r.triangular() <= 1.0
+        assert 0.0 <= r.triangular(0, 5) <= 5.0
+        assert 0.0 <= r.betavariate(2.0, 3.0) <= 1.0
+        assert 0 <= r.binomialvariate(10, 0.3) <= 10
+        assert r.binomialvariate() in (0, 1)
+        assert r.expovariate(2.0) >= 0.0
+        assert r.expovariate() >= 0.0
+        assert r.gammavariate(3.0, 2.0) >= 0.0
+        assert r.gammavariate(0.5, 1.0) >= 0.0      # alpha < 1 branch
+        assert r.gammavariate(1.0, 1.0) >= 0.0      # alpha == 1 branch
+        assert r.lognormvariate(0.0, 0.5) > 0.0
+        assert -10.0 < r.normalvariate() < 10.0
+        assert r.normalvariate(10.0, 0.001) > 9.0
+        assert r.gauss(10.0, 0.001) > 9.0
+        assert r.paretovariate(2.0) >= 1.0
+        assert 0.0 <= r.vonmisesvariate(0.0, 4.0) < 6.3
+        assert 0.0 <= r.vonmisesvariate(1.0, 0.0) < 6.3   # kappa <= 1e-6 branch
+        assert r.weibullvariate(1.5, 2.0) >= 0.0
+        assert r.randrange(10) in range(10)
+        assert r.randrange(5, 15) in range(5, 15)
+        assert r.randrange(0, 20, 5) in (0, 5, 10, 15)
+        assert r.randrange(10, 0, -3) in (10, 7, 4, 1)
+
+
+def test_instance_variates():
+    check_variates(random.Random(11))
+    check_variates(random.SystemRandom())
+
+    # a seeded instance reproduces its stream for every distribution
+    a = random.Random(5)
+    b = random.Random(5)
+    assert a.uniform(1.0, 2.0) == b.uniform(1.0, 2.0)
+    assert a.triangular(0.0, 1.0, 0.3) == b.triangular(0.0, 1.0, 0.3)
+    assert a.betavariate(2.0, 2.0) == b.betavariate(2.0, 2.0)
+    assert a.binomialvariate(20, 0.5) == b.binomialvariate(20, 0.5)
+    assert a.expovariate(1.5) == b.expovariate(1.5)
+    assert a.gammavariate(2.0, 1.0) == b.gammavariate(2.0, 1.0)
+    assert a.lognormvariate(0.0, 1.0) == b.lognormvariate(0.0, 1.0)
+    assert a.normalvariate(0.0, 1.0) == b.normalvariate(0.0, 1.0)
+    assert a.paretovariate(1.0) == b.paretovariate(1.0)
+    assert a.vonmisesvariate(0.0, 1.0) == b.vonmisesvariate(0.0, 1.0)
+    assert a.weibullvariate(1.0, 1.0) == b.weibullvariate(1.0, 1.0)
+    assert a.randrange(-100, 100, 7) == b.randrange(-100, 100, 7)
+
+    # the distributions must respect instance state, not the module stream
+    random.seed(2)
+    m1 = random.random()
+    random.seed(2)
+    random.Random(3).gammavariate(2.0, 2.0)
+    random.Random(3).vonmisesvariate(0.0, 2.0)
+    assert random.random() == m1
+
+    # argument errors
+    msg = ''
+    try:
+        random.Random(1).randrange(3, 3)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'empty range in randrange(3, 3)'
+
+    msg = ''
+    try:
+        random.SystemRandom().randrange(0)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'empty range for randrange()'
+
+
+def test_instance_choices_cum_weights():
+    pop = ['a', 'b', 'c', 'd']
+    r = random.Random(4)
+    assert set(r.choices(pop, cum_weights=[0, 0, 5, 5], k=30)) == {'c'}
+    assert set(r.choices(pop, cum_weights=(1, 1, 1, 2), k=30)) == {'a', 'd'}
+    assert set(r.choices(pop, cum_weights=[2.0, 2.0, 2.0, 2.0], k=10)) == {'a'}
+    assert len(r.choices(pop, None, cum_weights=[1, 2, 3, 4], k=6)) == 6
+
+    sr = random.SystemRandom()
+    assert set(sr.choices(pop, cum_weights=[0, 1, 1, 1], k=20)) == {'b'}
+
+    # a seeded instance reproduces its cumulative-weight choices
+    a = random.Random(8).choices(pop, cum_weights=[1, 2, 3, 4], k=10)
+    b = random.Random(8).choices(pop, cum_weights=[1, 2, 3, 4], k=10)
+    assert a == b
+
+    msg = ''
+    try:
+        r.choices(pop, cum_weights=[1, 2, 3], k=2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'The number of weights does not match the population'
+
+    msg = ''
+    try:
+        r.choices(pop, [1, 1, 1, 1], cum_weights=[1, 2, 3, 4])
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'Cannot specify both weights and cumulative weights'
+
+
+def test_seed_version():
+    # seed(a, version=2) is the default
+    assert random.Random('abc').random() == random.Random('abc').random()
+    random.seed('abc')
+    x = random.random()
+    random.seed('abc', version=2)
+    assert random.random() == x
+    random.seed('abc', 2)
+    assert random.random() == x
+
+    # version=1 is a different (but still deterministic) str/bytes seeding
+    random.seed('abc', version=1)
+    y = random.random()
+    random.seed('abc', version=1)
+    assert random.random() == y
+    assert x != y
+
+    r = random.Random()
+    r.seed(b'xyz', version=1)
+    z = r.random()
+    r.seed(b'xyz', version=1)
+    assert r.random() == z
+    r.seed(b'xyz')
+    assert r.random() != z
+
+    # the version only matters for str/bytes seeds
+    random.seed(1234, version=1)
+    a = random.random()
+    random.seed(1234, version=2)
+    assert random.random() == a
+    random.seed(2.5, version=1)
+    a = random.random()
+    random.seed(2.5)
+    assert random.random() == a
+    random.seed(None, version=1)
+    random.seed(version=1)
+
+    # the SystemRandom stub accepts the keyword as well
+    sr = random.SystemRandom()
+    sr.seed('abc', version=1)
+    sr.seed(version=2)
+    assert 0.0 <= sr.random() < 1.0
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -528,6 +680,9 @@ def test_all():
     test_choices_weights()
     test_sample_counts()
     test_choice_empty()
+    test_instance_variates()
+    test_instance_choices_cum_weights()
+    test_seed_version()
 
 
 if __name__ == '__main__':
