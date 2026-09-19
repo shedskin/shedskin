@@ -978,7 +978,21 @@ class OverflowError(ArithmeticError): pass
 class ZeroDivisionError(ArithmeticError): pass
 
 class OSError(Exception): pass
+class BlockingIOError(OSError): pass
+class ChildProcessError(OSError): pass
+class ConnectionError(OSError): pass
+class BrokenPipeError(ConnectionError): pass
+class ConnectionAbortedError(ConnectionError): pass
+class ConnectionRefusedError(ConnectionError): pass
+class ConnectionResetError(ConnectionError): pass
+class FileExistsError(OSError): pass
 class FileNotFoundError(OSError): pass
+class InterruptedError(OSError): pass
+class IsADirectoryError(OSError): pass
+class NotADirectoryError(OSError): pass
+class PermissionError(OSError): pass
+class ProcessLookupError(OSError): pass
+class TimeoutError(OSError): pass
 
 class LookupError(Exception): pass
 class IndexError(LookupError): pass
@@ -990,7 +1004,22 @@ class PythonFinalizationError(RuntimeError): pass
 
 __exception = Exception('') # XXX remove
 __exception = OSError('') # XXX remove
+# so the compiler knows the OSError attributes, also for the subclasses
+__exception = BlockingIOError('')
+__exception = ChildProcessError('')
+__exception = ConnectionError('')
+__exception = BrokenPipeError('')
+__exception = ConnectionAbortedError('')
+__exception = ConnectionRefusedError('')
+__exception = ConnectionResetError('')
+__exception = FileExistsError('')
 __exception = FileNotFoundError('')
+__exception = InterruptedError('')
+__exception = IsADirectoryError('')
+__exception = NotADirectoryError('')
+__exception = PermissionError('')
+__exception = ProcessLookupError('')
+__exception = TimeoutError('')
 __exception.errno = 0
 __exception.filename = ''
 __exception.strerror = ''

@@ -101,10 +101,10 @@ public:
 };
 
 extern class_ *cl_timeout;
-class timeout : public OSError {
+class timeout : public TimeoutError {
 public:
 
-    timeout(str *msg=0) : OSError(msg) {
+    timeout(str *msg=0) : TimeoutError(msg) {
         __class__ = cl_timeout;
         __init_plain_oserror(this, msg);
     }

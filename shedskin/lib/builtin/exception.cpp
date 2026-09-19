@@ -2,38 +2,98 @@
 
 /* Exceptions */
 
+/* a plain OSError('msg') has no errno (as in CPython); for a failed call
+   that did set errno, use __throw_oserror() instead */
 OSError::OSError(str *fname) {
-    this->filename = fname;
     this->__class__ = cl_oserror;
-    __ss_errno = errno;
-    strerror = new str(::strerror(__ss_errno));
-    if(fname)
-        message = this->__str__();
-    else
-        message = new str("");
+    __init_errno(0, fname);
+}
+void OSError::__init_errno(int e, str *fname) {
+    this->filename = fname;
+    __ss_errno = e;
+    strerror = e ? new str(::strerror(e)) : 0;
+    message = this->__str__();
 }
 str *OSError::__str__() {
+    if(!__ss_errno) /* e.g. user-raised OSError('msg') */
+        return filename ? filename : __ss_empty_str;
+    if(!filename)
+        return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
     return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
 }
 str *OSError::__repr__() {
-    return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
+    if(!__ss_errno)
+        return __add_strs(4, this->__class__->__name__, new str("("), filename ? repr(filename) : __ss_empty_str, new str(")"));
+    return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
-FileNotFoundError::FileNotFoundError(str *fname) {
-    this->filename = fname;
-    this->__class__ = cl_filenotfounderror;
-    __ss_errno = errno;
-    strerror = new str(::strerror(__ss_errno));
-    if(fname)
-        message = this->__str__();
-    else
-        message = new str("");
+/* errno is snapshotted by the caller, as allocation may clobber it */
+template<class T> [[noreturn]] static void __throw_errno(int e, str *fname) {
+    T *exc = new T(fname);
+    exc->__init_errno(e, fname);
+    throw exc;
 }
-str *FileNotFoundError::__str__() {
-    return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
-}
-str *FileNotFoundError::__repr__() {
-    return __add_strs(5, new str("FileNotFoundError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
+
+/* errno to OSError subclass mapping, following CPython (PEP 3151) */
+void __throw_oserror(str *fname) {
+    int e = errno;
+    if(e == EAGAIN)
+        __throw_errno<BlockingIOError>(e, fname);
+#ifdef EALREADY
+    if(e == EALREADY)
+        __throw_errno<BlockingIOError>(e, fname);
+#endif
+#ifdef EINPROGRESS
+    if(e == EINPROGRESS)
+        __throw_errno<BlockingIOError>(e, fname);
+#endif
+#ifdef EWOULDBLOCK
+    if(e == EWOULDBLOCK)
+        __throw_errno<BlockingIOError>(e, fname);
+#endif
+    if(e == EPIPE)
+        __throw_errno<BrokenPipeError>(e, fname);
+#ifdef ESHUTDOWN
+    if(e == ESHUTDOWN)
+        __throw_errno<BrokenPipeError>(e, fname);
+#endif
+    if(e == ECHILD)
+        __throw_errno<ChildProcessError>(e, fname);
+#ifdef ECONNABORTED
+    if(e == ECONNABORTED)
+        __throw_errno<ConnectionAbortedError>(e, fname);
+#endif
+#ifdef ECONNREFUSED
+    if(e == ECONNREFUSED)
+        __throw_errno<ConnectionRefusedError>(e, fname);
+#endif
+#ifdef ECONNRESET
+    if(e == ECONNRESET)
+        __throw_errno<ConnectionResetError>(e, fname);
+#endif
+    if(e == EEXIST)
+        __throw_errno<FileExistsError>(e, fname);
+    if(e == ENOENT)
+        __throw_errno<FileNotFoundError>(e, fname);
+    if(e == EISDIR)
+        __throw_errno<IsADirectoryError>(e, fname);
+    if(e == ENOTDIR)
+        __throw_errno<NotADirectoryError>(e, fname);
+    if(e == EINTR)
+        __throw_errno<InterruptedError>(e, fname);
+    if(e == EACCES || e == EPERM)
+        __throw_errno<PermissionError>(e, fname);
+#ifdef ENOTCAPABLE
+    if(e == ENOTCAPABLE)
+        __throw_errno<PermissionError>(e, fname);
+#endif
+    if(e == ESRCH)
+        __throw_errno<ProcessLookupError>(e, fname);
+#ifdef ETIMEDOUT
+    if(e == ETIMEDOUT)
+        __throw_errno<TimeoutError>(e, fname);
+#endif
+    __throw_errno<OSError>(e, fname);
 }
 
 /* Unicode errors: str() follows CPython's formatting exactly, singling

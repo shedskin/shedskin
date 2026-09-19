@@ -306,6 +306,11 @@ def test_stream_methods():
         assert False
     except OSError:  # timeout is an OSError
         pass
+    try:
+        conn.recv(10)
+        assert False
+    except TimeoutError:  # socket.timeout is TimeoutError
+        pass
     server.settimeout(0.05)
     try:
         server.accept()

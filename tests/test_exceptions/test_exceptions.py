@@ -410,6 +410,78 @@ def test_builtin_exception_raise_catch():
     assert repr(NameError()) == 'NameError()'
     assert repr(SystemError('sys')) == "SystemError('sys')"
 
+def test_oserror_subclasses():
+    # PEP 3151 hierarchy
+    hits = 0
+    try:
+        raise PermissionError('x')
+    except OSError:
+        hits += 1
+    try:
+        raise TimeoutError('x')
+    except OSError:
+        hits += 1
+    try:
+        raise BrokenPipeError('x')
+    except ConnectionError:
+        hits += 1
+    try:
+        raise ConnectionResetError('x')
+    except OSError:
+        hits += 1
+    try:
+        raise ProcessLookupError('x')
+    except FileNotFoundError:
+        hits += 100
+    except OSError:
+        hits += 1
+    assert hits == 5
+
+    # user-raised: no errno, str/repr as for a plain exception
+    caught = ''
+    try:
+        raise FileExistsError('hoppa')
+    except OSError as fee:
+        caught = str(fee)
+        assert repr(fee) == "FileExistsError('hoppa')"
+    assert caught == 'hoppa'
+    assert str(OSError()) == ''
+    assert repr(OSError()) == 'OSError()'
+
+    caught = ''
+    try:
+        raise ConnectionRefusedError('refused')
+    except ConnectionError as ce:
+        caught = str(ce)
+    assert caught == 'refused'
+
+    # catching a subclass as OSError keeps errno/filename/strerror
+    try:
+        open('shedskin_no_such_file.txt')
+        assert False
+    except OSError as oe:
+        assert oe.errno == 2
+        assert oe.filename == 'shedskin_no_such_file.txt'
+        assert oe.strerror == 'No such file or directory'
+        assert repr(oe) == "FileNotFoundError(2, 'No such file or directory')"
+        assert str(oe) == "[Errno 2] No such file or directory: 'shedskin_no_such_file.txt'"
+
+    # failed calls raise the subclass matching errno
+    ok = False
+    try:
+        os.mkdir('.')
+    except FileExistsError as fe:
+        ok = fe.errno == 17 and fe.filename == '.'
+    assert ok
+
+    ok = False
+    try:
+        os.rmdir('shedskin_no_such_dir')
+    except FileNotFoundError:
+        ok = True
+    assert ok
+
+
 def test_all():
     test_key_error()
     test_assert_error()
@@ -428,6 +500,7 @@ def test_all():
     test_else()
     test_builtin_exception_hierarchy()
     test_builtin_exception_raise_catch()
+    test_oserror_subclasses()
 
 
 if __name__ == '__main__':

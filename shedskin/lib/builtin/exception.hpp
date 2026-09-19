@@ -94,6 +94,7 @@ static void print_traceback(FILE *out)
 #endif
 
 extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
+extern class_ *cl_filenotfounderror, *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
 class BaseException : public pyobj {
 public:
@@ -265,6 +266,7 @@ public:
     str *strerror;
 
     OSError(str *msg=0);
+    void __init_errno(int e, str *fname);
     str *__str__();
     str *__repr__();
 
@@ -273,20 +275,131 @@ public:
 #endif
 };
 
+/* OSError subclasses (PEP 3151); __throw_oserror() picks one based on errno */
+
+class BlockingIOError : public OSError {
+public:
+    BlockingIOError(str *msg=0) : OSError(msg) { this->__class__ = cl_blockingioerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_BlockingIOError; }
+#endif
+};
+
+class ChildProcessError : public OSError {
+public:
+    ChildProcessError(str *msg=0) : OSError(msg) { this->__class__ = cl_childprocesserror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ChildProcessError; }
+#endif
+};
+
+class ConnectionError : public OSError {
+public:
+    ConnectionError(str *msg=0) : OSError(msg) { this->__class__ = cl_connectionerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ConnectionError; }
+#endif
+};
+
+class BrokenPipeError : public ConnectionError {
+public:
+    BrokenPipeError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_brokenpipeerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_BrokenPipeError; }
+#endif
+};
+
+class ConnectionAbortedError : public ConnectionError {
+public:
+    ConnectionAbortedError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionabortederror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ConnectionAbortedError; }
+#endif
+};
+
+class ConnectionRefusedError : public ConnectionError {
+public:
+    ConnectionRefusedError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionrefusederror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ConnectionRefusedError; }
+#endif
+};
+
+class ConnectionResetError : public ConnectionError {
+public:
+    ConnectionResetError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionreseterror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ConnectionResetError; }
+#endif
+};
+
+class FileExistsError : public OSError {
+public:
+    FileExistsError(str *msg=0) : OSError(msg) { this->__class__ = cl_fileexistserror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_FileExistsError; }
+#endif
+};
+
 class FileNotFoundError : public OSError {
 public:
-    int __ss_errno;
-    str *filename;
-    str *strerror;
-
-    FileNotFoundError(str *msg=0);
-    str *__str__();
-    str *__repr__();
-
+    FileNotFoundError(str *msg=0) : OSError(msg) { this->__class__ = cl_filenotfounderror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FileNotFoundError; }
 #endif
 };
+
+class InterruptedError : public OSError {
+public:
+    InterruptedError(str *msg=0) : OSError(msg) { this->__class__ = cl_interruptederror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_InterruptedError; }
+#endif
+};
+
+class IsADirectoryError : public OSError {
+public:
+    IsADirectoryError(str *msg=0) : OSError(msg) { this->__class__ = cl_isadirectoryerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_IsADirectoryError; }
+#endif
+};
+
+class NotADirectoryError : public OSError {
+public:
+    NotADirectoryError(str *msg=0) : OSError(msg) { this->__class__ = cl_notadirectoryerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_NotADirectoryError; }
+#endif
+};
+
+class PermissionError : public OSError {
+public:
+    PermissionError(str *msg=0) : OSError(msg) { this->__class__ = cl_permissionerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_PermissionError; }
+#endif
+};
+
+class ProcessLookupError : public OSError {
+public:
+    ProcessLookupError(str *msg=0) : OSError(msg) { this->__class__ = cl_processlookuperror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ProcessLookupError; }
+#endif
+};
+
+class TimeoutError : public OSError {
+public:
+    TimeoutError(str *msg=0) : OSError(msg) { this->__class__ = cl_timeouterror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_TimeoutError; }
+#endif
+};
+
+/* throw the OSError subclass matching errno (as CPython does), with the
+   given file name (or none); use this for failed calls that set errno */
+[[noreturn]] void __throw_oserror(str *fname=0);
 
 class OverflowError : public ArithmeticError {
 public:

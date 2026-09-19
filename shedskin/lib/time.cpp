@@ -360,7 +360,7 @@ static __ss_int __ss_win_clock_ns(__ss_int clk_id) {
         return thread_time_ns();
     }
     errno = EINVAL;
-    throw new OSError(new str("clock_gettime"));
+    __throw_oserror(new str("clock_gettime"));
 }
 
 __ss_float clock_gettime(__ss_int clk_id) {
@@ -382,7 +382,7 @@ __ss_float clock_getres(__ss_int clk_id) {
         return 1e-7; /* FILETIME granularity: 100ns */
     }
     errno = EINVAL;
-    throw new OSError(new str("clock_getres"));
+    __throw_oserror(new str("clock_getres"));
 }
 
 #else
@@ -390,21 +390,21 @@ __ss_float clock_getres(__ss_int clk_id) {
 __ss_float clock_gettime(__ss_int clk_id) {
     timespec ts { 0, 0 };
     if (::clock_gettime((clockid_t)clk_id, &ts) == -1)
-        throw new OSError(new str("clock_gettime"));
+        __throw_oserror(new str("clock_gettime"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
 __ss_int clock_gettime_ns(__ss_int clk_id) {
     timespec ts { 0, 0 };
     if (::clock_gettime((clockid_t)clk_id, &ts) == -1)
-        throw new OSError(new str("clock_gettime"));
+        __throw_oserror(new str("clock_gettime"));
     return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
 }
 
 __ss_float clock_getres(__ss_int clk_id) {
     timespec ts { 0, 0 };
     if (::clock_getres((clockid_t)clk_id, &ts) == -1)
-        throw new OSError(new str("clock_getres"));
+        __throw_oserror(new str("clock_getres"));
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
@@ -479,7 +479,7 @@ static struct_time *__ss_localtime(time_t timet) {
     tm *tm_time = ::localtime(&timet);
     if (!tm_time) {
         if (errno == 0) errno = EINVAL;
-        throw new OSError();
+        __throw_oserror();
     }
     return tm2tuple(tm_time);
 }
@@ -489,7 +489,7 @@ static struct_time *__ss_gmtime(time_t timet) {
     tm *tm_time = ::gmtime(&timet);
     if (!tm_time) {
         if (errno == 0) errno = EINVAL;
-        throw new OSError();
+        __throw_oserror();
     }
     return tm2tuple(tm_time);
 }
