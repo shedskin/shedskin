@@ -590,20 +590,28 @@ std::string strerror(int e)
 }
 #endif
 
-str* make_errstring(const char *prefix)
+/* socket.error carrying the errno of the failed call, like OSError.errno.
+ * Pass the errno explicitly when other calls (e.g. restoring blocking mode,
+ * which on Windows resets WSAGetLastError()) come between the failure and
+ * the throw. */
+static error *make_error(const char *prefix, int e)
 {
     std::ostringstream os;
-    os << prefix << ": " << strerror(ERRNO) << " (errno " << ERRNO << ")";
-    return new str( os.str().c_str() );
+    os << prefix << ": " << strerror(e) << " (errno " << e << ")";
+    error *err = new error(new str(os.str().c_str()));
+    err->__ss_errno = e;
+    err->strerror = new str(std::string(strerror(e)).c_str());
+    return err;
 }
 
-/* socket.error carrying the errno of the failed call, like OSError.errno */
 static error *make_error(const char *prefix)
 {
-    int e = ERRNO;
-    error *err = new error(make_errstring(prefix));
-    err->__ss_errno = e;
-    return err;
+    return make_error(prefix, ERRNO);
+}
+
+static timeout *make_timeout()
+{
+    return new timeout(timed_out);
 }
 
 /* CPython makes every socket it creates non-inheritable (PEP 446) */
@@ -663,8 +671,7 @@ socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int t
     this->type = type_;
     this->proto = proto_;
     _fd = fd;
-    _timeout = __ss_default_timeout;
-    _blocking = true;
+    apply_timeout(__ss_default_timeout);
 }
 
 str *socket::__repr__() {
@@ -691,8 +698,7 @@ __ss_int socket::detach() {
 
 socket *socket::dup() {
     socket *sock = new socket(wrap_fd_tag(), dup_socket_fd(_fd), family, type, proto);
-    sock->_blocking = _blocking;
-    sock->_timeout = _timeout;
+    sock->apply_timeout(_timeout);
     return sock;
 }
 
@@ -914,10 +920,19 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
     }
 
     if (::connect(_fd, sa, salen) == SOCKET_ERROR) {
-	if (ERRNO != EINPROGRESS) {
+        /* read the error before anything else: on Windows a successful call
+         * such as ioctlsocket() resets WSAGetLastError() to 0 */
+        int e = ERRNO;
+        bool in_progress = (e == EINPROGRESS);
+#ifdef WIN32
+        /* winsock reports a non-blocking connect in progress as WSAEWOULDBLOCK */
+        in_progress = in_progress || (e == WSAEWOULDBLOCK);
+#endif
+	if (!in_progress) {
+	    error *err = make_error("connect", e);
 	    if (_blocking && _timeout > 0)
 		set_blocking(_fd); // turn blocking back on
-	    throw make_error("connect");
+	    throw err;
 	}
     }
 
@@ -925,55 +940,75 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
+#ifdef WIN32
+        /* winsock signals a failed non-blocking connect through the
+         * exceptfds set rather than by marking the socket writable (as
+         * CPython's internal_select() also allows for) */
+        fd_set x;
+        FD_ZERO(&x);
+        FD_SET(_fd, &x);
+        fd_set *exceptfds = &x;
+#else
+        fd_set *exceptfds = 0;
+#endif
 
         timeval to;
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
 
-        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR) {
+        if (::select(_fd+1, 0, &s, exceptfds, &to) == SOCKET_ERROR) {
+            error *err = make_error("select");
 	    set_blocking(_fd); // turn blocking back on
-            throw make_error("select");
+            throw err;
 	}
-        if (! FD_ISSET(_fd, &s)) {
+        bool ready = FD_ISSET(_fd, &s);
+#ifdef WIN32
+        ready = ready || FD_ISSET(_fd, &x);
+#endif
+        if (!ready) {
 	    set_blocking(_fd); // turn blocking back on
-	    throw new timeout(timed_out);
+	    throw make_timeout();
 	}
 
         // get connection status
         int err = 0;
         socklen_t errsize = sizeof(err);
         if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR) {
+            error *e2 = make_error("getsockopt");
 	    set_blocking(_fd); // turn blocking back on
-            throw make_error("getsockopt");
+            throw e2;
 	}
 
         set_blocking(_fd); // turn blocking back on
 
-        if (err != 0) {
-            std::ostringstream os;
-            os << "connect: " << strerror(err) << " (errno " << err << ")";
-            const std::string& s2 = os.str();
-            error *e = new error(new str( s2.c_str() ));
-            e->__ss_errno = err;
-            throw e;
-        }
+        if (err != 0)
+            throw make_error("connect", err);
     }
 
     return this;
 }
 
-socket *socket::setblocking(__ss_int flag)
+/* Put the socket in the mode a timeout value means in CPython: 0.0 is
+ * non-blocking, a positive value is blocking with a timeout, and a negative
+ * value (None) is blocking without one. Always sets the fd's blocking flag
+ * explicitly, as BSD/macOS accept()ed sockets inherit O_NONBLOCK. */
+void socket::apply_timeout(double val)
 {
-    if (flag)  {
-        //blocking mode
-        _blocking = true;
-	_timeout = __ss_default_timeout;	// use default value set by socket.setdefaulttimeout()
-        set_blocking(_fd);
-    } else {
-        //non-blocking
+    if (val == 0) {
         set_nonblocking(_fd);
         _blocking = false;
+        _timeout = 0;
+    } else {
+        set_blocking(_fd);
+        _blocking = true;
+        _timeout = val < 0 ? -1 : val;
     }
+}
+
+socket *socket::setblocking(__ss_int flag)
+{
+    /* setblocking(True) is settimeout(None), setblocking(False) is settimeout(0.0) */
+    apply_timeout(flag ? -1 : 0);
     return this;
 }
 
@@ -981,15 +1016,7 @@ socket *socket::settimeout(double val)
 {
     if (val < 0)
 	throw new ValueError(new str("Timeout value out of range"));
-
-    if (val == 0) { // s.settimeout(0.0) is equivalent to s.setblocking(0)
-        set_nonblocking(_fd);
-	_blocking = false;
-    } else {
-        set_blocking(_fd);
-	_blocking = true;
-	_timeout = val;
-    }
+    apply_timeout(val);
     return this;
 }
 
@@ -1002,7 +1029,7 @@ socket *socket::shutdown(__ss_int how)
 
 void socket::write_wait()
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1012,7 +1039,7 @@ void socket::write_wait()
         if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
             throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
 }
 
@@ -1084,7 +1111,7 @@ socket *socket::close()
 
 void socket::read_wait()
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1094,7 +1121,7 @@ void socket::read_wait()
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
             throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
 }
 
@@ -1188,6 +1215,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
     this->family = family_;
     this->type = type_;
     this->proto = proto_;
+    apply_timeout(__ss_default_timeout);
 }
 
 socket::~socket()
@@ -1205,7 +1233,7 @@ socket *socket::listen(__ss_int backlog)
 
 socket* socket::accept(sockaddr *sa, socklen_t *salen)
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1215,7 +1243,7 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
             throw make_error("select");
         if (! FD_ISSET(_fd, &s))
-            throw new timeout(timed_out);
+            throw make_timeout();
     }
     socket_type r = ::accept(_fd, sa, salen);
     if (r == SS_INVALID_SOCKET)
@@ -1349,9 +1377,14 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
     socket *lsock = new socket(family, type, proto);
     socket *csock = 0, *ssock = 0;
     try {
+        /* the handshake is done in blocking mode whatever the default
+         * timeout is; the pair returned gets the default timeout like any
+         * newly created socket */
+        lsock->setblocking(1);
         lsock->bind(new tuple2<str *, __ss_int>(2, new str("127.0.0.1"), 0));
         lsock->listen(1);
         csock = new socket(family, type, proto);
+        csock->setblocking(1);
         /* a blocking connect to a local listening socket completes without
          * anyone calling accept() yet, so no non-blocking dance is needed */
         csock->connect(lsock->getsockname());
@@ -1363,6 +1396,7 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
         throw;
     }
     lsock->close();
+    csock->apply_timeout(__ss_default_timeout);
     return new tuple2<socket *, socket *>(2, ssock, csock);
 }
 

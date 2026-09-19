@@ -284,6 +284,18 @@ def test_stream_methods():
     # timeouts
     conn.settimeout(0.05)
     assert conn.gettimeout() == 0.05
+    # settimeout(0.0) is setblocking(False) and vice versa, and
+    # setblocking(True) drops the timeout again (as settimeout(None) does)
+    conn.settimeout(0.0)
+    assert not conn.getblocking()
+    assert conn.gettimeout() == 0.0
+    conn.setblocking(True)
+    assert conn.getblocking()
+    conn.settimeout(0.05)
+    conn.setblocking(False)
+    assert conn.gettimeout() == 0.0
+    conn.setblocking(True)
+    conn.settimeout(0.05)
     try:
         conn.recv(10)
         assert False
@@ -394,19 +406,6 @@ def test_create_connection():
     client.close()
     server.close()
 
-    # default timeout applies to new sockets
-    socket.setdefaulttimeout(1.5)
-    assert socket.getdefaulttimeout() == 1.5
-    s = socket.socket()
-    assert s.gettimeout() == 1.5
-    s.close()
-    socket.setdefaulttimeout(0.0)
-    try:
-        socket.setdefaulttimeout(-1.0)
-        assert False
-    except ValueError:
-        pass
-
 
 def test_fileno_close_dup():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -470,6 +469,22 @@ def test_socketpair():
     assert a.recv(4) == b'pong'
     a.close()
     b.close()
+
+    # default timeout 0.0 makes the pair non-blocking (as in CPython)
+    socket.setdefaulttimeout(0.0)
+    a, b = socket.socketpair()
+    assert not a.getblocking() and not b.getblocking()
+    socket.setdefaulttimeout(5.0)
+    a, b = socket.socketpair()
+    assert a.getblocking() and b.getblocking()
+    assert a.gettimeout() == 5.0 and b.gettimeout() == 5.0
+    a.sendall(b'ping')
+    assert b.recv(4) == b'ping'
+    a.close()
+    b.close()
+    socket.setdefaulttimeout(0.0)
+    with socket.socket() as s:
+        assert not s.getblocking()
 
     # non-zero proto: ValueError in shedskin (and CPython/Windows), OSError
     # in CPython on POSIX
@@ -575,6 +590,53 @@ def test_constants():
     s.close()
 
 
+def test_default_timeout():
+    # last, as the default timeout stays in effect for later sockets
+    socket.setdefaulttimeout(1.5)
+    assert socket.getdefaulttimeout() == 1.5
+    s = socket.socket()
+    assert s.gettimeout() == 1.5
+    assert s.getblocking()
+    s.close()
+    try:
+        socket.setdefaulttimeout(-1.0)
+        assert False
+    except ValueError:
+        pass
+
+    # timed-out recv on a socket created under the default timeout, and a
+    # fresh recv afterwards (the data has landed by then even on macOS)
+    server = socket.create_server(('127.0.0.1', 0))
+    port = server.getsockname()[1]
+    socket.setdefaulttimeout(0.05)
+    client = socket.socket()
+    client.connect(('127.0.0.1', port))
+    conn, addr = server.accept()
+    assert conn.gettimeout() == 0.05
+    try:
+        conn.recv(10)
+        assert False
+    except socket.timeout as e:
+        assert str(e) == 'timed out'
+    client.sendall(b'x')
+    conn.settimeout(5.0)
+    assert conn.recv(1) == b'x'
+    conn.close()
+    client.close()
+    server.close()
+
+    # 0.0: new sockets are non-blocking
+    socket.setdefaulttimeout(0.0)
+    s = socket.socket()
+    assert not s.getblocking()
+    assert s.gettimeout() == 0.0
+    s.close()
+    fd = socket.socket().detach()
+    w = socket.socket(fileno=fd)
+    assert not w.getblocking()
+    w.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -594,6 +656,7 @@ def test_all():
     test_create_server_args()
     test_socketpair()
     test_constants()
+    test_default_timeout()
 
 
 if __name__ == '__main__':

@@ -52,13 +52,28 @@ class socket;
 
 extern str *__name__;
 
+/* The OSError constructor snapshots the C errno, which for the socket
+   exceptions below is usually stale: on Windows the CRT errno is unrelated
+   to WSAGetLastError(), and a timeout has no errno at all. So start from a
+   plain message like CPython's OSError('msg'); make_error() in socket.cpp
+   fills in errno/strerror for failed calls. */
+inline void __init_plain_oserror(OSError *e, str *msg) {
+    e->__init__(msg);
+    e->__ss_errno = 0;
+    e->strerror = 0;
+    e->filename = 0;
+}
+
 extern class_ *cl_error;
 class error : public OSError {
 public:
 
     error(str *msg=0) : OSError(msg) {
         __class__ = cl_error;
+        __init_plain_oserror(this, msg);
     }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
 };
 
 extern class_ *cl_herror;
@@ -67,7 +82,10 @@ public:
 
     herror(str *msg=0) : OSError(msg) {
         __class__ = cl_herror;
+        __init_plain_oserror(this, msg);
     }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
 };
 
 extern class_ *cl_gaierror;
@@ -76,7 +94,10 @@ public:
 
     gaierror(str *msg=0) : OSError(msg) {
         __class__ = cl_gaierror;
+        __init_plain_oserror(this, msg);
     }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
 };
 
 extern class_ *cl_timeout;
@@ -85,7 +106,13 @@ public:
 
     timeout(str *msg=0) : OSError(msg) {
         __class__ = cl_timeout;
+        __init_plain_oserror(this, msg);
     }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_TimeoutError; } /* socket.timeout is TimeoutError */
+#endif
 };
 extern class_ *cl_socket;
 class socket : public object {
@@ -106,6 +133,9 @@ public:
     typedef tuple2<str *, __ss_int> *inet_address;
 
     socket(__ss_int family=-1, __ss_int type=-1, __ss_int proto=-1, __ss_int fileno=-1);
+    /* internal: put the socket in the mode a timeout value means (0.0
+       non-blocking, >0 timeout, <0 none) */
+    void apply_timeout(double value);
     /* internal: adopt an existing fd instead of creating a new socket */
     struct wrap_fd_tag {};
     socket(wrap_fd_tag, socket_type fd, __ss_int family, __ss_int type, __ss_int proto);
