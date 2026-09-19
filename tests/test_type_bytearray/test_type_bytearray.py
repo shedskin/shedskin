@@ -284,6 +284,79 @@ def test_hex():
     assert b.hex(sep='?') == 'aa?bb?cc'
 
 
+def test_bytearray_take_bytes():
+    # take all (n omitted)
+    ba = bytearray(b'hello')
+    b = ba.take_bytes()
+    assert b == b'hello'
+    assert ba == bytearray()
+    assert len(ba) == 0
+    assert hash(b) == hash(b'hello')  # result is immutable bytes
+
+    # explicit None also takes all
+    ba = bytearray(b'xyz')
+    assert ba.take_bytes(None) == b'xyz'
+    assert ba == bytearray()
+
+    # the bytearray is independent afterwards
+    ba = bytearray(b'hello')
+    b = ba.take_bytes()
+    ba.extend(b'xy')
+    assert b == b'hello'
+    assert ba == bytearray(b'xy')
+
+    # partial take
+    ba = bytearray(b'abc\ndef')
+    n = ba.find(b'\n')
+    data = ba.take_bytes(n + 1)
+    assert data == b'abc\n'
+    assert ba == bytearray(b'def')
+
+    # remaining single byte stays mutable and unshared (CPython gh-156995)
+    ba = bytearray(b'abc')
+    assert ba.take_bytes(2) == b'ab'
+    ba[0] = 0x42
+    assert ba == bytearray(b'B')
+    assert b'c' == bytes([99])
+
+    # n equal to length, zero
+    ba = bytearray(b'abc')
+    assert ba.take_bytes(3) == b'abc'
+    assert ba == bytearray()
+    ba = bytearray(b'abc')
+    assert ba.take_bytes(0) == b''
+    assert ba == bytearray(b'abc')
+
+    # negative n indexes from the end
+    ba = bytearray(b'abcdef')
+    assert ba.take_bytes(-2) == b'abcd'
+    assert ba == bytearray(b'ef')
+    ba = bytearray(b'abc')
+    assert ba.take_bytes(-3) == b''
+    assert ba == bytearray(b'abc')
+
+    # empty
+    ba = bytearray()
+    assert ba.take_bytes() == b''
+    assert ba.take_bytes(0) == b''
+
+    # out of bounds
+    ba = bytearray(b'abc')
+    error = ''
+    try:
+        ba.take_bytes(4)
+    except IndexError as e:
+        error = str(e)
+    assert error == "can't take 4 bytes outside size 3"
+    error = ''
+    try:
+        ba.take_bytes(-4)
+    except IndexError as e:
+        error = str(e)
+    assert error == "can't take -1 bytes outside size 3"
+    assert ba == bytearray(b'abc')
+
+
 def test_all():
     test_bytearray()
     test_bytearray_clear()
@@ -306,6 +379,7 @@ def test_all():
     test_bytearray_misc()
     test_bytearray_out_of_range()
     test_hex()
+    test_bytearray_take_bytes()
 
 
 if __name__ == "__main__":

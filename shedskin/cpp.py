@@ -3261,6 +3261,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # instead of the void* overloads (which correctly return "None").
             or self.library_func(funcs, "builtin", None, "str")
             or self.library_func(funcs, "builtin", None, "repr")
+            # bytearray.take_bytes(None) must pick the void* (take all)
+            # overload, not the __ss_int one
+            or self.library_func(funcs, "builtin", "bytes_", "take_bytes")
         ):
             castnull = True
         for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
