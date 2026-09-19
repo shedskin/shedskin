@@ -757,6 +757,215 @@ def test_quote_nonnumeric_writer():
     quotings = [csv.QUOTE_MINIMAL, csv.QUOTE_ALL, csv.QUOTE_NONNUMERIC, csv.QUOTE_NONE]
     assert len(set(quotings)) == 4
 
+def test_field_size_limit():
+    old = csv.field_size_limit()
+    assert old == 131072
+
+    # setting returns the previous limit; a subsequent call reports the new one
+    assert csv.field_size_limit(16) == 131072
+    assert csv.field_size_limit() == 16
+
+    # a field at/over the limit raises csv.Error
+    error = ''
+    try:
+        list(csv.reader(['a,' + 'x' * 20]))
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'field larger than field limit (16)'
+
+    # fields below the limit are fine
+    assert list(csv.reader(['a,' + 'x' * 10])) == [['a', 'x' * 10]]
+
+    assert csv.field_size_limit(old) == 16
+    assert csv.field_size_limit() == old
+
+
+def test_reader_doublequote():
+    # doublequote=True (default): "" inside a quoted field is a literal quote
+    assert list(csv.reader(['"a""b",c'])) == [['a"b', 'c']]
+    assert list(csv.reader(['"a""b",c'], doublequote=True)) == [['a"b', 'c']]
+
+    # doublequote=False with escapechar: the quote must be escaped instead
+    rows = list(csv.reader(['"a\\"b",c'], doublequote=False, escapechar='\\'))
+    assert rows == [['a"b', 'c']]
+
+    # doublequote=False without escapechar: the first " ends the quoted part
+    # and everything after it (including the second ") is plain data
+    rows = list(csv.reader(['"a""b",c'], doublequote=False))
+    assert rows == [['a"b"', 'c']]
+
+    # dialect attribute reflects the option
+    r = csv.reader(['x'], doublequote=False)
+    assert not r.dialect.doublequote
+    r = csv.reader(['x'], doublequote=True)
+    assert r.dialect.doublequote
+
+
+def test_reader_skipinitialspace():
+    line = 'a, b,  "c d" ,e'
+    assert list(csv.reader([line])) == [['a', ' b', '  "c d" ', 'e']]
+    rows = list(csv.reader([line], skipinitialspace=True))
+    assert rows == [['a', 'b', 'c d ', 'e']]
+
+    # only spaces directly after the delimiter are skipped, not tabs
+    rows = list(csv.reader(['a,\tb'], skipinitialspace=True))
+    assert rows == [['a', '\tb']]
+
+    r = csv.reader(['x'], skipinitialspace=True)
+    assert r.dialect.skipinitialspace
+    r = csv.reader(['x'], skipinitialspace=False)
+    assert not r.dialect.skipinitialspace
+
+
+def test_register_dialect_kwargs():
+    csv.register_dialect('weird', delimiter=';', quotechar="'",
+                         escapechar='\\', doublequote=False,
+                         skipinitialspace=True, lineterminator='\n',
+                         quoting=csv.QUOTE_ALL)
+    assert 'weird' in csv.list_dialects()
+
+    d = csv.get_dialect('weird')
+    assert d.delimiter == ';'
+    assert d.quotechar == "'"
+    assert d.escapechar == '\\'
+    assert not d.doublequote
+    assert d.skipinitialspace
+    assert d.lineterminator == '\n'
+    assert d.quoting == csv.QUOTE_ALL
+    assert not d.strict
+
+    # the registered name can then be used by reader and writer
+    rows = list(csv.reader(["'a;b'; 'c\\'d';e"], dialect='weird'))
+    assert rows == [['a;b', "c'd", 'e']]
+
+    f = io.StringIO()
+    w = csv.writer(f, dialect='weird')
+    w.writerow(['a;b', "c'd", 'e'])
+    assert f.getvalue() == "'a;b';'c\\'d';'e'\n"
+
+    # base dialect can be given as a name, and its settings are inherited
+    csv.register_dialect('unixish', 'unix', delimiter='|')
+    d = csv.get_dialect('unixish')
+    assert d.delimiter == '|'
+    assert d.quoting == csv.QUOTE_ALL
+    assert d.lineterminator == '\n'
+
+    # bad values are rejected
+    error = ''
+    try:
+        csv.register_dialect('bad', delimiter=';;')
+    except TypeError as e:
+        error = str(e)
+    assert error == '"delimiter" must be a 1-character string'
+    assert 'bad' not in csv.list_dialects()
+
+    csv.unregister_dialect('weird')
+    csv.unregister_dialect('unixish')
+    assert set(csv.list_dialects()) == set(['excel', 'excel-tab', 'unix'])
+
+
+def test_writer_doublequote_strict():
+    # doublequote=True (default): quotes are doubled
+    f = io.StringIO()
+    csv.writer(f, lineterminator='\n').writerow(['a"b', 'c'])
+    assert f.getvalue() == '"a""b",c\n'
+
+    # doublequote=False with escapechar: quotes are escaped instead
+    f = io.StringIO()
+    w = csv.writer(f, lineterminator='\n', doublequote=False, escapechar='\\')
+    w.writerow(['a"b', 'c'])
+    assert f.getvalue() == 'a\\"b,c\n'  # escaped quote does not force quoting
+    assert not w.dialect.doublequote
+
+    # doublequote=False without escapechar: nothing can escape the quote
+    f = io.StringIO()
+    w = csv.writer(f, lineterminator='\n', doublequote=False)
+    error = ''
+    try:
+        w.writerow(['a"b'])
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'need to escape, but no escapechar set'
+
+    # strict is accepted by the writer and stored on its dialect, but has
+    # no effect on output
+    f = io.StringIO()
+    w = csv.writer(f, lineterminator='\n', strict=True)
+    assert w.dialect.strict
+    w.writerow(['a', 'b'])
+    assert f.getvalue() == 'a,b\n'
+
+
+def test_writer_skipinitialspace():
+    # skipinitialspace is stored, and with a space delimiter an empty field
+    # is quoted so that it survives a round trip
+    f = io.StringIO()
+    w = csv.writer(f, delimiter=' ', skipinitialspace=True, lineterminator='\n')
+    assert w.dialect.skipinitialspace
+    w.writerow(['a', '', 'b'])
+    assert f.getvalue() == 'a "" b\n'
+    rows = list(csv.reader([f.getvalue()], delimiter=' ', skipinitialspace=True))
+    assert rows == [['a', '', 'b']]
+
+    # with a regular delimiter the option does not affect the output
+    f = io.StringIO()
+    w = csv.writer(f, skipinitialspace=True, lineterminator='\n')
+    w.writerow(['a', '', ' b'])
+    assert f.getvalue() == 'a,, b\n'
+
+
+def test_dictreader_kwargs():
+    lines = ['x; y', "'a;1'; 'b''c'", "d; 'e\\'f'"]
+    dr = csv.DictReader(lines, delimiter=';', quotechar="'", escapechar='\\',
+                        doublequote=False, skipinitialspace=True,
+                        quoting=csv.QUOTE_ALL, strict=True)
+    assert dr.fieldnames == ['x', 'y']
+    rows = list(dr)
+    assert rows == [{'x': 'a;1', 'y': "b'c'"}, {'x': 'd', 'y': "e'f"}]
+
+    # the options are visible on the underlying reader's dialect
+    assert dr.reader.dialect.delimiter == ';'
+    assert not dr.reader.dialect.doublequote
+    assert dr.reader.dialect.skipinitialspace
+    assert dr.reader.dialect.quoting == csv.QUOTE_ALL
+    assert dr.reader.dialect.strict
+
+    # strict=True raises on malformed quoting, strict=False does not
+    error = ''
+    try:
+        list(csv.DictReader(['a,b', '"x"y,z'], strict=True))
+    except csv.Error as e:
+        error = str(e)
+    assert error == "',' expected after '\"'"
+    rows = list(csv.DictReader(['a,b', '"x"y,z'], strict=False))
+    assert rows == [{'a': 'xy', 'b': 'z'}]
+
+
+def test_dictreader_restkey():
+    # restkey is stored as an attribute (None when not given)
+    dr = csv.DictReader(['a,b', '1,2'])
+    assert dr.restkey is None
+    dr = csv.DictReader(['a,b', '1,2'], restkey='rest')
+    assert dr.restkey == 'rest'
+    assert list(dr) == [{'a': '1', 'b': '2'}]
+
+
+def test_sniffer_preferred():
+    s = csv.Sniffer()
+    assert s.preferred == [',', '\t', ';', ' ', ':']
+
+    # ambiguous sample: both ';' and ':' are equally consistent, so the
+    # 'preferred' list decides
+    sample = 'a;b:c\nd;e:f\ng;h:i\n'
+    assert s.sniff(sample).delimiter == ';'
+
+    s.preferred = [':', ';']
+    assert s.sniff(sample).delimiter == ':'
+
+    # modifying one instance does not affect a fresh one
+    assert csv.Sniffer().sniff(sample).delimiter == ';'
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -787,6 +996,15 @@ def test_all():
     test_non_ascii_fields()
     test_unicode_roundtrip()
     test_quote_nonnumeric_writer()
+    test_field_size_limit()
+    test_reader_doublequote()
+    test_reader_skipinitialspace()
+    test_register_dialect_kwargs()
+    test_writer_doublequote_strict()
+    test_writer_skipinitialspace()
+    test_dictreader_kwargs()
+    test_dictreader_restkey()
+    test_sniffer_preferred()
 
 
 if __name__ == "__main__":
