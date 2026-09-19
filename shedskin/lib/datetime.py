@@ -23,10 +23,18 @@ class date:
     def fromisoformat(date_string):
         return date(0, 0, 0)
 
-    today         = staticmethod(today)
-    fromtimestamp = staticmethod(fromtimestamp)
-    fromordinal   = staticmethod(fromordinal)
-    fromisoformat = staticmethod(fromisoformat)
+    def fromisocalendar(year, week, day):
+        return date(0, 0, 0)
+
+    def strptime(date_string, format):
+        return date(0, 0, 0)
+
+    today           = staticmethod(today)
+    fromtimestamp   = staticmethod(fromtimestamp)
+    fromordinal     = staticmethod(fromordinal)
+    fromisoformat   = staticmethod(fromisoformat)
+    fromisocalendar = staticmethod(fromisocalendar)
+    strptime        = staticmethod(strptime)
 
     def __add__(self, other):
         return self
@@ -85,7 +93,7 @@ class date:
         return ''
 
 class datetime(date):
-    def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+    def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, fold=0):
         date.__init__(self, year, month, day)
 
         self.hour = hour
@@ -94,6 +102,7 @@ class datetime(date):
         self.microsecond = microsecond
 
         self.tzinfo = tzinfo
+        self.fold = fold
 
         tzinfo.utcoffset(self)
         tzinfo.dst(self)
@@ -119,6 +128,9 @@ class datetime(date):
     def fromordinal(ordinal):
         return datetime(0, 0, 0)
 
+    def fromisocalendar(year, week, day):
+        return datetime(0, 0, 0)
+
     def combine(date, time):
         return datetime(0, 0, 0)
 
@@ -134,6 +146,7 @@ class datetime(date):
     fromtimestamp = staticmethod(fromtimestamp)
     utcfromtimestamp = staticmethod(utcfromtimestamp)
     fromordinal = staticmethod(fromordinal)
+    fromisocalendar = staticmethod(fromisocalendar)
     combine = staticmethod(combine)
     strptime = staticmethod(strptime)
     fromisoformat = staticmethod(fromisoformat)
@@ -151,12 +164,12 @@ class datetime(date):
         return date(self.year, self.month, self.day)
 
     def time(self):
-        return time(self.hour, self.minute, self.second, self.microsecond, 0)
+        return time(self.hour, self.minute, self.second, self.microsecond, None, self.fold)
 
     def timetz(self):
-        return time(self.hour, self.minute, self.second, self.microsecond, self.tzinfo)
+        return time(self.hour, self.minute, self.second, self.microsecond, self.tzinfo, self.fold)
 
-    def replace(self, year=0, month=0, day=0, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+    def replace(self, year=0, month=0, day=0, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, fold=0):
         return self
 
     def astimezone(self, tz):
@@ -190,7 +203,7 @@ class datetime(date):
     def isocalendar(self):
         return (1, 1, 1)
 
-    def isoformat(self, sep=None):
+    def isoformat(self, sep=None, timespec=None):
         return ''
 
     def ctime(self):
@@ -223,13 +236,14 @@ class datetime(date):
         return ''
 
 class time:
-    def __init__(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+    def __init__(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, fold=0):
         self.hour = hour
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
 
         self.tzinfo = tzinfo
+        self.fold = fold
 
         dt = datetime(0,0,0)
         tzinfo.utcoffset(dt)
@@ -239,12 +253,16 @@ class time:
     def fromisoformat(time_string):
         return time(0, 0, 0)
 
-    fromisoformat = staticmethod(fromisoformat)
+    def strptime(time_string, format):
+        return time(0, 0, 0)
 
-    def replace(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+    fromisoformat = staticmethod(fromisoformat)
+    strptime = staticmethod(strptime)
+
+    def replace(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, fold=0):
         return self
 
-    def isoformat(self):
+    def isoformat(self, timespec=None):
         return ''
 
     def strftime(self, format):

@@ -39,7 +39,7 @@ int clock_gettime(int, struct timespec *tp)
 namespace __datetime__ {
 
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
-str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string,*t_string;
+str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string,*t_string,*auto_string;
 
 __ss_int MINYEAR, MAXYEAR;
 
@@ -53,7 +53,7 @@ timedelta *timedelta::min, *timedelta::max, *timedelta::resolution;
 
 str *date_repr_format, *time_repr_format, *datetime_repr_format;
 str *repr_arg_format, *repr_tzinfo_format, *repr_days_format, *repr_seconds_format, *repr_microseconds_format;
-str *comma_space_string, *zero_string, *close_paren_string;
+str *comma_space_string, *zero_string, *close_paren_string, *repr_fold_string;
 
 list<str *> *DayNames, *MonthNames;
 
@@ -77,6 +77,7 @@ void __init() {
 	point_string = new str("%s.%06d");
 	space_string = new str(" ");
 	t_string = new str("T");
+	auto_string = new str("auto");
 	none_string = new str("None");
 	empty_string = new str("");
 	z_string = new str("%z");
@@ -96,6 +97,7 @@ void __init() {
     comma_space_string = new str(", ");
     zero_string = new str("0");
     close_paren_string = new str(")");
+    repr_fold_string = new str(", fold=1");
 
     date::min = new date(MINYEAR, 1, 1);
     date::max = new date(MAXYEAR, 12, 31);
@@ -156,6 +158,49 @@ static __ss_int iso_fraction_to_microseconds(const char *frac) {
 /* true iff s[start..start+len) exists and consists only of ASCII digits;
  * used to enforce the fixed zero-padded field widths cpython requires
  * (e.g. rejects '2020-1-1', which sscanf's "%2d" would happily accept). */
+/* inverse of isocalendar(): ordinal of ISO (year, week, day), copied from
+ * cpython's _isoweek_to_gregorian / iso_week1_monday logic */
+static __ss_int isoweek_to_ord(__ss_int year, __ss_int week, __ss_int day) {
+    if(year<MINYEAR || year>MAXYEAR)
+        throw new ValueError(__mod6(new str("year must be in %d..%d, not %d"), 3, MINYEAR, MAXYEAR, year));
+    if(week<=0 || week>=53) {
+        bool out_of_range = true;
+        if(week==53) {
+            /* ISO years have 53 weeks when they start on a Thursday, or on a
+             * Wednesday in a leap year */
+            __ss_int first_weekday = ymd_to_ord(year, 1, 1) % 7;
+            if(first_weekday==4 || (first_weekday==3 && is_leap(year)))
+                out_of_range = false;
+        }
+        if(out_of_range)
+            throw new ValueError(__mod6(new str("Invalid week: %d"), 1, week));
+    }
+    if(day<=0 || day>=8)
+        throw new ValueError(__mod6(new str("Invalid weekday: %d (range is [1, 7])"), 1, day));
+    return iso_week1_monday(year) + (week-1)*7 + (day-1);
+}
+
+/* 'HH:MM:SS[.ffffff]' according to isoformat()'s timespec argument */
+static str *iso_time_string(__ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, str *timespec) {
+    const __GC_STR &ts = timespec->unit;
+    if(ts == __gcs("auto")) {
+        if(microsecond==0)
+            return __mod6(hour_format2, 3, hour, minute, second);
+        return __mod6(point_string, 2, __mod6(hour_format2, 3, hour, minute, second), microsecond);
+    }
+    if(ts == __gcs("hours"))
+        return __mod6(new str("%02d"), 1, hour);
+    if(ts == __gcs("minutes"))
+        return __mod6(new str("%02d:%02d"), 2, hour, minute);
+    if(ts == __gcs("seconds"))
+        return __mod6(hour_format2, 3, hour, minute, second);
+    if(ts == __gcs("milliseconds"))
+        return __mod6(new str("%02d:%02d:%02d.%03d"), 4, hour, minute, second, microsecond/1000);
+    if(ts == __gcs("microseconds"))
+        return __mod6(point_string, 2, __mod6(hour_format2, 3, hour, minute, second), microsecond);
+    throw new ValueError(new str("Unknown timespec value"));
+}
+
 static bool iso_all_digits(const __GC_STR &s, size_t start, size_t len) {
     if (start + len > s.size())
         return false;
@@ -205,6 +250,17 @@ date* date::fromordinal(__ss_int o) {
     date *r = new date(1,1,1);
     ord_to_ymd(o,&(r->year),&(r->month),&(r->day));
     return r;
+}
+
+date *date::fromisocalendar(__ss_int year, __ss_int week, __ss_int day) {
+    return fromordinal(isoweek_to_ord(year, week, day));
+}
+
+date *date::strptime(str *date_string, str *format) {
+    /* like cpython's _strptime_datetime_date: parse as a datetime, keep the
+     * date fields */
+    datetime *dt = datetime::strptime(date_string, format);
+    return new date(dt->year, dt->month, dt->day);
 }
 
 date *date::fromisoformat(str *date_string) {
@@ -399,19 +455,21 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 
 
 //class datetime
-datetime::datetime(__ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) : date(year_,month_,day_) {
+datetime::datetime(__ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) : date(year_,month_,day_) {
     __class__ = cl_datetime;
 
     if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
     if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
     if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
     if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(fold_!=0 && fold_!=1) throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
 
     this->hour = hour_;
     this->minute = minute_;
     this->second = second_;
     this->microsecond = microsecond_;
     this->_tzinfo = tzinfo;
+    this->fold = fold_;
 }
 
 datetime *datetime::today() {
@@ -537,8 +595,12 @@ datetime *datetime::fromordinal(__ss_int o) {
     return r;
 }
 
+datetime *datetime::fromisocalendar(__ss_int year, __ss_int week, __ss_int day) {
+    return fromordinal(isoweek_to_ord(year, week, day));
+}
+
 datetime *datetime::combine(date *d, time *t) {
-    return new datetime(d->year,d->month,d->day,t->hour,t->minute,t->second,t->microsecond,t->_tzinfo);
+    return new datetime(d->year,d->month,d->day,t->hour,t->minute,t->second,t->microsecond,t->_tzinfo,t->fold);
 }
 
 datetime *datetime::strptime(str *date_string, str *format) {
@@ -686,7 +748,7 @@ __ss_bool datetime::__ge__(datetime *other) { return __mbool(__cmp__(other) != -
 __ss_bool datetime::__le__(datetime *other) { return __mbool(__cmp__(other) != 1); }
 
 /* cpython omits trailing zero second/microsecond fields from the repr */
-static str *time_repr_tail(__ss_int second, __ss_int microsecond, tzinfo *tz) {
+static str *time_repr_tail(__ss_int second, __ss_int microsecond, tzinfo *tz, __ss_int fold) {
     str *s = new str("");
     if(microsecond != 0)
         s = __add_strs(2, __mod6(repr_arg_format, 1, second), __mod6(repr_arg_format, 1, microsecond));
@@ -694,12 +756,14 @@ static str *time_repr_tail(__ss_int second, __ss_int microsecond, tzinfo *tz) {
         s = __mod6(repr_arg_format, 1, second);
     if(tz)
         s = __add_strs(2, s, __mod6(repr_tzinfo_format, 1, repr(tz)));
+    if(fold)
+        s = __add_strs(2, s, repr_fold_string);
     return __add_strs(2, s, close_paren_string);
 }
 
 str *datetime::__repr__() {
     str *head = __mod6(datetime_repr_format, 5, year, month, day, hour, minute);
-    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo));
+    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo, fold));
 }
 
 __ss_int datetime::__hash__() {
@@ -719,14 +783,14 @@ date *datetime::_date() {
 }
 
 time *datetime::_time() {
-	return new time(hour,minute,second,microsecond);
+	return new time(hour,minute,second,microsecond,NULL,fold);
 }
 
 time *datetime::timetz() {
-	return new time(hour,minute,second,microsecond,_tzinfo);
+	return new time(hour,minute,second,microsecond,_tzinfo,fold);
 }
 
-datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
+datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     datetime *t = new datetime(this);
 
    if((__args & 1)==1) {
@@ -757,6 +821,9 @@ datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __
         t->microsecond=microsecond_;}
     if((__args & 128)==128)
         t->_tzinfo = tzinfo;
+    if((__args & 256)==256) {
+        if(fold_!=0 && fold_!=1)              throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
+        t->fold=fold_;}
     return t;
 }
 
@@ -766,7 +833,7 @@ datetime *datetime::astimezone(tzinfo *tzinfo) {
 		throw new ValueError(new str("astimezone() cannot be applied to a naive datetime"));
 	if(this->_tzinfo == tzinfo)
 		return this;
-	datetime *utc = this->__sub__(this->utcoffset())->replace(128,-1,-1,-1,-1,-1,-1,-1,tzinfo);
+	datetime *utc = this->__sub__(this->utcoffset())->replace(128,-1,-1,-1,-1,-1,-1,-1,tzinfo,-1);
 	datetime *r = tzinfo->fromutc(utc);
 	GC_FREE(utc);
 	return r;
@@ -881,23 +948,23 @@ __time__::struct_time *datetime::utctimetuple() {
         (__ss_int)0));
 }
 
-str *datetime::isoformat(str *sep) {
+str *datetime::isoformat(str *sep, str *timespec) {
     if(sep==NULL)
         sep = t_string;
     if(sep->__len__()!=1) {
         throw new TypeError(new str("isoformat() argument 1 must be char, not str"));
     }
+    if(timespec==NULL)
+        timespec = auto_string;
 	str *r;
-	r=__add_strs(3,date::__str__(),sep,__mod6(hour_format2, 3, hour, minute, second));
-    if(microsecond!=0)
-        r=__mod6(new str("%s.%06d"),2, r, microsecond);
+	r=__add_strs(3,date::__str__(),sep,iso_time_string(hour, minute, second, microsecond, timespec));
     if(this->_tzinfo!=NULL)
 		return r->__add__(this->_tzinfo->minutes_to_str(this));
 	return r;
 }
 
 str *datetime::__str__() {
-    return isoformat(space_string);
+    return isoformat(space_string, NULL);
 }
 
 str *datetime::ctime() {
@@ -924,19 +991,28 @@ str *datetime::strftime(str *format) {
 }
 
 //class time
-time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
+time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     __class__=cl_time;
 
     if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
     if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
     if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
     if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(fold_!=0 && fold_!=1) throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
 
     this->hour = hour_;
     this->minute = minute_;
     this->second = second_;
     this->microsecond = microsecond_;
     this->_tzinfo = tzinfo;
+    this->fold = fold_;
+}
+
+time *time::strptime(str *time_string, str *format) {
+    /* like cpython's _strptime_datetime_time: parse as a datetime, keep the
+     * time fields */
+    datetime *dt = datetime::strptime(time_string, format);
+    return new time(dt->hour, dt->minute, dt->second, dt->microsecond);
 }
 
 time *time::fromisoformat(str *time_string) {
@@ -961,7 +1037,7 @@ time *time::fromisoformat(str *time_string) {
     return new time((__ss_int)h, (__ss_int)mi, (__ss_int)sec, us);
 }
 
-time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
+time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     time *t = new time(this);
     if((__args & 1)==1) {
         if(hour_<0 || hour_>=24)          throw new ValueError(new str("hour must be in 0..23"));
@@ -977,22 +1053,23 @@ time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int 
         t->microsecond=microsecond_;}
     if((__args & 16)==16)
         t->_tzinfo = tzinfo;
+    if((__args & 32)==32) {
+        if(fold_!=0 && fold_!=1)          throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
+        t->fold=fold_;}
     return t;
 }
 
-str *time::isoformat() {
-    return __str__();
-}
-
-str *time::__str__() {
-    str * s;
-    if(microsecond==0)
-        s = __mod6(hour_format2, 3, hour, minute, second);
-    else
-        s = __mod6(point_string,2,__mod6(hour_format2, 3,hour, minute, second),microsecond);
+str *time::isoformat(str *timespec) {
+    if(timespec==NULL)
+        timespec = auto_string;
+    str *s = iso_time_string(hour, minute, second, microsecond, timespec);
     if(_tzinfo!=NULL)
         return s->__add__(_tzinfo->minutes_to_str(NULL));
     return s;
+}
+
+str *time::__str__() {
+    return isoformat(NULL);
 }
 
 str *time::strftime(str* format) {
@@ -1081,7 +1158,7 @@ __ss_bool time::__le__(time *other) { return __mbool(__cmp__(other) != 1); }
 
 str *time::__repr__() {
     str *head = __mod6(time_repr_format, 2, hour, minute);
-    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo));
+    return __add_strs(2, head, time_repr_tail(second, microsecond, _tzinfo, fold));
 }
 
 __ss_int time::__hash__() {

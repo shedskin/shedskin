@@ -49,6 +49,8 @@ public:
     static date *fromtimestamp(__ss_int timestamp);
     static date *fromordinal(__ss_int o);                    //copied from cpython
     static date *fromisoformat(str *date_string);
+    static date *fromisocalendar(__ss_int year, __ss_int week, __ss_int day);
+    static date *strptime(str *date_string, str *format);
     date *__add__(timedelta *other);
     date *__sub__(timedelta *other);
     timedelta *__sub__(date *other);
@@ -102,10 +104,11 @@ class datetime : public date {
 public:
     __ss_int hour, minute, second, microsecond;
     tzinfo *_tzinfo;
+    __ss_int fold;
 
-    datetime(datetime *d) : date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo)
+    datetime(datetime *d) : date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo),fold(d->fold)
                 {__class__=cl_datetime;};
-    datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
+    datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL, __ss_int fold=0);
     static datetime *min, *max;
     static timedelta *resolution;
 
@@ -118,6 +121,7 @@ public:
     static datetime *utcfromtimestamp(double timestamp);
     __ss_float timestamp();
     static datetime *fromordinal(__ss_int o);
+    static datetime *fromisocalendar(__ss_int year, __ss_int week, __ss_int day);
     static datetime *combine(date *d, time *t);
     static datetime *strptime(str *date_string, str *format);
     static datetime *fromisoformat(str *date_string);
@@ -130,7 +134,7 @@ public:
     time *_time();
     time *timetz();
 	
-    datetime *replace(__ss_int __args, __ss_int year=-1, __ss_int month=-1, __ss_int day=-1, __ss_int hour=-1, __ss_int minute=-1, __ss_int second=-1, __ss_int microsecond=-1,tzinfo *tzinfo=NULL);
+    datetime *replace(__ss_int __args, __ss_int year=-1, __ss_int month=-1, __ss_int day=-1, __ss_int hour=-1, __ss_int minute=-1, __ss_int second=-1, __ss_int microsecond=-1,tzinfo *tzinfo=NULL, __ss_int fold=-1);
     datetime *astimezone(tzinfo *tzinfo);
     timedelta *utcoffset();
     timedelta *dst();
@@ -139,7 +143,7 @@ public:
     __time__::struct_time *timetuple();
     __time__::struct_time *utctimetuple();
 
-    str *isoformat(str *sep = NULL);
+    str *isoformat(str *sep = NULL, str *timespec = NULL);
     str *__str__();
     str *__repr__();
     __ss_int __hash__();
@@ -166,18 +170,20 @@ class time : public pyobj {
 public:
     __ss_int hour, minute, second, microsecond;
     tzinfo *_tzinfo;
+    __ss_int fold;
 
-    time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo)
+    time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo), fold(t->fold)
                 {__class__=cl_time;};                                                       //copyconstructor
-    time(__ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
+    time(__ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL, __ss_int fold=0);
     static time *min, *max;
     static timedelta *resolution;
 
     static time *fromisoformat(str *time_string);
+    static time *strptime(str *time_string, str *format);
 
-    time *replace(__ss_int __args, __ss_int hour=-1, __ss_int minute=-1, __ss_int second=-1, __ss_int microsecond=-1, tzinfo *tzinfo=NULL);
+    time *replace(__ss_int __args, __ss_int hour=-1, __ss_int minute=-1, __ss_int second=-1, __ss_int microsecond=-1, tzinfo *tzinfo=NULL, __ss_int fold=-1);
 
-    str *isoformat();
+    str *isoformat(str *timespec = NULL);
     str *__str__();
     str *__repr__();
     __ss_int __hash__();
