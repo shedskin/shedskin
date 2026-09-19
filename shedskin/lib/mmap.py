@@ -15,6 +15,12 @@ MAP_EXECUTABLE = 4096
 MAP_POPULATE = 32768
 MAP_STACK = 131072
 
+# msync() flags for flush()'s `flags` argument; -1 on platforms that don't
+# have them (Windows, where flush() ignores `flags` anyway).
+MS_ASYNC = 1
+MS_INVALIDATE = 2
+MS_SYNC = 4
+
 # madvise() advice constants. Only MADV_NORMAL/RANDOM/SEQUENTIAL/WILLNEED/
 # DONTNEED are portable; the others are Linux-, BSD- or macOS-only. Unlike
 # CPython (which simply omits the missing ones), they are always defined
@@ -53,10 +59,10 @@ class mmap(pyiter):
     # flags/prot defaults are spelled as literals (MAP_SHARED, PROT_READ |
     # PROT_WRITE), so no default_N variables are needed in mmap.cpp; the
     # C++ side asserts at compile-time that these values match.
-    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0):
+    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0, trackfd=True):
         self.closed = False
 
-    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0):
+    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0, trackfd=True):
         pass
 
     def close(self):
@@ -68,8 +74,9 @@ class mmap(pyiter):
     def __exit__(self):
         pass
 
-    def flush(self, offset=0, size=-1):
-        return 0
+    # as in CPython, flags=0 means MS_SYNC
+    def flush(self, offset=0, size=-1, flags=0):
+        pass
 
     def madvise(self, option, start=0, length=-1):
         pass
