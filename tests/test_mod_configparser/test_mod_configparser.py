@@ -758,6 +758,378 @@ def test_interpolation_depth_error():
     # raw access never interpolates, so never hits the limit
     assert config.get('s', 'a', raw=True) == '%(b)s'
 
+def test_optionxform():
+    # RawConfigParser.optionxform: lower-cases option names on the way
+    # in (set/read/get), and is a public method in its own right
+    config = configparser.RawConfigParser()
+    assert config.optionxform('MiXeD') == 'mixed'
+    config.read_string('[s]\nKeyOne = 1\n')
+    config.set('s', 'KeyTwo', '2')
+    assert sorted(config.options('s')) == ['keyone', 'keytwo']
+    assert config.get('s', 'KEYONE') == '1'
+    assert config.has_option('s', 'keytwo')
+
+
+def test_boolean_states():
+    config = configparser.RawConfigParser()
+    states = config.BOOLEAN_STATES
+    assert states['yes'] is True
+    assert states['off'] is False
+    assert len(states) == 8
+    assert sorted(states) == ['0', '1', 'false', 'no', 'off', 'on', 'true', 'yes']
+    config.read_string('[s]\na = YES\nb = Off\nc = 1\nd = 0\n')
+    assert config.getboolean('s', 'a') and not config.getboolean('s', 'b')
+    assert config.getboolean('s', 'c') and not config.getboolean('s', 'd')
+    # it's one shared dict: an addition is seen by every parser
+    config.BOOLEAN_STATES['sure'] = True
+    other = configparser.ConfigParser()
+    other.read_string('[s]\ne = sure\n')
+    assert other.getboolean('s', 'e') is True
+    assert other['s'].getboolean('e') is True
+    del config.BOOLEAN_STATES['sure']
+    ok = False
+    try:
+        other.getboolean('s', 'e')
+    except ValueError:
+        ok = True
+    assert ok
+
+
+def test_constructor_defaults_and_default_section():
+    # defaults= are option-name normalized and live in the default section
+    config = configparser.RawConfigParser(defaults={'Home': '/root', 'shell': 'sh'})
+    assert config.defaults() == {'home': '/root', 'shell': 'sh'}
+    assert config.get('DEFAULT', 'home') == '/root'
+    config.add_section('user')
+    assert config.get('user', 'home') == '/root'   # inherited
+    assert config['user']['shell'] == 'sh'
+    assert sorted(config.options('user')) == ['home', 'shell']
+
+    # default_section= renames the section that feeds every other one
+    config = configparser.ConfigParser(default_section='common')
+    config.read_string('[common]\nbase = /opt\n[app]\npath = %(base)s/app\n')
+    assert config.default_section == 'common'
+    assert config.sections() == ['app']
+    assert config.get('app', 'path') == '/opt/app'
+    assert config.defaults() == {'base': '/opt'}
+    assert 'common' in config
+    assert config['common']['base'] == '/opt'
+
+
+def test_allow_no_value():
+    config = configparser.ConfigParser(allow_no_value=True)
+    config.read_string('[s]\nnovalue\nempty =\nnormal = x\n')
+    assert config.has_option('s', 'novalue')
+    assert config.get('s', 'novalue') is None
+    assert config['s']['novalue'] is None
+    assert config.get('s', 'empty') == ''
+    assert config.get('s', 'normal') == 'x'
+    assert sorted(config.options('s')) == ['empty', 'normal', 'novalue']
+    # CPython quirk: ConfigParser.items() interpolates the None into '',
+    # while raw=True (and RawConfigParser) keep the None
+    assert sorted(config.items('s')) == [('empty', ''), ('normal', 'x'), ('novalue', '')]
+    assert dict(config.items('s', raw=True)) == {'novalue': None, 'empty': '', 'normal': 'x'}
+    raw = configparser.RawConfigParser(allow_no_value=True)
+    raw.read_string('[s]\nnovalue\n')
+    assert raw.items('s') == [('novalue', None)]
+
+    # write() emits a bare key for a valueless option, and the result
+    # reads back the same
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    text = open(writefile).read()
+    assert '\nnovalue\n' in text
+    assert '\nempty = \n' in text
+    reread = configparser.ConfigParser(allow_no_value=True)
+    reread.read(writefile)
+    assert reread.get('s', 'novalue') is None
+    assert reread.get('s', 'empty') == ''
+
+    # without allow_no_value a bare key is a parsing error
+    strict = configparser.ConfigParser()
+    ok = False
+    try:
+        strict.read_string('[s]\nnovalue\n')
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.errors == [(2, 'novalue\n')]   # raw line (3.13+); repr()'d in the message
+    assert ok
+
+
+def test_delimiters():
+    config = configparser.ConfigParser(delimiters=('->', '='))
+    config.read_string('[s]\na -> 1\nb=2\nc: 3 -> x\n')
+    assert config.get('s', 'a') == '1'
+    assert config.get('s', 'b') == '2'
+    assert not config.has_option('s', 'c')
+    assert config.get('s', 'c: 3') == 'x'   # ':' is not a delimiter now
+    ok = False
+    try:
+        config.read_string('[s]\nd: 4\n')  # ... so this line has no delimiter
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.errors == [(2, 'd: 4\n')]
+    assert ok
+
+    # write() uses the first delimiter, with or without spaces
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    text = open(writefile).read()
+    assert 'a -> 1\n' in text
+    fl = open(writefile, 'w')
+    config.write(fl, space_around_delimiters=False)
+    fl.close()
+    text = open(writefile).read()
+    assert 'a->1\n' in text
+    assert 'b->2\n' in text
+
+    # the default delimiters
+    config = configparser.ConfigParser()
+    config.read_string('[s]\na = 1\nb : 2\nc=3\n')
+    assert sorted(config.items('s')) == [('a', '1'), ('b', '2'), ('c', '3')]
+    fl = open(writefile, 'w')
+    config.write(fl, space_around_delimiters=False)
+    fl.close()
+    assert sorted(open(writefile).read().split('\n')) == ['', '', '[s]', 'a=1', 'b=2', 'c=3']
+
+
+def test_comment_prefixes():
+    # full-line comments: default '#' and ';', only at the start of a
+    # (stripped) line
+    config = configparser.ConfigParser()
+    config.read_string('[s]\n# c1\n  ; c2\na = 1 # not a comment\n')
+    assert config.items('s') == [('a', '1 # not a comment')]
+
+    # a custom prefix; then '#' and ';' are plain option lines
+    config = configparser.ConfigParser(comment_prefixes=('//',))
+    config.read_string('[s]\n// c\n# not a comment = 1\n; also = 2\n')
+    assert sorted(config.items('s')) == [('# not a comment', '1'), ('; also', '2')]
+
+    # inline comments only when the prefix follows whitespace (or starts
+    # the line)
+    config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    config.read_string(
+        '[s]  ; header comment\n'
+        'url = http://host/?x=1 ; y=2\n'
+        'hash = red#ff0000\n'
+        'both = value # c1 ; c2\n'
+        'tail = value ;\n'
+        'only = ; nothing\n'
+    )
+    assert config.sections() == ['s']
+    assert config.get('s', 'url') == 'http://host/?x=1'
+    assert config.get('s', 'hash') == 'red#ff0000'
+    assert config.get('s', 'both') == 'value'
+    assert config.get('s', 'tail') == 'value'
+    assert config.get('s', 'only') == ''
+    assert sorted(config.options('s')) == ['both', 'hash', 'only', 'tail', 'url']
+
+
+def test_multiline_values():
+    config = configparser.ConfigParser()
+    config.read_string(
+        '[s]\n'
+        'a = first\n'
+        '    second\n'
+        '\n'
+        '    third\n'
+        'b = x\n'
+        '\n'
+        '\n'
+        'c =\n'
+        '  only continuation\n'
+    )
+    assert config.get('s', 'a') == 'first\nsecond\n\nthird'
+    assert config.get('s', 'b') == 'x'   # trailing empty lines are stripped
+    assert config.get('s', 'c') == '\nonly continuation'
+
+    # empty_lines_in_values=False: an empty line ends the value
+    # (and a later indented line is then just a bad line)
+    config = configparser.ConfigParser(empty_lines_in_values=False)
+    config.read_string('[s]\na = first\n    second\n\nb = x\n')
+    assert config.get('s', 'a') == 'first\nsecond'
+    assert config.get('s', 'b') == 'x'
+    ok = False
+    try:
+        config.read_string('[t]\na = first\n\n    orphan\n')
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.errors == [(4, '    orphan\n')]
+    assert ok
+    assert config.get('t', 'a') == 'first'
+
+    # continuation lines survive a write()/read() round trip
+    config = configparser.ConfigParser()
+    config.set('DEFAULT', 'm', 'l1\nl2\n\nl4')
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    assert open(writefile).read() == '[DEFAULT]\nm = l1\n\tl2\n\t\n\tl4\n\n'
+    reread = configparser.ConfigParser()
+    reread.read(writefile)
+    assert reread.get('DEFAULT', 'm') == 'l1\nl2\n\nl4'
+
+
+def test_strict():
+    # strict=False: duplicate sections and options in one source are
+    # merged/overwritten instead of raising
+    config = configparser.ConfigParser(strict=False)
+    config.read_string('[s]\na = 1\na = 2\n[s]\nb = 3\n')
+    assert sorted(config.items('s')) == [('a', '2'), ('b', '3')]
+
+    config = configparser.ConfigParser()   # strict=True default
+    for text in ('[s]\na = 1\na = 2\n', '[s]\na = 1\n[s]\nb = 3\n'):
+        ok = False
+        try:
+            config.read_string(text)
+        except configparser.DuplicateOptionError as doe:
+            ok = True
+            assert doe.section == 's' and doe.option == 'a'
+            assert doe.source == '<string>' and doe.lineno == 3
+        except configparser.DuplicateSectionError as dse:
+            ok = True
+            assert dse.section == 's' and dse.source == '<string>' and dse.lineno == 3
+        assert ok
+
+    # across two sources the same section may be extended even when strict
+    config = configparser.ConfigParser()
+    config.read_string('[s]\na = 1\n')
+    config.read_string('[s]\nb = 2\n')
+    assert sorted(config.items('s')) == [('a', '1'), ('b', '2')]
+
+
+def test_multiline_continuation_error():
+    config = configparser.ConfigParser(allow_no_value=True)
+    ok = False
+    try:
+        config.read_string('[s]\nnovalue\n    continued\n', source='cfg.ini')
+    except configparser.MultilineContinuationError as e:
+        ok = True
+        assert e.source == 'cfg.ini'
+        assert e.lineno == 3
+        assert e.line == '    continued\n'
+        assert 'Key without value' in e.message
+        assert isinstance(e, configparser.ParsingError)
+    assert ok
+
+
+def test_invalid_write_error():
+    config = configparser.ConfigParser()
+    config.add_section('s')
+    config['s']['[looks like a section]'] = 'x'
+    fl = open(writefile, 'w')
+    ok = False
+    try:
+        config.write(fl)
+    except configparser.InvalidWriteError as e:
+        ok = True
+        assert 'begins with section pattern' in e.message
+        assert isinstance(e, configparser.Error)
+    fl.close()
+    assert ok
+
+    config = configparser.ConfigParser()
+    config.read_dict({'s': {'a=b': '1'}})
+    fl = open(writefile, 'w')
+    ok = False
+    try:
+        config.write(fl)
+    except configparser.InvalidWriteError as e:
+        ok = True
+        assert 'contains delimiter =' in e.message
+    fl.close()
+    assert ok
+
+
+def test_parsing_error_source():
+    pe = configparser.ParsingError('some.ini')
+    assert pe.source == 'some.ini'
+    assert pe.message == "Source contains parsing errors: 'some.ini'"
+    assert pe.errors == []
+
+    # the source= argument of read_string/read_file/read_dict names the
+    # source in the raised errors (repr()'d in the message)
+    config = configparser.ConfigParser()
+    ok = False
+    try:
+        config.read_string('[s]\nbad line\nworse line\n', source='my.ini')
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.source == 'my.ini'
+        assert e.errors == [(2, 'bad line\n'), (3, 'worse line\n')]
+        assert e.message == "Source contains parsing errors: 'my.ini'\n\t[line  2]: 'bad line\\n'\n\t[line  3]: 'worse line\\n'"
+    assert ok
+
+    ok = False
+    try:
+        config.read_string('nosection = 1\n', source='x.ini')
+    except configparser.MissingSectionHeaderError as mshe:
+        ok = True
+        assert mshe.source == 'x.ini' and mshe.lineno == 1 and mshe.line == 'nosection = 1\n'
+    assert ok
+
+    fl = open(writefile, 'w')
+    fl.write('[s]\noops\n')
+    fl.close()
+    fl = open(writefile)
+    ok = False
+    try:
+        config.read_file(fl, source='named.ini')
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.source == 'named.ini'
+    fl.close()
+    assert ok
+    fl = open(writefile)
+    ok = False
+    try:
+        config.read_file(fl)
+    except configparser.ParsingError as e:
+        ok = True
+        assert e.source == writefile   # taken from fp.name
+    fl.close()
+    assert ok
+
+    # read_dict(source=) is accepted (a dict can't produce parsing errors)
+    config.read_dict({'d': {'k': 'v'}}, source='some dict')
+    assert config.get('d', 'k') == 'v'
+
+
+def test_typed_getters_raw_and_vars():
+    config = configparser.ConfigParser()
+    config.read_string('[s]\nn = 4\ndouble = %(n)s%(n)s\nflag = %(yes)s\nhalf = 0.5\n')
+    assert config.getint('s', 'double') == 44
+    assert config.getint('s', 'double', vars={'n': '7'}) == 77
+    assert config.getint('s', 'n', raw=True) == 4
+    assert config.getfloat('s', 'half', vars={'half': '0.25'}) == 0.25
+    assert config.getfloat('s', 'half', raw=True) == 0.5
+    assert config.getboolean('s', 'flag', vars={'yes': 'on'}) is True
+    assert config.getboolean('s', 'flag', vars={'yes': 'no'}) is False
+    ok = False
+    try:
+        config.getboolean('s', 'flag', raw=True)   # '%(yes)s' is not a boolean
+    except ValueError:
+        ok = True
+    assert ok
+
+    # the same three arguments on SectionProxy (fallback comes first there)
+    sec = config['s']
+    assert sec.getint('double', vars={'n': '2'}) == 22
+    assert sec.getint('n', 0, raw=True) == 4
+    assert sec.getfloat('half', raw=True) == 0.5
+    assert sec.getfloat('half', vars={'half': '2.5'}) == 2.5
+    assert sec.getboolean('flag', vars={'yes': 'true'}) is True
+    ok = False
+    try:
+        sec.getboolean('flag', False, raw=True)   # present but raw: not a boolean
+    except ValueError:
+        ok = True
+    assert ok
+    assert sec.getboolean('missing', True, raw=True) is True
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -796,6 +1168,18 @@ def test_all():
     test_basic_interpolation_syntax_errors()
     test_module_constants()
     test_interpolation_depth_error()
+    test_optionxform()
+    test_boolean_states()
+    test_constructor_defaults_and_default_section()
+    test_allow_no_value()
+    test_delimiters()
+    test_comment_prefixes()
+    test_multiline_values()
+    test_strict()
+    test_multiline_continuation_error()
+    test_invalid_write_error()
+    test_parsing_error_source()
+    test_typed_getters_raw_and_vars()
 
 if __name__ == '__main__':
     test_all()

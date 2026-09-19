@@ -6,11 +6,12 @@
 #include "builtin.hpp"
 #include "re.hpp"
 #include "io.hpp"
+#include <limits>
 
 using namespace __shedskin__;
 namespace __configparser__ {
 
-extern str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
+extern str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_73, *const_74, *const_75, *const_76, *const_77, *const_78, *const_79, *const_8, *const_80, *const_81, *const_82, *const_83, *const_84, *const_85, *const_86, *const_87, *const_9;
 
 class Error;
 class NoSectionError;
@@ -23,6 +24,8 @@ class InterpolationSyntaxError;
 class InterpolationDepthError;
 class ParsingError;
 class MissingSectionHeaderError;
+class MultilineContinuationError;
+class InvalidWriteError;
 class Interpolation;
 class BasicInterpolation;
 class ExtendedInterpolation;
@@ -196,14 +199,14 @@ Raised when a configuration file does not follow legal syntax.
 */
 public:
     list<tuple2<__ss_int, str *> *> *errors;
-    str *filename;
+    str *source;    /* CPython 3.12+ name (the old 'filename' attribute is gone) */
 
     ParsingError() {}
-    ParsingError(str *filename_) {
+    ParsingError(str *source_) {
         this->__class__ = cl_ParsingError;
-        __init__(filename_);
+        __init__(source_);
     }
-    void *__init__(str *filename_);
+    void *__init__(str *source_);
     void *append(__ss_int lineno, str *line);
 
     /* Merge the errors of any number of other ParsingErrors into this one
@@ -234,11 +237,44 @@ public:
     str *line;
 
     MissingSectionHeaderError() {}
-    MissingSectionHeaderError(str *filename_, __ss_int lineno_, str *line_) {
+    MissingSectionHeaderError(str *source_, __ss_int lineno_, str *line_) {
         this->__class__ = cl_MissingSectionHeaderError;
-        __init__(filename_, lineno_, line_);
+        __init__(source_, lineno_, line_);
     }
-    void *__init__(str *filename_, __ss_int lineno_, str *line_);
+    void *__init__(str *source_, __ss_int lineno_, str *line_);
+};
+
+extern class_ *cl_MultilineContinuationError;
+class MultilineContinuationError : public ParsingError {
+/**
+Raised when a key without value (allow_no_value=True) is followed by
+an indented continuation line (CPython 3.13+).
+*/
+public:
+    __ss_int lineno;
+    str *line;
+
+    MultilineContinuationError() {}
+    MultilineContinuationError(str *source_, __ss_int lineno_, str *line_) {
+        this->__class__ = cl_MultilineContinuationError;
+        __init__(source_, lineno_, line_);
+    }
+    void *__init__(str *source_, __ss_int lineno_, str *line_);
+};
+
+extern class_ *cl_InvalidWriteError;
+class InvalidWriteError : public Error {
+/**
+Raised by write() for a key the parser would read back differently:
+one that looks like a section header, or one containing a delimiter
+(CPython 3.14+).
+*/
+public:
+    InvalidWriteError() {}
+    InvalidWriteError(str *msg) {
+        this->__class__ = cl_InvalidWriteError;
+        Error::__init__(msg);
+    }
 };
 
 extern class_ *cl_Interpolation;
@@ -295,19 +331,34 @@ public:
 extern class_ *cl_RawConfigParser;
 class RawConfigParser : public pyiter<str *> {
 public:
-    static dict<str *, __ss_int> *_boolean_states;
+    /* CPython's class-level BOOLEAN_STATES dict; every instance's
+       BOOLEAN_STATES member points at the one shared _boolean_states
+       dict, so in-place additions are seen by all parsers, as in CPython */
+    static dict<str *, __ss_bool> *_boolean_states;
+    dict<str *, __ss_bool> *BOOLEAN_STATES;
     static __re__::re_object *SECTCRE;
     static __re__::re_object *OPTCRE;
+    static __re__::re_object *OPTCRE_NV;
+    static __re__::re_object *NONSPACECRE;
 
     dict<str *, str *> *_defaults;
     dict<str *, dict<str *, str *> *> *_sections;
     str *default_section;
     Interpolation *_interpolation;
 
+    /* constructor options (CPython names) */
+    tuple<str *> *_delimiters;
+    tuple<str *> *_comment_prefixes;
+    tuple<str *> *_inline_comment_prefixes;   /* never NULL: empty tuple for None */
+    __ss_int _strict;
+    __ss_int _allow_no_value;
+    __ss_int _empty_lines_in_values;
+    __re__::re_object *_optcre;
+
     RawConfigParser() {}
-    RawConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
+    RawConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
         this->__class__ = cl_RawConfigParser;
-        __init__(defaults, default_section_, interpolation_);
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_);
     }
     /* class-specific default for the interpolation= constructor argument
        (Interpolation for RawConfigParser, BasicInterpolation for
@@ -316,14 +367,20 @@ public:
        derived class */
     virtual Interpolation *_default_interpolation();
     virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
-    str *optionxform(str *optionstr);
+    /* virtual, so a C++-side subclass could keep option case (shedskin
+       itself does not support subclassing lib classes) */
+    virtual str *optionxform(str *optionstr);
     void *_set(str *section, str *option, str *value);
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
     __ss_bool remove_section(str *section);
-    void *__init__(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL);
+    void *__init__(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL);
     __ss_bool has_option(str *section, str *option);
-    void *write(file *fp);
+    void *write(file *fp, __ss_int space_around_delimiters=1);
+    void *_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter);
+    void *_validate_key_contents(str *key);
+    /* flush the multi-line accumulator of the option being parsed */
+    void *_join_value(dict<str *, str *> *cursect, str *optname, list<str *> *curval);
     void *add_section(str *section);
     list<str *> *sections();
     list<str *> *read(str *filename);
@@ -404,9 +461,9 @@ through the _interpolation member, so no overrides are needed here.
 public:
 
     ConfigParser() {}
-    ConfigParser(dict<str *, str *> *defaults, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
+    ConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
         this->__class__ = cl_ConfigParser;
-        __init__(defaults, default_section_, interpolation_);
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_);
     }
     Interpolation *_default_interpolation();
 };

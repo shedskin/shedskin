@@ -52,21 +52,31 @@ class InterpolationDepthError(InterpolationError):
         self.option = option
         self.section = section
 class ParsingError(Error):
-    def __init__(self, filename):
+    def __init__(self, source):
         self.message = ''
-        self.filename = filename
+        self.source = source
         self.errors = [(0, '')]
     def append(self, lineno, line):
         pass
     def combine(self, others):
         return self
 class MissingSectionHeaderError(ParsingError):
-    def __init__(self, filename, lineno, line):
+    def __init__(self, source, lineno, line):
         self.message = ''
-        self.filename = filename
+        self.source = source
         self.errors = [(0, '')]
         self.lineno = lineno
         self.line = line
+class MultilineContinuationError(ParsingError):
+    def __init__(self, source, lineno, line):
+        self.message = ''
+        self.source = source
+        self.errors = [(0, '')]
+        self.lineno = lineno
+        self.line = line
+class InvalidWriteError(Error):
+    def __init__(self, msg=''):
+        self.message = msg
 
 class Interpolation:
     """Dummy interpolation that passes the value through with no changes."""
@@ -100,12 +110,22 @@ __cperror7 = InterpolationSyntaxError('', '', '')
 __cperror8 = InterpolationDepthError('', '', '')
 __cperror9 = ParsingError('')
 __cperror10 = MissingSectionHeaderError('', 0, '')
+__cperror11 = MultilineContinuationError('', 0, '')
+__cperror12 = InvalidWriteError('')
 
 class RawConfigParser:
-    def __init__(self, defaults=None, default_section=None, interpolation=None):
+    def __init__(self, defaults=None, allow_no_value=False, delimiters=None, comment_prefixes=None, inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=None, interpolation=None):
+        # a class attribute in CPython; modelled per instance (shared dict)
+        self.BOOLEAN_STATES = {'': True}
         self._sections = {'': ''}
         self._defaults = {'': ''}
         self.default_section = ''
+        self._delimiters = delimiters
+        self._comment_prefixes = comment_prefixes
+        self._inline_comment_prefixes = inline_comment_prefixes
+        self._strict = strict
+        self._allow_no_value = allow_no_value
+        self._empty_lines_in_values = empty_lines_in_values
         if interpolation is None:
             self._interpolation = Interpolation()
         else:
@@ -150,7 +170,7 @@ class RawConfigParser:
         return True
     def set(self, section, option, value):
         pass
-    def write(self, fp):
+    def write(self, fp, space_around_delimiters=True):
         pass
     def remove_option(self, section, option):
         return True
