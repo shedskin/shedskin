@@ -737,6 +737,25 @@ def test_surrogate_literals():
     assert [ord(c) for c in 'q"?\\\0\udc80z'] == [113, 34, 63, 92, 0, 0xdc80, 122]
 
 
+def test_case_conversion_hash():
+    # regression: upper()/lower() used to copy the cached hash of the
+    # original string, so a lower-cased dict key could not be found again
+    src = {'Home': 1, 'SHELL': 2}
+    d = {}
+    for k, v in src.items():
+        d[k.lower()] = v
+        d[k.upper()] = v
+    assert sorted(d) == ['HOME', 'SHELL', 'home', 'shell']
+    assert 'home' in d and 'HOME' in d and 'shell' in d
+    for k in src:
+        assert k.lower() == k.lower().lower()
+        assert hash(k.lower()) == hash(k.lower() + '')
+        assert hash(k.upper()) != hash(k.lower())
+    s = {'MiXeD'}
+    assert 'mixed' in {x.lower() for x in s}
+    assert 'MIXED' in {x.upper() for x in s}
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -801,6 +820,7 @@ def test_all():
     test_bin()
     test_unicode_seq_conversion()
     test_surrogate_literals()
+    test_case_conversion_hash()
 
 
 if __name__ == "__main__":

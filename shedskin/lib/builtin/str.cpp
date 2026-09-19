@@ -816,7 +816,10 @@ str *str::upper() {
     if(this->unit.size() == 1)
         return __char_str(__ss_toupper(unit[0]));
 
-    str *toReturn = new str(*this);
+    /* not new str(*this): the copy constructor would carry over the cached
+       hash of the original (wrong for the converted string), breaking
+       dict lookups and __eq__ on the result */
+    str *toReturn = new str(unit);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_toupper);
 
     return toReturn;
@@ -826,7 +829,7 @@ str *str::lower() {
     if(this->unit.size() == 1)
         return __char_str(__ss_tolower(unit[0]));
 
-    str *toReturn = new str(*this);
+    str *toReturn = new str(unit);  /* see upper() */
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_tolower);
 
     return toReturn;

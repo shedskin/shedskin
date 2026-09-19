@@ -99,7 +99,7 @@ ConfigParser -- responsible for parsing a list of
 
 namespace __configparser__ {
 
-str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_8, *const_9;
+str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_73, *const_74, *const_75, *const_76, *const_77, *const_78, *const_79, *const_8, *const_80, *const_81, *const_82, *const_83, *const_84, *const_85, *const_86, *const_87, *const_9;
 
 str *DEFAULTSECT, *__name__;
 __ss_int MAX_INTERPOLATION_DEPTH;
@@ -254,10 +254,10 @@ class ParsingError
 
 class_ *cl_ParsingError;
 
-void *ParsingError::__init__(str *filename_) {
+void *ParsingError::__init__(str *source_) {
 
-    Error::__init__(__mod6(const_8, 1, filename_));
-    filename = filename_;
+    Error::__init__(__mod6(const_8, 1, source_));
+    source = source_;
     errors = (new list<tuple2<__ss_int, str *> *>());
     return NULL;
 }
@@ -275,14 +275,37 @@ class MissingSectionHeaderError
 
 class_ *cl_MissingSectionHeaderError;
 
-void *MissingSectionHeaderError::__init__(str *filename_, __ss_int lineno_, str *line_) {
+void *MissingSectionHeaderError::__init__(str *source_, __ss_int lineno_, str *line_) {
 
-    Error::__init__(__mod6(const_10, 3, filename_, lineno_, line_));
-    filename = filename_;
+    Error::__init__(__mod6(const_10, 3, source_, lineno_, line_));
+    source = source_;
+    errors = (new list<tuple2<__ss_int, str *> *>());
     lineno = lineno_;
     line = line_;
     return NULL;
 }
+
+/**
+class MultilineContinuationError
+*/
+
+class_ *cl_MultilineContinuationError;
+
+void *MultilineContinuationError::__init__(str *source_, __ss_int lineno_, str *line_) {
+
+    Error::__init__(__mod6(const_73, 3, source_, lineno_, line_));
+    source = source_;
+    errors = (new list<tuple2<__ss_int, str *> *>());
+    lineno = lineno_;
+    line = line_;
+    return NULL;
+}
+
+/**
+class InvalidWriteError
+*/
+
+class_ *cl_InvalidWriteError;
 
 /**
 class RawConfigParser
@@ -381,19 +404,44 @@ Interpolation *ConfigParser::_default_interpolation() {
     return new BasicInterpolation();
 }
 
-void *RawConfigParser::__init__(dict<str *, str *> *defaults, str *default_section_, Interpolation *interpolation_) {
+/* re.escape() a delimiter or comment prefix for use inside a pattern */
+static str *__re_escape(str *s_) {
+    return __re__::escape(s_);
+}
+
+void *RawConfigParser::__init__(dict<str *, str *> *defaults, __ss_int allow_no_value, tuple<str *> *delimiters, tuple<str *> *comment_prefixes, tuple<str *> *inline_comment_prefixes, __ss_int strict, __ss_int empty_lines_in_values, str *default_section_, Interpolation *interpolation_) {
     __ss_int __3;
     tuple<str *> *__0;
     str *key, *value;
     __iter<tuple<str *> *> *__1;
 
-
     __iter<tuple<str *> *>::for_in_loop __123;
 
+    this->BOOLEAN_STATES = RawConfigParser::_boolean_states;
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
+    this->_delimiters = (delimiters != NULL) ? delimiters : (new tuple<str *>(2, const_74, const_1));
+    this->_comment_prefixes = (comment_prefixes != NULL) ? comment_prefixes : (new tuple<str *>(2, const_75, const_76));
+    this->_inline_comment_prefixes = (inline_comment_prefixes != NULL) ? inline_comment_prefixes : (new tuple<str *>());
+    this->_strict = strict;
+    this->_allow_no_value = allow_no_value;
+    this->_empty_lines_in_values = empty_lines_in_values;
     this->default_section = (default_section_ != NULL) ? default_section_ : DEFAULTSECT;
     this->_interpolation = (interpolation_ != NULL) ? interpolation_ : this->_default_interpolation();
+
+    /* option-line regex: the class-level OPTCRE/OPTCRE_NV for the default
+       '=' / ':' delimiters, a per-instance compile otherwise */
+    if (delimiters == NULL || __eq(this->_delimiters, new tuple<str *>(2, const_74, const_1))) {
+        this->_optcre = allow_no_value ? RawConfigParser::OPTCRE_NV : RawConfigParser::OPTCRE;
+    } else {
+        list<str *> *parts = new list<str *>();
+        __ss_int n = len(this->_delimiters);
+        for (__ss_int i = 0; i < n; i++)
+            parts->append(__re_escape(this->_delimiters->__getitem__(i)));
+        str *d = (new str("|"))->join(parts);
+        this->_optcre = __re__::compile(__mod6(allow_no_value ? const_78 : const_77, 4, d, d, d, d));
+    }
+
     if (___bool(defaults)) {
 
         FOR_IN(__0,defaults->items(),1,3,123)
@@ -428,30 +476,75 @@ __ss_bool RawConfigParser::has_option(str *section, str *option) {
     return False;
 }
 
-void *RawConfigParser::write(file *fp) {
+void *RawConfigParser::_validate_key_contents(str *key) {
     /**
-    Write an .ini-format representation of the configuration state.
+    Raise InvalidWriteError for a key the parser would read back
+    differently: one matching the section-header pattern, or one
+    containing a delimiter (CPython 3.14+).
     */
-    __ss_int __22, __29;
+    if (___bool((RawConfigParser::SECTCRE)->match(key))) {
+        throw ((new InvalidWriteError(__mod6(const_79, 1, key))));
+    }
+    __ss_int n = len(this->_delimiters);
+    for (__ss_int i = 0; i < n; i++) {
+        str *delim = this->_delimiters->__getitem__(i);
+        if (key->__contains__(delim)) {
+            throw ((new InvalidWriteError(__mod6(const_80, 2, key, delim))));
+        }
+    }
+    return NULL;
+}
 
-    str *key, *section, *value;
-    tuple<str *> *__19, *__26;
-
-    __iter<tuple<str *> *> *__20, *__27;
-
+void *RawConfigParser::_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter) {
+    /**
+    Write a single section to the specified `fp`.
+    */
+    __ss_int __29;
+    str *key, *value;
+    tuple<str *> *__26;
+    __iter<tuple<str *> *> *__27;
     __iter<tuple<str *> *>::for_in_loop __123;
 
+    fp->write(__mod6(const_11, 1, section_name));
+
+    FOR_IN(__26,section_items->items(),27,29,123)
+        __26 = __26;
+        key = __26->__getfirst__();
+        value = __26->__getsecond__();
+        if (__eq(key, const_15)) {
+            continue;  /* legacy __name__ entry */
+        }
+        this->_validate_key_contents(key);
+        value = (this->_interpolation)->before_write(this, section_name, key, value);
+        if ((value != NULL) || (!this->_allow_no_value)) {
+            /* convert all possible line endings into '\n\t' */
+            value = delimiter->__add__((__str(value))->replace(const_81, const_13)->replace(const_82, const_13)->replace(const_13, const_14));
+        } else {
+            value = const_17;
+        }
+        fp->write(__mod6(const_83, 2, key, value));
+    END_FOR
+
+    fp->write(const_13);
+    return NULL;
+}
+
+void *RawConfigParser::write(file *fp, __ss_int space_around_delimiters) {
+    /**
+    Write an .ini-format representation of the configuration state.
+
+    If `space_around_delimiters` is True (the default), delimiters
+    between keys and values are surrounded by spaces.
+    */
+    str *d, *section;
+
+    if (space_around_delimiters) {
+        d = __mod6(const_84, 1, this->_delimiters->__getitem__(0));
+    } else {
+        d = this->_delimiters->__getitem__(0);
+    }
     if (___bool(this->_defaults)) {
-        fp->write(__mod6(const_11, 1, this->default_section));
-
-        FOR_IN(__19,(this->_defaults)->items(),20,22,123)
-            __19 = __19;
-            key = __19->__getfirst__();
-            value = __19->__getsecond__();
-            fp->write(__mod6(const_12, 2, key, (__str(value))->replace(const_13, const_14)));
-        END_FOR
-
-        fp->write(const_13);
+        this->_write_section(fp, this->default_section, this->_defaults, d);
     }
 
     dict<str *, dict<str *, str *> *>::for_in_loop __3;
@@ -459,18 +552,7 @@ void *RawConfigParser::write(file *fp) {
     dict<str *, dict<str *, str *> *> *__1;
 
     FOR_IN(section,this->_sections,1,2,3)
-        fp->write(__mod6(const_11, 1, section));
-
-        FOR_IN(__26,((this->_sections)->__getitem__(section))->items(),27,29,123)
-            __26 = __26;
-            key = __26->__getfirst__();
-            value = __26->__getsecond__();
-            if (__ne(key, const_15)) {
-                fp->write(__mod6(const_12, 2, key, (__str(value))->replace(const_13, const_14)));
-            }
-        END_FOR
-
-        fp->write(const_13);
+        this->_write_section(fp, section, (this->_sections)->__getitem__(section), d);
     END_FOR
 
     return NULL;
@@ -568,7 +650,7 @@ str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, s
         if (fallback != NULL) return fallback;
         throw;
     }
-    if (raw) {
+    if (raw || (value == NULL)) {   /* None: a valueless option (allow_no_value=True) */
         return value;
     }
     return (this->_interpolation)->before_get(this, section, option, value, d);
@@ -615,10 +697,10 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
 }
 
 __ss_bool RawConfigParser::_to_boolean(str *v) {
-    if ((!(RawConfigParser::_boolean_states)->__contains__(v->lower()))) {
+    if ((!(this->BOOLEAN_STATES)->__contains__(v->lower()))) {
         throw ((new ValueError(__mod6(const_16, 1, v))));
     }
-    return __mbool((RawConfigParser::_boolean_states)->__getitem__(v->lower()));
+    return (this->BOOLEAN_STATES)->__getitem__(v->lower());
 }
 
 list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int) {
@@ -725,38 +807,76 @@ tuple2<str *, SectionProxy *> *RawConfigParser::popitem() {
     return (new tuple2<str *, SectionProxy *>(2, key, value));
 }
 
+void *RawConfigParser::_join_value(dict<str *, str *> *cursect, str *optname, list<str *> *curval) {
+    /**
+    Join the accumulated lines of a (possibly multi-line) value, strip
+    trailing whitespace/blank lines and store it, passing it through the
+    interpolation object's before_read() (CPython's
+    _join_multiline_values, done per option instead of per file).
+    */
+    if ((cursect != NULL) && (optname != NULL) && (curval != NULL)) {
+        str *val = ((const_13)->join(curval))->rstrip();
+        str *sectname = const_17;
+        /* find the section name for before_read(); the defaults dict is
+           the default section */
+        if (cursect == this->_defaults) {
+            sectname = this->default_section;
+        } else {
+            dict<str *, dict<str *, str *> *>::for_in_loop __3;
+            int __2;
+            dict<str *, dict<str *, str *> *> *__1;
+            str *name;
+            FOR_IN(name,this->_sections,1,2,3)
+                if ((this->_sections)->__getitem__(name) == cursect) {
+                    sectname = name;
+                    break;
+                }
+            END_FOR
+        }
+        cursect->__setitem__(optname, (this->_interpolation)->before_read(this, sectname, optname, val));
+    }
+    return NULL;
+}
+
 void *RawConfigParser::_read(file *fp, str *fpname) {
     /**
-    Parse a sectioned setup file.
+    Parse a sectioned configuration file (a port of CPython 3.12's
+    RawConfigParser._read).
 
-    The sections in setup file contains a title line at the top,
-    indicated by a name in square brackets (`[]'), plus key/value
-    options lines, indicated by `name: value' format lines.
-    Continuations are represented by an embedded newline then
-    leading whitespace.  Blank lines, lines beginning with a '#',
-    and just about everything else are ignored.
+    Each section in a configuration file contains a header, indicated by
+    a name in square brackets (`[]`), plus key/value options, indicated by
+    `name` and `value` delimited with a specific substring (`=` or `:` by
+    default).
+
+    Values can span multiple lines, as long as they are indented deeper
+    than the first line of the value. Depending on the parser's mode, blank
+    lines may be treated as parts of multiline values or ignored.
+
+    Configuration files may include comments, prefixed by specific
+    characters (`#` and `;` by default). Comments may appear on their own
+    in an otherwise empty line or may be entered in lines holding values or
+    section names. Comments get stripped off when reading configuration
+    files.
     */
+    const __ss_int MAXSIZE = std::numeric_limits<__ss_int>::max();
     __re__::match_object *mo;
-    __ss_int __33, lineno;
+    __ss_int lineno, indent_level, cur_indent_level, comment_start, i, n;
+    __ss_bool has_comment;
 
     ParsingError *e;
-    str *line, *optname, *optval, *sectname, *value, *cursectname;
+    str *line, *value, *optname, *optval, *sectname, *cursectname;
     dict<str *, str *> *cursect;
-    set<str *> *elements_added;
-    set<str *> *cur_options;
+    list<str *> *curval;              /* accumulated lines of the current option, NULL for a valueless option */
+    set<str *> *elements_added;       /* section names and "section\x01option" keys added from *this* source */
 
-    cursect = 0;
-    cursectname = 0;
-    optname = 0;
+    cursect = NULL;
+    cursectname = NULL;
+    optname = NULL;
+    curval = NULL;
     lineno = 0;
-    e = 0;
-    /* Tracks section names and "section\x01option" keys added while
-       parsing *this* source, mirroring CPython's strict=True default:
-       re-reading an already-existing section across multiple read()
-       calls is fine, but repeating a section header or an option
-       within a single file/string/dict is an error. */
+    indent_level = 0;
+    e = NULL;
     elements_added = (new set<str *>());
-    cur_options = 0;
 
     while (1) {
         line = fp->readline();
@@ -764,74 +884,131 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
             break;
         }
         lineno = (lineno+1);
-        if (__OR(__eq(line->strip(), const_17), (const_18)->__contains__(line->__getitem__(0)), 33)) {
+
+        /* strip inline comments: a prefix counts when it starts the line
+           or follows whitespace */
+        comment_start = MAXSIZE;
+        n = len(this->_inline_comment_prefixes);
+        for (i = 0; i < n; i++) {
+            str *prefix = this->_inline_comment_prefixes->__getitem__(i);
+            __ss_int index = -1;
+            while (1) {
+                index = line->find(prefix, index+1);
+                if (index == -1) {
+                    break;
+                }
+                if ((index == 0) || ((line->__getitem__(index-1))->isspace())) {
+                    if (index < comment_start) {
+                        comment_start = index;
+                    }
+                    break;
+                }
+            }
+        }
+        /* strip full line comments */
+        n = len(this->_comment_prefixes);
+        for (i = 0; i < n; i++) {
+            if ((line->strip())->startswith(this->_comment_prefixes->__getitem__(i))) {
+                comment_start = 0;
+                break;
+            }
+        }
+        has_comment = __mbool(comment_start != MAXSIZE);
+        value = (has_comment ? line->__slice__(2, 0, comment_start, 1) : line)->strip();
+
+        if ((!___bool(value))) {
+            if (this->_empty_lines_in_values) {
+                /* add empty line to the value, but only if there was no
+                   comment on the line */
+                if ((!has_comment) && (cursect != NULL) && (optname != NULL) && (curval != NULL)) {
+                    curval->append(const_17);   /* newlines added at join */
+                }
+            } else {
+                /* empty line marks end of value */
+                indent_level = MAXSIZE;
+            }
             continue;
         }
-        if (((line->__getitem__(0))->isspace() && (cursect!=0) && ___bool(optname))) {
-            value = line->strip();
-            if (___bool(value)) {
-                cursect->__setitem__(optname, __mod6(const_21, 2, cursect->__getitem__(optname), value));
+
+        /* continuation line? */
+        mo = (RawConfigParser::NONSPACECRE)->search(line);
+        cur_indent_level = ___bool(mo) ? mo->start((__ss_int)0) : 0;
+        if ((cursect != NULL) && (optname != NULL) && (cur_indent_level > indent_level)) {
+            if (curval == NULL) {
+                throw ((new MultilineContinuationError(fpname, lineno, line)));
             }
+            curval->append(value);
+            continue;
         }
-        else {
-            mo = (RawConfigParser::SECTCRE)->match(line);
-            if (___bool(mo)) {
-                sectname = mo->group(1, const_22);
-                if (elements_added->__contains__(sectname)) {
+
+        /* a section header or option header: the previous option is done */
+        this->_join_value(cursect, optname, curval);
+        optname = NULL;
+        curval = NULL;
+        indent_level = cur_indent_level;
+
+        mo = (RawConfigParser::SECTCRE)->match(value);
+        if (___bool(mo)) {
+            sectname = mo->group(1, const_22);
+            if ((this->_sections)->__contains__(sectname)) {
+                if (this->_strict && elements_added->__contains__(sectname)) {
                     throw ((new DuplicateSectionError(sectname, fpname, lineno)));
                 }
+                cursect = (this->_sections)->__getitem__(sectname);
                 elements_added->add(sectname);
-                if ((this->_sections)->__contains__(sectname)) {
-                    cursect = (this->_sections)->__getitem__(sectname);
-                }
-                else if (__eq(sectname, this->default_section)) {
-                    cursect = this->_defaults;
-                }
-                else {
-                    cursect = (new dict<str *, str *>(1, new tuple<str *>(2,const_15,sectname)));
-                    this->_sections->__setitem__(sectname, cursect);
-                }
-                cursectname = sectname;
-                cur_options = (new set<str *>());
-                optname = 0;
             }
-            else if (cursect==0) {
-                throw ((new MissingSectionHeaderError(fpname,lineno,line)));
+            else if (__eq(sectname, this->default_section)) {
+                cursect = this->_defaults;
             }
             else {
-                mo = (RawConfigParser::OPTCRE)->match(line);
-                if (___bool(mo)) {
-                    optname = mo->group(1, const_23);
-                    optval = mo->group(1, const_25);
-                    /* No inline-comment stripping here: CPython 3's
-                       inline_comment_prefixes defaults to None, so a ';'
-                       (or '#') inside a value is data, not a comment.
-                       Python 2's ConfigParser did strip ' ;'-comments;
-                       doing that here silently truncated values such as
-                       'url = http://host/?x=1 ; y=2'. */
-                    optval = optval->strip();
-                    if (__eq(optval, const_27)) {
-                        optval = const_17;
-                    }
-                    optname = this->optionxform(optname->rstrip());
-                    if ((cur_options != 0) && cur_options->__contains__(optname)) {
-                        throw ((new DuplicateOptionError(cursectname, optname, fpname, lineno)));
-                    }
-                    if (cur_options != 0) {
-                        cur_options->add(optname);
-                    }
-                    cursect->__setitem__(optname, optval);
-                }
-                else {
-                    if ((!___bool(e))) {
+                cursect = (new dict<str *, str *>());
+                this->_sections->__setitem__(sectname, cursect);
+                elements_added->add(sectname);
+            }
+            cursectname = sectname;
+        }
+        else if (cursect == NULL) {
+            throw ((new MissingSectionHeaderError(fpname, lineno, line)));
+        }
+        else {
+            mo = (this->_optcre)->match(value);
+            if (___bool(mo)) {
+                optname = mo->group(1, const_23);
+                optval = mo->group(1, const_25);
+                if ((!___bool(optname))) {
+                    if (e == NULL) {
                         e = (new ParsingError(fpname));
                     }
-                    e->append(lineno, repr(line));
+                    e->append(lineno, line);
                 }
+                optname = this->optionxform(optname->rstrip());
+                if (this->_strict) {
+                    str *key = __add_strs(3, cursectname, const_85, optname);
+                    if (elements_added->__contains__(key)) {
+                        throw ((new DuplicateOptionError(cursectname, optname, fpname, lineno)));
+                    }
+                    elements_added->add(key);
+                }
+                if (optval != NULL) {
+                    curval = (new list<str *>(1, optval->strip()));
+                } else {
+                    /* valueless option (allow_no_value=True) */
+                    cursect->__setitem__(optname, NULL);
+                    curval = NULL;
+                }
+            }
+            else {
+                /* a non-fatal parsing error occurred: set up the exception
+                   but keep going, so it lists all bogus lines */
+                if (e == NULL) {
+                    e = (new ParsingError(fpname));
+                }
+                e->append(lineno, line);
             }
         }
     }
-    if (___bool(e)) {
+    this->_join_value(cursect, optname, curval);
+    if (e != NULL) {
         throw (e);
     }
     return NULL;
@@ -994,7 +1171,9 @@ __iter<str *> *RawConfigParser::__iter__() {
     return names->__iter__();
 }
 
-dict<str *, __ss_int> *RawConfigParser::_boolean_states;
+dict<str *, __ss_bool> *RawConfigParser::_boolean_states;
+__re__::re_object *RawConfigParser::OPTCRE_NV;
+__re__::re_object *RawConfigParser::NONSPACECRE;
 __re__::re_object *RawConfigParser::SECTCRE;
 __re__::re_object *RawConfigParser::OPTCRE;
 
@@ -1028,6 +1207,9 @@ class_ *cl_BasicInterpolation;
 __re__::re_object *BasicInterpolation::_KEYCRE;
 
 str *BasicInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
+    if (value == NULL) {   /* valueless option: CPython joins an empty accumulator into '' */
+        return const_17;
+    }
     list<str *> *L;
 
     L = (new list<str *>());
@@ -1110,6 +1292,9 @@ class_ *cl_ExtendedInterpolation;
 __re__::re_object *ExtendedInterpolation::_KEYCRE;
 
 str *ExtendedInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
+    if (value == NULL) {   /* valueless option: CPython joins an empty accumulator into '' */
+        return const_17;
+    }
     list<str *> *L;
 
     L = (new list<str *>());
@@ -1316,8 +1501,8 @@ void __init() {
     const_5 = new str("No option %r in section: %r");
     const_6 = new str("Bad value substitution:\n\tsection: [%s]\n\toption : %s\n\tkey    : %s\n\trawval : %s\n");
     const_7 = new str("Recursion limit exceeded in value substitution: option %r in section %r contains an interpolation key which cannot be substituted in %d steps. Raw value: %r");
-    const_8 = new str("File contains parsing errors: %s");
-    const_9 = new str("\n\t[line %2d]: %s");
+    const_8 = new str("Source contains parsing errors: %r");
+    const_9 = new str("\n\t[line %2d]: %r");
     const_10 = new str("File contains no section headers.\nfile: %s, line: %d\n%r");
     const_11 = new str("[%s]\n");
     const_12 = new str("%s = %s\n");
@@ -1341,8 +1526,7 @@ void __init() {
     const_34 = new str("no");
     const_35 = new str("false");
     const_36 = new str("off");
-    const_37 = new str("\\[(?P<header>[^]]+)\\]");
-    const_38 = new str("(?P<option>[^:=\\s][^:=]*)\\s*(?P<vi>[:=])\\s*(?P<value>.*)$");
+    const_37 = new str("\\[(?P<header>.+)\\]");
     const_40 = new str("NoSectionError");
     const_41 = new str("DuplicateSectionError");
     const_42 = new str("NoOptionError");
@@ -1375,6 +1559,23 @@ void __init() {
     const_70 = new str("bad interpolation variable reference %r");
     const_71 = new str("More than one ':' found: %r");
     const_72 = new str("'$' must be followed by '$' or '{', found: %r");
+    const_73 = new str("Key without value continued with an indented line.\nfile: %r, line: %d\n%r");
+    const_74 = new str("=");
+    const_75 = new str("#");
+    const_76 = new str(";");
+    /* CPython's _OPT_TMPL / _OPT_NV_TMPL with the delimiter alternation
+       substituted four times (the option group must not contain one) */
+    const_77 = new str("(?P<option>(?:(?!%s)\\S)*(?:(?:(?!%s)\\s)+(?:(?!%s)\\S)+)*)\\s*(?P<vi>%s)\\s*(?P<value>.*)$");
+    const_78 = new str("(?P<option>(?:(?!%s)\\S)*(?:(?:(?!%s)\\s)+(?:(?!%s)\\S)+)*)\\s*(?:(?P<vi>%s)\\s*(?P<value>.*))?$");
+    const_79 = new str("Cannot write key %s; begins with section pattern");
+    const_80 = new str("Cannot write key %s; contains delimiter %s");
+    const_81 = new str("\r\n");
+    const_82 = new str("\r");
+    const_83 = new str("%s%s\n");
+    const_84 = new str(" %s ");
+    const_85 = new str("\x01");
+    const_86 = new str("=|:");
+    const_87 = new str("\\S");
 
     __name__ = new str("ConfigParser");
 
@@ -1384,10 +1585,14 @@ void __init() {
     cl_InterpolationDepthError = new class_("InterpolationDepthError");
     cl_InterpolationSyntaxError = new class_("InterpolationSyntaxError");
     cl_MissingSectionHeaderError = new class_("MissingSectionHeaderError");
+    cl_MultilineContinuationError = new class_("MultilineContinuationError");
+    cl_InvalidWriteError = new class_("InvalidWriteError");
     cl_RawConfigParser = new class_("RawConfigParser");
-    RawConfigParser::_boolean_states = (new dict<str *, __ss_int>(8, new tuple2<str *, __ss_int>(2,const_29,1), new tuple2<str *, __ss_int>(2,const_30,1), new tuple2<str *, __ss_int>(2,const_31,1), new tuple2<str *, __ss_int>(2,const_32,1), new tuple2<str *, __ss_int>(2,const_33,0), new tuple2<str *, __ss_int>(2,const_34,0), new tuple2<str *, __ss_int>(2,const_35,0), new tuple2<str *, __ss_int>(2,const_36,0)));
+    RawConfigParser::_boolean_states = (new dict<str *, __ss_bool>(8, new tuple2<str *, __ss_bool>(2,const_29,True), new tuple2<str *, __ss_bool>(2,const_30,True), new tuple2<str *, __ss_bool>(2,const_31,True), new tuple2<str *, __ss_bool>(2,const_32,True), new tuple2<str *, __ss_bool>(2,const_33,False), new tuple2<str *, __ss_bool>(2,const_34,False), new tuple2<str *, __ss_bool>(2,const_35,False), new tuple2<str *, __ss_bool>(2,const_36,False)));
     RawConfigParser::SECTCRE = __re__::compile(const_37);
-    RawConfigParser::OPTCRE = __re__::compile(const_38);
+    RawConfigParser::OPTCRE = __re__::compile(__mod6(const_77, 4, const_86, const_86, const_86, const_86));
+    RawConfigParser::OPTCRE_NV = __re__::compile(__mod6(const_78, 4, const_86, const_86, const_86, const_86));
+    RawConfigParser::NONSPACECRE = __re__::compile(const_87);
     cl_ParsingError = new class_("ParsingError");
     cl_DuplicateSectionError = new class_("DuplicateSectionError");
     cl_DuplicateOptionError = new class_("DuplicateOptionError");
