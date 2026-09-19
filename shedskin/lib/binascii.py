@@ -20,17 +20,17 @@ def a2b_base64(data, strict_mode=__void, padded=True, alphabet=None, ignorechars
 def b2a_base64(data, newline=True, wrapcol=0, padded=True, alphabet=None):
     return b''
 
-def a2b_ascii85(data, foldspaces=False, adobe=False, ignorechars=b'', canonical=False):
+def a2b_ascii85(data, foldspaces=False, adobe=False, ignorechars=None, canonical=False):
     return b''
 def b2a_ascii85(data, foldspaces=False, wrapcol=0, pad=False, adobe=False):
     return b''
 
-def a2b_base85(data, alphabet=None, ignorechars=b'', canonical=False):
+def a2b_base85(data, alphabet=None, ignorechars=None, canonical=False):
     return b''
 def b2a_base85(data, alphabet=None, wrapcol=0, pad=False):
     return b''
 
-def a2b_base32(data, padded=True, alphabet=None, ignorechars=b'', canonical=False):
+def a2b_base32(data, padded=True, alphabet=None, ignorechars=None, canonical=False):
     return b''
 def b2a_base32(data, padded=True, alphabet=None, wrapcol=0):
     return b''
@@ -42,11 +42,11 @@ def b2a_qp(data, quotetabs=False, istext=True, header=False):
 
 def b2a_hex(data, sep=None, bytes_per_sep=1):
     return b''
-def a2b_hex(hexstr, ignorechars=b''):
+def a2b_hex(hexstr, ignorechars=None):
     return b''
 def hexlify(data, sep=None, bytes_per_sep=1):
     return b''
-def unhexlify(hexstr, ignorechars=b''):
+def unhexlify(hexstr, ignorechars=None):
     return b''
 
 def crc_hqx(data, crc):

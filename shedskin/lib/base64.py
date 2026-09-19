@@ -25,37 +25,37 @@ def urlsafe_b64decode(s, padded=False):
 def b16encode(s, wrapcol=0):
     return b''
 
-def b16decode(s, casefold=False, ignorechars=b''):
+def b16decode(s, casefold=False, ignorechars=None):
     return b''
 
 def b32encode(s, padded=True, wrapcol=0):
     return b''
 
-def b32decode(s, casefold=False, map01=None, padded=True, ignorechars=b'', canonical=False):
+def b32decode(s, casefold=False, map01=None, padded=True, ignorechars=None, canonical=False):
     return b''
 
 def b32hexencode(s, padded=True, wrapcol=0):
     return b''
 
-def b32hexdecode(s, casefold=False, padded=True, ignorechars=b'', canonical=False):
+def b32hexdecode(s, casefold=False, padded=True, ignorechars=None, canonical=False):
     return b''
 
 def a85encode(b, foldspaces=False, wrapcol=0, pad=False, adobe=False):
     return b''
 
-def a85decode(b, foldspaces=False, adobe=False, ignorechars=b' \t\n\r\v', canonical=False):
+def a85decode(b, foldspaces=False, adobe=False, ignorechars=None, canonical=False):
     return b''
 
 def b85encode(b, pad=False, wrapcol=0):
     return b''
 
-def b85decode(b, ignorechars=b'', canonical=False):
+def b85decode(b, ignorechars=None, canonical=False):
     return b''
 
 def z85encode(s, pad=False, wrapcol=0):
     return b''
 
-def z85decode(s, ignorechars=b'', canonical=False):
+def z85decode(s, ignorechars=None, canonical=False):
     return b''
 
 def encodebytes(s):

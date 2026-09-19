@@ -663,6 +663,23 @@ def test_a85_canonical():
             assert base64.a85decode(e, foldspaces=foldspaces, canonical=True) == chunk
 
 
+def test_ignorechars_defaults():
+    # omitting ignorechars must behave exactly like the documented default
+    assert base64.b16decode(b'6162') == base64.b16decode(b'6162', ignorechars=b'')
+    assert base64.b32decode(b'MFRGG===') == base64.b32decode(b'MFRGG===', ignorechars=b'')
+    assert base64.b32hexdecode(b'C5H66===') == base64.b32hexdecode(b'C5H66===', ignorechars=b'')
+    assert base64.b85decode(b'VPaz') == base64.b85decode(b'VPaz', ignorechars=b'')
+    assert base64.z85decode(b'vpAZ') == base64.z85decode(b'vpAZ', ignorechars=b'')
+    # a85decode ignores ASCII whitespace by default, but not other chars
+    assert base64.a85decode(b'@:E^ \t\n\r\v') == base64.a85decode(b'@:E^', ignorechars=b' \t\n\r\v')
+    assert base64.a85decode(b'@:E^ \t\n\r\v') == b'abc'
+    try:
+        base64.b85decode(b'VPaz ')
+        assert False
+    except (binascii.Error, ValueError):
+        pass
+
+
 def test_all():
     test_basic()
     test_altchars()
@@ -687,6 +704,7 @@ def test_all():
     test_b32_padded_wrapcol()
     test_b85_wrapcol_ignorechars_canonical()
     test_a85_canonical()
+    test_ignorechars_defaults()
 
 
 if __name__ == '__main__':
