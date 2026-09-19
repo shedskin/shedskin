@@ -315,7 +315,6 @@ void Random::_init_instance() {
     memcpy(this->_s, default_state, sizeof(this->_s));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    this->VERSION = 2;
 }
 
 /* CPython's version-1 string seeding (random.py, seed()):
@@ -735,7 +734,6 @@ SystemRandom::SystemRandom() {
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL); /* no-op, see SystemRandom::seed() */
-    this->VERSION = 2;
 }
 
 uint64_t SystemRandom::_next_word() {

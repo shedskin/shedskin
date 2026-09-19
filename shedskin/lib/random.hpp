@@ -35,7 +35,7 @@ Random number generator base class used by bound module functions.
 */
 public:
     int gauss_switch;
-    int VERSION;
+    static constexpr __ss_int VERSION = 3; /* like cpython's Random.VERSION */
     __ss_float gauss_next;
 
     /* xoshiro256++ state, one copy per instance so that separate Random

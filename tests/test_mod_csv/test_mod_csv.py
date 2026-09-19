@@ -966,6 +966,46 @@ def test_sniffer_preferred():
     assert csv.Sniffer().sniff(sample).delimiter == ';'
 
 
+def test_dictwriter_kwargs():
+    # doublequote=False with an escapechar: embedded quotes are escaped
+    f = io.StringIO()
+    dw = csv.DictWriter(f, fieldnames=['x', 'y'], doublequote=False,
+                        escapechar='\\', lineterminator='\n')
+    assert not dw.writer.dialect.doublequote
+    dw.writerow({'x': 'a"b', 'y': 'c'})
+    assert f.getvalue() == 'a\\"b,c\n'
+
+    # doublequote=True (the default) doubles them instead
+    f = io.StringIO()
+    dw = csv.DictWriter(f, fieldnames=['x'], doublequote=True, lineterminator='\n')
+    dw.writerow({'x': 'a"b'})
+    assert f.getvalue() == '"a""b"\n'
+
+    # doublequote=False without an escapechar cannot write a quote
+    f = io.StringIO()
+    dw = csv.DictWriter(f, fieldnames=['x'], doublequote=False)
+    try:
+        dw.writerow({'x': 'a"b'})
+        assert False
+    except csv.Error:
+        pass
+
+    # skipinitialspace with a space delimiter quotes empty fields
+    f = io.StringIO()
+    dw = csv.DictWriter(f, fieldnames=['x', 'y', 'z'], delimiter=' ',
+                        skipinitialspace=True, lineterminator='\n')
+    assert dw.writer.dialect.skipinitialspace
+    dw.writerow({'x': 'a', 'y': '', 'z': 'b'})
+    assert f.getvalue() == 'a "" b\n'
+
+    # strict is stored on the dialect
+    f = io.StringIO()
+    dw = csv.DictWriter(f, fieldnames=['x'], strict=True)
+    assert dw.writer.dialect.strict
+    dw = csv.DictWriter(f, fieldnames=['x'], strict=False)
+    assert not dw.writer.dialect.strict
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -1005,6 +1045,7 @@ def test_all():
     test_dictreader_kwargs()
     test_dictreader_restkey()
     test_sniffer_preferred()
+    test_dictwriter_kwargs()
 
 
 if __name__ == "__main__":

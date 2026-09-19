@@ -102,6 +102,7 @@ namespace __configparser__ {
 str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_21, *const_22, *const_23, *const_25, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_37, *const_38, *const_4, *const_40, *const_41, *const_42, *const_43, *const_44, *const_45, *const_46, *const_47, *const_48, *const_5, *const_50, *const_51, *const_52, *const_53, *const_54, *const_55, *const_56, *const_57, *const_58, *const_59, *const_6, *const_60, *const_61, *const_62, *const_63, *const_64, *const_65, *const_66, *const_67, *const_68, *const_69, *const_7, *const_70, *const_71, *const_72, *const_73, *const_74, *const_75, *const_76, *const_77, *const_78, *const_79, *const_8, *const_80, *const_81, *const_82, *const_83, *const_84, *const_85, *const_86, *const_87, *const_9;
 
 str *DEFAULTSECT, *__name__;
+str *UNNAMED_SECTION;
 __ss_int MAX_INTERPOLATION_DEPTH;
 
 /**
@@ -306,6 +307,7 @@ class InvalidWriteError
 */
 
 class_ *cl_InvalidWriteError;
+class_ *cl_UnnamedSectionDisabledError;
 
 /**
 class RawConfigParser
@@ -409,7 +411,7 @@ static str *__re_escape(str *s_) {
     return __re__::escape(s_);
 }
 
-void *RawConfigParser::__init__(dict<str *, str *> *defaults, __ss_int allow_no_value, tuple<str *> *delimiters, tuple<str *> *comment_prefixes, tuple<str *> *inline_comment_prefixes, __ss_int strict, __ss_int empty_lines_in_values, str *default_section_, Interpolation *interpolation_) {
+void *RawConfigParser::__init__(dict<str *, str *> *defaults, __ss_int allow_no_value, tuple<str *> *delimiters, tuple<str *> *comment_prefixes, tuple<str *> *inline_comment_prefixes, __ss_int strict, __ss_int empty_lines_in_values, str *default_section_, Interpolation *interpolation_, __ss_int allow_unnamed_section) {
     __ss_int __3;
     tuple<str *> *__0;
     str *key, *value;
@@ -426,6 +428,7 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults, __ss_int allow_no_
     this->_strict = strict;
     this->_allow_no_value = allow_no_value;
     this->_empty_lines_in_values = empty_lines_in_values;
+    this->_allow_unnamed_section = allow_unnamed_section;
     this->default_section = (default_section_ != NULL) ? default_section_ : DEFAULTSECT;
     this->_interpolation = (interpolation_ != NULL) ? interpolation_ : this->_default_interpolation();
 
@@ -495,7 +498,7 @@ void *RawConfigParser::_validate_key_contents(str *key) {
     return NULL;
 }
 
-void *RawConfigParser::_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter) {
+void *RawConfigParser::_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter, __ss_int unnamed) {
     /**
     Write a single section to the specified `fp`.
     */
@@ -505,7 +508,8 @@ void *RawConfigParser::_write_section(file *fp, str *section_name, dict<str *, s
     __iter<tuple<str *> *> *__27;
     __iter<tuple<str *> *>::for_in_loop __123;
 
-    fp->write(__mod6(const_11, 1, section_name));
+    if (!unnamed)
+        fp->write(__mod6(const_11, 1, section_name));
 
     FOR_IN(__26,section_items->items(),27,29,123)
         __26 = __26;
@@ -551,7 +555,15 @@ void *RawConfigParser::write(file *fp, __ss_int space_around_delimiters) {
     int __2;
     dict<str *, dict<str *, str *> *> *__1;
 
+    /* the unnamed section (if non-empty) comes first, without a header */
+    dict<str *, str *> *unnamed = this->_sections->get(UNNAMED_SECTION);
+    if (unnamed && ___bool(unnamed)) {
+        this->_write_section(fp, UNNAMED_SECTION, unnamed, d, 1);
+    }
+
     FOR_IN(section,this->_sections,1,2,3)
+        if (section == UNNAMED_SECTION)
+            continue;
         this->_write_section(fp, section, (this->_sections)->__getitem__(section), d);
     END_FOR
 
@@ -566,7 +578,9 @@ void *RawConfigParser::add_section(str *section) {
     already exists.
     */
 
-
+    if (section == UNNAMED_SECTION && !this->_allow_unnamed_section) {
+        throw new UnnamedSectionDisabledError();
+    }
     if ((this->_sections)->__contains__(section)) {
         throw ((new DuplicateSectionError(section)));
     }
@@ -864,7 +878,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     __ss_bool has_comment;
 
     ParsingError *e;
-    str *line, *value, *optname, *optval, *sectname, *cursectname;
+    str *line, *value, *optname, *optval, *cursectname;
     dict<str *, str *> *cursect;
     list<str *> *curval;              /* accumulated lines of the current option, NULL for a valueless option */
     set<str *> *elements_added;       /* section names and "section\x01option" keys added from *this* source */
@@ -877,6 +891,25 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     indent_level = 0;
     e = NULL;
     elements_added = (new set<str *>());
+
+    auto handle_header = [&](str *sectname) {
+        if ((this->_sections)->__contains__(sectname)) {
+            if (this->_strict && elements_added->__contains__(sectname)) {
+                throw ((new DuplicateSectionError(sectname, fpname, lineno)));
+            }
+            cursect = (this->_sections)->__getitem__(sectname);
+            elements_added->add(sectname);
+        }
+        else if (__eq(sectname, this->default_section)) {
+            cursect = this->_defaults;
+        }
+        else {
+            cursect = (new dict<str *, str *>());
+            this->_sections->__setitem__(sectname, cursect);
+            elements_added->add(sectname);
+        }
+        cursectname = sectname;
+    };
 
     while (1) {
         line = fp->readline();
@@ -947,25 +980,15 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         curval = NULL;
         indent_level = cur_indent_level;
 
+        /* like CPython, lines before the first section header go into
+           the unnamed section, if enabled */
+        if (this->_allow_unnamed_section && cursect == NULL) {
+            handle_header(UNNAMED_SECTION);
+        }
+
         mo = (RawConfigParser::SECTCRE)->match(value);
         if (___bool(mo)) {
-            sectname = mo->group(1, const_22);
-            if ((this->_sections)->__contains__(sectname)) {
-                if (this->_strict && elements_added->__contains__(sectname)) {
-                    throw ((new DuplicateSectionError(sectname, fpname, lineno)));
-                }
-                cursect = (this->_sections)->__getitem__(sectname);
-                elements_added->add(sectname);
-            }
-            else if (__eq(sectname, this->default_section)) {
-                cursect = this->_defaults;
-            }
-            else {
-                cursect = (new dict<str *, str *>());
-                this->_sections->__setitem__(sectname, cursect);
-                elements_added->add(sectname);
-            }
-            cursectname = sectname;
+            handle_header(mo->group(1, const_22));
         }
         else if (cursect == NULL) {
             throw ((new MissingSectionHeaderError(fpname, lineno, line)));
@@ -1587,6 +1610,7 @@ void __init() {
     cl_MissingSectionHeaderError = new class_("MissingSectionHeaderError");
     cl_MultilineContinuationError = new class_("MultilineContinuationError");
     cl_InvalidWriteError = new class_("InvalidWriteError");
+    cl_UnnamedSectionDisabledError = new class_("UnnamedSectionDisabledError");
     cl_RawConfigParser = new class_("RawConfigParser");
     RawConfigParser::_boolean_states = (new dict<str *, __ss_bool>(8, new tuple2<str *, __ss_bool>(2,const_29,True), new tuple2<str *, __ss_bool>(2,const_30,True), new tuple2<str *, __ss_bool>(2,const_31,True), new tuple2<str *, __ss_bool>(2,const_32,True), new tuple2<str *, __ss_bool>(2,const_33,False), new tuple2<str *, __ss_bool>(2,const_34,False), new tuple2<str *, __ss_bool>(2,const_35,False), new tuple2<str *, __ss_bool>(2,const_36,False)));
     RawConfigParser::SECTCRE = __re__::compile(const_37);
@@ -1607,6 +1631,7 @@ void __init() {
     cl_SectionProxy = new class_("SectionProxy");
 
     DEFAULTSECT = const_53;
+    UNNAMED_SECTION = new str("<UNNAMED_SECTION>");
     MAX_INTERPOLATION_DEPTH = 10;
 }
 
