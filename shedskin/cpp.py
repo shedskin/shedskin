@@ -2452,7 +2452,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Generate a power operation"""
         inttype = {(python.def_class(self.gx, "int_"), 0)}  # XXX merge
-        if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
+        if not mod and self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not ast_utils.is_num(right) or (
                 isinstance(right, ast.Constant) and isinstance(right.value, (int, float)) and right.value < 0
             ):
@@ -3035,11 +3035,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.bool_test(node.args[0], func, always_wrap=True)
                 return
             elif ident == "pow" and direct_call.mv.module.ident == "builtin":
-                if nrargs == 3:
-                    third = node.args[2]
-                else:
-                    third = None
-                self.power(node.args[0], node.args[1], third, func)
+                # pow(base, exp, mod) may also be called with keywords
+                pow_args = list(node.args)
+                pow_kwargs = {kw.arg: kw.value for kw in node.keywords}
+                for name in ("base", "exp", "mod")[len(pow_args):]:
+                    if name in pow_kwargs:
+                        pow_args.append(pow_kwargs[name])
+                third = pow_args[2] if len(pow_args) == 3 else None
+                self.power(pow_args[0], pow_args[1], third, func)
                 return
             elif ident == "hash":
                 self.append("hasher(")  # XXX cleanup

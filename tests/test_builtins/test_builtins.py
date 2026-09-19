@@ -108,6 +108,54 @@ def test_divmod():
     assert divmod(-496.0, -3.0) == (165.0, -1.0)
 
 
+def test_pow():
+    assert pow(2, 10) == 1024
+    assert pow(2.0, 3) == 8.0
+
+    # three-argument form: modular exponentiation
+    assert pow(2, 10, 1000) == 24
+    assert pow(3, 0, 7) == 1
+    assert pow(5, 0, 1) == 0
+    assert pow(0, 0, 7) == 1
+    assert pow(7, 1, 7) == 0
+
+    # the result takes the sign of the modulus
+    assert pow(-2, 3, 5) == 2
+    assert pow(2, 3, -5) == -2
+    assert pow(-3, 5, -7) == -5
+    assert pow(-4, 2, 8) == 0
+    assert pow(4, 2, -8) == 0
+
+    # negative exponent: modular inverse
+    assert pow(3, -1, 7) == 5
+    assert pow(-5, -1, 7) == 4
+    assert pow(3, -2, -7) == -3
+    assert pow(38, -1, 97) == 23
+    assert pow(9, -1, 1) == 0
+
+    # no intermediate overflow with a large modulus
+    assert pow(123456789, 987654321, 10**12 + 39) == 971610774191
+    assert pow(2, 100, 2**61 - 1) == 2**39  # 2**61 = 1 (mod 2**61 - 1)
+    assert pow(2**62 - 1, 2, 2**62) == 1
+
+    # keyword arguments
+    assert pow(base=3, exp=4, mod=5) == 1
+    assert pow(3, 4, mod=5) == 1
+    assert pow(3, exp=4) == 81
+
+    try:
+        pow(2, 3, 0)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'pow() 3rd argument cannot be 0'
+
+    try:
+        pow(2, -1, 4)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'base is not invertible for the given modulus'
+
+
 def test_enumerate():
     assert [(i, obj) for i, obj in enumerate(['a', 'b', 'c'])] == [(0, 'a'), (1, 'b'), (2, 'c')]
 
@@ -568,6 +616,7 @@ def test_all():
     test_min()
     test_oct()
     test_ord()
+    test_pow()
     test_property()
     test_print()
     test_range()

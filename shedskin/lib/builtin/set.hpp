@@ -73,7 +73,8 @@ public:
     template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
 
     set<T> *symmetric_difference(set<T> *s);
-    void *symmetric_difference_update(set<T> *s); // TODO why no iter versions?
+    void *symmetric_difference_update(set<T> *s);
+    template <class U> void *symmetric_difference_update(U *other);
 
     set<T> *__and__(set<T> *s);
     set<T> *__or__(set<T> *s);
@@ -236,7 +237,7 @@ template <class T> void *set<T>::remove(T key) {
 template<class T> T set<T>::pop() {
     typename __GC_SET<T>::iterator it = gcs.begin();
     if(it == gcs.end())
-        throw new KeyError(new str("pop from an empty set"));
+        throw new KeyError(repr(new str("pop from an empty set")));
     T t = *it;
     gcs.erase(it);
     return t;
@@ -545,6 +546,11 @@ template<class T> template<class U, class V, class W> void *set<T>::difference_u
 template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
     this->gcs = c->gcs;
+    return NULL;
+}
+
+template<class T> template<class U> void *set<T>::symmetric_difference_update(U *other) {
+    symmetric_difference_update(new set<T>(other));
     return NULL;
 }
 

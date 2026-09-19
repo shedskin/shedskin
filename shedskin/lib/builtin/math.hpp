@@ -61,41 +61,77 @@ template<> inline __ss_int __power(__ss_int a, __ss_int b) {
     return res;
 }
 
-#ifdef __SS_LONG
-inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
-    if(c == 0) throw new ValueError(new str("pow() 3rd argument cannot be 0"));
-    __ss_int res, tmp;
+/* three-argument pow: modular exponentiation with python semantics (result
+ * has the sign of the modulus, negative exponents take the modular inverse).
+ * the work is done in __ss_uint on values reduced into [0, m), so nothing
+ * overflows even when the modulus is close to the limits of __ss_int. */
 
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
+static inline __ss_uint __ss_mulmod(__ss_uint a, __ss_uint b, __ss_uint m) {
+#if defined(__SS_INT32)
+    return (__ss_uint)(((uint64_t)a * b) % m);
+#elif defined(__SS_INT64) && defined(__SIZEOF_INT128__)
+    return (__ss_uint)(((unsigned __int128)a * b) % m);
+#else
+    /* double-and-add; a, b < m, so no step can wrap */
+    __ss_uint r = 0;
+    while(b) {
+        if(b & 1)
+            r = (r >= m - a) ? r - (m - a) : r + a;
+        b >>= 1;
+        if(b)
+            a = (a >= m - a) ? a - (m - a) : a + a;
     }
-    return res;
+    return r;
+#endif
+}
+
+inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
+    if(c == 0)
+        throw new ValueError(new str("pow() 3rd argument cannot be 0"));
+
+    __ss_uint m = __ss_magnitude(c);
+
+    /* base reduced into [0, m) */
+    __ss_uint base = __ss_magnitude(a) % m;
+    if(a < 0 && base != 0)
+        base = m - base;
+
+    __ss_uint e = __ss_magnitude(b);
+
+    if(b < 0) { /* base = modular inverse of base (extended euclid) */
+        __ss_uint r0 = m, r1 = base, t0 = 0, t1 = 1 % m;
+        while(r1 != 0) {
+            __ss_uint q = r0 / r1;
+            __ss_uint r2 = r0 - q * r1;
+            r0 = r1; r1 = r2;
+            __ss_uint x = __ss_mulmod(q % m, t1, m);
+            __ss_uint t2 = (t0 >= x) ? t0 - x : t0 + (m - x);
+            t0 = t1; t1 = t2;
+        }
+        if(r0 != 1)
+            throw new ValueError(new str("base is not invertible for the given modulus"));
+        base = t0;
+    }
+
+    __ss_uint res = 1 % m;
+    while(e) {
+        if(e & 1)
+            res = __ss_mulmod(res, base, m);
+        e >>= 1;
+        if(e)
+            base = __ss_mulmod(base, base, m);
+    }
+
+    if(c < 0 && res != 0)
+        return (__ss_int)(res - m); /* wraps to res + c */
+    return (__ss_int)res;
+}
+
+#ifdef __SS_LONG
+inline int __power(int a, int b, int c) {
+    return (int)__power((__ss_int)a, (__ss_int)b, (__ss_int)c);
 }
 #endif
-
-inline int __power(int a, int b, int c) {
-    if(c == 0) throw new ValueError(new str("pow() 3rd argument cannot be 0"));
-    long long res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
-    }
-    return (int)res;
-}
 
 /* division */
 
