@@ -583,7 +583,9 @@ def test_os_path_sameopenfile():
     abc = join(testdata, "abc.txt")
     fd1 = os.open(abc, os.O_RDONLY)
     fd2 = os.open(join(testdata, ".", "abc.txt"), os.O_RDONLY)
-    fd3 = os.open(testdata, os.O_RDONLY)
+    # compare against another regular file rather than the directory:
+    # os.open() on a directory fails with EACCES on Windows (also in CPython)
+    fd3 = os.open(join(testdata, "cr.txt"), os.O_RDONLY)
 
     assert sameopenfile(fd1, fd1)
     assert sameopenfile(fd1, fd2)

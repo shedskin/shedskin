@@ -1113,6 +1113,9 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
+static void __ss_ignore_iph(const wchar_t *, const wchar_t *, const wchar_t *, unsigned int, uintptr_t) {
+}
+
 __ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
     /**
     Test whether two open file objects reference the same file.
@@ -1124,12 +1127,17 @@ __ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
     HANDLE h1, h2;
     BY_HANDLE_FILE_INFORMATION info1, info2;
 
+    /* _get_osfhandle() on a closed/invalid fd invokes the CRT invalid
+       parameter handler, which aborts the process in a default Release
+       build instead of returning INVALID_HANDLE_VALUE. Suppress it for
+       this thread while we query the handles (as CPython does with
+       _Py_BEGIN_SUPPRESS_IPH), so a closed fd raises OSError. */
+    _invalid_parameter_handler old_iph = _set_thread_local_invalid_parameter_handler(__ss_ignore_iph);
     h1 = (HANDLE)_get_osfhandle((int)fp1);
-    if (h1 == INVALID_HANDLE_VALUE) {
-        throw new OSError(new str("Bad file descriptor"));
-    }
     h2 = (HANDLE)_get_osfhandle((int)fp2);
-    if (h2 == INVALID_HANDLE_VALUE) {
+    _set_thread_local_invalid_parameter_handler(old_iph);
+
+    if (h1 == INVALID_HANDLE_VALUE || h2 == INVALID_HANDLE_VALUE) {
         throw new OSError(new str("Bad file descriptor"));
     }
 
