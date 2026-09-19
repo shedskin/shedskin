@@ -105,7 +105,11 @@ template<class A, class B, class C, class D> tuple2<list<__ss_int> *, list<__ss_
     ltimeout.tv_sec = timeout;
     ltimeout.tv_usec = (timeout - floor(timeout))*1E6;
     if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, has_timeout ? &ltimeout : NULL) == -1) {
-        throw new OSError();
+#ifdef WIN32
+        throw new OSError(); /* winsock: WSAGetLastError(), not errno */
+#else
+        __throw_oserror(); /* e.g. EINTR -> InterruptedError */
+#endif
     }
     rrFDs = (new list<__ss_int>());
     FOR_IN(FDa,rFDs,0,2,3)

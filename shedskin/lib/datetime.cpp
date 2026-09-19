@@ -480,7 +480,7 @@ datetime *datetime::today() {
 #else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
-        throw new OSError(new str("clock_gettime"));
+        __throw_oserror(new str("clock_gettime"));
 
     tm *t = localtime(&ts.tv_sec);
 
@@ -509,7 +509,7 @@ datetime *datetime::utcnow() {
 #else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
-        throw new OSError(new str("clock_gettime"));
+        __throw_oserror(new str("clock_gettime"));
 
     tm *t = gmtime(&ts.tv_sec);
 

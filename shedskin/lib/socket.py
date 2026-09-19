@@ -179,11 +179,11 @@ EWOULDBLOCK=11
 has_ipv6 = True
 
 # CPython: error is OSError itself, and timeout is TimeoutError (an OSError
-# subclass); shedskin has no TimeoutError, so both are OSError subclasses here
+# subclass); here error is an OSError subclass, and timeout a TimeoutError one
 class error(OSError): pass
 class herror(OSError): pass
 class gaierror(OSError): pass
-class timeout(OSError): pass
+class timeout(TimeoutError): pass
 
 # so the compiler knows the inherited OSError attributes (see builtin.py)
 __exception = error('')

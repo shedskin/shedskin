@@ -91,6 +91,14 @@ str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
 __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
 
+/* std::filesystem errors carry an error_code rather than setting errno
+   (on Windows it is a system error code), so map it back to errno */
+[[noreturn]] static void __throw_fs_error(std::filesystem::filesystem_error const& e, str *path) {
+    std::error_condition c = e.code().default_error_condition();
+    errno = (c.category() == std::generic_category()) ? c.value() : EIO;
+    __throw_oserror(path);
+}
+
 list<str *> *listdir(str *path) {
     if(!path)
         path = new str(".");
@@ -100,8 +108,8 @@ list<str *> *listdir(str *path) {
     try {
         for (const auto & entry : std::filesystem::directory_iterator(path->unit))
             r->append(new str(entry.path().filename().string().c_str()));
-    } catch (std::filesystem::filesystem_error const&) {
-        throw new OSError(path);
+    } catch (std::filesystem::filesystem_error const& e) {
+        __throw_fs_error(e, path);
     }
 
     return r;
@@ -117,7 +125,7 @@ str *getcwd() {
 
 void *chdir(str *dir) {
     if(::chdir(dir->c_str()) == -1)
-        throw new FileNotFoundError(dir);
+        __throw_oserror(dir);
     return NULL;
 }
 
@@ -145,9 +153,7 @@ str *getenv(str *name_, str *default_) {
 
 void *rename(str *a, str *b) {
     if(std::rename(a->c_str(), b->c_str()) == -1) {
-        if (errno == ENOENT)
-            throw new FileNotFoundError(a);
-        throw new OSError(a);
+        __throw_oserror(a);
     }
     return NULL;
 }
@@ -165,9 +171,7 @@ void *replace(str *a, str *b) {
          * leave errno set, so set it explicitly from ec before constructing
          * the exception, which reads the global errno */
         errno = ec.value();
-        if (errno == ENOENT)
-            throw new FileNotFoundError(a);
-        throw new OSError(a);
+        __throw_oserror(a);
     }
     return NULL;
 }
@@ -184,9 +188,7 @@ __ss_int cpu_count() {
 
 void *remove(str *path) {
     if(std::remove(path->c_str()) == -1) {
-        if (errno == ENOENT)
-            throw new FileNotFoundError(path);
-        throw new OSError(path);
+        __throw_oserror(path);
     }
     return NULL;
 }
@@ -198,7 +200,7 @@ void *unlink(str *path) {
 
 void *rmdir(str *a) {
     if (::rmdir(a->c_str()) == -1)
-        throw new OSError(a);
+        __throw_oserror(a);
     return NULL;
 }
 
@@ -236,7 +238,7 @@ void *mkdir(str *path, __ss_int mode) {
 #else
     if (::mkdir(path->c_str(), (unsigned)mode) == -1)
 #endif
-        throw new OSError(path);
+        __throw_oserror(path);
     return NULL;
 }
 
@@ -326,9 +328,7 @@ __cstat::__cstat(str *path, __ss_int t) {
     }
 #endif
     if (r == -1) {
-        if (errno == ENOENT)
-            throw new FileNotFoundError(path);
-        throw new OSError(path);
+        __throw_oserror(path);
     }
 
     fill_er_up();
@@ -338,7 +338,7 @@ __cstat::__cstat(__ss_int fd) {
     this->__class__ = cl___cstat;
 
     if(::fstat((int)fd, &sbuf) == -1)
-        throw new OSError();
+        __throw_oserror();
 
     fill_er_up();
 }
@@ -475,8 +475,8 @@ list<DirEntry *> *scandir(str *path) {
     try {
         for (const auto & entry : std::filesystem::directory_iterator(path->unit))
             r->append(new DirEntry(entry));
-    } catch (std::filesystem::filesystem_error const&) {
-        throw new OSError(path);
+    } catch (std::filesystem::filesystem_error const& e) {
+        __throw_fs_error(e, path);
     }
 
     return r;
@@ -701,7 +701,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
         flags = new str("r");
     f = __ss_popen(cmd->c_str(), flags->c_str());
     if(f == 0)
-        throw new OSError(cmd);
+        __throw_oserror(cmd);
     name = cmd;
     mode = flags;
 }
@@ -725,27 +725,27 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
         mode = new str("r");
     FILE* fp = __ss_popen(cmd->c_str(), mode->c_str());
 
-    if(!fp) throw new OSError(cmd);
+    if(!fp) __throw_oserror(cmd);
     return new popen_pipe(fp);
 }
 
 __ss_int dup(__ss_int f1) {
     __ss_int f2 = ::dup((int)f1);
     if (f2 == -1)
-        throw new OSError(new str("os.dup failed"));
+        __throw_oserror(new str("os.dup failed"));
     return f2;
 }
 
 __ss_int dup2(__ss_int f1, __ss_int f2) {
     if (::dup2((int)f1,(int)f2) == -1)
-        throw new OSError(new str("os.dup2 failed"));
+        __throw_oserror(new str("os.dup2 failed"));
     return f2;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(__ss_int f1) {
     if (::fdatasync((int)f1) == -1)
-        throw new OSError(new str("os.fdatasync failed"));
+        __throw_oserror(new str("os.fdatasync failed"));
     return NULL;
 }
 #endif
@@ -753,7 +753,7 @@ void *fdatasync(__ss_int f1) {
 __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
     __ss_int fp = ::open(name_->c_str(), (int)flags, (int)mode);
     if(fp == -1)
-        throw new OSError(new str("os.open failed"));
+        __throw_oserror(name_);
     return fp;
 }
 
@@ -763,7 +763,7 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
     FILE* fp = ::fdopen((int)fd, mode->c_str());
     if(fp == NULL)
-        throw new OSError(new str("os.fdopen failed"));
+        __throw_oserror(new str("os.fdopen failed"));
 
     file* ret = new file(fp);
     ret->name = new str("<fdopen>");
@@ -775,7 +775,7 @@ bytes *read(__ss_int fd, __ss_int n) {
        (e.g. on a pipe) instead of blocking until n bytes have arrived */
     if(n < 0) {
         errno = EINVAL;
-        throw new OSError(new str("os.read"));
+        __throw_oserror(new str("os.read"));
     }
     if(n > INT_MAX)
         n = INT_MAX;
@@ -783,7 +783,7 @@ bytes *read(__ss_int fd, __ss_int n) {
     s->unit.resize((size_t)n);
     auto nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
     if(nr < 0)
-        throw new OSError(new str("os.read"));
+        __throw_oserror(new str("os.read"));
     s->unit.resize((size_t)nr);
     return s;
 }
@@ -791,14 +791,14 @@ bytes *read(__ss_int fd, __ss_int n) {
 __ss_int write(__ss_int fd, bytes *s) {
     size_t r;
     if((r=(size_t)::write((int)fd, s->c_str(), s->unit.size())) == std::string::npos)
-        throw new OSError(new str("os.write"));
+        __throw_oserror(new str("os.write"));
     return (__ss_int)r;
 }
 
 
 void *close(__ss_int fd) {
    if(::close((int)fd) < 0)
-       throw new OSError(new str("os.close failed"));
+       __throw_oserror(new str("os.close failed"));
    return NULL;
 }
 
@@ -824,9 +824,9 @@ void __utime_win32(str *path, FILETIME atime, FILETIME mtime) {
     const char *apath = path->c_str();
     hFile = CreateFileA(apath, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-       throw new OSError(new str("os.utime"));
+       __throw_oserror(new str("os.utime"));
     if (!SetFileTime(hFile, NULL, &atime, &mtime))
-       throw new OSError(new str("os.utime"));
+       __throw_oserror(new str("os.utime"));
     CloseHandle(hFile);
 }
 
@@ -836,7 +836,7 @@ void __utime(str *path) {
     GetSystemTime(&now);
     if (!SystemTimeToFileTime(&now, &mtime) ||
         !SystemTimeToFileTime(&now, &atime)) {
-        throw new OSError(new str("os.utime"));
+        __throw_oserror(new str("os.utime"));
     }
     __utime_win32(path, atime, mtime);
 }
@@ -856,12 +856,12 @@ void __utime(str *path, double actime, double modtime) {
     buf.actime = (time_t)actime;
     buf.modtime = (time_t)modtime;
     if(::utime(path->c_str(), &buf) == -1)
-        throw new OSError(new str("os.utime"));
+        __throw_oserror(new str("os.utime"));
 }
 
 void __utime(str *path) {
     if(::utime(path->c_str(), NULL) == -1)
-        throw new OSError(new str("os.utime"));
+        __throw_oserror(new str("os.utime"));
 }
 #endif
 
@@ -938,7 +938,7 @@ __ss_int __ss_WTERMSIG(__ss_int status) {
 
 void *fchdir(__ss_int f1) {
     if (::fchdir((int)f1) == -1)
-        throw new OSError(new str("os.fchdir failed"));
+        __throw_oserror(new str("os.fchdir failed"));
     return NULL;
 }
 
@@ -951,7 +951,7 @@ str *readlink(str *path) {
         char *buffer = (char *) GC_malloc (size);
         size_t nchars = (size_t)::readlink(path->c_str(), buffer, size);
         if (nchars == std::string::npos) {
-            throw new OSError(path);
+            __throw_oserror(path);
         }
         if (nchars < size) {
             buffer[nchars] = '\0';
@@ -965,40 +965,40 @@ str *readlink(str *path) {
 __ss_int getuid() { return (__ss_int)::getuid(); }
 void *setuid(__ss_int uid) {
     if(::setuid((unsigned)uid) == -1)
-        throw new OSError(new str("os.setuid"));
+        __throw_oserror(new str("os.setuid"));
     return NULL;
 }
 
 __ss_int getgid() { return (__ss_int)::getgid(); }
 void *setgid(__ss_int gid) {
     if(::setgid((unsigned)gid) == -1)
-        throw new OSError(new str("os.setgid"));
+        __throw_oserror(new str("os.setgid"));
     return NULL;
 }
 
 __ss_int geteuid() { return (__ss_int)::geteuid(); }
 void *seteuid(__ss_int euid) {
     if(::seteuid((unsigned)euid) == -1)
-        throw new OSError(new str("os.seteuid"));
+        __throw_oserror(new str("os.seteuid"));
     return NULL;
 }
 
 __ss_int getegid() { return (__ss_int)::getegid(); }
 void *setegid(__ss_int egid) {
     if(::setegid((unsigned)egid) == -1)
-        throw new OSError(new str("os.setegid"));
+        __throw_oserror(new str("os.setegid"));
     return NULL;
 }
 
 void *setreuid(__ss_int ruid, __ss_int euid) {
     if(::setreuid((unsigned)ruid, (unsigned)euid) == -1)
-        throw new OSError(new str("os.setreuid"));
+        __throw_oserror(new str("os.setreuid"));
     return NULL;
 }
 
 void *setregid(__ss_int rgid, __ss_int egid) {
     if(::setregid((unsigned)rgid, (unsigned)egid) == -1)
-        throw new OSError(new str("os.setregid"));
+        __throw_oserror(new str("os.setregid"));
     return NULL;
 }
 
@@ -1006,20 +1006,20 @@ __ss_int tcgetpgrp(__ss_int fd) {
     __ss_int nr;
     nr = ::tcgetpgrp((int)fd);
     if(nr == -1)
-        throw new OSError(new str("os.tcgetpgrp"));
+        __throw_oserror(new str("os.tcgetpgrp"));
     return nr;
 }
 
 void *tcsetpgrp(__ss_int fd, __ss_int pg) {
     if(::tcsetpgrp((int)fd, (pid_t)pg) == -1)
-        throw new OSError(new str("os.tcsetpgrp"));
+        __throw_oserror(new str("os.tcsetpgrp"));
     return NULL;
 }
 
 __ss_int fork() {
     __ss_int ret;
     if ((ret = ::fork()) == -1)
-        throw new OSError(new str("os.fork"));
+        __throw_oserror(new str("os.fork"));
     return ret;
 }
 
@@ -1028,13 +1028,13 @@ tuple<__ss_int> *forkpty() {
     __ss_int ret;
     int amaster;
     if ((ret = ::forkpty(&amaster, NULL, NULL, NULL)) == -1)
-        throw new OSError(new str("os.forkpty"));
+        __throw_oserror(new str("os.forkpty"));
     return new tuple<__ss_int>(2, ret, (__ss_int)amaster);
 }
 tuple<__ss_int> *openpty() {
     int amaster, aslave;
     if (::openpty(&amaster, &aslave, NULL, NULL, NULL) == -1)
-        throw new OSError(new str("os.openpty"));
+        __throw_oserror(new str("os.openpty"));
     return new tuple<__ss_int>(2, (__ss_int)amaster, (__ss_int)aslave);
 }
 #endif
@@ -1042,57 +1042,57 @@ tuple<__ss_int> *openpty() {
 tuple<__ss_int> *wait() {
     int pid, status;
     if((pid = ::wait(&status)) == -1)
-        throw new OSError(new str("os.wait"));
+        __throw_oserror(new str("os.wait"));
     return new tuple<__ss_int>(2, (__ss_int)pid, (__ss_int)status);
 }
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status;
     if((pid = ::waitpid((pid_t)pid, &status, (int)options)) == -1)
-        throw new OSError(new str("os.waitpid"));
+        __throw_oserror(new str("os.waitpid"));
     return new tuple<__ss_int>(2, pid, (__ss_int)status);
 }
 
 __ss_int nice(__ss_int n) {
     __ss_int m;
     if((m = ::nice((int)n)) == -1)
-        throw new OSError(new str("os.nice"));
+        __throw_oserror(new str("os.nice"));
     return m;
 }
 
 void *kill(__ss_int pid, __ss_int sig) {
     if(::kill((pid_t)pid, (int)sig) == -1)
-        throw new OSError(new str("os.kill"));
+        __throw_oserror(new str("os.kill"));
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {
     if(::killpg((pid_t)pgid, (int)sig) == -1)
-        throw new OSError(new str("os.killpg"));
+        __throw_oserror(new str("os.killpg"));
     return NULL;
 }
 
 str *getlogin() {
     char *name_ = ::getlogin();
     if(!name_)
-        throw new OSError(new str("os.getlogin"));
+        __throw_oserror(new str("os.getlogin"));
     return new str(name_);
 }
 
 void *chown(str *path, __ss_int uid, __ss_int gid) {
     if (::chown(path->c_str(), (unsigned)uid, (unsigned)gid) == -1)
-        throw new OSError(path);
+        __throw_oserror(path);
     return NULL;
 }
 
 void *lchown(str *path, __ss_int uid, __ss_int gid) {
     if (::lchown(path->c_str(), (unsigned)uid, (unsigned)gid) == -1)
-        throw new OSError(path);
+        __throw_oserror(path);
     return NULL;
 }
 
 void *chroot(str *path) {
     if (::chroot(path->c_str()) == -1)
-        throw new OSError(path);
+        __throw_oserror(path);
     return NULL;
 }
 
@@ -1109,7 +1109,7 @@ __ss_bool isatty(__ss_int fd) {
 str *ttyname(__ss_int fd) {
     char *name_ = ::ttyname((int)fd);
     if(!name_)
-        throw new OSError(new str("os.ttyname"));
+        __throw_oserror(new str("os.ttyname"));
     return new str(name_);
 }
 
@@ -1123,7 +1123,7 @@ list<__ss_int> *getgroups() {
     gid_t l[MAXENTRIES];
     __ss_int nr = ::getgroups(MAXENTRIES, l);
     if(nr == -1)
-        throw new OSError(new str("os.getgroups"));
+        __throw_oserror(new str("os.getgroups"));
     list<__ss_int> *r = new list<__ss_int>();
     for(__ss_int i=0;i<nr;i++)
         r->append((__ss_int)l[i]);
@@ -1136,32 +1136,32 @@ void *setgroups(pyseq<__ss_int> *groups) {
     for(__ss_int i=0; i<len(groups); i++)
         l[i] = (gid_t)groups->__getitem__(i);
     if(::setgroups((size_t)len(groups), l) == -1)
-        throw new OSError(new str("os.setgroups"));
+        __throw_oserror(new str("os.setgroups"));
     return NULL;
 }
 
 __ss_int getsid(__ss_int pid) {
     __ss_int nr = ::getsid((pid_t)pid);
     if(nr == -1)
-        throw new OSError(new str("os.getsid"));
+        __throw_oserror(new str("os.getsid"));
     return nr;
 }
 __ss_int setsid() {
     __ss_int nr = ::setsid();
     if(nr == -1)
-        throw new OSError(new str("os.setsid"));
+        __throw_oserror(new str("os.setsid"));
     return nr;
 }
 
 __ss_int getpgid(__ss_int pid) {
     __ss_int nr = ::getpgid((pid_t)pid);
     if(nr == -1)
-        throw new OSError(new str("os.getpgid"));
+        __throw_oserror(new str("os.getpgid"));
     return nr;
 }
 void *setpgid(__ss_int pid, __ss_int pgrp) {
     if(::setpgid((pid_t)pid, (pid_t)pgrp) == -1)
-        throw new OSError(new str("os.setpgid"));
+        __throw_oserror(new str("os.setpgid"));
     return NULL;
 }
 
@@ -1170,13 +1170,13 @@ __ss_int getpgrp() {
 }
 void *setpgrp() {
     if(::setpgid(0, 0) == -1)
-        throw new OSError(new str("os.setpgrp"));
+        __throw_oserror(new str("os.setpgrp"));
     return NULL;
 }
 
 void *link(str *src, str *dst) {
     if(::link(src->c_str(), dst->c_str()) == -1)
-        throw new OSError(new str("os.link"));
+        __throw_oserror(new str("os.link"));
     return NULL;
 }
 
@@ -1208,7 +1208,7 @@ str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
     size_t size = ::confstr((int)name_, buf, MAXENTRIES); /* XXX errors */
     if(size == std::string::npos)
-        throw new OSError(new str("os.confstr"));
+        __throw_oserror(new str("os.confstr"));
     return new str(buf);
 }
 
@@ -1234,7 +1234,7 @@ tuple<__ss_float> *getloadavg() {
 
 void *mkfifo(str *path, __ss_int mode) {
     if(::mkfifo(path->c_str(), (unsigned)mode) == -1)
-        throw new OSError(new str("os.mkfifo"));
+        __throw_oserror(new str("os.mkfifo"));
     return NULL;
 }
 
@@ -1245,14 +1245,14 @@ class_ *cl___vfsstat;
 __vfsstat::__vfsstat(str *path) {
     this->__class__ = cl___vfsstat;
     if(statvfs(path->c_str(), &vbuf) == -1)
-        throw new OSError(path);
+        __throw_oserror(path);
     fill_er_up();
 }
 
 __vfsstat::__vfsstat(__ss_int fd) {
     this->__class__ = cl___vfsstat;
     if(fstatvfs((int)fd, &vbuf) == -1)
-        throw new OSError(__str(fd));
+        __throw_oserror(__str(fd));
     fill_er_up();
 }
 
@@ -1316,13 +1316,13 @@ __ss_bool access(str *path, __ss_int mode) {
 
 void *fsync(__ss_int fd) {
     if(::fsync((int)fd) == -1)
-        throw new OSError(new str("os.fsync"));
+        __throw_oserror(new str("os.fsync"));
     return NULL;
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
     if (::ftruncate((int)fd, n) == -1)
-        throw new OSError(new str("os.ftruncate"));
+        __throw_oserror(new str("os.ftruncate"));
     return NULL;
 }
 
@@ -1331,7 +1331,7 @@ tuple<__ss_float> *times() {
     clock_t c;
     double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
-        throw new OSError(new str("os.times"));
+        __throw_oserror(new str("os.times"));
     return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
 }
 
@@ -1371,13 +1371,13 @@ __ss_bool access(str *path, __ss_int mode) {
 
 void *fsync(__ss_int fd) {
     if(::_commit((int)fd) == -1)
-        throw new OSError(new str("os.fsync"));
+        __throw_oserror(new str("os.fsync"));
     return NULL;
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
     if (::_chsize_s((int)fd, (__int64)n) != 0)
-        throw new OSError(new str("os.ftruncate"));
+        __throw_oserror(new str("os.ftruncate"));
     return NULL;
 }
 
@@ -1402,14 +1402,14 @@ tuple<__ss_float> *times() {
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     __int64 r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
     if(r == -1)
-        throw new OSError(new str("os.lseek"));
+        __throw_oserror(new str("os.lseek"));
     return (__ss_int)r;
 }
 #else
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     off_t r = ::lseek((int)fd, pos, (int)how);
     if(r == -1)
-        throw new OSError(new str("os.lseek"));
+        __throw_oserror(new str("os.lseek"));
     return (__ss_int)r;
 }
 #endif
@@ -1431,7 +1431,7 @@ void *symlink(str *src, str *dst) {
 #else
 void *symlink(str *src, str *dst) {
     if(::symlink(src->c_str(), dst->c_str()) == -1)
-        throw new OSError(new str("os.symlink"));
+        __throw_oserror(new str("os.symlink"));
     return NULL;
 }
 #endif
@@ -1462,7 +1462,7 @@ __ss_int __ss_minor(__ss_int dev) {
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
     if(::mknod(filename->c_str(), (unsigned)mode, (unsigned)device) == -1)
-        throw new OSError(new str("os.mknod"));
+        __throw_oserror(new str("os.mknod"));
     return NULL;
 }
 
@@ -1487,7 +1487,7 @@ char **__exec_envplist(dict<str *, str *> *env) {
 
 void *execv(str* file, list<str*>* args) {
     ::execv(file->c_str(), __exec_argvlist(args));
-    throw new OSError(new str("os.execv"));
+    __throw_oserror(new str("os.execv"));
 }
 
 void *execvp(str* file, list<str*>* args) {
@@ -1495,7 +1495,7 @@ void *execvp(str* file, list<str*>* args) {
 
     if( ___bool(h_t->__getfirst__())) {
         execv(file,args);
-        throw new OSError(new str("os.execvp"));
+        __throw_oserror(new str("os.execvp"));
     }
 
     list<str *> *PATH = get_exec_path();
@@ -1507,12 +1507,12 @@ void *execvp(str* file, list<str*>* args) {
             execv(fullname, args);
         }
     }
-    throw new OSError(new str("os.execvp"));
+    __throw_oserror(new str("os.execvp"));
 }
 
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
     ::execve(file->c_str(), __exec_argvlist(args), __exec_envplist(env));
-    throw new OSError(new str("os.execve"));
+    __throw_oserror(new str("os.execve"));
 }
 
 void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
@@ -1520,7 +1520,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
 
     if( ___bool(h_t->__getfirst__())) {
         execve(file, args, env);
-        throw new OSError(new str("os.execvpe"));
+        __throw_oserror(new str("os.execvpe"));
     }
 
     list<str *> *PATH = get_exec_path(env);
@@ -1531,7 +1531,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
         if(__path__::exists(fullname))
             execve(fullname, args, env);
     }
-    throw new OSError(new str("os.execvpe"));
+    __throw_oserror(new str("os.execvpe"));
 }
 
 /* like CPython: P_WAIT gives the exit code, or -signal for a killed child */
@@ -1714,7 +1714,7 @@ tuple<__ss_int>* pipe() {
     if(ret != 0) {
         str* s = new str("os.pipe failed");
 
-        throw new OSError(s);
+        __throw_oserror(s);
     }
 
     return new tuple<__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);

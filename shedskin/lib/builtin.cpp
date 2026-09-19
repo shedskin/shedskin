@@ -16,6 +16,7 @@ namespace __shedskin__ {
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_frozendict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange, *cl_bytes, *cl_bytearray;
 
 class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
+class_ *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 bytes *bsp;
@@ -152,6 +153,20 @@ void __init() {
     cl_notimplementederror = new class_("NotImplementedError");
     cl_pythonfinalizationerror = new class_("PythonFinalizationError");
     cl_oserror = new class_("OSError");
+    cl_blockingioerror = new class_("BlockingIOError");
+    cl_childprocesserror = new class_("ChildProcessError");
+    cl_connectionerror = new class_("ConnectionError");
+    cl_brokenpipeerror = new class_("BrokenPipeError");
+    cl_connectionabortederror = new class_("ConnectionAbortedError");
+    cl_connectionrefusederror = new class_("ConnectionRefusedError");
+    cl_connectionreseterror = new class_("ConnectionResetError");
+    cl_fileexistserror = new class_("FileExistsError");
+    cl_interruptederror = new class_("InterruptedError");
+    cl_isadirectoryerror = new class_("IsADirectoryError");
+    cl_notadirectoryerror = new class_("NotADirectoryError");
+    cl_permissionerror = new class_("PermissionError");
+    cl_processlookuperror = new class_("ProcessLookupError");
+    cl_timeouterror = new class_("TimeoutError");
     cl_overflowerror = new class_("OverflowError");
     cl_runtimeerror = new class_("RuntimeError");
     cl_syntaxerror = new class_("SyntaxError");
