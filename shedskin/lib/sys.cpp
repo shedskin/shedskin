@@ -11,15 +11,19 @@ namespace __sys__ {
 list<str *> *argv, *orig_argv;
 str *version, *float_repr_style;
 
-class_ *cl_float_info, *cl_implementation;
+class_ *cl_float_info, *cl_implementation, *cl_flags, *cl_int_info, *cl_hash_info;
 __float_info *float_info;
 __implementation *implementation;
+__flags *flags;
+__int_info *int_info;
+__hash_info *hash_info;
 
 tuple2<__ss_int, __ss_int> *version_info;
 str *__name__, *copyright, *platform, *byteorder;
 __ss_int hexversion, maxsize, maxunicode;
 str *executable;
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+file *__stdin__, *__stdout__, *__stderr__;
 
 void __init(int c, char **v) {
     argv = new list<str *>();
@@ -62,14 +66,23 @@ void __init(int c, char **v) {
 
     cl_float_info = new class_("float_info");
     cl_implementation = new class_("implementation");
+    cl_flags = new class_("flags");
+    cl_int_info = new class_("int_info");
+    cl_hash_info = new class_("hash_info");
     float_info = new __float_info();
     implementation = new __implementation();
+    flags = new __flags();
+    int_info = new __int_info();
+    hash_info = new __hash_info();
 
     executable = (c > 0) ? new str(v[0]) : new str("");
 
     __ss_stdin = __shedskin__::__ss_stdin;
     __ss_stdout = __shedskin__::__ss_stdout;
     __ss_stderr = __shedskin__::__ss_stderr;
+    __stdin__ = __ss_stdin;
+    __stdout__ = __ss_stdout;
+    __stderr__ = __ss_stderr;
 
     int num = 1;
     if (*(char *)&num == 1)
@@ -153,6 +166,72 @@ __implementation::__implementation() {
 str *__implementation::__repr__() {
     return __mod6(new str("namespace(name=%s, version=%s, hexversion=%d)"), 3,
         repr(this->name), repr(this->version), this->hexversion);
+}
+
+__flags::__flags() {
+    this->__class__ = cl_flags;
+    debug = inspect = interactive = dont_write_bytecode = 0;
+    no_user_site = no_site = ignore_environment = verbose = 0;
+    bytes_warning = quiet = isolated = warn_default_encoding = 0;
+    thread_inherit_context = context_aware_warnings = 0;
+#ifdef __SS_NOASSERT
+    optimize = 1; /* like 'python -O': assert statements are compiled out */
+#else
+    optimize = 0;
+#endif
+    hash_randomization = 0; /* str/bytes hashes are not seeded */
+    utf8_mode = 1; /* utf-8 is used for file names and I/O, independent of the locale */
+    int_max_str_digits = 0; /* no int/str conversion limit */
+    gil = 1; /* not a free-threaded build */
+    dev_mode = False;
+    safe_path = False;
+}
+
+str *__flags::__repr__() {
+    return __mod6(new str("sys.flags(debug=%d, inspect=%d, interactive=%d, optimize=%d, dont_write_bytecode=%d, no_user_site=%d, no_site=%d, ignore_environment=%d, verbose=%d, bytes_warning=%d, quiet=%d, hash_randomization=%d, isolated=%d, dev_mode=%s, utf8_mode=%d, warn_default_encoding=%d, safe_path=%s, int_max_str_digits=%d, gil=%d, thread_inherit_context=%d, context_aware_warnings=%d)"), 21,
+        debug, inspect, interactive, optimize, dont_write_bytecode,
+        no_user_site, no_site, ignore_environment, verbose, bytes_warning,
+        quiet, hash_randomization, isolated, repr(dev_mode), utf8_mode,
+        warn_default_encoding, repr(safe_path), int_max_str_digits, gil,
+        thread_inherit_context, context_aware_warnings);
+}
+
+__int_info::__int_info() {
+    this->__class__ = cl_int_info;
+    bits_per_digit = (__ss_int)(sizeof(__ss_int) * CHAR_BIT - 1); /* value bits, excluding the sign */
+    sizeof_digit = (__ss_int)sizeof(__ss_int);
+    default_max_str_digits = 0; /* no limit, see flags.int_max_str_digits */
+    str_digits_check_threshold = 640; /* CPython's lowest non-zero limit */
+}
+
+str *__int_info::__repr__() {
+    return __mod6(new str("sys.int_info(bits_per_digit=%d, sizeof_digit=%d, default_max_str_digits=%d, str_digits_check_threshold=%d)"), 4,
+        bits_per_digit, sizeof_digit, default_max_str_digits, str_digits_check_threshold);
+}
+
+__hash_info::__hash_info() {
+    this->__class__ = cl_hash_info;
+    width = (__ss_int)(sizeof(__ss_int) * CHAR_BIT);
+    modulus = 0; /* numeric hashes are not reduced modulo a prime */
+    inf = hasher<__ss_float>(std::numeric_limits<__ss_float>::infinity());
+    nan = 0; /* no longer used (as in CPython) */
+    imag = 1000003; /* see complex::__hash__ */
+    /* str/bytes are hashed with the C++ library's std::hash */
+#if defined(_MSC_VER)
+    algorithm = new str("fnv");
+#elif defined(_LIBCPP_VERSION)
+    algorithm = new str("cityhash");
+#else
+    algorithm = new str("murmur2");
+#endif
+    hash_bits = (__ss_int)(sizeof(size_t) * CHAR_BIT);
+    seed_bits = 0; /* not seeded, see flags.hash_randomization */
+    cutoff = 0; /* no small-string optimization */
+}
+
+str *__hash_info::__repr__() {
+    return __mod6(new str("sys.hash_info(width=%d, modulus=%d, inf=%d, nan=%d, imag=%d, algorithm=%s, hash_bits=%d, seed_bits=%d, cutoff=%d)"), 9,
+        width, modulus, inf, nan, imag, repr(algorithm), hash_bits, seed_bits, cutoff);
 }
 
 } // module namespace
