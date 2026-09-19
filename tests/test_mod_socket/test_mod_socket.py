@@ -425,6 +425,19 @@ def test_fileno_close_dup():
         pass
     w.close()
 
+    # wrapping a bound fd, with the proto also detected (except on macOS,
+    # which has no SO_PROTOCOL, so CPython reports 0 there too)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+    s.bind(('127.0.0.1', 0))
+    name = s.getsockname()
+    w = socket.socket(fileno=s.detach())
+    assert w.family == socket.AF_INET
+    assert w.type == socket.SOCK_STREAM
+    if sys.platform != 'darwin':
+        assert w.proto == socket.IPPROTO_TCP
+    assert w.getsockname() == name
+    w.close()
+
     # fromfd with an explicit proto
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     assert s.proto == socket.IPPROTO_TCP

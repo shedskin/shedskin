@@ -1176,6 +1176,23 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
     if (fileno >= 0) {
         /* wrap an existing fd; like CPython, detect what wasn't given */
         _fd = (socket_type)fileno;
+#ifdef WIN32
+        /* getsockname() fails with WSAEINVAL on an unbound socket on
+         * Windows, so (like CPython) ask winsock for the protocol info
+         * instead, which also gives us the type and protocol */
+        if (family_ < 0 || type_ < 0 || proto_ < 0) {
+            WSAPROTOCOL_INFOW info;
+            socklen_t len = sizeof(info);
+            if (::getsockopt(_fd, SOL_SOCKET, SO_PROTOCOL_INFOW, SOCKOPT_CAST &info, &len) == SOCKET_ERROR)
+                throw make_error("socket");
+            if (family_ < 0)
+                family_ = info.iAddressFamily;
+            if (type_ < 0)
+                type_ = info.iSocketType;
+            if (proto_ < 0)
+                proto_ = info.iProtocol;
+        }
+#else
         if (family_ < 0) {
             sockaddr_storage ss;
             socklen_t len = sizeof(ss);
@@ -1200,6 +1217,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
                 proto_ = v;
 #endif
         }
+#endif /* WIN32 */
     } else {
         if (family_ < 0)
             family_ = AF_INET;
