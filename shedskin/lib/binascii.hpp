@@ -18,7 +18,6 @@ class Incomplete;
 
 
 extern str *__name__;
-extern bytes *default_4, *default_6, *default_9, *default_12, *default_14;
 extern bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *UU_ALPHABET, *CRYPT_ALPHABET, *BINHEX_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
 
 extern class_ *cl_Error;

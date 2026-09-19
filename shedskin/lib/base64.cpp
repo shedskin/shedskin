@@ -8,19 +8,6 @@ namespace __base64__ {
 
 str *__name__;
 
-/* Non-trivial argument defaults from base64.py, numbered in definition
- * order by the compiler (every non-numeric, non-bool default counts, so
- * None and __void defaults take up numbers too; keep in sync when editing
- * the model):
- *   default_4:  b16decode(ignorechars=b'')
- *   default_6:  b32decode(ignorechars=b'')
- *   default_7:  b32hexdecode(ignorechars=b'')
- *   default_8:  a85decode(ignorechars=b' \t\n\r\v')
- *   default_9:  b85decode(ignorechars=b'')
- *   default_10: z85decode(ignorechars=b'')
- */
-bytes *default_4, *default_6, *default_7, *default_8, *default_9, *default_10;
-
 /* BASE64_ALPHABET[:-2] + altchars, as base64.py does it */
 static bytes *alt_alphabet(bytes *altchars) {
     bytes *alphabet = new bytes(__binascii__::BASE64_ALPHABET);
@@ -240,8 +227,6 @@ void *decode(file_binary *input, file_binary *output) {
 void __init() {
     __name__ = new str("base64");
 
-    default_4 = default_6 = default_7 = default_9 = default_10 = new bytes();
-    default_8 = new bytes(" \t\n\r\v");
 }
 
 }

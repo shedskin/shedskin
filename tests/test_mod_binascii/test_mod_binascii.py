@@ -844,6 +844,25 @@ def test_incomplete():
         pass
 
 
+def test_ignorechars_default_is_empty():
+    # omitting ignorechars must behave exactly like passing b''
+    assert binascii.a2b_hex(b'6162') == binascii.a2b_hex(b'6162', ignorechars=b'')
+    assert binascii.unhexlify(b'6162') == binascii.unhexlify(b'6162', ignorechars=b'')
+    assert binascii.a2b_base32(b'MFRGG===') == binascii.a2b_base32(b'MFRGG===', ignorechars=b'')
+    assert binascii.a2b_base85(b'VPaz') == binascii.a2b_base85(b'VPaz', ignorechars=b'')
+    assert binascii.a2b_ascii85(b'@:E^') == binascii.a2b_ascii85(b'@:E^', ignorechars=b'')
+    try:
+        binascii.a2b_hex(b'61 62')
+        assert False
+    except binascii.Error:
+        pass
+    try:
+        binascii.a2b_base85(b'VPaz ')
+        assert False
+    except binascii.Error:
+        pass
+
+
 def test_all():
     test_qp()
     test_incomplete()
@@ -872,6 +891,7 @@ def test_all():
     test_base32()
     test_base85()
     test_ascii85()
+    test_ignorechars_default_is_empty()
 
 
 if __name__ == '__main__':

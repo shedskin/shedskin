@@ -9,18 +9,6 @@ namespace __binascii__ {
 
 str *__name__;
 
-/* Non-trivial argument defaults from binascii.py, numbered in definition
- * order by the compiler (every non-numeric, non-bool default counts, so
- * None and __void defaults take up numbers too; keep in sync when editing
- * the model):
- *   default_4:  a2b_ascii85(ignorechars=b'')
- *   default_6:  a2b_base85(ignorechars=b'')
- *   default_9:  a2b_base32(ignorechars=b'')
- *   default_12: a2b_hex(ignorechars=b'')
- *   default_14: unhexlify(ignorechars=b'')
- */
-bytes *default_4, *default_6, *default_9, *default_12, *default_14;
-
 bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *UU_ALPHABET, *CRYPT_ALPHABET, *BINHEX_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
 
 /* forward declarations for the shared codec helpers defined further down */
@@ -1495,7 +1483,6 @@ bytes *b2a_base32(bytes *data, __ss_bool padded, bytes *alphabet, __ss_int wrapc
 void __init() {
     __name__ = new str("binascii");
 
-    default_4 = default_6 = default_9 = default_12 = default_14 = new bytes();
 
     BASE64_ALPHABET = new bytes((const char *)table_b2a_base64, (size_t)64);
     URLSAFE_BASE64_ALPHABET = new bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");

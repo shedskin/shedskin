@@ -10,7 +10,6 @@ using namespace __shedskin__;
 namespace __base64__ {
 
 extern str *__name__;
-extern bytes *default_4, *default_6, *default_7, *default_8, *default_9, *default_10;
 
 bytes *b64encode(bytes *s, bytes *altchars, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *standard_b64encode(bytes *s);
