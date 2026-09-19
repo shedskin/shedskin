@@ -11,6 +11,8 @@
 #endif
 #endif
 #include <windows.h>
+#include <winioctl.h>
+#include <io.h>
 #endif
 
 /* converted using Shed Skin from the CPython implementation */
@@ -36,15 +38,14 @@ str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *
 str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
 /**
-Special value for the 'strict' argument of realpath(). CPython uses a
-singleton object with a true boolean value here; since shed skin types
-'strict' as a bool, we use a bool whose (uint8_t) value is neither 0 nor 1,
-so it is distinguishable from True while still being true.
+Special values for the 'strict' argument of realpath(). CPython uses
+singleton objects with a true boolean value here; since shed skin types
+'strict' as a bool, we use bools whose (uint8_t) value is neither 0 nor 1,
+so they are distinguishable from True (and from each other) while still
+being true.
 */
-__ss_bool ALLOW_MISSING;
-#ifdef WIN32
-__ss_int supports_unicode_filenames;
-#endif
+__ss_bool ALLOW_MISSING, ALL_BUT_LAST;
+__ss_bool supports_unicode_filenames;
 
 #ifndef WIN32
 void __init() {
@@ -72,7 +73,15 @@ void __init() {
     altsep = NULL;
     devnull = const_7;
 
+    /* CPython: supports_unicode_filenames = (sys.platform == 'darwin') */
+#ifdef __APPLE__
+    supports_unicode_filenames = True;
+#else
+    supports_unicode_filenames = False;
+#endif
+
     ALLOW_MISSING.value = (uint8_t)2;
+    ALL_BUT_LAST.value = (uint8_t)3;
 }
 
 str *normcase(str *s) {
@@ -369,6 +378,27 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
+__ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
+    /**
+    Test whether two open file objects reference the same file
+    */
+    __os__::__cstat *s1, *s2;
+
+    s1 = __os__::fstat(fp1);
+    s2 = __os__::fstat(fp2);
+    return __mbool(samestat(s1, s2));
+}
+
+__ss_bool isdevdrive(str *) {
+    /**
+    Determines whether the specified path is on a Windows Dev Drive.
+
+    Dev Drives only exist on Windows, so always return False.
+    */
+
+    return False;
+}
+
 __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point
@@ -516,7 +546,8 @@ str *realpath(str *filename, __ss_bool strict) {
     symbolic links encountered in the path. If strict is True, raise
     FileNotFoundError for the first path component that does not exist, and
     OSError for a symlink loop. If strict is ALLOW_MISSING, missing path
-    components are tolerated, but a symlink loop is still an error.
+    components are tolerated, but a symlink loop is still an error. If strict
+    is ALL_BUT_LAST, only the last path component may be missing.
 
     Note: this is a lighter-weight approximation of CPython's strict mode:
     a broken symlink's *target* is not specially detected as missing, only
@@ -525,9 +556,10 @@ str *realpath(str *filename, __ss_bool strict) {
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;
-    __ss_bool allow_missing;
+    __ss_bool allow_missing, all_but_last;
 
     allow_missing = __mbool(strict.value == ALLOW_MISSING.value);
+    all_but_last = __mbool(strict.value == ALL_BUT_LAST.value);
 
     if (isabs(filename)) {
         bits = ((new list<str *>(1, const_4)))->__add__((filename->split(const_4))->__slice__(1, 1, 0, 0));
@@ -539,7 +571,9 @@ str *realpath(str *filename, __ss_bool strict) {
     FAST_FOR(i,2,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
         if (strict.value && (!allow_missing.value) && (!lexists(component).value)) {
-            throw new FileNotFoundError(component);
+            if (!(all_but_last.value && (i == len(bits)))) {
+                throw new FileNotFoundError(component);
+            }
         }
         if (islink(component)) {
             resolved = _resolve_link(component);
@@ -656,9 +690,10 @@ void __init() {
     altsep = const_6;
     defpath = const_7;
     devnull = const_8;
-    supports_unicode_filenames = 0;
+    supports_unicode_filenames = True;
 
     ALLOW_MISSING.value = (uint8_t)2;
+    ALL_BUT_LAST.value = (uint8_t)3;
 }
 
 str *normcase(str *s) {
@@ -1078,6 +1113,74 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
+__ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
+    /**
+    Test whether two open file objects reference the same file.
+
+    As with samefile(), st_ino/st_dev from the C runtime are not reliable
+    on Windows, so compare the Win32 file identity of the underlying
+    handles instead.
+    */
+    HANDLE h1, h2;
+    BY_HANDLE_FILE_INFORMATION info1, info2;
+
+    h1 = (HANDLE)_get_osfhandle((int)fp1);
+    if (h1 == INVALID_HANDLE_VALUE) {
+        throw new OSError(new str("Bad file descriptor"));
+    }
+    h2 = (HANDLE)_get_osfhandle((int)fp2);
+    if (h2 == INVALID_HANDLE_VALUE) {
+        throw new OSError(new str("Bad file descriptor"));
+    }
+
+    if (!GetFileInformationByHandle(h1, &info1) || !GetFileInformationByHandle(h2, &info2)) {
+        throw new OSError(new str("Bad file descriptor"));
+    }
+    return __mbool((info1.dwVolumeSerialNumber == info2.dwVolumeSerialNumber) &&
+                   (info1.nFileIndexHigh == info2.nFileIndexHigh) &&
+                   (info1.nFileIndexLow == info2.nFileIndexLow));
+}
+
+/* older SDKs lack the Dev Drive volume state flag */
+#ifndef PERSISTENT_VOLUME_STATE_DEV_VOLUME
+#define PERSISTENT_VOLUME_STATE_DEV_VOLUME (0x00002000)
+#endif
+
+__ss_bool isdevdrive(str *path) {
+    /**
+    Determines whether the specified path is on a Windows Dev Drive.
+
+    Like CPython's os.path.isdevdrive(), any OS error (non-existent path,
+    unsupported file system, pre-Dev-Drive Windows, ...) yields False.
+    */
+    HANDLE h;
+    FILE_FS_PERSISTENT_VOLUME_INFORMATION volume_state;
+    DWORD bytes_returned;
+    BOOL ok;
+
+    h = CreateFileA(abspath(path)->c_str(), FILE_READ_ATTRIBUTES,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                    NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        return False;
+    }
+
+    memset(&volume_state, 0, sizeof(volume_state));
+    volume_state.Version = 1;
+    volume_state.FlagMask = PERSISTENT_VOLUME_STATE_DEV_VOLUME;
+
+    ok = DeviceIoControl(h, FSCTL_QUERY_PERSISTENT_VOLUME_STATE,
+                         &volume_state, sizeof(volume_state),
+                         &volume_state, sizeof(volume_state),
+                         &bytes_returned, NULL);
+    CloseHandle(h);
+
+    if (!ok) {
+        return False;
+    }
+    return __mbool((volume_state.VolumeFlags & PERSISTENT_VOLUME_STATE_DEV_VOLUME) != 0);
+}
+
 __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point (a drive root or a UNC share root)
@@ -1241,9 +1344,18 @@ str *relpath(str *path, str *start) {
 }
 
 str *realpath(str *path, __ss_bool strict) {
-
-    if (strict.value && (strict.value != ALLOW_MISSING.value) && (!exists(path).value)) {
-        throw new FileNotFoundError(path);
+    /**
+    Return the absolute path (symlinks are not resolved on Windows). If
+    strict is True, raise FileNotFoundError if the path does not exist; if
+    strict is ALL_BUT_LAST, only the last component may be missing; if
+    strict is ALLOW_MISSING, missing paths are tolerated.
+    */
+    if (strict.value && (strict.value != ALLOW_MISSING.value)) {
+        if (!exists(path).value) {
+            if (!((strict.value == ALL_BUT_LAST.value) && exists(dirname(abspath(path))).value)) {
+                throw new FileNotFoundError(path);
+            }
+        }
     }
     return abspath(path);
 }
