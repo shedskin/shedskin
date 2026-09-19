@@ -281,6 +281,8 @@ public:
 
 class DictReader : public __iter<dict<str *, str *> *> {
 public:
+    Dialect *dialect;
+    str *restkey;
     str *restval;
     __ss_int line_num;
     list<str *> *_fieldnames;

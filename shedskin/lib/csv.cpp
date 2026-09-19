@@ -656,10 +656,10 @@ void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *re
         this->_fieldnames = new list<str *>(fieldnames_);
     else
         this->_fieldnames = NULL;
-    if(restkey)
-        throw new ValueError(new str("DictReader(restkey) argument is not supported"));
+    this->restkey = restkey;
     this->restval = restval_;
     this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->dialect = this->_reader->dialect;
     this->line_num = 0;
     return NULL;
 }
@@ -689,7 +689,9 @@ dict<str *, str *> *DictReader::__next__() {
     lf = len(this->getfieldnames());
     lr = len(row);
     if ((lf<lr)) {
-        throw new Error(new str("DictReader 'restkey' is not supported"));
+        /* CPython stores the surplus fields as a list under d[restkey];
+           our dict is str->str, so that cannot be represented */
+        throw new Error(new str("DictReader: row has more fields than fieldnames ('restkey' is not supported)"));
     }
     else if ((lf>lr)) {
 
@@ -959,7 +961,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
 /* Sniffer::_guess_delimiter, ported from CPython's Lib/csv.py.
    Builds a per-character frequency table across lines and picks the
    character whose per-line occurrence count is most consistent. */
-static void __guess_delimiter(str *data_str, str *delimiters, std::string &out_delim, __ss_int &out_skip) {
+static void __guess_delimiter(str *data_str, str *delimiters, list<str *> *preferred, std::string &out_delim, __ss_int &out_skip) {
     std::vector<std::string> data;
     {
         list<str *> *lines = data_str->split(new str("\n"));
@@ -1087,10 +1089,11 @@ static void __guess_delimiter(str *data_str, str *delimiters, std::string &out_d
     }
 
     if (delims.size() > 1) {
-        // fall back to the 'preferred' list
-        static const char *preferred[5] = {",", "\t", ";", " ", ":"};
-        for (int p = 0; p < 5; p++) {
-            char d = preferred[p][0];
+        // fall back to the Sniffer instance's 'preferred' list
+        for (__ss_int p = 0; p < len(preferred); p++) {
+            str *ps = preferred->__getfast__(p);
+            if (ps->unit.empty()) continue;
+            char d = (char)ps->unit[0];
             if (delims.find(d) != delims.end()) {
                 std::string delim_s(1, d);
                 std::string pat = delim_s + " ";
@@ -1143,7 +1146,7 @@ Dialect *Sniffer::sniff(str *sample, str *delimiters) {
     __ss_int skipinitialspace = qd.skipinitialspace;
 
     if (delimiter.empty()) {
-        __guess_delimiter(sample, delimiters, delimiter, skipinitialspace);
+        __guess_delimiter(sample, delimiters, this->preferred, delimiter, skipinitialspace);
     }
     if (delimiter.empty()) {
         throw new Error(new str("Could not determine delimiter"));
