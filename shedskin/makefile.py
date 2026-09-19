@@ -780,7 +780,7 @@ class ShedskinBuilder(Builder):
             self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
-                self.add_ldlibs("-lws2_32")
+                self.add_ldlibs("-lws2_32", "-liphlpapi")
             elif PLATFORM == "SunOS":
                 self.add_ldlibs("-lsocket", "-lnsl")
         if "os" in module_ids:
@@ -1331,7 +1331,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
-                self.add_ldlibs("-lws2_32")
+                self.add_ldlibs("-lws2_32", "-liphlpapi")
             elif PLATFORM == "SunOS":
                 self.add_ldlibs("-lsocket", "-lnsl")
         if "os" in module_ids:

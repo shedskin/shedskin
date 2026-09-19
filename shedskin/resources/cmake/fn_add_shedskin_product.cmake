@@ -245,6 +245,7 @@ function(add_shedskin_product)
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
         )
         set(LIB_DIRS ${SHEDSKIN_LINK_DIRS})
         # Use the wrapper include dirs for gc/ structure and pcre2, plus any
@@ -264,6 +265,7 @@ function(add_shedskin_product)
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
@@ -276,6 +278,7 @@ function(add_shedskin_product)
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
         )
         set(LIB_DIRS ${LOCAL_DEPS_LIB_DIRS} ${SHEDSKIN_LINK_DIRS})
         set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
@@ -303,6 +306,7 @@ function(add_shedskin_product)
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS

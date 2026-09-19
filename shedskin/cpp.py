@@ -1501,13 +1501,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def effective_class(self, t: Any) -> Any:
         """A homogeneous tuple3 is emitted as a plain tuple (see typestr), so
-        treat it as such when checking classes"""
+        treat it as such when checking classes. A tuple3 contour with no
+        element types at all (e.g. the empty base contour that tags along with
+        a call returning a tuple3) is not homogeneous, just unknown"""
         if (
             isinstance(t[0], python.Class)
             and t[0].ident == "tuple3"
             and not self.hetero_tuple({t})
         ):
-            return python.def_class(self.gx, "tuple", mv=self.mv)
+            names = t[0].tvar_names()
+            elemvars = [t[0].vars.get(name) for name in names] if names else []
+            if any(
+                var and (var, t[1], 0) in self.gx.cnode and self.gx.cnode[var, t[1], 0].types()
+                for var in elemvars
+            ):
+                return python.def_class(self.gx, "tuple", mv=self.mv)
         return t[0]
 
     def only_classes(self, node: ast.AST, names: tuple[str, ...]) -> bool:

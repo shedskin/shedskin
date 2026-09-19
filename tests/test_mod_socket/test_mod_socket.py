@@ -115,6 +115,348 @@ def test_sendfile():
     os.remove(fname)
 
 
+def test_byteorder():
+    # round trips work on any endianness
+    assert socket.ntohs(socket.htons(0x1234)) == 0x1234
+    assert socket.ntohl(socket.htonl(0x12345678)) == 0x12345678
+    assert socket.htons(0) == 0 and socket.htonl(0) == 0
+    # a 16-bit value in network order is either unchanged or byte-swapped
+    assert socket.htons(0x1234) in (0x1234, 0x3412)
+    assert socket.htonl(1) in (1, 1 << 24)
+
+
+def test_inet():
+    assert socket.inet_aton('127.0.0.1') == b'\x7f\x00\x00\x01'
+    assert socket.inet_aton('255.255.255.255') == b'\xff\xff\xff\xff'
+    assert socket.inet_ntoa(b'\x7f\x00\x00\x01') == '127.0.0.1'
+    assert socket.inet_ntoa(socket.inet_aton('192.168.1.2')) == '192.168.1.2'
+    try:
+        socket.inet_aton('300.1.1.1')
+        assert False
+    except OSError:
+        pass
+    try:
+        socket.inet_ntoa(b'abc')
+        assert False
+    except OSError:
+        pass
+
+    assert socket.inet_pton(socket.AF_INET, '10.0.0.1') == b'\x0a\x00\x00\x01'
+    assert socket.inet_ntop(socket.AF_INET, b'\x0a\x00\x00\x01') == '10.0.0.1'
+    v6 = socket.inet_pton(socket.AF_INET6, '::1')
+    assert v6 == b'\x00' * 15 + b'\x01'
+    assert socket.inet_ntop(socket.AF_INET6, v6) == '::1'
+    assert socket.inet_ntop(socket.AF_INET6, socket.inet_pton(socket.AF_INET6, '2001:db8::1')) == '2001:db8::1'
+    try:
+        socket.inet_pton(socket.AF_INET6, 'not an address')
+        assert False
+    except OSError:
+        pass
+    try:
+        socket.inet_ntop(socket.AF_INET, b'\x00' * 16)
+        assert False
+    except ValueError:
+        pass
+    try:
+        socket.inet_pton(socket.AF_UNSPEC, '1.2.3.4')
+        assert False
+    except OSError:
+        pass
+    try:
+        socket.inet_ntop(socket.AF_UNSPEC, b'\x00' * 4)
+        assert False
+    except ValueError:
+        pass
+
+
+def test_names():
+    assert socket.has_ipv6 in (True, False)
+    assert socket.gethostname() != ''
+    assert socket.gethostbyname('127.0.0.1') == '127.0.0.1'
+    assert socket.gethostbyname('localhost') == '127.0.0.1'
+    assert socket.getfqdn('') != ''
+    assert socket.getfqdn('127.0.0.1') != ''
+    assert socket.getfqdn() == socket.getfqdn('')
+    name, aliases, addrs = socket.gethostbyname_ex('127.0.0.1')
+    assert name != '' and addrs == ['127.0.0.1']
+    name, aliases, addrs = socket.gethostbyaddr('127.0.0.1')
+    assert name != '' and '127.0.0.1' in addrs
+    try:
+        socket.gethostbyname('no.such.host.invalid')
+        assert False
+    except socket.gaierror:
+        pass
+    try:
+        socket.gethostbyaddr('no.such.host.invalid')
+        assert False
+    except OSError:  # gaierror or herror
+        pass
+    assert socket.getfqdn('no.such.host.invalid') == 'no.such.host.invalid'
+
+    assert socket.getnameinfo(('127.0.0.1', 80), socket.NI_NUMERICHOST | socket.NI_NUMERICSERV) == ('127.0.0.1', '80')
+    assert socket.getprotobyname('tcp') == socket.IPPROTO_TCP
+    assert socket.getprotobyname('udp') == socket.IPPROTO_UDP
+    assert socket.getservbyname('http', 'tcp') == 80
+    assert socket.getservbyname('http') == 80
+    assert socket.getservbyport(80, 'tcp') == 'http'
+    assert socket.getservbyport(80) == 'http'
+    try:
+        socket.getservbyname('no-such-service-xyz')
+        assert False
+    except OSError:
+        pass
+    try:
+        socket.getservbyport(70000)
+        assert False
+    except OverflowError:
+        pass
+
+    ifs = socket.if_nameindex()
+    assert len(ifs) > 0
+    for index, name in ifs:
+        assert index > 0 and name != ''
+        assert socket.if_nametoindex(name) == index
+        assert socket.if_indextoname(index) == name
+    try:
+        socket.if_nametoindex('no-such-interface-xyz')
+        assert False
+    except OSError:
+        pass
+    try:
+        socket.if_indextoname(-1)
+        assert False
+    except OverflowError:
+        pass
+
+
+def test_udp():
+    a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    assert a.type == socket.SOCK_DGRAM
+    a.bind(('127.0.0.1', 0))
+    b.bind(('127.0.0.1', 0))
+    assert b.sendto(b'dgram', a.getsockname()) == 5
+    data, addr = a.recvfrom(100)
+    assert data == b'dgram'
+    assert addr == b.getsockname()
+    assert a.sendto(b'back', 0, addr) == 4
+    data, addr = b.recvfrom(100, 0)
+    assert data == b'back' and addr == a.getsockname()
+    a.close()
+    b.close()
+
+
+def test_stream_methods():
+    server = socket.create_server(('127.0.0.1', 0))
+    port = server.getsockname()[1]
+    client = socket.socket()
+    client.connect(('127.0.0.1', port))
+    conn, addr = server.accept()
+
+    # getpeername/getsockname pair up
+    assert client.getpeername() == conn.getsockname()
+    assert conn.getpeername() == client.getsockname()
+    assert addr == client.getsockname()
+
+    # send/recv with flags
+    assert client.send(b'peek') == 4
+    assert conn.recv(4, socket.MSG_PEEK) == b'peek'
+    assert conn.recv(4) == b'peek'
+
+    # getsockopt (int form)
+    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    assert conn.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY) != 0
+    assert conn.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE) == socket.SOCK_STREAM
+    assert conn.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0
+
+    # blocking mode
+    assert conn.getblocking()
+    conn.setblocking(False)
+    assert not conn.getblocking()
+    try:
+        conn.recv(10)  # nothing pending, so does not block
+        assert False
+    except OSError:
+        pass
+    conn.setblocking(True)
+    assert conn.getblocking()
+
+    # timeouts
+    conn.settimeout(0.05)
+    assert conn.gettimeout() == 0.05
+    try:
+        conn.recv(10)
+        assert False
+    except socket.timeout:
+        pass
+    try:
+        conn.recv(10)
+        assert False
+    except OSError:  # timeout is an OSError
+        pass
+    server.settimeout(0.05)
+    try:
+        server.accept()
+        assert False
+    except socket.timeout:
+        pass
+    try:
+        conn.settimeout(-1.0)
+        assert False
+    except ValueError:
+        pass
+
+    # inheritable flag: sockets are created non-inheritable (PEP 446)
+    assert not client.get_inheritable()
+    client.set_inheritable(True)
+    assert client.get_inheritable()
+    client.set_inheritable(False)
+    assert not client.get_inheritable()
+
+    # shutdown: peer reads EOF
+    client.shutdown(socket.SHUT_WR)
+    conn.settimeout(5.0)
+    assert conn.recv(10) == b''
+
+    conn.close()
+    client.close()
+    server.close()
+
+
+def test_makefile():
+    # not exercised on windows: a socket handle is not a CRT file descriptor
+    if sys.platform == 'win32':
+        return
+    a, b = socket.socketpair()
+    f = a.makefile('w')
+    f.write('line one\n')
+    f.flush()
+    assert b.recv(9) == b'line one\n'
+    b.sendall(b'line two\n')
+    g = a.makefile('r')
+    assert g.readline() == 'line two\n'
+    f.close()
+    g.close()
+    a.close()
+    b.close()
+
+
+def test_connect_ex():
+    server = socket.create_server(('127.0.0.1', 0))
+    port = server.getsockname()[1]
+    client = socket.socket()
+    assert client.connect_ex(('127.0.0.1', port)) == 0
+    conn, addr = server.accept()
+    conn.close()
+    client.close()
+    server.close()
+
+    # grab a free port and close it again, so nobody is listening there
+    s = socket.socket()
+    s.bind(('127.0.0.1', 0))
+    port = s.getsockname()[1]
+    s.close()
+    client = socket.socket()
+    assert client.connect_ex(('127.0.0.1', port)) != 0
+    client.close()
+    client = socket.socket()
+    try:
+        client.connect(('127.0.0.1', port))
+        assert False
+    except socket.error as e:
+        # ECONNREFUSED
+        if sys.platform == 'win32':
+            assert e.errno == 10061
+        elif sys.platform == 'darwin':
+            assert e.errno == 61
+        else:
+            assert e.errno == 111
+    except OSError:  # socket.error is an OSError
+        assert False
+    client.close()
+
+
+def test_create_connection():
+    server = socket.create_server(('127.0.0.1', 0))
+    port = server.getsockname()[1]
+    client = socket.create_connection(('127.0.0.1', port), 2.0)
+    assert client.gettimeout() == 2.0
+    conn, addr = server.accept()
+    client.sendall(b'cc')
+    assert conn.recv(2) == b'cc'
+    conn.close()
+    client.close()
+    # source_address and all_errors
+    client = socket.create_connection(('127.0.0.1', port), source_address=('127.0.0.1', 0), all_errors=True)
+    assert client.getsockname()[0] == '127.0.0.1'
+    conn, addr = server.accept()
+    conn.close()
+    client.close()
+    server.close()
+
+    # default timeout applies to new sockets
+    socket.setdefaulttimeout(1.5)
+    assert socket.getdefaulttimeout() == 1.5
+    s = socket.socket()
+    assert s.gettimeout() == 1.5
+    s.close()
+    socket.setdefaulttimeout(0.0)
+    try:
+        socket.setdefaulttimeout(-1.0)
+        assert False
+    except ValueError:
+        pass
+
+
+def test_fileno_close_dup():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    fd = s.detach()
+    # wrapping an fd detects the family/type
+    w = socket.socket(fileno=fd)
+    assert w.family == socket.AF_INET
+    assert w.type == socket.SOCK_DGRAM
+    assert w.fileno() == fd
+    fd2 = socket.dup(fd)
+    assert fd2 != fd
+    socket.close(fd2)
+    try:
+        socket.close(fd2)  # already closed
+        assert False
+    except OSError:
+        pass
+    w.close()
+
+    # fromfd with an explicit proto
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+    assert s.proto == socket.IPPROTO_TCP
+    f = socket.fromfd(s.fileno(), socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+    assert f.proto == socket.IPPROTO_TCP
+    f.close()
+    s.close()
+
+
+def test_create_server_args():
+    # reuse_port: SO_REUSEPORT on posix, a ValueError on windows (as in CPython)
+    if sys.platform == 'win32':
+        try:
+            socket.create_server(('127.0.0.1', 0), reuse_port=True)
+            assert False
+        except ValueError:
+            pass
+    else:
+        s = socket.create_server(('127.0.0.1', 0), reuse_port=True)
+        assert s.getsockname()[1] > 0
+        s.close()
+    s = socket.create_server(('127.0.0.1', 0), family=socket.AF_INET)
+    assert s.family == socket.AF_INET
+    s.close()
+    try:
+        socket.create_server(('127.0.0.1', 0), dualstack_ipv6=True)
+        assert False
+    except ValueError:
+        pass
+
+
 def test_socketpair():
     # defaults only: CPython on POSIX gives an AF_UNIX pair, while shedskin
     # (like CPython on Windows) emulates it with a connected AF_INET pair
@@ -136,6 +478,17 @@ def test_socketpair():
         assert False
     except (ValueError, OSError):
         pass
+    # likewise for other families/types (only the defaults are supported here)
+    try:
+        socket.socketpair(socket.AF_UNSPEC)
+        assert False
+    except (ValueError, OSError):
+        pass
+    try:
+        socket.socketpair(socket.AF_INET, socket.SOCK_DGRAM)
+        assert False
+    except (ValueError, OSError):
+        pass
 
 
 def test_constants():
@@ -154,6 +507,9 @@ def test_constants():
         socket.IPPROTO_IP, socket.IPPROTO_IPV6, socket.IPPROTO_NONE, socket.IPPROTO_PIM,
         socket.IPPROTO_PUP, socket.IPPROTO_RAW, socket.IPPROTO_ROUTING, socket.IPPROTO_SCTP,
         socket.IPPROTO_TCP, socket.IPPROTO_UDP, socket.IPV6_CHECKSUM, socket.IPV6_HOPLIMIT,
+        socket.AF_INET, socket.AF_INET6, socket.SOCK_STREAM, socket.SOCK_DGRAM,
+        socket.INADDR_ANY, socket.INADDR_BROADCAST, socket.INADDR_LOOPBACK, socket.SOMAXCONN,
+        socket.SOL_SOCKET, socket.SO_REUSEADDR,
         socket.IPV6_HOPOPTS, socket.IPV6_JOIN_GROUP, socket.IPV6_LEAVE_GROUP, socket.IPV6_MULTICAST_HOPS,
         socket.IPV6_MULTICAST_IF, socket.IPV6_MULTICAST_LOOP, socket.IPV6_PKTINFO, socket.IPV6_RECVRTHDR,
         socket.IPV6_RECVTCLASS, socket.IPV6_RTHDR, socket.IPV6_TCLASS, socket.IPV6_UNICAST_HOPS,
@@ -173,7 +529,7 @@ def test_constants():
         socket.SO_SNDTIMEO, socket.SO_TYPE, socket.TCP_FASTOPEN, socket.TCP_KEEPCNT,
         socket.TCP_KEEPINTVL, socket.TCP_MAXSEG, socket.TCP_NODELAY,
     ]
-    assert len(consts) == 122
+    assert len(consts) == 132
 
     # values fixed by IANA or by CPython itself, so the same on all platforms
     assert socket.AF_UNSPEC == 0
@@ -192,6 +548,10 @@ def test_constants():
     assert socket.SHUT_WR == 1
     assert socket.SHUT_RDWR == 2
     assert socket.INADDR_NONE == 0xffffffff
+    assert socket.INADDR_ANY == 0
+    assert socket.INADDR_BROADCAST == 0xffffffff
+    assert socket.INADDR_LOOPBACK == 0x7f000001
+    assert socket.SOMAXCONN > 0
     assert socket.INADDR_UNSPEC_GROUP == 0xe0000000
     assert socket.INADDR_ALLHOSTS_GROUP == 0xe0000001
     assert socket.INADDR_MAX_LOCAL_GROUP == 0xe00000ff
@@ -222,6 +582,16 @@ def test_all():
     test_detach_dup_fromfd()
     test_create_server()
     test_sendfile()
+    test_byteorder()
+    test_inet()
+    test_names()
+    test_udp()
+    test_stream_methods()
+    test_makefile()
+    test_connect_ex()
+    test_create_connection()
+    test_fileno_close_dup()
+    test_create_server_args()
     test_socketpair()
     test_constants()
 
