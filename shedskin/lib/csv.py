@@ -1,7 +1,7 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 import re  # noqa: F401 (Sniffer's real implementation is hand-written C++
-           # in csv.cpp/csv.hpp, which uses re_object/PCRE2 directly; this
+           # in csv.cpp/csv.hpp, which uses Pattern/PCRE2 directly; this
            # import is only here so shedskin's dependency analysis links in
            # re.cpp/re.hpp and pcre2, matching the pattern used by fnmatch.py)
 

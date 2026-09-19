@@ -15,8 +15,8 @@ namespace __glob__ {
 extern str *const_0, *const_2, *const_3, *const_4, *const_5, *const_6;
 
 extern str *__name__;
-extern __re__::re_object *magic_check;
-extern __re__::re_object *magic_check_escape;
+extern __re__::Pattern *magic_check;
+extern __re__::Pattern *magic_check_escape;
 
 /* dir_fd: CPython's `dir_fd=None` arrives here as the default -1 (argument
    omitted) or as 0 (the compiler emits NULL for a literal None); neither is

@@ -305,7 +305,7 @@ not part of '%%' or '%(name)s' raises InterpolationSyntaxError even
 when the value contains no reference at all.
 */
 public:
-    static __re__::re_object *_KEYCRE;
+    static __re__::Pattern *_KEYCRE;
 
     BasicInterpolation() { this->__class__ = cl_BasicInterpolation; }
     str *before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults);
@@ -320,7 +320,7 @@ ${option} / ${section:option} interpolation, in the style of
 zc.buildout. Enables interpolation between sections.
 */
 public:
-    static __re__::re_object *_KEYCRE;
+    static __re__::Pattern *_KEYCRE;
 
     ExtendedInterpolation() { this->__class__ = cl_ExtendedInterpolation; }
     str *before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults);
@@ -336,10 +336,10 @@ public:
        dict, so in-place additions are seen by all parsers, as in CPython */
     static dict<str *, __ss_bool> *_boolean_states;
     dict<str *, __ss_bool> *BOOLEAN_STATES;
-    static __re__::re_object *SECTCRE;
-    static __re__::re_object *OPTCRE;
-    static __re__::re_object *OPTCRE_NV;
-    static __re__::re_object *NONSPACECRE;
+    static __re__::Pattern *SECTCRE;
+    static __re__::Pattern *OPTCRE;
+    static __re__::Pattern *OPTCRE_NV;
+    static __re__::Pattern *NONSPACECRE;
 
     dict<str *, str *> *_defaults;
     dict<str *, dict<str *, str *> *> *_sections;
@@ -353,7 +353,7 @@ public:
     __ss_int _strict;
     __ss_int _allow_no_value;
     __ss_int _empty_lines_in_values;
-    __re__::re_object *_optcre;
+    __re__::Pattern *_optcre;
 
     RawConfigParser() {}
     RawConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL) {

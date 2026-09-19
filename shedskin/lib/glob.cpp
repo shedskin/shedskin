@@ -19,8 +19,8 @@ namespace __glob__ {
 str *const_0, *const_2, *const_3, *const_4, *const_5, *const_6;
 
 str *__name__;
-__re__::re_object *magic_check;
-__re__::re_object *magic_check_escape;
+__re__::Pattern *magic_check;
+__re__::Pattern *magic_check_escape;
 
 void __init() {
     const_0 = new str("[*?[]");

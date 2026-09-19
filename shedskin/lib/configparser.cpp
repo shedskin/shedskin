@@ -859,7 +859,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     files.
     */
     const __ss_int MAXSIZE = std::numeric_limits<__ss_int>::max();
-    __re__::match_object *mo;
+    __re__::Match *mo;
     __ss_int lineno, indent_level, cur_indent_level, comment_start, i, n;
     __ss_bool has_comment;
 
@@ -1172,10 +1172,10 @@ __iter<str *> *RawConfigParser::__iter__() {
 }
 
 dict<str *, __ss_bool> *RawConfigParser::_boolean_states;
-__re__::re_object *RawConfigParser::OPTCRE_NV;
-__re__::re_object *RawConfigParser::NONSPACECRE;
-__re__::re_object *RawConfigParser::SECTCRE;
-__re__::re_object *RawConfigParser::OPTCRE;
+__re__::Pattern *RawConfigParser::OPTCRE_NV;
+__re__::Pattern *RawConfigParser::NONSPACECRE;
+__re__::Pattern *RawConfigParser::SECTCRE;
+__re__::Pattern *RawConfigParser::OPTCRE;
 
 /**
 class Interpolation
@@ -1204,7 +1204,7 @@ class BasicInterpolation
 */
 
 class_ *cl_BasicInterpolation;
-__re__::re_object *BasicInterpolation::_KEYCRE;
+__re__::Pattern *BasicInterpolation::_KEYCRE;
 
 str *BasicInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
     if (value == NULL) {   /* valueless option: CPython joins an empty accumulator into '' */
@@ -1237,7 +1237,7 @@ void BasicInterpolation::_interpolate_some(RawConfigParser *parser, str *option,
     */
     str *rawval, *c, *var, *v;
     __ss_int p;
-    __re__::match_object *m;
+    __re__::Match *m;
 
     rawval = parser->get(section, option, 1, NULL, rest);
     if (depth > MAX_INTERPOLATION_DEPTH) {
@@ -1289,7 +1289,7 @@ class ExtendedInterpolation
 */
 
 class_ *cl_ExtendedInterpolation;
-__re__::re_object *ExtendedInterpolation::_KEYCRE;
+__re__::Pattern *ExtendedInterpolation::_KEYCRE;
 
 str *ExtendedInterpolation::before_get(RawConfigParser *parser, str *section, str *option, str *value, dict<str *, str *> *defaults) {
     if (value == NULL) {   /* valueless option: CPython joins an empty accumulator into '' */
@@ -1325,7 +1325,7 @@ void ExtendedInterpolation::_interpolate_some(RawConfigParser *parser, str *opti
     str *rawval, *c, *sect, *opt, *v;
     list<str *> *path;
     __ss_int p;
-    __re__::match_object *m;
+    __re__::Match *m;
 
     rawval = parser->get(section, option, 1, NULL, rest);
     if (depth > MAX_INTERPOLATION_DEPTH) {

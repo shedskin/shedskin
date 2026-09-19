@@ -24,17 +24,23 @@ namespace __re__ {
 extern const __ss_int I, L, M, S, U, X, A,
     IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE, ASCII, DEBUG, NOFLAG;
 
-class match_object;
-typedef str *(*replfunc)(match_object *);
+class Match;
+typedef str *(*replfunc)(Match *);
 
 extern class_ *cl_error;
 
-//re.error
+//re.PatternError (re.error): like CPython, when both pattern and pos are
+//given, pos/lineno/colno are filled in and the message gets " at position N"
+//(plus " (line L, column C)" for multi-line patterns). CPython uses None for
+//pos/lineno/colno otherwise; as these are ints here, they are 0 instead.
 class PatternError : public Exception
 {
 public:
+    str *msg;
+    str *pattern;
+    __ss_int pos, lineno, colno;
 
-    PatternError(str *m = 0) : Exception(m) {}
+    PatternError(str *msg = 0, str *pattern = 0, __ss_int pos = -1);
 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_Exception; } // TODO re.PatternError?
@@ -43,32 +49,35 @@ public:
 
 using error = PatternError;
 
-//we have a circular declaration, so we need to forward declare re_object
-class re_object;
+//we have a circular declaration, so we need to forward declare Pattern
+class Pattern;
 
 //MatchObject
-class match_object : public pyobj
+class Match : public pyobj
 {
 public:
 
+    //note: all members are default-initialized, so that directly
+    //constructing re.Match() (which CPython disallows) stays harmless
+
     //our regular expression
-    re_object *re;
+    Pattern *re = 0;
 
     //internal: captured subpatterns
-    pcre2_match_data *match_data;
+    pcre2_match_data *match_data = 0;
 
     //self-explanatory
-    __ss_int pos, endpos;
+    __ss_int pos = 0, endpos = 0;
 
     //last match and last named match
-    __ss_int lastindex;
+    __ss_int lastindex = 0;
 
     //subject string
-    str *string;
+    str *string = 0;
 
-    //computed in re_object::__exec by scanning groupindex for the
+    //computed in Pattern::__exec by scanning groupindex for the
     //highest-numbered named group that participated in the match
-    str *lastgroup;
+    str *lastgroup = 0;
 
     //functions
     str *expand(str *tpl);
@@ -107,42 +116,45 @@ public:
 
 
 //compiled regular expression
-class re_object : public pyobj
+class Pattern : public pyobj
 {
 public:
 
+    //note: all members are default-initialized, so that directly
+    //constructing re.Pattern() (which CPython disallows) stays harmless
+
     //named captured subpatterns
-    dict<str *, __ss_int> *groupindex;
+    dict<str *, __ss_int> *groupindex = 0;
 
     //how many captured subpatterns there are
-    __ss_int capture_count;
+    __ss_int capture_count = 0;
 
     //the original pattern
-    str *pattern;
+    str *pattern = 0;
 
     //the flags used
-    __ss_int flags;
+    __ss_int flags = 0;
 
     //number of captured groups
-    __ss_int groups;
+    __ss_int groups = 0;
 
     //internal functions
-    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int m);
+    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int m, __GC_STR *tpl = 0, size_t tplpos = 0);
     __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, str *m);
     __GC_STR __expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl);
 
     //the compiled pattern
-    pcre2_code *compiled_pattern;
+    pcre2_code *compiled_pattern = 0;
 
-    match_object *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags_ = 0);
+    Match *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags_ = 0);
     str *__subn(str *repl, str *subj, __ss_int maxn = -1, int *howmany = 0);
     list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos = 0, __ss_int endpos = -1);
 
-    match_object *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    match_object *prefixmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    match_object *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    match_object *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    __iter<match_object *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    Match *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    Match *prefixmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    Match *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    Match *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    __iter<Match *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     list<str *> *split(str *subj, __ss_int maxn = -1);
     str *sub(str *repl, str *subj, __ss_int maxn = -1);
     str *sub(replfunc repl, str *subj, __ss_int maxn = -1);
@@ -152,33 +164,24 @@ public:
     str *__repr__();
 };
 
-//marker classes so `re.Pattern`/`re.Match` resolve to real C++ types for
-//annotations/isinstance; see the NOTE above class match_object in re.py.
-//Deliberately unrelated to re_object/match_object: compile()/search()/etc
-//still return re_object*/match_object*, never these. Constructing one of
-//these directly is harmless (unlike constructing a bare re_object/
-//match_object, which carries uninitialized PCRE2 state).
-class Pattern : public pyobj { public: str *__repr__(); };
-class Match : public pyobj { public: str *__repr__(); };
-
-class match_iter : public __iter<match_object *>
+class match_iter : public __iter<Match *>
 {
 public:
-    re_object *ro;
+    Pattern *ro;
     str *subj;
     __ss_int pos, endpos, flags;
 
-    match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags);
-    match_object *__next__();
+    match_iter(Pattern *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags);
+    Match *__next__();
 };
 
-re_object *compile(str *pat, __ss_int flags = 0);
+Pattern *compile(str *pat, __ss_int flags = 0);
 
-match_object *match(str *pat, str *subj, __ss_int flags = 0);
-match_object *prefixmatch(str *pat, str *subj, __ss_int flags = 0);
-match_object *fullmatch(str *pat, str *subj, __ss_int flags = 0);
-match_object *search(str *pat, str *subj, __ss_int flags = 0);
-__iter<match_object *> *finditer(str *pat, str *subj, __ss_int flags = 0);
+Match *match(str *pat, str *subj, __ss_int flags = 0);
+Match *prefixmatch(str *pat, str *subj, __ss_int flags = 0);
+Match *fullmatch(str *pat, str *subj, __ss_int flags = 0);
+Match *search(str *pat, str *subj, __ss_int flags = 0);
+__iter<Match *> *finditer(str *pat, str *subj, __ss_int flags = 0);
 list<str *> *split(str *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);
 str *sub(str *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 str *sub(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
@@ -187,7 +190,7 @@ list<str *> *findall(str *pat, str *subj, __ss_int flags = 0);
 str *escape(str *s);
 
 list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
-match_object *__exec_once(str *subj, __ss_int flags);
+Match *__exec_once(str *subj, __ss_int flags);
 
 inline void *purge() { return NULL; };
 

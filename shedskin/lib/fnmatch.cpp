@@ -17,13 +17,13 @@ corresponding to PATTERN.  (It does not compile it.)
 
 namespace __fnmatch__ {
 
-dict<str *, __re__::re_object *> *_cache;
+dict<str *, __re__::Pattern *> *_cache;
 str *__name__;
 
 void __init() {
     __name__ = new str("__fnmatch__");
 
-    _cache = (new dict<str *, __re__::re_object *>());
+    _cache = (new dict<str *, __re__::Pattern *>());
 }
 
 namespace {
@@ -71,7 +71,7 @@ list<str *> *filter(list<str *> *names, str *pat) {
     */
     list<str *> *__0, *result;
     str *name, *res;
-    __re__::re_object *cpat;
+    __re__::Pattern *cpat;
     __ss_int __2;
     list<str *>::for_in_loop __123;
 
@@ -102,7 +102,7 @@ list<str *> *filterfalse(list<str *> *names, str *pat) {
     */
     list<str *> *__0, *result;
     str *name, *res;
-    __re__::re_object *cpat;
+    __re__::Pattern *cpat;
     __ss_int __2;
     list<str *>::for_in_loop __123;
 
