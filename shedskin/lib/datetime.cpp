@@ -39,7 +39,7 @@ int clock_gettime(int, struct timespec *tp)
 namespace __datetime__ {
 
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
-str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string,*t_string,*auto_string;
+str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*empty_string,*t_string,*auto_string;
 
 __ss_int MINYEAR, MAXYEAR;
 
@@ -78,10 +78,7 @@ void __init() {
 	space_string = new str(" ");
 	t_string = new str("T");
 	auto_string = new str("auto");
-	none_string = new str("None");
 	empty_string = new str("");
-	z_string = new str("%z");
-	Z_string = new str("%Z");
 
     MINYEAR = 1;
     MAXYEAR = 9999;
@@ -240,16 +237,19 @@ date* date::fromtimestamp(__ss_int timestamp) {
 	return new date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
 }
 
+/* like CPython: ValueError (not OverflowError) for out-of-range ordinals */
+static void check_ordinal(__ss_int o, __ss_int *year, __ss_int *month, __ss_int *day) {
+    if(o<1)
+        throw new ValueError(new str("ordinal must be >= 1"));
+    ord_to_ymd(o, year, month, day);
+    if(*year>MAXYEAR)
+        throw new ValueError(__mod6(new str("year %d is out of range"), 1, *year));
+}
+
 date* date::fromordinal(__ss_int o) {
-	//OverflowError is raised if date2.year  would be smaller than MINYEAR or larger than MAXYEAR.
-	 if(o<1)		//1 = date.min.toordinal()
-		throw new OverflowError(new str("ordinal must be >= 1"));
-	if(o>3652059)	//3652059 = date.max.toordinal()
-		throw new OverflowError(new str("year is out of range"));
-	
-    date *r = new date(1,1,1);
-    ord_to_ymd(o,&(r->year),&(r->month),&(r->day));
-    return r;
+    __ss_int y, m, d;
+    check_ordinal(o, &y, &m, &d);
+    return new date(y, m, d);
 }
 
 date *date::fromisocalendar(__ss_int year, __ss_int week, __ss_int day) {
@@ -388,8 +388,49 @@ str *date::ctime() {
                         day, (__ss_int)0, (__ss_int)0, (__ss_int)0, year);
 }
 
+/* expand the datetime-specific directives (%f, %z, %Z) ourselves and pass
+   everything else on to time.strftime. '%%' is skipped over as a unit, so
+   that e.g. '%%f' stays a literal '%f' */
+static void __strftime_append_escaped(__GC_STR &out, str *s) {
+    if(!s)
+        return;
+    for(size_t i=0; i<s->unit.size(); i++) {
+        out += s->unit[i];
+        if(s->unit[i] == U'%')
+            out += U'%';
+    }
+}
+
+static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str *Z) {
+    __GC_STR out;
+    const __GC_STR &f = format->unit;
+    size_t n = f.size();
+    for(size_t i=0; i<n; i++) {
+        __ss_char c = f[i];
+        if(c != U'%' || i+1 == n) {
+            out += c;
+            continue;
+        }
+        __ss_char d = f[++i];
+        if(d == U'f') {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%06d", (int)microsecond);
+            for(int k=0; k<6; k++)
+                out += (__ss_char)buf[k];
+        } else if(d == U'z') {
+            __strftime_append_escaped(out, z);
+        } else if(d == U'Z') {
+            __strftime_append_escaped(out, Z);
+        } else {
+            out += U'%';
+            out += d;
+        }
+    }
+    return new str(out);
+}
+
 str *date::strftime(str *format) {
-    return __time__::strftime(format,timetuple());
+    return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL), timetuple());
 }
 
 
@@ -585,14 +626,9 @@ datetime *datetime::fromtimestamp(double timestamp, tzinfo *tzinfo) {
 }
 
 datetime *datetime::fromordinal(__ss_int o) {
-    if(o<1)  //1 = date.min.toordinal()
-        throw new OverflowError(new str("ordinal must be >= 1"));
-    if(o>3652059)  //3652059 = date.max.toordinal()
-        throw new OverflowError(new str("year is out of range"));
-
-    datetime *r = new datetime(1,1,1);
-    ord_to_ymd(o,&(r->year),&(r->month),&(r->day));
-    return r;
+    __ss_int y, m, d;
+    check_ordinal(o, &y, &m, &d);
+    return new datetime(y, m, d);
 }
 
 datetime *datetime::fromisocalendar(__ss_int year, __ss_int week, __ss_int day) {
@@ -861,7 +897,7 @@ timedelta *datetime::dst() {
 
 str *datetime::tzname() {
     if(_tzinfo==NULL)
-        return none_string;
+        return NULL;
     else
 		return _tzinfo->tzname(this);
 }
@@ -975,19 +1011,12 @@ str *datetime::ctime() {
 }
 
 str *datetime::strftime(str *format) {
-	str *tmp;
-	if(_tzinfo) {
-		tmp = format->replace(z_string,_tzinfo->minutes_to_str(this)->__str__());
-		format = tmp->replace(Z_string,_tzinfo->tzname(this));
-	}
-	else {
-		tmp = format->replace(z_string,empty_string);
-		format = tmp->replace(Z_string,empty_string);
-	}
-        GC_FREE(tmp);
-        tmp = __time__::strftime(format,timetuple());
-	GC_FREE(format);
-	return tmp;
+    str *z = NULL, *Z = NULL;
+    if(_tzinfo) {
+        z = _tzinfo->minutes_to_str(this);
+        Z = _tzinfo->tzname(this);
+    }
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z), timetuple());
 }
 
 //class time
@@ -1073,29 +1102,16 @@ str *time::__str__() {
 }
 
 str *time::strftime(str* format) {
-	str *tmp;
-	if(_tzinfo) {
-		tmp = format->replace(z_string,_tzinfo->minutes_to_str(NULL)->__str__());
-		format = tmp->replace(Z_string,_tzinfo->tzname(NULL));
-	}
-	else {
-		tmp = format->replace(z_string,empty_string);
-		format = tmp->replace(Z_string,empty_string);
-	}
-	GC_FREE(tmp);
-    tmp = __time__::strftime(format, new __time__::struct_time(
-        new tuple2<__ss_int, __ss_int>(9,
-            (__ss_int)1900,
-            (__ss_int)1,
-            (__ss_int)1,//according to cpython implementation, but 0,0, according to description I found on the internet
-            (__ss_int)hour,
-            (__ss_int)minute,
-            (__ss_int)second,
-            (__ss_int)0,
-            (__ss_int)0,
-            (__ss_int)(-1))));
-	GC_FREE(format);
-	return tmp;
+    str *z = NULL, *Z = NULL;
+    if(_tzinfo) {
+        z = _tzinfo->minutes_to_str(NULL);
+        Z = _tzinfo->tzname(NULL);
+    }
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z),
+        new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
+            (__ss_int)1900, (__ss_int)1, (__ss_int)1,
+            (__ss_int)hour, (__ss_int)minute, (__ss_int)second,
+            (__ss_int)0, (__ss_int)1, (__ss_int)(-1))));
 }
 
 timedelta *time::utcoffset() {
@@ -1114,7 +1130,7 @@ timedelta *time::dst() {
 
 str *time::tzname() {
     if(_tzinfo==NULL)
-        return none_string;
+        return NULL;
     else
         return _tzinfo->tzname(NULL);
 }
