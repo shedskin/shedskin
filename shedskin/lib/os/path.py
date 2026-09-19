@@ -17,7 +17,15 @@ devnull = ''
 # with a value distinct from True/False (see ALLOW_MISSING in path.cpp).
 ALLOW_MISSING = True
 
-def isdir(path):
+# special value for the 'strict' argument of realpath(): the last path
+# component may be missing, all other errors are raised (see path.cpp).
+ALL_BUT_LAST = True
+
+# True if arbitrary Unicode strings can be used as file names (within
+# limitations imposed by the file system).
+supports_unicode_filenames = False
+
+def isdir(s):
     return True
 
 def exists(path):
@@ -39,6 +47,12 @@ def samefile(a, b):
     return True
 
 def samestat(a, b):
+    return True
+
+def sameopenfile(fp1, fp2):
+    return True
+
+def isdevdrive(path):
     return True
 
 def ismount(path):

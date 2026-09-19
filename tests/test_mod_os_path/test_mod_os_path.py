@@ -1,6 +1,7 @@
 import os.path
 from os.path import *
 import os
+import sys
 
 def test_os_path_join():
     assert os.path.join("heuk") == 'heuk'
@@ -256,6 +257,46 @@ def test_os_path_realpath_strict():
     assert realpath(existing, strict=True) == existing
     assert realpath(existing, strict=os.path.ALLOW_MISSING) == existing
     os.system("rm -rf " + existing)
+
+
+def test_os_path_realpath_all_but_last():
+    # (os.path.ALL_BUT_LAST is new in CPython 3.15, so running this file
+    # under an older CPython fails here)
+    if os.name == "nt":
+        return  # see test_os_path_realpath_strict
+
+    tmpdir = realpath("/tmp")
+    existing = join(tmpdir, "shedskin_test_realpath_all_but_last")
+    os.system("mkdir -p " + existing)
+
+    # existing path: fine
+    assert realpath(existing, strict=os.path.ALL_BUT_LAST) == existing
+
+    # existing parent, missing last component: fine with ALL_BUT_LAST,
+    # an error with strict=True
+    missing_last = join(existing, "nope")
+    assert realpath(missing_last, strict=os.path.ALL_BUT_LAST) == missing_last
+    try:
+        realpath(missing_last, strict=True)
+        assert False, "expected FileNotFoundError for missing last component"
+    except FileNotFoundError:
+        pass
+
+    # missing parent directory: an error, unlike ALLOW_MISSING
+    missing = join(existing, "nope", "foo")
+    assert realpath(missing, strict=os.path.ALLOW_MISSING) == missing
+    try:
+        realpath(missing, strict=os.path.ALL_BUT_LAST)
+        assert False, "expected FileNotFoundError for missing parent"
+    except FileNotFoundError:
+        pass
+
+    os.system("rm -rf " + existing)
+
+    # the special values are all true, but distinct from each other
+    assert os.path.ALLOW_MISSING
+    assert os.path.ALL_BUT_LAST
+    assert os.path.ALLOW_MISSING != os.path.ALL_BUT_LAST
 
 
 def test_os_path_realpath_symlink_loop():
@@ -531,6 +572,63 @@ def test_os_path_islink_samestat():
 
     os.system("rm -rf " + base)
 
+def test_os_path_sameopenfile():
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
+    abc = join(testdata, "abc.txt")
+    fd1 = os.open(abc, os.O_RDONLY)
+    fd2 = os.open(join(testdata, ".", "abc.txt"), os.O_RDONLY)
+    # compare against another regular file rather than the directory:
+    # os.open() on a directory fails with EACCES on Windows (also in CPython)
+    fd3 = os.open(join(testdata, "cr.txt"), os.O_RDONLY)
+
+    assert sameopenfile(fd1, fd1)
+    assert sameopenfile(fd1, fd2)
+    assert not sameopenfile(fd1, fd3)
+
+    os.close(fd1)
+    os.close(fd2)
+    os.close(fd3)
+
+    try:
+        sameopenfile(fd1, fd2)
+        assert False, "expected an error for a closed file descriptor"
+    except OSError:
+        pass
+
+
+def test_os_path_isdevdrive():
+    if os.name == "nt":
+        # Dev Drives may or may not be in use, but it shouldn't raise
+        assert isdevdrive(".") in (True, False)
+        assert isdevdrive(os.getcwd()) in (True, False)
+    else:
+        assert isdevdrive(".") is False
+        assert isdevdrive("/") is False
+    # a non-existent path is never on a Dev Drive
+    assert isdevdrive("shedskin_does_not_exist_isdevdrive") is False
+
+
+def test_os_path_supports_unicode_filenames():
+    assert os.path.supports_unicode_filenames in (True, False)
+    if os.name == "nt" or sys.platform == "darwin":
+        assert os.path.supports_unicode_filenames is True
+    else:
+        assert os.path.supports_unicode_filenames is False
+
+
+def test_os_path_isdir_kwarg():
+    # genericpath.isdir(s) in CPython: the parameter is called 's'
+    assert isdir(s=".")
+    assert not isdir(s="shedskin_does_not_exist_isdir")
+    assert not exists(path="shedskin_does_not_exist_isdir")
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -543,6 +641,7 @@ def test_all():
     # test_os_path_islink_samefile_samestat_realpath()  # see comment above, disabled for now
     test_os_path_relpath()
     test_os_path_realpath_strict()
+    test_os_path_realpath_all_but_last()
     test_os_path_realpath_symlink_loop()
     # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
     # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
@@ -558,6 +657,10 @@ def test_all():
     test_os_path_constants()
     test_os_path_split()
     test_os_path_islink_samestat()
+    test_os_path_sameopenfile()
+    test_os_path_isdevdrive()
+    test_os_path_supports_unicode_filenames()
+    test_os_path_isdir_kwarg()
 
 if __name__ == '__main__':
     test_all()
