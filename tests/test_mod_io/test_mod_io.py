@@ -405,6 +405,117 @@ def test_module_constants():
         assert f.read() == b'x'
     os.remove('io_bufsize_testdata.bin')
 
+
+def test_capabilities():
+    s = io.StringIO('abc')
+    assert s.readable()
+    assert s.writable()
+    assert s.seekable()
+    assert not s.isatty()
+    s.flush()
+    b = io.BytesIO(b'abc')
+    assert b.readable()
+    assert b.writable()
+    assert b.seekable()
+    assert not b.isatty()
+    b.flush()
+
+    s.close()
+    b.close()
+    s.flush()  # StringIO.flush doesn't check for closed in CPython
+    for i in range(4):
+        err = False
+        try:
+            if i == 0:
+                s.readable()
+            elif i == 1:
+                s.writable()
+            elif i == 2:
+                s.seekable()
+            else:
+                s.isatty()
+        except ValueError:
+            err = True
+        assert err
+    for i in range(5):
+        err = False
+        try:
+            if i == 0:
+                b.readable()
+            elif i == 1:
+                b.writable()
+            elif i == 2:
+                b.seekable()
+            elif i == 3:
+                b.isatty()
+            else:
+                b.flush()
+        except ValueError:
+            err = True
+        assert err
+
+
+def test_unsupported():
+    s = io.StringIO('abc')
+    b = io.BytesIO(b'abc')
+    for i in range(4):
+        msg = ''
+        try:
+            if i == 0:
+                s.fileno()
+            elif i == 1:
+                s.detach()
+            elif i == 2:
+                b.fileno()
+            else:
+                b.detach()
+        except io.UnsupportedOperation as e:
+            msg = str(e)
+        assert msg == ['fileno', 'detach'][i % 2]
+    err = False
+    try:
+        b.fileno()
+    except OSError:
+        err = True
+    assert err
+    # still usable afterwards
+    assert s.read() == 'abc'
+    assert b.read() == b'abc'
+
+
+def test_writelines():
+    s = io.StringIO()
+    s.writelines(['aa\n', 'bb', '\n'])
+    s.writelines(('cc',))
+    assert s.getvalue() == 'aa\nbb\ncc'
+    s.seek(1)
+    s.writelines(['XY'])
+    assert s.getvalue() == 'aXYbb\ncc'
+    b = io.BytesIO()
+    b.writelines([b'aa\n', b'bb'])
+    b.writelines(iter([b'cc']))
+    assert b.getvalue() == b'aa\nbbcc'
+
+
+def test_read1():
+    b = io.BytesIO(b'hello world')
+    assert b.read1(5) == b'hello'
+    assert b.tell() == 5
+    assert b.read1() == b' world'
+    assert b.read1() == b''
+    b.seek(6)
+    assert b.read1(-1) == b'world'
+    b.seek(20)
+    assert b.read1(2) == b''
+    assert b.tell() == 20
+    b.close()
+    try:
+        b.read1()
+        assert False
+    except ValueError:
+        pass
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -430,6 +541,10 @@ def test_all():
     test_unicode_positions()
     test_close()
     test_module_constants()
+    test_capabilities()
+    test_unsupported()
+    test_writelines()
+    test_read1()
 
 
 if __name__ == '__main__':
