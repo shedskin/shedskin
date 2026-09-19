@@ -57,12 +57,12 @@ public:
 
     void _init_instance();
     Random();
-    template <class A> Random(A a) {
-        /* a may be None (seed from entropy), an int, float, str or bytes,
+    template <class A> Random(A x) {
+        /* x may be None (seed from entropy), an int, float, str or bytes,
            as for seed(). */
         this->__class__ = cl_Random;
         this->_init_instance();
-        this->seed(a);
+        this->seed(x);
     }
     virtual __ss_float random();
     __ss_float paretovariate(__ss_float alpha);
@@ -71,7 +71,7 @@ public:
     __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
     __ss_float betavariate(__ss_float alpha, __ss_float beta);
     __ss_float normalvariate(__ss_float mu, __ss_float sigma);
-    template <class A> void *seed(A a);
+    template <class A> void *seed(A a, __ss_int version=2);
     __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
     __ss_int binomialvariate(__ss_int n=1, __ss_float p=0.5);
     int _init_by_array(list<int> *init_key);
@@ -117,7 +117,7 @@ public:
     virtual uint64_t _next_word();
     virtual bytes *getstate();
     virtual void *setstate(bytes *state);
-    template <class A> void *seed(A a) {
+    template <class A> void *seed(A, __ss_int version=2) {
         /**
         Stub method.  Not used for a system random number generator.
         */
@@ -341,18 +341,27 @@ template <class A, class W, class C> list<A> *Random::choices(pyseq<A> *seq, W w
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
-template <class A> void *Random::seed(A a) {
+/* seed(a, version=1) hashes str/bytes seeds the way Python 3.1 did (as
+   CPython still does for version=1); for every other type the version
+   makes no difference. */
+template<class T> inline uint64_t __seed_v1(T t) { return (uint64_t)hasher(t); }
+uint64_t __seed_v1(str *s);
+uint64_t __seed_v1(bytes *b);
+
+template <class A> void *Random::seed(A a, __ss_int version) {
     /**
     Initialize the random number generator with a single seed number.
 
-            If provided, the seed, a, must be an integer.
-            If no argument is provided, current time is used for seeding.
+            If provided, the seed, a, must be an int, float, str or bytes.
+            If no argument is provided, OS entropy is used for seeding.
     */
 
     if(__is_none(a)) {
         std::random_device rd;
         uint64_t hi = rd();
         this->_seed_state((hi << 32) | rd());
+    } else if(version == 1) {
+        this->_seed_state(__seed_v1(a));
     } else {
         this->_seed_state(hasher(a));
     }
@@ -360,8 +369,8 @@ template <class A> void *Random::seed(A a) {
     return NULL;
 }
 
-template <class A> void *seed(A a) {
-    return _inst->seed(a);
+template <class A> void *seed(A a, __ss_int version=2) {
+    return _inst->seed(a, version);
 }
 
 } // module namespace
