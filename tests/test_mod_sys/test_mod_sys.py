@@ -181,6 +181,75 @@ def test_std_streams():
     assert sys.stdin is not sys.stdout
     assert sys.stdout is not sys.stderr
 
+def test_std_streams_originals():
+    # __stdin__ and friends hold the streams the program started with
+    assert sys.__stdin__ is sys.stdin
+    assert sys.__stdout__ is sys.stdout
+    assert sys.__stderr__ is sys.stderr
+    assert sys.__stdout__.fileno() == 1
+    assert sys.__stderr__.name == '<stderr>'
+
+def test_flags():
+    fl = sys.flags
+    assert fl.debug == 0
+    assert fl.inspect == 0
+    assert fl.interactive == 0
+    assert fl.optimize in (0, 1, 2)
+    assert fl.verbose == 0
+    assert fl.quiet in (0, 1)
+    assert fl.isolated in (0, 1)
+    assert fl.hash_randomization in (0, 1)
+    assert fl.utf8_mode in (0, 1)
+    assert fl.int_max_str_digits >= -1
+    assert fl.dev_mode in (True, False)
+    assert fl.safe_path in (True, False)
+    assert repr(fl).startswith('sys.flags(debug=0, inspect=0, ')
+
+def test_int_info():
+    ii = sys.int_info
+    assert ii.bits_per_digit > 0
+    assert ii.sizeof_digit * 8 >= ii.bits_per_digit
+    assert ii.default_max_str_digits >= 0
+    assert ii.str_digits_check_threshold == 640
+    assert repr(ii).startswith('sys.int_info(bits_per_digit=')
+
+def test_hash_info():
+    hi = sys.hash_info
+    assert hi.width in (32, 64, 128)
+    assert hi.imag == 1000003
+    assert hash(float('inf')) == hi.inf
+    assert len(hi.algorithm) > 0
+    assert hi.hash_bits > 0
+    assert hi.seed_bits >= 0
+    assert hi.cutoff >= 0
+    assert repr(hi).startswith('sys.hash_info(width=')
+
+def test_getsizeof():
+    # a container's own buffer is counted..
+    small = [1, 2]
+    big = [1, 2]
+    for i in range(1000):
+        big.append(i)
+    assert sys.getsizeof(big) > sys.getsizeof(small) + 1000
+    assert sys.getsizeof('a' * 1000) > sys.getsizeof('a') + 900
+    assert sys.getsizeof(b'a' * 1000) > sys.getsizeof(b'a') + 900
+    assert sys.getsizeof(tuple(big)) > sys.getsizeof((1, 2)) + 1000
+    d = {1: 2}
+    s = {1}
+    for i in range(1000):
+        d[i] = i
+        s.add(i)
+    assert sys.getsizeof(d) > sys.getsizeof({1: 2}) + 1000
+    assert sys.getsizeof(s) > sys.getsizeof({1}) + 1000
+    # ..but not the objects it refers to
+    assert sys.getsizeof(['a']) == sys.getsizeof(['a' * 1000])
+    assert sys.getsizeof({1: 'a'}) == sys.getsizeof({1: 'a' * 1000})
+    # other objects
+    assert sys.getsizeof(1) > 0
+    assert sys.getsizeof(1.0) > 0
+    assert sys.getsizeof(1, -1) == sys.getsizeof(1)
+    assert sys.getsizeof(small, -1) == sys.getsizeof(small)
+
 def test_all():
     test_sys()
     test_version_consistency()
@@ -201,6 +270,11 @@ def test_all():
     test_orig_argv()
     test_maxsize()
     test_std_streams()
+    test_std_streams_originals()
+    test_flags()
+    test_int_info()
+    test_hash_info()
+    test_getsizeof()
 
 if __name__ == '__main__':
     test_all()

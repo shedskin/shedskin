@@ -4,6 +4,7 @@
 argv = ['']
 
 stdin, stdout, stderr = file('stdin'), file('stdout'), file('stderr')
+__stdin__, __stdout__, __stderr__ = stdin, stdout, stderr
 
 version = ''
 version_info = (0,)
@@ -39,6 +40,9 @@ def exit(code=0):
 def getfilesystemencodeerrors():
     return ''
 
+def getsizeof(obj, default=0):
+    return 0
+
 float_repr_style = ''
 orig_argv = ['']
 
@@ -71,3 +75,61 @@ class __implementation:
         return 'str'
 
 implementation = __implementation()
+
+class __flags:
+    def __init__(self):
+        self.debug = 0
+        self.inspect = 0
+        self.interactive = 0
+        self.optimize = 0
+        self.dont_write_bytecode = 0
+        self.no_user_site = 0
+        self.no_site = 0
+        self.ignore_environment = 0
+        self.verbose = 0
+        self.bytes_warning = 0
+        self.quiet = 0
+        self.hash_randomization = 0
+        self.isolated = 0
+        self.dev_mode = False
+        self.utf8_mode = 0
+        self.warn_default_encoding = 0
+        self.safe_path = False
+        self.int_max_str_digits = 0
+        self.gil = 0
+        self.thread_inherit_context = 0
+        self.context_aware_warnings = 0
+
+    def __repr__(self):
+        return 'str'
+
+flags = __flags()
+
+class __int_info:
+    def __init__(self):
+        self.bits_per_digit = 0
+        self.sizeof_digit = 0
+        self.default_max_str_digits = 0
+        self.str_digits_check_threshold = 0
+
+    def __repr__(self):
+        return 'str'
+
+int_info = __int_info()
+
+class __hash_info:
+    def __init__(self):
+        self.width = 0
+        self.modulus = 0
+        self.inf = 0
+        self.nan = 0
+        self.imag = 0
+        self.algorithm = ''
+        self.hash_bits = 0
+        self.seed_bits = 0
+        self.cutoff = 0
+
+    def __repr__(self):
+        return 'str'
+
+hash_info = __hash_info()
