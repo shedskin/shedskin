@@ -600,6 +600,166 @@ def test_datetime_fromtimestamp_round_half_even():
     assert repr(datetime.datetime.utcfromtimestamp(-1.0000001)) == 'datetime.datetime(1969, 12, 31, 23, 59, 59)'
 
 
+def test_fromisocalendar():
+    # inverse of isocalendar(): round-trip a few dates, including ones where
+    # the ISO year differs from the calendar year
+    for d in [datetime.date(2024, 1, 1), datetime.date(2021, 1, 3),
+              datetime.date(2020, 12, 31), datetime.date(2019, 12, 30),
+              datetime.date(2015, 12, 31), datetime.date(2004, 1, 1)]:
+        y, w, wd = d.isocalendar()
+        assert datetime.date.fromisocalendar(y, w, wd) == d
+
+    assert datetime.date.fromisocalendar(2021, 1, 1) == datetime.date(2021, 1, 4)
+    assert datetime.date.fromisocalendar(2020, 53, 5) == datetime.date(2021, 1, 1)
+    assert datetime.date.fromisocalendar(2015, 53, 4) == datetime.date(2015, 12, 31)
+    assert datetime.datetime.fromisocalendar(2024, 10, 3) == datetime.datetime(2024, 3, 6)
+
+    # 2021 has only 52 ISO weeks
+    error = ''
+    try:
+        datetime.date.fromisocalendar(2021, 53, 1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'Invalid week: 53'
+
+    error = ''
+    try:
+        datetime.date.fromisocalendar(2021, 0, 1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'Invalid week: 0'
+
+    error = ''
+    try:
+        datetime.date.fromisocalendar(2021, 10, 8)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'Invalid weekday: 8 (range is [1, 7])'
+
+    error = ''
+    try:
+        datetime.date.fromisocalendar(0, 10, 1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'year must be in 1..9999, not 0'
+
+def test_date_time_strptime():
+    # date.strptime/time.strptime (3.14)
+    assert datetime.date.strptime('2024-03-06', '%Y-%m-%d') == datetime.date(2024, 3, 6)
+    assert datetime.date.strptime('06 Mar 2024', '%d %b %Y') == datetime.date(2024, 3, 6)
+    assert datetime.time.strptime('13:45:07', '%H:%M:%S') == datetime.time(13, 45, 7)
+    assert datetime.time.strptime('13:45', '%H:%M') == datetime.time(13, 45)
+
+    error = ''
+    try:
+        datetime.date.strptime('2024-13-06', '%Y-%m-%d')
+    except ValueError as e:
+        error = 'err'
+    assert error == 'err'
+
+def test_isoformat_timespec():
+    dt = datetime.datetime(2024, 3, 6, 13, 45, 7, 123456)
+    assert dt.isoformat(timespec='auto') == '2024-03-06T13:45:07.123456'
+    assert dt.isoformat(timespec='hours') == '2024-03-06T13'
+    assert dt.isoformat(timespec='minutes') == '2024-03-06T13:45'
+    assert dt.isoformat(timespec='seconds') == '2024-03-06T13:45:07'
+    assert dt.isoformat(timespec='milliseconds') == '2024-03-06T13:45:07.123'
+    assert dt.isoformat(timespec='microseconds') == '2024-03-06T13:45:07.123456'
+    assert dt.isoformat(' ', 'minutes') == '2024-03-06 13:45'
+    assert dt.isoformat(sep='_', timespec='seconds') == '2024-03-06_13:45:07'
+
+    dt0 = datetime.datetime(2024, 3, 6, 13, 45, 7)
+    assert dt0.isoformat(timespec='auto') == '2024-03-06T13:45:07'
+    assert dt0.isoformat(timespec='milliseconds') == '2024-03-06T13:45:07.000'
+    assert dt0.isoformat(timespec='microseconds') == '2024-03-06T13:45:07.000000'
+
+    t = datetime.time(13, 45, 7, 123456)
+    assert t.isoformat() == '13:45:07.123456'
+    assert t.isoformat(timespec='hours') == '13'
+    assert t.isoformat(timespec='minutes') == '13:45'
+    assert t.isoformat(timespec='seconds') == '13:45:07'
+    assert t.isoformat(timespec='milliseconds') == '13:45:07.123'
+    assert t.isoformat(timespec='microseconds') == '13:45:07.123456'
+    assert datetime.time(1, 2).isoformat(timespec='microseconds') == '01:02:00.000000'
+
+    error = ''
+    try:
+        dt.isoformat(timespec='nanoseconds')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'Unknown timespec value'
+
+    error = ''
+    try:
+        t.isoformat(timespec='days')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'Unknown timespec value'
+
+def test_fold():
+    dt = datetime.datetime(2024, 11, 3, 1, 30)
+    assert dt.fold == 0
+    dt1 = datetime.datetime(2024, 11, 3, 1, 30, fold=1)
+    assert dt1.fold == 1
+    assert repr(dt1) == 'datetime.datetime(2024, 11, 3, 1, 30, fold=1)'
+    assert repr(datetime.datetime(2024, 11, 3, 1, 30, 5, 7, fold=1)) == 'datetime.datetime(2024, 11, 3, 1, 30, 5, 7, fold=1)'
+    assert repr(dt) == 'datetime.datetime(2024, 11, 3, 1, 30)'
+    # fold does not take part in naive comparison/hashing
+    assert dt == dt1
+    assert hash(dt) == hash(dt1)
+    assert str(dt1) == '2024-11-03 01:30:00'
+
+    # replace preserves fold unless given
+    assert dt1.replace(minute=45).fold == 1
+    assert dt1.replace(fold=0).fold == 0
+    assert dt.replace(fold=1).fold == 1
+    assert dt.replace(hour=2, fold=1) == datetime.datetime(2024, 11, 3, 2, 30, fold=1)
+    # arithmetic yields fold=0
+    assert (dt1 + datetime.timedelta(hours=1)).fold == 0
+    # time()/combine carry fold along
+    assert dt1.time().fold == 1
+    assert dt1.time() == datetime.time(1, 30, fold=1)
+    assert datetime.datetime.combine(datetime.date(2024, 11, 3), datetime.time(1, 30, fold=1)).fold == 1
+
+    t = datetime.time(1, 30, fold=1)
+    assert t.fold == 1
+    assert datetime.time(1, 30).fold == 0
+    assert repr(t) == 'datetime.time(1, 30, fold=1)'
+    assert repr(datetime.time(1, 30, 0, 5, fold=1)) == 'datetime.time(1, 30, 0, 5, fold=1)'
+    assert t == datetime.time(1, 30)
+    assert t.replace(second=1).fold == 1
+    assert t.replace(fold=0).fold == 0
+    assert t.replace(fold=0) == datetime.time(1, 30)
+
+    error = ''
+    try:
+        datetime.datetime(2024, 11, 3, 1, 30, fold=2)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'fold must be either 0 or 1, not 2'
+
+    error = ''
+    try:
+        datetime.time(1, 30, fold=-1)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'fold must be either 0 or 1, not -1'
+
+    error = ''
+    try:
+        dt.replace(fold=3)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'fold must be either 0 or 1, not 3'
+
+    error = ''
+    try:
+        t.replace(fold=3)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'fold must be either 0 or 1, not 3'
+
+
 def test_all():
         test_date()
         test_date_ctime()
@@ -641,6 +801,10 @@ def test_all():
         test_timedelta_fractional_args()
         test_timedelta_round_half_even()
         test_datetime_fromtimestamp_round_half_even()
+        test_fromisocalendar()
+        test_date_time_strptime()
+        test_isoformat_timespec()
+        test_fold()
 
 if __name__ == "__main__":
     test_all()
