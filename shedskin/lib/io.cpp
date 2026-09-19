@@ -10,6 +10,8 @@
 
 namespace __io__ {
 
+class_ *cl_UnsupportedOperation;
+
 const __ss_int DEFAULT_BUFFER_SIZE = 8192;
 const __ss_int __ss_SEEK_SET = 0, __ss_SEEK_CUR = 1, __ss_SEEK_END = 2;
 
@@ -204,6 +206,7 @@ str *StringIO::getvalue() {
 /* init */
 
 void __init() {
+    cl_UnsupportedOperation = new class_("UnsupportedOperation");
 
 }
 

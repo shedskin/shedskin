@@ -8,6 +8,24 @@
 using namespace __shedskin__;
 namespace __io__ {
 
+extern class_ *cl_UnsupportedOperation;
+class UnsupportedOperation : public OSError {
+public:
+    UnsupportedOperation(str *msg=0) : OSError(msg) {
+        __class__ = cl_UnsupportedOperation;
+        /* plain message, like CPython's UnsupportedOperation('fileno') */
+        this->__init__(msg);
+        __ss_errno = 0;
+        strerror = 0;
+        filename = 0;
+    }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_OSError; }
+#endif
+};
+
 class BytesIO : public file_binary {
 public:
     __ss_int pos; // TODO size_t
@@ -28,6 +46,14 @@ public:
     bool __eof() { return (pos >= len(s)); }
 
     bytes *getvalue();
+    bytes *read1(__ss_int n=-1) { return read(n); }
+
+    __ss_bool readable() { __check_closed(); return True; }
+    __ss_bool writable() { __check_closed(); return True; }
+    __ss_bool seekable() { __check_closed(); return True; }
+    __ss_bool isatty() { __check_closed(); return False; }
+    __ss_int __ss_fileno() { throw new UnsupportedOperation(new str("fileno")); }
+    void *detach() { throw new UnsupportedOperation(new str("detach")); }
 };
 
 class StringIO : public file {
@@ -50,6 +76,15 @@ public:
     bool __eof() { return (pos >= len(s)); }
 
     str *getvalue();
+
+    void *flush() { return NULL; } /* CPython: no closed check here */
+
+    __ss_bool readable() { __check_closed(); return True; }
+    __ss_bool writable() { __check_closed(); return True; }
+    __ss_bool seekable() { __check_closed(); return True; }
+    __ss_bool isatty() { __check_closed(); return False; }
+    __ss_int __ss_fileno() { throw new UnsupportedOperation(new str("fileno")); }
+    void *detach() { throw new UnsupportedOperation(new str("detach")); }
 };
 
 extern const __ss_int DEFAULT_BUFFER_SIZE;
