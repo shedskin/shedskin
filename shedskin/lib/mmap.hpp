@@ -47,6 +47,11 @@ MAP_EXECUTABLE,/* Mark it as an executable.  */
 MAP_POPULATE,  /* Populate page tables.      */
 MAP_STACK,     /* Reserve for a process stack.*/
 
+/* msync() flags for flush() (value is -1 on platforms that lack them). */
+MS_ASYNC,
+MS_INVALIDATE,
+MS_SYNC,
+
 /* madvise() advice (value is -1 on platforms that lack them). */
 MADV_NORMAL,
 MADV_RANDOM,
@@ -98,35 +103,38 @@ class mmap: public pyiter<bytes *>
          __ss_int flags_ = MAP_SHARED,
          __ss_int prot_  = PROT_READ | PROT_WRITE,
          __ss_int access_ = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), fd(-1)
+         __ss_int offset = 0,
+         __ss_bool trackfd_ = True) : closed(__mbool(false)), fd(-1)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
-                 flags_, prot_, access_, offset);
+                 flags_, prot_, access_, offset, trackfd_);
     }
     void *__init__(int __ss_fileno, __ss_int length,
                    __ss_int flags_,  __ss_int prot_,
-                   __ss_int access_, __ss_int offset);
+                   __ss_int access_, __ss_int offset,
+                   __ss_bool trackfd_);
 #else /* WIN32 */
     mmap(int __ss_fileno,
          __ss_int length,
          str *tagname = 0,
          __ss_int access = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
+         __ss_int offset = 0,
+         __ss_bool trackfd_ = True) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
-                 tagname, access, offset);
+                 tagname, access, offset, trackfd_);
     }
     void *__init__(int __ss_fileno, __ss_int length,
                    str *tagname, __ss_int access,
-                   __ss_int offset);
+                   __ss_int offset, __ss_bool trackfd_);
 #endif /* WIN32 */
     // mmap
     void *   close();
     void     __enter__();
     void     __exit__();
-    __ss_int flush(__ss_int offset=0, __ss_int size=-1);
+    void *   flush(__ss_int offset=0, __ss_int size=-1, __ss_int flags=0);
     void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
     __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
@@ -192,6 +200,7 @@ class mmap: public pyiter<bytes *>
     size_t offset;
 #endif /* WIN32 */
     __ss_int access;
+    bool trackfd;
 
     void *__raise_if_closed();
     void *__raise_if_closed_or_not_readable();

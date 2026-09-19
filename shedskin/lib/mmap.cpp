@@ -75,6 +75,24 @@ enum
   __MAP_STACK = -1,
 #endif
 
+  /* msync() flags for flush(); absent on WIN32, where flush() ignores
+     its flags argument. */
+#ifdef MS_ASYNC
+  MMAP_PUSH(MS_ASYNC),
+#else
+  __MS_ASYNC = -1,
+#endif
+#ifdef MS_INVALIDATE
+  MMAP_PUSH(MS_INVALIDATE),
+#else
+  __MS_INVALIDATE = -1,
+#endif
+#ifdef MS_SYNC
+  MMAP_PUSH(MS_SYNC),
+#else
+  __MS_SYNC = -1,
+#endif
+
   /* madvise() advice; not every option exists on every system (and none of
      them do on WIN32), so missing ones fall back to -1, which madvise()
      then rejects with EINVAL -> OSError. */
@@ -217,6 +235,10 @@ enum
 #undef MAP_POPULATE
 #undef MAP_STACK
 
+#undef MS_ASYNC
+#undef MS_INVALIDATE
+#undef MS_SYNC
+
 #undef MADV_NORMAL
 #undef MADV_RANDOM
 #undef MADV_SEQUENTIAL
@@ -273,6 +295,10 @@ const __ss_int
     MAP_POPULATE   = __MAP_POPULATE,
     MAP_STACK      = __MAP_STACK,
 
+    MS_ASYNC      = __MS_ASYNC,
+    MS_INVALIDATE = __MS_INVALIDATE,
+    MS_SYNC       = __MS_SYNC,
+
     MADV_NORMAL = __MADV_NORMAL,
     MADV_RANDOM = __MADV_RANDOM,
     MADV_SEQUENTIAL = __MADV_SEQUENTIAL,
@@ -309,13 +335,14 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
-    *const_25, *const_26;
+    *const_25, *const_26, *const_27, *const_28, *const_29, *const_30,
+    *const_31, *const_32;
 
 str *__name__;
 class_ *cl_mmap;
 
 #ifndef WIN32
-void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_int prot_, __ss_int access_, __ss_int offset_)
+void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_int prot_, __ss_int access_, __ss_int offset_, __ss_bool trackfd_)
 {
     if (length_ < 0)
     {
@@ -359,34 +386,55 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         access_ = ACCESS_READ;
     }
 
+    if (__ss_fileno_ != -1)
+    {
+        /* As in CPython: for a regular file, check (or, for length 0,
+           derive) the mapped length against the file size and offset. */
+        struct stat buf;
+        if (fstat(__ss_fileno_, &buf) == 0 and S_ISREG(buf.st_mode))
+        {
+            if (length_ == 0)
+            {
+                if (buf.st_size == 0)
+                {
+                    throw new ValueError(const_27);
+                }
+                if ((off_t)offset_ >= buf.st_size)
+                {
+                    throw new ValueError(const_28);
+                }
+                length_ = (__ss_int)(buf.st_size - (off_t)offset_);
+            }
+            else if ((off_t)offset_ > buf.st_size or
+                     buf.st_size - (off_t)offset_ < (off_t)length_)
+            {
+                throw new ValueError(const_29);
+            }
+        }
+    }
+
     if (__ss_fileno_ == -1)
     {
         flags_ |= MAP_ANONYMOUS;
         assert(fd == -1);
     }
-    else
+    else if (trackfd_)
     {
         fd = dup(__ss_fileno_);
         if (fd == -1)
         {
             throw new OSError();
         }
-        if(length_ == 0)
-        {
-            struct stat buf;
-            if (fstat(fd, &buf) == -1)
-            {
-                throw new OSError();
-            }
-            length_ = (__ss_int)buf.st_size;
-        }
     }
+    /* else: trackfd=False, so the descriptor is not duplicated (or kept),
+       and size()/resize() will refuse to work. */
 
-    void *temp = ::mmap(0, (size_t)length_, (int)prot_, (int)flags_, fd, offset_);
+    void *temp = ::mmap(0, (size_t)length_, (int)prot_, (int)flags_,
+                        __ss_fileno_, (off_t)offset_);
 
     if (temp == MAP_FAILED)
     {
-        throw OSError();
+        throw new OSError();
     }
 
     m_begin = static_cast<iterator>(temp);
@@ -398,6 +446,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
     prot = prot_;
     access = access_;
     offset = (off_t)offset_;
+    trackfd = trackfd_;
 
     return NULL;
 }
@@ -416,14 +465,31 @@ void *mmap::close()
     return NULL;
 }
 
-__ss_int mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::flush(__ss_int offset_, __ss_int size_, __ss_int flags_)
 {
     __raise_if_closed();
-    if (::msync(m_begin + offset, __subscript(size), MS_SYNC) == -1)
+    __ss_int mapsize = (__ss_int)__size();
+    if (size_ == -1)
+    {
+        size_ = mapsize - offset_;
+    }
+    if (size_ < 0 or offset_ < 0 or mapsize - offset_ < size_)
+    {
+        throw new ValueError(const_30);
+    }
+    if (access == ACCESS_READ or access == ACCESS_COPY)
+    {
+        return NULL;
+    }
+    if (flags_ == 0)
+    {
+        flags_ = MS_SYNC;
+    }
+    if (::msync(m_begin + offset_, (size_t)size_, (int)flags_) == -1)
     {
         throw new OSError();
     }
-    return 0;
+    return NULL;
 }
 
 // since darwin doesn't have mremap
@@ -434,6 +500,10 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();
+    if (not trackfd)
+    {
+        throw new ValueError(const_31);
+    }
 #ifdef HAVE_MREMAP
     /* If this mapping is backed by a file, the file itself must be grown
        (or shrunk) to match, or else accessing the newly mapped region
@@ -495,7 +565,7 @@ void *mmap::resize(__ss_int new_size)
     return NULL;
 }
 #else /* WIN32*/
-void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int access_, __ss_int offset_)
+void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int access_, __ss_int offset_, __ss_bool trackfd_)
 {
     if (length_ < 0)
     {
@@ -552,8 +622,9 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
     else
     {
         /* It is necessary to duplicate the handle, so the
-           Python code can close it on us */
-        if (!DuplicateHandle(
+           Python code can close it on us (unless trackfd=False, in which
+           case the handle is only used to create the mapping below) */
+        if (trackfd_ and !DuplicateHandle(
                     GetCurrentProcess(), /* source process handle */
                     fh, /* handle to be duplicated */
                     GetCurrentProcess(), /* target proc handle */
@@ -610,7 +681,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
 #endif // SIZEOF_SIZE_T > 4
     /* For files, it would be sufficient to pass 0 as size.
        For anonymous maps, we have to pass the size explicitly. */
-    map_handle = CreateFileMapping(file_handle,
+    map_handle = CreateFileMapping((fh != 0 and not trackfd_) ? fh : file_handle,
                                    NULL,
                                    flProtect,
                                    size_hi,
@@ -634,6 +705,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
     m_position = m_begin;
     m_end = m_begin + size_lo;
     offset = offset_;
+    trackfd = trackfd_;
 
     return NULL;
 }
@@ -651,15 +723,37 @@ void *mmap::close()
     return NULL;
 }
 
-__ss_int mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::flush(__ss_int offset_, __ss_int size_, __ss_int flags_)
 {
     __raise_if_closed();
-    return __ss_int(FlushViewOfFile(m_begin + offset, __subscript(size)));
+    (void)flags_; /* ignored on WIN32, as in CPython */
+    __ss_int mapsize = (__ss_int)__size();
+    if (size_ == -1)
+    {
+        size_ = mapsize - offset_;
+    }
+    if (size_ < 0 or offset_ < 0 or mapsize - offset_ < size_)
+    {
+        throw new ValueError(const_30);
+    }
+    if (access == ACCESS_READ or access == ACCESS_COPY)
+    {
+        return NULL;
+    }
+    if (!FlushViewOfFile(m_begin + offset_, (size_t)size_))
+    {
+        throw new OSError();
+    }
+    return NULL;
 }
 
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();
+    if (not trackfd)
+    {
+        throw new ValueError(const_31);
+    }
     DWORD dwErrCode = 0;
     DWORD off_hi, off_lo;
     LONG newSizeLow, newSizeHigh;
@@ -738,7 +832,7 @@ __ss_int mmap::find(bytes *needle, __ss_int start, __ss_int end)
 void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 {
     __raise_if_closed_or_not_readable();
-    __ss_int length = size();
+    __ss_int length = (__ss_int)__size();
 
     // Taken from Python 2.7
     if (count < 0 or (count + destination) < count or
@@ -966,13 +1060,21 @@ __ss_int mmap::size()
         size = (((uint64_t)high)<<32) + low;
         return __ss_int(size);
     }
-    else 
+    else if (trackfd)
     {
         return __size();
     }
-#else /* UNIX */
-    if(fd == -1 )
+    else
     {
+        throw new ValueError(const_32);
+    }
+#else /* UNIX */
+    if (fd == -1)
+    {
+        if (not trackfd)
+        {
+            throw new ValueError(const_32);
+        }
         return (__ss_int)__size();
     }
     else
@@ -1036,7 +1138,10 @@ __iter<bytes *> *mmap::__iter__()
 
 __ss_int mmap::__len__()
 {
-    return size();
+    /* the size of the mapping, not of the underlying file (which differs
+       when mapping with an offset, or only part of a file) */
+    __raise_if_closed();
+    return (__ss_int)__size();
 }
 
 __ss_int mmap::__getitem__(__ss_int index)
@@ -1282,6 +1387,12 @@ void __init()
         const_24 = new str("Cannot set annotation on non-anonymous mappings");
         const_25 = new str("Annotation of mmap is not supported on this platform");
         const_26 = new str("embedded null character");
+        const_27 = new str("cannot mmap an empty file");
+        const_28 = new str("mmap offset is greater than file size");
+        const_29 = new str("mmap length is greater than file size");
+        const_30 = new str("flush values out of range");
+        const_31 = new str("mmap can't resize with trackfd=False.");
+        const_32 = new str("can't get size with trackfd=False");
 
         __name__ = new str("mmap");
 

@@ -545,6 +545,229 @@ def test_access_copy():
         assert g.read() == b'original!'
     tearDown(m)
 
+def test_readline():
+    m = mmap.mmap(-1, 24)
+    m.write(b"first\nsecond line\nlast")
+    m.seek(0)
+    assert m.readline() == b"first\n"
+    assert m.tell() == 6
+    assert m.readline() == b"second line\n"
+    # no trailing newline: runs up to the end of the mapping
+    assert m.readline() == b"last\x00\x00"
+    assert m.tell() == 24
+    assert m.readline() == b""
+    m.seek(3)
+    assert m.readline() == b"st\n"
+    m.close()
+
+
+def test_readline_file():
+    setUp()
+    with open(TESTFILE_OUT, "wb") as f:
+        f.write(b"alpha\nbeta\ngamma\n")
+    with open(TESTFILE_OUT, "r+b") as f:
+        m = mmap.mmap(f.fileno(), 0)
+        lines = []
+        line = m.readline()
+        while line:
+            lines.append(line)
+            line = m.readline()
+        assert lines == [b"alpha\n", b"beta\n", b"gamma\n"]
+        m.close()
+    tearDown(m)
+
+
+def test_flush():
+    PAGESIZE = mmap.PAGESIZE
+    m = mmap.mmap(-1, PAGESIZE * 2)
+    m.write(b"flushme")
+    m.flush()
+    m.flush(0)
+    m.flush(PAGESIZE)                 # offset without size: flush to the end
+    m.flush(0, PAGESIZE)
+    m.flush(PAGESIZE, PAGESIZE)
+    m.flush(PAGESIZE * 2)             # empty range at the end is fine
+    m.flush(flags=mmap.MS_SYNC)
+    m.flush(0, PAGESIZE, flags=mmap.MS_ASYNC)
+    m.flush(PAGESIZE, flags=mmap.MS_SYNC)
+
+    for offset, size in [(0, PAGESIZE * 2 + 1), (PAGESIZE, PAGESIZE + 1), (-PAGESIZE, -1), (0, -2), (PAGESIZE * 3, -1)]:
+        error = False
+        try:
+            m.flush(offset, size)
+        except ValueError as e:
+            error = True
+            assert str(e) == "flush values out of range"
+        assert error, "flush(%d, %d) should raise ValueError" % (offset, size)
+    m.close()
+
+    error = False
+    try:
+        m.flush()
+    except ValueError:
+        error = True
+    assert error, "flush() on a closed mmap should raise ValueError"
+
+
+def test_flush_file():
+    PAGESIZE = mmap.PAGESIZE
+    setUp()
+    with open(TESTFILE_OUT, "wb") as f:
+        f.write(b"-" * PAGESIZE * 2)
+    f = open(TESTFILE_OUT, "r+b")
+    m = mmap.mmap(f.fileno(), 0)
+    m[:5] = b"hello"
+    m[PAGESIZE:PAGESIZE + 5] = b"world"
+    m.flush(0, PAGESIZE, flags=mmap.MS_SYNC)
+    m.flush(PAGESIZE, flags=mmap.MS_SYNC | mmap.MS_INVALIDATE)
+    f.close()
+    with open(TESTFILE_OUT, "rb") as g:
+        data = g.read()
+    assert data[:5] == b"hello"
+    assert data[PAGESIZE:PAGESIZE + 5] == b"world"
+    tearDown(m)
+
+    # flushing a read-only mapping is a no-op, as in CPython
+    with open(TESTFILE_IN, "rb") as f:
+        m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+        m.flush()
+        m.flush(0, 1, flags=mmap.MS_ASYNC)
+        m.close()
+
+
+def test_offset():
+    GRAN = mmap.ALLOCATIONGRANULARITY
+    setUp()
+    with open(TESTFILE_OUT, "wb") as f:
+        f.write(b"a" * GRAN + b"b" * GRAN + b"c" * 10)
+    f = open(TESTFILE_OUT, "r+b")
+
+    # length 0: map from offset to the end of the file
+    m = mmap.mmap(f.fileno(), 0, offset=GRAN)
+    assert len(m) == GRAN + 10
+    assert m.size() == GRAN * 2 + 10      # size() is the size of the file
+    assert m[0] == ord("b")
+    assert m[-1] == ord("c")
+    assert m.read(3) == b"bbb"
+    assert m.find(b"c") == GRAN
+    m[GRAN:GRAN + 3] = b"XYZ"
+    m.move(0, GRAN, 3)
+    m.flush()
+    m.close()
+
+    # explicit length at an offset
+    m = mmap.mmap(f.fileno(), 5, offset=GRAN * 2)
+    assert len(m) == 5
+    assert m[:] == b"XYZcc"
+    m.close()
+
+    # positional offset (unix signature: fileno, length, flags, prot, access, offset)
+    m = mmap.mmap(f.fileno(), 4, mmap.MAP_SHARED, mmap.PROT_READ, 0, GRAN)
+    assert m[:] == b"XYZb"
+    m.close()
+    f.close()
+
+    with open(TESTFILE_OUT, "rb") as g:
+        data = g.read()
+    assert data[:GRAN] == b"a" * GRAN
+    assert data[GRAN:GRAN + 4] == b"XYZb"
+    assert data[GRAN * 2:] == b"XYZccccccc"
+
+    f = open(TESTFILE_OUT, "r+b")
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=GRAN * 3)
+    except ValueError as e:
+        error = True
+        assert str(e) == "mmap offset is greater than file size"
+    assert error, "offset beyond the end of the file should raise"
+    for length, offset in [(GRAN * 2, GRAN), (1, GRAN * 3)]:
+        error = False
+        try:
+            mmap.mmap(f.fileno(), length, offset=offset)
+        except ValueError as e:
+            error = True
+            assert str(e) == "mmap length is greater than file size"
+        assert error, "mmap(fd, %d, offset=%d) should raise" % (length, offset)
+
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=-GRAN)
+    except OverflowError:
+        error = True
+    assert error, "a negative offset should raise OverflowError"
+
+    # a misaligned offset is rejected by the OS
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=1)
+    except OSError:
+        error = True
+    assert error, "a misaligned offset should raise OSError"
+    f.close()
+
+    setUp()
+    with open(TESTFILE_OUT, "wb") as f:
+        pass
+    with open(TESTFILE_OUT, "r+b") as f:
+        error = False
+        try:
+            mmap.mmap(f.fileno(), 0)
+        except ValueError as e:
+            error = True
+            assert str(e) == "cannot mmap an empty file"
+        assert error, "mapping an empty file should raise ValueError"
+    os.remove(TESTFILE_OUT)
+
+
+def test_trackfd():
+    PAGESIZE = mmap.PAGESIZE
+    setUp()
+    with open(TESTFILE_OUT, "wb") as f:
+        f.write(b"q" * PAGESIZE)
+
+    f = open(TESTFILE_OUT, "r+b")
+    m = mmap.mmap(f.fileno(), 0, trackfd=True)
+    assert m.size() == PAGESIZE
+    m.close()
+
+    m = mmap.mmap(f.fileno(), 0, trackfd=False)
+    f.close()                              # the mapping stays usable
+    assert len(m) == PAGESIZE
+    assert m[:3] == b"qqq"
+    m[0] = ord("Q")
+    m.flush()
+    error = False
+    try:
+        m.size()
+    except ValueError as e:
+        error = True
+        assert str(e) == "can't get size with trackfd=False"
+    assert error, "size() with trackfd=False should raise ValueError"
+    error = False
+    try:
+        m.resize(PAGESIZE * 2)
+    except ValueError as e:
+        error = True
+        assert str(e) == "mmap can't resize with trackfd=False."
+    assert error, "resize() with trackfd=False should raise ValueError"
+    m.close()
+    with open(TESTFILE_OUT, "rb") as g:
+        assert g.read(2) == b"Qq"
+
+    # also for anonymous mappings
+    m = mmap.mmap(-1, PAGESIZE, trackfd=False)
+    assert len(m) == PAGESIZE
+    error = False
+    try:
+        m.size()
+    except ValueError:
+        error = True
+    assert error
+    m.close()
+    os.remove(TESTFILE_OUT)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -562,8 +785,14 @@ def test_all():
         test_set_name()
         test_set_name_file_backed()
         test_default_flags_prot()
+        test_flush_file()
+        test_offset()
+        test_trackfd()
     test_module_constants()
     test_access_copy()
+    test_readline()
+    test_readline_file()
+    test_flush()
 
 if __name__ == '__main__':
     test_all()
