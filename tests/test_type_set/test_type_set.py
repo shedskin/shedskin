@@ -240,6 +240,48 @@ def test_set_augmented_assign():
     assert sorted(set4) == []
 
 
+def test_symmetric_difference_update():
+    s = {1, 2, 3, 4}
+    assert s.symmetric_difference_update({3, 4, 5}) is None
+    assert sorted(s) == [1, 2, 5]
+
+    s.symmetric_difference_update(s.copy())
+    assert len(s) == 0
+
+    s.symmetric_difference_update({7})
+    assert sorted(s) == [7]
+
+    # any iterable
+    t = {1, 2, 3}
+    t.symmetric_difference_update([3, 4, 4])
+    assert sorted(t) == [1, 2, 4]
+    t.symmetric_difference_update((1, 5))
+    assert sorted(t) == [2, 4, 5]
+    t.symmetric_difference_update(range(4))
+    assert sorted(t) == [0, 1, 3, 4, 5]
+
+    u = {'a', 'c'}
+    u.symmetric_difference_update('abb')
+    assert sorted(u) == ['b', 'c']
+
+    # same result as ^=
+    v = {1, 2, 3}
+    w = {1, 2, 3}
+    v.symmetric_difference_update({2, 9})
+    w ^= {2, 9}
+    assert v == w
+
+
+def test_pop_empty():
+    s = {1}
+    assert s.pop() == 1
+    try:
+        s.pop()
+        assert False
+    except KeyError as e:
+        assert str(e) == "'pop from an empty set'"
+
+
 def test_set_syntax():
     s = {1, 2}
     assert len(s) == 2
@@ -287,6 +329,8 @@ def test_all():
     test_set_proper_subset_superset()
     test_set_binary_elem()
     test_set_augmented_assign()
+    test_symmetric_difference_update()
+    test_pop_empty()
     test_set_syntax()
     test_eq()
     test_set_literal_in_method()

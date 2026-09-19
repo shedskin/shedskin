@@ -339,7 +339,7 @@ template<class K, class V> V dict<K,V>::pop(K key, V value) {
 template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
     typename __GC_DICT<K, V>::iterator it = gcd.begin();
     if(it == gcd.end())
-        throw new KeyError(new str("popitem(): dictionary is empty"));
+        throw new KeyError(repr(new str("popitem(): dictionary is empty")));
     else {
         tuple2<K,V> *t = new tuple2<K,V>(2, (*it).first, (*it).second);
         gcd.erase(it);

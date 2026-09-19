@@ -119,6 +119,33 @@ def test_pop():
     assert len(d) == 0
 
 
+def test_popitem():
+    d = {1: 'a', 2: 'b', 3: 'c'}
+    seen = []
+    while d:
+        k, v = d.popitem()
+        assert v == 'abc'[k - 1]
+        assert k not in d
+        seen.append(k)
+    assert sorted(seen) == [1, 2, 3]
+    assert len(d) == 0
+
+    try:
+        d.popitem()
+        assert False
+    except KeyError as e:
+        assert str(e) == "'popitem(): dictionary is empty'"
+
+    # usable again afterwards
+    d[4] = 'd'
+    assert d.popitem() == (4, 'd')
+
+    f = {'x': 1.5}
+    kv = f.popitem()
+    assert kv == ('x', 1.5)
+    assert len(f) == 0
+
+
 def test_update():
     # dict
     d = {1: '2', 2: '4'}
@@ -248,6 +275,7 @@ def test_all():
     # test_func_as_value()
     test_dict_fromkeys()
     test_pop()
+    test_popitem()
     test_update()
     test_merge()
     test_frozendict()
