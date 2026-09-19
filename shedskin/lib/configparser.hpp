@@ -26,6 +26,7 @@ class ParsingError;
 class MissingSectionHeaderError;
 class MultilineContinuationError;
 class InvalidWriteError;
+class UnnamedSectionDisabledError;
 class Interpolation;
 class BasicInterpolation;
 class ExtendedInterpolation;
@@ -34,6 +35,8 @@ class ConfigParser;
 class SectionProxy;
 
 extern str *DEFAULTSECT, *__name__;
+/* a unique str instance, compared by identity where CPython uses 'is' */
+extern str *UNNAMED_SECTION;
 extern __ss_int MAX_INTERPOLATION_DEPTH;
 
 extern class_ *cl_Error;
@@ -277,6 +280,19 @@ public:
     }
 };
 
+extern class_ *cl_UnnamedSectionDisabledError;
+class UnnamedSectionDisabledError : public Error {
+/**
+Raised when an attempt to use UNNAMED_SECTION is made with the
+corresponding functionality disabled (CPython 3.14+).
+*/
+public:
+    UnnamedSectionDisabledError() {
+        this->__class__ = cl_UnnamedSectionDisabledError;
+        Error::__init__(new str("Support for UNNAMED_SECTION is disabled."));
+    }
+};
+
 extern class_ *cl_Interpolation;
 class Interpolation : public pyobj {
 /**
@@ -353,12 +369,13 @@ public:
     __ss_int _strict;
     __ss_int _allow_no_value;
     __ss_int _empty_lines_in_values;
+    __ss_int _allow_unnamed_section;
     __re__::Pattern *_optcre;
 
     RawConfigParser() {}
-    RawConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
+    RawConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL, __ss_int allow_unnamed_section=0) {
         this->__class__ = cl_RawConfigParser;
-        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_);
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_, allow_unnamed_section);
     }
     /* class-specific default for the interpolation= constructor argument
        (Interpolation for RawConfigParser, BasicInterpolation for
@@ -374,10 +391,10 @@ public:
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
     __ss_bool remove_section(str *section);
-    void *__init__(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL);
+    void *__init__(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL, __ss_int allow_unnamed_section=0);
     __ss_bool has_option(str *section, str *option);
     void *write(file *fp, __ss_int space_around_delimiters=1);
-    void *_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter);
+    void *_write_section(file *fp, str *section_name, dict<str *, str *> *section_items, str *delimiter, __ss_int unnamed=0);
     void *_validate_key_contents(str *key);
     /* flush the multi-line accumulator of the option being parsed */
     void *_join_value(dict<str *, str *> *cursect, str *optname, list<str *> *curval);
@@ -461,9 +478,9 @@ through the _interpolation member, so no overrides are needed here.
 public:
 
     ConfigParser() {}
-    ConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL) {
+    ConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL, __ss_int allow_unnamed_section=0) {
         this->__class__ = cl_ConfigParser;
-        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_);
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_, allow_unnamed_section);
     }
     Interpolation *_default_interpolation();
 };

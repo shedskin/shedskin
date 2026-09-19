@@ -52,6 +52,8 @@ class Random:
     def binomialvariate(self, n=1, p=0.5): return 1
 
 
+Random.VERSION = 3
+
 class SystemRandom(Random):
     def __init__(self, x=None):
         x.__hash__()

@@ -659,6 +659,12 @@ def test_seed_version():
     assert 0.0 <= sr.random() < 1.0
 
 
+def test_version():
+    assert random.Random.VERSION == 3
+    assert random.Random(1).VERSION == 3
+    assert random.SystemRandom().VERSION == 3
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -683,6 +689,7 @@ def test_all():
     test_instance_variates()
     test_instance_choices_cum_weights()
     test_seed_version()
+    test_version()
 
 
 if __name__ == '__main__':

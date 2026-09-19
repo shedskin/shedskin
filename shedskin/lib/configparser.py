@@ -6,6 +6,10 @@ import io
 DEFAULTSECT = "DEFAULT"
 MAX_INTERPOLATION_DEPTH = 10
 
+# CPython uses a unique _UnnamedSection object; shed skin models it as a
+# unique str instance (see configparser.cpp)
+UNNAMED_SECTION = ''
+
 __void = 0  # 'no fallback given' sentinel for the typed getters
 
 class Error(Exception):
@@ -78,6 +82,10 @@ class InvalidWriteError(Error):
     def __init__(self, msg=''):
         self.message = msg
 
+class UnnamedSectionDisabledError(Error):
+    def __init__(self):
+        self.message = ''
+
 class Interpolation:
     """Dummy interpolation that passes the value through with no changes."""
     def before_get(self, parser, section, option, value, defaults):
@@ -112,9 +120,10 @@ __cperror9 = ParsingError('')
 __cperror10 = MissingSectionHeaderError('', 0, '')
 __cperror11 = MultilineContinuationError('', 0, '')
 __cperror12 = InvalidWriteError('')
+__cperror13 = UnnamedSectionDisabledError()
 
 class RawConfigParser:
-    def __init__(self, defaults=None, allow_no_value=False, delimiters=None, comment_prefixes=None, inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=None, interpolation=None):
+    def __init__(self, defaults=None, allow_no_value=False, delimiters=None, comment_prefixes=None, inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=None, interpolation=None, allow_unnamed_section=False):
         # a class attribute in CPython; modelled per instance (shared dict)
         self.BOOLEAN_STATES = {'': True}
         self._sections = {'': ''}
@@ -126,6 +135,7 @@ class RawConfigParser:
         self._strict = strict
         self._allow_no_value = allow_no_value
         self._empty_lines_in_values = empty_lines_in_values
+        self._allow_unnamed_section = allow_unnamed_section
         if interpolation is None:
             self._interpolation = Interpolation()
         else:

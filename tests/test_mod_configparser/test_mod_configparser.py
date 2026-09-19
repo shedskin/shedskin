@@ -1130,6 +1130,77 @@ def test_typed_getters_raw_and_vars():
     assert sec.getboolean('missing', True, raw=True) is True
 
 
+def test_unnamed_section():
+    U = configparser.UNNAMED_SECTION
+    assert str(U) == '<UNNAMED_SECTION>'
+
+    # options before the first header go into the unnamed section
+    config = configparser.ConfigParser(allow_unnamed_section=True)
+    config.read_string('a = 1\nb = 2\n\n[s]\nc = 3\n')
+    # (no order checks: shed skin dicts are unordered)
+    assert len(config.sections()) == 2
+    assert U in config.sections()
+    assert 's' in config.sections()
+    assert config.has_section(U)
+    assert config.get(U, 'a') == '1'
+    assert config[U]['b'] == '2'
+    assert sorted(config.items(U)) == [('a', '1'), ('b', '2')]
+    assert config.get('s', 'c') == '3'
+
+    # write(): the unnamed section comes first, without a header
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    text = open(writefile).read()
+    unnamed, rest = text.split('\n\n[s]\n')
+    assert sorted(unnamed.split('\n')) == ['a = 1', 'b = 2']
+    assert rest == 'c = 3\n\n'
+
+    # an empty unnamed section is not written
+    config = configparser.RawConfigParser(allow_unnamed_section=True)
+    config.read_string('[s]\nc = 3\n')
+    assert config.has_section(U)
+    assert config.options(U) == []
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    assert open(writefile).read() == '[s]\nc = 3\n\n'
+
+    # add_section()/set()/read_dict()
+    config = configparser.ConfigParser(allow_unnamed_section=True)
+    config.add_section(U)
+    config.set(U, 'x', 'y')
+    config.read_dict({'t': {'k': 'v'}})
+    fl = open(writefile, 'w')
+    config.write(fl)
+    fl.close()
+    assert open(writefile).read() == 'x = y\n\n[t]\nk = v\n\n'
+    try:
+        config.add_section(U)
+        assert False
+    except configparser.DuplicateSectionError:
+        pass
+
+    # disabled by default
+    config = configparser.ConfigParser()
+    try:
+        config.read_string('a = 1\n')
+        assert False
+    except configparser.MissingSectionHeaderError:
+        pass
+    try:
+        config.add_section(U)
+        assert False
+    except configparser.UnnamedSectionDisabledError as e:
+        assert str(e) == 'Support for UNNAMED_SECTION is disabled.'
+    try:
+        config.read_dict({U: {'a': '1'}})
+        assert False
+    except configparser.Error:
+        pass
+    assert not config.has_section(U)
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1180,6 +1251,7 @@ def test_all():
     test_invalid_write_error()
     test_parsing_error_source()
     test_typed_getters_raw_and_vars()
+    test_unnamed_section()
 
 if __name__ == '__main__':
     test_all()
