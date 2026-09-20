@@ -578,6 +578,46 @@ def test_stringio_newline():
             assert str(e) == 'illegal newline value: ' + repr(bad)
 
 
+def test_bytesio_readinto():
+    b = io.BytesIO(b'hello world')
+    ba = bytearray(4)
+    assert b.readinto(ba) == 4
+    assert ba == bytearray(b'hell')
+    assert b.tell() == 4
+    assert b.readinto1(ba) == 4
+    assert ba == bytearray(b'o wo')
+
+    # short read: only the first bytes of the buffer are overwritten
+    big = bytearray(b'xxxxxxxx')
+    assert b.readinto(big) == 3
+    assert big == bytearray(b'rldxxxxx')
+    assert b.readinto(big) == 0
+    assert b.readinto(bytearray()) == 0
+
+    b.seek(100)
+    assert b.readinto(ba) == 0
+
+    b.seek(0)
+    try:
+        b.readinto(b'xxxx')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'readinto() argument must be read-write bytes-like object, not bytes'
+
+    b.close()
+    try:
+        b.readinto(ba)
+        assert False
+    except ValueError:
+        pass
+
+
+def test_stringio_line_buffering():
+    s = io.StringIO('abc')
+    assert s.line_buffering == False
+    assert not io.StringIO(newline=None).line_buffering
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -609,6 +649,8 @@ def test_all():
     test_writelines()
     test_read1()
     test_stringio_newline()
+    test_bytesio_readinto()
+    test_stringio_line_buffering()
 
 
 if __name__ == '__main__':

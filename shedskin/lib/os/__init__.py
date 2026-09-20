@@ -80,9 +80,12 @@ class __cstat:
         self.st_dev = 1
         self.st_rdev = 1
         self.st_nlink = 1
-        self.st_mtime = 1
-        self.st_atime = 1
-        self.st_ctime = 1
+        self.st_mtime = 1.0
+        self.st_atime = 1.0
+        self.st_ctime = 1.0
+        self.st_atime_ns = 1
+        self.st_mtime_ns = 1
+        self.st_ctime_ns = 1
         self.st_uid = 1
         self.st_gid = 1
 
@@ -141,6 +144,10 @@ class DirEntry:
         return True
     def is_symlink(self):
         return True
+    def is_junction(self):
+        return True
+    def inode(self):
+        return 1
     def stat(self, follow_symlinks=True):
         return __cstat()
     def __repr__(self):

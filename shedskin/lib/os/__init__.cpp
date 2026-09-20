@@ -19,6 +19,8 @@
 #ifdef _MSC_VER
 #include <direct.h>
 #include <io.h>
+#elif defined(WIN32)
+#include <io.h> /* _get_osfhandle */
 #else
 #include <sys/time.h>
 #include <utime.h>
@@ -297,6 +299,38 @@ void *abort() {
 
 class_ *cl___cstat;
 
+/* set float seconds, integer nanoseconds and integer seconds for one timestamp,
+   computed the same way as CPython (float: sec + nsec * 1e-9) */
+static void __set_stat_time(__ss_float &f, __ss_int &ns, __ss_int &s, long long sec, long nsec) {
+    f = (__ss_float)((double)sec + (double)nsec * 1e-9);
+    ns = (__ss_int)(sec * 1000000000LL + nsec);
+    s = (__ss_int)sec;
+}
+
+#ifdef WIN32
+/* the CRT stat() leaves st_ino zero, reports the drive number as st_dev and
+   has second resolution only, so like CPython take these from the Win32 API */
+static void __set_stat_filetime(__ss_float &f, __ss_int &ns, __ss_int &s, const FILETIME &ft) {
+    ULARGE_INTEGER u;
+    u.LowPart = ft.dwLowDateTime;
+    u.HighPart = ft.dwHighDateTime;
+    long long in = (long long)u.QuadPart; /* 100ns units since 1601-01-01 */
+    __set_stat_time(f, ns, s, in / 10000000LL - 11644473600LL, (long)(in % 10000000LL) * 100);
+}
+
+static void __stat_win32_info(__cstat *st, HANDLE h) {
+    BY_HANDLE_FILE_INFORMATION info;
+    if (h == INVALID_HANDLE_VALUE || !GetFileInformationByHandle(h, &info))
+        return; /* keep the CRT values */
+    st->st_ino = (__ss_int)(((unsigned long long)info.nFileIndexHigh << 32) | info.nFileIndexLow);
+    st->st_dev = (__ss_int)info.dwVolumeSerialNumber;
+    st->st_nlink = (__ss_int)info.nNumberOfLinks;
+    __set_stat_filetime(st->__ss_st_atime, st->st_atime_ns, st->__atime_s, info.ftLastAccessTime);
+    __set_stat_filetime(st->__ss_st_mtime, st->st_mtime_ns, st->__mtime_s, info.ftLastWriteTime);
+    __set_stat_filetime(st->__ss_st_ctime, st->st_ctime_ns, st->__ctime_s, info.ftCreationTime);
+}
+#endif
+
 __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
@@ -309,6 +343,7 @@ __cstat::__cstat(str *path, __ss_int t) {
 #endif
     }
 #ifdef WIN32
+    bool device = false;
     if (r == -1) {
         /* The CRT stat() fails on device names such as 'nul' or 'con'.
            Like CPython (since 3.8), fall back to opening the path and
@@ -323,6 +358,7 @@ __cstat::__cstat(str *path, __ss_int t) {
                 memset(&sbuf, 0, sizeof(sbuf));
                 sbuf.st_mode = (type == FILE_TYPE_CHAR) ? _S_IFCHR : _S_IFIFO;
                 r = 0;
+                device = true;
             }
         }
     }
@@ -332,6 +368,18 @@ __cstat::__cstat(str *path, __ss_int t) {
     }
 
     fill_er_up();
+
+#ifdef WIN32
+    if (!device) {
+        HANDLE h = CreateFileA(path->c_str(), 0,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                               NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        if (h != INVALID_HANDLE_VALUE) {
+            __stat_win32_info(this, h);
+            CloseHandle(h);
+        }
+    }
+#endif
 }
 
 __cstat::__cstat(__ss_int fd) {
@@ -341,6 +389,10 @@ __cstat::__cstat(__ss_int fd) {
         __throw_oserror();
 
     fill_er_up();
+
+#ifdef WIN32
+    __stat_win32_info(this, (HANDLE)_get_osfhandle((int)fd));
+#endif
 }
 
 void __cstat::fill_er_up() {
@@ -349,9 +401,16 @@ void __cstat::fill_er_up() {
     this->st_dev = (__ss_int)sbuf.st_dev;
     this->st_rdev = (__ss_int)sbuf.st_rdev;
     this->st_nlink = (__ss_int)sbuf.st_nlink;
-    this->__ss_st_atime = (__ss_int)sbuf.st_atime;
-    this->__ss_st_mtime = (__ss_int)sbuf.st_mtime;
-    this->__ss_st_ctime = (__ss_int)sbuf.st_ctime;
+#if defined(WIN32)
+    long atime_nsec = 0, mtime_nsec = 0, ctime_nsec = 0; /* overridden by __stat_win32_info */
+#elif defined(__APPLE__)
+    long atime_nsec = sbuf.st_atimespec.tv_nsec, mtime_nsec = sbuf.st_mtimespec.tv_nsec, ctime_nsec = sbuf.st_ctimespec.tv_nsec;
+#else
+    long atime_nsec = sbuf.st_atim.tv_nsec, mtime_nsec = sbuf.st_mtim.tv_nsec, ctime_nsec = sbuf.st_ctim.tv_nsec;
+#endif
+    __set_stat_time(this->__ss_st_atime, this->st_atime_ns, this->__atime_s, (long long)sbuf.st_atime, atime_nsec);
+    __set_stat_time(this->__ss_st_mtime, this->st_mtime_ns, this->__mtime_s, (long long)sbuf.st_mtime, mtime_nsec);
+    __set_stat_time(this->__ss_st_ctime, this->st_ctime_ns, this->__ctime_s, (long long)sbuf.st_ctime, ctime_nsec);
     this->st_uid = (__ss_int)sbuf.st_uid;
     this->st_gid = (__ss_int)sbuf.st_gid;
     this->st_size = (__ss_int)sbuf.st_size;
@@ -375,9 +434,9 @@ __ss_int __cstat::__getitem__(__ss_int i) {
         case 4: return (__ss_int)st_uid;
         case 5: return (__ss_int)st_gid;
         case 6: return (__ss_int)st_size;
-        case 7: return __ss_st_atime;
-        case 8: return __ss_st_mtime;
-        case 9: return __ss_st_ctime;
+        case 7: return __atime_s;
+        case 8: return __mtime_s;
+        case 9: return __ctime_s;
 
         default:
             throw new IndexError(new str("tuple index out of range"));
@@ -452,6 +511,14 @@ __ss_bool DirEntry::is_file(__ss_bool follow_symlinks) {
 __ss_bool DirEntry::is_symlink() {
     std::error_code ec;
     return __mbool(__entry.is_symlink(ec));
+}
+
+__ss_bool DirEntry::is_junction() {
+    return __path__::isjunction(this->path); /* always False except on Windows */
+}
+
+__ss_int DirEntry::inode() {
+    return __os__::lstat(this->path)->st_ino;
 }
 
 __cstat *DirEntry::stat(__ss_bool follow_symlinks) {
@@ -788,6 +855,23 @@ void *close(__ss_int fd) {
 
 /* utime */
 
+/* split float seconds into seconds and nanoseconds like CPython does for
+   os.utime() (_PyTime_DoubleToDenominator with ROUND_FLOOR) */
+static void __utime_split(double t, long long &sec, long &nsec) {
+    double intpart;
+    double floatpart = modf(t, &intpart);
+    floatpart = floor(floatpart * 1e9);
+    if (floatpart >= 1e9) {
+        floatpart -= 1e9;
+        intpart += 1.0;
+    } else if (floatpart < 0) {
+        floatpart += 1e9;
+        intpart -= 1.0;
+    }
+    sec = (long long)intpart;
+    nsec = (long)floatpart;
+}
+
 #ifdef WIN32
 /* win32 implementation based on cpython */
 
@@ -825,21 +909,28 @@ void __utime(str *path) {
     __utime_win32(path, atime, mtime);
 }
 void __utime(str *path, double actime, double modtime) {
-    time_t atimesec, mtimesec;
+    long long atimesec, mtimesec;
+    long atimensec, mtimensec;
     FILETIME atime, mtime;
-    atimesec = (time_t)actime;
-    mtimesec = (time_t)modtime;
-    time_t_to_FILE_TIME(atimesec, 0, &atime); /* XXX nanoseconds */
-    time_t_to_FILE_TIME(mtimesec, 0, &mtime);
+    __utime_split(actime, atimesec, atimensec);
+    __utime_split(modtime, mtimesec, mtimensec);
+    time_t_to_FILE_TIME((time_t)atimesec, (int)atimensec, &atime);
+    time_t_to_FILE_TIME((time_t)mtimesec, (int)mtimensec, &mtime);
     __utime_win32(path, atime, mtime);
 }
 
 #else
 void __utime(str *path, double actime, double modtime) {
-    struct utimbuf buf;
-    buf.actime = (time_t)actime;
-    buf.modtime = (time_t)modtime;
-    if(::utime(path->c_str(), &buf) == -1)
+    struct timespec ts[2];
+    long long sec;
+    long nsec;
+    __utime_split(actime, sec, nsec);
+    ts[0].tv_sec = (time_t)sec;
+    ts[0].tv_nsec = nsec;
+    __utime_split(modtime, sec, nsec);
+    ts[1].tv_sec = (time_t)sec;
+    ts[1].tv_nsec = nsec;
+    if(::utimensat(AT_FDCWD, path->c_str(), ts, 0) == -1)
         __throw_oserror(new str("os.utime"));
 }
 
