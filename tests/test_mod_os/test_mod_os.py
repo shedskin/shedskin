@@ -900,6 +900,58 @@ def test_terminal_size():
         pass
 
 
+walk_errors = []
+walk_errnos = []
+
+def walk_onerror(e):
+    walk_errors.append(e.filename)
+
+def walk_reraise(e):
+    raise e
+
+def test_walk_onerror():
+    # onerror is called with the OSError for a directory that cannot be
+    # scanned (here: a missing top, or a top that is a file)
+    base = 'shedskin_test_walk_onerror'
+    afile = os.path.join(base, 'afile.txt')
+    os.mkdir(base)
+    with open(afile, 'w') as f:
+        f.write('hi')
+
+    assert list(os.walk('shedskin_walk_missing', onerror=walk_onerror)) == []
+    assert walk_errors == ['shedskin_walk_missing']
+    assert list(os.walk(afile, onerror=walk_onerror)) == []
+    assert walk_errors == ['shedskin_walk_missing', afile]
+
+    # lazy: nothing happens before the first next()
+    w = os.walk('shedskin_walk_missing2', onerror=walk_onerror)
+    assert len(walk_errors) == 2
+    assert list(w) == []
+    assert len(walk_errors) == 3
+    assert list(os.walk('shedskin_walk_missing3', topdown=False, onerror=walk_onerror)) == []
+    assert walk_errors[3] == 'shedskin_walk_missing3'
+
+    # readable directories do not trigger it
+    assert len(list(os.walk(base, onerror=walk_onerror))) == 1
+    assert len(walk_errors) == 4
+
+    # explicit None, lambda, and a callback that re-raises
+    assert list(os.walk('shedskin_walk_missing', onerror=None)) == []
+    list(os.walk('shedskin_walk_missing', onerror=lambda err: walk_errnos.append(err.errno)))
+    assert walk_errnos == [2]  # ENOENT
+    ok = False
+    try:
+        list(os.walk('shedskin_walk_missing', False, walk_reraise))
+    except OSError as e:  # TODO FileNotFoundError: 'raise e' loses the subclass
+        ok = True
+        assert e.errno == 2
+        assert e.filename == 'shedskin_walk_missing'
+    assert ok
+
+    os.remove(afile)
+    os.rmdir(base)
+
+
 def test_all():
     test_getcwd()
     test_chdir()
@@ -927,6 +979,7 @@ def test_all():
     test_stat_times()
     test_direntry_inode_junction()
     test_walk()
+    test_walk_onerror()
     test_oserror_subclasses()
     test_kwarg_names()
     test_getcwdb()

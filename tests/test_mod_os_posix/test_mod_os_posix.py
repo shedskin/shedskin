@@ -241,9 +241,82 @@ def test_pty_terminal():
     assert ok
 
 
+def test_walk_followlinks():
+    base = 'shedskin_test_walk_links'
+    os.system('rm -rf ' + base)
+    os.makedirs(os.path.join(base, 'real', 'sub'))
+    with open(os.path.join(base, 'real', 'sub', 'f.txt'), 'w') as f:
+        f.write('x')
+    with open(os.path.join(base, 'file.txt'), 'w') as f:
+        f.write('x')
+    os.symlink('real', os.path.join(base, 'link'))
+
+    # symlinked directories are listed in dirnames, but only descended
+    # into with followlinks=True
+    for followlinks in (False, True):
+        seen = []
+        for root, dirs, files in os.walk(base, followlinks=followlinks):
+            seen.append((root, sorted(dirs), sorted(files)))
+        seen.sort()
+        expected = [(base, ['link', 'real'], ['file.txt'])]
+        if followlinks:
+            expected += [(base + '/link', ['sub'], []), (base + '/link/sub', [], ['f.txt'])]
+        expected += [(base + '/real', ['sub'], []), (base + '/real/sub', [], ['f.txt'])]
+        assert seen == expected
+
+    roots = []
+    for root, dirs, files in os.walk(base, topdown=False, followlinks=True):
+        roots.append(root)
+    assert roots[-1] == base
+    assert sorted(roots) == [base, base + '/link', base + '/link/sub', base + '/real', base + '/real/sub']
+
+    os.system('rm -rf ' + base)
+
+
+def test_direntry_follow_symlinks():
+    base = 'shedskin_test_direntry_links'
+    os.system('rm -rf ' + base)
+    os.mkdir(base)
+    os.mkdir(os.path.join(base, 'real'))
+    with open(os.path.join(base, 'file.txt'), 'w') as f:
+        f.write('x')
+    os.symlink('real', os.path.join(base, 'link'))
+    os.symlink('file.txt', os.path.join(base, 'flink'))
+    os.symlink('nowhere', os.path.join(base, 'dangling'))
+
+    info = {}
+    for entry in os.scandir(base):
+        info[entry.name] = (entry.is_dir(), entry.is_dir(follow_symlinks=False),
+                            entry.is_file(), entry.is_file(follow_symlinks=False),
+                            entry.is_symlink())
+        if entry.name != 'dangling':
+            assert entry.stat().st_ino == os.stat(entry.path).st_ino
+        assert entry.stat(follow_symlinks=False).st_ino == os.lstat(entry.path).st_ino
+
+    assert info['real'] == (True, True, False, False, False)
+    assert info['file.txt'] == (False, False, True, True, False)
+    assert info['link'] == (True, False, False, False, True)
+    assert info['flink'] == (False, False, True, False, True)
+    assert info['dangling'] == (False, False, False, False, True)
+
+    # following a dangling link fails
+    for entry in os.scandir(base):
+        if entry.name == 'dangling':
+            ok = False
+            try:
+                entry.stat()
+            except FileNotFoundError:
+                ok = True
+            assert ok
+
+    os.system('rm -rf ' + base)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
+    test_walk_followlinks()
+    test_direntry_follow_symlinks()
     test_chmod()
     test_popen_spawn()
     test_times_children()

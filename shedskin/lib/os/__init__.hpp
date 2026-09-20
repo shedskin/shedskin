@@ -6,6 +6,7 @@
 #include "builtin.hpp"
 
 #include <filesystem>
+#include <functional>
 
 using namespace __shedskin__;
 namespace __os__ {
@@ -112,21 +113,35 @@ list<DirEntry *> *scandir(str *path=0);
 
 typedef tuple3<str *, list<str *> *, list<str *> *> __walk_tuple;
 
+typedef std::function<void(OSError *)> __walk_onerror;
+
 class __walk_iter : public __iter<__walk_tuple *> {
 public:
     __ss_bool topdown, followlinks;
+    __walk_onerror onerror;      /* called with the OSError for directories that cannot be scanned */
+    str *top;
     std::vector<str *> pending;  /* directories still to be scanned (topdown) */
     __walk_tuple *last;          /* last yielded tuple; its dirnames may have been pruned by the caller */
     std::vector<__walk_tuple *> results; /* precomputed post-order results (bottom-up) */
     size_t pos;
+    bool collected;              /* bottom-up results computed (lazily, on the first __next__) */
 
-    __walk_iter(str *top, __ss_bool topdown, __ss_bool followlinks);
+    __walk_iter(str *top, __ss_bool topdown, __ss_bool followlinks, __walk_onerror onerror=nullptr);
     __walk_tuple *__scan(str *top, std::vector<str *> &subdirs);
+    void __onerror(str *path, std::error_code ec);
     void __collect(str *top);
     __walk_tuple *__next__();
 };
 
 __walk_iter *walk(str *top, __ss_bool topdown=True, void *onerror=0, __ss_bool followlinks=False);
+
+/* onerror=<function>: the callback's argument type comes from type inference
+   (normally OSError *, but any base class of it works as well) */
+template<class R, class A> __walk_iter *walk(str *top, __ss_bool topdown, R (*onerror)(A), __ss_bool followlinks=False) {
+    if(!onerror)
+        return new __walk_iter(top, topdown, followlinks);
+    return new __walk_iter(top, topdown, followlinks, [onerror](OSError *e) { onerror(e); });
+}
 
 __ss_bool stat_float_times(__ss_int newvalue=-1);
 str *strerror(__ss_int i);

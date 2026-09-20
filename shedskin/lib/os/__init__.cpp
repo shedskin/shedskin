@@ -628,35 +628,60 @@ static str *__walk_join(str *top, str *name) {
 #endif
 }
 
-__walk_iter::__walk_iter(str *top, __ss_bool topdown_, __ss_bool followlinks_) {
+__walk_iter::__walk_iter(str *top_, __ss_bool topdown_, __ss_bool followlinks_, __walk_onerror onerror_) {
+    top = top_;
     topdown = topdown_;
     followlinks = followlinks_;
+    onerror = onerror_;
     last = NULL;
     pos = 0;
+    collected = false;
     if(topdown)
         pending.push_back(top);
-    else
-        __collect(top);
+}
+
+/* report a directory that cannot be scanned to the onerror callback (if any),
+   with the same OSError subclass/errno/filename as e.g. os.scandir(path) */
+void __walk_iter::__onerror(str *path, std::error_code ec) {
+    if(!onerror)
+        return;
+    OSError *err = NULL;
+    int saved = errno;
+    errno = ec.default_error_condition().value();
+    try {
+        __throw_oserror(path);
+    } catch (OSError *e) {
+        err = e;
+    }
+    errno = saved;
+    onerror(err);
 }
 
 /* scan a directory into a (dirpath, dirnames, filenames) tuple; returns NULL if
-   it cannot be read (silently skipped, like os.walk with onerror=None) */
+   it cannot be read (reported to onerror, then skipped) */
 __walk_tuple *__walk_iter::__scan(str *top, std::vector<str *> &subdirs) {
     list<str *> *dirs = new list<str *>();
     list<str *> *files = new list<str *>();
 
+    std::error_code ec;
+    std::filesystem::directory_iterator it(top->unit, ec);
+    if(ec) {
+        __onerror(top, ec);
+        return NULL;
+    }
     try {
-        for (const auto & entry : std::filesystem::directory_iterator(top->unit)) {
-            std::error_code ec;
+        for (const auto & entry : it) {
+            std::error_code ec2;
             str *name = new str(entry.path().filename().string().c_str());
-            if(entry.is_directory(ec)) {
+            if(entry.is_directory(ec2)) {
                 dirs->append(name);
-                if(followlinks || !entry.is_symlink(ec))
+                if(followlinks || !entry.is_symlink(ec2))
                     subdirs.push_back(name);
             } else
                 files->append(name);
         }
-    } catch (std::filesystem::filesystem_error const&) {
+    } catch (std::filesystem::filesystem_error const &e) {
+        __onerror(top, e.code());
         return NULL;
     }
 
@@ -676,6 +701,10 @@ void __walk_iter::__collect(str *top) {
 
 __walk_tuple *__walk_iter::__next__() {
     if(!topdown) {
+        if(!collected) { /* like the CPython generator, nothing happens before the first next() */
+            collected = true;
+            __collect(top);
+        }
         if(pos >= results.size())
             throw new StopIteration();
         return results[pos++];

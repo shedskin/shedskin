@@ -1201,6 +1201,75 @@ def test_unnamed_section():
     assert not config.has_section(U)
 
 
+def test_interpolation_before_methods():
+    # the before_* hooks can also be called directly
+    p = configparser.ConfigParser()
+    p.read_string('[o]\nx = X\n')
+    d = {'a': 'A'}
+
+    di = configparser.Interpolation()   # passes everything through
+    assert di.before_get(p, 's', 'o', '%(x', d) == '%(x'
+    assert di.before_set(p, 's', 'o', '%') == '%'
+    assert di.before_read(p, 's', 'o', '$') == '$'
+    assert di.before_write(p, 's', 'o', '$') == '$'
+
+    bi = configparser.BasicInterpolation()
+    assert bi.before_get(p, 's', 'o', '%(a)s-%%', d) == 'A-%'
+    assert bi.before_set(p, 's', 'o', '100%%') == '100%%'
+    assert bi.before_read(p, 's', 'o', '%(x') == '%(x'
+    assert bi.before_write(p, 's', 'o', '%(x') == '%(x'
+    ok = False
+    try:
+        bi.before_set(p, 's', 'o', '100%')
+    except ValueError as e:
+        ok = True
+        assert str(e) == "invalid interpolation syntax in '100%' at position 3"
+    assert ok
+    ok = False
+    try:
+        bi.before_get(p, 's', 'opt', '%(nope)s', d)
+    except configparser.InterpolationMissingOptionError as e2:
+        ok = True
+        assert (e2.section, e2.option, e2.reference) == ('s', 'opt', 'nope')
+    assert ok
+    ok = False
+    try:
+        bi.before_get(p, 's', 'opt', '%(a)s %', d)
+    except configparser.InterpolationSyntaxError as e3:
+        ok = True
+        assert (e3.section, e3.option) == ('s', 'opt')
+    assert ok
+    ok = False
+    try:
+        bi.before_get(p, 's', 'opt', '%(a)s', {'a': '%(a)s'})
+    except configparser.InterpolationDepthError as e4:
+        ok = True
+        assert (e4.section, e4.option) == ('s', 'opt')
+    assert ok
+
+    ei = configparser.ExtendedInterpolation()
+    assert ei.before_get(p, 's', 'o', '${a}-$$', d) == 'A-$'
+    assert ei.before_get(p, 's', 'o', '${o:x}/${a}', d) == 'X/A'
+    assert ei.before_set(p, 's', 'o', '$$5') == '$$5'
+    assert ei.before_read(p, 's', 'o', '${x') == '${x'
+    assert ei.before_write(p, 's', 'o', '${x') == '${x'
+    ok = False
+    try:
+        ei.before_set(p, 's', 'o', '5$')
+    except ValueError as e5:
+        ok = True
+        assert str(e5) == "invalid interpolation syntax in '5$' at position 1"
+    assert ok
+    for ref in ('${nope}', '${o:nope}'):
+        ok = False
+        try:
+            ei.before_get(p, 's', 'opt', ref, d)
+        except configparser.InterpolationMissingOptionError as e6:
+            ok = True
+            assert e6.reference == ref[2:-1]
+        assert ok
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1252,6 +1321,7 @@ def test_all():
     test_parsing_error_source()
     test_typed_getters_raw_and_vars()
     test_unnamed_section()
+    test_interpolation_before_methods()
 
 if __name__ == '__main__':
     test_all()
