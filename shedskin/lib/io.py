@@ -3,6 +3,8 @@
 DEFAULT_BUFFER_SIZE = 8192
 SEEK_SET = SEEK_CUR = SEEK_END = 0
 
+__void = ''  # 'newline not given' sentinel (StringIO defaults to '\n', while None means universal newlines)
+
 
 # CPython's UnsupportedOperation derives from both OSError and ValueError;
 # shedskin exceptions are single-inheritance, so only OSError here
@@ -38,7 +40,7 @@ class BytesIO(file_binary):
 
 
 class StringIO(file):
-    def __init__(self, initial_value=None):
+    def __init__(self, initial_value=None, newline=__void):
         self.unit = ''
 
     def getvalue(self):

@@ -516,6 +516,55 @@ def test_read1():
         pass
 
 
+def test_stringio_newline():
+    # None: universal newlines, '\r\n' and '\r' are written as '\n'
+    s = io.StringIO('a\rb\r\nc\nd', newline=None)
+    assert s.getvalue() == 'a\nb\nc\nd'
+    assert s.readlines() == ['a\n', 'b\n', 'c\n', 'd']
+    s = io.StringIO(newline=None)
+    assert s.write('x\r') == 2
+    assert s.write('\ny\r\n') == 4
+    assert s.getvalue() == 'x\n\ny\n'
+    assert s.tell() == 5
+    s = io.StringIO('abcdef', None)
+    s.seek(2)
+    s.write('\r\n')
+    assert s.getvalue() == 'ab\ndef'
+    assert s.tell() == 3
+    # '': no translation, lines end at '\n', '\r' or '\r\n'
+    s = io.StringIO('a\rb\r\nc\nd', newline='')
+    assert s.getvalue() == 'a\rb\r\nc\nd'
+    assert s.readlines() == ['a\r', 'b\r\n', 'c\n', 'd']
+    assert list(io.StringIO('x\r\r\ny\rz\n', newline='')) == ['x\r', '\r\n', 'y\r', 'z\n']
+    s = io.StringIO('a\r\nb', newline='')
+    assert s.readline(2) == 'a\r'
+    assert s.readline() == '\n'
+    # '\n' (default): no translation, lines end at '\n' only
+    s = io.StringIO('a\rb\r\nc\nd', newline='\n')
+    assert s.readlines() == ['a\rb\r\n', 'c\n', 'd']
+    # '\r': '\n' is written as '\r', lines end at '\r'
+    s = io.StringIO('a\rb\r\nc\nd', newline='\r')
+    assert s.getvalue() == 'a\rb\r\rc\rd'
+    assert s.readlines() == ['a\r', 'b\r', '\r', 'c\r', 'd']
+    # '\r\n': '\n' is written as '\r\n', lines end at '\r\n'
+    s = io.StringIO(newline='\r\n')
+    assert s.write('a\r\nb\n') == 5
+    assert s.getvalue() == 'a\r\r\nb\r\n'
+    assert s.tell() == 7
+    s.seek(0)
+    assert s.readlines() == ['a\r\r\n', 'b\r\n']
+    s = io.StringIO('abc\n', newline='\r\n')
+    assert s.tell() == 0
+    assert s.read() == 'abc\r\n'
+    # invalid values
+    for bad in ['x', '\n\r', 'ab']:
+        try:
+            io.StringIO(newline=bad)
+            assert False
+        except ValueError as e:
+            assert str(e) == 'illegal newline value: ' + repr(bad)
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -545,6 +594,7 @@ def test_all():
     test_unsupported()
     test_writelines()
     test_read1()
+    test_stringio_newline()
 
 
 if __name__ == '__main__':

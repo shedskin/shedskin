@@ -61,7 +61,18 @@ public:
     __ss_int pos; // TODO size_t
     str *s;
 
-    StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? new str(initial_value->unit) : new str()) {}
+    /* newline handling: NULL (None) -> universal: '\r\n' and '\r' written as '\n';
+       '' -> no translation, lines end at '\n', '\r' or '\r\n';
+       '\n' (default), '\r', '\r\n' -> '\n' written as nl, lines end at nl */
+    bool universal, any_ending;
+    __GC_STR nl;
+
+    StringIO(str *initial_value=NULL) : StringIO(initial_value, new str("\n")) {}
+    StringIO(str *initial_value, __ss_void_struct) : StringIO(initial_value) {} /* newline not given */
+    StringIO(str *initial_value, str *newline);
+
+    __GC_STR __translate(str *data);
+    size_t __line_end(size_t start);
 
     str *read(__ss_int n=-1);
     str *readline(__ss_int n=-1);

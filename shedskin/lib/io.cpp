@@ -112,6 +112,71 @@ bytes *BytesIO::getvalue() {
 
 /* StringIO */
 
+StringIO::StringIO(str *initial_value, str *newline) : file(), pos(0), s(new str()), universal(false), any_ending(false) {
+    if(!newline) {
+        universal = true;
+        nl = __GC_STR(1, '\n');
+    } else {
+        const __GC_STR &n = newline->unit;
+        if(n.empty())
+            any_ending = true;
+        else if(n.size() == 1 and (n[0] == '\n' or n[0] == '\r'))
+            nl = n;
+        else if(n.size() == 2 and n[0] == '\r' and n[1] == '\n')
+            nl = n;
+        else
+            throw new ValueError(__add(new str("illegal newline value: "), repr(newline)));
+    }
+    if(initial_value)
+        s->unit = __translate(initial_value);
+}
+
+__GC_STR StringIO::__translate(str *data) {
+    const __GC_STR &u = data->unit;
+    if(universal) { /* '\r\n' and lone '\r' -> '\n' */
+        if(u.find('\r') == __GC_STR::npos)
+            return u;
+        __GC_STR r;
+        r.reserve(u.size());
+        for(size_t i = 0; i < u.size(); i++) {
+            if(u[i] == '\r') {
+                r.push_back('\n');
+                if(i+1 < u.size() and u[i+1] == '\n')
+                    i++;
+            } else
+                r.push_back(u[i]);
+        }
+        return r;
+    }
+    if(any_ending or (nl.size() == 1 and nl[0] == '\n') or u.find('\n') == __GC_STR::npos)
+        return u;
+    __GC_STR r; /* '\n' -> '\r' or '\r\n' */
+    r.reserve(u.size());
+    for(size_t i = 0; i < u.size(); i++) {
+        if(u[i] == '\n')
+            r.append(nl);
+        else
+            r.push_back(u[i]);
+    }
+    return r;
+}
+
+size_t StringIO::__line_end(size_t start) {
+    /* index just past the line ending at or after start, or npos */
+    const __GC_STR &u = s->unit;
+    if(any_ending) {
+        for(size_t i = start; i < u.size(); i++) {
+            if(u[i] == '\n')
+                return i+1;
+            if(u[i] == '\r')
+                return (i+1 < u.size() and u[i+1] == '\n') ? i+2 : i+1;
+        }
+        return __GC_STR::npos;
+    }
+    size_t i = u.find(nl, start);
+    return i == __GC_STR::npos ? i : i + nl.size();
+}
+
 str *StringIO::read(__ss_int n) {
     __check_closed();
     __ss_int size = len(s);
@@ -132,9 +197,9 @@ str *StringIO::readline(__ss_int n) {
     __check_closed();
     if(__eof())
         return new str();
-    size_t nl = s->unit.find('\n', (size_t)pos);
-    if(nl != std::string::npos) {
-        __ss_int tbr = (__ss_int)(nl - (size_t)pos + 1);
+    size_t end = __line_end((size_t)pos);
+    if(end != std::string::npos) {
+        __ss_int tbr = (__ss_int)(end - (size_t)pos);
         return read(n < 0 ? tbr : std::min(tbr, n));
     } else {
         return read(n);
@@ -142,7 +207,7 @@ str *StringIO::readline(__ss_int n) {
 }
 
 list<str *> *StringIO::readlines(__ss_int hint) {
-    /* with the default newline='\n', lines end at '\n' only (unlike str.splitlines) */
+    /* lines end according to newline (by default at '\n' only, unlike str.splitlines) */
     __check_closed();
     list<str *> *result = new list<str *>();
     __ss_int total = 0;
@@ -189,13 +254,14 @@ __ss_int StringIO::write(str *data) {
     __check_closed();
     if(!data)
         throw new TypeError(new str("string argument expected, got 'NoneType'"));
-    const size_t size = data->unit.size();
+    __GC_STR u = __translate(data);
+    const size_t size = u.size();
     if((size_t)pos > s->unit.size())
         s->unit.resize((size_t)pos, '\0');
-    s->unit.insert((size_t)pos, data->unit);
+    s->unit.insert((size_t)pos, u);
     pos += (__ss_int)size;
     s->unit.erase((size_t)pos, size);
-    return (__ss_int)size;
+    return len(data); /* length before translation, like CPython */
 }
 
 str *StringIO::getvalue() {
