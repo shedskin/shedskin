@@ -1127,6 +1127,10 @@ void socket::read_wait()
 
 bytes *socket::recv(__ss_int bufsize, __ss_int flags)
 {
+    if (bufsize < 0)
+        throw new ValueError(new str("negative buffersize in recv"));
+    if (bufsize == 0) /* like CPython, don't wait */
+        return new bytes();
     read_wait();
 
     std::vector<char> buf((size_t)bufsize);
@@ -1161,11 +1165,49 @@ size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, sock
 
 tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
+    if (bufsize < 0)
+        throw new ValueError(new str("negative buffersize in recvfrom"));
     std::vector<char> buf((size_t)bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(buf.data(), (size_t)bufsize, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
     return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
+}
+
+/* validate a recv_into()/recvfrom_into() buffer and nbytes (0: whole buffer) */
+static size_t check_into_buffer(bytes *buffer, __ss_int nbytes, const char *fn, const char *too_small)
+{
+    if (buffer->frozen)
+        throw new TypeError(__add_strs(2, new str(fn), new str("() argument 1 must be read-write bytes-like object, not bytes")));
+    if (nbytes < 0)
+        throw new ValueError(__add_strs(2, new str("negative buffersize in "), new str(fn)));
+    size_t size = buffer->unit.size();
+    if (nbytes == 0)
+        return size;
+    if ((size_t)nbytes > size)
+        throw new ValueError(new str(too_small));
+    return (size_t)nbytes;
+}
+
+__ss_int socket::recv_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
+{
+    size_t n = check_into_buffer(buffer, nbytes, "recv_into", "buffer too small for requested bytes");
+    if (n == 0) /* like CPython, don't wait */
+        return 0;
+    read_wait();
+    ssize_t len = ::recv(_fd, &buffer->unit[0], n, (int)flags);
+    if (len == SOCKET_ERROR)
+        throw make_error("recv_into");
+    return (__ss_int)len;
+}
+
+tuple2<__ss_int, socket::inet_address> *socket::recvfrom_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
+{
+    size_t n = check_into_buffer(buffer, nbytes, "recvfrom_into", "nbytes is greater than the length of the buffer");
+    struct sockaddr_in sin;
+    socklen_t salen = sizeof(sin);
+    size_t len = recvfrom(&buffer->unit[0], n, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
+    return new tuple2<__ss_int, inet_address>(2, (__ss_int)len, sin_addr_to_tuple(&sin));
 }
 
 socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int fileno) {
