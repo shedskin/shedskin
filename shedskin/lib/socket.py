@@ -297,6 +297,13 @@ class socket(object):
     def recvfrom(self, bufsize, flags=0):
         return (b'', ('', 0))
 
+    # NOTE buffer must be a bytearray (array.array/memoryview unsupported)
+    def recv_into(self, buffer, nbytes=0, flags=0):
+        return 0
+
+    def recvfrom_into(self, buffer, nbytes=0, flags=0):
+        return (0, ('', 0))
+
     # sendto(data, address) or sendto(data, flags, address)
     def sendto(self, data, flags=0, address=0):
         return 0

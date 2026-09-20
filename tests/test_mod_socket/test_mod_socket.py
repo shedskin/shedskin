@@ -655,6 +655,90 @@ def test_default_timeout():
     w.close()
 
 
+def test_recv_into():
+    a, b = socket.socketpair()
+    b.sendall(b'hello world')
+    buf = bytearray(5)
+    assert a.recv_into(buf) == 5
+    assert buf == bytearray(b'hello')
+    buf = bytearray(10)
+    assert a.recv_into(buf, 3) == 3
+    assert buf[:3] == bytearray(b' wo') and buf[3:] == bytearray(7)
+    assert a.recv_into(buf, 0, 0) == 3
+    assert buf[:3] == bytearray(b'rld')
+    # MSG_PEEK leaves the data queued
+    b.sendall(b'xyz')
+    buf = bytearray(3)
+    a.settimeout(5.0)
+    assert a.recv_into(buf, 2, socket.MSG_PEEK) == 2 and buf == bytearray(b'xy\x00')
+    assert a.recv_into(buf) == 3 and buf == bytearray(b'xyz')
+    # empty buffer/zero bufsize: returns immediately, even with a timeout
+    assert a.recv_into(bytearray()) == 0
+    assert a.recv(0) == b''
+    try:
+        a.recv_into(b'immutable')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'recv_into() argument 1 must be read-write bytes-like object, not bytes'
+    try:
+        a.recv_into(bytearray(3), -1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'negative buffersize in recv_into'
+    try:
+        a.recv_into(bytearray(3), 4)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'buffer too small for requested bytes'
+    try:
+        a.recv(-1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'negative buffersize in recv'
+    # EOF
+    b.close()
+    assert a.recv_into(bytearray(4)) == 0
+    a.close()
+
+
+def test_recvfrom_into():
+    a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    a.bind(('127.0.0.1', 0))
+    b.bind(('127.0.0.1', 0))
+    b.sendto(b'datagram', a.getsockname())
+    buf = bytearray(20)
+    n, addr = a.recvfrom_into(buf)
+    assert n == 8 and buf[:n] == bytearray(b'datagram')
+    assert addr == b.getsockname()
+    b.sendto(b'abc', a.getsockname())
+    buf = bytearray(4)
+    assert a.recvfrom_into(buf, 3, 0) == (3, b.getsockname())
+    assert buf == bytearray(b'abc\x00')
+    try:
+        a.recvfrom_into(b'abc')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'recvfrom_into() argument 1 must be read-write bytes-like object, not bytes'
+    try:
+        a.recvfrom_into(bytearray(3), -1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'negative buffersize in recvfrom_into'
+    try:
+        a.recvfrom_into(bytearray(3), 4)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'nbytes is greater than the length of the buffer'
+    try:
+        a.recvfrom(-1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'negative buffersize in recvfrom'
+    a.close()
+    b.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -675,6 +759,8 @@ def test_all():
     test_socketpair()
     test_constants()
     test_default_timeout()
+    test_recv_into()
+    test_recvfrom_into()
 
 
 if __name__ == '__main__':

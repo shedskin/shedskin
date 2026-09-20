@@ -171,6 +171,8 @@ public:
     double gettimeout() { return _timeout; }
     bytes *recv(__ss_int bufsize, __ss_int flags=0);
     tuple2<bytes *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
+    __ss_int recv_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
+    tuple2<__ss_int, inet_address> *recvfrom_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
     socket *listen(__ss_int backlog);
     inet_address getpeername();
     inet_address getsockname();
