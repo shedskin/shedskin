@@ -657,6 +657,9 @@ def test_default_timeout():
 
 def test_recv_into():
     a, b = socket.socketpair()
+    # explicit timeout: the default timeout may be 0.0 here (non-blocking), and
+    # loopback data need not have arrived yet right after sendall (macOS)
+    a.settimeout(5.0)
     b.sendall(b'hello world')
     buf = bytearray(5)
     assert a.recv_into(buf) == 5
@@ -669,7 +672,6 @@ def test_recv_into():
     # MSG_PEEK leaves the data queued
     b.sendall(b'xyz')
     buf = bytearray(3)
-    a.settimeout(5.0)
     assert a.recv_into(buf, 2, socket.MSG_PEEK) == 2 and buf == bytearray(b'xy\x00')
     assert a.recv_into(buf) == 3 and buf == bytearray(b'xyz')
     # empty buffer/zero bufsize: returns immediately, even with a timeout
@@ -704,6 +706,7 @@ def test_recv_into():
 def test_recvfrom_into():
     a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    a.settimeout(5.0) # see test_recv_into
     a.bind(('127.0.0.1', 0))
     b.bind(('127.0.0.1', 0))
     b.sendto(b'datagram', a.getsockname())
