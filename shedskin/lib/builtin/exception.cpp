@@ -10,6 +10,7 @@ OSError::OSError(str *fname) {
 }
 void OSError::__init_errno(int e, str *fname) {
     this->filename = fname;
+    this->filename2 = 0;
     __ss_errno = e;
     strerror = e ? new str(::strerror(e)) : 0;
     message = this->__str__();
@@ -218,7 +219,15 @@ void __throw_zero_division(const char *msg) {
 
 BaseException::BaseException(str *msg) {
     this->__class__ = cl_baseexception;
+    this->__notes__ = 0;
     __init__(msg);
+}
+
+void *BaseException::add_note(str *note) {
+    if(!__notes__)
+        __notes__ = new list<str *>();
+    __notes__->append(note);
+    return NULL;
 }
 
 void BaseException::__init__(str *msg) {

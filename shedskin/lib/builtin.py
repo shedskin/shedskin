@@ -933,20 +933,39 @@ class object: pass
 class BaseException:
     def __init__(self, arg=None):
         self.args = ('',)
+        self.__notes__ = ['']
+
+    def add_note(self, note):
+        self.__notes__ = [note]
 
 class GeneratorExit(BaseException): pass
 class KeyboardInterrupt(BaseException): pass
-class SystemExit(BaseException): pass
+
+class SystemExit(BaseException):
+    def __init__(self, arg=None):
+        self.code = 1
 
 class Exception(BaseException): pass
 
 class AssertionError(Exception): pass
+class BufferError(Exception): pass
 class EOFError(Exception): pass
 class MemoryError(Exception): pass
-class NameError(Exception): pass
+class ReferenceError(Exception): pass
+
+class NameError(Exception):
+    def __init__(self, arg=None, name=None):
+        self.name = ''
+
+class UnboundLocalError(NameError): pass
+
 class SyntaxError(Exception): pass
 class SystemError(Exception): pass
-class StopIteration(Exception): pass
+
+class StopIteration(Exception):
+    def __init__(self, arg=None):
+        self.value = ''
+
 class TypeError(Exception): pass
 class ValueError(Exception): pass
 
@@ -980,7 +999,13 @@ class FloatingPointError(ArithmeticError): pass
 class OverflowError(ArithmeticError): pass
 class ZeroDivisionError(ArithmeticError): pass
 
-class OSError(Exception): pass
+class OSError(Exception):
+    def __init__(self, arg=None):
+        self.errno = 0
+        self.strerror = ''
+        self.filename = ''
+        self.filename2 = ''
+
 class BlockingIOError(OSError): pass
 class ChildProcessError(OSError): pass
 class ConnectionError(OSError): pass
@@ -1004,6 +1029,20 @@ class KeyError(LookupError): pass
 class RuntimeError(Exception): pass
 class NotImplementedError(RuntimeError): pass
 class PythonFinalizationError(RuntimeError): pass
+class RecursionError(RuntimeError): pass
+
+class Warning(Exception): pass
+class BytesWarning(Warning): pass
+class DeprecationWarning(Warning): pass
+class EncodingWarning(Warning): pass
+class FutureWarning(Warning): pass
+class ImportWarning(Warning): pass
+class PendingDeprecationWarning(Warning): pass
+class ResourceWarning(Warning): pass
+class RuntimeWarning(Warning): pass
+class SyntaxWarning(Warning): pass
+class UnicodeWarning(Warning): pass
+class UserWarning(Warning): pass
 
 __exception = Exception('') # XXX remove
 __exception = OSError('') # XXX remove
@@ -1023,12 +1062,7 @@ __exception = NotADirectoryError('')
 __exception = PermissionError('')
 __exception = ProcessLookupError('')
 __exception = TimeoutError('')
-__exception.errno = 0
-__exception.filename = ''
-__exception.strerror = ''
-
 __exception2 = SystemExit('')
-__exception2.code = 1
 
 def str(object=None):
     object.__str__()

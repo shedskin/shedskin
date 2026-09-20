@@ -16,6 +16,8 @@ namespace __shedskin__ {
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_frozendict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange, *cl_bytes, *cl_bytearray;
 
 class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
+class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
+class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
 class_ *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
@@ -178,6 +180,22 @@ void __init() {
     cl_unicodedecodeerror = new class_("UnicodeDecodeError");
     cl_unicodeencodeerror = new class_("UnicodeEncodeError");
     cl_unicodetranslateerror = new class_("UnicodeTranslateError");
+    cl_recursionerror = new class_("RecursionError");
+    cl_unboundlocalerror = new class_("UnboundLocalError");
+    cl_referenceerror = new class_("ReferenceError");
+    cl_buffererror = new class_("BufferError");
+    cl_warning = new class_("Warning");
+    cl_byteswarning = new class_("BytesWarning");
+    cl_deprecationwarning = new class_("DeprecationWarning");
+    cl_encodingwarning = new class_("EncodingWarning");
+    cl_futurewarning = new class_("FutureWarning");
+    cl_importwarning = new class_("ImportWarning");
+    cl_pendingdeprecationwarning = new class_("PendingDeprecationWarning");
+    cl_resourcewarning = new class_("ResourceWarning");
+    cl_runtimewarning = new class_("RuntimeWarning");
+    cl_syntaxwarning = new class_("SyntaxWarning");
+    cl_unicodewarning = new class_("UnicodeWarning");
+    cl_userwarning = new class_("UserWarning");
 
 }
 
@@ -247,6 +265,9 @@ void terminate_handler() {
             print_(0, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
         else
             print_(0, False, NULL, NULL, NULL, e->__class__->__name__);
+        if(e->__notes__)
+            for(__ss_int i=0; i<len(e->__notes__); i++)
+                print_(0, False, NULL, NULL, NULL, e->__notes__->__getfast__(i));
         code = 1;
     }
 
