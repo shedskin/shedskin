@@ -731,6 +731,175 @@ def test_kwarg_names_posix():
     p.close()
 
 
+def test_getcwdb():
+    b = os.getcwdb()
+    assert b.__class__.__name__ == 'bytes'
+    assert b == os.fsencode(os.getcwd())
+    assert os.fsdecode(b) == os.getcwd()
+
+
+def test_fsencode_fsdecode():
+    assert os.fsencode('abc') == b'abc'
+    assert os.fsencode(b'abc') == b'abc'
+    assert os.fsdecode(b'abc') == 'abc'
+    assert os.fsdecode('abc') == 'abc'
+    assert os.fsencode('caf\u00e9') == b'caf\xc3\xa9'
+    assert os.fsdecode(b'caf\xc3\xa9') == 'caf\u00e9'
+    # surrogateescape: undecodable bytes survive a round trip
+    s = os.fsdecode(b'a\xffb')
+    assert s == 'a\udcffb'
+    assert os.fsencode(s) == b'a\xffb'
+
+
+def test_process_cpu_count():
+    n = os.process_cpu_count()
+    assert 1 <= n <= os.cpu_count()
+
+
+def test_truncate():
+    path = 'shedskin_test_truncate.txt'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.write(fd, b'0123456789')
+    os.close(fd)
+    os.truncate(path, 4)
+    assert os.stat(path).st_size == 4
+    os.truncate(path, 7)
+    assert os.stat(path).st_size == 7
+    fd = os.open(path, os.O_RDONLY)
+    assert os.read(fd, 10) == b'0123\0\0\0'
+    os.close(fd)
+    os.remove(path)
+
+    ok = False
+    try:
+        os.truncate('shedskin_no_such_file.txt', 0)
+    except FileNotFoundError as e:
+        ok = e.filename == 'shedskin_no_such_file.txt'
+    assert ok
+
+
+def test_closerange():
+    # place descriptors at known numbers, so no unrelated ones get closed
+    fd = os.open(os.devnull, os.O_RDONLY)
+    fds = [200, 201, 202]
+    for n in fds:
+        os.dup2(fd, n)
+    os.close(fd)
+    os.closerange(200, 202)
+    for n in fds[:2]:
+        ok = False
+        try:
+            os.fstat(n)
+        except OSError:
+            ok = True
+        assert ok
+    os.fstat(202)  # fd_high is exclusive
+    os.close(202)
+    os.closerange(300, 310)  # errors are ignored
+
+
+def test_bad_fd():
+    # an unused descriptor must give OSError(EBADF), not crash (msvc crt)
+    fd = os.open(os.devnull, os.O_RDONLY)
+    os.close(fd)
+    count = 0
+    try:
+        os.fstat(fd)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.close(fd)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.dup(fd)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.dup2(fd, 250)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.read(fd, 1)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.write(fd, b'x')
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.lseek(fd, 0, os.SEEK_SET)
+    except OSError as e:
+        count += (e.errno == 9)
+    try:
+        os.fsync(fd)
+    except OSError as e:
+        count += (e.errno == 9)
+    assert count == 8
+    assert not os.isatty(fd)
+
+
+def test_waitstatus_to_exitcode():
+    assert os.waitstatus_to_exitcode(0) == 0
+    assert os.waitstatus_to_exitcode(3 << 8) == 3
+    assert os.waitstatus_to_exitcode(255 << 8) == 255
+
+
+def test_inheritable():
+    path = 'shedskin_test_inheritable.txt'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.set_inheritable(fd, True)
+    assert os.get_inheritable(fd) == True
+    os.set_inheritable(fd, False)
+    assert os.get_inheritable(fd) == False
+    os.set_inheritable(fd, True)
+    assert os.get_inheritable(fd) == True
+    os.close(fd)
+    os.remove(path)
+
+    ok = False
+    try:
+        os.get_inheritable(fd)
+    except OSError as e:
+        ok = e.errno == 9  # EBADF
+    assert ok
+
+
+def test_device_encoding():
+    fd = os.open(os.devnull, os.O_RDONLY)
+    assert os.device_encoding(fd) is None
+    os.close(fd)
+
+
+def test_terminal_size():
+    ts = os.terminal_size((80, 24))
+    assert ts.columns == 80
+    assert ts.lines == 24
+    assert len(ts) == 2
+    assert ts[0] == 80
+    assert ts[1] == 24
+    assert ts[-1] == 24
+    assert ts[:] == (80, 24)
+    assert repr(ts) == 'os.terminal_size(columns=80, lines=24)'
+    ok = False
+    try:
+        ts[2]
+    except IndexError:
+        ok = True
+    assert ok
+
+    # stdout may or may not be a terminal while testing
+    try:
+        ts = os.get_terminal_size()
+        assert ts.columns >= 0 and ts.lines >= 0
+    except OSError:
+        pass
+    try:
+        ts = os.get_terminal_size(1)
+    except OSError:
+        pass
+
+
 def test_all():
     test_getcwd()
     test_chdir()
@@ -760,6 +929,16 @@ def test_all():
     test_walk()
     test_oserror_subclasses()
     test_kwarg_names()
+    test_getcwdb()
+    test_fsencode_fsdecode()
+    test_process_cpu_count()
+    test_truncate()
+    test_closerange()
+    test_bad_fd()
+    test_waitstatus_to_exitcode()
+    test_inheritable()
+    test_device_encoding()
+    test_terminal_size()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()

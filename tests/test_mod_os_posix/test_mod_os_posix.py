@@ -203,6 +203,44 @@ def test_direntry_inode_symlink():
     os.rmdir(base)
 
 
+def test_waitstatus_signals():
+    assert os.waitstatus_to_exitcode(9) == -9  # killed by SIGKILL
+    ok = False
+    try:
+        os.waitstatus_to_exitcode(0x137f)  # stopped by signal 19
+    except ValueError:
+        ok = True
+    assert ok
+
+    # a real child process
+    pid = os.spawnv(os.P_NOWAIT, '/bin/sh', ['sh', '-c', 'exit 7'])
+    pid2, status = os.waitpid(pid, 0)
+    assert pid2 == pid
+    assert os.waitstatus_to_exitcode(status) == 7
+
+
+def test_pty_terminal():
+    master, slave = os.openpty()
+    assert os.device_encoding(slave) == 'utf-8'
+    ts = os.get_terminal_size(slave)
+    assert ts.columns >= 0 and ts.lines >= 0
+    columns, lines = ts
+    assert columns == ts.columns
+    assert list(ts) == [columns, lines]
+    assert [x for x in ts] == [columns, lines]
+    os.close(slave)
+    os.close(master)
+
+    ok = False
+    fd = os.open(os.devnull, os.O_RDONLY)
+    try:
+        os.get_terminal_size(fd)
+    except OSError:
+        ok = True
+    os.close(fd)
+    assert ok
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -214,6 +252,8 @@ def test_all():
     test_kwarg_names()
     test_direntry_inode_symlink()
     test_mknod_default_mode()
+    test_waitstatus_signals()
+    test_pty_terminal()
 
 
 if __name__ == '__main__':

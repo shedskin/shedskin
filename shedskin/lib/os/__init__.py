@@ -168,6 +168,15 @@ def get_exec_path(env=None):
 def getcwd():
     return ''
 
+def getcwdb():
+    return b''
+
+def fsencode(filename):
+    return b''
+
+def fsdecode(filename):
+    return ''
+
 def getlogin():
     return ''
 
@@ -181,6 +190,9 @@ def replace(src, dst):
     pass
 
 def cpu_count():
+    return 1
+
+def process_cpu_count():
     return 1
 
 def fspath(path):
@@ -449,6 +461,45 @@ def sysconf(name):
 
 def ftruncate(fd, length):
     pass
+
+def truncate(path, length):
+    pass
+
+def closerange(fd_low, fd_high):
+    pass
+
+def waitstatus_to_exitcode(status):
+    return 1
+
+def get_inheritable(fd):
+    return True
+
+def set_inheritable(fd, inheritable):
+    pass
+
+def device_encoding(fd):
+    return ''
+
+class terminal_size:
+    def __init__(self, t):
+        self.columns = 1
+        self.lines = 1
+        self.unit = 1  # element type, for iteration/unpacking
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return __iter(1)
+    def __getunit__(self, i):
+        return 1
+    def __getitem__(self, i):
+        return 1
+    def __slice__(self, x, l, u, s):
+        return (1,)
+    def __repr__(self):
+        return ''
+
+def get_terminal_size(fd=1):
+    return terminal_size((1, 1))
 
 def getloadavg():
     return (1.0,)

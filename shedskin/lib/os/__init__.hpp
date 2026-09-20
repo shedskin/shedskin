@@ -23,12 +23,21 @@ class __cstat;
 
 list<str *> *listdir(str *path=0);
 str *getcwd();
+bytes *getcwdb();
 void *chdir(str *dir);
 str *getenv(str *name_, str *default_=0);
 list<str *> *get_exec_path(dict<str *, str *> *env=0);
 void *rename(str *a, str *b);
 void *replace(str *a, str *b);
 __ss_int cpu_count();
+__ss_int process_cpu_count();
+
+/* utf-8 + surrogateescape (PEP 383), the only filesystem encoding for now;
+   like cpython, bytes pass through fsencode() and str through fsdecode() */
+bytes *fsencode(str *filename);
+bytes *fsencode(bytes *filename);
+str *fsdecode(bytes *filename);
+str *fsdecode(str *filename);
 
 /* os.fspath() is the identity function for the str/bytes paths that
  * shedskin supports (no os.PathLike protocol) */
@@ -51,6 +60,13 @@ public:
     str *__repr__();
     virtual __ss_int __len__() = 0;
     virtual __ss_int __getitem__(__ss_int i) = 0;
+
+    /* iteration (and so unpacking) goes through __getitem__ */
+    typedef __ss_int for_in_unit;
+    typedef __ss_int for_in_loop;
+    inline __ss_int for_in_init() { return 0; }
+    inline bool for_in_has_next(__ss_int i) { return i < __len__(); }
+    inline __ss_int for_in_next(__ss_int &i) { return __getitem__(i++); }
 };
 
 extern class_ *cl___cstat;
@@ -163,6 +179,28 @@ void *ftruncate(__ss_int fd, __ss_int n);
 void *fsync(__ss_int fd);
 __ss_bool access(str *path, __ss_int mode);
 tuple<__ss_float> *times();
+
+void *truncate(str *path, __ss_int length);
+void *closerange(__ss_int fd_low, __ss_int fd_high);
+__ss_int waitstatus_to_exitcode(__ss_int status);
+__ss_bool get_inheritable(__ss_int fd);
+void *set_inheritable(__ss_int fd, __ss_bool inheritable);
+str *device_encoding(__ss_int fd);
+
+extern class_ *cl_terminal_size;
+class terminal_size : public namedtuple {
+public:
+    __ss_int columns, lines;
+
+    terminal_size(__ss_int columns, __ss_int lines);
+    terminal_size(tuple<__ss_int> *t);
+
+    __ss_int __len__();
+    __ss_int __getitem__(__ss_int i);
+    str *__repr__();
+};
+
+terminal_size *get_terminal_size(__ss_int fd=1);
 
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
