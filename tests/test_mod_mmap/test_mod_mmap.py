@@ -545,6 +545,114 @@ def test_access_copy():
         assert g.read() == b'original!'
     tearDown(m)
 
+def test_readline():
+    m = mmap.mmap(-1, 16)
+    m.write(b'ab\ncd\r\n\nef')
+    m.seek(0)
+    assert m.readline() == b'ab\n'
+    assert m.tell() == 3
+    assert m.readline() == b'cd\r\n'
+    assert m.readline() == b'\n'
+    # no trailing newline: read up to the end of the mapping
+    assert m.readline() == b'ef' + b'\x00' * 6
+    assert m.tell() == 16
+    assert m.readline() == b''
+    m.seek(4)
+    assert m.readline() == b'd\r\n'
+    m.close()
+
+    error = False
+    try:
+        m.readline()
+    except ValueError:
+        error = True
+    assert error, "readline() on a closed mmap should raise ValueError"
+
+
+def test_offset():
+    G = mmap.ALLOCATIONGRANULARITY
+    setUp()
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'a' * G + b'line1\nline2\nlast')
+    f = open(TESTFILE_OUT, 'r+b')
+
+    # length 0: map from offset to the end of the file
+    m = mmap.mmap(f.fileno(), 0, offset=G)
+    assert len(m) == 16           # the mapping..
+    assert m.size() == G + 16     # ..vs the underlying file
+    assert m[:5] == b'line1'
+    assert m.readline() == b'line1\n'
+    assert m.readline() == b'line2\n'
+    assert m.readline() == b'last'
+    assert m.readline() == b''
+    m.seek(0)
+    assert m.find(b'last') == 12
+    m[0:4] = b'LINE'
+    m.flush()
+    m.close()
+
+    # explicit length
+    m = mmap.mmap(f.fileno(), 6, offset=G)
+    assert len(m) == 6
+    assert m[:] == b'LINE1\n'
+    m.close()
+
+    # offset must be a multiple of ALLOCATIONGRANULARITY
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=G + 1)
+    except OSError:
+        error = True
+    assert error, "unaligned offset should raise OSError"
+
+    # ..without leaving anything mapped: (on Windows) the file can still be resized
+    f.truncate(G + 16)
+
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=-G)
+    except OverflowError:
+        error = True
+    assert error, "negative offset should raise OverflowError"
+
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0, offset=4 * G)
+    except ValueError as e:
+        error = True
+        assert str(e) == 'mmap offset is greater than file size'
+    assert error, "offset past the end of the file should raise ValueError"
+
+    # (on Windows, a length past the end of the file extends the file instead)
+    if sys.platform != 'win32':
+        error = False
+        try:
+            mmap.mmap(f.fileno(), 100, offset=G)
+        except ValueError as e:
+            error = True
+            assert str(e) == 'mmap length is greater than file size'
+        assert error, "length past the end of the file should raise ValueError"
+
+    f.close()
+    with open(TESTFILE_OUT, 'rb') as g:
+        g.seek(G)
+        assert g.read() == b'LINE1\nline2\nlast'
+
+    # an empty file cannot be mapped with length 0
+    with open(TESTFILE_OUT, 'wb') as f:
+        pass
+    f = open(TESTFILE_OUT, 'r+b')
+    error = False
+    try:
+        mmap.mmap(f.fileno(), 0)
+    except ValueError as e:
+        error = True
+        assert str(e) == 'cannot mmap an empty file'
+    assert error, "mapping an empty file should raise ValueError"
+    f.close()
+    os.remove(TESTFILE_OUT)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -564,6 +672,8 @@ def test_all():
         test_default_flags_prot()
     test_module_constants()
     test_access_copy()
+    test_readline()
+    test_offset()
 
 if __name__ == '__main__':
     test_all()

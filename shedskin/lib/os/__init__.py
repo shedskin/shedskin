@@ -157,6 +157,7 @@ def scandir(path=None):
     return [DirEntry()]
 
 def walk(top, topdown=True, onerror=None, followlinks=False):
+    onerror(OSError())
     return __iter((top, [top], [top]))
 
 def getenv(key, default=None):

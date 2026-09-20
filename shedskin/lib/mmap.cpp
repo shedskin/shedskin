@@ -309,7 +309,7 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
-    *const_25, *const_26;
+    *const_25, *const_26, *const_27, *const_28, *const_29;
 
 str *__name__;
 class_ *cl_mmap;
@@ -371,14 +371,33 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         {
             __throw_oserror();
         }
-        if(length_ == 0)
+        /* like CPython: for regular files, a zero length maps from offset
+           to the end of the file, and a mapping must not extend past it */
+        struct stat buf;
+        if (fstat(fd, &buf) == 0 and S_ISREG(buf.st_mode))
         {
-            struct stat buf;
-            if (fstat(fd, &buf) == -1)
+            if (length_ == 0)
             {
-                __throw_oserror();
+                if (buf.st_size == 0)
+                {
+                    ::close(fd);
+                    fd = -1;
+                    throw new ValueError(const_27);
+                }
+                if (offset_ >= (__ss_int)buf.st_size)
+                {
+                    ::close(fd);
+                    fd = -1;
+                    throw new ValueError(const_28);
+                }
+                length_ = (__ss_int)buf.st_size - offset_;
             }
-            length_ = (__ss_int)buf.st_size;
+            else if (offset_ > (__ss_int)buf.st_size or (__ss_int)buf.st_size - offset_ < length_)
+            {
+                ::close(fd);
+                fd = -1;
+                throw new ValueError(const_29);
+            }
         }
     }
 
@@ -386,6 +405,14 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
 
     if (temp == MAP_FAILED)
     {
+        /* e.g. an unaligned offset: don't leak the dup'ed descriptor */
+        int saved = errno;
+        if (fd != -1)
+        {
+            ::close(fd);
+            fd = -1;
+        }
+        errno = saved;
         __throw_oserror();
     }
 
@@ -579,14 +606,29 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
             {
                 throw new ValueError(const_17);
             }
+            uint64_t file_size = (((uint64_t)high)<<32) + low;
+            if (file_size == 0)
+            {
+                CloseHandle(file_handle);
+                file_handle = INVALID_HANDLE_VALUE;
+                throw new ValueError(const_27);
+            }
+            if ((uint64_t)offset_ >= file_size)
+            {
+                CloseHandle(file_handle);
+                file_handle = INVALID_HANDLE_VALUE;
+                throw new ValueError(const_28);
+            }
+            /* map from offset to the end of the file */
+            file_size -= (uint64_t)offset_;
 #if SIZEOF_SIZE_T > 4
-            size = (size_t(high)<<32) + low;
+            size = (size_t)file_size;
 #else // SIZEOF_SIZE_T <= 4
-            if (high)
+            if (file_size >> 32)
                 /* File is too large to map completely */
                 size = size_t(-1);
             else
-                size = low;
+                size = (size_t)file_size;
 #endif // SIZEOF_SIZE_T > 4
         }
     }
@@ -618,6 +660,11 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
                                    tagname);
     if (map_handle == NULL)
     {
+        if (file_handle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(file_handle);
+            file_handle = INVALID_HANDLE_VALUE;
+        }
         throw new OSError();
     }
 
@@ -628,11 +675,22 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
                                     size));
     if (m_begin == NULL)
     {
+        /* e.g. an offset that is not a multiple of ALLOCATIONGRANULARITY.
+           the mapping object must not be leaked: as long as it exists,
+           Windows refuses to truncate the file (ERROR_USER_MAPPED_FILE,
+           which surfaces as EINVAL in e.g. open(path, 'wb')) */
+        CloseHandle(map_handle);
+        map_handle = NULL;
+        if (file_handle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(file_handle);
+            file_handle = INVALID_HANDLE_VALUE;
+        }
         throw new OSError();
     }
     /* set the initial position */
     m_position = m_begin;
-    m_end = m_begin + size_lo;
+    m_end = m_begin + size;
     offset = offset_;
 
     return NULL;
@@ -1036,7 +1094,9 @@ __iter<bytes *> *mmap::__iter__()
 
 __ss_int mmap::__len__()
 {
-    return size();
+    /* the size of the mapping, not of the underlying file (size()) */
+    __raise_if_closed();
+    return (__ss_int)__size();
 }
 
 __ss_int mmap::__getitem__(__ss_int index)
@@ -1282,6 +1342,9 @@ void __init()
         const_24 = new str("Cannot set annotation on non-anonymous mappings");
         const_25 = new str("Annotation of mmap is not supported on this platform");
         const_26 = new str("embedded null character");
+        const_27 = new str("cannot mmap an empty file");
+        const_28 = new str("mmap offset is greater than file size");
+        const_29 = new str("mmap length is greater than file size");
 
         __name__ = new str("mmap");
 
