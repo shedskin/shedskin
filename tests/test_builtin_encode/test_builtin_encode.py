@@ -107,6 +107,42 @@ def test_errors_arg():
     # so that is not asserted here
 
 
+def test_errors_keyword_only():
+    # 'errors' passed without 'encoding' must not end up as the encoding
+    assert 'x'.encode(errors='strict') == b'x'
+    assert b'x'.decode(errors='strict') == 'x'
+    assert b'caf\xc3\xa9'.decode(errors='strict') == 'caf\xe9'
+
+
+def test_str_decode():
+    b = b'caf\xc3\xa9'
+    assert str(b, 'utf-8') == 'caf\xe9'
+    assert str(b, encoding='utf-8') == 'caf\xe9'
+    assert str(b, 'utf-8', 'strict') == 'caf\xe9'
+    assert str(object=b, encoding='utf-8') == 'caf\xe9'
+    assert str(b'caf\xe9', 'latin-1') == 'caf\xe9'
+    assert str(b'hello', 'ascii') == 'hello'
+    assert str(b'', 'utf-8') == ''
+    assert str(bytearray(b'caf\xc3\xa9'), 'utf-8') == 'caf\xe9'
+    # note: str(b, errors=..) without encoding, and str(encoding=..), are
+    # not supported (builtin defaults are skipped, shifting the arguments)
+
+    # without encoding/errors, str() still gives the repr
+    assert str(b'ab') == "b'ab'"
+    assert list(map(str, [1, 2])) == ['1', '2']
+
+    caught = 0
+    try:
+        str(b'caf\xe9', 'ascii')
+    except UnicodeDecodeError:
+        caught += 1
+    try:
+        str(b'x', 'bogus')
+    except LookupError:
+        caught += 1
+    assert caught == 2
+
+
 def test_literal_consistency():
     # '\xe9' is the same string as 'é', also in its encoded form
     assert '\xe9' == '\u00e9'
@@ -314,6 +350,8 @@ def test_all():
     test_decode_errors()
     test_encoding_lookup()
     test_errors_arg()
+    test_errors_keyword_only()
+    test_str_decode()
     test_literal_consistency()
     test_bytearray_decode()
     test_unicode_error_hierarchy()

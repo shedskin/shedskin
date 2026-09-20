@@ -512,6 +512,10 @@ def connect_actual_formal(
                 "map",
                 "to_bytes",
                 "from_bytes",
+                # emit all (None) defaults, so that e.g. decode(errors=..)
+                # does not pass 'errors' as the encoding
+                "encode",
+                "decode",
             )
         )
     ):
