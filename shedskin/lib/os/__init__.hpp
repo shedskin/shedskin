@@ -57,7 +57,9 @@ extern class_ *cl___cstat;
 class __cstat : public namedtuple {
 public:
     __ss_int st_mode, st_ino, st_dev, st_rdev, st_nlink, st_uid, st_gid, st_size, st_blksize, st_blocks;
-    __ss_int __ss_st_mtime, __ss_st_atime, __ss_st_ctime;
+    __ss_float __ss_st_mtime, __ss_st_atime, __ss_st_ctime; /* float seconds, as in CPython */
+    __ss_int st_atime_ns, st_mtime_ns, st_ctime_ns;
+    __ss_int __atime_s, __mtime_s, __ctime_s; /* integer seconds, for indexing (items 7-9) */
 
     __cstat(str *path, __ss_int t);
     __cstat(__ss_int fd);
@@ -84,6 +86,8 @@ public:
     __ss_bool is_dir(__ss_bool follow_symlinks=True);
     __ss_bool is_file(__ss_bool follow_symlinks=True);
     __ss_bool is_symlink();
+    __ss_bool is_junction();
+    __ss_int inode();
     __cstat *stat(__ss_bool follow_symlinks=True);
     str *__repr__();
 };

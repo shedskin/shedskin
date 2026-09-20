@@ -47,6 +47,8 @@ public:
 
     bytes *getvalue();
     bytes *read1(__ss_int n=-1) { return read(n); }
+    __ss_int readinto(bytes *b);
+    __ss_int readinto1(bytes *b) { return readinto(b); }
 
     __ss_bool readable() { __check_closed(); return True; }
     __ss_bool writable() { __check_closed(); return True; }
@@ -66,6 +68,7 @@ public:
        '\n' (default), '\r', '\r\n' -> '\n' written as nl, lines end at nl */
     bool universal, any_ending;
     __GC_STR nl;
+    __ss_bool line_buffering; /* always False (only meaningful for TextIOWrapper) */
 
     StringIO(str *initial_value=NULL) : StringIO(initial_value, new str("\n")) {}
     StringIO(str *initial_value, __ss_void_struct) : StringIO(initial_value) {} /* newline not given */

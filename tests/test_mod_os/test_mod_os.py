@@ -79,6 +79,62 @@ def test_scandir_name_path():
     os.rmdir(base)
 
 
+def test_stat_times():
+    path = 'shedskin_test_stat_times.txt'
+    with open(path, 'w') as f:
+        f.write('x')
+
+    os.utime(path, (1000000000.5, 1234567890.25))
+    for st in [os.stat(path), os.lstat(path)]:
+        # float seconds, as in CPython (st_mtime used to be an int)
+        assert st.st_atime == 1000000000.5
+        assert st.st_mtime == 1234567890.25
+        assert str(st.st_mtime) == '1234567890.25'
+        assert st.st_atime_ns == 1000000000500000000
+        assert st.st_mtime_ns == 1234567890250000000
+        assert abs(st.st_ctime - st.st_ctime_ns / 1e9) < 1e-3
+        # tuple items 7-9 are still integer seconds
+        assert st[7] == 1000000000
+        assert st[8] == 1234567890
+        assert st[9] == st.st_ctime_ns // 1000000000
+    assert os.path.getmtime(path) == 1234567890.25
+    assert os.path.getatime(path) == 1000000000.5
+
+    fd = os.open(path, os.O_RDONLY)
+    st = os.fstat(fd)
+    os.close(fd)
+    assert st.st_mtime == 1234567890.25
+    assert st.st_mtime_ns == 1234567890250000000
+    assert st.st_ino == os.stat(path).st_ino
+    assert st.st_dev == os.stat(path).st_dev
+
+    os.remove(path)
+
+
+def test_direntry_inode_junction():
+    base = 'shedskin_test_direntry_inode'
+    afile = os.path.join(base, 'afile.txt')
+    subdir = os.path.join(base, 'subdir')
+
+    os.mkdir(base)
+    os.mkdir(subdir)
+    with open(afile, 'w') as f:
+        f.write('hi')
+
+    inodes = []
+    for entry in os.scandir(base):
+        assert entry.inode() == os.lstat(entry.path).st_ino
+        assert entry.inode() == entry.stat(follow_symlinks=False).st_ino
+        assert not entry.is_junction()
+        inodes.append(entry.inode())
+    assert len(inodes) == 2
+    assert inodes[0] != inodes[1]
+
+    os.remove(afile)
+    os.rmdir(subdir)
+    os.rmdir(base)
+
+
 # following currently only tested under posix
 # (see test_mod_os_posix for functionality that is #ifndef WIN32 in lib/os:
 # shedskin translates every called function unconditionally, so a runtime
@@ -699,6 +755,8 @@ def test_all():
     test_fspath()
     test_scandir()
     test_scandir_name_path()
+    test_stat_times()
+    test_direntry_inode_junction()
     test_walk()
     test_oserror_subclasses()
     test_kwarg_names()

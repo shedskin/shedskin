@@ -181,6 +181,28 @@ def test_mknod_default_mode():
     os.remove(path)
 
 
+def test_direntry_inode_symlink():
+    base = 'shedskin_test_direntry_inode_symlink'
+    target = os.path.join(base, 'target.txt')
+    link = os.path.join(base, 'link')
+
+    os.mkdir(base)
+    with open(target, 'w') as f:
+        f.write('hi')
+    os.symlink('target.txt', link)
+
+    for entry in os.scandir(base):
+        # inode() is that of the entry itself, so of the link, not its target
+        assert entry.inode() == os.lstat(entry.path).st_ino
+        assert not entry.is_junction()
+        if entry.name == 'link':
+            assert entry.inode() != os.stat(entry.path).st_ino
+
+    os.remove(link)
+    os.remove(target)
+    os.rmdir(base)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -190,6 +212,7 @@ def test_all():
     test_misc_constants()
     test_oserror_subclasses()
     test_kwarg_names()
+    test_direntry_inode_symlink()
     test_mknod_default_mode()
 
 

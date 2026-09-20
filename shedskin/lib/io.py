@@ -27,6 +27,13 @@ class BytesIO(file_binary):
     def read1(self, size=-1):
         return b''
 
+    # NOTE b must be a bytearray (array.array/memoryview unsupported)
+    def readinto(self, b):
+        return 1
+
+    def readinto1(self, b):
+        return 1
+
     def readable(self):
         return True
 
@@ -46,6 +53,7 @@ class BytesIO(file_binary):
 class StringIO(file):
     def __init__(self, initial_value=None, newline=__void):
         self.unit = ''
+        self.line_buffering = False
 
     def getvalue(self):
         return ''

@@ -33,6 +33,20 @@ bytes *BytesIO::read(__ss_int n) {
     return result;
 }
 
+__ss_int BytesIO::readinto(bytes *b) {
+    /* b must be a bytearray (array.array/memoryview are not supported) */
+    if(b->frozen)
+        throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
+    __check_closed();
+    __ss_int size = len(s);
+    if(pos >= size)
+        return 0;
+    size_t n = std::min(b->unit.size(), (size_t)(size - pos));
+    b->unit.replace(0, n, s->unit, (size_t)pos, n);
+    pos += (__ss_int)n;
+    return (__ss_int)n;
+}
+
 bytes *BytesIO::readline(__ss_int n) {
     __check_closed();
     if(__eof())
@@ -112,7 +126,7 @@ bytes *BytesIO::getvalue() {
 
 /* StringIO */
 
-StringIO::StringIO(str *initial_value, str *newline) : file(), pos(0), s(new str()), universal(false), any_ending(false) {
+StringIO::StringIO(str *initial_value, str *newline) : file(), pos(0), s(new str()), universal(false), any_ending(false), line_buffering(False) {
     if(!newline) {
         universal = true;
         nl = __GC_STR(1, '\n');
