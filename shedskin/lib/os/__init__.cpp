@@ -39,6 +39,11 @@
 
 #include <grp.h>
 #include <sysexits.h>
+#include <sys/ioctl.h>
+#endif
+
+#ifdef __linux__
+#include <sched.h>
 #endif
 
 #ifdef WIN32
@@ -77,6 +82,21 @@ extern char **environ;
 #endif
 
 namespace __os__ {
+
+/* the msvc crt calls its invalid parameter handler (which aborts by default)
+   for a bad file descriptor; like cpython, suppress that around calls that
+   may legitimately receive one, so they fail with EBADF instead */
+#ifdef _MSC_VER
+static void __noop_iph(const wchar_t *, const wchar_t *, const wchar_t *, unsigned int, uintptr_t) {}
+struct __suppress_iph {
+    _invalid_parameter_handler old;
+    __suppress_iph() { old = _set_thread_local_invalid_parameter_handler(__noop_iph); }
+    ~__suppress_iph() { _set_thread_local_invalid_parameter_handler(old); }
+};
+#else
+struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warnings) */
+#endif
+
 
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
@@ -123,6 +143,31 @@ str *getcwd() {
     r = new str(d);
     free(d);
     return r;
+}
+
+bytes *getcwdb() {
+    char *d=::getcwd(0, 256);
+    if (!d)
+        __throw_oserror();
+    bytes *r = new bytes(d);
+    free(d);
+    return r;
+}
+
+bytes *fsencode(str *filename) {
+    return new bytes(__to_utf8(filename->unit));
+}
+
+bytes *fsencode(bytes *filename) {
+    return filename;
+}
+
+str *fsdecode(bytes *filename) {
+    return new str(__from_utf8(filename->unit));
+}
+
+str *fsdecode(str *filename) {
+    return filename;
 }
 
 void *chdir(str *dir) {
@@ -186,6 +231,20 @@ __ss_int cpu_count() {
     if (n == 0)
         n = 1;
     return (__ss_int)n;
+}
+
+/* like cpython: the number of cpus the calling thread may run on (its
+   affinity mask) where the platform can tell, else cpu_count() */
+__ss_int process_cpu_count() {
+#ifdef __linux__
+    cpu_set_t set;
+    if (sched_getaffinity(0, sizeof(set), &set) == 0) {
+        int n = CPU_COUNT(&set);
+        if (n > 0)
+            return (__ss_int)n;
+    }
+#endif
+    return cpu_count();
 }
 
 void *remove(str *path) {
@@ -385,7 +444,12 @@ __cstat::__cstat(str *path, __ss_int t) {
 __cstat::__cstat(__ss_int fd) {
     this->__class__ = cl___cstat;
 
-    if(::fstat((int)fd, &sbuf) == -1)
+    int r;
+    {
+        __suppress_iph guard;
+        r = ::fstat((int)fd, &sbuf);
+    }
+    if(r == -1)
         __throw_oserror();
 
     fill_er_up();
@@ -781,14 +845,23 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
 }
 
 __ss_int dup(__ss_int f1) {
-    __ss_int f2 = ::dup((int)f1);
+    __ss_int f2;
+    {
+        __suppress_iph guard;
+        f2 = ::dup((int)f1);
+    }
     if (f2 == -1)
         __throw_oserror(new str("os.dup failed"));
     return f2;
 }
 
 __ss_int dup2(__ss_int f1, __ss_int f2) {
-    if (::dup2((int)f1,(int)f2) == -1)
+    int r;
+    {
+        __suppress_iph guard;
+        r = ::dup2((int)f1,(int)f2);
+    }
+    if (r == -1)
         __throw_oserror(new str("os.dup2 failed"));
     return f2;
 }
@@ -832,7 +905,11 @@ bytes *read(__ss_int fd, __ss_int n) {
         n = INT_MAX;
     bytes *s = new bytes();
     s->unit.resize((size_t)n);
-    auto nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
+    decltype(::read(0, 0, 0)) nr;
+    {
+        __suppress_iph guard;
+        nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
+    }
     if(nr < 0)
         __throw_oserror(new str("os.read"));
     s->unit.resize((size_t)nr);
@@ -841,14 +918,23 @@ bytes *read(__ss_int fd, __ss_int n) {
 
 __ss_int write(__ss_int fd, bytes *s) {
     size_t r;
-    if((r=(size_t)::write((int)fd, s->c_str(), s->unit.size())) == std::string::npos)
+    {
+        __suppress_iph guard;
+        r = (size_t)::write((int)fd, s->c_str(), s->unit.size());
+    }
+    if(r == std::string::npos)
         __throw_oserror(new str("os.write"));
     return (__ss_int)r;
 }
 
 
 void *close(__ss_int fd) {
-   if(::close((int)fd) < 0)
+   int r;
+   {
+       __suppress_iph guard;
+       r = ::close((int)fd);
+   }
+   if(r < 0)
        __throw_oserror(new str("os.close failed"));
    return NULL;
 }
@@ -972,7 +1058,8 @@ bytes *getrandom(__ss_int size, __ss_int flags) {
 
 #ifdef WIN32
 __ss_bool isatty(__ss_int fd) {
-    return __mbool(::_isatty(fd));
+    __suppress_iph guard;
+    return __mbool(::_isatty((int)fd));
 }
 #endif
 
@@ -1445,13 +1532,23 @@ __ss_bool access(str *path, __ss_int mode) {
 }
 
 void *fsync(__ss_int fd) {
-    if(::_commit((int)fd) == -1)
+    int r;
+    {
+        __suppress_iph guard;
+        r = ::_commit((int)fd);
+    }
+    if(r == -1)
         __throw_oserror(new str("os.fsync"));
     return NULL;
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
-    if (::_chsize_s((int)fd, (__int64)n) != 0)
+    errno_t r;
+    {
+        __suppress_iph guard;
+        r = ::_chsize_s((int)fd, (__int64)n);
+    }
+    if (r != 0)
         __throw_oserror(new str("os.ftruncate"));
     return NULL;
 }
@@ -1470,12 +1567,226 @@ tuple<__ss_float> *times() {
 
 #endif
 
+/* truncate, closerange, waitstatus_to_exitcode, get/set_inheritable,
+   device_encoding and get_terminal_size are declared unconditionally in
+   __init__.hpp: posix versions first, then the win32 equivalents. */
+
+class_ *cl_terminal_size;
+
+terminal_size::terminal_size(__ss_int columns, __ss_int lines) {
+    this->__class__ = cl_terminal_size;
+    this->columns = columns;
+    this->lines = lines;
+}
+
+terminal_size::terminal_size(tuple<__ss_int> *t) {
+    this->__class__ = cl_terminal_size;
+    if (len(t) != 2)
+        throw new TypeError(__add_strs(3, new str("os.terminal_size() takes a 2-sequence ("), __str(len(t)), new str("-sequence given)")));
+    this->columns = t->__getitem__(0);
+    this->lines = t->__getitem__(1);
+}
+
+__ss_int terminal_size::__len__() {
+    return 2;
+}
+
+__ss_int terminal_size::__getitem__(__ss_int i) {
+    if (i < 0)
+        i += 2;
+    switch(i) {
+        case 0: return columns;
+        case 1: return lines;
+        default:
+            throw new IndexError(new str("tuple index out of range"));
+    }
+}
+
+str *terminal_size::__repr__() {
+    return __add_strs(5, new str("os.terminal_size(columns="), __str(columns), new str(", lines="), __str(lines), new str(")"));
+}
+
+#ifndef WIN32
+
+void *truncate(str *path, __ss_int length) {
+    if (::truncate(path->c_str(), (off_t)length) == -1)
+        __throw_oserror(path);
+    return NULL;
+}
+
+void *closerange(__ss_int fd_low, __ss_int fd_high) {
+    /* descriptors can't be (much) above the open file limit, so don't loop
+       all the way up to e.g. closerange(3, 2**31) */
+    long max_fd = ::sysconf(_SC_OPEN_MAX);
+    if (max_fd > 0 && fd_high > max_fd)
+        fd_high = (__ss_int)max_fd;
+    if (fd_low < 0)
+        fd_low = 0;
+    for (__ss_int fd = fd_low; fd < fd_high; fd++)
+        ::close((int)fd); /* errors are ignored */
+    return NULL;
+}
+
+__ss_int waitstatus_to_exitcode(__ss_int status) {
+    if (status < INT_MIN || status > INT_MAX)
+        throw new OverflowError(new str("signed integer is greater than maximum"));
+    int st = (int)status;
+    if (WIFEXITED(st))
+        return (__ss_int)WEXITSTATUS(st);
+    if (WIFSIGNALED(st))
+        return -(__ss_int)WTERMSIG(st);
+    if (WIFSTOPPED(st))
+        throw new ValueError(__add_strs(2, new str("process stopped by delivery of signal "), __str((__ss_int)WSTOPSIG(st))));
+    throw new ValueError(__add_strs(2, new str("invalid wait status: "), __str(status)));
+}
+
+__ss_bool get_inheritable(__ss_int fd) {
+    int flags = ::fcntl((int)fd, F_GETFD);
+    if (flags == -1)
+        __throw_oserror();
+    return __mbool(!(flags & FD_CLOEXEC));
+}
+
+void *set_inheritable(__ss_int fd, __ss_bool inheritable) {
+    int flags = ::fcntl((int)fd, F_GETFD);
+    if (flags == -1)
+        __throw_oserror();
+    int new_flags = inheritable ? (flags & ~FD_CLOEXEC) : (flags | FD_CLOEXEC);
+    if (new_flags != flags && ::fcntl((int)fd, F_SETFD, new_flags) == -1)
+        __throw_oserror();
+    return NULL;
+}
+
+/* shedskin behaves like cpython in utf-8 mode (the default from 3.15 on) */
+str *device_encoding(__ss_int fd) {
+    if (!::isatty((int)fd))
+        return NULL;
+    return new str("utf-8");
+}
+
+terminal_size *get_terminal_size(__ss_int fd) {
+    struct winsize w;
+    if (::ioctl((int)fd, TIOCGWINSZ, &w) != 0)
+        __throw_oserror();
+    return new terminal_size((__ss_int)w.ws_col, (__ss_int)w.ws_row);
+}
+
+#else /* WIN32 */
+
+void *truncate(str *path, __ss_int length) {
+    if (length < 0) {
+        errno = EINVAL;
+        __throw_oserror(path);
+    }
+    std::error_code ec;
+    std::filesystem::resize_file(path->c_str(), (std::uintmax_t)length, ec);
+    if (ec) {
+        std::error_condition c = ec.default_error_condition();
+        errno = (c.category() == std::generic_category()) ? c.value() : EIO;
+        __throw_oserror(path);
+    }
+    return NULL;
+}
+
+void *closerange(__ss_int fd_low, __ss_int fd_high) {
+    /* the msvc crt supports at most 8192 low-level descriptors */
+    if (fd_high > 8192)
+        fd_high = 8192;
+    if (fd_low < 0)
+        fd_low = 0;
+    __suppress_iph guard;
+    for (__ss_int fd = fd_low; fd < fd_high; fd++)
+        ::_close((int)fd); /* errors are ignored */
+    return NULL;
+}
+
+/* like cpython: see the _cwait() based os.waitpid() */
+__ss_int waitstatus_to_exitcode(__ss_int status) {
+    if (status < 0)
+        throw new OverflowError(new str("can't convert negative int to unsigned"));
+    unsigned long long exitcode = ((unsigned long long)status) >> 8;
+    if (exitcode > UINT_MAX)
+        throw new ValueError(__add_strs(2, new str("invalid exit code: "), __str((__ss_int)exitcode)));
+    return (__ss_int)exitcode;
+}
+
+static HANDLE __fd_handle(__ss_int fd) {
+    HANDLE h;
+    {
+        __suppress_iph guard;
+        h = (HANDLE)::_get_osfhandle((int)fd);
+    }
+    if (h == INVALID_HANDLE_VALUE) {
+        errno = EBADF;
+        __throw_oserror();
+    }
+    return h;
+}
+
+__ss_bool get_inheritable(__ss_int fd) {
+    DWORD flags;
+    if (!GetHandleInformation(__fd_handle(fd), &flags))
+        throw new OSError(new str("os.get_inheritable"));
+    return __mbool((flags & HANDLE_FLAG_INHERIT) != 0);
+}
+
+void *set_inheritable(__ss_int fd, __ss_bool inheritable) {
+    if (!SetHandleInformation(__fd_handle(fd), HANDLE_FLAG_INHERIT, inheritable ? HANDLE_FLAG_INHERIT : 0))
+        throw new OSError(new str("os.set_inheritable"));
+    return NULL;
+}
+
+/* like cpython: the console code page for the standard streams */
+str *device_encoding(__ss_int fd) {
+    int tty;
+    {
+        __suppress_iph guard;
+        tty = ::_isatty((int)fd);
+    }
+    if (!tty)
+        return NULL;
+    UINT cp;
+    if (fd == 0)
+        cp = GetConsoleCP();
+    else if (fd == 1 || fd == 2)
+        cp = GetConsoleOutputCP();
+    else
+        cp = 0;
+    if (cp == 0) /* no console */
+        return NULL;
+    return __add_strs(2, new str("cp"), __str((__ss_int)cp));
+}
+
+terminal_size *get_terminal_size(__ss_int fd) {
+    DWORD nhandle;
+    switch (fd) {
+        case 0: nhandle = STD_INPUT_HANDLE; break;
+        case 1: nhandle = STD_OUTPUT_HANDLE; break;
+        case 2: nhandle = STD_ERROR_HANDLE; break;
+        default:
+            throw new ValueError(new str("bad file descriptor"));
+    }
+    HANDLE handle = GetStdHandle(nhandle);
+    if (handle == NULL)
+        throw new OSError(new str("handle cannot be retrieved"));
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (handle == INVALID_HANDLE_VALUE || !GetConsoleScreenBufferInfo(handle, &csbi))
+        throw new OSError(new str("os.get_terminal_size"));
+    return new terminal_size((__ss_int)(csbi.srWindow.Right - csbi.srWindow.Left + 1), (__ss_int)(csbi.srWindow.Bottom - csbi.srWindow.Top + 1));
+}
+
+#endif
+
 /* lseek is declared unconditionally in __init__.hpp (it's cross-platform,
    unlike the UNIX-only functionality above and below), so it must be
    defined for both WIN32 and non-WIN32 builds. */
 #ifdef WIN32
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
-    __int64 r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
+    __int64 r;
+    {
+        __suppress_iph guard;
+        r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
+    }
     if(r == -1)
         __throw_oserror(new str("os.lseek"));
     return (__ss_int)r;
@@ -1798,6 +2109,7 @@ tuple<__ss_int>* pipe() {
 void __init() {
     cl___cstat = new class_("__cstat");
     cl_DirEntry = new class_("DirEntry");
+    cl_terminal_size = new class_("terminal_size");
 
     linesep = new str("\n");
 #ifdef WIN32
