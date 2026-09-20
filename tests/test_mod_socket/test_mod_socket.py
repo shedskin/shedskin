@@ -758,9 +758,9 @@ def test_all():
     test_create_server_args()
     test_socketpair()
     test_constants()
-    test_default_timeout()
     test_recv_into()
     test_recvfrom_into()
+    test_default_timeout() # last, see comment there
 
 
 if __name__ == '__main__':
