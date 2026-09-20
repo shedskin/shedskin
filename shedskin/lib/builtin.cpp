@@ -24,7 +24,6 @@ str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 bytes *bsp;
 
 __GC_STRING ws, __fmtchars;
-__GC_STR __uws;
 __GC_VECTOR(str *) __char_cache;
 __GC_VECTOR(bytes *) __byte_cache;
 
@@ -87,7 +86,6 @@ void __init() {
     byteorder_little = new str("little");
 
     ws = " \n\r\t\f\v";
-    __uws = __gcs(" \n\r\t\f\v");
     __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
     bsp = new bytes(" ");

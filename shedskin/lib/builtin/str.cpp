@@ -4,6 +4,39 @@
 
 /* str methods */
 
+/* CPython's final sigma rule for lower(): a capital sigma becomes a final
+   sigma when it is preceded by a cased character and not followed by one,
+   skipping over case-ignorable characters in both directions */
+static bool __final_sigma(const __GC_STR &u, size_t i) {
+    size_t len = u.size();
+    size_t j = i;
+    __ss_char c = 0;
+
+    for(; j > 0; j--) {
+        c = u[j-1];
+        if(!__ss_char_has(c, __SS_CHAR_CASE_IGNORABLE))
+            break;
+    }
+    if(j == 0 || !__ss_char_has(c, __SS_CHAR_CASED))
+        return false;
+
+    for(j = i+1; j < len; j++) {
+        c = u[j];
+        if(!__ss_char_has(c, __SS_CHAR_CASE_IGNORABLE))
+            break;
+    }
+    return j == len || !__ss_char_has(c, __SS_CHAR_CASED);
+}
+
+/* append the lowercase version of u[i] */
+static inline void __lower_to(__GC_STR &out, const __GC_STR &u, size_t i) {
+    __ss_char c = u[i];
+    if(c == 0x3a3) /* capital sigma */
+        out += __final_sigma(u, i) ? (__ss_char)0x3c2 : (__ss_char)0x3c3;
+    else
+        __ss_char_map_to(out, c, __SS_CHAR_LOWER_MAP);
+}
+
 str::str() : hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
@@ -111,46 +144,55 @@ void str::operator+= (const char &rhs) {
     this->unit += rhs;
 }
 
-__ss_bool str::__ctype_function(int (*cfunc)(int))
-{
-  size_t i, l = this->unit.size();
-
-  if(!l)
-      return False;
-
-  for(i = 0; i < l; i++) {
-      __ss_char c = unit[i];
-      if(c > 127 || !cfunc((int)c)) return False; /* ascii-only for now */
-  }
-
-  return True;
-}
-
-__ss_bool str::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(__uws) == std::string::npos)); }
-__ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
-__ss_bool str::isalpha() {
+/* all characters have one of the given flags (and there is at least one
+   character), as str.isalpha(), str.isdigit() etc. */
+__ss_bool str::__all_have(unsigned short flags) {
     size_t l = unit.size();
-    if(!l) return False;
+    if(!l)
+        return False;
     for(size_t i = 0; i < l; i++)
-        if(!__ss_char_alpha(unit[i])) return False;
+        if(!__ss_char_has(unit[i], flags))
+            return False;
     return True;
 }
-__ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
-__ss_bool str::islower() { /* has a cased char, and no upper-case ones */
+
+__ss_bool str::isspace() {
+    size_t l = unit.size();
+    if(!l)
+        return False;
+    for(size_t i = 0; i < l; i++)
+        if(!__ss_char_space(unit[i]))
+            return False;
+    return True;
+}
+
+__ss_bool str::isalpha() { return __all_have(__SS_CHAR_ALPHA); }
+__ss_bool str::isdecimal() { return __all_have(__SS_CHAR_DECIMAL); }
+__ss_bool str::isdigit() { return __all_have(__SS_CHAR_DIGIT); }
+__ss_bool str::isnumeric() { return __all_have(__SS_CHAR_NUMERIC); }
+
+/* like CPython: a character is alphanumeric when it is alphabetic, decimal,
+   a digit or numeric */
+__ss_bool str::isalnum() { return __all_have(__SS_CHAR_ALPHA | __SS_CHAR_DECIMAL | __SS_CHAR_DIGIT | __SS_CHAR_NUMERIC); }
+
+__ss_bool str::islower() { /* has a cased char, and no upper-case or title-case ones */
     size_t l = unit.size();
     bool cased = false;
     for(size_t i = 0; i < l; i++) {
-        if(__ss_char_upper(unit[i])) return False;
-        if(__ss_char_lower(unit[i])) cased = true;
+        unsigned short f = __ss_char_rec(unit[i])->flags;
+        if(f & (__SS_CHAR_UPPER | __SS_CHAR_TITLE)) return False;
+        if(f & __SS_CHAR_LOWER) cased = true;
     }
     return __mbool(cased);
 }
-__ss_bool str::isupper() { /* has a cased char, and no lower-case ones */
+
+__ss_bool str::isupper() { /* has a cased char, and no lower-case or title-case ones */
     size_t l = unit.size();
     bool cased = false;
     for(size_t i = 0; i < l; i++) {
-        if(__ss_char_lower(unit[i])) return False;
-        if(__ss_char_upper(unit[i])) cased = true;
+        unsigned short f = __ss_char_rec(unit[i])->flags;
+        if(f & (__SS_CHAR_LOWER | __SS_CHAR_TITLE)) return False;
+        if(f & __SS_CHAR_UPPER) cased = true;
     }
     return __mbool(cased);
 }
@@ -171,38 +213,6 @@ __ss_bool str::__ss_isascii() {
   for(i = 0; i < l; i++)
       if(unit[i] > 127)
           return False;
-
-  return True;
-}
-
-__ss_bool str::isdecimal() {
-  size_t i, l = this->unit.size();
-
-  if(!l)
-      return False;
-
-  for(i = 0; i < l; i++) {
-      __ss_char elem = unit[i];
-
-      if(elem < 48 or elem > 57)
-          return False;
-  }
-
-  return True;
-}
-
-__ss_bool str::isnumeric() {
-  size_t i, l = this->unit.size();
-
-  if(!l)
-      return False;
-
-  for(i = 0; i < l; i++) {
-      __ss_char elem = unit[i];
-
-      if(elem < 48 or (elem > 57 and elem < 178) or (elem > 179 and elem < 185) or (elem > 185 and elem < 188) or elem > 190)
-          return False;
-  }
 
   return True;
 }
@@ -269,6 +279,30 @@ str *str::expandtabs(__ss_int tabsize) {
     return new str(r);
 }
 
+/* first/last position (from pos) that is not whitespace, or npos */
+static inline size_t __first_nonspace(const __GC_STR &u, size_t pos=0) {
+    size_t l = u.size();
+    for(; pos < l; pos++)
+        if(!__ss_char_space(u[pos]))
+            return pos;
+    return std::string::npos;
+}
+
+static inline size_t __first_space(const __GC_STR &u, size_t pos) {
+    size_t l = u.size();
+    for(; pos < l; pos++)
+        if(__ss_char_space(u[pos]))
+            return pos;
+    return std::string::npos;
+}
+
+static inline size_t __last_nonspace(const __GC_STR &u) {
+    for(size_t i = u.size(); i > 0; i--)
+        if(!__ss_char_space(u[i-1]))
+            return i-1;
+    return std::string::npos;
+}
+
 str *str::strip(str *chars) {
     size_t first, last;
     if(chars) {
@@ -277,10 +311,10 @@ str *str::strip(str *chars) {
             return __ss_empty_str;
         last = unit.find_last_not_of(chars->unit);
     } else {
-        first = unit.find_first_not_of(__uws);
+        first = __first_nonspace(unit);
         if(first == std::string::npos)
             return __ss_empty_str;
-        last = unit.find_last_not_of(__uws);
+        last = __last_nonspace(unit);
     }
     return new str(this->unit.data()+first, last-first+1);
 }
@@ -290,7 +324,7 @@ str *str::lstrip(str *chars) {
     if(chars) {
         first = unit.find_first_not_of(chars->unit);
     } else {
-        first = unit.find_first_not_of(__uws);
+        first = __first_nonspace(unit);
     }
     if(first == std::string::npos)
         return __ss_empty_str;
@@ -298,11 +332,11 @@ str *str::lstrip(str *chars) {
 }
 
 str *str::rstrip(str *chars) {
-    size_t first, last;
+    size_t last;
     if(chars) {
         last = unit.find_last_not_of(chars->unit);
     } else {
-        last = unit.find_last_not_of(__uws);
+        last = __last_nonspace(unit);
     }
     if(last == std::string::npos)
         return __ss_empty_str;
@@ -358,44 +392,39 @@ list<str *> *str::rsplit(str *separator, __ss_int maxsep)
 
 __ss_bool str::istitle()
 {
-    size_t i, len;
+    /* as CPython: upper/title-case characters may only follow uncased ones,
+       lower-case characters only cased ones, and there must be at least one
+       cased character */
+    size_t len = this->unit.size();
+    bool cased = false, previous_is_cased = false;
 
-    len = this->unit.size();
-    if(!len)
-        return False;
-
-    bool cased = false; /* cpython: needs at least one cased character */
-    for(i = 0; i < len; )
-    {
-        for( ; i < len && !__ss_char_alpha(unit[i]); i++) ;
-        if(i == len) break;
-
-        if(!__ss_char_upper(unit[i])) return False;
-        cased = true;
-        i++;
-
-        for( ; i < len && __ss_char_lower(unit[i]); i++) ;
-        if(i == len) break;
-
-        if(__ss_char_alpha(unit[i])) return False;
+    for(size_t i = 0; i < len; i++) {
+        unsigned short f = __ss_char_rec(unit[i])->flags;
+        if(f & (__SS_CHAR_UPPER | __SS_CHAR_TITLE)) {
+            if(previous_is_cased)
+                return False;
+            previous_is_cased = cased = true;
+        } else if(f & __SS_CHAR_LOWER) {
+            if(!previous_is_cased)
+                return False;
+            previous_is_cased = cased = true;
+        } else
+            previous_is_cased = false;
     }
 
     return __mbool(cased);
 }
 
 __ss_bool str::isidentifier() {
-    size_t i, len;
-
-    len = this->unit.size();
+    /* XID_Start (or '_') followed by XID_Continue characters */
+    size_t len = this->unit.size();
     if(!len)
         return False;
-    if('0' <= unit[0] and unit[0] <= '9')
+    if(unit[0] != '_' and !__ss_char_has(unit[0], __SS_CHAR_XID_START))
         return False;
-
-    for(i = 0; i < len; i++)
-        if(not (('a' <= unit[i] and unit[i] <= 'z') or ('A' <= unit[i] and unit[i] <= 'Z') or ('0' <= unit[i] and unit[i] <= '9') or (unit[i] == '_')))
+    for(size_t i = 1; i < len; i++)
+        if(!__ss_char_has(unit[i], __SS_CHAR_XID_CONTINUE))
             return False;
-
     return True;
 }
 
@@ -437,14 +466,14 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         throw new ValueError(new str("empty separator"));
 
     if(sep_ == NULL) {
-        pos_start = unit.find_first_not_of(__uws, pos_start);
+        pos_start = __first_nonspace(unit, pos_start);
         if (pos_start == std::string::npos)
             return result;
     }
 
     while(1) {
         if(sep_ == NULL)
-            pos_end = unit.find_first_of(__uws, pos_start);
+            pos_end = __first_space(unit, pos_start);
         else
             pos_end = unit.find(sep_->unit, pos_start);
 
@@ -465,7 +494,7 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         splits += 1;
 
         if(sep_ == NULL) {
-            pos_start = unit.find_first_not_of(__uws, pos_end);
+            pos_start = __first_nonspace(unit, pos_end);
             if(pos_start == std::string::npos)
                 break;
         } else {
@@ -483,17 +512,21 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
     return result;
 }
 
+/* a str table maps code point c to table[c], like any sequence in CPython
+   (where str.translate just indexes the table); code points past its end
+   (IndexError in CPython) are left unchanged. (delchars is a Python 2
+   leftover.) */
 str *str::translate(str *table, str *delchars) {
-    if(len(table) != 256)
-        throw new ValueError(new str("translation table must be 256 characters long"));
-
     str *newstr = new str();
-
     size_t self_size = this->unit.size();
+    size_t table_size = table->unit.size();
+    newstr->unit.reserve(self_size);
+
     for(size_t i = 0; i < self_size; i++) {
-        char c = unit[i];
-        if(!delchars || delchars->unit.find(c) == std::string::npos)
-            *newstr += table->unit[(unsigned char)c];
+        __ss_char c = unit[i];
+        if(delchars && delchars->unit.find(c) != std::string::npos)
+            continue;
+        newstr->unit += (c < table_size) ? table->unit[c] : c;
     }
 
     return newstr;
@@ -511,7 +544,7 @@ str *str::translate(dict<__ss_int, str *> *table) {
                 newstr->unit += repl->unit;
             /* else: None in the table means delete this character */
         } else {
-            *newstr += unit[i];
+            newstr->unit += unit[i]; /* not *newstr += unit[i]: that would narrow to char */
         }
     }
 
@@ -568,13 +601,23 @@ dict<__ss_int, str *> *str::maketrans(dict<str *, str *> *table) {
 }
 
 str *str::swapcase() {
-    str *r = new str(unit);
+    /* like CPython: upper-case characters are lowercased (including the
+       final sigma rule), lower-case ones uppercased; title-case and uncased
+       ones are left alone */
+    __GC_STR r;
     size_t len = unit.size();
+    r.reserve(len);
     for(size_t i=0; i<len; i++) {
         __ss_char c = unit[i];
-        r->unit[i] = __ss_char_upper(c) ? __ss_tolower(c) : __ss_char_lower(c) ? __ss_toupper(c) : c;
+        unsigned short f = __ss_char_rec(c)->flags;
+        if(f & __SS_CHAR_UPPER)
+            __lower_to(r, unit, i);
+        else if(f & __SS_CHAR_LOWER)
+            __ss_char_map_to(r, c, __SS_CHAR_UPPER_MAP);
+        else
+            r += c;
     }
-    return r;
+    return new str(r);
 }
 
 str *str::center(__ss_int w, str *fillchar) {
@@ -734,21 +777,39 @@ __ss_int str::rindex(str *s, __ss_int a, __ss_int b) { return __checkneg(rfind(s
 
 __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__()); }
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
-    __ss_int count, one = 1;
-    size_t i;
-    size_t ssize = s->unit.size();
-    slicenr(7, start, end, one, __len__());
+    /* index adjustment as CPython's (ADJUST_INDICES): start is not clamped
+       to the length, so that e.g. 'abc'.count('', 5) is 0 */
+    __ss_int len = __len__();
+    if(end > len)
+        end = len;
+    else if(end < 0) {
+        end += len;
+        if(end < 0)
+            end = 0;
+    }
+    if(start < 0) {
+        start += len;
+        if(start < 0)
+            start = 0;
+    }
+    __ss_int ssize = s->__len__();
+    if(end - start < ssize)
+        return 0;
+    if(!ssize) /* empty substring: matches at every position, including the end */
+        return end - start + 1;
 
-    i = (size_t)start;
-    count = 0;
-    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
-    {
-        i += ssize;
-        if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
-            i++;
+    /* search only within [start:end]: checking the match position against
+       end-len(s) underflowed when s is longer than end, so that matches
+       running past end were still counted ('abcabc'.count('abc', 0, 2)) */
+    std::u32string_view view(unit.data() + start, (size_t)(end - start));
+    std::u32string_view sub(s->unit.data(), (size_t)ssize);
+
+    __ss_int count = 0;
+    size_t i = 0;
+    while((i = view.find(sub, i)) != std::string::npos) {
+        i += (size_t)ssize;
         count++;
     }
-
     return count;
 }
 
@@ -813,66 +874,65 @@ str *str::replace(str *a, str *b, __ss_int c) {
 }
 
 str *str::upper() {
-    if(this->unit.size() == 1)
-        return __char_str(__ss_toupper(unit[0]));
-
-    /* not new str(*this): the copy constructor would carry over the cached
-       hash of the original (wrong for the converted string), breaking
-       dict lookups and __eq__ on the result */
-    str *toReturn = new str(unit);
-    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_toupper);
-
-    return toReturn;
+    size_t len = unit.size();
+    __GC_STR r;
+    r.reserve(len);
+    for(size_t i=0; i<len; i++) {
+        __ss_char c = unit[i];
+        if(c < 0x80)
+            r += (c >= 'a' && c <= 'z') ? c - 32 : c;
+        else
+            __ss_char_map_to(r, c, __SS_CHAR_UPPER_MAP);
+    }
+    if(r.size() == 1)
+        return __char_str(r[0]);
+    /* not new str(*this) and modifying: the copy constructor would carry
+       over the cached hash of the original (wrong for the converted string),
+       breaking dict lookups and __eq__ on the result */
+    return new str(r);
 }
 
 str *str::lower() {
-    if(this->unit.size() == 1)
-        return __char_str(__ss_tolower(unit[0]));
-
-    str *toReturn = new str(unit);  /* see upper() */
-    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), __ss_tolower);
-
-    return toReturn;
+    size_t len = unit.size();
+    __GC_STR r;
+    r.reserve(len);
+    for(size_t i=0; i<len; i++) {
+        __ss_char c = unit[i];
+        if(c < 0x80)
+            r += (c >= 'A' && c <= 'Z') ? c + 32 : c;
+        else
+            __lower_to(r, unit, i);
+    }
+    if(r.size() == 1)
+        return __char_str(r[0]);
+    return new str(r); /* see upper() */
 }
 
 str *str::title() {
-    str *r = new str(unit);
-    bool up = true;
+    /* as CPython: a character following a cased one is lowercased, any
+       other one titlecased */
+    __GC_STR r;
     size_t len = this->unit.size();
+    r.reserve(len);
+    bool previous_is_cased = false;
     for(size_t i=0; i<len; i++) {
         __ss_char c = this->unit[i];
-        if(!__ss_char_alpha(c))
-            up = true;
-        else if (up) {
-            c = __ss_toupper(c);
-            up = false;
-        }
+        if(previous_is_cased)
+            __lower_to(r, unit, i);
         else
-            c = __ss_tolower(c);
-        r->unit[i] = c;
+            __ss_char_map_to(r, c, __SS_CHAR_TITLE_MAP);
+        previous_is_cased = __ss_char_has(c, __SS_CHAR_CASED);
     }
-    return r;
+    return new str(r);
 }
 
 str *str::casefold() {
-    str *r = new str();
+    __GC_STR r;
     size_t len = this->unit.size();
-    r->unit.reserve(len);
-
-    for(size_t i=0; i<len; i++) {
-        __ss_char c = unit[i];
-
-        if(65 <= c and c <= 90)
-            c += 32;
-        else if(192 <= c and c <= 214)
-            c += 32;
-        else if(216 <= c and c <= 222)
-            c += 32;
-
-        r->unit += c;
-    }
-
-    return r;
+    r.reserve(len);
+    for(size_t i=0; i<len; i++)
+        __ss_char_map_to(r, unit[i], __SS_CHAR_FOLD_MAP);
+    return new str(r);
 }
 
 str *str::removeprefix(str *prefix) {
@@ -892,14 +952,16 @@ str *str::removesuffix(str *suffix) {
 }
 
 str *str::capitalize() {
-    str *r = new str(unit);
-    size_t len = r->unit.size();
+    /* as CPython (3.8+): titlecase the first character, lowercase the rest */
+    __GC_STR r;
+    size_t len = unit.size();
+    r.reserve(len);
     if(len) {
-        r->unit[0] = __ss_toupper(r->unit[0]);
+        __ss_char_map_to(r, unit[0], __SS_CHAR_TITLE_MAP);
         for(size_t i = 1; i < len; i++)
-            r->unit[i] = __ss_tolower(r->unit[i]);
+            __lower_to(r, unit, i);
     }
-    return r;
+    return new str(r);
 }
 
 #ifdef __SS_BIND

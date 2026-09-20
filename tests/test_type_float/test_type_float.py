@@ -131,6 +131,26 @@ def test_repr_formatting():
     assert repr(float('nan')) == 'nan'
 
 
+def float_fails(s):
+    try:
+        float(s)
+    except ValueError:
+        return True
+    return False
+
+
+def test_float_from_unicode_str():
+    # unicode decimal digits and whitespace are accepted, as in CPython
+    assert float('\u0663.5') == 3.5
+    assert float('\xa01.5\u2003') == 1.5
+    assert float('1e\u0663') == 1000.0
+    assert float('\uff11\uff12.\uff15') == 12.5
+    assert float('\u3000-2\u3000') == -2.0
+    assert float_fails('\xbd')
+    assert float_fails('\u3000')
+    assert float_fails('1.5\x00')
+
+
 def test_all():
     test_float()
     test_inf()
@@ -142,6 +162,7 @@ def test_all():
     test_hex_fromhex()
     test_repr_roundtrip()
     test_repr_formatting()
+    test_float_from_unicode_str()
 
 
 if __name__ == "__main__":
