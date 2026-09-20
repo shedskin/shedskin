@@ -374,6 +374,19 @@ def test_close():
 
 
 
+def _encoding_or_default(encoding):
+    return io.text_encoding(encoding)
+
+def test_text_encoding():
+    assert io.text_encoding('latin-1') == 'latin-1'
+    assert io.text_encoding('utf-8', 3) == 'utf-8'
+    # utf-8 mode is the default since 3.15 (and always on in shedskin)
+    assert io.text_encoding(None) == 'utf-8'
+    # str-or-None argument
+    assert _encoding_or_default('cp1252') == 'cp1252'
+    assert _encoding_or_default(None) == 'utf-8'
+    assert 'h\xe9'.encode(io.text_encoding(None)) == b'h\xc3\xa9'
+
 def test_module_constants():
     assert io.DEFAULT_BUFFER_SIZE == 8192
     assert io.SEEK_SET == 0
@@ -589,6 +602,7 @@ def test_all():
     test_stringio_seek_whence()
     test_unicode_positions()
     test_close()
+    test_text_encoding()
     test_module_constants()
     test_capabilities()
     test_unsupported()

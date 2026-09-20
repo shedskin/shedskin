@@ -105,6 +105,11 @@ extern const __ss_int DEFAULT_BUFFER_SIZE;
    references for them; declare them under those names accordingly. */
 extern const __ss_int __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
 
+/* shedskin always runs in UTF-8 mode (sys.flags.utf8_mode == 1), so the
+   default is 'utf-8' rather than 'locale'; stacklevel only affects the
+   EncodingWarning that CPython emits under -X warn_default_encoding. */
+str *text_encoding(str *encoding, __ss_int stacklevel=2);
+
 void __init();
 
 } // module namespace

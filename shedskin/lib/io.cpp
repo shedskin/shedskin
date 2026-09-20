@@ -271,6 +271,12 @@ str *StringIO::getvalue() {
 
 /* init */
 
+str *text_encoding(str *encoding, __ss_int) {
+    if (encoding)
+        return encoding;
+    return new str("utf-8");
+}
+
 void __init() {
     cl_UnsupportedOperation = new class_("UnsupportedOperation");
 
