@@ -500,6 +500,35 @@ def test_repr():
     assert repr(1.1) == '1.1'
 
 
+class Asciied:
+    def __repr__(self):
+        return 'Asciied(\u00e9)'
+
+
+def test_ascii():
+    assert ascii(1) == '1'
+    assert ascii(1.5) == '1.5'
+    assert ascii(True) == 'True'
+    assert ascii(None) == 'None'
+    assert ascii('hoi') == "'hoi'"
+    assert ascii('') == "''"
+    assert ascii('caf\u00e9') == "'caf\\xe9'"
+    assert ascii('\u20ac5') == "'\\u20ac5'"
+    assert ascii('\U0001f600') == "'\\U0001f600'"
+    assert ascii('a\nb\\') == "'a\\nb\\\\'"
+    assert ascii(b'\xe9') == "b'\\xe9'"
+    assert ascii(['\u00ff', 'x']) == "['\\xff', 'x']"
+    assert ascii({'\u0100': 1}) == "{'\\u0100': 1}"
+    assert ascii(('\u00e9', 2)) == "('\\xe9', 2)"
+    assert ascii(Asciied()) == 'Asciied(\\xe9)'
+    s = 'na\u00efve'
+    assert ascii(s) == repr(s).replace('\u00ef', '\\xef')
+    assert '%a' % 'caf\u00e9' == "'caf\\xe9'"
+    assert '%a|%a' % ('\u20ac', 3) == "'\\u20ac'|3"
+    assert '%(x)a' % {'x': '\u00e9'} == "'\\xe9'"
+    assert '%8a' % '\u00e9' == "  '\\xe9'"
+
+
 def test_reversed():
     assert list(reversed([1,2,3])) == [3,2,1]
     assert list(reversed(['a','b','c'])) == ['c','b','a']
@@ -623,6 +652,7 @@ def test_all():
     test_range_beyond_32_bits()
     test_range_slicing()
     test_repr()
+    test_ascii()
     test_reversed()
     test_round()
     test_set()

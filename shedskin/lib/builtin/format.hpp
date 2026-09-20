@@ -147,6 +147,8 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
     __GC_STR s;
     if(c=='s')
         s = __str(arg)->unit;
+    else if(c=='a')
+        s = ascii(arg)->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
 
@@ -160,6 +162,8 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
     __GC_STR s;
     if(flag) // bytes % bytes
         s = __widen(arg->unit);
+    else if(c=='a')
+        s = ascii(arg)->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
 
@@ -329,6 +333,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
 
             case 's':
             case 'r':
+            case 'a':
                 if(name) {
                     __mod_str(flag, result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision);
                     break;

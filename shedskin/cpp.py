@@ -2830,6 +2830,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(value, ast.FormattedValue):
                 if value.conversion == ord("r"):
                     convert = "repr"
+                elif value.conversion == ord("a"):
+                    convert = "ascii"
                 value = value.value
             # __add_strs is variadic, so a bare NULL argument would be deduced
             # as whatever integer type NULL happens to be spelled as, and bind
@@ -3261,6 +3263,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # instead of the void* overloads (which correctly return "None").
             or self.library_func(funcs, "builtin", None, "str")
             or self.library_func(funcs, "builtin", None, "repr")
+            or self.library_func(funcs, "builtin", None, "ascii")
             # bytearray.take_bytes(None) must pick the void* (take all)
             # overload, not the __ss_int one
             or self.library_func(funcs, "builtin", "bytes_", "take_bytes")

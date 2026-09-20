@@ -78,6 +78,11 @@ template<> str *repr(long unsigned int t);
 template<> str *repr(size_t t);
 #endif
 
+/* ascii: repr() with non-ASCII code points backslash-escaped */
+
+str *__ascii(str *s);
+template<class T> str *ascii(T t) { return __ascii(repr(t)); }
+
 /* len */
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
