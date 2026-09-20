@@ -18,12 +18,20 @@ namespace __gc__ {
 static bool __enabled = true;
 #endif
 
+__ss_int DEBUG_STATS, DEBUG_COLLECTABLE, DEBUG_UNCOLLECTABLE, DEBUG_SAVEALL, DEBUG_LEAK;
+
+static __ss_int __debug_flags = 0;
+
 static __ss_int __threshold0 = 700;
 static __ss_int __threshold1 = 10;
 static __ss_int __threshold2 = 10;
 
 void __init() {
-
+    DEBUG_STATS = 1;
+    DEBUG_COLLECTABLE = 2;
+    DEBUG_UNCOLLECTABLE = 4;
+    DEBUG_SAVEALL = 32;
+    DEBUG_LEAK = 38; /* COLLECTABLE | UNCOLLECTABLE | SAVEALL */
 }
 
 void *enable() {
@@ -61,7 +69,9 @@ __ss_bool isenabled() {
 #endif
 }
 
-__ss_int collect() {
+__ss_int collect(__ss_int) {
+    /* Boehm is not generational, so the generation argument is ignored and
+     * every call does a full collection. */
 #ifndef __SS_NOGC
     GC_gcollect();
 #endif
@@ -89,6 +99,30 @@ void *set_threshold(__ss_int threshold0, __ss_int threshold1, __ss_int threshold
         __threshold2 = threshold2;
 
     return NULL;
+}
+
+/* debug flags are stored and handed back, but have no effect */
+__ss_int get_debug() {
+    return __debug_flags;
+}
+
+void *set_debug(__ss_int flags) {
+    __debug_flags = flags;
+    return NULL;
+}
+
+/* there is no permanent generation to move objects into, so freeze() and
+ * unfreeze() do nothing and the permanent generation is always empty */
+void *freeze() {
+    return NULL;
+}
+
+void *unfreeze() {
+    return NULL;
+}
+
+__ss_int get_freeze_count() {
+    return 0;
 }
 
 } // module namespace
