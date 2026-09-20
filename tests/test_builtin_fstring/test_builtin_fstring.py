@@ -54,6 +54,16 @@ def test_fstring_self_documenting():
     assert f'{age=}' == 'age=48'
 
 
+def test_fstring_ascii_conversion():
+    name = 'caf\u00e9'
+    assert f'{name!a}' == "'caf\\xe9'"
+    assert f'{"\u20ac"!a}' == "'\\u20ac'"
+    assert f'{[name]!a}' == "['caf\\xe9']"
+    assert f'{12!a}' == '12'
+    assert f'<{None!a}>' == '<None>'
+    assert f'{Repred()!a}' == 'Repred()'
+
+
 class Repred:
     def __repr__(self):
         return 'Repred()'
@@ -66,6 +76,7 @@ def test_all():
     test_fstring_str_conversion()
     test_fstring_repr_conversion()
     test_fstring_self_documenting()
+    test_fstring_ascii_conversion()
 
 
 if __name__ == '__main__':

@@ -623,10 +623,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=getmv(),
                     )
-                # '!s' is just the default str conversion; '!r' maps onto
-                # __repr__ (note '{x=}' desugars to a '!r' conversion as
-                # well). '!a' would need ascii(), which we do not have.
-                if value.conversion == ord("r"):
+                # '!s' is just the default str conversion; '!r' and '!a' map
+                # onto __repr__ (note '{x=}' desugars to a '!r' conversion as
+                # well; '!a' is ascii(), i.e. an escaped repr).
+                if value.conversion in (ord("r"), ord("a")):
                     method = "__repr__"
                 elif value.conversion not in (None, -1, ord("s")):
                     error.error(

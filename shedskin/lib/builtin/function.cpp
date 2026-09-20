@@ -310,6 +310,41 @@ __iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 
+/* ascii */
+
+str *__ascii(str *s) {
+    static const char *hexdigits = "0123456789abcdef";
+    const __GC_STR &u = s->unit;
+    size_t i = 0, n = u.size();
+    while (i < n && (uint32_t)u[i] < 0x80)
+        i++;
+    if (i == n)
+        return s; /* common case: already pure ASCII */
+    __GC_STR r(u, 0, i);
+    for (; i < n; i++) {
+        uint32_t c = (uint32_t)u[i];
+        if (c < 0x80) {
+            r += u[i];
+            continue;
+        }
+        int digits;
+        r += (__ss_char)'\\';
+        if (c < 0x100) {
+            r += (__ss_char)'x';
+            digits = 2;
+        } else if (c < 0x10000) {
+            r += (__ss_char)'u';
+            digits = 4;
+        } else {
+            r += (__ss_char)'U';
+            digits = 8;
+        }
+        for (int d = digits - 1; d >= 0; d--)
+            r += (__ss_char)hexdigits[(c >> (4 * d)) & 0xf];
+    }
+    return new str(r);
+}
+
 /* repr */
 
 template<> str *repr(__ss_float d) { return __str(d); }

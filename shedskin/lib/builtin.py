@@ -1204,6 +1204,10 @@ def repr(x):
     x.__repr__()
     return ''
 
+def ascii(x):
+    x.__repr__()
+    return ''
+
 def hash(x):
     return x.__hash__()
 
