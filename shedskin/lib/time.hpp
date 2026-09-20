@@ -61,6 +61,21 @@ __ss_int clock_gettime_ns(__ss_int clk_id);
 __ss_float clock_getres(__ss_int clk_id);
 void *sleep(__ss_float s);
 
+/* time.get_clock_info(): a types.SimpleNamespace in CPython */
+extern class_ *cl_clock_info;
+class __clock_info : public pyobj {
+public:
+    str *implementation;
+    __ss_bool monotonic;
+    __ss_bool adjustable;
+    __ss_float resolution;
+
+    __clock_info(str *implementation, __ss_bool monotonic, __ss_bool adjustable, __ss_float resolution);
+    str *__repr__();
+};
+
+__clock_info *get_clock_info(str *name);
+
 extern str *const_0, *const_1;
 
 class struct_time;

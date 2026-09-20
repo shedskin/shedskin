@@ -11,6 +11,10 @@ class UnsupportedOperation(OSError): pass
 __exception = UnsupportedOperation('')
 
 
+def text_encoding(encoding, stacklevel=2):
+    return ''
+
+
 class BytesIO(file_binary):
     def __init__(self, initial_bytes=None):
         self.unit = b''

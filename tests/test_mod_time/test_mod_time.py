@@ -152,6 +152,28 @@ def test_clock_getres():
         assert res > 0.0
         assert res <= 1.0
 
+def test_get_clock_info():
+    for name in ['time', 'monotonic', 'perf_counter', 'process_time', 'thread_time']:
+        info = time.get_clock_info(name)
+        assert len(info.implementation) > 0
+        assert info.resolution > 0.0
+        assert info.resolution <= 1.0
+        assert repr(info).startswith('namespace(implementation=')
+    info = time.get_clock_info('time')
+    assert not info.monotonic
+    assert info.adjustable
+    for name in ['monotonic', 'perf_counter', 'process_time', 'thread_time']:
+        info = time.get_clock_info(name)
+        assert info.monotonic
+        assert not info.adjustable
+    caught = False
+    try:
+        time.get_clock_info('bogus')
+    except ValueError as e:
+        assert str(e) == 'unknown clock'
+        caught = True
+    assert caught
+
 def test_clock_invalid_id():
     # -1 is the "unavailable on this platform" id, and no platform has a
     # clock with that id, so it must raise instead of silently succeeding
@@ -377,6 +399,7 @@ def test_all():
     test_clock_gettime()
     test_clock_gettime_ns()
     test_clock_getres()
+    test_get_clock_info()
     test_clock_invalid_id()
     test_isdst_attribute()
     test_len()

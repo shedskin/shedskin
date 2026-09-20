@@ -59,6 +59,19 @@ def monotonic_ns():
 def process_time_ns():
     return 1
 
+class __clock_info:
+    def __init__(self):
+        self.implementation = ''
+        self.monotonic = False
+        self.adjustable = False
+        self.resolution = 0.0
+
+    def __repr__(self):
+        return 'str'
+
+def get_clock_info(name):
+    return __clock_info()
+
 class struct_time(pyseq):
     def __init__(self, tuple):
         self.tm_year = 0

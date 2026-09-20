@@ -410,6 +410,88 @@ __ss_float clock_getres(__ss_int clk_id) {
 
 #endif
 
+/* get_clock_info: describes the clocks exactly as implemented above (not
+   necessarily as CPython implements them on the same platform, e.g. on macOS
+   CPython uses mach_absolute_time() for monotonic/perf_counter). */
+
+class_ *cl_clock_info;
+
+__clock_info::__clock_info(str *implementation, __ss_bool monotonic, __ss_bool adjustable, __ss_float resolution) {
+    this->__class__ = cl_clock_info;
+    this->implementation = implementation;
+    this->monotonic = monotonic;
+    this->adjustable = adjustable;
+    this->resolution = resolution;
+}
+
+str *__clock_info::__repr__() {
+    return __mod6(new str("namespace(implementation=%s, monotonic=%s, adjustable=%s, resolution=%s)"), 4,
+        repr(implementation), repr(monotonic), repr(adjustable), repr(resolution));
+}
+
+__clock_info *get_clock_info(str *name) {
+    str *impl;
+    __ss_bool mono = True, adjustable = False;
+    __ss_float res;
+
+#ifdef WIN32
+    if (__eq(name, new str("time"))) {
+#ifdef _MSC_VER
+        impl = new str("GetSystemTimeAsFileTime()");
+#else
+        impl = new str("clock_gettime(CLOCK_REALTIME)");
+#endif
+        mono = False;
+        adjustable = True;
+        /* like CPython: the system clock tick, typically 15.625 ms */
+        DWORD adj, inc;
+        BOOL disabled;
+        if (GetSystemTimeAdjustment(&adj, &inc, &disabled) && inc)
+            res = (__ss_float)inc * 1e-7;
+        else
+            res = 1e-7;
+    } else if (__eq(name, new str("monotonic")) || __eq(name, new str("perf_counter"))) {
+        impl = new str("QueryPerformanceCounter()");
+        LARGE_INTEGER frequency;
+        QueryPerformanceFrequency(&frequency);
+        res = 1.0 / (__ss_float)frequency.QuadPart;
+    } else if (__eq(name, new str("process_time"))) {
+        impl = new str("GetProcessTimes()");
+        res = 1e-7;
+    } else if (__eq(name, new str("thread_time"))) {
+        impl = new str("GetThreadTimes()");
+        res = 1e-7;
+    } else
+        throw new ValueError(new str("unknown clock"));
+#else
+    clockid_t clk;
+    if (__eq(name, new str("time"))) {
+        impl = new str("clock_gettime(CLOCK_REALTIME)");
+        clk = CLOCK_REALTIME;
+        mono = False;
+        adjustable = True;
+    } else if (__eq(name, new str("monotonic")) || __eq(name, new str("perf_counter"))) {
+        impl = new str("clock_gettime(CLOCK_MONOTONIC)");
+        clk = CLOCK_MONOTONIC;
+    } else if (__eq(name, new str("process_time"))) {
+        impl = new str("clock_gettime(CLOCK_PROCESS_CPUTIME_ID)");
+        clk = CLOCK_PROCESS_CPUTIME_ID;
+    } else if (__eq(name, new str("thread_time"))) {
+        impl = new str("clock_gettime(CLOCK_THREAD_CPUTIME_ID)");
+        clk = CLOCK_THREAD_CPUTIME_ID;
+    } else
+        throw new ValueError(new str("unknown clock"));
+
+    timespec ts { 0, 0 };
+    if (::clock_getres(clk, &ts) == 0 && (ts.tv_sec || ts.tv_nsec))
+        res = (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
+    else
+        res = 1e-9;
+#endif
+
+    return new __clock_info(impl, mono, adjustable, res);
+}
+
 static void __ss_check_sleep(__ss_float s) {
     if (std::isnan(s))
         throw new ValueError(new str("Invalid value NaN (not a number)"));
@@ -1393,6 +1475,7 @@ void __init_clock_ids() {
 void __init() {
     start = std::clock();
     __init_clock_ids();
+    cl_clock_info = new class_("SimpleNamespace");
     const_0 = new str("time.struct_time() takes a 9-sequence");
     const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
     struct_time* gmt = gmtime();
