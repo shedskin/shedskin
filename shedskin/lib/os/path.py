@@ -43,10 +43,10 @@ def isfile(path):
 def isjunction(path):
     return True
 
-def samefile(a, b):
+def samefile(f1, f2):
     return True
 
-def samestat(a, b):
+def samestat(s1, s2):
     return True
 
 def sameopenfile(fp1, fp2):
@@ -73,50 +73,50 @@ def normcase(s):
 def isabs(s):
     return True
 
-def splitdrive(s):
+def splitdrive(p):
     return ('', '')
 
-def splitroot(s):
+def splitroot(path):
     return ('', '', '')
 
-def basename(s):
-    return s
+def basename(p):
+    return p
 
-def dirname(s):
-    return s
+def dirname(p):
+    return p
 
-def commonprefix(s):
+def commonprefix(m):
     return ''
 
-def abspath(s):
+def abspath(path):
     return ''
 
-def realpath(s, strict=False):
+def realpath(path, strict=False):
     return ''
 
-def normpath(s):
+def normpath(path):
     return ''
 
 def relpath(path, start=None):
     return ''
 
-def expanduser(s):
-    return s
+def expanduser(path):
+    return path
 
-def expandvars(s):
-    return s
+def expandvars(path):
+    return path
 
 def commonpath(paths):
     return ''
 
-def getsize(s):
+def getsize(filename):
     return 1
 
-def getatime(s):
+def getatime(filename):
     return 1.0
 
-def getmtime(s):
+def getmtime(filename):
     return 1.0
 
-def getctime(s):
+def getctime(filename):
     return 1.0

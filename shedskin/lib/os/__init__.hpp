@@ -332,7 +332,7 @@ __ss_int __ss_makedev(__ss_int major, __ss_int minor);
 __ss_int __ss_major(__ss_int dev);
 __ss_int __ss_minor(__ss_int dev);
 
-void *mknod(str *filename, __ss_int mode=438, __ss_int device=0);
+void *mknod(str *filename, __ss_int mode=0600, __ss_int device=0);
 
 #endif
 

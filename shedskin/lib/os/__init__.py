@@ -152,7 +152,7 @@ def scandir(path=None):
 def walk(top, topdown=True, onerror=None, followlinks=False):
     return __iter((top, [top], [top]))
 
-def getenv(name, default=None):
+def getenv(key, default=None):
     return ''
 
 def get_exec_path(env=None):
@@ -164,13 +164,13 @@ def getcwd():
 def getlogin():
     return ''
 
-def chdir(d):
+def chdir(path):
     pass
 
-def rename(a, b):
+def rename(src, dst):
     pass
 
-def replace(a, b):
+def replace(src, dst):
     pass
 
 def cpu_count():
@@ -182,13 +182,13 @@ def fspath(path):
 def remove(path):
     pass
 
-def rmdir(a):
+def rmdir(path):
     pass
 
 def removedirs(name):
     pass
 
-def mkdir(a, mode=0o0777):
+def mkdir(path, mode=0o0777):
     pass
 
 def makedirs(name, mode=0o0777, exist_ok=False, parent_mode=-1):
@@ -209,10 +209,10 @@ def abort():
 def chown(path, uid, gid):
     pass
 
-def system(c):
+def system(command):
     return 1
 
-def strerror(i):
+def strerror(code):
     return ''
 
 def stat(path):
@@ -221,7 +221,7 @@ def stat(path):
 def lstat(path):
     return __cstat()
 
-def fstat(file):
+def fstat(fd):
     return __cstat()
 
 def readlink(path):
@@ -284,34 +284,34 @@ def getpid():
 def setreuid(ruid, euid):
     pass
 
-def setregid(guid, egid):
+def setregid(rgid, egid):
     pass
 
 def tcgetpgrp(fd):
     return 1
 
-def tcsetpgrp(fd, pg):
+def tcsetpgrp(fd, pgid):
     pass
 
 def stat_float_times(n=False):
     return True
 
-def putenv(variable, value):
+def putenv(name, value):
     pass
 
-def umask(newmask):
+def umask(mask):
     return 0
 
-def chmod(path, val):
+def chmod(path, mode):
     return 0
 
-def unsetenv(var):
+def unsetenv(name):
     pass
 
 def renames(old, new):
     pass
 
-def popen(cmd, mode=None, bufsize=-1):
+def popen(cmd, mode=None, buffering=-1):
     return popen_pipe('')
 
 def popen2(cmd, mode=None, bufsize=-1):
@@ -335,13 +335,13 @@ def execle(*path):
 def execlpe(*path):
     pass
 
-def execv(path, args):
+def execv(path, argv):
     pass
-def execvp(path, args):
+def execvp(file, args):
     pass
-def execve(path, args, env):
+def execve(path, argv, env):
     pass
-def execvpe(path, args, env):
+def execvpe(file, args, env):
     pass
 
 def spawnl(mode, *path):
@@ -353,43 +353,43 @@ def spawnle(mode, *path):
 def spawnlpe(mode, *path):
     return 1
 
-def spawnv(mode, path, args):
+def spawnv(mode, file, args):
     return 1
-def spawnvp(mode, path, args):
+def spawnvp(mode, file, args):
     return 1
-def spawnve(mode, path, args, env):
+def spawnve(mode, file, args, env):
     return 1
-def spawnvpe(mode, path, args, env):
-    return 1
-
-def open(name, flags, mode=0o777):
+def spawnvpe(mode, file, args, env):
     return 1
 
-def read(fd, n):
+def open(path, flags, mode=0o777):
+    return 1
+
+def read(fd, length):
     return b''
 
-def write(fd, s):
+def write(fd, data):
     return 1
 
-def fdopen(fd, mode=None, bufsize=-1):
+def fdopen(fd, mode=None, buffering=-1):
     return file('/bin/sh')
 
 def pipe():
     return (0,0)
 
-def dup(f1):
+def dup(fd):
     return 1
 
-def dup2(f1,f2):
+def dup2(fd, fd2):
     return 1
 
-def fchdir(f1):
+def fchdir(fd):
     pass
 
-def fdatasync(f1):
+def fdatasync(fd):
     pass
 
-def chroot(dir):
+def chroot(path):
     pass
 
 def ctermid():
@@ -404,16 +404,16 @@ def ttyname(fd):
 def uname():
     return ('',)
 
-def lchown(p, u, g):
+def lchown(path, uid, gid):
     pass
 
-def link(a, b):
+def link(src, dst):
     pass
 
-def symlink(a, b):
+def symlink(src, dst):
     pass
 
-def nice(n):
+def nice(increment):
     return 1
 
 def wait():
@@ -422,10 +422,10 @@ def wait():
 def waitpid(pid, options):
     return (1,)
 
-def kill(pid, sig):
+def kill(pid, signal):
     pass
 
-def killpg(pgid, sig):
+def killpg(pgid, signal):
     pass
 
 def pathconf(path, name):
@@ -440,7 +440,7 @@ def confstr(name):
 def sysconf(name):
     return 1
 
-def ftruncate(fd, n):
+def ftruncate(fd, length):
     pass
 
 def getloadavg():
@@ -452,13 +452,13 @@ def mkfifo(path, mode=438):
 def unlink(path):
     pass
 
-def lseek(fd, pos, how):
+def lseek(fd, position, whence):
     return 1
 
 def fsync(fd):
     pass
 
-def urandom(n):
+def urandom(size):
     return b''
 
 def getrandom(size, flags=0):
@@ -476,13 +476,13 @@ def times():
 def makedev(major, minor):
     return 1
 
-def major(dev):
+def major(device):
     return 1
 
-def minor(dev):
+def minor(device):
     return 1
 
-def mknod(filename, mode=438, device=0):
+def mknod(path, mode=0o600, device=0):
     pass
 
 def WCOREDUMP(status):
@@ -502,5 +502,5 @@ def WSTOPSIG(status):
 def WTERMSIG(status):
     return 1
 
-def _exit(code):
+def _exit(status):
     pass
