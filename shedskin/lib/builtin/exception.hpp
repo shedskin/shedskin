@@ -94,14 +94,18 @@ static void print_traceback(FILE *out)
 #endif
 
 extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
+extern class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
+extern class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
 extern class_ *cl_filenotfounderror, *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
 class BaseException : public pyobj {
 public:
     tuple<str *> *args;
     str *message; // TODO remove? now used by extmod code
+    list<str *> *__notes__; /* 0 (None) until add_note is called */
 
     BaseException(str *msg=0);
+    void *add_note(str *note);
 
     void __init__(str *msg);
     void __init__(void *) {
@@ -129,7 +133,8 @@ public:
 
 class StopIteration : public Exception {
 public:
-    StopIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopiteration; }
+    str *value; /* only for explicit raises; generator return values are not tracked */
+    StopIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopiteration; this->value = msg; }
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_StopIteration; }
 #endif
@@ -225,9 +230,34 @@ public:
 
 class NameError : public Exception {
 public:
-    NameError(str *msg=0) : Exception(msg) { this->__class__ = cl_nameerror; }
+    str *name;
+    NameError(str *msg=0, str *name=0) : Exception(msg) { this->__class__ = cl_nameerror; this->name = name; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NameError; }
+#endif
+};
+
+class UnboundLocalError : public NameError {
+public:
+    UnboundLocalError(str *msg=0, str *name=0) : NameError(msg, name) { this->__class__ = cl_unboundlocalerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnboundLocalError; }
+#endif
+};
+
+class ReferenceError : public Exception {
+public:
+    ReferenceError(str *msg=0) : Exception(msg) { this->__class__ = cl_referenceerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ReferenceError; }
+#endif
+};
+
+class BufferError : public Exception {
+public:
+    BufferError(str *msg=0) : Exception(msg) { this->__class__ = cl_buffererror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_BufferError; }
 #endif
 };
 
@@ -247,6 +277,14 @@ public:
 #endif
 };
 
+class RecursionError : public RuntimeError {
+public:
+    RecursionError(str *msg=0) : RuntimeError(msg) { this->__class__ = cl_recursionerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_RecursionError; }
+#endif
+};
+
 class PythonFinalizationError : public RuntimeError {
 public:
     PythonFinalizationError(str *msg=0) : RuntimeError(msg) { this->__class__ = cl_pythonfinalizationerror; }
@@ -261,8 +299,9 @@ public:
 
 class OSError : public Exception {
 public:
-    int __ss_errno;
+    __ss_int __ss_errno;
     str *filename;
+    str *filename2;
     str *strerror;
 
     OSError(str *msg=0);
@@ -514,5 +553,103 @@ public:
     ZeroDivisionError(str *msg=0) : ArithmeticError(msg) { this->__class__ = cl_zerodivisionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
+#endif
+};
+
+/* warnings */
+
+class Warning : public Exception {
+public:
+    Warning(str *msg=0) : Exception(msg) { this->__class__ = cl_warning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_Warning; }
+#endif
+};
+
+class BytesWarning : public Warning {
+public:
+    BytesWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_byteswarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_BytesWarning; }
+#endif
+};
+
+class DeprecationWarning : public Warning {
+public:
+    DeprecationWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_deprecationwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_DeprecationWarning; }
+#endif
+};
+
+class EncodingWarning : public Warning {
+public:
+    EncodingWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_encodingwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_EncodingWarning; }
+#endif
+};
+
+class FutureWarning : public Warning {
+public:
+    FutureWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_futurewarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_FutureWarning; }
+#endif
+};
+
+class ImportWarning : public Warning {
+public:
+    ImportWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_importwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ImportWarning; }
+#endif
+};
+
+class PendingDeprecationWarning : public Warning {
+public:
+    PendingDeprecationWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_pendingdeprecationwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_PendingDeprecationWarning; }
+#endif
+};
+
+class ResourceWarning : public Warning {
+public:
+    ResourceWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_resourcewarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ResourceWarning; }
+#endif
+};
+
+class RuntimeWarning : public Warning {
+public:
+    RuntimeWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_runtimewarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_RuntimeWarning; }
+#endif
+};
+
+class SyntaxWarning : public Warning {
+public:
+    SyntaxWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_syntaxwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_SyntaxWarning; }
+#endif
+};
+
+class UnicodeWarning : public Warning {
+public:
+    UnicodeWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_unicodewarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UnicodeWarning; }
+#endif
+};
+
+class UserWarning : public Warning {
+public:
+    UserWarning(str *msg=0) : Warning(msg) { this->__class__ = cl_userwarning; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_UserWarning; }
 #endif
 };

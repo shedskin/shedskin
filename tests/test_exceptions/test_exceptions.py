@@ -482,6 +482,118 @@ def test_oserror_subclasses():
     assert ok
 
 
+def test_more_builtin_exceptions():
+    ok = False
+    try:
+        raise RecursionError('deep')
+    except RuntimeError as re1:
+        ok = repr(re1) == "RecursionError('deep')"
+    assert ok
+
+    ok = False
+    try:
+        raise UnboundLocalError('local x')
+    except NameError as ne1:
+        ok = repr(ne1) == "UnboundLocalError('local x')"
+    assert ok
+
+    ok = False
+    try:
+        raise ReferenceError('ref')
+    except Exception as ex1:
+        ok = repr(ex1) == "ReferenceError('ref')"
+    assert ok
+
+    ok = False
+    try:
+        raise BufferError('buf')
+    except Exception as ex2:
+        ok = repr(ex2) == "BufferError('buf')"
+    assert ok
+
+
+def test_warnings():
+    warnings = [UserWarning('a'), DeprecationWarning('b'),
+                PendingDeprecationWarning('c'), SyntaxWarning('d'),
+                RuntimeWarning('e'), FutureWarning('f'), ImportWarning('g'),
+                UnicodeWarning('h'), BytesWarning('i'), ResourceWarning('j'),
+                EncodingWarning('k'), Warning('l')]
+    reprs = []
+    for w in warnings:
+        try:
+            raise w
+        except Warning as we:
+            reprs.append(repr(we))
+    assert reprs == ["UserWarning('a')", "DeprecationWarning('b')",
+                     "PendingDeprecationWarning('c')", "SyntaxWarning('d')",
+                     "RuntimeWarning('e')", "FutureWarning('f')", "ImportWarning('g')",
+                     "UnicodeWarning('h')", "BytesWarning('i')", "ResourceWarning('j')",
+                     "EncodingWarning('k')", "Warning('l')"]
+
+    ok = False
+    try:
+        raise DeprecationWarning('old')
+    except Exception:
+        ok = True
+    assert ok
+
+
+def test_exception_attributes():
+    # NameError.name
+    assert NameError('x').name is None
+    assert NameError('msg', name='y').name == 'y'
+    ok = False
+    try:
+        raise UnboundLocalError('msg', name='z')
+    except NameError as ne2:
+        ok = ne2.name == 'z' and str(ne2) == 'msg'
+    assert ok
+
+    # StopIteration.value (explicit raises)
+    assert StopIteration().value is None
+    ok = False
+    try:
+        raise StopIteration('done')
+    except StopIteration as si:
+        ok = si.value == 'done'
+    assert ok
+
+    # SystemExit.code
+    ok = False
+    try:
+        raise SystemExit(3)
+    except SystemExit as se:
+        ok = se.code == 3
+    assert ok
+
+    # OSError errno/strerror/filename/filename2
+    oe = OSError('plain')
+    assert oe.errno is None or oe.errno == 0  # shedskin: 0
+    assert oe.filename2 is None
+    ok = False
+    try:
+        open('shedskin_no_such_file')
+    except OSError as oe2:
+        ok = oe2.errno > 0 and oe2.strerror is not None and \
+            oe2.filename == 'shedskin_no_such_file' and oe2.filename2 is None
+    assert ok
+
+    # add_note / __notes__
+    ve = ValueError('bad')
+    ve.add_note('note 1')
+    ve.add_note('note 2')
+    assert ve.__notes__ == ['note 1', 'note 2']
+    notes = []
+    try:
+        raise ve
+    except ValueError as ve2:
+        notes = ve2.__notes__
+    assert notes == ['note 1', 'note 2']
+    ke = KeyError('k')
+    ke.add_note('hmm')
+    assert ke.__notes__ == ['hmm']
+
+
 def test_all():
     test_key_error()
     test_assert_error()
@@ -501,6 +613,9 @@ def test_all():
     test_builtin_exception_hierarchy()
     test_builtin_exception_raise_catch()
     test_oserror_subclasses()
+    test_more_builtin_exceptions()
+    test_warnings()
+    test_exception_attributes()
 
 
 if __name__ == '__main__':
