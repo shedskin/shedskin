@@ -421,7 +421,7 @@ class str_(pyseq):
         return ['']
     def join(self, l):
         return self
-    def encode(self, encoding='utf-8', errors='strict'):
+    def encode(self, encoding=None, errors=None):
         return b''
     def __getitem__(self, i):
         return ''
@@ -529,7 +529,7 @@ class bytes_(pyseq):
     def maketrans(cls, frm, to):
         return b''
 
-    def decode(self, encoding='utf-8', errors='strict'):
+    def decode(self, encoding=None, errors=None):
         return ''
 
     def strip(self, bytes=''):
@@ -1064,7 +1064,7 @@ __exception = ProcessLookupError('')
 __exception = TimeoutError('')
 __exception2 = SystemExit('')
 
-def str(object=None):
+def str(object=None, encoding=None, errors=None):
     object.__str__()
     object.__repr__()
     return ''

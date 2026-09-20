@@ -362,6 +362,7 @@ template<> str *repr(size_t i) { return repr((__ss_int)i); }
 /* str */
 
 str *__str(void *) { return new str("None"); }
+str *__str(bytes *b, str *encoding, str *errors) { return b->decode(encoding, errors); }
 
 /* isinstance */
 
