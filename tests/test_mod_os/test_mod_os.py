@@ -642,6 +642,39 @@ def test_oserror_subclasses():
     assert ok
 
 
+def test_kwarg_names():
+    # keyword argument names should match CPython
+    base = 'shedskin_test_kwarg_names'
+    os.mkdir(path=base, mode=0o755)
+    cwd = os.getcwd()
+    os.chdir(path=base)
+    os.chdir(cwd)
+    fd = os.open(path=base + '/f', flags=os.O_CREAT | os.O_WRONLY, mode=0o644)
+    assert os.fstat(fd=fd).st_size == 0
+    os.close(fd)
+    os.chmod(path=base + '/f', mode=0o600)
+    error = False
+    try:
+        os.chmod(base + '/no_such_file', 0o600)
+    except OSError:
+        error = True
+    assert error
+    os.rename(src=base + '/f', dst=base + '/g')
+    os.replace(src=base + '/g', dst=base + '/h')
+    assert os.listdir(base) == ['h']
+    os.remove(base + '/h')
+    os.rmdir(path=base)
+    assert not os.path.exists(base)
+
+
+def test_kwarg_names_posix():
+    assert os.getenv(key='SHEDSKIN_NO_SUCH_VAR', default='dflt') == 'dflt'
+    assert os.system(command='true') == 0
+    p = os.popen(cmd='echo hi', mode='r', buffering=-1)
+    assert p.read() == 'hi\n'
+    p.close()
+
+
 def test_all():
     test_getcwd()
     test_chdir()
@@ -668,6 +701,7 @@ def test_all():
     test_scandir_name_path()
     test_walk()
     test_oserror_subclasses()
+    test_kwarg_names()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
@@ -682,6 +716,7 @@ def test_all():
         test_getrandom()
         test_makedirs_parent_mode()
         test_makedirs_default_parent_mode()
+        test_kwarg_names_posix()
         # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
         # __os__ in lib/os/__init__.hpp, and shedskin translates this
         # function's body to C++ unconditionally (the `os.name == 'posix'`

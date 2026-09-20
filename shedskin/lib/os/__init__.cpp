@@ -610,32 +610,16 @@ __ss_int umask(__ss_int newmask)  {
     return (__ss_int)::umask((unsigned)newmask);
 }
 
-#ifndef WIN32
-__ss_int chmod (str* path, __ss_int val) {
+__ss_int chmod(str* path, __ss_int val) {
 #ifdef WIN32
-    DWORD attr;
-    __ss_int res;
-    attr = GetFileAttributesA(var->c_str());
-
-    if (attr != 0xFFFFFFFF) {
-        if (i & S_IWRITE)
-            attr &= ~FILE_ATTRIBUTE_READONLY;
-        else
-            attr |= FILE_ATTRIBUTE_READONLY;
-        res = SetFileAttributesA(var->c_str(), attr);
-    }
-    else {
-        res = 0;
-    }
-    if(!res) {
-        throw new OSError("Chmod");
-    }
-    return 0;
+    /* windows only honours the write permission bit (read-only attribute) */
+    if(::_chmod(path->c_str(), (int)val) == -1)
 #else
-    return (__ss_int)::chmod(path->c_str(), (unsigned)val);
+    if(::chmod(path->c_str(), (unsigned)val) == -1)
 #endif
+        throw new OSError(path);
+    return 0;
 }
-#endif
 
 void *renames(str* old, str* _new) {
     tuple<str *> *__0, *__1, *__5;

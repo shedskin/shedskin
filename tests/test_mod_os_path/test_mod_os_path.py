@@ -629,6 +629,14 @@ def test_os_path_isdir_kwarg():
     assert not exists(path="shedskin_does_not_exist_isdir")
 
 
+def test_os_path_kwarg_names():
+    # keyword argument names should match CPython
+    assert os.path.normpath(path='a//b/../c') == os.path.normpath('a/c')
+    assert os.path.abspath(path='.') == os.getcwd()
+    assert os.path.expanduser(path='noexpand') == 'noexpand'
+    assert os.path.expandvars(path='noexpand') == 'noexpand'
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -661,6 +669,7 @@ def test_all():
     test_os_path_isdevdrive()
     test_os_path_supports_unicode_filenames()
     test_os_path_isdir_kwarg()
+    test_os_path_kwarg_names()
 
 if __name__ == '__main__':
     test_all()

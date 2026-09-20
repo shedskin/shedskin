@@ -3,6 +3,7 @@
 
 import os
 import stat
+import sys
 
 
 def test_kill():
@@ -142,6 +143,44 @@ def test_oserror_subclasses():
     os.remove(path)
 
 
+def test_kwarg_names():
+    # keyword argument names should match CPython
+    base = '/tmp/shedskin_test_posix_kwarg_names'
+    if os.path.exists(base):
+        for name in os.listdir(base):
+            os.remove(base + '/' + name)
+        os.rmdir(base)
+    os.mkdir(base)
+    f = open(base + '/f', 'w')
+    f.close()
+    os.link(src=base + '/f', dst=base + '/hard')
+    os.symlink(src=base + '/f', dst=base + '/soft')
+    assert os.readlink(base + '/soft') == base + '/f'
+    assert os.stat(base + '/hard').st_nlink == 2
+    for name in os.listdir(base):
+        os.remove(base + '/' + name)
+    os.rmdir(base)
+
+
+def test_mknod_default_mode():
+    # CPython's default mode for os.mknod is 0o600 (a regular file).
+    # macOS only allows unprivileged mknod() for FIFOs (EPERM otherwise),
+    # so there pass S_IFIFO explicitly and just check the permission bits.
+    path = '/tmp/shedskin_test_mknod_default'
+    if os.path.exists(path):
+        os.remove(path)
+    mask = os.umask(0o022)
+    os.umask(mask)
+    if sys.platform == 'darwin':
+        os.mknod(path=path, mode=stat.S_IFIFO | 0o600)
+        assert stat.S_ISFIFO(os.stat(path).st_mode)
+    else:
+        os.mknod(path=path)
+        assert stat.S_ISREG(os.stat(path).st_mode)
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o600 & ~mask
+    os.remove(path)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -150,6 +189,8 @@ def test_all():
     test_times_children()
     test_misc_constants()
     test_oserror_subclasses()
+    test_kwarg_names()
+    test_mknod_default_mode()
 
 
 if __name__ == '__main__':
