@@ -86,7 +86,7 @@ public:
     str *swapcase();
     str *center(__ss_int width, str *fillchar=0);
 
-    __ss_bool __ctype_function(int (*cfunc)(int));
+    __ss_bool __all_have(unsigned short flags);
 
     __ss_bool istitle();
     __ss_bool isspace();

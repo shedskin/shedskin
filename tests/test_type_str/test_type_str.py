@@ -755,6 +755,88 @@ def test_case_conversion_hash():
     assert 'mixed' in {x.lower() for x in s}
     assert 'MIXED' in {x.upper() for x in s}
 
+def test_unicode_classes():
+    # character classes come from a generated unicode table, not just
+    # ascii/latin-1 (scripts/gen_unicode_db.py)
+    assert '\x1c\x1d\x1e\x1f\x85\xa0\u1680\u2000\u200a\u2028\u2029\u202f\u205f\u3000'.isspace()
+    assert not '\u200b'.isspace()                # zero width space: Cf
+    assert '\xaa\xb5\xba'.isalpha()              # ordinal indicators, micro sign
+    assert '\u03b1\u0416\u4e00\u0100'.isalpha()  # greek, cyrillic, cjk, latin ext-a
+    assert '\xb2\xb3\xb9'.isdigit() and not '\xbd'.isdigit()
+    assert '\u0663\uff11'.isdigit() and '\u0663\uff11'.isdecimal()
+    assert '\u2167\u4e00'.isnumeric() and not '\u2167'.isdigit()
+    assert 'caf\xe9'.isalnum() and '\xbd\xb2x'.isalnum() and '\u0663'.isalnum()
+    assert not 'caf\xe9!'.isalnum()
+    assert '\u03b1\u03b2'.islower() and '\u0391\u0392'.isupper()
+    assert not '\u01c5'.isupper() and not '\u01c5'.islower()   # title-case dz
+    assert '\u01c5a'.istitle() and '\u0391\u03b2 \u0393'.istitle()
+    assert not '\u0391\u0392'.istitle()
+    assert 'caf\xe9'.isidentifier() and '\u03c0'.isidentifier() and '\xb5'.isidentifier()
+    assert 'a\xb7'.isidentifier() and not '\xb7'.isidentifier()  # middle dot: continue only
+    assert 'x\u0663'.isidentifier() and not '\u0663x'.isidentifier()
+    assert not '\u2603'.isidentifier() and not '\xbd'.isidentifier()
+
+
+def test_unicode_split_strip():
+    assert ' \u3000a b\xa0c\u2003'.split() == ['a', 'b', 'c']
+    assert 'a\x1cb\x85c'.split() == ['a', 'b', 'c']
+    assert 'a\u3000b\u3000c'.rsplit(None, 1) == ['a\u3000b', 'c']
+    assert '\u3000x\u2003'.strip() == 'x'
+    assert '\x85x'.lstrip() == 'x' and 'x\u2029'.rstrip() == 'x'
+    assert '\xa0\u3000'.strip() == ''
+
+
+def test_unicode_case_mapping():
+    assert '\u03b1\u03b2\u03b3'.upper() == '\u0391\u0392\u0393'
+    assert '\u0416\u0418'.lower() == '\u0436\u0438'
+    assert '\u0100\u0101'.swapcase() == '\u0101\u0100'
+    # multi-character and out-of-latin-1 mappings
+    assert '\xdf'.upper() == 'SS' and 'stra\xdfe'.upper() == 'STRASSE'
+    assert '\xff'.upper() == '\u0178' and '\xb5'.upper() == '\u039c'
+    assert '\u0130'.lower() == 'i\u0307'
+    assert '\xdf'.casefold() == 'ss' and '\xb5'.casefold() == '\u03bc'
+    assert 'Stra\xdfe'.casefold() == 'strasse'
+    assert '\xdfa'.title() == 'Ssa' and '\xdfa'.capitalize() == 'Ssa'
+    assert '\xdf'.swapcase() == 'SS'
+    assert '\u01c6'.title() == '\u01c5' and '\u01c6x'.capitalize() == '\u01c5x'
+    assert 'hello \u03c9\u03bf\u03c1\u03bb\u03b4'.title() == 'Hello \u03a9\u03bf\u03c1\u03bb\u03b4'
+    # final sigma
+    assert '\u039f\u0394\u039f\u03a3'.lower() == '\u03bf\u03b4\u03bf\u03c2'
+    assert '\u03a3'.lower() == '\u03c3'
+    assert 'A\u03a3b'.lower() == 'a\u03c3b'
+    assert 'A\u03a3.'.lower() == 'a\u03c2.'
+    assert 'A\u03a3\'s'.lower() == 'a\u03c3\'s'       # apostrophe is case-ignorable
+    assert '\u03a3\u03a3'.lower() == '\u03c3\u03c2'
+    assert '\u039f\u03a3'.swapcase() == '\u03bf\u03c2'
+    assert '\u039f\u03a3'.casefold() == '\u03bf\u03c3'  # no final sigma in casefold
+    # single-char results still compare/hash like any other str
+    assert {'\xe9'.upper(): 1}['\xc9'] == 1
+
+
+def test_unicode_translate():
+    # characters not in the table must not be narrowed to a byte
+    assert 'w\xf6rld \U0001f600'.translate({ord('w'): 'W'}) == 'W\xf6rld \U0001f600'
+    assert 'a\u2603b'.translate({0x2603: 'snow', ord('b'): None}) == 'asnow'
+    # a str table is indexed by code point; past its end is left alone
+    table = ''.join([chr(i + 1) for i in range(256)])
+    assert '\u0100ab\xe9\xff'.translate(table) == '\u0100bc\xea\u0100'
+    assert 'abc\u2603'.translate('xyz' * 50) == 'yzx\u2603'
+    assert 'abc'.translate('xy') == 'abc'
+
+
+def test_count_range():
+    # matches running past end used to be counted
+    assert 'abcabc'.count('abc', 0, 2) == 0
+    assert 'abcabc'.count('abc', 1, 2) == 0
+    assert 'aaa'.count('aa', 0, 1) == 0
+    assert 'abcabc'.count('abc', 0, 5) == 1
+    assert 'abcabc'.count('abc', 0, 6) == 2
+    assert 'abcabc'.count('abc', -3) == 1
+    assert 'a\u2603\u2603'.count('\u2603\u2603', 0, 2) == 0
+    assert 'abc'.count('', 5) == 0 and 'abc'.count('', 3) == 1
+    assert 'abc'.count('', 2, 1) == 0 and 'abc'.count('', -1) == 2
+    assert 'abc'.count('a', 5) == 0 and ''.count('') == 1
+
 
 def test_all():
     test_unicode_case()
@@ -821,6 +903,11 @@ def test_all():
     test_unicode_seq_conversion()
     test_surrogate_literals()
     test_case_conversion_hash()
+    test_unicode_classes()
+    test_unicode_split_strip()
+    test_unicode_case_mapping()
+    test_unicode_translate()
+    test_count_range()
 
 
 if __name__ == "__main__":

@@ -293,6 +293,28 @@ bool __ss_char_printable_nonascii(__ss_char c) {
 
 #ifndef __SS_UNICODE_STANDALONE
 
+#include "unicode_db.cpp"
+
+__GC_STRING __ss_ascii_numeric(str *s) {
+    size_t len = s->unit.size();
+    __GC_STRING r;
+    r.reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        __ss_char c = s->unit[i];
+        if (c == 0)
+            r += '?';
+        else if (c < 0x80)
+            r += (char)c;
+        else if (__ss_char_space(c))
+            r += ' ';
+        else {
+            int d = __ss_char_rec(c)->decimal;
+            r += (d >= 0) ? (char)('0' + d) : '?';
+        }
+    }
+    return r;
+}
+
 void __throw_decode_error(const char *codec, bytes *b, size_t start, size_t end, const char *msg) {
     throw new UnicodeDecodeError(new str(codec), b, (__ss_int)start, (__ss_int)end, new str(msg));
 }

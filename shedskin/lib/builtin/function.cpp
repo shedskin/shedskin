@@ -18,23 +18,23 @@ str *input(str *msg) {
 /* int */
 
 __ss_int __int(str *s, __ss_int base) {
+    /* unicode digits and whitespace -> ascii (see __ss_ascii_numeric) */
+    __GC_STRING a = __ss_ascii_numeric(s);
+    const char *start = a.c_str();
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
+    i = (__ss_int)strtoll(start, &cp, (int)base);
 #else
-    i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
+    i = (__ss_int)strtol(start, &cp, (int)base);
 #endif
-    if(*cp != '\0') {
-        s = s->rstrip();
-        #ifdef __SS_LONG
-            i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
-        #else
-            i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
-        #endif
-        if(*cp != '\0')
-            throw new ValueError(new str("invalid literal for int()"));
-    }
+    /* no digits at all: strtol happily returns 0 for '' or '   ' */
+    if(cp == start)
+        throw new ValueError(new str("invalid literal for int()"));
+    while(*cp and isspace((unsigned char)*cp))
+        cp++;
+    if(*cp != '\0')
+        throw new ValueError(new str("invalid literal for int()"));
     return i;
 }
 
@@ -135,7 +135,8 @@ static bool __float_scan(const char *p, __GC_STRING &clean) {
 
 template<> __ss_float __float(str *s) {
     __GC_STRING clean;
-    if(not __float_scan(s->c_str(), clean))
+    __GC_STRING a = __ss_ascii_numeric(s); /* unicode digits/whitespace */
+    if(not __float_scan(a.c_str(), clean))
         throw new ValueError(__add_strs(0, new str("could not convert string to float: "), repr(s)));
     __ss_float d = strtod(clean.c_str(), NULL);
     if(std::isnan(d))

@@ -123,30 +123,79 @@ std::string __narrow_std(const __GC_STR &u);
 /* single-character str for a code point (cached below 256) */
 str *__char_str(__ss_char cp);
 
-/* ascii + latin-1 case mapping for now (proper unicode tables later);
-   the latin-1 exceptions: 0xd7/0xf7 are multiply/divide signs, 0xdf
-   (sharp s) uppercases to "SS" which needs multi-char mappings, and
-   0xff (y-diaeresis) uppercases outside latin-1 (U+0178) */
-inline __ss_char __ss_toupper(__ss_char c) {
-    if (c >= 'a' && c <= 'z') return c - 32;
-    if (c >= 0xe0 && c <= 0xfe && c != 0xf7) return c - 32;
-    return c;
-}
-inline __ss_char __ss_tolower(__ss_char c) {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    if (c >= 0xc0 && c <= 0xde && c != 0xd7) return c + 32;
-    return c;
+/* character database for the str methods: character classes and full
+   case mappings, generated from CPython's own str methods by
+   scripts/gen_unicode_db.py (see there to regenerate for a newer unicode
+   version). a record holds the flags below plus the upper, lower, title
+   and casefold mappings of a code point, each either a delta to add to the
+   code point, or, for records with __SS_CHAR_EXTENDED_CASE set (the
+   mapping of one or more of the four is not a single code point, as in
+   '\xdf'.upper() == 'SS'), (length << 24) | offset into
+   __ss_char_ext_case. the decimal digit value is kept for int()/float(). */
+struct __ss_char_record {
+    int map[4];
+    unsigned short flags;
+    signed char decimal; /* decimal digit value, or -1 */
+};
+
+enum {
+    __SS_CHAR_UPPER_MAP = 0,
+    __SS_CHAR_LOWER_MAP = 1,
+    __SS_CHAR_TITLE_MAP = 2,
+    __SS_CHAR_FOLD_MAP = 3,
+};
+
+#define __SS_CHAR_ALPHA          0x0001
+#define __SS_CHAR_DECIMAL        0x0002
+#define __SS_CHAR_DIGIT          0x0004
+#define __SS_CHAR_NUMERIC        0x0008
+#define __SS_CHAR_LOWER          0x0010
+#define __SS_CHAR_UPPER          0x0020
+#define __SS_CHAR_TITLE          0x0040
+#define __SS_CHAR_CASED          0x0080
+#define __SS_CHAR_CASE_IGNORABLE 0x0100
+#define __SS_CHAR_SPACE          0x0200
+#define __SS_CHAR_XID_START      0x0400
+#define __SS_CHAR_XID_CONTINUE   0x0800
+#define __SS_CHAR_EXTENDED_CASE  0x1000
+
+#include "unicode_db.hpp"
+
+/* three-level table lookup (the generator picks the shifts) */
+inline const __ss_char_record *__ss_char_rec(__ss_char c) {
+    if (c > __MAX_CODEPOINT) /* not a code point, so like an unassigned one */
+        c = 0x10ffff;
+    const size_t mid = __SS_UCD_SHIFT1 - __SS_UCD_SHIFT2;
+    size_t i = __ss_char_index1[c >> __SS_UCD_SHIFT1];
+    i = __ss_char_index2[(i << mid) + ((c >> __SS_UCD_SHIFT2) & ((1u << mid) - 1))];
+    return &__ss_char_records[__ss_char_index3[(i << __SS_UCD_SHIFT2) + (c & ((1u << __SS_UCD_SHIFT2) - 1))]];
 }
 
-/* cased-letter predicates over the same ascii + latin-1 subset */
-inline bool __ss_char_upper(__ss_char c) {
-    return (c >= 'A' && c <= 'Z') || (c >= 0xc0 && c <= 0xde && c != 0xd7);
+inline bool __ss_char_has(__ss_char c, unsigned short flags) {
+    return (__ss_char_rec(c)->flags & flags) != 0;
 }
-inline bool __ss_char_lower(__ss_char c) {
-    return (c >= 'a' && c <= 'z') || (c >= 0xdf && c <= 0xff && c != 0xf7);
+
+/* whitespace as in str.isspace/split/strip (includes \x1c-\x1f) */
+inline bool __ss_char_space(__ss_char c) {
+    if (c < 0x80)
+        return c == ' ' || (c >= '\t' && c <= '\r') || (c >= 0x1c && c <= 0x1f);
+    return __ss_char_has(c, __SS_CHAR_SPACE);
 }
-inline bool __ss_char_alpha(__ss_char c) {
-    return __ss_char_upper(c) || __ss_char_lower(c);
+
+/* the ascii text int() and float() parse, as CPython's
+   _PyUnicode_TransformDecimalAndSpaceToASCII: unicode whitespace becomes a
+   space, decimal digits of any script their ascii digit, any other
+   non-ascii character (and NUL, so it cannot end the parse early) '?' */
+__GC_STRING __ss_ascii_numeric(str *s);
+
+/* append the full (possibly multi-character) case mapping of c */
+inline void __ss_char_map_to(__GC_STR &out, __ss_char c, int which) {
+    const __ss_char_record *r = __ss_char_rec(c);
+    int v = r->map[which];
+    if (!(r->flags & __SS_CHAR_EXTENDED_CASE))
+        out += (__ss_char)((int)c + v);
+    else
+        out.append(__ss_char_ext_case + (v & 0xffffff), (size_t)(v >> 24));
 }
 #endif
 

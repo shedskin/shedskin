@@ -189,6 +189,38 @@ def test_from_bytes():
     assert int.from_bytes([66, 67, 68]) == 4342596
 
 
+def int_fails(s):
+    try:
+        int(s)
+    except ValueError:
+        return True
+    return False
+
+
+def test_int_from_unicode_str():
+    # unicode decimal digits and whitespace are accepted, as in CPython
+    assert int('\u0663') == 3
+    assert int('\u0661\u0662') == 12
+    assert int('\uff11\uff12') == 12
+    assert int('\U0001d7ce\U0001d7d7') == 9
+    assert int(' 7\u3000') == 7
+    assert int('\xa07') == 7
+    assert int('\u2003-7\u2003') == -7
+    assert int('\u0e51\u0e50') == 10
+    # but not other numeric characters
+    assert int_fails('\xb2')
+    assert int_fails('\u2167')
+    assert int_fails('\xbd')
+    # no digits at all used to give 0
+    assert int_fails('')
+    assert int_fails('   ')
+    assert int_fails('\u3000')
+    assert int_fails('-')
+    # embedded NUL must not end the parse early
+    assert int_fails('12\x00')
+    assert int_fails('1 2')
+
+
 def test_all():
     test_int()
     test_division()
@@ -200,6 +232,7 @@ def test_all():
     test_str_extremes()
     test_to_bytes()
     test_from_bytes()
+    test_int_from_unicode_str()
 
 
 if __name__ == "__main__":
