@@ -693,7 +693,7 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
     /* split the pattern on any separator character (like CPython's
        re.split(any_sep, pat): separators between/around segments produce
        empty parts, so "a//b" -> ["a", "", "b"] and "/a" -> ["", "a"]) */
-    std::vector<__GC_STR> parts;
+    __GC_VECTOR(__GC_STR) parts; /* GC-visible: string buffers are GC-allocated */
     {
         const __GC_STR &p = pat->unit;
         __GC_STR cur;

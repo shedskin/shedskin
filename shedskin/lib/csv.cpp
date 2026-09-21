@@ -835,7 +835,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
     };
 
     __re__::Pattern *regexp = NULL;
-    std::vector<__re__::Match *> matches;
+    __GC_VECTOR(__re__::Match *) matches; // GC-visible: plain std::vector storage is not scanned by Boehm
 
     __qd_result result;
     result.doublequote = false;
