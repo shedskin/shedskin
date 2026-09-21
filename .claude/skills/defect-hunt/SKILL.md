@@ -72,6 +72,10 @@ down to the smallest program that still reproduces before reporting.
   deliberately out of scope.
 - The `tests/skip_*` directories are known-unsupported; don't report those.
 - Check `tests/errs/` — those are expected-error cases, not defects.
+- Make sure to understand the Shedskin limitations as described in the
+  documentation.
+- Not mentioned in the documentation perhaps: evaluation order in C++ may be
+  different from that in CPython.
 - Before reporting, search existing open issues for a duplicate/very similar
   issue. Only report new or substantially different issues.
 - One exception to "open": if a probe reproduces something an issue was
