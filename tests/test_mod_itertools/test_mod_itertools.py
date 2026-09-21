@@ -448,6 +448,18 @@ def test_batched():
         pass
 
 
+def test_tee_gc():
+    # the tee cache must stay reachable for the collector while one of the
+    # iterators lags behind (allocate plenty in between to force collections)
+    for rnd in range(5):
+        a, b = itertools.tee(str(i) for i in range(20000))
+        la = list(a)
+        junk = [[str(j)] * 10 for j in range(20000)]
+        lb = list(b)
+        assert la == lb
+        assert len(junk) == 20000
+
+
 def test_all():
     test_count()
     test_cycle()
@@ -466,6 +478,7 @@ def test_all():
     test_compress()
     test_tee()
     test_tee_interleaved()
+    test_tee_gc()
     test_filterfalse()
     test_zip_longest()
     test_pairwise()

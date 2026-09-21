@@ -157,12 +157,12 @@ class ShedskinDependencyManager:
     def targets_exist(self) -> bool:
         """Check if required targets exist"""
         libgc = self.lib_dir / f"libgc{self.lib_suffix}"
-        libgccpp = self.lib_dir / f"libgccpp{self.lib_suffix}"
         libpcre2 = self.lib_dir / f"libpcre2-32{self.lib_suffix}"
         gc_h = self.include_dir / "gc.h"
+        gc_cpp_h = self.include_dir / "gc_cpp.h"
         pcre2_h = self.include_dir / "pcre2.h"
 
-        targets = [libgc, libgccpp, libpcre2, gc_h, pcre2_h]
+        targets = [libgc, libpcre2, gc_h, gc_cpp_h, pcre2_h]
         return all(t.exists() for t in targets)
 
     def install_all(self) -> None:
@@ -328,12 +328,10 @@ class LocalDependencyManager:
         if sys.platform == "win32":
             self.lib_suffix = ".lib"
             self.libgc_name = "gc.lib"
-            self.libgccpp_name = "gccpp.lib"
             self.libpcre2_name = "pcre2-32-static.lib"
         else:
             self.lib_suffix = ".a"
             self.libgc_name = "libgc.a"
-            self.libgccpp_name = "libgccpp.a"
             self.libpcre2_name = "libpcre2-32.a"
 
         if self.reset_on_run and self.deps_dir.exists():
@@ -404,9 +402,9 @@ class LocalDependencyManager:
     def bdwgc_targets_exist(self) -> bool:
         """Check if bdwgc targets are already built."""
         libgc = self.lib_dir / self.libgc_name
-        libgccpp = self.lib_dir / self.libgccpp_name
         gc_h = self.include_dir / "gc.h"
-        return all(t.exists() for t in [libgc, libgccpp, gc_h])
+        gc_cpp_h = self.include_dir / "gc_cpp.h"
+        return all(t.exists() for t in [libgc, gc_h, gc_cpp_h])
 
     def pcre2_targets_exist(self) -> bool:
         """Check if pcre2 targets are already built."""

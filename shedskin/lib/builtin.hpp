@@ -11,6 +11,9 @@
 #ifdef WIN32
 #define GC_NO_INLINE_STD_NEW
 #endif
+/* throw std::bad_alloc directly on OOM, instead of via GC_throw_bad_alloc
+   (which lives in libgccpp/libgctba, neither of which we link) */
+#define GC_INCLUDE_NEW
 #include <gc/gc_allocator.h>
 #include <gc/gc_cpp.h>
 #include <new>

@@ -140,6 +140,38 @@ def test_sorted_positional_iterable_with_kwargs():
     assert sorted(pairs, key=lambda p: p[1], reverse=True) == [(2, "c"), (1, "b"), (3, "a")]
 
 
+def test_sorted_stable_large():
+    # more than one insertion-sort run, so the merge passes are exercised
+    n = 1000
+    pairs = [((i * 7919) % 97, i) for i in range(n)]
+    # stable: equal keys keep their original (increasing) order
+    result = sorted(pairs, key=lambda p: p[0])
+    assert len(result) == n
+    for i in range(1, n):
+        assert result[i - 1][0] <= result[i][0]
+        if result[i - 1][0] == result[i][0]:
+            assert result[i - 1][1] < result[i][1]
+    # reverse=True is stable as well (not reversed stable order)
+    result = sorted(pairs, key=lambda p: p[0], reverse=True)
+    for i in range(1, n):
+        assert result[i - 1][0] >= result[i][0]
+        if result[i - 1][0] == result[i][0]:
+            assert result[i - 1][1] < result[i][1]
+    # key function that allocates (may trigger collections while sorting)
+    words = [str((i * 31337) % 1009) for i in range(n)]
+    result2 = sorted(words, key=lambda w: w + "!" * (len(w) % 3))
+    for i in range(1, n):
+        assert result2[i - 1] + "!" * (len(result2[i - 1]) % 3) <= result2[i] + "!" * (len(result2[i]) % 3)
+    assert sorted(result2) == sorted(words)
+    # plain sort of objects, all sizes around the run boundary
+    for m in range(28, 70):
+        l = [str((i * 13) % m) for i in range(m)]
+        assert sorted(l) == sorted(sorted(l, reverse=True))
+        l.sort()
+        for i in range(1, m):
+            assert l[i - 1] <= l[i]
+
+
 def test_all():
     test_sorted1()
     test_sorted2()
@@ -150,6 +182,7 @@ def test_all():
     test_sorted_reverse_kwarg()
     test_sorted_key_and_reverse_kwargs()
     test_sorted_positional_iterable_with_kwargs()
+    test_sorted_stable_large()
 
 
 if __name__ == '__main__':

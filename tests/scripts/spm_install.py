@@ -69,12 +69,11 @@ class ShedskinPackageManager:
 
     def targets_exist(self):
         libgc = self.lib_dir / f'libgc{self.lib_suffix}'
-        libgccpp = self.lib_dir / f'libgccpp{self.lib_suffix}'
         libpcre2 = self.lib_dir / f'libpcre2-8{self.lib_suffix}'
         gc_h = self.include_dir / 'gc.h'
         pcre2_h = self.include_dir / 'pcre2.h'
  
-        targets = [libgc, libgccpp, libpcre2, gc_h, pcre2_h]
+        targets = [libgc, libpcre2, gc_h, pcre2_h]
         return all(t.exists() for t in targets)
 
     def install_all(self):

@@ -630,7 +630,9 @@ template<class T, class U, class V, class W> inline isliceiter<T> *islice(pyiter
 
 // tee
 
-template<class T> class teecache {
+/* allocated with plain new: derive from gc, so it is traced (its deque is
+   GC-allocated and referenced only from here) and not malloc'ed */
+template<class T> class teecache : public gc {
 public:
     typedef std::pair<T, int> item;
 
