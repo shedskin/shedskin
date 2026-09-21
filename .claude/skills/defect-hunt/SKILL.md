@@ -56,7 +56,8 @@ down to the smallest program that still reproduces before reporting.
   deliberately out of scope.
 - The `tests/skip_*` directories are known-unsupported; don't report those.
 - Check `tests/errs/` — those are expected-error cases, not defects.
-- Before reporting, search existing issues for a duplicate.
+- Before reporting, search existing open issues for a duplicate/very similar
+  issue. Only report new or substantially different issues.
 
 ## Budget
 
@@ -88,24 +89,25 @@ report which area was covered so the next run can pick a different one.
   each against CPython's documented semantics: negative and out-of-range
   indices, empty and single-element inputs, default arguments, keyword
   arguments, unicode vs bytes, exception type and message, float formatting and
-  rounding, integer overflow at 32/64-bit boundaries.
+  rounding, integer overflow at 32/64-bit boundaries, etc.
 - **Builtins** — `shedskin/lib/builtin/*.hpp`. String methods, `sorted`/`sort`
   stability and `key=`, `format`/f-string specifiers, `dict`/`set` ordering
-  guarantees, slicing with negative steps, `int`/`float` conversion edges.
+  guarantees, slicing with negative steps, `int`/`float` conversion edges, etc.
 - **Language features** — comprehensions and generators, nested and recursive
   functions, closures, default mutable arguments, `*args`/`**kwargs`,
   inheritance and `super()`, operator overloading and reflected operators,
-  context managers, exception chaining and `finally` interactions.
+  context managers, exception chaining and `finally` interactions, etc.
 - **Type inference** — `shedskin/infer.py`, `graph.py`, `typestr.py`. Union
   types flowing through containers, polymorphic call sites, recursive data
-  structures.
+  structures, etc.
 - **Code generation** — `shedskin/cpp.py`. Operator precedence in emitted
-  expressions, name mangling and shadowing, temporaries and evaluation order.
+  expressions, name mangling and shadowing, temporaries and evaluation order, etc.
 - **Memory safety** - check that GC is working as intended, that there are
   no memory leaks/premature deallocations, that extmod refcounting works as
-  intended, that it works well with linked-in shared libs and so on.
+  intended, that it works well with linked-in shared libs and so on, etc.
 - **Recent commits** — `git log --since="8 weeks ago"` points at code that is
-  newly changed and least exercised.
+  newly changed and least exercised. Often there are similar fixes possible
+  by generalizing the issue/recent commits, etc.
 
 ## Cross-checking flags
 
