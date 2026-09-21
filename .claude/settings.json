@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/setup.sh",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}
