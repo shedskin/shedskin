@@ -21,6 +21,22 @@ Always work from the latest `main` unless told otherwise:
 git fetch origin main && git checkout -B <branch> origin/main
 ```
 
+The checkout is shallow. shedskin lands well over two hundred commits in eight
+weeks, so the default depth does not reach back far enough for the "recent
+commits" area below — deepen it with a bounded fetch before relying on history:
+
+```bash
+git fetch --depth=1000 origin main
+```
+
+Probes go in a scratch directory **outside the repo**, so nothing you generate
+is mistaken for a change to shedskin itself. Use this session's scratchpad
+directory if it has one, otherwise:
+
+```bash
+SCRATCH=$(mktemp -d)
+```
+
 ## The core loop: differential testing
 
 This is where almost every confirmed defect comes from. A test program is a
@@ -58,6 +74,9 @@ down to the smallest program that still reproduces before reporting.
 - Check `tests/errs/` — those are expected-error cases, not defects.
 - Before reporting, search existing open issues for a duplicate/very similar
   issue. Only report new or substantially different issues.
+- One exception to "open": if a probe reproduces something an issue was
+  **closed as fixed** for, that is a regression, not a duplicate. Report it,
+  cite the issue, and name the commit that closed it if you can find one.
 
 ## Budget
 
@@ -109,6 +128,37 @@ report which area was covered so the next run can pick a different one.
   newly changed and least exercised. Often there are similar fixes possible
   by generalizing the issue/recent commits, etc.
 
+## The other half: extension modules
+
+The loop above covers `shedskin translate` to an executable. shedskin also
+translates to a CPython extension module (`-e`), CI tests both, and nothing in
+this file probes it — so that surface is where undisturbed bugs are most likely
+to be sitting.
+
+```bash
+shedskin translate -e mymod.py && make      # produces mymod.so
+python3 -c "import mymod; print(mymod.f(10))"
+```
+
+**The gotcha that will cost you an hour if you do not know it:** shedskin only
+generates a binding for a function whose argument types it could infer, so a
+module with no calls in it exports nothing and `import` gives you an
+`AttributeError`. Seed the types with a main block:
+
+```python
+def addup(n):
+    return sum(range(n))
+
+if __name__ == '__main__':
+    print(addup(10))       # seeds inference; without this, no binding
+```
+
+Extension modules make a *better* differential harness than executables: import
+the module and compare its functions against a pure-Python reference in the same
+process, over many inputs, instead of diffing stdout once. Disagreement between
+the same function called as an extension module and as an executable is itself a
+defect worth reporting.
+
 ## Cross-checking flags
 
 Behaviour that differs only under a flag is a defect too. When a probe passes
@@ -128,6 +178,39 @@ A code-reading finding is only worth reporting once a probe confirms it. If you
 cannot make it reproduce, leave it out — or state plainly that it is unconfirmed
 and say what you tried.
 
+## Probing memory safety
+
+Stdout diffing cannot see a leak or a premature free, so the memory-safety area
+needs its own tooling — and the obvious approach is a trap worth knowing about
+before you spend a subagent on it.
+
+**Do not run valgrind against a normal build.** Boehm GC scans memory
+conservatively by design, so valgrind reports hundreds of uninitialised-read
+errors on a test that passes perfectly — 343 errors from 8 contexts on a small
+passing test, none of them bugs. A subagent that does not know this will report
+the noise.
+
+Build with `--nogc` instead, which takes the collector out of the picture and
+leaves valgrind's error summary meaningful:
+
+```bash
+shedskin translate --nogc probe.py && make
+valgrind ./probe                    # same probe, GC build: 343 errors
+                                    #              --nogc build: 0 errors
+```
+
+Read that run for **invalid accesses** — use-after-free, out-of-bounds, bad
+reads — not for leak counts: with `--nogc` nothing is ever freed, so the leak
+numbers mean nothing. `-fsanitize=address` on the generated `.cpp` is the other
+option where valgrind is too slow.
+
+This leaves one real blind spot, and it is worth saying out loud rather than
+pretending otherwise: bugs *in* GC behaviour — a premature collection, an object
+the collector never reclaims — only manifest in the GC build, where valgrind is
+useless. Those need a probe that allocates hard in a loop and watches RSS, or a
+reproducible wrong answer caused by an object collected too early. If you cannot
+get either, say so rather than reporting valgrind noise as a finding.
+
 ## Going wide
 
 A thorough hunt is many independent probes, and probes do not depend on each
@@ -139,7 +222,16 @@ yourself before it goes in the issue.
 ## The report
 
 File one GitHub issue per run against `shedskin/shedskin`, titled
-`Weekly defect report — <date>`. Structure it as:
+`Weekly defect report — <date>`.
+
+**If filing fails with a 403**, the Claude GitHub App is not installed on the
+shedskin org. Do not retry it or look for a way around it. Note it in one line
+at the top of the report and carry on — reading the tracker still works, so
+duplicate-checking is unaffected.
+
+Either way, **end your turn with the full report as your final message**: that
+message is what reaches the maintainer by email, and it is the delivery path
+that works whether or not the issue filed. Structure it as:
 
 - **Run cost** — wall clock, tokens and dollars, and the fan-out used (see
   below).
