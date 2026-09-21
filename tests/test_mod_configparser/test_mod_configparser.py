@@ -1000,6 +1000,50 @@ def test_strict():
     assert sorted(config.items('s')) == [('a', '1'), ('b', '2')]
 
 
+def test_raw_constructor_args():
+    # the same keyword arguments, but on RawConfigParser itself
+    config = configparser.RawConfigParser(
+        delimiters=('->',),
+        comment_prefixes=('//',),
+        inline_comment_prefixes=('!',),
+        strict=False,
+        empty_lines_in_values=False,
+        default_section='common',
+    )
+    assert config.default_section == 'common'
+    config.read_string(
+        '[common]\n'
+        'shared -> %(x)s\n'
+        '[s]\n'
+        '// comment\n'
+        '# a -> 1 ! inline\n'
+        'b -> first\n'
+        '    second\n'
+        '\n'
+        'b -> again\n'
+        '[s]\n'
+        'c -> 3\n'
+    )
+    assert config.sections() == ['s']
+    assert config.get('s', '# a') == '1'
+    assert config.get('s', 'b') == 'again'           # strict=False: overwritten
+    assert config.get('s', 'c') == '3'               # ... and section merged
+    assert config.get('s', 'shared') == '%(x)s'      # no interpolation
+    assert config.has_section('common') == False
+
+    config = configparser.RawConfigParser(empty_lines_in_values=False)
+    config.read_string('[s]\na = first\n    second\n\nb = x\n')
+    assert config.get('s', 'a') == 'first\nsecond'
+
+    config = configparser.RawConfigParser()   # strict=True default
+    ok = False
+    try:
+        config.read_string('[s]\na = 1\na = 2\n')
+    except configparser.DuplicateOptionError:
+        ok = True
+    assert ok
+
+
 def test_multiline_continuation_error():
     config = configparser.ConfigParser(allow_no_value=True)
     ok = False
@@ -1316,6 +1360,7 @@ def test_all():
     test_comment_prefixes()
     test_multiline_values()
     test_strict()
+    test_raw_constructor_args()
     test_multiline_continuation_error()
     test_invalid_write_error()
     test_parsing_error_source()

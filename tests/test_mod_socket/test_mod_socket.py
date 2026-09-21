@@ -564,6 +564,17 @@ def test_constants():
     ]
     assert len(consts) == 132
 
+    # IP_RECVTTL (CPython only exposes it on Linux since 3.14)
+    if (sys.version_info[0], sys.version_info[1]) >= (3, 14):
+        assert socket.IP_RECVTTL > 0
+        assert socket.IP_RECVTTL != socket.IP_TTL
+        assert socket.IP_RECVTTL != socket.IP_RECVTOS
+        if sys.platform == 'linux':
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_RECVTTL, 1)
+            assert sock.getsockopt(socket.IPPROTO_IP, socket.IP_RECVTTL) == 1
+            sock.close()
+
     # values fixed by IANA or by CPython itself, so the same on all platforms
     assert socket.AF_UNSPEC == 0
     assert socket.IPPROTO_IP == 0

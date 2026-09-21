@@ -30,6 +30,8 @@ def test_debug():
 def test_freeze():
     n = gc.get_freeze_count()
     assert n >= 0
+    gc.freeze()
+    assert gc.get_freeze_count() >= n  # shedskin always reports zero
     gc.unfreeze()
     assert gc.get_freeze_count() == 0
 
