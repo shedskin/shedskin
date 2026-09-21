@@ -58,6 +58,25 @@ down to the smallest program that still reproduces before reporting.
 - Check `tests/errs/` — those are expected-error cases, not defects.
 - Before reporting, search existing issues for a duplicate.
 
+## Budget
+
+There is no token or spend cap available to a session, so the budget is whatever
+this file says it is. These numbers are the dial — raise or lower them here.
+
+- **Target about 3 hours of wall clock.** Note the time when you start.
+- **At most 3 focus areas per run**, and **at most 6 subagents in flight** at
+  once. Fan-out is the dominant cost: every subagent carries its own context, so
+  doubling the areas roughly doubles the run.
+- **At most ~12 probes per area.** Probes are cheap individually; it is the
+  unbounded ones that run away. When an area keeps yielding, note it in the
+  report as worth revisiting rather than chasing it to exhaustion.
+- **Stop probing once your own context passes roughly 60%** and spend the rest
+  on confirming candidates and writing the report. A thorough hunt with no
+  report written is a wasted run.
+
+Stopping early because the budget is spent is a correct outcome, not a failure —
+say so in the report and name what was left unexplored.
+
 ## Where to look
 
 Rotate the focus each week rather than re-treading the same ground; say in the
@@ -117,8 +136,9 @@ yourself before it goes in the issue.
 File one GitHub issue per run against `shedskin/shedskin`, titled
 `Weekly defect report — <date>`. Structure it as:
 
-- **Summary** — how many confirmed defects, which areas were covered, and how
-  long the run took.
+- **Run cost** — wall clock, tokens and dollars, and the fan-out used (see
+  below).
+- **Summary** — how many confirmed defects and which areas were covered.
 - **Confirmed defects** — one section each, ordered by severity. Every one needs
   a minimal reproducing `.py`, the CPython output, the shedskin output (or the
   translate/compile/runtime error), and a one-line note on the suspected cause
@@ -129,6 +149,20 @@ File one GitHub issue per run against `shedskin/shedskin`, titled
 
 If a run finds nothing, file the issue anyway and say so. A clean week is a
 useful signal, and the "areas checked" list still compounds.
+
+## Reporting the run's cost
+
+Open the report with what the run itself cost, so the budget above can be tuned
+against real numbers rather than guesses:
+
+- **Wall clock** — always available; you noted the start time.
+- **Tokens and dollars** — call the `get_session` tool (Claude Code Remote MCP)
+  with `session_id` omitted and read `external_metadata.usage` (input, output and
+  cache token counts, and `cost_usd`) plus `external_metadata.context_usage`.
+  If that tool is not available in the run, say "usage unavailable" rather than
+  estimating — a made-up number is worse than none.
+- **Fan-out actually used** — how many areas and subagents, so the cost lines up
+  with something you can adjust.
 
 Do not open pull requests with fixes unless asked — the report is the
 deliverable.

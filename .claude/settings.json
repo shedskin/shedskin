@@ -12,5 +12,25 @@
         ]
       }
     ]
+  },
+  "bashOutputMaxChars": 30000,
+  "permissions": {
+    "allow": [
+      "Bash(./.claude/setup.sh)",
+      "Bash(shedskin:*)",
+      "Bash(make:*)",
+      "Bash(cmake:*)",
+      "Bash(g++:*)",
+      "Bash(python3:*)",
+      "Bash(diff:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git checkout:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [
+      "Bash(shedskin runtests)"
+    ]
   }
 }
