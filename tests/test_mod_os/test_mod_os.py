@@ -630,6 +630,43 @@ def test_times():
     assert t2[0] >= t[0]
     assert t2[4] >= t[4]
 
+    # times_result: named fields, unpacking, slicing, tuple methods
+    assert t2.user == t2[0]
+    assert t2.system == t2[1]
+    assert t2.children_user == t2[2]
+    assert t2.children_system == t2[3]
+    assert t2.elapsed == t2[4] == t2[-1]
+    user, system, cuser, csystem, elapsed = t2
+    assert user == t2.user and elapsed == t2.elapsed
+    assert len(t2[:2]) == 2
+    assert t2[1:3] == (t2.system, t2.children_user)
+    assert t2.elapsed in t2
+
+    tr = os.times_result((1.5, 2.0, 0.0, 0.0, 10.25))
+    assert tr.user == 1.5
+    assert tr.elapsed == 10.25
+    assert tr[::2] == (1.5, 0.0, 10.25)
+    assert tr.count(0.0) == 2
+    assert tr.index(0.0) == 2
+    assert tr.index(0.0, 3) == 3
+    assert tr.index(0.0, 0, 3) == 2
+    assert list(tr) == [1.5, 2.0, 0.0, 0.0, 10.25]
+    assert repr(tr) == os.name + '.times_result(user=1.5, system=2.0, children_user=0.0, children_system=0.0, elapsed=10.25)'
+    tr = os.times_result((1, 2, 3, 4, 5))
+    assert tr.children_system == 4.0
+    ok = False
+    try:
+        tr[5]
+    except IndexError:
+        ok = True
+    assert ok
+    ok = False
+    try:
+        tr.index(7.0)
+    except ValueError:
+        ok = True
+    assert ok
+
 
 def test_misc_constants():
     assert os.TMP_MAX > 0
@@ -865,6 +902,25 @@ def test_inheritable():
     assert ok
 
 
+def test_fchmod():
+    # portable: only the write bit (read-only attribute on windows)
+    path = 'shedskin_test_fchmod.txt'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.fchmod(fd, stat.S_IREAD)
+    assert not (os.stat(path).st_mode & stat.S_IWRITE)
+    os.fchmod(fd, stat.S_IREAD | stat.S_IWRITE)
+    assert os.stat(path).st_mode & stat.S_IWRITE
+    os.close(fd)
+    os.remove(path)
+
+    ok = False
+    try:
+        os.fchmod(fd, 0o644)
+    except OSError as e:
+        ok = e.errno == 9  # EBADF
+    assert ok
+
+
 def test_device_encoding():
     fd = os.open(os.devnull, os.O_RDONLY)
     assert os.device_encoding(fd) is None
@@ -990,6 +1046,7 @@ def test_all():
     test_bad_fd()
     test_waitstatus_to_exitcode()
     test_inheritable()
+    test_fchmod()
     test_device_encoding()
     test_terminal_size()
 

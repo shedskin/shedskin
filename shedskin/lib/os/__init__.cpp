@@ -781,6 +781,35 @@ __ss_int chmod(str* path, __ss_int val) {
     return 0;
 }
 
+void *fchmod(__ss_int fd, __ss_int mode) {
+#ifdef WIN32
+    /* like cpython (3.13+): only the write permission bit, as the read-only
+       attribute of the open file */
+    HANDLE h;
+    {
+        __suppress_iph guard;
+        h = (HANDLE)::_get_osfhandle((int)fd);
+    }
+    if (h == INVALID_HANDLE_VALUE) {
+        errno = EBADF;
+        __throw_oserror();
+    }
+    FILE_BASIC_INFO info;
+    if (!GetFileInformationByHandleEx(h, FileBasicInfo, &info, sizeof(info)))
+        throw new OSError(new str("os.fchmod"));
+    if (mode & _S_IWRITE)
+        info.FileAttributes &= ~(DWORD)FILE_ATTRIBUTE_READONLY;
+    else
+        info.FileAttributes |= FILE_ATTRIBUTE_READONLY;
+    if (!SetFileInformationByHandle(h, FileBasicInfo, &info, sizeof(info)))
+        throw new OSError(new str("os.fchmod"));
+#else
+    if (::fchmod((int)fd, (mode_t)mode) == -1)
+        __throw_oserror();
+#endif
+    return NULL;
+}
+
 void *renames(str* old, str* _new) {
     tuple<str *> *__0, *__1, *__5;
     str *__2, *head, *tail;
@@ -1304,10 +1333,79 @@ str *ttyname(__ss_int fd) {
     return new str(name_);
 }
 
-tuple<str *> *uname() {
+class_ *cl_uname_result;
+
+uname_result::uname_result(str *sysname, str *nodename, str *release, str *version, str *machine) {
+    this->__class__ = cl_uname_result;
+    this->sysname = sysname;
+    this->nodename = nodename;
+    this->release = release;
+    this->version = version;
+    this->machine = machine;
+}
+
+uname_result::uname_result(tuple<str *> *t) {
+    this->__class__ = cl_uname_result;
+    if (len(t) != 5)
+        throw new TypeError(__add_strs(3, new str("os.uname_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+    sysname = t->__getitem__(0);
+    nodename = t->__getitem__(1);
+    release = t->__getitem__(2);
+    version = t->__getitem__(3);
+    machine = t->__getitem__(4);
+}
+
+tuple<str *> *uname_result::__tuple() {
+    return new tuple<str *>(5, sysname, nodename, release, version, machine);
+}
+
+__ss_int uname_result::__len__() {
+    return 5;
+}
+
+str *uname_result::__getitem__(__ss_int i) {
+    if (i < 0)
+        i += 5;
+    switch(i) {
+        case 0: return sysname;
+        case 1: return nodename;
+        case 2: return release;
+        case 3: return version;
+        case 4: return machine;
+        default:
+            throw new IndexError(new str("tuple index out of range"));
+    }
+}
+
+tuple<str *> *uname_result::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
+    return __tuple()->__slice__(x, l, u, s);
+}
+
+__ss_bool uname_result::__contains__(str *x) {
+    return __tuple()->__contains__(x);
+}
+
+__ss_int uname_result::count(str *x) {
+    return __tuple()->count(x);
+}
+
+__ss_int uname_result::index(str *x, __ss_int start, __ss_void_struct) {
+    return __tuple()->index(x, start);
+}
+
+__ss_int uname_result::index(str *x, __ss_int start, __ss_int stop) {
+    return __tuple()->index(x, start, stop);
+}
+
+str *uname_result::__repr__() {
+    return __add_strs(12, name, new str(".uname_result(sysname="), repr(sysname), new str(", nodename="), repr(nodename), new str(", release="), repr(release), new str(", version="), repr(version), new str(", machine="), repr(machine), new str(")"));
+}
+
+uname_result *uname() {
     struct utsname name_;
-    ::uname(&name_);
-    return new tuple<str *>(5, new str(name_.sysname), new str(name_.nodename), new str(name_.release), new str(name_.version), new str(name_.machine));
+    if (::uname(&name_) == -1)
+        __throw_oserror();
+    return new uname_result(new str(name_.sysname), new str(name_.nodename), new str(name_.release), new str(name_.version), new str(name_.machine));
 }
 
 list<__ss_int> *getgroups() {
@@ -1517,13 +1615,13 @@ void *ftruncate(__ss_int fd, __ss_int n) {
     return NULL;
 }
 
-tuple<__ss_float> *times() {
+times_result *times() {
     struct tms buf;
     clock_t c;
     double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
         __throw_oserror(new str("os.times"));
-    return new tuple<__ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
+    return new times_result(((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
 }
 
 #else /* WIN32 */
@@ -1583,7 +1681,7 @@ void *ftruncate(__ss_int fd, __ss_int n) {
 }
 
 /* like cpython: (user, system, children_user=0, children_system=0, elapsed) */
-tuple<__ss_float> *times() {
+times_result *times() {
     FILETIME create, exit_, kernel, user;
     if (!GetProcessTimes(GetCurrentProcess(), &create, &exit_, &kernel, &user))
         throw new OSError(new str("os.times"));
@@ -1591,7 +1689,7 @@ tuple<__ss_float> *times() {
     k.LowPart = kernel.dwLowDateTime; k.HighPart = kernel.dwHighDateTime;
     u.LowPart = user.dwLowDateTime; u.HighPart = user.dwHighDateTime;
     __ss_float elapsed = (__ss_float)GetTickCount64() / 1000.0;
-    return new tuple<__ss_float>(5, (__ss_float)u.QuadPart / 1e7, (__ss_float)k.QuadPart / 1e7, (__ss_float)0.0, (__ss_float)0.0, elapsed);
+    return new times_result((__ss_float)u.QuadPart / 1e7, (__ss_float)k.QuadPart / 1e7, (__ss_float)0.0, (__ss_float)0.0, elapsed);
 }
 
 #endif
@@ -1633,6 +1731,85 @@ __ss_int terminal_size::__getitem__(__ss_int i) {
 
 str *terminal_size::__repr__() {
     return __add_strs(5, new str("os.terminal_size(columns="), __str(columns), new str(", lines="), __str(lines), new str(")"));
+}
+
+class_ *cl_times_result;
+
+times_result::times_result(__ss_float user, __ss_float system, __ss_float children_user, __ss_float children_system, __ss_float elapsed) {
+    this->__class__ = cl_times_result;
+    this->user = user;
+    this->system = system;
+    this->children_user = children_user;
+    this->children_system = children_system;
+    this->elapsed = elapsed;
+}
+
+times_result::times_result(tuple<__ss_float> *t) {
+    this->__class__ = cl_times_result;
+    if (len(t) != 5)
+        throw new TypeError(__add_strs(3, new str("os.times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+    user = t->__getitem__(0);
+    system = t->__getitem__(1);
+    children_user = t->__getitem__(2);
+    children_system = t->__getitem__(3);
+    elapsed = t->__getitem__(4);
+}
+
+times_result::times_result(tuple<__ss_int> *t) {
+    this->__class__ = cl_times_result;
+    if (len(t) != 5)
+        throw new TypeError(__add_strs(3, new str("os.times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+    user = (__ss_float)t->__getitem__(0);
+    system = (__ss_float)t->__getitem__(1);
+    children_user = (__ss_float)t->__getitem__(2);
+    children_system = (__ss_float)t->__getitem__(3);
+    elapsed = (__ss_float)t->__getitem__(4);
+}
+
+tuple<__ss_float> *times_result::__tuple() {
+    return new tuple<__ss_float>(5, user, system, children_user, children_system, elapsed);
+}
+
+__ss_int times_result::__len__() {
+    return 5;
+}
+
+__ss_float times_result::__getitem__(__ss_int i) {
+    if (i < 0)
+        i += 5;
+    switch(i) {
+        case 0: return user;
+        case 1: return system;
+        case 2: return children_user;
+        case 3: return children_system;
+        case 4: return elapsed;
+        default:
+            throw new IndexError(new str("tuple index out of range"));
+    }
+}
+
+tuple<__ss_float> *times_result::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
+    return __tuple()->__slice__(x, l, u, s);
+}
+
+__ss_bool times_result::__contains__(__ss_float x) {
+    return __tuple()->__contains__(x);
+}
+
+__ss_int times_result::count(__ss_float x) {
+    return __tuple()->count(x);
+}
+
+__ss_int times_result::index(__ss_float x, __ss_int start, __ss_void_struct) {
+    return __tuple()->index(x, start);
+}
+
+__ss_int times_result::index(__ss_float x, __ss_int start, __ss_int stop) {
+    return __tuple()->index(x, start, stop);
+}
+
+str *times_result::__repr__() {
+    return __add_strs(12, name, new str(".times_result(user="), repr(user), new str(", system="), repr(system), new str(", children_user="), repr(children_user), new str(", children_system="), repr(children_system), new str(", elapsed="), repr(elapsed), new str(")"));
 }
 
 #ifndef WIN32
@@ -1682,6 +1859,23 @@ void *set_inheritable(__ss_int fd, __ss_bool inheritable) {
         __throw_oserror();
     int new_flags = inheritable ? (flags & ~FD_CLOEXEC) : (flags | FD_CLOEXEC);
     if (new_flags != flags && ::fcntl((int)fd, F_SETFD, new_flags) == -1)
+        __throw_oserror();
+    return NULL;
+}
+
+__ss_bool get_blocking(__ss_int fd) {
+    int flags = ::fcntl((int)fd, F_GETFL);
+    if (flags == -1)
+        __throw_oserror();
+    return __mbool(!(flags & O_NONBLOCK));
+}
+
+void *set_blocking(__ss_int fd, __ss_bool blocking) {
+    int flags = ::fcntl((int)fd, F_GETFL);
+    if (flags == -1)
+        __throw_oserror();
+    int new_flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+    if (new_flags != flags && ::fcntl((int)fd, F_SETFL, new_flags) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1762,6 +1956,21 @@ __ss_bool get_inheritable(__ss_int fd) {
 void *set_inheritable(__ss_int fd, __ss_bool inheritable) {
     if (!SetHandleInformation(__fd_handle(fd), HANDLE_FLAG_INHERIT, inheritable ? HANDLE_FLAG_INHERIT : 0))
         throw new OSError(new str("os.set_inheritable"));
+    return NULL;
+}
+
+/* like cpython (3.12+): only supported for pipes */
+__ss_bool get_blocking(__ss_int fd) {
+    DWORD mode;
+    if (!GetNamedPipeHandleStateW(__fd_handle(fd), &mode, NULL, NULL, NULL, NULL, 0))
+        throw new OSError(new str("os.get_blocking"));
+    return __mbool(!(mode & PIPE_NOWAIT));
+}
+
+void *set_blocking(__ss_int fd, __ss_bool blocking) {
+    DWORD mode = blocking ? PIPE_WAIT : PIPE_NOWAIT;
+    if (!SetNamedPipeHandleState(__fd_handle(fd), &mode, NULL, NULL))
+        throw new OSError(new str("os.set_blocking"));
     return NULL;
 }
 
@@ -2139,6 +2348,7 @@ void __init() {
     cl___cstat = new class_("__cstat");
     cl_DirEntry = new class_("DirEntry");
     cl_terminal_size = new class_("terminal_size");
+    cl_times_result = new class_("times_result");
 
     linesep = new str("\n");
 #ifdef WIN32
@@ -2146,6 +2356,7 @@ void __init() {
 #else
     name = new str("posix");
     cl___vfsstat = new class_("__vfsstat");
+    cl_uname_result = new class_("uname_result");
 #endif
 
     __ss_environ = new dict<str *, str *>();

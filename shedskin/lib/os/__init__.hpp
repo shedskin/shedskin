@@ -149,6 +149,7 @@ str *strerror(__ss_int i);
 void *putenv(str* varname, str* value);
 __ss_int umask(__ss_int newmask);
 __ss_int chmod(str* path, __ss_int val);
+void *fchmod(__ss_int fd, __ss_int mode);
 void *renames(str* old, str* _new);
 tuple2<__ss_int,__ss_int>* pipe();
 __ss_int dup(__ss_int f1);
@@ -193,13 +194,43 @@ __ss_int getppid();
 void *ftruncate(__ss_int fd, __ss_int n);
 void *fsync(__ss_int fd);
 __ss_bool access(str *path, __ss_int mode);
-tuple<__ss_float> *times();
+
+extern class_ *cl_times_result;
+class times_result : public pyobj {
+public:
+    __ss_float user, system, children_user, children_system, elapsed;
+
+    times_result(__ss_float user, __ss_float system, __ss_float children_user, __ss_float children_system, __ss_float elapsed);
+    times_result(tuple<__ss_float> *t);
+    times_result(tuple<__ss_int> *t);
+
+    tuple<__ss_float> *__tuple();
+    __ss_int __len__();
+    __ss_float __getitem__(__ss_int i);
+    tuple<__ss_float> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    __ss_bool __contains__(__ss_float x);
+    __ss_int count(__ss_float x);
+    __ss_int index(__ss_float x, __ss_int start, __ss_void_struct stop); /* stop not given */
+    __ss_int index(__ss_float x, __ss_int start, __ss_int stop);
+    str *__repr__();
+
+    /* iteration (and so unpacking) goes through __getitem__ */
+    typedef __ss_float for_in_unit;
+    typedef __ss_int for_in_loop;
+    inline __ss_int for_in_init() { return 0; }
+    inline bool for_in_has_next(__ss_int i) { return i < 5; }
+    inline __ss_float for_in_next(__ss_int &i) { return __getitem__(i++); }
+};
+
+times_result *times();
 
 void *truncate(str *path, __ss_int length);
 void *closerange(__ss_int fd_low, __ss_int fd_high);
 __ss_int waitstatus_to_exitcode(__ss_int status);
 __ss_bool get_inheritable(__ss_int fd);
 void *set_inheritable(__ss_int fd, __ss_bool inheritable);
+__ss_bool get_blocking(__ss_int fd);
+void *set_blocking(__ss_int fd, __ss_bool blocking);
 str *device_encoding(__ss_int fd);
 
 extern class_ *cl_terminal_size;
@@ -355,7 +386,33 @@ void *chroot(str *path);
 str *ctermid();
 str *ttyname(__ss_int fd);
 
-tuple2<str *, str *> *uname();
+extern class_ *cl_uname_result;
+class uname_result : public pyobj {
+public:
+    str *sysname, *nodename, *release, *version, *machine;
+
+    uname_result(str *sysname, str *nodename, str *release, str *version, str *machine);
+    uname_result(tuple<str *> *t);
+
+    tuple<str *> *__tuple();
+    __ss_int __len__();
+    str *__getitem__(__ss_int i);
+    tuple<str *> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    __ss_bool __contains__(str *x);
+    __ss_int count(str *x);
+    __ss_int index(str *x, __ss_int start, __ss_void_struct stop); /* stop not given */
+    __ss_int index(str *x, __ss_int start, __ss_int stop);
+    str *__repr__();
+
+    /* iteration (and so unpacking) goes through __getitem__ */
+    typedef str *for_in_unit;
+    typedef __ss_int for_in_loop;
+    inline __ss_int for_in_init() { return 0; }
+    inline bool for_in_has_next(__ss_int i) { return i < 5; }
+    inline str *for_in_next(__ss_int &i) { return __getitem__(i++); }
+};
+
+uname_result *uname();
 
 __ss_int fork();
 tuple2<__ss_int, __ss_int> *forkpty();
