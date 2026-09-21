@@ -67,6 +67,88 @@ def test_chmod():
     os.remove(path)
 
 
+def test_fchmod():
+    path = 'shedskin_test_fchmod.txt'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.fchmod(fd, 0o600)
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    os.fchmod(fd, mode=0o640)
+    assert stat.S_IMODE(os.fstat(fd).st_mode) == 0o640
+    os.close(fd)
+    os.remove(path)
+
+
+def test_blocking():
+    r, w = os.pipe()
+    assert os.get_blocking(r)
+    os.set_blocking(r, False)
+    assert not os.get_blocking(r)
+    assert os.get_blocking(w)  # per-descriptor
+    ok = False
+    try:
+        os.read(r, 1)  # nothing written yet
+    except BlockingIOError:
+        ok = True
+    assert ok
+    os.set_blocking(r, True)
+    assert os.get_blocking(r)
+    os.write(w, b'x')
+    assert os.read(r, 1) == b'x'
+    os.close(r)
+    os.close(w)
+
+    ok = False
+    try:
+        os.get_blocking(r)
+    except OSError as e:
+        ok = e.errno == 9  # EBADF
+    assert ok
+    ok = False
+    try:
+        os.set_blocking(r, True)
+    except OSError as e:
+        ok = e.errno == 9
+    assert ok
+
+
+def test_uname():
+    u = os.uname()
+    assert len(u) == 5
+    assert u.sysname == u[0]
+    assert u.nodename == u[1]
+    assert u.release == u[2]
+    assert u.version == u[3]
+    assert u.machine == u[4] == u[-1]
+    sysname, nodename, release, version, machine = u
+    assert sysname == u.sysname and machine == u.machine
+    assert [x for x in u] == [u.sysname, u.nodename, u.release, u.version, u.machine]
+    assert u[:2] == (u.sysname, u.nodename)
+    assert u.sysname in u
+    if sys.platform.startswith('linux'):
+        assert u.sysname == 'Linux'
+
+    ur = os.uname_result(('A', 'b', 'c', 'b', 'e'))
+    assert ur.version == 'b'
+    assert ur.count('b') == 2
+    assert ur.index('b') == 1
+    assert ur.index('b', 2) == 3
+    assert ur.index('b', -3, 5) == 3
+    ok = False
+    try:
+        ur.index('b', 2, 3)
+    except ValueError:
+        ok = True
+    assert ok
+    assert ur[::-2] == ('e', 'c', 'A')
+    assert repr(ur) == "posix.uname_result(sysname='A', nodename='b', release='c', version='b', machine='e')"
+    ok = False
+    try:
+        ur[5]
+    except IndexError:
+        ok = True
+    assert ok
+
+
 def test_popen_spawn():
     p = os.popen('echo hello popen')
     assert p.read() == 'hello popen\n'
@@ -318,6 +400,9 @@ def test_all():
     test_walk_followlinks()
     test_direntry_follow_symlinks()
     test_chmod()
+    test_fchmod()
+    test_blocking()
+    test_uname()
     test_popen_spawn()
     test_times_children()
     test_misc_constants()

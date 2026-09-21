@@ -279,12 +279,12 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
     } else if(s > 0) {
         if(u > l)
             c->units.reserve((size_t)((u-l+s-1)/s));
-        for(int i=l; i<u; i += s)
+        for(__ss_int i=l; i<u; i += s)
             c->units.push_back(units[i]);
     } else {
         if(l > u)
             c->units.reserve((size_t)((l-u-s-1)/(-s)));
-        for(int i=l; i>u; i += s)
+        for(__ss_int i=l; i>u; i += s)
             c->units.push_back(units[i]);
     }
     return c;

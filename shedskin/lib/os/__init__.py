@@ -65,6 +65,8 @@ WUNTRACED = 0
 W_OK = 0
 X_OK = 0
 
+__void = 0  # 'argument not given' sentinel (e.g. tuple-style index(x, start, stop))
+
 pathconf_names = {'': 1}
 sysconf_names = {'': 1}
 confstr_names = {'': 1}
@@ -325,6 +327,9 @@ def umask(mask):
 def chmod(path, mode):
     return 0
 
+def fchmod(fd, mode):
+    pass
+
 def unsetenv(name):
     pass
 
@@ -421,8 +426,35 @@ def isatty(fd):
 def ttyname(fd):
     return ''
 
+class uname_result:
+    def __init__(self, t):
+        self.sysname = ''
+        self.nodename = ''
+        self.release = ''
+        self.version = ''
+        self.machine = ''
+        self.unit = ''  # element type, for iteration/unpacking
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return __iter('')
+    def __getunit__(self, i):
+        return ''
+    def __getitem__(self, i):
+        return ''
+    def __slice__(self, x, l, u, s):
+        return ('',)
+    def __contains__(self, x):
+        return True
+    def count(self, x):
+        return 1
+    def index(self, x, start=0, stop=__void):
+        return 1
+    def __repr__(self):
+        return ''
+
 def uname():
-    return ('',)
+    return uname_result(('',))
 
 def lchown(path, uid, gid):
     pass
@@ -478,6 +510,12 @@ def get_inheritable(fd):
 def set_inheritable(fd, inheritable):
     pass
 
+def get_blocking(fd):
+    return True
+
+def set_blocking(fd, blocking):
+    pass
+
 def device_encoding(fd):
     return ''
 
@@ -529,8 +567,35 @@ def utime(path, times):
 def access(path, mode):
     return True
 
+class times_result:
+    def __init__(self, t):
+        self.user = 1.0
+        self.system = 1.0
+        self.children_user = 1.0
+        self.children_system = 1.0
+        self.elapsed = 1.0
+        self.unit = 1.0  # element type, for iteration/unpacking
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return __iter(1.0)
+    def __getunit__(self, i):
+        return 1.0
+    def __getitem__(self, i):
+        return 1.0
+    def __slice__(self, x, l, u, s):
+        return (1.0,)
+    def __contains__(self, x):
+        return True
+    def count(self, x):
+        return 1
+    def index(self, x, start=0, stop=__void):
+        return 1
+    def __repr__(self):
+        return ''
+
 def times():
-    return (1.0,)
+    return times_result((1.0,))
 
 def makedev(major, minor):
     return 1
