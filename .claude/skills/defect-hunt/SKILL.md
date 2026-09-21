@@ -225,17 +225,30 @@ yourself before it goes in the issue.
 
 ## The report
 
-File one GitHub issue per run against `shedskin/shedskin`, titled
-`Weekly defect report — <date>`.
+Write the report once, then deliver it three ways. Do all three — they fail
+independently, and between them one always gets through.
 
-**If filing fails with a 403**, the Claude GitHub App is not installed on the
-shedskin org. Do not retry it or look for a way around it. Note it in one line
-at the top of the report and carry on — reading the tracker still works, so
-duplicate-checking is unaffected.
+**1. A file in the repo.** Write the report to
+`reports/defect-hunt/<YYYY-MM-DD>.md` and commit it to your working branch.
+This is what makes the reports an archive rather than a stream of emails: they
+accumulate, they diff against each other, and next week's run can read last
+week's instead of relying on the issue tracker. Commit it even if you cannot
+push — the file still shows in the session's diff, where it can be read and
+downloaded, and it is ready to push the moment access allows.
 
-Either way, **end your turn with the full report as your final message**: that
-message is what reaches the maintainer by email, and it is the delivery path
-that works whether or not the issue filed. Structure it as:
+**2. A GitHub issue** against `shedskin/shedskin`, titled
+`Weekly defect report — <date>`. If filing fails with a 403, the Claude GitHub
+App is not installed on the shedskin org. Do not retry it or look for a way
+around it. Note it in one line at the top of the report and carry on — reading
+the tracker still works, so duplicate-checking is unaffected.
+
+**3. Your final message**, which is what reaches the maintainer by email. This
+one is not optional and it must be genuinely last: the turn ending is what
+sends the mail, so anything you do afterwards means the mail arrived before the
+work stopped. Write the file and file the issue *first*, then end the turn with
+the full report.
+
+Structure it the same way in all three:
 
 - **Run cost** — wall clock, tokens and dollars, and the fan-out used (see
   below).
@@ -248,7 +261,7 @@ that works whether or not the issue filed. Structure it as:
   and why it did not reproduce.
 - **Areas checked, nothing found** — so the next run can skip them.
 
-If a run finds nothing, file the issue anyway and say so. A clean week is a
+If a run finds nothing, write and file it anyway and say so. A clean week is a
 useful signal, and the "areas checked" list still compounds.
 
 ## Reporting the run's cost
