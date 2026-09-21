@@ -1008,6 +1008,237 @@ def test_walk_onerror():
     os.rmdir(base)
 
 
+
+def test_utime_extended():
+    path = 'shedskin_test_utime2.txt'
+    with open(path, 'w') as f:
+        f.write('x')
+
+    # nanosecond precision (multiples of 100ns, the windows resolution)
+    os.utime(path, ns=(1000000000123456700, 1234567890987654300))
+    st = os.stat(path)
+    assert st.st_atime_ns == 1000000000123456700
+    assert st.st_mtime_ns == 1234567890987654300
+    os.utime(path, None, ns=(2000000000000000000, 2000000000500000000))
+    assert os.stat(path).st_mtime_ns == 2000000000500000000
+
+    # no times: set both to the current time
+    os.utime(path, (1000000000, 1000000000))
+    os.utime(path)
+    assert os.stat(path).st_mtime > 1600000000
+    os.utime(path, (1000000000, 1000000000))
+    os.utime(path, None)
+    assert os.stat(path).st_mtime > 1600000000
+
+    try:
+        os.utime(path, (1, 2), ns=(1, 2))
+        assert False
+    except ValueError as e:
+        assert str(e) == "utime: you may specify either 'times' or 'ns' but not both"
+    try:
+        os.utime(path, (1.0, 2.0, 3.0))
+        assert False
+    except TypeError:
+        pass
+    try:
+        os.utime(path, ns=(1, 2, 3))
+        assert False
+    except TypeError:
+        pass
+    try:
+        os.utime('shedskin_no_such_file_utime', None)
+        assert False
+    except FileNotFoundError:
+        pass
+
+    os.remove(path)
+
+
+def test_stat_follow_symlinks():
+    path = 'shedskin_test_stat_follow.txt'
+    with open(path, 'w') as f:
+        f.write('abc')
+    st = os.stat(path, follow_symlinks=False)
+    assert st.st_size == 3
+    assert st.st_ino == os.lstat(path).st_ino
+    assert os.stat(path, follow_symlinks=True).st_size == 3
+
+    # stat_result attributes
+    st = os.stat(path)
+    assert st.st_nlink >= 1
+    assert st.st_uid >= 0
+    assert st.st_gid >= 0
+    os.remove(path)
+
+
+def test_links():
+    base = 'shedskin_test_links'
+    os.mkdir(base)
+    target = os.path.join(base, 'target.txt')
+    hard = os.path.join(base, 'hard.txt')
+    with open(target, 'w') as f:
+        f.write('data')
+
+    os.link(target, hard)
+    if os.name != 'nt':  # (st_nlink is always 1 on windows yet)
+        assert os.stat(target).st_nlink == 2
+    with open(hard) as f:
+        assert f.read() == 'data'
+    try:
+        os.link(target, hard)
+        assert False
+    except FileExistsError:
+        pass
+
+    # symlinks may need extra privileges on windows
+    soft = os.path.join(base, 'soft.txt')
+    softdir = os.path.join(base, 'softdir')
+    made = False
+    try:
+        os.symlink('target.txt', soft)
+        made = True
+    except OSError:
+        pass
+    if made:
+        assert os.readlink(soft) == 'target.txt'
+        if os.name != 'nt':  # (no st_ino/lstat distinction on windows yet)
+            assert os.stat(soft, follow_symlinks=False).st_ino != os.stat(soft).st_ino
+        os.symlink('.', softdir, target_is_directory=True)
+        assert os.path.isdir(softdir)
+        assert os.readlink(softdir) == '.'
+        os.unlink(soft)
+        if os.name == 'nt':
+            os.rmdir(softdir)
+        else:
+            os.unlink(softdir)
+    try:
+        os.readlink(target)
+        assert False
+    except OSError:
+        pass
+
+    os.unlink(hard)
+    assert os.stat(target).st_nlink == 1
+    os.unlink(target)
+    os.rmdir(base)
+
+
+def test_dup2_inheritable():
+    path = 'shedskin_test_dup2_inh.txt'
+    fd = os.open(path, os.O_CREAT | os.O_WRONLY, 0o644)
+    fd2 = os.dup(fd)
+    assert os.dup2(fd, fd2) == fd2
+    assert os.get_inheritable(fd2)
+    assert os.dup2(fd, fd2, False) == fd2
+    assert not os.get_inheritable(fd2)
+    assert os.dup2(fd, fd2, inheritable=True) == fd2
+    assert os.get_inheritable(fd2)
+    os.close(fd2)
+    os.close(fd)
+    os.remove(path)
+
+
+def test_readinto():
+    path = 'shedskin_test_readinto.txt'
+    with open(path, 'wb') as f:
+        f.write(b'abcdefg')
+    fd = os.open(path, os.O_RDONLY)
+    buf = bytearray(4)
+    assert os.readinto(fd, buf) == 4
+    assert buf == bytearray(b'abcd')
+    assert os.readinto(fd, buf) == 3
+    assert buf == bytearray(b'efgd')
+    assert os.readinto(fd, buf) == 0
+    assert os.readinto(fd, bytearray()) == 0
+    try:
+        os.readinto(fd, b'xyz')
+        assert False
+    except TypeError:
+        pass
+    os.close(fd)
+    try:
+        os.readinto(fd, buf)
+        assert False
+    except OSError:
+        pass
+    os.remove(path)
+
+
+def test_reload_environ():
+    name = 'SHEDSKIN_RELOAD_ENVIRON_TEST'
+    env = os.environ
+    os.putenv(name, 'first')
+    assert name not in os.environ
+    os.reload_environ()
+    assert env[name] == 'first'  # updated in place
+    assert os.getenv(name) == 'first'
+    os.putenv(name, 'second')
+    os.reload_environ()
+    assert os.environ[name] == 'second'
+    os.unsetenv(name)
+    os.reload_environ()
+    assert name not in env
+    try:
+        os.putenv('A=B', 'x')
+        assert False
+    except ValueError:
+        pass
+
+
+def test_getlogin():
+    # fails without a controlling terminal on posix (as in cpython)
+    try:
+        name = os.getlogin()
+        assert len(name) > 0
+    except OSError:
+        pass
+
+
+def test_fdopen_buffering():
+    path = 'shedskin_test_fdopen_buf.txt'
+    fd = os.open(path, os.O_CREAT | os.O_WRONLY, 0o644)
+    f = os.fdopen(fd, 'w', 1)
+    f.write('line\n')
+    f.close()
+    fd = os.open(path, os.O_RDONLY)
+    f = os.fdopen(fd, 'r', buffering=-1)
+    assert f.read() == 'line\n'
+    f.close()
+    os.remove(path)
+
+
+def test_process_constants():
+    assert os.P_WAIT == 0
+    assert os.P_NOWAIT == 1
+    if os.name == 'nt':
+        assert os.P_NOWAITO == 3
+        assert os.P_DETACH == 4
+
+
+def test_process_compile_only():
+    # process creation/termination: compiled on all platforms, but not run
+    # (see test_mod_os_posix for runtime tests)
+    if os.getenv('SHEDSKIN_TEST_NEVER_SET_ABC') is None:
+        return
+    env = {'A': 'B'}
+    prog = 'shedskin_no_such_program'
+    pid = os.spawnv(os.P_NOWAIT, prog, [prog, 'x'])
+    pid = os.spawnve(os.P_NOWAIT, prog, [prog, 'x'], env)
+    pid = os.spawnvp(os.P_NOWAIT, prog, [prog, 'x'])
+    pid = os.spawnvpe(os.P_NOWAIT, prog, [prog, 'x'], env)
+    pid = os.spawnl(os.P_WAIT, prog, prog, 'x')
+    pid, status = os.waitpid(pid, 0)
+    os.kill(pid, 0)
+    os.execv(prog, [prog, 'x'])
+    os.execve(prog, [prog, 'x'], env)
+    os.execvp(prog, [prog, 'x'])
+    os.execvpe(prog, [prog, 'x'], env)
+    os.execl(prog, prog, 'x')
+    os.execlp(prog, prog, 'x')
+    os.abort()
+    os._exit(1)
+
+
 def test_all():
     test_getcwd()
     test_chdir()
@@ -1050,6 +1281,19 @@ def test_all():
     test_device_encoding()
     test_terminal_size()
 
+    test_utime_extended()
+    test_stat_follow_symlinks()
+    test_links()
+    test_dup2_inheritable()
+    test_readinto()
+    test_reload_environ()
+    test_getlogin()
+    test_fdopen_buffering()
+    test_process_constants()
+    test_process_compile_only()
+    test_urandom()
+    test_getrandom()
+
     if os.name == 'posix':  # TODO 'nt'
         test_posix()
         test_env()
@@ -1059,8 +1303,6 @@ def test_all():
         test_lseek()
         test_isatty()
         test_system()
-        test_urandom()
-        test_getrandom()
         test_makedirs_parent_mode()
         test_makedirs_default_parent_mode()
         test_kwarg_names_posix()

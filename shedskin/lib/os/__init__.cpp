@@ -55,6 +55,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <io.h>
+#include <process.h> /* _wexecv, _wspawnv, _cwait */
 #endif
 
 #ifdef __FreeBSD__
@@ -95,6 +96,42 @@ struct __suppress_iph {
 };
 #else
 struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warnings) */
+#endif
+
+#ifdef WIN32
+/* map a win32 error code (GetLastError()) to errno, so __throw_oserror()
+   picks the same OSError subclass as cpython does for the common cases */
+[[noreturn]] static void __throw_winerror(DWORD err, str *fname=0) {
+    switch(err) {
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_PATH_NOT_FOUND:
+        case ERROR_INVALID_NAME:
+        case ERROR_BAD_NETPATH: errno = ENOENT; break;
+        case ERROR_ACCESS_DENIED:
+        case ERROR_SHARING_VIOLATION:
+        case ERROR_LOCK_VIOLATION: errno = EACCES; break;
+        case ERROR_PRIVILEGE_NOT_HELD: errno = EPERM; break;
+        case ERROR_ALREADY_EXISTS:
+        case ERROR_FILE_EXISTS: errno = EEXIST; break;
+        case ERROR_NOT_SAME_DEVICE: errno = EXDEV; break;
+        case ERROR_DIRECTORY: errno = ENOTDIR; break;
+        case ERROR_DIR_NOT_EMPTY: errno = ENOTEMPTY; break;
+        case ERROR_NOT_ENOUGH_MEMORY:
+        case ERROR_OUTOFMEMORY: errno = ENOMEM; break;
+        default: errno = EINVAL; break;
+    }
+    __throw_oserror(fname);
+}
+
+/* str (code points) <-> native wide strings, via std::filesystem::path */
+static std::wstring __to_wide(str *s) {
+    return std::filesystem::path(s->unit).wstring();
+}
+
+static str *__from_wide(const wchar_t *w) {
+    std::u32string u = std::filesystem::path(w).u32string();
+    return new str((const __ss_char *)u.data(), u.size());
+}
 #endif
 
 
@@ -537,6 +574,11 @@ tuple<__ss_int> *namedtuple::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_
 __cstat *stat(str *path) {
     return new __cstat(path, 1);
 }
+__cstat *stat(__ss_bool follow_symlinks, str *path) {
+    if(follow_symlinks)
+        return stat(path);
+    return lstat(path);
+}
 __cstat *lstat(str *path) {
 #ifndef WIN32
     return new __cstat(path, 2);
@@ -740,16 +782,17 @@ __walk_iter *walk(str *top, __ss_bool topdown, void *, __ss_bool followlinks) {
     return new __walk_iter(top, topdown, followlinks);
 }
 
-__ss_bool stat_float_times(__ss_int newvalue) {
-    if(newvalue==0)
-        throw new TypeError(new str("os.stat_float_times: cannot change type"));
-    return True;
-}
-
 void *putenv(str* varname, str* value) {
-    std::stringstream ss;
-    ss << varname->c_str() << '=' << value->c_str();
-    ::putenv(const_cast<char*>(ss.str().c_str()));
+    /* (::putenv() keeps the pointer it is passed, so use the copying variants) */
+    if(varname->unit.empty() || varname->find(new str("=")) != -1)
+        throw new ValueError(new str("illegal environment variable name"));
+#ifdef WIN32
+    if(::_putenv_s(varname->c_str(), value->c_str()) != 0)
+        __throw_oserror(new str("os.putenv"));
+#else
+    if(::setenv(varname->c_str(), value->c_str(), 1) == -1)
+        __throw_oserror(new str("os.putenv"));
+#endif
     return NULL;
 }
 
@@ -913,7 +956,7 @@ __ss_int dup(__ss_int f1) {
     return f2;
 }
 
-__ss_int dup2(__ss_int f1, __ss_int f2) {
+__ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
     int r;
     {
         __suppress_iph guard;
@@ -921,6 +964,13 @@ __ss_int dup2(__ss_int f1, __ss_int f2) {
     }
     if (r == -1)
         __throw_oserror(new str("os.dup2 failed"));
+    /* like cpython: the new descriptor is inheritable unless asked otherwise */
+#ifdef WIN32
+    set_inheritable(f2, inheritable);
+#else
+    if (!inheritable)
+        set_inheritable(f2, False);
+#endif
     return f2;
 }
 
@@ -986,6 +1036,25 @@ __ss_int write(__ss_int fd, bytes *s) {
 }
 
 
+/* like cpython: a single read(2) into a writable buffer (a bytearray) */
+__ss_int readinto(__ss_int fd, bytes *buffer) {
+    if(buffer->frozen)
+        throw new TypeError(new str("readinto() argument 2 must be read-write bytes-like object, not bytes"));
+    size_t n = buffer->unit.size();
+    if(n == 0)
+        return 0;
+    if(n > INT_MAX)
+        n = INT_MAX;
+    decltype(::read(0, 0, 0)) nr;
+    {
+        __suppress_iph guard;
+        nr = ::read((int)fd, &buffer->unit[0], (unsigned int)n);
+    }
+    if(nr < 0)
+        __throw_oserror(new str("os.readinto"));
+    return (__ss_int)nr;
+}
+
 void *close(__ss_int fd) {
    int r;
    {
@@ -1016,86 +1085,131 @@ static void __utime_split(double t, long long &sec, long &nsec) {
     nsec = (long)floatpart;
 }
 
+/* set atime/mtime of path, as whole seconds plus nanoseconds */
 #ifdef WIN32
 /* win32 implementation based on cpython */
 
 static __int64 secs_between_epochs = 11644473600; /* Seconds between 1.1.1601 and 1.1.1970 */
 
 static void
-time_t_to_FILE_TIME(time_t time_in, int nsec_in, FILETIME *out_ptr)
+time_t_to_FILE_TIME(long long time_in, long nsec_in, FILETIME *out_ptr)
 {
-    /* XXX endianness */
-    __int64 out;
-    out = time_in + secs_between_epochs;
-    out = out * 10000000 + nsec_in / 100;
-    memcpy(out_ptr, &out, sizeof(out));
+    ULARGE_INTEGER out;
+    out.QuadPart = (ULONGLONG)((time_in + secs_between_epochs) * 10000000 + nsec_in / 100);
+    out_ptr->dwLowDateTime = out.LowPart;
+    out_ptr->dwHighDateTime = out.HighPart;
 }
 
-void __utime_win32(str *path, FILETIME atime, FILETIME mtime) {
+static void __utime_win32(str *path, FILETIME *atime, FILETIME *mtime) {
     HANDLE hFile;
-    const char *apath = path->c_str();
-    hFile = CreateFileA(apath, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    hFile = CreateFileW(__to_wide(path).c_str(), FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-       __throw_oserror(new str("os.utime"));
-    if (!SetFileTime(hFile, NULL, &atime, &mtime))
-       __throw_oserror(new str("os.utime"));
+       __throw_winerror(GetLastError(), path);
+    if (!SetFileTime(hFile, NULL, atime, mtime)) {
+       DWORD err = GetLastError();
+       CloseHandle(hFile);
+       __throw_winerror(err, path);
+    }
     CloseHandle(hFile);
 }
 
-void __utime(str *path) {
-    SYSTEMTIME now;
-    FILETIME atime, mtime;
-    GetSystemTime(&now);
-    if (!SystemTimeToFileTime(&now, &mtime) ||
-        !SystemTimeToFileTime(&now, &atime)) {
-        __throw_oserror(new str("os.utime"));
-    }
-    __utime_win32(path, atime, mtime);
+void *__utime_now(str *path) {
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    __utime_win32(path, &now, &now);
+    return NULL;
 }
-void __utime(str *path, double actime, double modtime) {
-    long long atimesec, mtimesec;
-    long atimensec, mtimensec;
+
+static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec) {
     FILETIME atime, mtime;
-    __utime_split(actime, atimesec, atimensec);
-    __utime_split(modtime, mtimesec, mtimensec);
-    time_t_to_FILE_TIME((time_t)atimesec, (int)atimensec, &atime);
-    time_t_to_FILE_TIME((time_t)mtimesec, (int)mtimensec, &mtime);
-    __utime_win32(path, atime, mtime);
+    time_t_to_FILE_TIME(asec, ansec, &atime);
+    time_t_to_FILE_TIME(msec, mnsec, &mtime);
+    __utime_win32(path, &atime, &mtime);
 }
 
 #else
-void __utime(str *path, double actime, double modtime) {
+static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec) {
     struct timespec ts[2];
-    long long sec;
-    long nsec;
-    __utime_split(actime, sec, nsec);
-    ts[0].tv_sec = (time_t)sec;
-    ts[0].tv_nsec = nsec;
-    __utime_split(modtime, sec, nsec);
-    ts[1].tv_sec = (time_t)sec;
-    ts[1].tv_nsec = nsec;
+    ts[0].tv_sec = (time_t)asec;
+    ts[0].tv_nsec = ansec;
+    ts[1].tv_sec = (time_t)msec;
+    ts[1].tv_nsec = mnsec;
     if(::utimensat(AT_FDCWD, path->c_str(), ts, 0) == -1)
-        __throw_oserror(new str("os.utime"));
+        __throw_oserror(path);
 }
 
-void __utime(str *path) {
-    if(::utime(path->c_str(), NULL) == -1)
-        __throw_oserror(new str("os.utime"));
+void *__utime_now(str *path) {
+    if(::utimensat(AT_FDCWD, path->c_str(), NULL, 0) == -1)
+        __throw_oserror(path);
+    return NULL;
 }
 #endif
 
-#define HOPPA if (times) __utime(path, (double)times->__getfirst__(), (double)times->__getsecond__()); else __utime(path); return NULL;
+void *__utime_float(str *path, __ss_float atime, __ss_float mtime) {
+    long long asec, msec;
+    long ansec, mnsec;
+    __utime_split((double)atime, asec, ansec);
+    __utime_split((double)mtime, msec, mnsec);
+    __utime_set(path, asec, ansec, msec, mnsec);
+    return NULL;
+}
 
-void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<__ss_int, __ss_float> *times) { HOPPA }
-void *utime(str *path, tuple2<__ss_float, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<__ss_float, __ss_float> *times) { HOPPA }
+/* split nanoseconds into seconds and nanoseconds (floor division) */
+static void __utime_split_ns(__ss_int t, long long &sec, long &nsec) {
+    long long v = (long long)t;
+    sec = v / 1000000000LL;
+    long long r = v % 1000000000LL;
+    if (r < 0) {
+        r += 1000000000LL;
+        sec -= 1;
+    }
+    nsec = (long)r;
+}
 
-#undef HOPPA
+void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns) {
+    long long asec, msec;
+    long ansec, mnsec;
+    __utime_split_ns(atime_ns, asec, ansec);
+    __utime_split_ns(mtime_ns, msec, mnsec);
+    __utime_set(path, asec, ansec, msec, mnsec);
+    return NULL;
+}
+
+void __utime_error(const char *msg) {
+    if (strstr(msg, "not both"))
+        throw new ValueError(new str(msg));
+    throw new TypeError(new str(msg));
+}
+
+void *utime(void *, str *path, void *) {
+    return __utime_now(path);
+}
 
 bytes *urandom(__ss_int n) {
 #ifdef WIN32
-    throw new NotImplementedError();  // TODO use bcrypt.h..
+    /* like cpython: BCryptGenRandom with the system-preferred rng; looked up
+       at run-time, so no extra link library is needed */
+    typedef LONG (WINAPI *genrandom_t)(void *, PUCHAR, ULONG, ULONG);
+    static genrandom_t genrandom = NULL;
+    if(n < 0)
+        throw new ValueError(new str("negative argument not allowed"));
+    if(!genrandom) {
+        HMODULE lib = LoadLibraryA("bcrypt.dll");
+        if(lib)
+            genrandom = (genrandom_t)(void *)GetProcAddress(lib, "BCryptGenRandom");
+        if(!genrandom)
+            __throw_winerror(GetLastError());
+    }
+    bytes *s = new bytes();
+    s->unit.resize((size_t)n);
+    size_t done = 0;
+    while(done < (size_t)n) {
+        ULONG chunk = (ULONG)std::min((size_t)n - done, (size_t)0x40000000);
+        if(genrandom(NULL, (PUCHAR)&s->unit[done], chunk, 0x00000002 /* BCRYPT_USE_SYSTEM_PREFERRED_RNG */) < 0)
+            throw new OSError(new str("os.urandom"));
+        done += chunk;
+    }
+    return s;
 #else
     __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
     bytes *s = read(fd, n);
@@ -1108,7 +1222,7 @@ bytes *urandom(__ss_int n) {
  * syscall in CPython, with flags (GRND_NONBLOCK, GRND_RANDOM) that have no
  * portable meaning. Rather than special-case a raw syscall() on Linux only,
  * we implement it on top of the same cross-platform source urandom() already
- * uses (/dev/urandom on POSIX, NotImplementedError on Windows for now), so
+ * uses (/dev/urandom on POSIX, BCryptGenRandom on Windows), so
  * behavior is consistent across platforms; flags is accepted but ignored. */
 bytes *getrandom(__ss_int size, __ss_int flags) {
     return urandom(size);
@@ -1592,6 +1706,176 @@ __vfsstat *fstatvfs(__ss_int fd) {
 
 #endif /* WIN32 */
 
+#ifdef WIN32
+/* windows versions of posix functionality that cpython also offers there */
+
+/* like cpython: CTRL_C_EVENT/CTRL_BREAK_EVENT go to the console process
+   group, anything else terminates the process with sig as its exit code */
+void *kill(__ss_int pid, __ss_int sig) {
+    if (sig == CTRL_C_EVENT || sig == CTRL_BREAK_EVENT) {
+        if (!GenerateConsoleCtrlEvent((DWORD)sig, (DWORD)pid))
+            __throw_winerror(GetLastError());
+        return NULL;
+    }
+    HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)pid);
+    if (handle == NULL)
+        __throw_winerror(GetLastError());
+    if (!TerminateProcess(handle, (UINT)sig)) {
+        DWORD err = GetLastError();
+        CloseHandle(handle);
+        __throw_winerror(err);
+    }
+    CloseHandle(handle);
+    return NULL;
+}
+
+/* like cpython: pid is a process handle (as returned by spawn*(P_NOWAIT)),
+   and the exit code is shifted left by 8 bits in the returned status */
+tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
+    int status = 0;
+    intptr_t res;
+    {
+        __suppress_iph guard;
+        res = ::_cwait(&status, (intptr_t)pid, (int)options);
+    }
+    if (res == -1)
+        __throw_oserror(new str("os.waitpid"));
+    return new tuple<__ss_int>(2, (__ss_int)res, (__ss_int)(((unsigned long long)(unsigned int)status) << 8));
+}
+
+void *link(str *src, str *dst) {
+    if (!CreateHardLinkW(__to_wide(dst).c_str(), __to_wide(src).c_str(), NULL))
+        __throw_winerror(GetLastError(), src);
+    return NULL;
+}
+
+str *readlink(str *path) {
+    std::error_code ec;
+    std::filesystem::path target = std::filesystem::read_symlink(std::filesystem::path(path->unit), ec);
+    if (ec) {
+        std::error_condition c = ec.default_error_condition();
+        errno = (c.category() == std::generic_category()) ? c.value() : EINVAL;
+        __throw_oserror(path);
+    }
+    std::u32string u = target.u32string();
+    return new str((const __ss_char *)u.data(), u.size());
+}
+
+str *getlogin() {
+    wchar_t buffer[257]; /* UNLEN + 1 */
+    DWORD size = 257;
+    if (!GetUserNameW(buffer, &size))
+        __throw_winerror(GetLastError());
+    return __from_wide(buffer);
+}
+
+/* argument and environment vectors for the wide crt exec/spawn functions */
+struct __wide_vector {
+    std::vector<std::wstring> strings;
+    std::vector<const wchar_t *> pointers;
+
+    __wide_vector(list<str *> *args) {
+        for (size_t i = 0; i < args->units.size(); i++)
+            strings.push_back(__to_wide(args->units[i]));
+        finish();
+    }
+    __wide_vector(dict<str *, str *> *env) {
+        for (auto const& [k, v] : env->gcd)
+            strings.push_back(__to_wide(__add_strs(3, k, new str("="), v)));
+        finish();
+    }
+    void finish() {
+        for (size_t i = 0; i < strings.size(); i++)
+            pointers.push_back(strings[i].c_str());
+        pointers.push_back(NULL);
+    }
+    const wchar_t *const *data() { return pointers.data(); }
+};
+
+static void __check_exec_args(list<str *> *args, const char *func) {
+    if (args->units.empty())
+        throw new ValueError(new str((std::string(func) + " arg 2 must not be empty").c_str()));
+    if (args->units[0]->unit.empty())
+        throw new ValueError(new str((std::string(func) + " arg 2 first element cannot be empty").c_str()));
+}
+
+void *execv(str *file, list<str *> *args) {
+    __check_exec_args(args, "execv()");
+    __wide_vector argv(args);
+    {
+        __suppress_iph guard;
+        ::_wexecv(__to_wide(file).c_str(), argv.data());
+    }
+    __throw_oserror(new str("os.execv"));
+}
+
+void *execvp(str *file, list<str *> *args) {
+    __check_exec_args(args, "execvp()");
+    __wide_vector argv(args);
+    {
+        __suppress_iph guard;
+        ::_wexecvp(__to_wide(file).c_str(), argv.data());
+    }
+    __throw_oserror(new str("os.execvp"));
+}
+
+void *execve(str *file, list<str *> *args, dict<str *, str *> *env) {
+    __check_exec_args(args, "execve()");
+    __wide_vector argv(args), envp(env);
+    {
+        __suppress_iph guard;
+        ::_wexecve(__to_wide(file).c_str(), argv.data(), envp.data());
+    }
+    __throw_oserror(new str("os.execve"));
+}
+
+void *execvpe(str *file, list<str *> *args, dict<str *, str *> *env) {
+    __check_exec_args(args, "execvpe()");
+    __wide_vector argv(args), envp(env);
+    {
+        __suppress_iph guard;
+        ::_wexecvpe(__to_wide(file).c_str(), argv.data(), envp.data());
+    }
+    __throw_oserror(new str("os.execvpe"));
+}
+
+/* like cpython: P_WAIT returns the exit code, P_NOWAIT a process handle */
+static __ss_int __spawn_result(intptr_t r, const char *func) {
+    if (r == -1)
+        __throw_oserror(new str(func));
+    return (__ss_int)r;
+}
+
+__ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
+    __check_exec_args(args, "spawnv()");
+    __wide_vector argv(args);
+    __suppress_iph guard;
+    return __spawn_result(::_wspawnv((int)mode, __to_wide(file).c_str(), argv.data()), "os.spawnv");
+}
+
+__ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
+    __check_exec_args(args, "spawnvp()");
+    __wide_vector argv(args);
+    __suppress_iph guard;
+    return __spawn_result(::_wspawnvp((int)mode, __to_wide(file).c_str(), argv.data()), "os.spawnvp");
+}
+
+__ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __check_exec_args(args, "spawnve()");
+    __wide_vector argv(args), envp(env);
+    __suppress_iph guard;
+    return __spawn_result(::_wspawnve((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()), "os.spawnve");
+}
+
+__ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __check_exec_args(args, "spawnvpe()");
+    __wide_vector argv(args), envp(env);
+    __suppress_iph guard;
+    return __spawn_result(::_wspawnvpe((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()), "os.spawnvpe");
+}
+
+#endif /* WIN32 */
+
 /* getpid/getppid/access/fsync/ftruncate/times are declared unconditionally
    in __init__.hpp: posix versions first, then the win32 equivalents. */
 #ifndef WIN32
@@ -2040,20 +2324,21 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
 
 /* symlink is declared unconditionally in __init__.hpp */
 #ifdef WIN32
-void *symlink(str *src, str *dst) {
-    /* like cpython: pick the directory flag when the target is a directory */
+void *symlink(str *src, str *dst, __ss_bool target_is_directory) {
+    /* like cpython: pick the directory flag when asked to, or when the
+       target exists and is a directory */
     std::error_code ec;
     std::filesystem::path target = std::filesystem::path(dst->unit).parent_path() / src->unit;
-    DWORD flags = std::filesystem::is_directory(target, ec) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
+    DWORD flags = (target_is_directory || std::filesystem::is_directory(target, ec)) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
 #ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
     flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 #endif
-    if(!CreateSymbolicLinkA(dst->c_str(), src->c_str(), flags))
-        throw new OSError(new str("os.symlink"));
+    if(!CreateSymbolicLinkW(__to_wide(dst).c_str(), __to_wide(src).c_str(), flags))
+        __throw_winerror(GetLastError(), dst);
     return NULL;
 }
 #else
-void *symlink(str *src, str *dst) {
+void *symlink(str *src, str *dst, __ss_bool) { /* target_is_directory: windows only */
     if(::symlink(src->c_str(), dst->c_str()) == -1)
         __throw_oserror(new str("os.symlink"));
     return NULL;
@@ -2203,125 +2488,6 @@ __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *
     return pid;
 }
 
-tuple<file *> *popen2(str* cmd) {
-    return popen2(cmd, new str("t"), -1);
-}
-
-tuple<file *> *popen2(pyiter<str *> *cmd_l) {
-    return popen2(cmd_l, new str("t"), -1);
-}
-
-tuple<file *> *popen2(pyiter<str *> *cmd_i, str *, __ss_int) {
-    list<str *> *cmd_l = new list<str *>(cmd_i);
-    // TODO what if there is not even 1 element in cmd_l ?
-    tuple<__ss_int>* p2c = pipe();
-    tuple<__ss_int>* c2p = pipe();
-
-    __ss_int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-
-        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-        execvp(cmd_l->__getitem__(0), cmd_l); /* XXX pass cmd_i? */
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-
-    tuple<file *> *ret = new tuple<file *>();
-    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-
-    return ret;
-}
-tuple<file *> *popen2(str* cmd, str*, __ss_int) {
-    list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-             new str("-c"), cmd);
-    return popen2(cmd_l);
-}
-
-tuple<file *> *popen3(str* cmd) {
-    return popen3(cmd, new str("t"), -1);
-}
-
-
-tuple<file *> *popen3(str* cmd, str*, __ss_int) {
-    tuple<__ss_int>* p2c = pipe();
-    tuple<__ss_int>* c2p = pipe();
-    tuple<__ss_int>* erp = pipe();
-
-    __ss_int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-        dup2( erp->__getsecond__(), 2);
-
-        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-    close(erp->__getsecond__());
-
-    return new tuple<file *>(3,fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")), fdopen(erp->__getfirst__(), new str("r")) );
-}
-
-tuple<file *> *popen4(str* cmd) {
-    return popen4(cmd, new str("t"), -1);
-}
-
-tuple<file *> * popen4(str* cmd, str*, __ss_int) {
-    tuple<__ss_int>* p2c = pipe();
-    tuple<__ss_int>* c2p = pipe();
-
-    __ss_int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-        dup2( c2p->__getsecond__(), 2);
-
-        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-
-    tuple<file *> *ret = new tuple<file *>();
-    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-
-    return ret;
-
-}
-
 #endif
 
 /* pipe is declared unconditionally in __init__.hpp */
@@ -2344,6 +2510,26 @@ tuple<__ss_int>* pipe() {
     return new tuple<__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);
 }
 
+/* like cpython: update os.environ in place from the process environment,
+   so references to it stay valid */
+void *reload_environ() {
+    __ss_environ->clear();
+    str *eq = new str("=");
+    for (__ss_int n = 0; environ[n]; n++) {
+        str *line = new str(environ[n]);
+        __ss_int pos = line->find(eq);
+#ifdef WIN32
+        /* skip the hidden per-drive '=C:=C:\\...' entries, like cpython */
+        if (pos == 0)
+            pos = line->find(eq, 1);
+#endif
+        if (pos <= 0)
+            continue;
+        __ss_environ->__setitem__(line->__slice__(2, 0, pos, 0), line->__slice__(1, (pos+1), 0, 0));
+    }
+    return NULL;
+}
+
 void __init() {
     cl___cstat = new class_("__cstat");
     cl_DirEntry = new class_("DirEntry");
@@ -2360,12 +2546,7 @@ void __init() {
 #endif
 
     __ss_environ = new dict<str *, str *>();
-
-    for (__ss_int n = 0; environ[n]; n++) {
-        str *line = new str(environ[n]);
-        __ss_int pos = line->find(new str("="));
-        __ss_environ->__setitem__(line->__slice__(2, 0, pos, 0), line->__slice__(1, (pos+1), 0, 0));
-    }
+    reload_environ();
 
     __path__::__init(); /* ugh */
 
@@ -2548,11 +2729,19 @@ void __init() {
     __ss_EX_NOTFOUND = EX_NOTFOUND;
 #endif
 
-    __ss_P_WAIT = 0; /* XXX */
+#ifdef WIN32
+    __ss_P_WAIT = _P_WAIT;
+    __ss_P_NOWAIT = _P_NOWAIT;
+    __ss_P_NOWAITO = _P_NOWAITO;
+    __ss_P_OVERLAY = _P_OVERLAY;
+    __ss_P_DETACH = _P_DETACH;
+#else
+    __ss_P_WAIT = 0;
     __ss_P_NOWAIT = 1;
     __ss_P_NOWAITO = 1;
-    __ss_P_OVERLAY = 2;
-    __ss_P_DETACH = 3;
+    __ss_P_OVERLAY = 2; /* (windows only in cpython) */
+    __ss_P_DETACH = 3; /* (windows only in cpython) */
+#endif
 
 #ifdef SEEK_CUR
     __ss_SEEK_CUR = SEEK_CUR;

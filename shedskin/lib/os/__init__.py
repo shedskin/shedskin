@@ -237,7 +237,7 @@ def system(command):
 def strerror(code):
     return ''
 
-def stat(path):
+def stat(path, __kw_follow_symlinks=True):
     return __cstat()
 
 def lstat(path):
@@ -315,9 +315,6 @@ def tcgetpgrp(fd):
 def tcsetpgrp(fd, pgid):
     pass
 
-def stat_float_times(n=False):
-    return True
-
 def putenv(name, value):
     pass
 
@@ -338,15 +335,6 @@ def renames(old, new):
 
 def popen(cmd, mode=None, buffering=-1):
     return popen_pipe('')
-
-def popen2(cmd, mode=None, bufsize=-1):
-    return ( file('/bin/sh'), file('/bin/sh') )
-
-def popen3(cmd, mode=None, bufsize=-1):
-    return ( file('/bin/sh'), file('/bin/sh'), file('/bin/sh') )
-
-def popen4(cmd, mode=None, bufsize=-1):
-    return ( file('/bin/sh'), file('/bin/sh') )
 
 def close(fd):
     pass
@@ -396,6 +384,12 @@ def read(fd, length):
 def write(fd, data):
     return 1
 
+def readinto(fd, buffer):
+    return 1
+
+def reload_environ():
+    pass
+
 def fdopen(fd, mode=None, buffering=-1):
     return file('/bin/sh')
 
@@ -405,7 +399,7 @@ def pipe():
 def dup(fd):
     return 1
 
-def dup2(fd, fd2):
+def dup2(fd, fd2, inheritable=True):
     return 1
 
 def fchdir(fd):
@@ -462,7 +456,7 @@ def lchown(path, uid, gid):
 def link(src, dst):
     pass
 
-def symlink(src, dst):
+def symlink(src, dst, target_is_directory=False):
     pass
 
 def nice(increment):
@@ -561,7 +555,7 @@ def urandom(size):
 def getrandom(size, flags=0):
     return b''
 
-def utime(path, times):
+def utime(path, times=None, __kw_ns=None):
     pass
 
 def access(path, mode):
