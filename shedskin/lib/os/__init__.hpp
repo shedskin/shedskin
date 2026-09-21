@@ -88,6 +88,7 @@ public:
 };
 
 __cstat *stat(str *path);
+__cstat *stat(__ss_bool follow_symlinks, str *path); /* follow_symlinks is keyword-only */
 __cstat *lstat(str *path);
 __cstat *fstat(__ss_int fd);
 
@@ -143,7 +144,6 @@ template<class R, class A> __walk_iter *walk(str *top, __ss_bool topdown, R (*on
     return new __walk_iter(top, topdown, followlinks, [onerror](OSError *e) { onerror(e); });
 }
 
-__ss_bool stat_float_times(__ss_int newvalue=-1);
 str *strerror(__ss_int i);
 
 void *putenv(str* varname, str* value);
@@ -153,12 +153,14 @@ void *fchmod(__ss_int fd, __ss_int mode);
 void *renames(str* old, str* _new);
 tuple2<__ss_int,__ss_int>* pipe();
 __ss_int dup(__ss_int f1);
-__ss_int dup2(__ss_int f1, __ss_int f2);
+__ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable=True);
 void *close(__ss_int fd);
 __ss_int open(str *name_, __ss_int flags, __ss_int mode=0777);
 file* fdopen(__ss_int fd, str* mode=NULL, __ss_int bufsize=-1);
 bytes *read(__ss_int fd, __ss_int n);
 __ss_int write(__ss_int fd, bytes *s);
+__ss_int readinto(__ss_int fd, bytes *buffer);
+void *reload_environ();
 
 class popen_pipe : public file {
 public:
@@ -174,10 +176,29 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize);
 
 void _exit(__ss_int code);
 
-void *utime(str *path, tuple2<__ss_int, __ss_int> *times);
-void *utime(str *path, tuple2<__ss_int, __ss_float> *times);
-void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
-void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
+/* os.utime(path, times=None, *, ns=None): the keyword-only ns comes first */
+void *__utime_now(str *path);
+void *__utime_float(str *path, __ss_float atime, __ss_float mtime);
+void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns);
+[[noreturn]] void __utime_error(const char *msg);
+
+template<class T> inline void __utime_check_pair(T *t, const char *msg) {
+    if(t->__len__() != 2)
+        __utime_error(msg);
+}
+
+void *utime(void *ns, str *path, void *times);
+template<class T> void *utime(void *, str *path, T *times) {
+    __utime_check_pair(times, "utime: 'times' must be either a tuple of two numbers or None");
+    return __utime_float(path, (__ss_float)times->__getfirst__(), (__ss_float)times->__getsecond__());
+}
+template<class N> void *utime(N *ns, str *path, void *) {
+    __utime_check_pair(ns, "utime: 'ns' must be a tuple of two ints");
+    return __utime_ns(path, (__ss_int)ns->__getfirst__(), (__ss_int)ns->__getsecond__());
+}
+template<class N, class T> void *utime(N *, str *, T *) {
+    __utime_error("utime: you may specify either 'times' or 'ns' but not both");
+}
 
 bytes *urandom(__ss_int n);
 bytes *getrandom(__ss_int size, __ss_int flags=0);
@@ -188,7 +209,7 @@ void *unsetenv(str* var);
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
 /* available on both posix and windows (windows versions in __init__.cpp) */
-void *symlink(str *src, str *dst);
+void *symlink(str *src, str *dst, __ss_bool target_is_directory=False);
 __ss_int getpid();
 __ss_int getppid();
 void *ftruncate(__ss_int fd, __ss_int n);
@@ -248,15 +269,12 @@ public:
 
 terminal_size *get_terminal_size(__ss_int fd=1);
 
-#ifndef WIN32
-__ss_int __ss_WCOREDUMP(__ss_int status);
-__ss_int __ss_WEXITSTATUS(__ss_int status);
-__ss_int __ss_WIFCONTINUED(__ss_int status);
-__ss_int __ss_WIFEXITED(__ss_int status);
-__ss_int __ss_WIFSIGNALED(__ss_int status);
-__ss_int __ss_WIFSTOPPED(__ss_int status);
-__ss_int __ss_WSTOPSIG(__ss_int status);
-__ss_int __ss_WTERMSIG(__ss_int status);
+/* process management and links, available on both posix and windows */
+void *kill(__ss_int pid, __ss_int sig);
+tuple2<__ss_int, __ss_int> *waitpid(__ss_int pid, __ss_int options);
+void *link(str *src, str *dst);
+str *readlink(str *path);
+str *getlogin();
 
 void *execv(str *file, list<str*> *args);
 void *execvp(str *file, list<str*> *args);
@@ -323,17 +341,15 @@ template <class ... Args> __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file
 }
 
 
-tuple2<file*,file*>* popen2(str* cmd);
-tuple2<file*,file*>* popen2(str* cmd, str* mode, __ss_int bufsize);
-
-tuple2<file*,file*>* popen2(pyiter<str *> *cmd, str *mode, __ss_int bufsize);
-tuple2<file*,file*>* popen2(pyiter<str *> *cmd);
-
-tuple2<file*,file*>* popen3(str* cmd);
-tuple2<file*,file*>* popen3(str* cmd, str* mode, __ss_int bufsize);
-
-tuple2<file*,file*>* popen4(str* cmd);
-tuple2<file*,file*>* popen4(str* cmd, str* mode, __ss_int bufsize);
+#ifndef WIN32
+__ss_int __ss_WCOREDUMP(__ss_int status);
+__ss_int __ss_WEXITSTATUS(__ss_int status);
+__ss_int __ss_WIFCONTINUED(__ss_int status);
+__ss_int __ss_WIFEXITED(__ss_int status);
+__ss_int __ss_WIFSIGNALED(__ss_int status);
+__ss_int __ss_WIFSTOPPED(__ss_int status);
+__ss_int __ss_WSTOPSIG(__ss_int status);
+__ss_int __ss_WTERMSIG(__ss_int status);
 
 extern class_ *cl___vfsstat;
 class __vfsstat : public namedtuple {
@@ -371,13 +387,10 @@ __ss_int tcgetpgrp(__ss_int fd);
 void *tcsetpgrp(__ss_int fd, __ss_int pg);
 
 void *lchown(str *path, __ss_int uid, __ss_int gid);
-void *link(str *src, str *dst);
 
 list<__ss_int> *getgroups();
 void *setgroups(pyseq<__ss_int> *groups);
-str *getlogin();
 
-str *readlink(str *path);
 void *fchdir(__ss_int f1);
 void *fdatasync(__ss_int f1);
 void *chown(str *path, __ss_int uid, __ss_int gid);
@@ -420,11 +433,9 @@ tuple2<__ss_int, __ss_int> *forkpty();
 tuple2<__ss_int, __ss_int> *openpty();
 
 tuple2<__ss_int, __ss_int> *wait();
-tuple2<__ss_int, __ss_int> *waitpid(__ss_int pid, __ss_int options);
 
 __ss_int nice(__ss_int n);
 
-void *kill(__ss_int pid, __ss_int sig);
 void *killpg(__ss_int pgid, __ss_int sig);
 
 __ss_int pathconf(str *path, str *name_);
