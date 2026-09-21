@@ -11,8 +11,26 @@ report of suspicions.
 
 ## Setup
 
+The container may not have the repo in it. Check before assuming a working
+directory — in a fresh remote container `/home/user/shedskin` has not existed:
+
 ```bash
+[ -d /home/user/shedskin ] || git clone https://github.com/shedskin/shedskin.git /home/user/shedskin
+cd /home/user/shedskin
 ./.claude/setup.sh      # installs libgc/pcre, pip install -e .
+```
+
+**Do not trust setup.sh's exit code or its "ready" line.** Its install guard is
+`python3 -c 'import shedskin' || pip install -e "$repo_root"`, and because the
+script runs from the repo root, `import shedskin` resolves to the source tree via
+cwd and always succeeds — so `pip install -e` never runs. On a machine where
+shedskin was not already installed this leaves it uninstalled while the script
+still prints `setup.sh: ready (shedskin )` and exits 0. Verify for yourself and
+install by hand if needed:
+
+```bash
+python3 -c 'import importlib.metadata as m; print(m.version("shedskin"))' || pip install -e .
+which shedskin
 ```
 
 Always work from the latest `main` unless told otherwise:
@@ -44,13 +62,23 @@ self-contained `.py` file that prints its results; shedskin's own test suite
 uses `assert`, but **printing is better for hunting** — an assert only tells you
 something broke, printed output tells you exactly how the two runtimes diverge.
 
+`shedskin` and `make` generate files next to the `.py`, so **every probe needs
+its own directory** — and you have to create it, `mktemp -d` only made
+`$SCRATCH`:
+
 ```bash
 mkdir -p "$SCRATCH/probe" && cd "$SCRATCH/probe"   # one dir per probe
 python3 probe.py > cpython.txt 2>&1          # reference behaviour
-shedskin translate probe.py && make          # translate + compile
+timeout 120 shedskin translate probe.py && make   # translate + compile
 ./probe > shedskin.txt 2>&1
 diff cpython.txt shedskin.txt                # a difference is a candidate defect
 ```
+
+Two harness facts that will bite you otherwise: the shell's working directory
+**does not persist between tool calls**, so begin every command with an absolute
+`cd`; and wrapping `shedskin translate` in `timeout` turns a non-terminating type
+analysis into exit 124 instead of a blocked run (a hang is itself a defect —
+report it).
 
 Four distinct failure modes, all worth reporting:
 
@@ -68,12 +96,19 @@ down to the smallest program that still reproduces before reporting.
 - **Never run the whole test suite.** It takes about an hour. Use
   `shedskin translate` on individual probes, or at most a few related test sets
   via `shedskin runtests --include <regex>`.
+- **Read `docs/documentation.md` "Python Subset Restrictions" before you probe**,
+  and put it in every subagent's brief. shedskin supports a subset on purpose,
+  and a divergence from a documented non-feature is not a defect. That list
+  currently rules out `eval`/`getattr`/`isinstance`, arbitrary-precision
+  integers, `*args`/`**kwargs`, **ordered dicts**, multiple inheritance, nested
+  functions and classes, closures, full unicode, and inheritance from builtins.
+  Ordered dicts is the expensive one: dict insertion order and `popitem()` LIFO
+  look like serious CPython divergences, and agents who have not read that list
+  reliably report them as top-severity findings that then have to be thrown away.
 - **Ignore empty-list/empty-container inference issues.** Known weak spot,
   deliberately out of scope.
 - The `tests/skip_*` directories are known-unsupported; don't report those.
 - Check `tests/errs/` — those are expected-error cases, not defects.
-- Make sure to understand the Shedskin limitations as described in the
-  documentation.
 - Not mentioned in the documentation perhaps: evaluation order in C++ may be
   different from that in CPython.
 - Before reporting, search existing open issues for a duplicate/very similar
@@ -166,8 +201,17 @@ defect worth reporting.
 ## Cross-checking flags
 
 Behaviour that differs only under a flag is a defect too. When a probe passes
-cleanly, it is cheap to re-run it under `--int32`, `--int64`, `--nogc`, or
-`-b` (bounds checking) and diff again.
+cleanly, it is cheap to re-run it under `--int32`, `--int64`, `--nogc`, `-b`,
+`--predict`, `--boost`, `-w` or `-z` and diff again.
+
+Mind what the disabling flags actually mean — they are all *off* switches, and
+reading them the other way produces confident false positives. `-b` is
+`--nobounds`: it turns bounds checking **off**, so out-of-range indexing
+returning garbage or a NUL byte under `-b` is by design. Likewise `-w`
+(`--nowrap`) drops wrap-around checking on negative indices, `-z` (`--nozero`)
+makes division by zero undefined, and `--noassert` removes `assert`s. Narrowing
+flags lose information on purpose too: `--int32` overflowing at 2**31 and
+`--float32` printing `0.33333334` are not defects.
 
 ## Reading the source for defects
 
@@ -218,12 +262,26 @@ get either, say so rather than reporting valgrind noise as a finding.
 ## Going wide
 
 A thorough hunt is many independent probes, and probes do not depend on each
-other. Fan out with subagents — one per focus area — each building and running
-its own probes in its own scratch directory, then collect and confirm their
-findings yourself before writing the report. Re-run every candidate defect
-yourself before it goes in the issue.
+other. Fan out with subagents, each building and running its own probes in its
+own scratch directory, then collect and confirm their findings yourself before
+writing the report. Re-run every candidate defect yourself before it goes in the
+issue.
+
+The budget's "at most 3 focus areas" and "at most 6 subagents" reconcile by
+*splitting* a broad area across two agents — "library modules" into
+string/data and numeric/time, say — not by taking on more areas. Give each
+agent its own scratch directory and tell it explicitly which findings other
+agents have already reported, or two of them will hand you the same bug.
 
 ## The report
+
+**One run produces exactly one report.** Everything the run found goes in it —
+including anything turned up by follow-up work after you have already drafted
+it. If you find more after drafting, fold it into the same report and deliver
+the whole thing again; never leave findings spread across two reports, two
+messages or two files. A maintainer who is not watching the session sees only
+what is delivered, and a second partial report does not add to the first, it
+competes with it.
 
 Write the report once, then deliver it three ways. Do all three — they fail
 independently, and between them one always gets through.
@@ -237,10 +295,18 @@ push — the file still shows in the session's diff, where it can be read and
 downloaded, and it is ready to push the moment access allows.
 
 **2. A GitHub issue** against `shedskin/shedskin`, titled
-`Weekly defect report — <date>`. If filing fails with a 403, the Claude GitHub
-App is not installed on the shedskin org. Do not retry it or look for a way
-around it. Note it in one line at the top of the report and carry on — reading
-the tracker still works, so duplicate-checking is unaffected.
+`Weekly defect report — <date>`. If filing fails with a 403, note it in one line
+at the top of the report and carry on — reading the tracker still works, so
+duplicate-checking is unaffected. Do not retry it or look for a way around it.
+Two different 403s are possible and neither is actionable from inside the run:
+GitHub's own, meaning the Claude GitHub App is not installed on the shedskin
+org; or the API proxy's, which reads `GitHub access to this repository is not
+enabled for this session. Use add_repo to request access.` If you get the
+second, do **not** go looking for `add_repo` — it is not among the available
+tools in this environment. The same authorization gap also blocks `git push`
+(`access denied by the git proxy: shedskin/shedskin is not in this session's
+authorized repository set`), so delivery 1 may end at the commit; say so rather
+than retrying.
 
 **3. Your final message**, which is what reaches the maintainer by email. This
 one is not optional and it must be genuinely last: the turn ending is what
@@ -248,7 +314,14 @@ sends the mail, so anything you do afterwards means the mail arrived before the
 work stopped. Write the file and file the issue *first*, then end the turn with
 the full report.
 
-Structure it the same way in all three:
+When the run is a scheduled routine rather than someone sitting at the terminal,
+`PushNotification` is what puts it in front of them — banner and inbox — so send
+it too, with the report inside `<routine_summary>` tags. Note that it and the
+final message are two deliveries of one report, not two reports: if you notify
+and then keep working, the next notification must carry the *whole* updated
+report, not just the new part.
+
+Structure it the same way everywhere:
 
 - **Run cost** — wall clock, tokens and dollars, and the fan-out used (see
   below).
@@ -261,8 +334,8 @@ Structure it the same way in all three:
   and why it did not reproduce.
 - **Areas checked, nothing found** — so the next run can skip them.
 
-If a run finds nothing, write and file it anyway and say so. A clean week is a
-useful signal, and the "areas checked" list still compounds.
+If a run finds nothing, write it, file it and send it anyway, and say so. A
+clean week is a useful signal, and the "areas checked" list still compounds.
 
 ## Reporting the run's cost
 
@@ -273,8 +346,10 @@ against real numbers rather than guesses:
 - **Tokens and dollars** — call the `get_session` tool (Claude Code Remote MCP)
   with `session_id` omitted and read `external_metadata.usage` (input, output and
   cache token counts, and `cost_usd`) plus `external_metadata.context_usage`.
-  If that tool is not available in the run, say "usage unavailable" rather than
-  estimating — a made-up number is worse than none.
+  **This tool is usually absent in the remote container these runs happen in** —
+  if it is not there, say "usage unavailable" in one line and move on. Do not
+  estimate, and do not spend the run hunting for a substitute; a made-up number
+  is worse than none.
 - **Fan-out actually used** — how many areas and subagents, so the cost lines up
   with something you can adjust.
 
