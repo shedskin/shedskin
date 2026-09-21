@@ -45,7 +45,7 @@ uses `assert`, but **printing is better for hunting** — an assert only tells y
 something broke, printed output tells you exactly how the two runtimes diverge.
 
 ```bash
-cd "$SCRATCH/probe"
+mkdir -p "$SCRATCH/probe" && cd "$SCRATCH/probe"   # one dir per probe
 python3 probe.py > cpython.txt 2>&1          # reference behaviour
 shedskin translate probe.py && make          # translate + compile
 ./probe > shedskin.txt 2>&1
