@@ -659,7 +659,7 @@ void __walk_iter::__onerror(str *path, std::error_code ec) {
 
 /* scan a directory into a (dirpath, dirnames, filenames) tuple; returns NULL if
    it cannot be read (reported to onerror, then skipped) */
-__walk_tuple *__walk_iter::__scan(str *top, std::vector<str *> &subdirs) {
+__walk_tuple *__walk_iter::__scan(str *top, __GC_VECTOR(str *) &subdirs) {
     list<str *> *dirs = new list<str *>();
     list<str *> *files = new list<str *>();
 
@@ -690,7 +690,7 @@ __walk_tuple *__walk_iter::__scan(str *top, std::vector<str *> &subdirs) {
 
 /* bottom-up: precompute results in post-order (no pruning possible) */
 void __walk_iter::__collect(str *top) {
-    std::vector<str *> subdirs;
+    __GC_VECTOR(str *) subdirs;
     __walk_tuple *t = __scan(top, subdirs);
     if(!t)
         return;
@@ -726,7 +726,7 @@ __walk_tuple *__walk_iter::__next__() {
     while(!pending.empty()) {
         str *top = pending.back();
         pending.pop_back();
-        std::vector<str *> subdirs; /* unused for topdown: recursion uses last->dirnames */
+        __GC_VECTOR(str *) subdirs; /* unused for topdown: recursion uses last->dirnames */
         __walk_tuple *t = __scan(top, subdirs);
         if(t) {
             last = t;

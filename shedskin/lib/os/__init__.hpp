@@ -120,14 +120,14 @@ public:
     __ss_bool topdown, followlinks;
     __walk_onerror onerror;      /* called with the OSError for directories that cannot be scanned */
     str *top;
-    std::vector<str *> pending;  /* directories still to be scanned (topdown) */
+    __GC_VECTOR(str *) pending;  /* directories still to be scanned (topdown) */
     __walk_tuple *last;          /* last yielded tuple; its dirnames may have been pruned by the caller */
-    std::vector<__walk_tuple *> results; /* precomputed post-order results (bottom-up) */
+    __GC_VECTOR(__walk_tuple *) results; /* precomputed post-order results (bottom-up) */
     size_t pos;
     bool collected;              /* bottom-up results computed (lazily, on the first __next__) */
 
     __walk_iter(str *top, __ss_bool topdown, __ss_bool followlinks, __walk_onerror onerror=nullptr);
-    __walk_tuple *__scan(str *top, std::vector<str *> &subdirs);
+    __walk_tuple *__scan(str *top, __GC_VECTOR(str *) &subdirs);
     void __onerror(str *path, std::error_code ec);
     void __collect(str *top);
     __walk_tuple *__next__();

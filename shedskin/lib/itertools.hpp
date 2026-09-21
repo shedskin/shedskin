@@ -926,8 +926,8 @@ template<class T, class F, class ... Args> inline zip_longestiter<T, T> *zip_lon
 template<class T, class U> class productiter : public __iter<tuple2<T, U> *> {
 public:
     bool exhausted;
-    std::vector<T> values1;
-    std::vector<U> values2;
+    __GC_VECTOR(T) values1;
+    __GC_VECTOR(U) values2;
     unsigned int indice1;
     unsigned int indice2;
 
@@ -1005,7 +1005,7 @@ template<class T, class U> tuple2<T, U> *productiter<T, U>::__next__() {
 template<class T> class productiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     bool exhausted;
-    std::vector<std::vector<T> > values;
+    __GC_VECTOR(__GC_VECTOR(T)) values;
     std::vector<unsigned int> iter;
     std::vector<unsigned int> indices;
 
@@ -1029,7 +1029,7 @@ template<class T> inline productiter<T, T>::productiter() {
 }
 
 template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
-    this->values.push_back(std::vector<T>());
+    this->values.push_back(__GC_VECTOR(T)());
 
     // TODO this is not optimal at all for pyseq
     // (could be improved with static polymorphism and partial specialization on templates templates)
@@ -1140,7 +1140,7 @@ public:
     int current;
     unsigned int* indices;
     unsigned int* cycles;
-    std::vector<T> cache;
+    __GC_VECTOR(T) cache;
 
     permutationsiter();
     permutationsiter(pyiter<T> *iterable, __ss_int r, bool r_none=false);
