@@ -15,66 +15,6 @@
 #include <gc/gc_cpp.h>
 #include <new>
 
-/* gc_cpp.h only redirects the classic, non-aligned, throwing global
- * operator new/delete to the GC heap. C++14 added a separate sized
- * deallocation overload, and C++17 added another overload set for
- * over-aligned allocation (std::align_val_t), plus there is the
- * pre-existing nothrow overload set; none of these are covered by
- * gc_cpp.h. Any allocation that goes through one of these uncovered
- * overloads therefore bypasses GC_MALLOC and lands in the plain
- * system allocator, producing memory the collector never scans. If a
- * pointer into a GC-managed object is ever stored only in such a
- * buffer (e.g. a standard library algorithm's internal scratch space,
- * such as std::stable_sort's merge buffer, allocated via the nothrow
- * operator new below but released via the plain sized operator
- * delete(void*, size_t)), a collection that runs while it's live
- * there can reclaim the object out from under it -- or, since the
- * sized delete overload here was previously missing entirely, the
- * pointer can instead be handed to the system allocator's free()
- * even though it was never obtained from malloc, aborting immediately
- * with "free(): invalid pointer". Redirect these remaining overloads
- * to GC_MALLOC (and make the matching deletes no-ops) so *all*
- * allocation paths stay inside the traced heap. */
-inline void *operator new(std::size_t sz, std::align_val_t) {
-    return GC_MALLOC(sz);
-}
-inline void *operator new[](std::size_t sz, std::align_val_t) {
-    return GC_MALLOC(sz);
-}
-inline void *operator new(std::size_t sz, const std::nothrow_t &) noexcept {
-    return GC_MALLOC(sz);
-}
-inline void *operator new[](std::size_t sz, const std::nothrow_t &) noexcept {
-    return GC_MALLOC(sz);
-}
-inline void *operator new(std::size_t sz, std::align_val_t,
-                           const std::nothrow_t &) noexcept {
-    return GC_MALLOC(sz);
-}
-inline void *operator new[](std::size_t sz, std::align_val_t,
-                             const std::nothrow_t &) noexcept {
-    return GC_MALLOC(sz);
-}
-
-/* GC_MALLOC'd memory is reclaimed by the collector itself, so the
- * matching deallocation overloads are deliberate no-ops (consistent
- * with how gc_cpp.h treats the classic operator delete). This sized
- * overload in particular is the one std::stable_sort's temporary
- * buffer (stl_tempbuf.h's __return_temporary_buffer) actually calls;
- * without it, freeing that buffer falls through to the system
- * allocator's free() on a GC_MALLOC'd pointer and aborts. */
-inline void operator delete(void *, std::size_t) noexcept {}
-inline void operator delete[](void *, std::size_t) noexcept {}
-inline void operator delete(void *) noexcept {}
-inline void operator delete[](void *) noexcept {}
-inline void operator delete(void *, std::align_val_t) noexcept {}
-inline void operator delete[](void *, std::align_val_t) noexcept {}
-inline void operator delete(void *, const std::nothrow_t &) noexcept {}
-inline void operator delete[](void *, const std::nothrow_t &) noexcept {}
-inline void operator delete(void *, std::align_val_t,
-                             const std::nothrow_t &) noexcept {}
-inline void operator delete[](void *, std::align_val_t,
-                               const std::nothrow_t &) noexcept {}
 #endif
 
 #ifdef __SS_BOOST
@@ -217,6 +157,28 @@ using __ss_allocator = gc_allocator< T >;
 #endif
 
 #define __GC_DEQUE(T) std::deque< T, __ss_allocator< T > >
+
+/* std::stable_sort (like std::inplace_merge/std::stable_partition) merges via a
+ * temporary buffer from plain ::operator new, which the collector never scans.
+ * while sorting, some elements may be referenced only from that buffer, and
+ * comparisons (e.g. key functions) can allocate and so trigger a collection.
+ * keep a GC-visible copy of the range alive for the duration of the sort,
+ * rather than redirecting global operator new/delete (which would affect every
+ * other library in the process, such as those of an extension module's host). */
+template<class Iter, class Cmp> inline void __ss_stable_sort(Iter first, Iter last, Cmp cmp) {
+    typedef typename std::iterator_traits<Iter>::value_type V;
+#ifndef __SS_NOGC
+    if constexpr (!std::is_arithmetic<V>::value) {
+        if (last - first > 1) {
+            __GC_VECTOR(V) keepalive(first, last);
+            std::stable_sort(first, last, cmp);
+            GC_reachable_here(keepalive.data());
+            return;
+        }
+    }
+#endif
+    std::stable_sort(first, last, cmp);
+}
 #define __GC_BYTES std::basic_string<char, std::char_traits<char>, __ss_allocator<char> >
 #define __GC_STRING __GC_BYTES /* compat alias, to be removed */
 
