@@ -240,7 +240,7 @@ public:
     bool pending; /* refill from iters[last] on the next call (lazily, like CPython) */
     size_t last;
     __GC_VECTOR(__iter<T> *) iters;
-    std::vector<iter_heap> heap;
+    __GC_VECTOR(iter_heap) heap; /* GC-visible: holds the only reference to pending items */
 
     mergeiter();
     mergeiter(pyiter<T> *iterable, Key key, bool reverse);
@@ -375,7 +375,7 @@ template<class T, class Key> struct InvNCmpSecond {
 template<class T, template <class Y, class Z> class Cmp, class Key> class nheapiter : public __iter<T> {
 public:
     size_t index;
-    std::vector<T> values;
+    __GC_VECTOR(T) values; /* GC-visible: holds the only reference to results */
 
     nheapiter();
     nheapiter(__ss_int n, pyiter<T> *iterable, Key key);
@@ -398,7 +398,7 @@ template<class T, template <class Y, class Z> class Cmp, class Key> inline nheap
 
     __iter<T> *iter = iterable->__iter__();
     typedef std::pair<size_t, T> item_t;
-    std::vector<item_t> heap;
+    __GC_VECTOR(item_t) heap; /* GC-visible: holds the only reference to candidates */
     size_t seq = 0;
 
     try {

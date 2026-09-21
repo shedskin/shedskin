@@ -209,7 +209,7 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                        the whole program with an uncaught regex-compile
                        exception the moment somebody feeds fnmatch/glob an
                        unlucky pattern. */
-                    std::vector<__GC_STR> chunks;
+                    __GC_VECTOR(__GC_STR) chunks; /* GC-visible: string buffers are GC-allocated */
                     size_t start = i;
                     size_t k = (p[i] == '!') ? i + 2 : i + 1;
 
