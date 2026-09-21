@@ -13,6 +13,7 @@
       }
     ]
   },
+  "effortLevel": "high",
   "bashOutputMaxChars": 30000,
   "permissions": {
     "allow": [
