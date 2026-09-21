@@ -101,6 +101,9 @@ report which area was covered so the next run can pick a different one.
   structures.
 - **Code generation** — `shedskin/cpp.py`. Operator precedence in emitted
   expressions, name mangling and shadowing, temporaries and evaluation order.
+- **Memory safety** - check that GC is working as intended, that there are
+  no memory leaks/premature deallocations, that extmod refcounting works as
+  intended, that it works well with linked-in shared libs and so on.
 - **Recent commits** — `git log --since="8 weeks ago"` points at code that is
   newly changed and least exercised.
 
