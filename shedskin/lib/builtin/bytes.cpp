@@ -43,23 +43,23 @@ str *bytes::__str__() {
     return __repr__();
 }
 
-__ss_int bytes::__fixstart(size_t a, __ss_int b) {
-    if(a == std::string::npos) return -1;
-    return (__ss_int)a+b;
-}
-
 __ss_int bytes::find(bytes *s, __ss_int a) {
     return this->find(s, a, this->__len__());
 }
 
 __ss_int bytes::find(bytes *s, __ss_int a, __ss_int b) {
-    __ss_int step = 1;
-    slicenr(3, a, b, step, this->__len__());
-    std::string_view view(this->unit.data() + a, b - a);
-    size_t pos = view.find(s->unit);
+    /* index adjustment as CPython's (see __adjust_indices): slicenr() clamps
+       start down to len, which both loses b'abc'.find(b"", 5) == -1 and lets
+       b-a go negative for start>end, wrapping the view length to SIZE_MAX */
+    __adjust_indices(a, b, this->__len__());
+    __ss_int ssize = s->__len__();
+    if(b - a < ssize)
+        return -1;
+    std::string_view view(this->unit.data() + (size_t)a, (size_t)(b - a));
+    size_t pos = view.find(std::string_view(s->unit.data(), (size_t)ssize));
     if(pos == std::string::npos)
         return -1;
-    return (__ss_int)(pos + a);
+    return (__ss_int)pos + a;
 }
 
 __ss_int bytes::find(__ss_int i, __ss_int a) {
@@ -77,16 +77,20 @@ __ss_int bytes::find(__ss_int i, __ss_int a, __ss_int b) {
 }
 
 __ss_int bytes::rfind(bytes *s, __ss_int a) {
-    __ss_int step = 1;
-    __ss_int b = this->__len__();
-    slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).rfind(s->unit), a);
+    return this->rfind(s, a, this->__len__());
 }
 
 __ss_int bytes::rfind(bytes *s, __ss_int a, __ss_int b) {
-    __ss_int step = 1;
-    slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).rfind(s->unit), a);
+    /* see bytes::find */
+    __adjust_indices(a, b, this->__len__());
+    __ss_int ssize = s->__len__();
+    if(b - a < ssize)
+        return -1;
+    std::string_view view(this->unit.data() + (size_t)a, (size_t)(b - a));
+    size_t pos = view.rfind(std::string_view(s->unit.data(), (size_t)ssize));
+    if(pos == std::string::npos)
+        return -1;
+    return (__ss_int)pos + a;
 }
 
 __ss_int bytes::rfind(__ss_int i, __ss_int a) {
@@ -733,10 +737,13 @@ static inline void __fillbyte_check(bytes *fillchar, const char *name) {
 bytes *bytes::center(__ss_int w, bytes *fillchar) {
     __fillbyte_check(fillchar, "center");
 
+    /* see str::center: a negative width has to be rejected before the cast
+       to size_t, which would wrap it to a huge value */
+    if(w<=__len__())
+        return this;
+
     size_t width = (size_t)w;
     size_t len = unit.size();
-    if(width<=len)
-        return this;
 
     if(!fillchar) fillchar = bsp;
     bytes *r = fillchar->__mul__(w);

@@ -491,6 +491,21 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
     }
 }
 
+void __adjust_indices(__ss_int &start, __ss_int &end, __ss_int len) {
+    if(end > len)
+        end = len;
+    else if(end < 0) {
+        end += len;
+        if(end < 0)
+            end = 0;
+    }
+    if(start < 0) {
+        start += len;
+        if(start < 0)
+            start = 0;
+    }
+}
+
 __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_int len) {
     slicenr(x, l, u, s, len);
     if(l == u) return 0;

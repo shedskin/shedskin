@@ -30,6 +30,15 @@ def test_center():
     assert 'ab'.center(7, '*') == '***ab**'
     assert 'ab'.center(6, '*') == '**ab**'
 
+    # a width at or below the length is a no-op. the width used to be cast
+    # to size_t *before* that guard, so a negative one wrapped to ~2**64 and
+    # the fill loop wrote far past the end of the result buffer
+    assert 'abc'.center(-5) == 'abc'
+    assert 'abc'.center(-5, '*') == 'abc'
+    assert 'abc'.center(0) == 'abc'
+    assert 'abc'.center(3) == 'abc'
+    assert ''.center(-1) == ''
+
 
 def test_fillchar():
     # the fill character must be exactly one character long; a longer one
@@ -118,6 +127,25 @@ def test_expandtabs():
 def test_find():
     assert 'bla'.find('la') == 1
     assert 'bla'.find('ba') == -1
+
+    assert 'abcabc'.find('b', 2) == 4
+    assert 'abcabc'.find('bc', 0, 4) == 1
+    assert 'abcabc'.find('bc', -3) == 4
+
+    # start past end is an empty range, so nothing is found. the bounds used
+    # to be normalized with slicenr(), which leaves end-start negative here;
+    # the searched length then wrapped to SIZE_MAX and the search ran off the
+    # end of the buffer ('abcabc'.find('a', 5, 1) returned 498 in one run)
+    assert 'abcabc'.find('b', 4, 2) == -1
+    assert 'abcabc'.find('a', 5, 1) == -1
+    assert 'abcabc'.find('', 4, 2) == -1
+
+    # unlike a slice, start is not clamped down to the length, so an empty
+    # needle is not found past the end
+    assert 'abc'.find('', 5) == -1
+    assert 'abc'.find('a', 5) == -1
+    assert 'abc'.find('', 3) == 3
+    assert 'abc'.find('') == 0
 
 
 def test_format():
@@ -357,6 +385,18 @@ def test_rfind():
     assert 'abcabc'.find('bc') == 1
     assert 'abcabc'.rfind('bc') == 4
     assert 'abcabc'.rfind('bc', 0, 4) == 1
+    assert 'abcabc'.rfind('bc', -3) == 4
+    assert 'abcabc'.rfind('b', 1, 5) == 4
+
+    # see test_find: start past end used to wrap the searched length
+    assert 'abcabc'.rfind('b', 4, 2) == -1
+    assert 'abcabc'.rfind('a', 5, 1) == -1
+    assert 'abcabc'.rfind('', 4, 2) == -1
+
+    assert 'abc'.rfind('', 5) == -1
+    assert 'abc'.rfind('a', 5) == -1
+    assert 'abc'.rfind('', 3) == 3
+    assert 'abc'.rfind('') == 3
 
 
 def test_rindex():
