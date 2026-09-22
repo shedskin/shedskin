@@ -200,6 +200,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
         self._ss_list_site_ids: dict[int, int] = {}
+        self.str_format_node: Optional[ast_utils.StrFormat] = None
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -2845,6 +2846,37 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(", ")
         self.append(")")
 
+    def visit_StrFormat(
+        self, node: ast_utils.StrFormat, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a literal str.format(..) call, as an f-string
+
+        Arguments that were assigned a temp var are first evaluated (once, and
+        in order) using a comma expression, e.g. (__1=f(), __2=g(), ..).
+        """
+        temps = self.gx.str_format[node]
+        assigns = [(arg, tvar) for (arg, tvar) in zip(node.args, temps) if tvar]
+        if assigns:
+            self.append("(")
+            for arg, tvar in assigns:
+                self.visitm(tvar, "=", arg, ", ", func)
+        outer, self.str_format_node = self.str_format_node, node
+        self.visit(node.joined, func)
+        self.str_format_node = outer
+        if assigns:
+            self.append(")")
+
+    def visit_StrFormatArg(
+        self, node: ast_utils.StrFormatArg, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a reference to a str.format(..) argument"""
+        assert self.str_format_node
+        tvar = self.gx.str_format[self.str_format_node][node.index]
+        if tvar:
+            self.append(tvar)
+        else:
+            self.visit(self.str_format_node.args[node.index], func)
+
     def visit_Pass(
         self, node: ast.Pass, func: Optional["python.Function"] = None
     ) -> None:
@@ -3077,6 +3109,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif method_call:
             assert objexpr
             for cl, _ in self.mergeinh[objexpr]:
+                if (
+                    isinstance(cl, python.Class)
+                    and cl.ident == "str_"
+                    and ident == "format"
+                ):
+                    error.error(
+                        "str.format is only supported for literal format strings",
+                        self.gx,
+                        node,
+                        mv=self.mv,
+                    )
                 if (
                     isinstance(cl, python.Class)
                     and cl.ident != "none"
