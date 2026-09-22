@@ -841,7 +841,9 @@ class TestVoidStarSetter:
         out = self._generate(gx_with_builtin)
 
         start = out.index("__ss_set_")
-        body = out[start:out.index("}", start)]
+        # to the closing brace of the function (column 0), not the first '}'
+        # in the body -- the delete guard has a braced block of its own
+        body = out[start:out.index("\n}", start)]
 
         assert "__to_ss<void *>(value)" in body, (
             "setter should route the assignment through __to_ss<void *>, "
@@ -852,3 +854,25 @@ class TestVoidStarSetter:
             "setter must not unconditionally overwrite the attribute with "
             "NULL regardless of what value was passed in"
         )
+
+    def test_setter_rejects_deletion(self, gx_with_builtin):
+        """CPython calls the setter with value==NULL for 'del obj.attr'.
+
+        Without a guard that reaches __to_ss, which only special-cases
+        Py_None and dereferences the NULL -- segfaulting the interpreter.
+        """
+        out = self._generate(gx_with_builtin)
+
+        start = out.index("__ss_set_")
+        body = out[start:out.index("\n}", start)]
+
+        guard = body.index("value == NULL")
+        assert body.index("__to_ss") > guard, (
+            "the NULL check must come before the conversion, or 'del obj.attr' "
+            "hands __to_ss a NULL pointer to dereference"
+        )
+        assert "PyExc_AttributeError" in body, (
+            "deleting an attribute of a C++ object can never be supported, so "
+            "the setter should raise AttributeError rather than crash"
+        )
+        assert "return -1;" in body

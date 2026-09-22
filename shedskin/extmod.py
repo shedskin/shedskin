@@ -691,6 +691,19 @@ class ExtensionModule:
                 % (clname(cl), var.name, clname(cl))
             )
             write("    (void)closure;")
+            # CPython signals 'del obj.attr' by calling the setter with a NULL
+            # value. Without this guard it reaches __to_ss, which only
+            # special-cases Py_None and dereferences the NULL, segfaulting the
+            # host interpreter. A C++ object has a fixed layout, so deleting an
+            # attribute can never be supported -- say so, like CPython does for
+            # an attribute that cannot be written.
+            write("    if(value == NULL) {")
+            write(
+                '        PyErr_SetString(PyExc_AttributeError, "attribute \'%s\' of \'%s.%s\' objects cannot be deleted");'
+                % (var.name, cl.module.ident, cl.ident)
+            )
+            write("        return -1;")
+            write("    }")
             write("    try {")
             typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             # A "void *" attribute (one whose merged type is only ever None)
