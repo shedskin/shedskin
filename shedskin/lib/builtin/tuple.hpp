@@ -388,6 +388,10 @@ template<class A, class B> str *tuple2<A, B>::__repr__() {
 template<class A, class B> tuple2<A, B>::tuple2(PyObject *p) {
     if(!PyTuple_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
+    /* the arity is fixed by type inference; without this check PyTuple_GetItem
+       returns NULL for a shorter tuple and __to_ss dereferences it */
+    if(PyTuple_Size(p) != 2)
+        throw new TypeError(new str("error in conversion to Shed Skin (2-tuple expected)"));
 
     this->__class__ = cl_tuple;
     first = __to_ss<A>(PyTuple_GetItem(p, 0));
@@ -471,6 +475,9 @@ template<class A, class B, class C> str *tuple3<A, B, C>::__repr__() {
 template<class A, class B, class C> tuple3<A, B, C>::tuple3(PyObject *p) {
     if(!PyTuple_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
+    /* see tuple2: a shorter tuple would hand __to_ss a NULL item */
+    if(PyTuple_Size(p) != 3)
+        throw new TypeError(new str("error in conversion to Shed Skin (3-tuple expected)"));
 
     this->__class__ = cl_tuple;
     first = __to_ss<A>(PyTuple_GetItem(p, 0));

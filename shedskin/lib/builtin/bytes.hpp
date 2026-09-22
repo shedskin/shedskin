@@ -41,7 +41,6 @@ public:
     /* functions pointing to the underlying C++ implementation */
     char *c_str() const;
 
-    __ss_int __fixstart(size_t a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
 
     bytes *upper();

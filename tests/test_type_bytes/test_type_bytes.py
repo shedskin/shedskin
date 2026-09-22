@@ -16,6 +16,13 @@ def test_center():
     assert b'ab'.center(7, b'*') == b'***ab**'
     assert b'ab'.center(6, b'*') == b'**ab**'
 
+    # a negative width used to be cast to size_t before the no-op guard,
+    # wrapping to ~2**64 so the fill loop wrote out of bounds (see str.center)
+    assert b'abc'.center(-5) == b'abc'
+    assert b'abc'.center(-5, b'*') == b'abc'
+    assert b'abc'.center(0) == b'abc'
+    assert b''.center(-1) == b''
+
 def test_count():
     assert b'blaa'.count(b'a') == 2
     assert b'blaa'.count(b'a', 3) == 1
@@ -100,6 +107,18 @@ def test_find():
 
     assert b'bla'.find(b'la') == 1
     assert b'bla'.find(b'ba') == -1
+
+    # start past end is an empty range. the bounds used to go through
+    # slicenr(), leaving end-start negative and wrapping the searched
+    # length to SIZE_MAX (an out-of-bounds read)
+    assert b'abcabc'.find(b'b', 4, 2) == -1
+    assert b'abcabc'.find(b'a', 5, 1) == -1
+    assert b'abcabc'.find(ord('b'), 4, 2) == -1
+
+    # unlike a slice, start is not clamped down to the length
+    assert b'abc'.find(b'', 5) == -1
+    assert b'abc'.find(b'', 3) == 3
+    assert b'abc'.find(b'') == 0
 
 def test_index():
     assert b'bla'.index(b'a') == 2
@@ -229,6 +248,18 @@ def test_rfind():
 
     assert b'bla'.rfind(b'la') == 1
     assert b'bla'.rfind(b'ba') == -1
+
+    assert b'abcabc'.rfind(b'bc') == 4
+    assert b'abcabc'.rfind(b'bc', 0, 4) == 1
+
+    # see test_find: start past end used to wrap the searched length
+    assert b'abcabc'.rfind(b'b', 4, 2) == -1
+    assert b'abcabc'.rfind(b'a', 5, 1) == -1
+    assert b'abcabc'.rfind(ord('b'), 4, 2) == -1
+
+    assert b'abc'.rfind(b'', 5) == -1
+    assert b'abc'.rfind(b'', 3) == 3
+    assert b'abc'.rfind(b'') == 3
 
 def test_rindex():
     assert b'bla'.rindex(b'a') == 2

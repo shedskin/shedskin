@@ -623,10 +623,14 @@ str *str::swapcase() {
 str *str::center(__ss_int w, str *fillchar) {
     __fillchar_check(fillchar);
 
+    /* compare as __ss_int, like ljust/rjust/zfill: casting a negative width
+       to size_t first wraps it to a huge value, so the guard below is skipped
+       and the fill loop writes far out of bounds */
+    if(w<=__len__())
+        return this;
+
     size_t width = (size_t)w;
     size_t len = unit.size();
-    if(width<=len)
-        return this;
 
     if(!fillchar) fillchar = sp;
     str *r = fillchar->__mul__(w);
@@ -731,36 +735,40 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     }
 }
 
-__ss_int str::__fixstart(size_t a, __ss_int b) {
-    if(a == std::string::npos) return -1;
-    return (__ss_int)a+b;
-}
-
 __ss_int str::find(str *s, __ss_int a) {
     return this->find(s, a, this->__len__());
 }
 
 __ss_int str::find(str *s, __ss_int a, __ss_int b) {
-    __ss_int step = 1;
-    slicenr(3, a, b, step, this->__len__());
-    std::u32string_view view(this->unit.data() + a, (size_t)(b - a));
-    size_t pos = view.find(std::u32string_view(s->unit.data(), s->unit.size()));
+    /* index adjustment as CPython's (see __adjust_indices): slicenr() clamps
+       start down to len, which both loses 'abc'.find("", 5) == -1 and lets
+       b-a go negative for start>end, wrapping the view length to SIZE_MAX */
+    __adjust_indices(a, b, this->__len__());
+    __ss_int ssize = s->__len__();
+    if(b - a < ssize)
+        return -1;
+    std::u32string_view view(this->unit.data() + (size_t)a, (size_t)(b - a));
+    size_t pos = view.find(std::u32string_view(s->unit.data(), (size_t)ssize));
     if(pos == std::string::npos)
         return -1;
-    return (__ss_int)(pos + a);
+    return (__ss_int)pos + a;
 }
 
 __ss_int str::rfind(str *s, __ss_int a) {
-    __ss_int step = 1;
-    __ss_int b = this->__len__();
-    slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).rfind(s->unit), a);
+    return this->rfind(s, a, this->__len__());
 }
 
 __ss_int str::rfind(str *s, __ss_int a, __ss_int b) {
-    __ss_int step = 1;
-    slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).rfind(s->unit), a);
+    /* see str::find */
+    __adjust_indices(a, b, this->__len__());
+    __ss_int ssize = s->__len__();
+    if(b - a < ssize)
+        return -1;
+    std::u32string_view view(this->unit.data() + (size_t)a, (size_t)(b - a));
+    size_t pos = view.rfind(std::u32string_view(s->unit.data(), (size_t)ssize));
+    if(pos == std::string::npos)
+        return -1;
+    return (__ss_int)pos + a;
 }
 
 __ss_int str::__checkneg(__ss_int i) {
@@ -777,21 +785,9 @@ __ss_int str::rindex(str *s, __ss_int a, __ss_int b) { return __checkneg(rfind(s
 
 __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__()); }
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
-    /* index adjustment as CPython's (ADJUST_INDICES): start is not clamped
-       to the length, so that e.g. 'abc'.count('', 5) is 0 */
-    __ss_int len = __len__();
-    if(end > len)
-        end = len;
-    else if(end < 0) {
-        end += len;
-        if(end < 0)
-            end = 0;
-    }
-    if(start < 0) {
-        start += len;
-        if(start < 0)
-            start = 0;
-    }
+    /* index adjustment as CPython's (see __adjust_indices): start is not
+       clamped to the length, so that e.g. 'abc'.count('', 5) is 0 */
+    __adjust_indices(start, end, __len__());
     __ss_int ssize = s->__len__();
     if(end - start < ssize)
         return 0;

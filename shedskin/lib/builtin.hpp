@@ -387,6 +387,14 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
+/* CPython's ADJUST_INDICES, for the methods that take start/end arguments
+ * rather than a slice (find, rfind, index, rindex, count, ..). Unlike
+ * slicenr(), start is deliberately *not* clamped to len, so that a start past
+ * the end leaves end-start negative and the caller reports "not found"
+ * ('abc'.find("", 5) is -1, not 3). Callers must check end-start against the
+ * needle length before indexing: end is clamped to len, but start is not. */
+void __adjust_indices(__ss_int &start, __ss_int &end, __ss_int len);
+
 /* size an extended slice ('a[l:u:s]', s not 1) must have to be assigned to;
  * shared by list<T>::__setslice__() and bytes::__setslice__() so their
  * length-mismatch checks (and CPython-matching error wording) don't drift
