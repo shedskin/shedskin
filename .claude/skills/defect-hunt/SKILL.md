@@ -166,6 +166,9 @@ report which area was covered so the next run can pick a different one.
 - **Recent commits** — `git log --since="8 weeks ago"` points at code that is
   newly changed and least exercised. Often there are similar fixes possible
   by generalizing the issue/recent commits, etc.
+- **Unicode support** - does unicode work across the board? so anywhere a str
+  can be used (in filenames or otherwise). are common encodings supported? do
+  we get proper errors/fallbacks for unsupported encodings? surrogates etc.
 
 ## The other half: extension modules
 
