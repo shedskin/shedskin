@@ -516,6 +516,8 @@ def connect_actual_formal(
                 # does not pass 'errors' as the encoding
                 "encode",
                 "decode",
+                "open",  # open(f, encoding=..) must not pass it as the mode
+                "open_binary",
             )
         )
     ):

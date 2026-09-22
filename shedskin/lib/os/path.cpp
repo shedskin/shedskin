@@ -1053,9 +1053,9 @@ __ss_bool isjunction(str *path) {
     */
     DWORD attr;
     HANDLE handle;
-    WIN32_FIND_DATAA data;
+    WIN32_FIND_DATAW data;
 
-    attr = GetFileAttributesA(path->c_str());
+    attr = GetFileAttributesW(__ss_wpath(path).c_str());
     if (attr == INVALID_FILE_ATTRIBUTES) {
         return False;
     }
@@ -1063,7 +1063,7 @@ __ss_bool isjunction(str *path) {
         return False;
     }
 
-    handle = FindFirstFileA(path->c_str(), &data);
+    handle = FindFirstFileW(__ss_wpath(path).c_str(), &data);
     if (handle == INVALID_HANDLE_VALUE) {
         return False;
     }
@@ -1084,13 +1084,13 @@ __ss_bool samefile(str *f1, str *f2) {
     BY_HANDLE_FILE_INFORMATION info1, info2;
     __ss_bool result;
 
-    h1 = CreateFileA(f1->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+    h1 = CreateFileW(__ss_wpath(f1).c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                       NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (h1 == INVALID_HANDLE_VALUE) {
         throw new OSError(f1);
     }
 
-    h2 = CreateFileA(f2->c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+    h2 = CreateFileW(__ss_wpath(f2).c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                       NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (h2 == INVALID_HANDLE_VALUE) {
         CloseHandle(h1);
@@ -1172,7 +1172,7 @@ __ss_bool isdevdrive(str *path) {
     DWORD bytes_returned;
     BOOL ok;
 
-    h = CreateFileA(abspath(path)->c_str(), FILE_READ_ATTRIBUTES,
+    h = CreateFileW(__ss_wpath(abspath(path)).c_str(), FILE_READ_ATTRIBUTES,
                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                     NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (h == INVALID_HANDLE_VALUE) {
@@ -1201,7 +1201,7 @@ __ss_bool ismount(str *path) {
     */
     tuple2<str *, str *> *__sd;
     str *root, *rest, *x, *y;
-    char volpath[MAX_PATH];
+    wchar_t volpath[MAX_PATH];
 
     path = abspath(path);
     __sd = splitdrive(path);
@@ -1217,11 +1217,11 @@ __ss_bool ismount(str *path) {
         return True;
     }
 
-    if (!GetVolumePathNameA(path->c_str(), volpath, MAX_PATH)) {
+    if (!GetVolumePathNameW(__ss_wpath(path).c_str(), volpath, MAX_PATH)) {
         return False;
     }
     x = path->rstrip(const_4);
-    y = (new str(volpath))->rstrip(const_4);
+    y = (new str(__from_utf16<wchar_t>(volpath, wcslen(volpath))))->rstrip(const_4);
     return __mbool(__eq(x, y));
 }
 

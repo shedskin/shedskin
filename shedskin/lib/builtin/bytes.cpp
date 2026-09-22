@@ -999,9 +999,18 @@ __ss_bool bytes::__contains__(__ss_int i) {
 
 str *bytes::decode(str *encoding, str *errors) {
     /* str holds code points; decode the bytes into them directly */
-    __check_errors_arg(errors);
+    __ss_errors err = __lookup_errors(errors);
     __ss_encoding enc = __lookup_encoding(encoding);
+    if (enc == __SS_ENC_UTF8_SIG) { /* skip a bom, then utf-8 (error positions are after the bom, as CPython) */
+        if (unit.size() >= 3 && unit.compare(0, 3, "\xef\xbb\xbf") == 0)
+            return (new bytes(unit.data() + 3, unit.size() - 3))->decode(0, errors);
+        return decode(0, errors);
+    }
     str *s = new str();
+    if (err != __SS_ERR_STRICT || __ss_charmap(enc)) {
+        __decode_into(s->unit, unit.data(), unit.size(), enc, err);
+        return s;
+    }
 
     if (enc == __SS_ENC_UTF8) {
         size_t n = __utf8_decode_checked(this, 0); /* measure+validate */

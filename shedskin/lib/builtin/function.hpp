@@ -1003,7 +1003,7 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
         fwrite(b.data(), 1, b.size(), stdout);
         b = __to_utf8(end->unit);
         fwrite(b.data(), 1, b.size(), stdout);
-        if(f)
+        if(flush)
             fflush(stdout);
     }
 }

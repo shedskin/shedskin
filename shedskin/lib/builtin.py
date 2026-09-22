@@ -1063,6 +1063,9 @@ __exception = PermissionError('')
 __exception = ProcessLookupError('')
 __exception = TimeoutError('')
 __exception2 = SystemExit('')
+# raised by the runtime (codecs, text files): make sure their attributes are typed
+__exception3 = UnicodeDecodeError('', b'', 0, 0, '')
+__exception4 = UnicodeEncodeError('', '', 0, 0, '')
 
 def str(object=None, encoding=None, errors=None):
     object.__str__()
@@ -1212,10 +1215,10 @@ class file_binary(pyiter):
         return self.unit
 
 __file = file('')
-def open(file, mode=None):
+def open(file, mode=None, encoding=None, errors=None, newline=None):
     return __file
 
-def open_binary(file, mode=None):
+def open_binary(file, mode=None, encoding=None, errors=None, newline=None):
     return file_binary('')
 
 def ord(c):

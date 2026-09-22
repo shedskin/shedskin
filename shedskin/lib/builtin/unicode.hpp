@@ -3,7 +3,9 @@
 #ifndef SS_UNICODE_HPP
 #define SS_UNICODE_HPP
 
-/* codec primitives for unicode support: utf-8, ascii, latin-1.
+/* codec primitives for unicode support: utf-8, ascii, latin-1 (utf-8-sig
+   and the cp125x code pages are layered on top, see __decode_into/
+   __encode_into and str::encode/bytes::decode).
 
    these translate between raw bytes (char) and unicode code points
    (__ss_char), with strict validation matching CPython (overlong
@@ -74,7 +76,16 @@ enum __ss_encoding {
     __SS_ENC_UTF8,
     __SS_ENC_ASCII,
     __SS_ENC_LATIN1,
+    __SS_ENC_UTF8_SIG, /* utf-8 with a byte order mark (skipped/added) */
+    /* single-byte windows code pages ('charmap' codecs in CPython) */
+    __SS_ENC_CP1250, /* central european */
+    __SS_ENC_CP1251, /* cyrillic */
+    __SS_ENC_CP1252, /* western: latin-1 with 0x80-0x9f remapped */
 };
+
+inline bool __ss_charmap(__ss_encoding enc) {
+    return enc == __SS_ENC_CP1250 || enc == __SS_ENC_CP1251 || enc == __SS_ENC_CP1252;
+}
 
 /* wrappers that raise UnicodeDecodeError/UnicodeEncodeError (with
    CPython's message, start/end range and attributes) on failure. return
@@ -93,8 +104,6 @@ void __throw_encode_error(__ss_encoding enc, str *s, size_t start, const char *m
    __ss_encoding; raises LookupError for anything unsupported */
 __ss_encoding __lookup_encoding(str *encoding);
 
-/* only 'strict' (or 0) is accepted for the errors= argument for now */
-void __check_errors_arg(str *errors);
 
 /* internal conversions between the utf-8 boundary representation and
    the __ss_char code point representation used inside str. these never
@@ -108,6 +117,63 @@ __GC_STR __from_utf8(const char *s, size_t len);
 __GC_STR __from_utf8(const __GC_BYTES &b);
 __GC_BYTES __to_utf8(const __ss_char *s, size_t len);
 __GC_BYTES __to_utf8(const __GC_STR &u);
+
+/* code points <-> utf-16 (native wide strings on Windows). like CPython
+   on Windows (surrogatepass), lone surrogates are kept as single units in
+   both directions, so file names that are not valid utf-16 still round
+   trip; only a proper high+low pair combines into one code point. these
+   are templates on the unit type so they work with wchar_t (Windows) as
+   well as char16_t (tests elsewhere). */
+template<class W> std::basic_string<W> __to_utf16(const __GC_STR &u) {
+    std::basic_string<W> out;
+    out.reserve(u.size());
+    for (__ss_char cp : u) {
+        if (cp >= 0x10000 && cp <= __MAX_CODEPOINT) {
+            cp -= 0x10000;
+            out += (W)(0xd800 + (cp >> 10));
+            out += (W)(0xdc00 + (cp & 0x3ff));
+        } else
+            out += (W)(cp > __MAX_CODEPOINT ? 0xfffd : cp);
+    }
+    return out;
+}
+
+template<class W> __GC_STR __from_utf16(const W *w, size_t len) {
+    __GC_STR out;
+    out.reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        __ss_char c = (__ss_char)(unsigned)w[i] & 0xffff;
+        if (c >= 0xd800 && c < 0xdc00 && i + 1 < len) {
+            __ss_char d = (__ss_char)(unsigned)w[i + 1] & 0xffff;
+            if (d >= 0xdc00 && d < 0xe000) {
+                out += (__ss_char)(0x10000 + ((c - 0xd800) << 10) + (d - 0xdc00));
+                i++;
+                continue;
+            }
+        }
+        out += c;
+    }
+    return out;
+}
+
+/* error handlers supported for encode/decode and text files */
+enum __ss_errors {
+    __SS_ERR_STRICT,
+    __SS_ERR_SURROGATEESCAPE,
+    __SS_ERR_IGNORE,
+    __SS_ERR_REPLACE,
+};
+
+/* normalize an errors= argument (0 means 'strict'); raises ValueError for
+   anything unsupported */
+__ss_errors __lookup_errors(str *errors);
+
+/* generic (error-handler aware) codecs, appending to out. decode errors
+   with __SS_ERR_STRICT raise UnicodeDecodeError, reporting positions
+   relative to src; replace follows CPython (one U+FFFD per maximal
+   subpart of an ill-formed utf-8 sequence; '?' when encoding). */
+void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err);
+void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err);
 
 /* widen an ascii c-string / std::string to __GC_STR (repr building etc.) */
 __GC_STR __gcs(const char *s);

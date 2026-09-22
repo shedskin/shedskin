@@ -1166,9 +1166,19 @@ template<> str *__str(size_t i) {
 
 bytes *str::encode(str *encoding, str *errors) {
     /* str holds code points; encode them into the target encoding */
-    __check_errors_arg(errors);
+    __ss_errors err = __lookup_errors(errors);
     __ss_encoding enc = __lookup_encoding(encoding);
+    if (enc == __SS_ENC_UTF8_SIG) { /* bom + utf-8 */
+        bytes *b = new bytes();
+        b->unit = "\xef\xbb\xbf";
+        b->unit += encode(0, errors)->unit;
+        return b;
+    }
     bytes *b = new bytes();
+    if (err != __SS_ERR_STRICT || __ss_charmap(enc)) {
+        __encode_into(b->unit, this, enc, err);
+        return b;
+    }
     __codec_result r;
 
     if (enc == __SS_ENC_UTF8) {
