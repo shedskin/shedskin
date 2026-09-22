@@ -363,7 +363,82 @@ __ss_int calcitems(str *fmt) {
     return result;
 }
 
+/* CPython's _struct range-checks every integer field before packing it;
+   without this, out-of-range values are silently truncated to the format's
+   width (e.g. struct.pack('<b', 200) -> b'\xc8' instead of an error, and
+   struct.pack('<i', 2**40) -> four zero bytes: total data loss) */
+static void check_int_range(char c, __ss_int t, unsigned int itemsize) {
+    bool is_signed;
+    bool ok;
+
+    if(itemsize == 0) /* e.g. 'N' under a non-native order; reported elsewhere */
+        return;
+
+    switch(c) {
+        case 'b':
+        case 'h':
+        case 'i':
+        case 'l':
+        case 'q':
+            is_signed = true;
+            break;
+        default: /* 'B', 'H', 'I', 'L', 'Q', 'N' */
+            is_signed = false;
+    }
+
+    if(is_signed) {
+        /* a format at least as wide as __ss_int cannot overflow */
+        if(itemsize >= sizeof(__ss_int))
+            return;
+        __ss_int hi = ((__ss_int)1 << (8*itemsize - 1)) - 1;
+        ok = (t >= -hi - 1 and t <= hi);
+    } else {
+        /* an unsigned format at least as wide as __ss_int can't be checked:
+           shedskin ints are signed, so a negative value is indistinguishable
+           from the large unsigned one CPython would accept (struct.pack('<Q',
+           2**64-1) arrives here as -1, and unpack('<Q') hands back -1 too) */
+        if(itemsize >= sizeof(__ss_int))
+            return;
+        __ss_int hi = ((__ss_int)1 << (8*itemsize)) - 1;
+        ok = (t >= 0 and t <= hi);
+    }
+    if(ok)
+        return;
+
+    /* CPython spells out the bounds for the codes narrower than 8 bytes and
+       falls back to a generic message for the rest. 'I'/'L' are the odd ones
+       out: a negative value fails in their PyLong_AsUnsignedLong conversion
+       before the width check, so it gets the generic message too. */
+    switch(c) {
+        case 'b':
+            throw new error(new str("byte format requires -128 <= number <= 127"));
+        case 'B':
+            throw new error(new str("ubyte format requires 0 <= number <= 255"));
+        case 'h':
+            throw new error(new str("short format requires -32768 <= number <= 32767"));
+        case 'H':
+            throw new error(new str("ushort format requires 0 <= number <= 65535"));
+        case 'i':
+            throw new error(new str("'i' format requires -2147483648 <= number <= 2147483647"));
+        case 'l':
+            throw new error(new str("'l' format requires -2147483648 <= number <= 2147483647"));
+        case 'I':
+            if(t >= 0)
+                throw new error(new str("'I' format requires 0 <= number <= 4294967295"));
+            break;
+        case 'L':
+            if(t >= 0)
+                throw new error(new str("'L' format requires 0 <= number <= 4294967295"));
+            break;
+        default:
+            ;
+    }
+    throw new error(new str("argument out of range"));
+}
+
 void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
+    check_int_range(c, t, itemsize);
+
     if(order == '@') {
         switch(c) {
             case 'b': *((signed char *)buffy) = (signed char)t; break;

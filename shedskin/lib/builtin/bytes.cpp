@@ -390,6 +390,9 @@ tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
 {
     size_t i;
 
+    if(separator->unit.empty())
+        throw new ValueError(new str("empty separator"));
+
     i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
@@ -400,6 +403,9 @@ tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
 tuple2<bytes *, bytes *> *bytes::rpartition(bytes *separator)
 {
     size_t i;
+
+    if(separator->unit.empty())
+        throw new ValueError(new str("empty separator"));
 
     i = this->unit.rfind(separator->unit);
     if(i != std::string::npos)
@@ -437,30 +443,33 @@ list<bytes *> *bytes::splitlines(__ss_int keepends)
 __ss_bool bytes::startswith(bytes *s) { return __mbool(this->unit.starts_with(s->unit)); }
 __ss_bool bytes::startswith(bytes *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool bytes::startswith(bytes *s, __ss_int start, __ss_int end) {
-    __ss_int one = 1;
-
-    slicenr(7, start, end, one, __len__());
+    /* see str::startswith: a start past the end must stay unclamped, so that
+       b'abc'.startswith(b'', 5) is False while b'abc'.startswith(b'', 3) is True */
+    __adjust_indices(start, end, __len__());
+    if(end - start < (__ss_int)s->unit.size())
+        return False;
 
     size_t i, j;
-    for(i = (size_t)start, j = 0; i < (size_t)end && j < s->unit.size(); )
+    for(i = (size_t)start, j = 0; j < s->unit.size(); )
         if (unit[i++] != s->unit[j++])
             return False;
 
-    return __mbool(j == s->unit.size());
+    return True;
 }
 
 __ss_bool bytes::endswith(bytes *s) { return __mbool(this->unit.ends_with(s->unit)); }
 __ss_bool bytes::endswith(bytes *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
-    __ss_int one = 1;
-    slicenr(7, start, end, one, __len__());
+    __adjust_indices(start, end, __len__());
+    if(end - start < (__ss_int)s->unit.size())
+        return False;
 
     size_t i, j;
-    for(i = (size_t)end, j = s->unit.size(); i > (size_t)start && j > 0; )
+    for(i = (size_t)end, j = s->unit.size(); j > 0; )
         if (unit[--i] != s->unit[--j])
             return False;
 
-    return __mbool(j == 0);
+    return True;
 }
 
 __ss_bool bytes::startswith(tuple<bytes *> *s) { return startswith(s, 0, __len__()); }

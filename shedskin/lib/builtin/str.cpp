@@ -347,6 +347,9 @@ tuple2<str *, str *> *str::partition(str *separator)
 {
     size_t i;
 
+    if(separator->unit.empty())
+        throw new ValueError(new str("empty separator"));
+
     i = this->unit.find(separator->unit);
     if(i != std::string::npos)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
@@ -357,6 +360,9 @@ tuple2<str *, str *> *str::partition(str *separator)
 tuple2<str *, str *> *str::rpartition(str *separator)
 {
     size_t i;
+
+    if(separator->unit.empty())
+        throw new ValueError(new str("empty separator"));
 
     i = unit.rfind(separator->unit);
     if(i != std::string::npos)
@@ -812,29 +818,34 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
 __ss_bool str::startswith(str *s) { return __mbool(this->unit.starts_with(s->unit)); }
 __ss_bool str::startswith(str *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int one = 1;
-    slicenr(7, start, end, one, __len__());
+    /* CPython's ADJUST_INDICES leaves a start past the end unclamped, so
+       e.g. 'abc'.startswith('', 5) is False while 'abc'.startswith('', 3)
+       is True; slicenr() used to clamp start down to len and lost that */
+    __adjust_indices(start, end, __len__());
+    if(end - start < (__ss_int)s->unit.size())
+        return False;
 
     size_t i, j;
-    for(i = (size_t)start, j = 0; i < (size_t)end && j < s->unit.size(); )
+    for(i = (size_t)start, j = 0; j < s->unit.size(); )
         if (unit[i++] != s->unit[j++])
             return False;
 
-    return __mbool(j == s->unit.size());
+    return True;
 }
 
 __ss_bool str::endswith(str *s) { return __mbool(this->unit.ends_with(s->unit)); }
 __ss_bool str::endswith(str *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int one = 1;
-    slicenr(7, start, end, one, __len__());
+    __adjust_indices(start, end, __len__());
+    if(end - start < (__ss_int)s->unit.size())
+        return False;
 
     size_t i, j;
-    for(i = (size_t)end, j = s->unit.size(); i > (size_t)start && j > 0; )
+    for(i = (size_t)end, j = s->unit.size(); j > 0; )
         if (unit[--i] != s->unit[--j])
             return False;
 
-    return __mbool(j == 0);
+    return True;
 }
 
 __ss_bool str::startswith(tuple<str *> *s) { return startswith(s, 0, __len__()); }

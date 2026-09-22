@@ -373,6 +373,21 @@ def test_close():
     assert f.closed
 
 
+def test_closed_is_bool():
+    # 'closed' used to be an __ss_int, printing as 1/0 instead of True/False
+    s = io.StringIO('abc')
+    assert str(s.closed) == 'False'
+    assert s.closed is False
+    s.close()
+    assert str(s.closed) == 'True'
+    assert s.closed is True
+
+    b = io.BytesIO(b'abc')
+    assert str(b.closed) == 'False'
+    b.close()
+    assert str(b.closed) == 'True'
+
+
 
 def _encoding_or_default(encoding):
     return io.text_encoding(encoding)
@@ -642,6 +657,7 @@ def test_all():
     test_stringio_seek_whence()
     test_unicode_positions()
     test_close()
+    test_closed_is_bool()
     test_text_encoding()
     test_module_constants()
     test_capabilities()

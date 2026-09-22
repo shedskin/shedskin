@@ -39,7 +39,7 @@ public:
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     __ss_int truncate(__ss_int size=-1);
-    void *close() { closed = 1; return NULL; }
+    void *close() { closed = True; return NULL; }
     __ss_int write(bytes *data);
 
     bool __error() { return false; }
@@ -83,7 +83,7 @@ public:
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     __ss_int truncate(__ss_int size=-1);
-    void *close() { closed = 1; return NULL; }
+    void *close() { closed = True; return NULL; }
     __ss_int write(str *data);
 
     bool __error() { return false; }

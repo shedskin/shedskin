@@ -493,11 +493,18 @@ namespace __bytes___ {
                     throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
             }
             else {
+                /* table_a2b_hex yields -1 for anything that is not a hex
+                   digit; without this check the -1 was folded straight into
+                   the result byte, so e.g. bytes.fromhex('zz') returned
+                   b'\xff' instead of raising (CPython: ValueError) */
+                signed char nibble = table_a2b_hex[(unsigned char)c];
+                if(nibble == -1)
+                    throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
                 if(count == 0) {
-                    high = table_a2b_hex[(unsigned char)c];
+                    high = (unsigned char)nibble;
                     count += 1;
                 } else {
-                    result->unit += (char)((high << 4) | table_a2b_hex[(unsigned char)c]);
+                    result->unit += (char)((high << 4) | (unsigned char)nibble);
                     count = 0;
                 }
             }

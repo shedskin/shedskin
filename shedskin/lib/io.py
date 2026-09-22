@@ -20,6 +20,7 @@ def text_encoding(encoding, stacklevel=2):
 class BytesIO(file_binary):
     def __init__(self, initial_bytes=None):
         self.unit = b''
+        self.closed = False
 
     def getvalue(self):
         return b''
@@ -53,6 +54,7 @@ class BytesIO(file_binary):
 class StringIO(file):
     def __init__(self, initial_value=None, newline=__void):
         self.unit = ''
+        self.closed = False
         self.line_buffering = False
 
     def getvalue(self):
