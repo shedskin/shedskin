@@ -103,34 +103,29 @@ def test_no_nogc_by_default(tmp_path, monkeypatch):
     assert "-D__SS_NOGC" not in cmakelists
 
 
-def test_static_gc_lib_order_gccpp_before_gc():
-    """Regression test for a static-link failure: gc_cpp.cc (bundled in
-    libgccpp) calls GC_malloc_uncollectable()/GC_free(), which are only
-    defined in libgc. Static archives are searched left-to-right by the
-    linker, so libgccpp must be listed *before* libgc in LIB_DEPS, or the
-    link fails with 'undefined reference to GC_malloc_uncollectable' (this
-    is exactly what 'shedskin build --nogc' hit with ENABLE_LOCAL_DEPS).
-    This only checks the raw-archive-path branches (ENABLE_SPM,
-    ENABLE_LOCAL_DEPS); ENABLE_FETCH_CONTENT links CMake targets, whose
-    inter-target dependency order CMake resolves itself.
+def test_no_gccpp_linked():
+    """libgccpp (bdwgc's replacement of the global operator new/delete) must
+    not be linked. In extension modules its symbols are kept local (hidden
+    visibility, --exclude-libs), so libstdc++ keeps its own operator new while
+    shedskin code binds to gccpp's: std::stable_sort's temporary buffer is then
+    allocated via libstdc++'s nothrow new (malloc), but released via gccpp's
+    sized delete (GC_free), crashing. shedskin allocates everything it traces
+    via gc/gc_allocator, so it does not need gccpp (nor libgctba, as builtin.hpp
+    defines GC_INCLUDE_NEW).
     """
-    cmake_module = (
-        Path(__file__).parents[2]
-        / "shedskin"
-        / "resources"
-        / "cmake"
-        / "fn_add_shedskin_product.cmake"
-    )
-    text = cmake_module.read_text()
-
-    for block_start in ("elseif(ENABLE_SPM)", "elseif(ENABLE_LOCAL_DEPS)"):
-        start = text.index(block_start)
-        # the LIB_DEPS assignment immediately follows within this branch
-        lib_deps_start = text.index("set(LIB_DEPS", start)
-        lib_deps_end = text.index(")", lib_deps_start)
-        block = text[lib_deps_start:lib_deps_end]
-        gccpp_pos = block.index("LIBGCCPP")
-        gc_pos = block.index("LIBGC}")
-        assert gccpp_pos < gc_pos, (
-            f"{block_start}: LIBGCCPP must be listed before LIBGC in LIB_DEPS"
-        )
+    root = Path(__file__).parents[2] / "shedskin"
+    sources = [
+        root / "makefile.py",
+        root / "resources" / "cmake" / "fn_add_shedskin_product.cmake",
+        root / "resources" / "cmake" / "install_deps.cmake",
+        root / "resources" / "cmake" / "shedskin_deps.cmake",
+        root / "resources" / "flags" / "FLAGS",
+        root / "resources" / "flags" / "FLAGS.osx",
+        root / "resources" / "flags" / "FLAGS.mingw",
+    ]
+    for source in sources:
+        for line in source.read_text().splitlines():
+            if line.lstrip().startswith("#"):
+                continue
+            for name in ("gccpp", "GCCPP", "gctba"):
+                assert name not in line, f"{source.name}: links {name}: {line.strip()}"

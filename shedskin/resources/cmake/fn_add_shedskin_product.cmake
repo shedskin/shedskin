@@ -225,11 +225,9 @@ function(add_shedskin_product)
 
     if (UNIX)
         set(LIBGC libgc.a)
-        set(LIBGCCPP libgccpp.a)
         set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
-        set(LIBGCCPP gccpp.lib)
         set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
@@ -241,7 +239,6 @@ function(add_shedskin_product)
         # FetchContent targets - link to targets directly
         set(LIB_DEPS
             gc
-            gccpp
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
@@ -253,12 +250,11 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
-        # NOTE: libgccpp must precede libgc: gc_cpp.cc (in libgccpp) references
-        # GC_malloc_uncollectable/GC_free which are only defined in libgc, and
-        # static archives are searched left-to-right, so libgc must come after
-        # the archive that needs its symbols.
+        # NOTE: libgccpp (bdwgc's global operator new/delete replacement) is
+        # deliberately not linked: shedskin allocates everything it traces via
+        # gc/gc_allocator, and a partial global new/delete replacement mixes
+        # allocators (e.g. std::stable_sort's temporary buffer in extmods).
         set(LIB_DEPS
-            ${SPM_LIB_DIRS}/${LIBGCCPP}
             ${SPM_LIB_DIRS}/${LIBGC}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
@@ -271,9 +267,8 @@ function(add_shedskin_product)
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_LOCAL_DEPS)
         set(USING_STATIC_GC ON)
-        # NOTE: see libgccpp/libgc ordering comment above (ENABLE_SPM branch).
+        # NOTE: see libgccpp comment above (ENABLE_SPM branch).
         set(LIB_DEPS
-            ${LOCAL_DEPS_LIB_DIRS}/${LIBGCCPP}
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
@@ -302,7 +297,6 @@ function(add_shedskin_product)
 
         set(LIB_DEPS
             "-lgc"
-            "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
@@ -605,14 +599,10 @@ function(add_shedskin_product)
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
-            # keep symbols pulled in from static libs (libgc.a/libgccpp.a in
-            # particular) out of the extension's dynamic symbol table. Without
-            # this, the GC-backed operator new/delete overrides in gccpp are
-            # exported with default visibility and can interpose over the
-            # unrelated operator new/delete of other C++ extensions (e.g.
-            # numpy) loaded into the same host process, causing memory
-            # corruption / segfaults when those extensions free memory that
-            # was never allocated by the Boehm GC.
+            # keep symbols pulled in from static libs (libgc.a in particular)
+            # out of the extension's dynamic symbol table, so they cannot
+            # interpose over the same symbols of other extensions (or another
+            # copy of bdwgc) loaded into the same host process.
             "$<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:-Wl,--exclude-libs,ALL>"
         )
 

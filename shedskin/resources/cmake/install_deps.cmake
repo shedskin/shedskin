@@ -23,11 +23,9 @@ function(common)
     # Platform-specific library names
     if (UNIX)
         set(LIBGC libgc.a)
-        set(LIBGCCPP libgccpp.a)
         set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
-        set(LIBGCCPP gccpp.lib)
         set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
@@ -35,7 +33,6 @@ function(common)
         # FetchContent targets - link to targets directly
         set(LIB_DEPS
             gc
-            gccpp
             $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
         )
         set(LIB_DIRS)
@@ -43,7 +40,6 @@ function(common)
     elseif(ENABLE_SPM)
         set(LIB_DEPS
             ${SPM_LIB_DIRS}/${LIBGC}
-            ${SPM_LIB_DIRS}/${LIBGCCPP}
             $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
@@ -68,7 +64,6 @@ function(common)
 
         set(LIB_DEPS 
             "-lgc"
-            "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}

@@ -676,7 +676,7 @@ class ShedskinBuilder(Builder):
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
         )
-        self.add_ldlibs("-lgc", "-lpcre2-32", "-lgccpp")
+        self.add_ldlibs("-lgc", "-lpcre2-32")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -701,17 +701,15 @@ class ShedskinBuilder(Builder):
                 if self.gx.options.static_libs:
                     self.add_ldlibs(
                         f"{prefix}/lib/libgc.a",
-                        f"{prefix}/lib/libgccpp.a",
                         f"{prefix}/lib/libpcre2-32.a",
                     )
                 else:
                     self.add_ldlibs(
                         "-lgc",
-                        "-lgctba",
                         "-lpcre2-32",
                     )
             else:
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-32")
+                self.add_ldlibs("-lgc", "-lpcre2-32")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -727,7 +725,7 @@ class ShedskinBuilder(Builder):
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
             self.add_cxxflags("-O2", "-std=c++20", "-march=native")
-            self.add_ldlibs("-lgc", "-lgctba", "-lutil")
+            self.add_ldlibs("-lgc", "-lutil")
 
     def _add_feature_flags(self) -> None:
         """Add feature-specific compiler flags"""
@@ -1197,7 +1195,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-Wl,--enable-auto-import",
                 "$(CPPFLAGS)",
             )
-            self.add_ldlibs("-lgc", "-lpcre2-32", "-lgccpp")
+            self.add_ldlibs("-lgc", "-lpcre2-32")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -1221,10 +1219,9 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_include_dirs(LOCAL_DEPS_INCLUDE="$(LOCAL_DEPS_DIR)/include")
                 self.add_link_dirs(LOCAL_DEPS_LIB="$(LOCAL_DEPS_DIR)/lib")
                 self.add_variable("STATIC_GC", "$(LOCAL_DEPS_LIB)/libgc.a")
-                self.add_variable("STATIC_GCCPP", "$(LOCAL_DEPS_LIB)/libgccpp.a")
                 self.add_variable("STATIC_PCRE2", "$(LOCAL_DEPS_LIB)/libpcre2-32.a")
                 self.add_variable(
-                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
+                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_PCRE2)"
                 )
 
         prefixes = [
@@ -1250,15 +1247,14 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
-                self.add_variable("STATIC_GCCPP", "$(HOMEBREW_LIB)/libgccpp.a")
                 self.add_variable("STATIC_PCRE2", "$(HOMEBREW_LIB)/libpcre2-32.a")
                 self.add_variable(
-                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_GCCPP) $(STATIC_PCRE2)"
+                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_PCRE2)"
                 )
 
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated", "$(CPPFLAGS)")
-                self.add_ldlibs("-lgc", "-lgctba", "-lpcre2-32")
+                self.add_ldlibs("-lgc", "-lpcre2-32")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -1275,7 +1271,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                     self.add_link_dirs(self.py.libpl)
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++20", "-march=native", "$(CPPFLAGS)")
-                self.add_ldlibs("-lgc", "-lgctba", "-lutil")
+                self.add_ldlibs("-lgc", "-lutil")
 
         self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")
         self.add_variable("HPPFILES", "$(GENERATED_HPPFILES) $(BUILTIN_HPPFILES)")

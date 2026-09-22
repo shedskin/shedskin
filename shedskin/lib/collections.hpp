@@ -578,7 +578,7 @@ public:
         list<tuple2<K, V> *> *result = new list<tuple2<K, V> *>();
         for(auto &kv : this->gcd)
             result->units.push_back(new tuple2<K, V>(2, kv.first, kv.second));
-        std::stable_sort(result->units.begin(), result->units.end(),
+        __ss_stable_sort(result->units.begin(), result->units.end(),
             [](tuple2<K, V> *a, tuple2<K, V> *b) { return a->second > b->second; });
         if(n >= 0 && (size_t)n < result->units.size())
             result->units.resize((size_t)n);

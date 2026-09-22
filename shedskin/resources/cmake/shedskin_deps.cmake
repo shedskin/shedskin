@@ -10,7 +10,7 @@
 #   include(shedskin_deps)
 #
 # After including, the following variables are available:
-#   SHEDSKIN_DEP_LIBS        - Libraries to link (gc, gccpp, pcre2-32-static)
+#   SHEDSKIN_DEP_LIBS        - Libraries to link (gc, pcre2-32-static)
 #   SHEDSKIN_DEP_INCLUDE_DIR - Include directory for gc/ headers
 #   SHEDSKIN_PCRE2_INCLUDE_DIR - Include directory for pcre2.h
 #
@@ -87,4 +87,4 @@ file(COPY ${_BDWGC_HEADERS} DESTINATION ${SHEDSKIN_DEP_INCLUDE_DIR}/gc)
 set(SHEDSKIN_PCRE2_INCLUDE_DIR ${pcre2_BINARY_DIR})
 
 # Export library targets for linking
-set(SHEDSKIN_DEP_LIBS gc gccpp pcre2-32-static)
+set(SHEDSKIN_DEP_LIBS gc pcre2-32-static)
