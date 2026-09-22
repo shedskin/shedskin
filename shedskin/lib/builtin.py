@@ -1112,7 +1112,7 @@ def input(prompt=''):
 class file(pyiter):
     def __init__(self, name, flags=None):
         self.unit = ''
-        self.closed = 0
+        self.closed = False
         self.name = ''
         self.mode = ''
         self.buffer = file_binary('')
@@ -1164,7 +1164,7 @@ class file(pyiter):
 class file_binary(pyiter):
     def __init__(self, name, flags=None):
         self.unit = b''
-        self.closed = 0
+        self.closed = False
         self.name = ''
         self.mode = ''
 

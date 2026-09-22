@@ -878,6 +878,45 @@ def test_count_range():
     assert 'abc'.count('a', 5) == 0 and ''.count('') == 1
 
 
+def test_partition_empty_separator():
+    # CPython raises ValueError('empty separator'), like split() already did
+    error = ''
+    try:
+        'a-b'.partition('')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty separator'
+
+    error = ''
+    try:
+        'a-b'.rpartition('')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty separator'
+
+
+def test_startswith_range():
+    # a start past the end must stay unclamped (CPython's ADJUST_INDICES),
+    # so an empty needle there is *not* found
+    assert not 'abc'.startswith('', 5)
+    assert not 'abc'.endswith('', 5)
+    assert not 'abc'.startswith('', 4)
+    assert not 'abc'.endswith('', 4)
+    assert 'abc'.startswith('', 3)
+    assert 'abc'.endswith('', 3)
+    assert 'abc'.startswith('', 0)
+    assert 'abc'.startswith('', -10)
+    assert 'abc'.endswith('', -10)
+    assert not 'abc'.startswith('a', 5)
+    assert not 'abc'.endswith('c', 5)
+    assert not 'abcabc'.endswith('abc', 0, 4)
+    assert 'abcabc'.endswith('abc', 0, 6)
+    assert 'abc'.startswith('b', 1, 2)
+    assert not 'abc'.startswith('bc', 1, 2)
+    assert not 'abc'.startswith(('x', ''), 5)
+    assert not 'abc'.endswith(('x', ''), 5)
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -948,6 +987,8 @@ def test_all():
     test_unicode_case_mapping()
     test_unicode_translate()
     test_count_range()
+    test_partition_empty_separator()
+    test_startswith_range()
 
 
 if __name__ == "__main__":

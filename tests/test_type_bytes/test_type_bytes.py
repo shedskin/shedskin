@@ -551,6 +551,60 @@ def test_fromhex():
     assert bytes.fromhex('aabb  \tcc \n') == b'\xaa\xbb\xcc'
 
 
+def test_fromhex_non_hex():
+    # a non-hex digit used to be folded into the result byte as -1 instead
+    # of raising, so bytes.fromhex('zz') returned b'\xff'
+    for arg, pos in [('zz', 0), ('abz', 2), ('_a', 0), ('ab cz', 4)]:
+        error = ''
+        try:
+            bytes.fromhex(arg)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'non-hexadecimal number found in fromhex() arg at position ' + str(pos)
+
+    # an odd number of digits (and a lone digit before a separator) already
+    # raised; check the reported position stays right
+    for arg, pos in [('a', 1), ('abc', 3), ('ab c', 4), ('4 1 4', 1)]:
+        error = ''
+        try:
+            bytes.fromhex(arg)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'non-hexadecimal number found in fromhex() arg at position ' + str(pos)
+
+
+def test_partition_empty_separator():
+    error = ''
+    try:
+        b'a-b'.partition(b'')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty separator'
+
+    error = ''
+    try:
+        b'a-b'.rpartition(b'')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty separator'
+
+
+def test_startswith_range():
+    # see test_type_str.test_startswith_range: a start past the end is not
+    # clamped, so an empty needle there is not found
+    assert not b'abc'.startswith(b'', 5)
+    assert not b'abc'.endswith(b'', 5)
+    assert b'abc'.startswith(b'', 3)
+    assert b'abc'.endswith(b'', 3)
+    assert b'abc'.startswith(b'', -10)
+    assert not b'abc'.startswith(b'a', 5)
+    assert not b'abcabc'.endswith(b'abc', 0, 4)
+    assert b'abcabc'.endswith(b'abc', 0, 6)
+    assert b'abc'.startswith(b'b', 1, 2)
+    assert not b'abc'.startswith(b'bc', 1, 2)
+    assert b'abc'.endswith(b'c', -1)
+
+
 def test_bin():
     s = b'\xab'
     assert len(s) == 1
@@ -620,6 +674,9 @@ def test_all():
     test_iadd_imul()
     test_hex()
     test_fromhex()
+    test_fromhex_non_hex()
+    test_partition_empty_separator()
+    test_startswith_range()
     test_bin()
 
 

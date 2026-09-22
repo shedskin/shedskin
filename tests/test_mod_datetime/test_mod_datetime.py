@@ -872,6 +872,45 @@ def test_strftime():
     assert t.strftime('%z|%Z') == '|'
 
 
+def test_arithmetic_overflow():
+    # date/timedelta arithmetic that leaves the supported year range raises
+    # OverflowError in CPython, unlike date.fromordinal() (ValueError)
+    day = datetime.timedelta(days=1)
+    error = ''
+    try:
+        datetime.date(9999, 12, 31) + day
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'date value out of range'
+
+    error = ''
+    try:
+        datetime.date(1, 1, 1) - day
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'date value out of range'
+
+    error = ''
+    try:
+        datetime.datetime(9999, 12, 31, 23, 59) + day
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'date value out of range'
+
+    error = ''
+    try:
+        datetime.datetime(1, 1, 1) - datetime.timedelta(hours=1)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'date value out of range'
+
+    # just inside the range still works
+    assert datetime.date(9999, 12, 30) + day == datetime.date.max
+    assert datetime.date(1, 1, 2) - day == datetime.date.min
+    assert datetime.datetime(2024, 2, 28, 12, 30) + day == datetime.datetime(2024, 2, 29, 12, 30)
+    assert datetime.datetime(2024, 3, 1, 0, 30) - datetime.timedelta(hours=1) == datetime.datetime(2024, 2, 29, 23, 30)
+
+
 def test_all():
         test_date()
         test_date_ctime()
@@ -924,6 +963,7 @@ def test_all():
         test_timetuple()
         test_today()
         test_strftime()
+        test_arithmetic_overflow()
 
 if __name__ == "__main__":
     test_all()

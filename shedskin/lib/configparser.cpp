@@ -575,11 +575,19 @@ void *RawConfigParser::add_section(str *section) {
     Create a new section in the configuration.
 
     Raise DuplicateSectionError if a section by the specified name
-    already exists.
+    already exists. Raise ValueError if name is DEFAULT.
     */
 
-    if (section == UNNAMED_SECTION && !this->_allow_unnamed_section) {
-        throw new UnnamedSectionDisabledError();
+    if (section == UNNAMED_SECTION) {
+        if (!this->_allow_unnamed_section) {
+            throw new UnnamedSectionDisabledError();
+        }
+    }
+    /* CPython's _validate_section_name: the default section already exists
+       implicitly, so adding it would land a bogus entry in _sections and
+       make sections() (documented as excluding [DEFAULT]) return it */
+    else if (__eq(section, this->default_section)) {
+        throw ((new ValueError(__add(__add(new str("Invalid section name: '"), section), new str("'")))));
     }
     if ((this->_sections)->__contains__(section)) {
         throw ((new DuplicateSectionError(section)));

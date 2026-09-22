@@ -387,6 +387,54 @@ def test_repeat():
     assert b''.join([d, e, f]) == b'aap'
 
 
+def test_range_errors():
+    # CPython's _struct range-checks every integer field; out-of-range values
+    # used to be silently truncated to the format's width
+    cases = [
+        ('<b', 200, 'byte format requires -128 <= number <= 127'),
+        ('@b', 200, 'byte format requires -128 <= number <= 127'),
+        ('<b', -129, 'byte format requires -128 <= number <= 127'),
+        ('<B', 300, 'ubyte format requires 0 <= number <= 255'),
+        ('<B', -1, 'ubyte format requires 0 <= number <= 255'),
+        ('<h', 70000, 'short format requires -32768 <= number <= 32767'),
+        ('<H', -1, 'ushort format requires 0 <= number <= 65535'),
+        ('<H', 65536, 'ushort format requires 0 <= number <= 65535'),
+        ('<i', 2**40, "'i' format requires -2147483648 <= number <= 2147483647"),
+        ('<I', -1, 'argument out of range'),
+        ('<I', 2**40, "'I' format requires 0 <= number <= 4294967295"),
+        ('@I', 2**40, "'I' format requires 0 <= number <= 4294967295"),
+        ('<L', 2**40, "'L' format requires 0 <= number <= 4294967295"),
+        ('<l', 2**40, "'l' format requires -2147483648 <= number <= 2147483647"),
+        ('<L', -1, 'argument out of range'),
+    ]
+    for fmt, value, message in cases:
+        error = ''
+        try:
+            struct.pack(fmt, value)
+        except struct.error as e:
+            error = str(e)
+        assert error == message
+
+    # the extremes of each range still pack fine
+    assert struct.pack('<b', -128) == b'\x80'
+    assert struct.pack('<b', 127) == b'\x7f'
+    assert struct.pack('<B', 255) == b'\xff'
+    assert struct.pack('<h', -32768) == b'\x00\x80'
+    assert struct.pack('<H', 65535) == b'\xff\xff'
+    assert struct.pack('<i', 2147483647) == b'\xff\xff\xff\x7f'
+    assert struct.pack('<i', -2147483648) == b'\x00\x00\x00\x80'
+    assert struct.pack('<q', -1) == b'\xff\xff\xff\xff\xff\xff\xff\xff'
+    assert struct.pack('<Q', 0) == b'\x00\x00\x00\x00\x00\x00\x00\x00'
+    assert struct.pack('<?', True) == b'\x01'
+
+    # 'Q'/'N' are as wide as shedskin's (signed) int, so a value beyond
+    # 2**63-1 arrives here as a negative int and can't be told apart from an
+    # out-of-range one: those stay unchecked, and keep round-tripping
+    a = struct.pack('<Q', 18000000000000000000)
+    ua, = struct.unpack('<Q', a)
+    assert ua == 18000000000000000000
+
+
 def test_errors():
     error = ''
     try:
@@ -695,6 +743,7 @@ def test_all():
     test_repeat()
     test_pack_into()
     test_calcsize()
+    test_range_errors()
     test_errors()
     test_multi_1()
     test_n_native_only()

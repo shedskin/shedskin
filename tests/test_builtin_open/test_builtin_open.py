@@ -151,6 +151,22 @@ def test_read_chars_unicode():
     os.remove('utest.txt')
 
 
+def test_closed_is_bool():
+    # 'closed' used to be an __ss_int, printing as 1/0 instead of True/False
+    w = open('ctest.txt', 'w')
+    assert str(w.closed) == 'False'
+    w.write('x\n')
+    w.close()
+    assert str(w.closed) == 'True'
+    assert w.closed is True
+
+    r = open('ctest.txt', 'rb')
+    assert str(r.closed) == 'False'
+    r.close()
+    assert str(r.closed) == 'True'
+    os.remove('ctest.txt')
+
+
 def test_all():
     test_read_chars_unicode()
     test_open_for()
@@ -164,6 +180,7 @@ def test_all():
     test_open_enter_exit()
     test_lineendings()
     test_open_directory_raises_oserror()
+    test_closed_is_bool()
 
 
 if __name__ == '__main__':

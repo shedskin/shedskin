@@ -21,11 +21,11 @@ public:
     FILE *f;
     file_binary *buffer;
 
-    __ss_int closed;
+    __ss_bool closed;
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
-    file(FILE *g=0) : f(g), closed(0) {}
+    file(FILE *g=0) : f(g), closed(False) {}
     file(str *name, str *mode=0);
 
     virtual void * close();
@@ -65,11 +65,11 @@ public:
     str *mode;
 
     FILE *f;
-    __ss_int closed;
+    __ss_bool closed;
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
-    file_binary(FILE *g=0) : f(g), closed(0) {}
+    file_binary(FILE *g=0) : f(g), closed(False) {}
     file_binary(str *name, str *mode=0);
 
     virtual void * close();

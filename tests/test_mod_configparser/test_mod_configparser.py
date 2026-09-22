@@ -247,6 +247,40 @@ def test_duplicate_section_error():
         ok = True
     assert ok
 
+def test_add_default_section_error():
+    # CPython's _validate_section_name: adding the default section used to be
+    # accepted, which then made sections() (documented as excluding [DEFAULT])
+    # return it
+    config = configparser.ConfigParser()
+    error = ''
+    try:
+        config.add_section('DEFAULT')
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid section name: 'DEFAULT'"
+    assert config.sections() == []
+    config.add_section('other')
+    assert config.sections() == ['other']
+
+    # ..and it follows a custom default_section
+    config2 = configparser.ConfigParser(default_section='mydef')
+    error = ''
+    try:
+        config2.add_section('mydef')
+    except ValueError as e:
+        error = str(e)
+    assert error == "Invalid section name: 'mydef'"
+    assert config2.sections() == []
+    config2.add_section('DEFAULT')
+    assert config2.sections() == ['DEFAULT']
+
+    # read_dict still routes the default section to the defaults
+    config3 = configparser.ConfigParser()
+    config3.read_dict({'DEFAULT': {'a': '1'}, 's': {'b': '2'}})
+    assert config3.sections() == ['s']
+    assert config3.get('s', 'a') == '1'
+
+
 def test_duplicate_section_error_while_parsing():
     config = configparser.ConfigParser()
     ok = False
@@ -1367,6 +1401,7 @@ def test_all():
     test_typed_getters_raw_and_vars()
     test_unnamed_section()
     test_interpolation_before_methods()
+    test_add_default_section_error()
 
 if __name__ == '__main__':
     test_all()

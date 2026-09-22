@@ -924,7 +924,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
 
 void *popen_pipe::close() {
     __ss_pclose(f);
-    closed = 1;
+    closed = True;
     return NULL;
 }
 

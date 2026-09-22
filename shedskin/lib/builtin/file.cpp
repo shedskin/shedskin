@@ -251,7 +251,7 @@ void *file::close() {
         flush();
         if(fclose(f))
             __throw_oserror();
-        closed = 1;
+        closed = True;
     }
     return NULL;
 }
@@ -484,7 +484,7 @@ void *file_binary::close() {
         flush();
         if(fclose(f))
             __throw_oserror();
-        closed = 1;
+        closed = True;
     }
     return NULL;
 }

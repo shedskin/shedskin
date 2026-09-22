@@ -246,6 +246,28 @@ static void check_ordinal(__ss_int o, __ss_int *year, __ss_int *month, __ss_int 
         throw new ValueError(__mod6(new str("year %d is out of range"), 1, *year));
 }
 
+/* date/datetime arithmetic that leaves the supported year range raises
+   OverflowError in CPython, unlike date.fromordinal() (ValueError) above */
+static void check_ordinal_arith(__ss_int o, __ss_int *year, __ss_int *month, __ss_int *day) {
+    if(o<1)
+        throw new OverflowError(new str("date value out of range"));
+    ord_to_ymd(o, year, month, day);
+    if(*year>MAXYEAR)
+        throw new OverflowError(new str("date value out of range"));
+}
+
+static date *__date_arith(__ss_int o) {
+    __ss_int y, m, d;
+    check_ordinal_arith(o, &y, &m, &d);
+    return new date(y, m, d);
+}
+
+static datetime *__datetime_arith(__ss_int o) {
+    __ss_int y, m, d;
+    check_ordinal_arith(o, &y, &m, &d);
+    return new datetime(y, m, d);
+}
+
 date* date::fromordinal(__ss_int o) {
     __ss_int y, m, d;
     check_ordinal(o, &y, &m, &d);
@@ -277,11 +299,11 @@ date *date::fromisoformat(str *date_string) {
 }
 
 date *date::__add__(timedelta *other) {
-    return fromordinal(toordinal()+(other->days));
+    return __date_arith(toordinal()+(other->days));
 }
 
 date *date::__sub__(timedelta *other) {
-    return fromordinal(toordinal()-(other->days));
+    return __date_arith(toordinal()-(other->days));
 }
 
 timedelta *date::__sub__(date *other) {
@@ -681,7 +703,7 @@ datetime *datetime::fromisoformat(str *date_string) {
 datetime *datetime::__add__(timedelta *other) {
     __ss_int usec = this->microsecond + other->microseconds;
     __ss_int sec = this->second + other->seconds;
-    datetime *r = datetime::fromordinal(this->toordinal()+other->days +
+    datetime *r = __datetime_arith(this->toordinal()+other->days +
                                         (((usec/1000000 + sec)/60 +
                                         this->minute)/60 + this->hour)/24);
     r->microsecond = usec%1000000;
@@ -698,7 +720,7 @@ datetime *datetime::__sub__(timedelta *other) {
     __ss_int days = this->toordinal()-other->days +
                                         (((usec/1000000 + sec)/60 +
                                         this->minute)/60 + this->hour)/24;
-    datetime *r = datetime::fromordinal(days);
+    datetime *r = __datetime_arith(days);
     r->microsecond = usec%1000000;
     r->second = (sec + usec/1000000)%(60);
     r->minute = (this->minute + (sec + usec/1000000)/60)%60;
@@ -720,7 +742,7 @@ datetime *datetime::__sub__(timedelta *other) {
 	}
 	if(r->hour<0) {
 		r->hour+=24;
-		date *tmp = date::fromordinal(days-1);
+		date *tmp = __date_arith(days-1);
 		r->year=tmp->year;
 		r->month=tmp->month;
 		r->day=tmp->day;
