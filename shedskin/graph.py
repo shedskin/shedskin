@@ -35,7 +35,8 @@ import pathlib
 import re
 import string
 import sys
-from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union
+import _string  # type: ignore[import-not-found]
+from typing import TYPE_CHECKING, Any, NoReturn, Optional, TypeAlias, Union
 
 from . import ast_utils, error, infer, python
 
@@ -108,6 +109,166 @@ def inherit_rec(
 
     for a, b in zip(ast.iter_child_nodes(original), ast.iter_child_nodes(copy)):
         inherit_rec(gx, a, b, mv)
+
+
+
+# --- rewrite literal str.format(..) calls into f-strings
+class StrFormatRewriter(ast.NodeTransformer):
+    """Replace each '<literal>.format(..)' call with a StrFormat node
+
+    The format string is parsed at compile-time into an equivalent f-string
+    (ast.JoinedStr), which refers to the call arguments via StrFormatArg
+    nodes. Anything that CPython would reject for the given arguments
+    (bad index, missing keyword, bad conversion..) becomes a compile-time
+    error. Format specs are passed on as f-string format specs (including
+    nested replacement fields), so they are handled in the same way.
+    """
+
+    def __init__(self, gx: "config.GlobalInfo", mv: "ModuleVisitor"):
+        self.gx = gx
+        self.mv = mv
+
+    def fail(self, node: ast.AST, msg: str) -> NoReturn:
+        error.error("str.format: " + msg, self.gx, node, mv=self.mv)
+        assert False
+
+    def visit_Attribute(self, node: ast.Attribute) -> ast.AST:
+        # (literal str.format calls don't get here, see visit_Call)
+        if node.attr == "format" and ast_utils.is_str(node.value):
+            self.fail(node, "only direct calls are supported")
+        self.generic_visit(node)
+        return node
+
+    def visit_Call(self, node: ast.Call) -> ast.AST:
+        # '<literal>.format(..)' or 'str.format(<literal>, ..)'
+        fmt: Optional[str] = None
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+            if ast_utils.is_str(node.func.value):
+                fmt = _const_str(node.func.value)
+            elif (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "str"
+            ):
+                if not node.args or not ast_utils.is_str(node.args[0]):
+                    self.fail(node, "only supported for literal format strings")
+                fmt = _const_str(node.args[0])
+                node.args = node.args[1:]
+
+        if fmt is None:
+            self.generic_visit(node)
+            return node
+
+        # nested rewrites (keyword values are replaced in-place)
+        node.args = [self.visit(arg) for arg in node.args]
+        for kw in node.keywords:
+            self.visit(kw)
+
+        def fail(msg: str) -> NoReturn:
+            self.fail(node, msg)
+
+        for arg in node.args:
+            if isinstance(arg, ast.Starred):
+                fail("'*' arguments are not supported")
+        kwpos: dict[str, int] = {}
+        for i, kw in enumerate(node.keywords):
+            if kw.arg is None:
+                fail("'**' arguments are not supported")
+            kwpos[kw.arg] = len(node.args) + i
+        npos = len(node.args)
+        args = list(node.args) + [kw.value for kw in node.keywords]
+
+        auto_index = 0
+        numbering: Optional[str] = None  # 'automatic' or 'manual'
+
+        def build(fmt: str, depth: int) -> list[ast.expr]:
+            nonlocal auto_index, numbering
+            try:
+                parsed = list(string.Formatter().parse(fmt))
+            except ValueError as e:
+                fail(str(e))
+
+            values: list[ast.expr] = []
+            for literal, field_name, format_spec, conversion in parsed:
+                if literal:
+                    if values and ast_utils.is_str(values[-1]):
+                        values[-1] = ast.Constant(_const_str(values[-1]) + literal)
+                    else:
+                        values.append(ast.Constant(literal))
+                if field_name is None:
+                    continue
+                if depth > 1:
+                    fail("Max string recursion exceeded")
+
+                try:
+                    first, rest_iter = _string.formatter_field_name_split(
+                        field_name
+                    )
+                    rest = list(rest_iter)
+                except ValueError as e:
+                    fail(str(e))
+
+                # positional (automatic or manual numbering) or keyword argument
+                if isinstance(first, int) or first == "":
+                    if first == "":
+                        if numbering == "manual":
+                            fail(
+                                "cannot switch from manual field specification "
+                                "to automatic field numbering"
+                            )
+                        numbering = "automatic"
+                        first = auto_index
+                        auto_index += 1
+                    else:
+                        if numbering == "automatic":
+                            fail(
+                                "cannot switch from automatic field numbering "
+                                "to manual field specification"
+                            )
+                        numbering = "manual"
+                    assert isinstance(first, int)
+                    if first >= npos:
+                        fail(
+                            "Replacement index %d out of range for positional "
+                            "args tuple" % first
+                        )
+                    index = first
+                else:
+                    if first not in kwpos:
+                        fail("no keyword argument '%s'" % first)
+                    index = kwpos[first]
+                expr: ast.expr = ast_utils.StrFormatArg(index)
+
+                # attribute access/indexing, e.g. '{0.x[1]}'
+                for is_attr, key in rest:
+                    if is_attr:
+                        expr = ast.Attribute(expr, key, ast.Load())
+                    else:
+                        expr = ast.Subscript(expr, ast.Constant(key), ast.Load())
+
+                # conversion
+                if conversion is None:
+                    conv = -1
+                elif conversion in ("s", "r", "a"):
+                    conv = ord(conversion)
+                else:
+                    fail("Unknown conversion specifier %s" % conversion)
+
+                # format spec, possibly containing nested replacement fields
+                spec: Optional[ast.expr] = None
+                if format_spec:
+                    spec = ast.JoinedStr(build(format_spec, depth + 1))
+
+                values.append(ast.FormattedValue(expr, conv, spec))
+            return values
+
+        joined = ast.JoinedStr(build(fmt, 0))
+        newnode = ast_utils.StrFormat(args, joined)
+        ast.copy_location(newnode, node)
+        # synthesized nodes get the location of the call
+        for child in ast.walk(joined):
+            if "lineno" in child._attributes:
+                ast.copy_location(child, node)
+        return newnode
 
 
 def register_node(node: ast.AST, func: Optional["python.Function"]) -> None:
@@ -214,6 +375,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lambdaname: dict[ast.AST, str] = {}
         self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
+        self.str_format_node: Optional[ast_utils.StrFormat] = None
         self.listcomps: list[
             tuple[ast.ListComp, "python.Function", Optional["python.Function"]]
         ] = []
@@ -642,6 +804,50 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.fake_func(infer.inode(self.gx, value), value, method, [], func)
         self.instance(node, python.def_class(self.gx, "str_"), func)
 
+    def visit_StrFormat(
+        self, node: ast_utils.StrFormat, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit a literal str.format(..) call (see StrFormatRewriter)
+
+        Each argument is evaluated exactly once and in order, into a temp var,
+        unless all arguments are plain names or constants (so there can be no
+        side-effects or evaluation order issues). Constant arguments are
+        always used directly.
+        """
+        direct = all(
+            isinstance(arg, ast.Name) or ast_utils.is_constant(arg)
+            for arg in node.args
+        )
+        temps: list[Optional[str]] = []
+        for i, arg in enumerate(node.args):
+            self.visit(arg, func)
+            if direct or ast_utils.is_constant(arg):
+                temps.append(None)
+            else:
+                tvar = self.temp_var2(
+                    (node, "format", i), infer.inode(self.gx, arg), func
+                )
+                temps.append(tvar.name)
+        self.gx.str_format[node] = temps
+
+        outer, self.str_format_node = self.str_format_node, node
+        self.visit(node.joined, func)
+        self.str_format_node = outer
+
+        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        self.gx.types[newnode] = set()
+        self.add_constraint((infer.inode(self.gx, node.joined), newnode), func)
+
+    def visit_StrFormatArg(
+        self, node: ast_utils.StrFormatArg, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit a reference to a str.format(..) argument"""
+        assert self.str_format_node
+        arg = self.str_format_node.args[node.index]
+        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        self.gx.types[newnode] = set()
+        self.add_constraint((infer.inode(self.gx, arg), newnode), func)
+
     def visit_Expr(
         self, node: ast.Expr, func: Optional["python.Function"] = None
     ) -> None:
@@ -675,6 +881,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Module(self, node: ast.Module) -> None:
         """Visit a module"""
+        # --- literal str.format(..) calls become f-strings
+        StrFormatRewriter(self.gx, getmv()).visit(node)
+
         # --- bootstrap built-in classes
         if self.module.ident == "builtin":
             for dummy in self.gx.builtins:

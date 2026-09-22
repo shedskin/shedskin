@@ -451,6 +451,10 @@ class GlobalInfo:
         return self._graph_context.struct_unpack
 
     @property
+    def str_format(self) -> dict["ast.AST", list[Optional[str]]]:
+        return self._graph_context.str_format
+
+    @property
     def augment(self) -> set["ast.AST"]:
         return self._graph_context.augment
 

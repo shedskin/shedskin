@@ -28,6 +28,8 @@ class GraphBuildingContext:
         item_rvalue: Maps AST nodes to their item rvalue.
         assign_target: Maps assignment nodes to their targets.
         struct_unpack: Maps struct unpack assignments to their format info.
+        str_format: Maps literal str.format() nodes to per-argument temp var
+            names (None where the argument is referenced directly).
         augment: Set of augmented assignment AST nodes.
         parent_nodes: Maps AST nodes to their parent nodes.
         from_module: Maps AST nodes to their source modules.
@@ -49,6 +51,7 @@ class GraphBuildingContext:
     struct_unpack: Dict[
         ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str, Optional[str]]
     ] = field(default_factory=dict)
+    str_format: Dict[ast.AST, List[Optional[str]]] = field(default_factory=dict)
     augment: Set[ast.AST] = field(default_factory=set)
     parent_nodes: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     from_module: Dict[ast.AST, "python.Module"] = field(default_factory=dict)

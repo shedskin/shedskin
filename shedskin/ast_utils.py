@@ -281,3 +281,43 @@ class BaseNodeVisitor:
                         self.visit(item, *args)
             elif isinstance(value, ast.AST):
                 self.visit(value, *args)
+
+
+
+# --- literal str.format(..) calls are rewritten into these nodes before
+# --- analysis (see graph.StrFormatRewriter), so they are handled as f-strings
+
+
+class StrFormat(ast.expr):
+    """A literal str.format(..) call, rewritten into an f-string
+
+    args:   the call arguments (positional first, then keyword values), each
+            evaluated once, in order
+    joined: the equivalent f-string (ast.JoinedStr), referring to the
+            arguments by index via StrFormatArg nodes
+    """
+
+    _fields = ("args", "joined")
+    args: list[ast.expr]
+    joined: ast.JoinedStr
+
+    def __init__(
+        self,
+        args: Optional[list[ast.expr]] = None,
+        joined: Optional[ast.JoinedStr] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self.args = args or []
+        self.joined = joined or ast.JoinedStr([])
+
+
+class StrFormatArg(ast.expr):
+    """Reference (by index) to an argument of the enclosing StrFormat node"""
+
+    _fields = ("index",)
+    index: int
+
+    def __init__(self, index: int = 0, **kwargs: Any):
+        super().__init__(**kwargs)
+        self.index = index
