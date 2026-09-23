@@ -1343,14 +1343,14 @@ str *readlink(str *path) {
 
     while (1)
       {
-        char *buffer = (char *) GC_malloc (size);
-        size_t nchars = (size_t)::readlink(path->c_str(), buffer, size);
+        std::string buffer(size, '\0');
+        size_t nchars = (size_t)::readlink(path->c_str(), &buffer[0], size);
         if (nchars == std::string::npos) {
             __throw_oserror(path);
         }
         if (nchars < size) {
-            buffer[nchars] = '\0';
-            r = new str(buffer);
+            buffer.resize(nchars);
+            r = new str(buffer.c_str());
             return r;
         }
         size *= 2;
@@ -2435,23 +2435,27 @@ void *mknod(str *filename, __ss_int mode, __ss_int device) {
     return NULL;
 }
 
+/* the argv/envp arrays live in GC-scanned static vectors, so the strings they
+ * point into stay alive until exec replaces the process (or fails) */
 char **__exec_argvlist(list<str *> *args) {
-    char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->units.size()+1));
+    static __GC_VECTOR(char *) argvlist;
+    argvlist.clear();
     for(__ss_int i = 0; i < args->__len__(); ++i) {
-        argvlist[i] = (char *)(args->__getitem__(i)->c_str());
+        argvlist.push_back((char *)(args->__getitem__(i)->c_str()));
     }
-    argvlist[args->__len__()] = NULL;
-    return argvlist;
+    argvlist.push_back(NULL);
+    return argvlist.data();
 }
 
 char **__exec_envplist(dict<str *, str *> *env) {
-    char** envplist = (char**)GC_malloc(sizeof(char*)*(env->gcd.size()+1));
+    static __GC_VECTOR(char *) envplist;
+    envplist.clear();
     list<tuple<str *> *> *items = new list<tuple<str *> *>(env->items());
     for(__ss_int i=0; i < items->__len__(); i++) {
-        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->c_str());
+        envplist.push_back((char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->c_str()));
     }
-    envplist[items->__len__()] = NULL;
-    return envplist;
+    envplist.push_back(NULL);
+    return envplist.data();
 }
 
 void *execv(str* file, list<str*>* args) {

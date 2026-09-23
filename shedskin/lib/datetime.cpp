@@ -472,9 +472,6 @@ datetime *tzinfo::fromutc(datetime *dt) {
 	if(dtdst==NULL)
 		throw new ValueError(new str("fromutc: non-None dst() result required"));
 	dt = dt->__add__(dtdst);
-	GC_FREE(delta);
-	GC_FREE(dtoff);
-	GC_FREE(dtdst);
 	return dt;
 	/*    dtdst = dt.dst()
           # raise ValueError if dtoff is None or dtdst is None
@@ -746,7 +743,6 @@ datetime *datetime::__sub__(timedelta *other) {
 		r->year=tmp->year;
 		r->month=tmp->month;
 		r->day=tmp->day;
-		GC_FREE(tmp);
 	}
     return r;
 }
@@ -760,11 +756,7 @@ timedelta *datetime::__sub__(datetime *other) {
 		timedelta *offset2 = other->_tzinfo->utcoffset(other);
 		if(offset1!=NULL && offset2!=NULL) {
 			timedelta *tmp = td->__sub__(offset1);
-			GC_FREE(td);
-			GC_FREE(offset1);
 			td = tmp->__add__(offset2);
-			GC_FREE(tmp);
-			GC_FREE(offset2);
 			return td;
 		}
 		if(offset1==NULL && offset2==NULL) {
@@ -893,7 +885,6 @@ datetime *datetime::astimezone(tzinfo *tzinfo) {
 		return this;
 	datetime *utc = this->__sub__(this->utcoffset())->replace(128,-1,-1,-1,-1,-1,-1,-1,tzinfo,-1);
 	datetime *r = tzinfo->fromutc(utc);
-	GC_FREE(utc);
 	return r;
 /*def astimezone(self, tz):
       if self.tzinfo is tz:
@@ -972,7 +963,6 @@ __time__::struct_time *datetime::timetuple() {
 			dst=0;
 		else
 			dst=1;
-        GC_FREE(tmp);
 	}
 
     return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
@@ -992,7 +982,6 @@ __time__::struct_time *datetime::utctimetuple() {
 	timedelta *offset;
 	if(_tzinfo!=NULL && NULL!=(offset=_tzinfo->utcoffset(this))) {
 		tmp = this->__sub__(offset);
-		GC_FREE(offset);
 	}
     return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
         (__ss_int)(tmp->year),
