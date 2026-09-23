@@ -228,7 +228,7 @@ template <class T> void *set<T>::discard(T key) {
 template <class T> void *set<T>::remove(T key) {
     typename __GC_SET<T>::iterator it = gcs.find(key);
     if(it == gcs.end())
-        throw new KeyError(repr(key), true);
+        throw new KeyErrorT(key);
     else
         gcs.erase(it);
     return NULL;
@@ -237,7 +237,7 @@ template <class T> void *set<T>::remove(T key) {
 template<class T> T set<T>::pop() {
     typename __GC_SET<T>::iterator it = gcs.begin();
     if(it == gcs.end())
-        throw new KeyError(repr(new str("pop from an empty set")), true);
+        throw new KeyErrorT(new str("pop from an empty set"));
     T t = *it;
     gcs.erase(it);
     return t;

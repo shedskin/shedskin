@@ -191,29 +191,6 @@ PyObject *UnicodeEncodeError::__py_args__() {
 PyObject *UnicodeTranslateError::__py_args__() {
     return Py_BuildValue("Nnns", __to_py(_object), (Py_ssize_t)start, (Py_ssize_t)end, reason->c_str());
 }
-
-/* KeyError.__str__ in CPython repr()s its single argument, so a KeyError
-   whose message is already repr(key) would come out double-quoted
-   (KeyError("'k'") instead of KeyError('k')). recover the key object from
-   its repr via ast.literal_eval where possible; 0 (use the message) otherwise */
-PyObject *KeyError::__py_args__() {
-    if(!msg_is_repr || !message)
-        return 0;
-    PyObject *args = 0;
-    PyObject *ast = PyImport_ImportModule("ast");
-    if(ast) {
-        PyObject *msg = message->__to_py__();
-        PyObject *key = PyObject_CallMethod(ast, "literal_eval", "O", msg);
-        if(key) {
-            args = PyTuple_Pack(1, key);
-            Py_DECREF(key);
-        }
-        Py_XDECREF(msg);
-        Py_DECREF(ast);
-    }
-    PyErr_Clear();
-    return args;
-}
 #endif
 
 void __throw_index_out_of_range(const char *msg) {

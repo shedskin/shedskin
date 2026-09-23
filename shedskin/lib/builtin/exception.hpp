@@ -182,14 +182,26 @@ public:
 
 class KeyError : public LookupError {
 public:
-    /* msg_is_repr: the message is the repr of the missing key (as raised by
-       dict/set/Counter lookups), rather than a plain message from an explicit
-       'raise KeyError(...)' */
-    bool msg_is_repr;
-    KeyError(str *msg=0, bool msg_is_repr=false) : LookupError(msg), msg_is_repr(msg_is_repr) { this->__class__ = cl_keyerror; }
+    KeyError(str *msg=0) : LookupError(msg) { this->__class__ = cl_keyerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
-    PyObject *__py_args__();
+#endif
+};
+
+/* KeyError raised by a failed dict/set/Counter lookup: keeps the key itself,
+   so an extension module can pass it to CPython as-is (message is repr(key),
+   which KeyError.__str__ would otherwise repr a second time) */
+template<class T> str *repr(T t);
+#ifdef __SS_BIND
+template<class T> PyObject *__to_py(T t);
+#endif
+
+template<class T> class KeyErrorT : public KeyError {
+public:
+    T key;
+    KeyErrorT(T key) : KeyError(repr(key)), key(key) {}
+#ifdef __SS_BIND
+    PyObject *__py_args__() { return PyTuple_Pack(1, __to_py(key)); }
 #endif
 };
 
