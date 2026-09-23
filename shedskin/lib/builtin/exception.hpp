@@ -194,6 +194,13 @@ public:
 template<class T> str *repr(T t);
 #ifdef __SS_BIND
 template<class T> PyObject *__to_py(T t);
+
+/* can __to_py(T) be instantiated? true for the non-pointer types that have
+   explicit specializations (int, float, bool, complex) and for pointers to
+   classes defining __to_py__(); false for e.g. datetime.date keys, which have
+   no conversion and would otherwise break the extension module build */
+template<class T, class = void> struct __ss_has_to_py : std::bool_constant<!std::is_pointer_v<T>> {};
+template<class T> struct __ss_has_to_py<T, std::void_t<decltype(std::declval<T>()->__to_py__())>> : std::true_type {};
 #endif
 
 template<class T> class KeyErrorT : public KeyError {
@@ -201,7 +208,12 @@ public:
     T key;
     KeyErrorT(T key) : KeyError(repr(key)), key(key) {}
 #ifdef __SS_BIND
-    PyObject *__py_args__() { return PyTuple_Pack(1, __to_py(key)); }
+    PyObject *__py_args__() {
+        if constexpr (__ss_has_to_py<T>::value)
+            return Py_BuildValue("(N)", __to_py(key)); /* N: steals the new reference */
+        else
+            return 0; /* fall back to the message (repr(key)) */
+    }
 #endif
 };
 
