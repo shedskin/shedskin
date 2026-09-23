@@ -224,6 +224,8 @@ public:
     timedelta *__sub__(timedelta *other);
     timedelta *__mul__(__ss_int n);
     timedelta *__truediv__(__ss_int n);
+    timedelta *__mul__(__ss_float f);
+    timedelta *__truediv__(__ss_float f);
     timedelta *__neg__();
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
     timedelta *__abs__();

@@ -1300,6 +1300,16 @@ timedelta *timedelta::__mul__(__ss_int n) {
     return new timedelta((double)(days*n), (double)(seconds*n), (double)(microseconds*n),0,0,0,0);
 }
 
+timedelta *timedelta::__mul__(__ss_float f) { /* not exact like cpython, but close enough */
+    return new timedelta(0, 0, (((double)days*86400+seconds)*1e6+microseconds)*f, 0, 0, 0, 0);
+}
+
+timedelta *timedelta::__truediv__(__ss_float f) {
+    if(f==0)
+        throw new ZeroDivisionError(new str("division by zero"));
+    return __mul__(1/f);
+}
+
 /* Exact-integer floor division of timedelta(days,seconds,microseconds) by n,
  * without ever forming (days*86400+seconds)*1000000+microseconds as a single
  * value (which overflows a 64-bit integer for large day counts, and which is

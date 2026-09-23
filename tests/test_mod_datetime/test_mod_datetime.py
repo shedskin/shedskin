@@ -318,6 +318,13 @@ def test_timedelta_truediv():
     assert (datetime.timedelta(microseconds=7) / 2).microseconds == 4
 
 
+def test_timedelta_float_mul_div():
+    assert str(datetime.timedelta(days=1) * 0.5) == '12:00:00'
+    assert str(datetime.timedelta(days=1) / 0.5) == '2 days, 0:00:00'
+    assert str(datetime.timedelta(hours=-3) * 1.5) == '-1 day, 19:30:00'
+    assert str(datetime.timedelta(seconds=1) / 3.0) == '0:00:00.333333'
+
+
 def test_date_arithmetic():
     # regression test: for __add__, both operands used to be converted to
     # the union of their types, so that element types get unified (e.g.
@@ -969,6 +976,7 @@ def test_all():
         test_timedelta_total_seconds()
         test_timedelta_floordiv()
         test_timedelta_truediv()
+        test_timedelta_float_mul_div()
         test_date_replace_keeps_unchanged_day_out_of_range()
         test_datetime_replace_keywords()
         test_time_replace_keywords()
