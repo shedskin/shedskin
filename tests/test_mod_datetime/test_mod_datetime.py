@@ -928,6 +928,44 @@ def test_date_dict_key():
         assert False
     except KeyError as e:
         assert str(e) == 'datetime.datetime(2020, 1, 1, 13, 0)'
+        
+        
+# a tzinfo whose utcoffset()/dst() return the same shared timedelta objects
+# every call: the datetime runtime must not free/reuse what user code hands
+# it (aware subtraction, dst(), fromutc()/astimezone() all call these)
+class SharedTZ(datetime.tzinfo):
+    def __init__(self, hours):
+        self.off = datetime.timedelta(hours=hours)
+        self.zero = datetime.timedelta(0)
+
+    def utcoffset(self, dt):
+        return self.off
+
+    def dst(self, dt):
+        return self.zero
+
+    def tzname(self, dt):
+        return 'shared'
+
+
+def test_tzinfo_shared_offsets():
+    east = SharedTZ(2)
+    west = SharedTZ(-5)
+    a = datetime.datetime(2024, 3, 10, 12, 0, tzinfo=east)
+    b = datetime.datetime(2024, 3, 10, 12, 0, tzinfo=west)
+    for i in range(3):
+        assert b - a == datetime.timedelta(hours=7)
+        assert a - b == datetime.timedelta(hours=-7)
+        assert a.timetuple().tm_isdst == 0
+        c = a.astimezone(west)
+        assert (c.year, c.month, c.day, c.hour) == (2024, 3, 10, 5)
+        assert c.tzinfo is west
+        assert c.utcoffset() == datetime.timedelta(hours=-5)
+        assert a.utctimetuple().tm_hour == 10
+    # the shared objects survived all of the above intact
+    assert east.off == datetime.timedelta(hours=2)
+    assert west.off == datetime.timedelta(hours=-5)
+    assert east.zero == datetime.timedelta(0)
 
 
 def test_all():
@@ -984,6 +1022,7 @@ def test_all():
         test_strftime()
         test_arithmetic_overflow()
         test_date_dict_key()
+        test_tzinfo_shared_offsets()
 
 if __name__ == "__main__":
     test_all()
