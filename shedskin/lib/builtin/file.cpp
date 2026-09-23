@@ -53,7 +53,7 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
 #endif
 }
 
-file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline) {
+file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline) : closed(False) {
     options.universal_mode = true;
     __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
     __errors = __lookup_errors(errors);
@@ -390,7 +390,7 @@ str *file::__next__() {
 
 /* file_binary TODO merge with file */
 
-file_binary::file_binary(str *file_name, str *flags) {
+file_binary::file_binary(str *file_name, str *flags) : closed(False) {
     if (flags) {
         size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {

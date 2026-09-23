@@ -313,15 +313,25 @@ __GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
 
 
 
-//replacing pcre's allocation functions with ours using the garbage collector
+/* replace pcre2's allocation functions with ours, so that compiled patterns
+ * and match data are reclaimed by the garbage collector together with the
+ * Pattern/Match objects that reference them (with --nogc, plain malloc/free) */
 void *re_malloc(PCRE2_SIZE n, void *)
 {
+#ifdef __SS_NOGC
+    return malloc(n);
+#else
     return GC_MALLOC(n);
+#endif
 }
 
 void re_free(void *o, void *)
 {
+#ifdef __SS_NOGC
+    free(o);
+#else
     GC_FREE(o);
+#endif
 }
 
 str *Pattern::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
@@ -811,8 +821,6 @@ Match *__exec_once(str *pat, str *subj, __ss_int flags)
 
     r = compile(pat, flags & ~(__ss_int)(PCRE2_ANCHORED | PCRE2_ENDANCHORED));
     mo = r->__exec(subj, 0, -1, flags & (PCRE2_ANCHORED | PCRE2_ENDANCHORED));
-
-    if(!mo) GC_FREE(r);
 
     return mo;
 }
