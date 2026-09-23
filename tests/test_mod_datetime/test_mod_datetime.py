@@ -911,6 +911,25 @@ def test_arithmetic_overflow():
     assert datetime.datetime(2024, 3, 1, 0, 30) - datetime.timedelta(hours=1) == datetime.datetime(2024, 2, 29, 23, 30)
 
 
+def test_date_dict_key():
+    # dict keyed by date/datetime: a missing key raises KeyError; date has no
+    # python conversion so this must still compile as an extension module
+    d = {datetime.date(2020, 1, 1): 'a'}
+    assert d[datetime.date(2020, 1, 1)] == 'a'
+    try:
+        d[datetime.date(2021, 1, 1)]
+        assert False
+    except KeyError as e:
+        assert str(e) == 'datetime.date(2021, 1, 1)'
+
+    dt = {datetime.datetime(2020, 1, 1, 12, 0): 1}
+    try:
+        dt.pop(datetime.datetime(2020, 1, 1, 13, 0))
+        assert False
+    except KeyError as e:
+        assert str(e) == 'datetime.datetime(2020, 1, 1, 13, 0)'
+        
+        
 # a tzinfo whose utcoffset()/dst() return the same shared timedelta objects
 # every call: the datetime runtime must not free/reuse what user code hands
 # it (aware subtraction, dst(), fromutc()/astimezone() all call these)
@@ -1002,6 +1021,7 @@ def test_all():
         test_today()
         test_strftime()
         test_arithmetic_overflow()
+        test_date_dict_key()
         test_tzinfo_shared_offsets()
 
 if __name__ == "__main__":

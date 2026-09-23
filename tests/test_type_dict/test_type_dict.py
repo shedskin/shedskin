@@ -262,6 +262,37 @@ def test_view_len_bool():
     assert e.values()
 
 
+def test_keyerror_message():
+    # str(KeyError) is repr(key), whether we raise it in an exe or (as an
+    # actual KeyError(key)) from an extension module
+    d = {1: 'a'}
+    try:
+        d[42]
+        assert False
+    except KeyError as e:
+        assert str(e) == '42'
+
+    s = {'x': 1}
+    try:
+        del s['zz']
+        assert False
+    except KeyError as e:
+        assert str(e) == "'zz'"
+
+    try:
+        s.pop('zz')
+        assert False
+    except KeyError as e:
+        assert str(e) == "'zz'"
+
+    t = {(1, 2): 'a'}
+    try:
+        t[(3, 4)]
+        assert False
+    except KeyError as e:
+        assert str(e) == '(3, 4)'
+
+
 def test_all():
     test_dict()
     test_dict_get()
@@ -280,6 +311,7 @@ def test_all():
     test_merge()
     test_frozendict()
     test_view_len_bool()
+    test_keyerror_message()
 
 
 if __name__ == "__main__":

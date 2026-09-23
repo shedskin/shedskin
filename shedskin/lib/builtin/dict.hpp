@@ -262,7 +262,7 @@ template<> __ss_bool __none();
 template <class K, class V> V dict<K,V>::__getitem__(K key) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw new KeyError(repr(key));
+        throw new KeyErrorT(key);
     else
         return (*it).second;
 }
@@ -270,7 +270,7 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw new KeyError(repr(key));
+        throw new KeyErrorT(key);
     else
         (*it).second = __add((*it).second, value);
 
@@ -307,7 +307,7 @@ template <class K, class V> V dict<K,V>::setdefault(K key, V value)
 template <class K, class V> void *dict<K,V>::__delitem__(K key) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw new KeyError(repr(key));
+        throw new KeyErrorT(key);
     else
         gcd.erase(it);
 
@@ -317,7 +317,7 @@ template <class K, class V> void *dict<K,V>::__delitem__(K key) {
 template<class K, class V> V dict<K,V>::pop(K key) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw new KeyError(repr(key));
+        throw new KeyErrorT(key);
     else {
         V v = (*it).second;
         gcd.erase(it);
@@ -339,7 +339,7 @@ template<class K, class V> V dict<K,V>::pop(K key, V value) {
 template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
     typename __GC_DICT<K, V>::iterator it = gcd.begin();
     if(it == gcd.end())
-        throw new KeyError(repr(new str("popitem(): dictionary is empty")));
+        throw new KeyErrorT(new str("popitem(): dictionary is empty"));
     else {
         tuple2<K,V> *t = new tuple2<K,V>(2, (*it).first, (*it).second);
         gcd.erase(it);

@@ -221,6 +221,29 @@ def test_int_from_unicode_str():
     assert int_fails('1 2')
 
 
+def test_int_error_message():
+    for value, base, expected in [
+        ('x', 10, "invalid literal for int() with base 10: 'x'"),
+        ('', 10, "invalid literal for int() with base 10: ''"),
+        ('12a', 10, "invalid literal for int() with base 10: '12a'"),
+        (' 8 ', 8, "invalid literal for int() with base 8: ' 8 '"),
+        ('zz', 16, "invalid literal for int() with base 16: 'zz'"),
+    ]:
+        error = ''
+        try:
+            int(value, base)
+        except ValueError as e:
+            error = str(e)
+        assert error == expected
+
+    error = ''
+    try:
+        int(b'zz ', 16)
+    except ValueError as e:
+        error = str(e)
+    assert error == "invalid literal for int() with base 16: b'zz '"
+
+
 def test_all():
     test_int()
     test_division()
@@ -233,6 +256,7 @@ def test_all():
     test_to_bytes()
     test_from_bytes()
     test_int_from_unicode_str()
+    test_int_error_message()
 
 
 if __name__ == "__main__":

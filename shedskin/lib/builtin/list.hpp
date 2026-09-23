@@ -487,7 +487,7 @@ template<class T> __ss_int list<T>::index(T a) {
     for(__ss_int i = 0; i < len; i++)
         if(__eq(a, units[i]))
             return i;
-    throw new ValueError(new str("list.index(x): x not in list"));
+    throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
 }
 
 template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, this->__len__()); }
@@ -497,7 +497,7 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     for(__ss_int i = s; i < e; i++)
         if(__eq(a, units[i]))
             return i;
-    throw new ValueError(new str("list.index(x): x not in list"));
+    throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
 }
 
 template<class T> __ss_int list<T>::count(T a) {
