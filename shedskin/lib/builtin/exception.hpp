@@ -182,9 +182,14 @@ public:
 
 class KeyError : public LookupError {
 public:
-    KeyError(str *msg=0) : LookupError(msg) { this->__class__ = cl_keyerror; }
+    /* msg_is_repr: the message is the repr of the missing key (as raised by
+       dict/set/Counter lookups), rather than a plain message from an explicit
+       'raise KeyError(...)' */
+    bool msg_is_repr;
+    KeyError(str *msg=0, bool msg_is_repr=false) : LookupError(msg), msg_is_repr(msg_is_repr) { this->__class__ = cl_keyerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
+    PyObject *__py_args__();
 #endif
 };
 

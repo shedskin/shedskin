@@ -17,6 +17,10 @@ str *input(str *msg) {
 
 /* int */
 
+template<class T> static str *__int_error(T s, __ss_int base) {
+    return __add_strs(4, new str("invalid literal for int() with base "), __str(base), new str(": "), repr(s));
+}
+
 __ss_int __int(str *s, __ss_int base) {
     /* unicode digits and whitespace -> ascii (see __ss_ascii_numeric) */
     __GC_STRING a = __ss_ascii_numeric(s);
@@ -30,15 +34,16 @@ __ss_int __int(str *s, __ss_int base) {
 #endif
     /* no digits at all: strtol happily returns 0 for '' or '   ' */
     if(cp == start)
-        throw new ValueError(new str("invalid literal for int()"));
+        throw new ValueError(__int_error(s, base));
     while(*cp and isspace((unsigned char)*cp))
         cp++;
     if(*cp != '\0')
-        throw new ValueError(new str("invalid literal for int()"));
+        throw new ValueError(__int_error(s, base));
     return i;
 }
 
 __ss_int __int(bytes *s, __ss_int base) {
+    bytes *orig = s;
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
@@ -54,7 +59,7 @@ __ss_int __int(bytes *s, __ss_int base) {
             i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
         #endif
         if(*cp != '\0')
-            throw new ValueError(new str("invalid literal for int()"));
+            throw new ValueError(__int_error(orig, base));
     }
     return i;
 }

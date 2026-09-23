@@ -337,7 +337,7 @@ public:
             this->__setitem__(k, v);
             return v;
         }
-        throw new KeyError(repr(k));
+        throw new KeyError(repr(k), true);
     }
 
     void *__addtoitem__(K key, V value) {
@@ -346,7 +346,7 @@ public:
             if(func)
                 this->__setitem__(key, __add(func(), value));
             else
-                throw new KeyError(repr(key));
+                throw new KeyError(repr(key), true);
         }
         else {
             (*it).second = __add((*it).second, value);

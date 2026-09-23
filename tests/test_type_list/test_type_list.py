@@ -269,6 +269,29 @@ def test_list_iadd():
     assert t == [1, 2, 3, 4, 5]
 
 
+def test_list_index_error_message():
+    error = ''
+    try:
+        [1, 2].index(3)
+    except ValueError as e:
+        error = str(e)
+    assert error == '3 is not in list'
+
+    error = ''
+    try:
+        ['a', 'b'].index('c', 1)
+    except ValueError as e:
+        error = str(e)
+    assert error == "'c' is not in list"
+
+    error = ''
+    try:
+        [1.5].index(2.5, 0, 1)
+    except ValueError as e:
+        error = str(e)
+    assert error == '2.5 is not in list'
+
+
 def test_all():
     test_list_append()
     test_list_assign()
@@ -290,6 +313,7 @@ def test_all():
     test_tuple_in_list()
     test_list_imul()
     test_list_iadd()
+    test_list_index_error_message()
 
 
 if __name__ == "__main__":
