@@ -160,7 +160,7 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
 }
 template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
     __GC_STR s;
-    if(flag) // bytes % bytes
+    if(flag && c=='s') // bytes % bytes (%r/%a still use repr/ascii)
         s = __widen(arg->unit);
     else if(c=='a')
         s = ascii(arg)->unit;
