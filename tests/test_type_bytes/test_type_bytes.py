@@ -498,6 +498,13 @@ def test_format():
     d = {b'aap': 8, b'bert': 9}
     assert (b'hoho %(aap)d, %(bert)d' % d) == b'hoho 8, 9'
 
+    # %r/%a on a bytes argument used to act like %s
+    assert (b'%r' % (b'a',)) == b"b'a'"
+    assert (b'%a' % (b'a',)) == b"b'a'"
+    assert (b'%s' % (b'a',)) == b'a'
+    assert (b'[%-6r|%.3r]' % (b'x', b'xyz')) == b"[b'x'  |b'x]"
+    assert (b'%(k)r %(k)s' % {b'k': b'v'}) == b"b'v' v"
+
     d2 = {b'aap': b'acht', b'bert': b'negen'}
     assert (b'hoho %(aap)s, %(bert)s' % d2) == b'hoho acht, negen'
 
