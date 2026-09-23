@@ -123,16 +123,40 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
     __throw_oserror(fname);
 }
 
-/* str (code points) <-> native wide strings, via std::filesystem::path */
+/* str (code points) <-> native wide strings. (not via std::filesystem::path,
+   whose conversions throw on lone surrogates) */
 static std::wstring __to_wide(str *s) {
-    return std::filesystem::path(s->unit).wstring();
+    return __to_utf16<wchar_t>(s->unit);
 }
 
 static str *__from_wide(const wchar_t *w) {
-    std::u32string u = std::filesystem::path(w).u32string();
-    return new str((const __ss_char *)u.data(), u.size());
+    return new str(__from_utf16<wchar_t>(w, wcslen(w)));
 }
 #endif
+
+/* str <-> std::filesystem::path. constructing a path from the code points
+   directly would go through the standard codecvt, which throws on the lone
+   surrogates that stand in for undecodable bytes (PEP 383); and on Windows
+   path::string() converts to the (lossy) ansi code page. so use the native
+   representation: utf-8 bytes (with surrogateescape) on posix, utf-16 on
+   Windows. */
+static std::filesystem::path __fspath(str *s) {
+#ifdef WIN32
+    return std::filesystem::path(__to_wide(s));
+#else
+    __GC_BYTES b = __to_utf8(s->unit);
+    return std::filesystem::path(std::string(b.data(), b.size()));
+#endif
+}
+
+static str *__fsstr(const std::filesystem::path &p) {
+    const auto &n = p.native();
+#ifdef WIN32
+    return new str(__from_utf16<wchar_t>(n.data(), n.size()));
+#else
+    return new str(__from_utf8(n.data(), n.size()));
+#endif
+}
 
 
 str *linesep, *name;
@@ -165,8 +189,8 @@ list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
 
     try {
-        for (const auto & entry : std::filesystem::directory_iterator(path->unit))
-            r->append(new str(entry.path().filename().string().c_str()));
+        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path)))
+            r->append(__fsstr(entry.path().filename()));
     } catch (std::filesystem::filesystem_error const& e) {
         __throw_fs_error(e, path);
     }
@@ -176,19 +200,30 @@ list<str *> *listdir(str *path) {
 
 str *getcwd() {
     str *r;
+#ifdef WIN32
+    wchar_t *d = ::_wgetcwd(0, 0);
+    if (!d)
+        __throw_oserror();
+    r = __from_wide(d);
+#else
     char *d=::getcwd(0, 256);
     r = new str(d);
+#endif
     free(d);
     return r;
 }
 
 bytes *getcwdb() {
+#ifdef WIN32
+    return new bytes(__to_utf8(getcwd()->unit)); /* as CPython: fs encoding */
+#else
     char *d=::getcwd(0, 256);
     if (!d)
         __throw_oserror();
     bytes *r = new bytes(d);
     free(d);
     return r;
+#endif
 }
 
 bytes *fsencode(str *filename) {
@@ -208,7 +243,11 @@ str *fsdecode(str *filename) {
 }
 
 void *chdir(str *dir) {
+#ifdef WIN32
+    if(::_wchdir(__to_wide(dir).c_str()) == -1)
+#else
     if(::chdir(dir->c_str()) == -1)
+#endif
         __throw_oserror(dir);
     return NULL;
 }
@@ -236,7 +275,11 @@ str *getenv(str *name_, str *default_) {
 }
 
 void *rename(str *a, str *b) {
+#ifdef WIN32
+    if(::_wrename(__to_wide(a).c_str(), __to_wide(b).c_str()) == -1) {
+#else
     if(std::rename(a->c_str(), b->c_str()) == -1) {
+#endif
         __throw_oserror(a);
     }
     return NULL;
@@ -249,7 +292,7 @@ void *replace(str *a, str *b) {
      * semantics on every platform, so use that here instead to match what
      * os.replace() promises. */
     std::error_code ec;
-    std::filesystem::rename(a->c_str(), b->c_str(), ec);
+    std::filesystem::rename(__fspath(a), __fspath(b), ec);
     if (ec) {
         /* the error_code overload doesn't throw and isn't guaranteed to
          * leave errno set, so set it explicitly from ec before constructing
@@ -285,7 +328,11 @@ __ss_int process_cpu_count() {
 }
 
 void *remove(str *path) {
+#ifdef WIN32
+    if(::_wremove(__to_wide(path).c_str()) == -1) {
+#else
     if(std::remove(path->c_str()) == -1) {
+#endif
         __throw_oserror(path);
     }
     return NULL;
@@ -297,7 +344,11 @@ void *unlink(str *path) {
 }
 
 void *rmdir(str *a) {
+#ifdef WIN32
+    if (::_wrmdir(__to_wide(a).c_str()) == -1)
+#else
     if (::rmdir(a->c_str()) == -1)
+#endif
         __throw_oserror(a);
     return NULL;
 }
@@ -332,7 +383,7 @@ void *removedirs(str *name_) {
 
 void *mkdir(str *path, __ss_int mode) {
 #ifdef WIN32
-    if (::mkdir(path->c_str()) == -1)
+    if (::_wmkdir(__to_wide(path).c_str()) == -1)
 #else
     if (::mkdir(path->c_str(), (unsigned)mode) == -1)
 #endif
@@ -432,7 +483,13 @@ __cstat::__cstat(str *path, __ss_int t) {
 
     int r = -1;
     if(t==1) {
+#ifdef WIN32
+        /* (struct stat is the 64-bit time, 32-bit size variant) */
+        static_assert(sizeof(struct stat) == sizeof(struct _stat64i32));
+        r = ::_wstat64i32(__to_wide(path).c_str(), (struct _stat64i32 *)&sbuf);
+#else
         r = ::stat(path->c_str(), &sbuf);
+#endif
     } else if (t==2) {
 #ifndef WIN32
         r = ::lstat(path->c_str(), &sbuf);
@@ -444,7 +501,7 @@ __cstat::__cstat(str *path, __ss_int t) {
         /* The CRT stat() fails on device names such as 'nul' or 'con'.
            Like CPython (since 3.8), fall back to opening the path and
            reporting it as a character device/pipe. */
-        HANDLE h = CreateFileA(path->c_str(), 0,
+        HANDLE h = CreateFileW(__to_wide(path).c_str(), 0,
                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                                NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         if (h != INVALID_HANDLE_VALUE) {
@@ -467,7 +524,7 @@ __cstat::__cstat(str *path, __ss_int t) {
 
 #ifdef WIN32
     if (!device) {
-        HANDLE h = CreateFileA(path->c_str(), 0,
+        HANDLE h = CreateFileW(__to_wide(path).c_str(), 0,
                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                                NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         if (h != INVALID_HANDLE_VALUE) {
@@ -596,8 +653,8 @@ class_ *cl_DirEntry;
 
 DirEntry::DirEntry(const std::filesystem::directory_entry &entry) : __entry(entry) {
     this->__class__ = cl_DirEntry;
-    this->name = new str(entry.path().filename().string().c_str());
-    this->path = new str(entry.path().string().c_str());
+    this->name = __fsstr(entry.path().filename());
+    this->path = __fsstr(entry.path());
 }
 
 __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
@@ -646,7 +703,7 @@ list<DirEntry *> *scandir(str *path) {
     list<DirEntry *> *r = new list<DirEntry *>();
 
     try {
-        for (const auto & entry : std::filesystem::directory_iterator(path->unit))
+        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path)))
             r->append(new DirEntry(entry));
     } catch (std::filesystem::filesystem_error const& e) {
         __throw_fs_error(e, path);
@@ -706,7 +763,7 @@ __walk_tuple *__walk_iter::__scan(str *top, __GC_VECTOR(str *) &subdirs) {
     list<str *> *files = new list<str *>();
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(top->unit, ec);
+    std::filesystem::directory_iterator it(__fspath(top), ec);
     if(ec) {
         __onerror(top, ec);
         return NULL;
@@ -714,7 +771,7 @@ __walk_tuple *__walk_iter::__scan(str *top, __GC_VECTOR(str *) &subdirs) {
     try {
         for (const auto & entry : it) {
             std::error_code ec2;
-            str *name = new str(entry.path().filename().string().c_str());
+            str *name = __fsstr(entry.path().filename());
             if(entry.is_directory(ec2)) {
                 dirs->append(name);
                 if(followlinks || !entry.is_symlink(ec2))
@@ -759,7 +816,7 @@ __walk_tuple *__walk_iter::__next__() {
             str *name = dirs->units[i-1];
             std::error_code ec;
             str *path = __walk_join(last->__getfirst__(), name);
-            if(followlinks || !std::filesystem::is_symlink(path->unit, ec))
+            if(followlinks || !std::filesystem::is_symlink(__fspath(path), ec))
                 pending.push_back(path);
         }
         last = NULL;
@@ -816,7 +873,7 @@ __ss_int umask(__ss_int newmask)  {
 __ss_int chmod(str* path, __ss_int val) {
 #ifdef WIN32
     /* windows only honours the write permission bit (read-only attribute) */
-    if(::_chmod(path->c_str(), (int)val) == -1)
+    if(::_wchmod(__to_wide(path).c_str(), (int)val) == -1)
 #else
     if(::chmod(path->c_str(), (unsigned)val) == -1)
 #endif
@@ -983,7 +1040,11 @@ void *fdatasync(__ss_int f1) {
 #endif
 
 __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
+#ifdef WIN32
+    __ss_int fp = ::_wopen(__to_wide(name_).c_str(), (int)flags, (int)mode);
+#else
     __ss_int fp = ::open(name_->c_str(), (int)flags, (int)mode);
+#endif
     if(fp == -1)
         __throw_oserror(name_);
     return fp;
@@ -1751,14 +1812,13 @@ void *link(str *src, str *dst) {
 
 str *readlink(str *path) {
     std::error_code ec;
-    std::filesystem::path target = std::filesystem::read_symlink(std::filesystem::path(path->unit), ec);
+    std::filesystem::path target = std::filesystem::read_symlink(__fspath(path), ec);
     if (ec) {
         std::error_condition c = ec.default_error_condition();
         errno = (c.category() == std::generic_category()) ? c.value() : EINVAL;
         __throw_oserror(path);
     }
-    std::u32string u = target.u32string();
-    return new str((const __ss_char *)u.data(), u.size());
+    return __fsstr(target);
 }
 
 str *getlogin() {
@@ -1939,7 +1999,7 @@ __ss_int getppid() {
    cpython, treat X_OK as 'exists'. */
 __ss_bool access(str *path, __ss_int mode) {
     int m = (int)mode & (__ss_R_OK | __ss_W_OK);
-    return __mbool(::_access(path->c_str(), m) == 0);
+    return __mbool(::_waccess(__to_wide(path).c_str(), m) == 0);
 }
 
 void *fsync(__ss_int fd) {
@@ -2186,7 +2246,7 @@ void *truncate(str *path, __ss_int length) {
         __throw_oserror(path);
     }
     std::error_code ec;
-    std::filesystem::resize_file(path->c_str(), (std::uintmax_t)length, ec);
+    std::filesystem::resize_file(__fspath(path), (std::uintmax_t)length, ec);
     if (ec) {
         std::error_condition c = ec.default_error_condition();
         errno = (c.category() == std::generic_category()) ? c.value() : EIO;
@@ -2328,7 +2388,7 @@ void *symlink(str *src, str *dst, __ss_bool target_is_directory) {
     /* like cpython: pick the directory flag when asked to, or when the
        target exists and is a directory */
     std::error_code ec;
-    std::filesystem::path target = std::filesystem::path(dst->unit).parent_path() / src->unit;
+    std::filesystem::path target = __fspath(dst).parent_path() / __fspath(src);
     DWORD flags = (target_is_directory || std::filesystem::is_directory(target, ec)) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
 #ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
     flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
@@ -2536,10 +2596,11 @@ void __init() {
     cl_terminal_size = new class_("terminal_size");
     cl_times_result = new class_("times_result");
 
-    linesep = new str("\n");
 #ifdef WIN32
+    linesep = new str("\r\n");
     name = new str("nt");
 #else
+    linesep = new str("\n");
     name = new str("posix");
     cl___vfsstat = new class_("__vfsstat");
     cl_uname_result = new class_("uname_result");

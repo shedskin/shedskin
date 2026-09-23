@@ -389,6 +389,11 @@ def test_posix():
     assert os.devnull == '/dev/null'
 
 
+def test_nt():
+    assert os.linesep == '\r\n'
+    assert os.sep == '\\'
+
+
 def test_rdwr():
     fd = os.open('/dev/null', os.O_RDWR)
     assert os.write(fd, b'blah') == 4
@@ -1239,7 +1244,61 @@ def test_process_compile_only():
     os._exit(1)
 
 
+def test_unicode_names():
+    d = 'tmp_\xfcn\xef'
+    fn = os.path.join(d, 'caf\xe9_\u20ac_\U0001f600.txt')
+    os.mkdir(d)
+    with open(fn, 'w') as f:
+        f.write('h\xe9llo')
+    os.mkdir(os.path.join(d, 'sub_\xdf'))
+    assert sorted(os.listdir(d)) == ['caf\xe9_\u20ac_\U0001f600.txt', 'sub_\xdf']
+    assert sorted([e.name for e in os.scandir(d)]) == sorted(os.listdir(d))
+    assert sorted([e.path for e in os.scandir(d)]) == sorted([os.path.join(d, n) for n in os.listdir(d)])
+    walked = [(r, sorted(ds), sorted(fs)) for r, ds, fs in os.walk(d)]
+    assert walked == [(d, ['sub_\xdf'], ['caf\xe9_\u20ac_\U0001f600.txt']), (os.path.join(d, 'sub_\xdf'), [], [])]
+    assert os.path.isfile(fn) and os.stat(fn).st_size == 6
+    fn2 = os.path.join(d, 'na\xefve.txt')
+    os.rename(fn, fn2)
+    with open(fn2) as f:  # (closed: Windows cannot remove an open file)
+        assert f.read() == 'h\xe9llo'
+    os.chdir(d)
+    assert os.path.basename(os.getcwd()) == d
+    os.chdir('..')
+    os.remove(fn2)
+    os.rmdir(os.path.join(d, 'sub_\xdf'))
+    os.rmdir(d)
+    assert not os.path.exists(d)
+
+
+def test_undecodable_names():
+    # names that are not valid utf-8 come back with surrogateescape (PEP 383)
+    # and must work again as paths. (skipped where the file system refuses
+    # such names, e.g. APFS)
+    d = 'tmp_bad'
+    os.mkdir(d)
+    sub = os.path.join(d, 'd\udcfe')
+    try:
+        os.mkdir(sub)
+    except OSError:
+        os.rmdir(d)
+        return
+    with open(os.path.join(sub, 'f\udcff'), 'w') as f:
+        f.write('abc')
+    assert os.listdir(d) == ['d\udcfe']
+    assert os.fsencode(os.listdir(d)[0]) == b'd\xfe'
+    assert [e.name for e in os.scandir(sub)] == ['f\udcff']
+    walked = [(r, fs) for r, ds, fs in os.walk(d)]
+    assert walked == [(d, []), (sub, ['f\udcff'])]
+    for e in os.scandir(sub):
+        assert e.is_file() and e.stat().st_size == 3
+    os.remove(os.path.join(sub, 'f\udcff'))
+    os.rmdir(sub)
+    os.rmdir(d)
+
+
 def test_all():
+    test_unicode_names()
+    test_undecodable_names()
     test_getcwd()
     test_chdir()
     test_exceptions()
@@ -1293,6 +1352,9 @@ def test_all():
     test_process_compile_only()
     test_urandom()
     test_getrandom()
+
+    if os.name == 'nt':
+        test_nt()
 
     if os.name == 'posix':  # TODO 'nt'
         test_posix()

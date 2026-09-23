@@ -2597,9 +2597,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if ident == "print" and not shadowed:
                 ident = node.func.id = "__print"  # XXX
 
-            if ident == "open" and not shadowed and len(node.args) > 1:
-                if ast_utils.is_str(node.args[1]):
-                    if "b" in _const_str(node.args[1]):
+            if ident == "open" and not shadowed:
+                mode_arg = node.args[1] if len(node.args) > 1 else None
+                for kw in node.keywords:
+                    if kw.arg == "mode":
+                        mode_arg = kw.value
+            else:
+                mode_arg = None
+            if mode_arg is not None:
+                if ast_utils.is_str(mode_arg):
+                    if "b" in _const_str(mode_arg):
                         ident = node.func.id = "open_binary"
 
                 else:

@@ -102,9 +102,72 @@ def test_errors_arg():
     assert 'x'.encode('utf-8', 'strict') == b'x'
     assert b'x'.decode('utf-8', 'strict') == 'x'
     assert 'x'.encode(encoding='ascii', errors='strict') == b'x'
-    # note: shedskin rejects other handlers ('replace', ...) eagerly with
-    # ValueError; cpython only looks the handler up when an error occurs,
-    # so that is not asserted here
+    # note: shedskin rejects unsupported handlers ('backslashreplace', ...)
+    # eagerly with ValueError; cpython only looks the handler up when an
+    # error occurs, so that is not asserted here
+
+
+def test_error_handlers_decode():
+    bs = b'a\xe2\x82b\xed\xa0\x80c\xf0\x9f\x98\xff\xc0\xafd'
+    assert bs.decode('utf-8', 'ignore') == 'abcd'
+    # replace: one U+FFFD per maximal subpart
+    assert bs.decode('utf-8', 'replace') == 'a\ufffdb\ufffd\ufffd\ufffdc\ufffd\ufffd\ufffd\ufffdd'
+    assert str(bs, 'utf-8', 'replace') == bs.decode('utf-8', 'replace')
+    se = bs.decode('utf-8', 'surrogateescape')
+    assert se == 'a\udce2\udc82b\udced\udca0\udc80c\udcf0\udc9f\udc98\udcff\udcc0\udcafd'
+    assert se.encode('utf-8', 'surrogateescape') == bs
+    assert b'\xff\x80a'.decode('ascii', 'surrogateescape').encode('ascii', 'surrogateescape') == b'\xff\x80a'
+    assert b'a\xe9b'.decode('ascii', 'replace') == 'a\ufffdb'
+    assert b'a\xe9b'.decode('ascii', 'ignore') == 'ab'
+    assert b'\xe9t\xe9'.decode('latin-1', 'ignore') == '\xe9t\xe9'
+    assert b'caf\xc3\xa9'.decode('utf-8', 'replace') == 'caf\xe9'
+
+
+def test_error_handlers_encode():
+    s = '\xe9\u20ac\U0001f600x'
+    assert s.encode('ascii', 'ignore') == b'x'
+    assert s.encode('ascii', 'replace') == b'???x'
+    assert s.encode('latin-1', 'replace') == b'\xe9??x'
+    assert 'a\udcffb'.encode('utf-8', 'surrogateescape') == b'a\xffb'
+    assert 'a\udcffb'.encode('latin-1', 'surrogateescape') == b'a\xffb'
+    assert 'a\ud800b'.encode('utf-8', 'ignore') == b'ab'
+    caught = 0
+    try:
+        'a\udc12b'.encode('utf-8', 'surrogateescape')  # below U+DC80: no byte
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end) == (1, 2)
+        caught += 1
+    assert caught == 1
+
+
+def test_cp1252():
+    allb = bytes([i for i in range(256) if i not in (0x81, 0x8d, 0x8f, 0x90, 0x9d)])
+    u = allb.decode('cp1252')
+    assert len(u) == 251
+    assert u.encode('cp1252') == allb
+    assert b'\x80\x93q\x94\x96\x85\x9f'.decode('windows-1252') == '\u20ac\u201cq\u201d\u2013\u2026\u0178'
+    assert '\u20ac\xe9'.encode('1252') == b'\x80\xe9'
+    assert b'\x00a'.decode('cp1252') == '\x00a'
+    assert b'a\x81b\x9d\x80'.decode('cp1252', 'replace') == 'a\ufffdb\ufffd\u20ac'
+    assert b'a\x81b'.decode('cp1252', 'ignore') == 'ab'
+    assert b'a\x81b'.decode('cp1252', 'surrogateescape') == 'a\udc81b'
+    assert 'a\u20ac\u0100b'.encode('cp1252', 'replace') == b'a\x80?b'
+    assert 'a\udc81b'.encode('cp1252', 'surrogateescape') == b'a\x81b'
+    caught = 0
+    try:
+        b'x\x90'.decode('cp1252')
+    except UnicodeDecodeError as e:
+        assert e.encoding == 'charmap'
+        assert (e.start, e.end) == (1, 2)
+        assert e.reason == 'character maps to <undefined>'
+        caught += 1
+    try:
+        'a\u20ac\u0100\u0101b'.encode('cp1252')
+    except UnicodeEncodeError as e:
+        assert e.encoding == 'charmap'
+        assert (e.start, e.end) == (2, 4)
+        caught += 1
+    assert caught == 2
 
 
 def test_errors_keyword_only():
@@ -340,6 +403,48 @@ def test_surrogate_literals():
     assert caught == 1
 
 
+def test_cp1250_cp1251():
+    for cp, undef in (('cp1250', [0x81, 0x83, 0x88, 0x90, 0x98]), ('windows-1251', [0x98])):
+        allb = bytes([i for i in range(256) if i not in undef])
+        u = allb.decode(cp)
+        assert len(u) == 256 - len(undef)
+        assert u.encode(cp) == allb
+    assert 'Za\u017c\xf3\u0142\u0107'.encode('1250') == b'Za\xbf\xf3\xb3\xe6'
+    assert '\u041f\u0440\u0438'.encode('cp1251') == b'\xcf\xf0\xe8'
+    assert b'\xcf\xf0\xe8'.decode('1251') == '\u041f\u0440\u0438'
+    assert b'a\x98b'.decode('cp1251', 'replace') == 'a\ufffdb'
+    assert 'a\xe9b'.encode('cp1251', 'replace') == b'a?b'
+    caught = 0
+    try:
+        b'a\x98b'.decode('cp1251')
+    except UnicodeDecodeError as e:
+        assert e.encoding == 'charmap' and (e.start, e.end) == (1, 2)
+        caught += 1
+    try:
+        'a\u20ac\u0100b'.encode('cp1250')
+    except UnicodeEncodeError as e:
+        assert e.encoding == 'charmap' and (e.start, e.end) == (2, 3)
+        caught += 1
+    assert caught == 2
+
+
+def test_utf8_sig():
+    assert b'\xef\xbb\xbfab'.decode('utf-8-sig') == 'ab'
+    assert b'ab'.decode('UTF_8_SIG') == 'ab'
+    assert b''.decode('utf-8-sig') == ''
+    assert b'\xef\xbb'.decode('utf-8-sig', 'replace') == '\ufffd'
+    assert str(b'\xef\xbb\xbfx', 'utf-8-sig') == 'x'
+    assert 'ab'.encode('utf-8-sig') == b'\xef\xbb\xbfab'
+    assert ''.encode('utf-8-sig') == b'\xef\xbb\xbf'
+    caught = 0
+    try:
+        b'\xef\xbb\xbfa\xff'.decode('utf-8-sig')
+    except UnicodeDecodeError as e:
+        assert e.encoding == 'utf-8' and (e.start, e.end) == (1, 2)  # after the bom, as cpython
+        caught += 1
+    assert caught == 1
+
+
 def test_all():
     test_encode_utf8()
     test_decode_utf8()
@@ -351,6 +456,11 @@ def test_all():
     test_encoding_lookup()
     test_errors_arg()
     test_errors_keyword_only()
+    test_error_handlers_decode()
+    test_error_handlers_encode()
+    test_cp1252()
+    test_cp1250_cp1251()
+    test_utf8_sig()
     test_str_decode()
     test_literal_consistency()
     test_bytearray_decode()

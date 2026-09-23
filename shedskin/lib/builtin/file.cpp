@@ -45,42 +45,104 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #define FEOF   feof_unlocked
 #endif // HAVE_STDIO_UNLOCKED
 
-file::file(str *file_name, str *flags) {
-    options.universal_mode = true;
+static FILE *__ss_fopen(str *file_name, str *flags) {
+#ifdef WIN32
+    return _wfopen(__ss_wpath(file_name).c_str(), __ss_wpath(flags).c_str());
+#else
+    return fopen(file_name->c_str(), flags->c_str());
+#endif
+}
 
+file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline) {
+    options.universal_mode = true;
+    __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
+    __errors = __lookup_errors(errors);
+
+    /* newline='' or '\n': no translation in either direction, so also
+       none by the C runtime (Windows text mode) */
+    bool untranslated = false;
+    if (newline) {
+        if (newline->unit.empty() || newline->unit == U"\n") {
+            options.universal_mode = false;
+            untranslated = true;
+        } else if (newline->unit == U"\r" || newline->unit == U"\r\n")
+            throw new ValueError(__add_strs(3, new str("newline="), repr(newline), new str(" is not supported by shedskin (only None, '' and '\\n')")));
+        else
+            throw new ValueError(__add_strs(2, new str("illegal newline value: "), newline));
+    }
+
+    str *cflags;
     if (flags) {
+        cflags = flags;
         size_t universal = flags->unit.find_first_of(__gcs("Uu"));
         if(universal != std::string::npos) {
             options.universal_mode = true;
-            flags = new str(flags->unit);
-            flags->unit[universal] = 'b'; // force binary mode as expected by readline
+            cflags = new str(flags->unit);
+            cflags->unit[universal] = 'b'; // force binary mode as expected by readline
+            flags = cflags;
         }
     }
     else
-        flags = __char_cache['r'];
-    f = fopen(file_name->c_str(), flags->c_str());
+        flags = cflags = __char_cache['r'];
+    if (untranslated && cflags->unit.find('b') == std::string::npos)
+        cflags = new str(cflags->unit + __gcs("b"));
+    f = __ss_fopen(file_name, cflags);
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
     name = file_name;
     mode = flags;
 
+    if (__encoding == __SS_ENC_UTF8_SIG) {
+        __encoding = __SS_ENC_UTF8;
+        bool readable = mode->unit.find_first_of(__gcs("r+")) != std::string::npos;
+        bool bom = false;
+        if (readable) { /* skip a leading bom */
+            char head[3];
+            bom = fread(head, 1, 3, f) == 3 && memcmp(head, "\xef\xbb\xbf", 3) == 0;
+            if (!bom)
+                fseek(f, 0, SEEK_SET);
+        }
+        bool writable = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
+        if (!bom && writable) { /* bom first, unless appending to existing data */
+            if (mode->unit.find('a') != std::string::npos)
+                fseek(f, 0, SEEK_END);
+            __bom_pending = (ftell(f) == 0);
+        }
+    }
+
     buffer = new file_binary(f);
 }
 
-file *open(str *name, str *flags) {
-    return new file(name, flags);
+file *open(str *name, str *flags, str *encoding, str *errors, str *newline) {
+    return new file(name, flags, encoding, errors, newline);
 }
 
-file *open(bytes *name, str *flags) {
-    return new file(new str(name->unit), flags);
+file *open(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
+    return new file(new str(name->unit), flags, encoding, errors, newline);
+}
+
+/* decode the bytes collected in __read_cache, with the file's encoding */
+str *file::__decode_cache() {
+    str *s = new str();
+    if (!__read_cache.empty())
+        __decode_into(s->unit, &__read_cache[0], __read_cache.size(), __encoding, __errors);
+    return s;
 }
 
 __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
     if(f) {
-        __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
+        __GC_BYTES b;
+        if (__bom_pending) {
+            __bom_pending = false;
+            b = "\xef\xbb\xbf";
+        }
+        if (__encoding == __SS_ENC_UTF8 && __errors == __SS_ERR_SURROGATEESCAPE && b.empty())
+            b = __to_utf8(s->unit); /* fast path (standard streams) */
+        else
+            __encode_into(b, s, __encoding, __errors);
         if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             __throw_oserror();
         size = (__ss_int)s->unit.size(); /* characters written, as CPython */
@@ -158,7 +220,7 @@ str *file::readline(__ss_int n) {
     if(__error())
         __throw_oserror();
 
-    return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    return __decode_cache();
 }
 
 static void __throw_io_error() {
@@ -188,7 +250,7 @@ str *file::read(__ss_int n) {
                         break;
                 }
             }
-            if(!__is_utf8_cont(c)) {
+            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
                 if(chars == size_t(n)) { /* character n+1 starts: not ours */
                     ungetc(c, f); /* raw byte, before any cr translation */
                     break;
@@ -203,7 +265,7 @@ str *file::read(__ss_int n) {
         }
         if(__error())
             __throw_io_error();
-        return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+        return __decode_cache();
     }
     if(n == 1) {
         const int c = GETC(f);
@@ -220,7 +282,7 @@ str *file::read(__ss_int n) {
         const int c = GETC(f);
         if(c == EOF)
             break;
-        if(!__is_utf8_cont(c)) {
+        if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
             if(chars == size_t(n)) {
                 ungetc(c, f);
                 break;
@@ -231,7 +293,7 @@ str *file::read(__ss_int n) {
     }
     if(__error())
         __throw_io_error();
-    return new str(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    return __decode_cache();
 }
 
 list<str *> *file::readlines(__ss_int /*size_hint*/) {
@@ -339,7 +401,7 @@ file_binary::file_binary(str *file_name, str *flags) {
     }
     else
         flags = __char_cache['r'];
-    f = fopen(file_name->c_str(), flags->c_str());
+    f = __ss_fopen(file_name, flags);
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
@@ -347,11 +409,22 @@ file_binary::file_binary(str *file_name, str *flags) {
     mode = flags;
 }
 
-file_binary *open_binary(str *name, str *flags) {
+static void __check_binary_args(str *encoding, str *errors, str *newline) {
+    if (encoding)
+        throw new ValueError(new str("binary mode doesn't take an encoding argument"));
+    if (errors)
+        throw new ValueError(new str("binary mode doesn't take an errors argument"));
+    if (newline)
+        throw new ValueError(new str("binary mode doesn't take a newline argument"));
+}
+
+file_binary *open_binary(str *name, str *flags, str *encoding, str *errors, str *newline) {
+    __check_binary_args(encoding, errors, newline);
     return new file_binary(name, flags);
 }
 
-file_binary *open_binary(bytes *name, str *flags) {
+file_binary *open_binary(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
+    __check_binary_args(encoding, errors, newline);
     return new file_binary(new str(name->unit), flags);
 }
 

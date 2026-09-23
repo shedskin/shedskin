@@ -21,12 +21,18 @@ public:
     FILE *f;
     file_binary *buffer;
 
-    __ss_bool closed;
+    __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
+    /* text encoding: open() defaults to utf-8/strict (as CPython 3.15, where
+       utf-8 mode is the default); the standard streams use surrogateescape */
+    __ss_encoding __encoding = __SS_ENC_UTF8;
+    __ss_errors __errors = __SS_ERR_SURROGATEESCAPE;
+    bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
+
     file(FILE *g=0) : f(g), closed(False) {}
-    file(str *name, str *mode=0);
+    file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0);
 
     virtual void * close();
     virtual void * flush();
@@ -55,6 +61,8 @@ public:
         if(closed)
             throw new ValueError(new str("I/O operation on closed file"));
     }
+
+    str *__decode_cache();
 };
 
 /* TODO file<bytes *> template? */
@@ -65,7 +73,7 @@ public:
     str *mode;
 
     FILE *f;
-    __ss_bool closed;
+    __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
@@ -100,10 +108,16 @@ public:
     }
 };
 
-file *open(str *name, str *flags = 0);
-file *open(bytes *name, str *flags = 0);
-file_binary *open_binary(str *name, str *flags = 0);
-file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
+#ifdef WIN32
+/* file names on Windows: utf-16 for the wide apis (the narrow ones go
+   through the lossy ansi code page), lone surrogates kept as in CPython */
+inline std::wstring __ss_wpath(str *s) { return __to_utf16<wchar_t>(s->unit); }
+#endif
+
+file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
+file *open(bytes *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
+file_binary *open_binary(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
+file_binary *open_binary(bytes *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0); /* ugly duplication.. use str/byte template? */
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 

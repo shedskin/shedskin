@@ -167,7 +167,158 @@ def test_closed_is_bool():
     os.remove('ctest.txt')
 
 
+# helpers that close their files: on Windows an open file cannot be removed,
+# and with a garbage collector it is not closed at a predictable moment
+
+def rbytes(name):
+    with open(name, 'rb') as g:
+        return g.read()
+
+
+def rtext(name, encoding=None, errors=None, newline=None):
+    with open(name, encoding=encoding, errors=errors, newline=newline) as f:
+        return f.read()
+
+
+def nl(b):
+    # text mode writes '\n' as os.linesep (as CPython, for newline=None)
+    return b.replace(b'\n', os.linesep.encode())
+
+
+def test_open_encoding():
+    with open('uenc.txt', 'w', encoding='latin-1') as f:
+        f.write('caf\xe9 \xff\n')
+    assert rbytes('uenc.txt') == nl(b'caf\xe9 \xff\n')
+    with open('uenc.txt', encoding='ISO-8859-1') as f:
+        assert f.read(4) == 'caf\xe9'
+        assert f.read() == ' \xff\n'
+    # default utf-8 is strict, as in cpython
+    caught = 0
+    with open('uenc.txt') as f:
+        try:
+            f.read()
+        except UnicodeDecodeError as e:
+            assert (e.start, e.end) == (3, 4)
+            caught += 1
+    assert caught == 1
+    assert rtext('uenc.txt', errors='surrogateescape') == 'caf\udce9 \udcff\n'
+    assert rtext('uenc.txt', errors='ignore') == 'caf \n'
+    assert rtext('uenc.txt', errors='replace') == 'caf\ufffd \ufffd\n'
+    with open('uenc.txt', encoding='ascii', errors='replace') as f:
+        assert f.readline() == 'caf\ufffd \ufffd\n'
+
+    with open('uenc.txt', 'w', encoding='cp1252') as f:
+        f.write('\u20ac \u201cq\u201d \u2013 na\xefve\u2026\n')
+    assert rbytes('uenc.txt') == nl(b'\x80 \x93q\x94 \x96 na\xefve\x85\n')
+    with open('uenc.txt', encoding='windows-1252') as f:
+        assert f.read(3) == '\u20ac \u201c'
+        assert f.readline() == 'q\u201d \u2013 na\xefve\u2026\n'
+
+    with open('uenc.txt', 'w', encoding='ascii', errors='replace') as f:
+        f.write('\xe9\u20acx\n')
+    assert rtext('uenc.txt') == '??x\n'
+    caught = 0
+    with open('uenc.txt', 'w', encoding='latin-1') as f:
+        try:
+            f.write('\u20ac')
+        except UnicodeEncodeError:
+            caught += 1
+    with open('uenc.txt', 'w') as f:
+        try:
+            f.write('a\udcffb')
+        except UnicodeEncodeError:
+            caught += 1
+    assert caught == 2
+    os.remove('uenc.txt')
+
+
+def test_open_utf8_sig():
+    with open('usig.txt', 'w', encoding='utf-8-sig') as f:
+        f.write('caf\xe9')
+        f.write('!\n')
+    assert rbytes('usig.txt') == nl(b'\xef\xbb\xbfcaf\xc3\xa9!\n')
+    assert rtext('usig.txt', encoding='utf-8-sig') == 'caf\xe9!\n'
+    assert rtext('usig.txt') == '\ufeffcaf\xe9!\n'
+    with open('usig.txt', encoding='utf-8-sig') as f:
+        assert f.read(1) == 'c'
+        assert f.readline() == 'af\xe9!\n'
+    with open('usig.txt', 'a', encoding='utf-8-sig') as f:  # no second bom
+        f.write('more\n')
+    assert rbytes('usig.txt') == nl(b'\xef\xbb\xbfcaf\xc3\xa9!\nmore\n')
+    with open('usig.txt', 'wb') as g:
+        g.write(b'plain\n')
+    assert rtext('usig.txt', encoding='utf-8-sig') == 'plain\n'
+    os.remove('usig.txt')
+    with open('usig.txt', 'a', encoding='utf-8-sig') as f:  # new file: bom
+        f.write('x')
+    assert rbytes('usig.txt') == b'\xef\xbb\xbfx'
+    with open('usig.txt', 'w', encoding='cp1251') as f:
+        f.write('\u041f\u0440\u0438\u0432\u0435\u0442\n')
+    assert rbytes('usig.txt') == nl(b'\xcf\xf0\xe8\xe2\xe5\xf2\n')
+    with open('usig.txt', encoding='cp1251') as f:
+        assert f.read(3) == '\u041f\u0440\u0438'
+    os.remove('usig.txt')
+
+
+def test_open_bad_args():
+    caught = 0
+    try:
+        open(datafile, encoding='utf-99')
+    except LookupError:
+        caught += 1
+    try:
+        open(datafile, 'rb', encoding='utf-8')
+    except ValueError:
+        caught += 1
+    try:
+        open(datafile, newline='x')
+    except ValueError:
+        caught += 1
+    assert caught == 3
+
+
+def test_open_mode_keyword():
+    # (own file: a checkout may turn testdata into crlf, e.g. git autocrlf on Windows)
+    with open('umode.txt', mode='wb') as f:
+        f.write(b'hop\nhop\nhoppa!\n')
+    with open('umode.txt', mode='rb') as f:
+        assert f.read() == b'hop\nhop\nhoppa!\n'
+    with open('umode.txt', mode='r', encoding='utf-8') as g:
+        assert g.read() == 'hop\nhop\nhoppa!\n'
+    os.remove('umode.txt')
+
+
+def test_open_newline():
+    with open('unl.txt', 'w', newline='') as f:
+        f.write('a\r\nb\n')
+    assert rbytes('unl.txt') == b'a\r\nb\n'
+    assert rtext('unl.txt') == 'a\nb\n'
+    assert rtext('unl.txt', newline='') == 'a\r\nb\n'
+    with open('unl.txt', newline='\n') as f:
+        assert f.readlines() == ['a\r\n', 'b\n']
+    os.remove('unl.txt')
+
+
+def test_open_unicode_name():
+    # non-ascii file names (the wide apis on Windows, not the ansi code page)
+    fn = 'u_caf\xe9_\u20ac_\U0001f600.txt'
+    with open(fn, 'w') as f:
+        f.write('x')
+    assert fn in os.listdir('.')
+    assert rtext(fn) == 'x'
+    with open(fn.encode(), 'rb') as g:  # bytes name
+        assert g.read() == b'x'
+    os.remove(fn)
+    assert not os.path.exists(fn)
+
+
 def test_all():
+    test_open_unicode_name()
+    test_open_encoding()
+    test_open_utf8_sig()
+    test_open_bad_args()
+    test_open_mode_keyword()
+    test_open_newline()
     test_read_chars_unicode()
     test_open_for()
     test_open_read()
