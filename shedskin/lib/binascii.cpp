@@ -35,49 +35,8 @@ bytes *hexlify(bytes *data, str *sep, __ss_int bytes_per_sep) {
     return new bytes(__to_utf8(data->hex(sep, bytes_per_sep)->unit));
 }
 
-/*
-The following table generated with:
-lst = [i-ord('0')
-    if (i>=ord('0') and i<=ord('9'))
-    else (i-ord('a')+10
-        if (i>=ord('a') and i<=ord('f'))
-        else (i-ord('A')+10
-            if (i>=ord('A') and i<=ord('F'))
-            else -1))
-    for i in xrange(256)]
-
-for i in xrange(0,256,16):
-    # lst[i:i+16] lines
-    sys.stdout.write('    ')
-    for j in xrange(i,i+16,4):
-        # lst[j:j+4] groups
-        for k in xrange(j,j+4):
-            # lst[k] numbers
-            sys.stdout.write(str(lst[k]).rjust(2)+',')
-        if j+4!=i+16: # if not last group
-            sys.stdout.write(' ')
-    sys.stdout.write('\n')
-
-*/
-
-static signed char table_a2b_hex[] = {
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-     0, 1, 2, 3,  4, 5, 6, 7,  8, 9,-1,-1, -1,-1,-1,-1,
-    -1,10,11,12, 13,14,15,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,10,11,12, 13,14,15,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-};
+/* (table_a2b_hex: see __ss_hexdigit in builtin/math.hpp) */
+static const signed char *table_a2b_hex = __ss_hexdigit;
 
 
 bytes *unhexlify(bytes *hex, bytes *ignorechars) {

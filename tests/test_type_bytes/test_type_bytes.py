@@ -93,6 +93,13 @@ def test_endswith():  # TODO start, stop
 
 def test_expandtabs():
     assert b'bla\tbla'.expandtabs() == b'bla     bla'
+    # the column restarts after a newline, as for str
+    assert b'ab\ncd\tx'.expandtabs(4) == b'ab\ncd  x'
+    assert b'a\r\tb'.expandtabs(4) == b'a\r    b'
+    assert b'a\tb\tc'.expandtabs(3) == b'a  b  c'
+    # tabsize <= 0 drops tabs (used to divide by zero)
+    assert b'a\tb'.expandtabs(0) == b'ab'
+    assert b'a\tb'.expandtabs(-1) == b'ab'
 
 def test_find():
     assert b'bla'.find(b'a') == 2
@@ -424,6 +431,14 @@ def test_bytes_builtin():
 
     assert b"hop %s" % b"hup" == b'hop hup'
     assert int(b"123") == 123
+    assert int(b" 12 ") == 12
+    # like int(str): no digits at all is an error (int(b'') returned 0)
+    for arg in [b'', b'  ', b'1 2', b'12x']:
+        try:
+            int(arg)
+            assert False
+        except ValueError:
+            pass
 
 
 def test_fillbyte():
@@ -556,12 +571,14 @@ def test_fromhex():
     assert bytes.fromhex('aabbcc') == b'\xaa\xbb\xcc'
     assert bytes.fromhex('  aabbcc') == b'\xaa\xbb\xcc'
     assert bytes.fromhex('aabb  \tcc \n') == b'\xaa\xbb\xcc'
+    assert bytes.fromhex('01\x0b02\x0c03') == b'\x01\x02\x03'
+    assert bytearray.fromhex('01 02') == bytearray(b'\x01\x02')
 
 
 def test_fromhex_non_hex():
     # a non-hex digit used to be folded into the result byte as -1 instead
     # of raising, so bytes.fromhex('zz') returned b'\xff'
-    for arg, pos in [('zz', 0), ('abz', 2), ('_a', 0), ('ab cz', 4)]:
+    for arg, pos in [('zz', 0), ('abz', 2), ('_a', 0), ('ab cz', 4), ('\u0131\u0131', 0), ('a\u0141', 1)]:
         error = ''
         try:
             bytes.fromhex(arg)

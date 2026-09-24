@@ -558,6 +558,18 @@ def test_round():
     assert round(0.5, 0) == 0.0
     assert round(1.25, 1) == 1.2
     assert round(1234.5, -2) == 1200.0
+
+    # round(int, -n): ties to even, and exact beyond 2**53
+    assert round(5, -1) == 0
+    assert round(15, -1) == 20
+    assert round(25, -1) == 20
+    assert round(-15, -1) == -20
+    assert round(-25, -1) == -20
+    assert round(1249, -2) == 1200
+    assert round(1251, -2) == 1300
+    assert round(12345, 2) == 12345
+    assert round(2**60 + 7, -1) == 2**60 + 4
+    assert round(2**60 + 7, -30) == 0
     assert round(25.0, -1) == 20.0
     assert round(15.0, -1) == 20.0
     assert round(-0.0, 2) == 0.0

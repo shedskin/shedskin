@@ -139,13 +139,7 @@ inline __ss_float cbrt(__ss_float x) {
     return std::cbrt(x);
 }
 
-inline __ss_int isqrt(__ss_float x) {
-    return (__ss_int)(floor(std::sqrt(x))); // TODO optimize?
-}
-
-inline __ss_int isqrt(__ss_int n) {
-    return __math__::__integer__::isqrt(n);
-}
+using __integer__::isqrt;
 
 #define __SS_MATH_ARC_MSG "expected a number in range from -1 up to 1, got "
 
@@ -416,25 +410,9 @@ inline __ss_float fsum(pyiter<__ss_float> *iterable) {
     return hi;
 }
 
-template<class ... Args> __ss_int gcd(int, __ss_int x, Args ... args) {
-    return ((x = std::gcd(x, args)), ...);
-}
-inline __ss_int gcd(int, __ss_int x) {
-    return x < 0 ? -x : x;
-}
-inline __ss_int gcd(int) {
-    return 0;
-}
-
-template<class ... Args> __ss_int lcm(int, __ss_int x, Args ... args) {
-    return ((x = std::lcm(x, args)), ...);
-}
-inline __ss_int lcm(int, __ss_int x) {
-    return x < 0 ? -x : x;
-}
-inline __ss_int lcm(int) {
-    return 1;
-}
+/* (soft deprecated, moved to math.integer) */
+using __integer__::gcd;
+using __integer__::lcm;
 
 inline __ss_int perm(__ss_int n, __ss_int k) {
     return __math__::__integer__::perm(n, k);

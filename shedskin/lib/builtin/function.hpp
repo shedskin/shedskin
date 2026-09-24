@@ -1018,18 +1018,19 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* round */
 
-inline __ss_int ___round(__ss_float x) {
+/* nearest integer, ties to even: the one tie-breaking rule behind round(x)
+   and round(i, -n) (std::nearbyint would do, but depends on the current
+   floating point rounding mode) */
+inline __ss_float __round_half_even(__ss_float x) {
     __ss_float f = std::floor(x);
     __ss_float diff = x - f;
-    __ss_float r;
+    if (diff < 0.5) return f;
+    if (diff > 0.5) return f + 1.0;
+    return (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
+}
 
-    if (diff < 0.5) r = f;
-    else if (diff > 0.5) r = f + 1.0;
-    else
-        // Tie-break: round to the nearest EVEN integer
-        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
-
-    return (__ss_int)r;
+inline __ss_int ___round(__ss_float x) {
+    return (__ss_int)__round_half_even(x);
 }
 
 /* round(a, n) needs to match CPython's semantics: it rounds the *exact*
@@ -1136,22 +1137,23 @@ inline __ss_float ___round(__ss_float a, int n) {
     return __decimal_round(a, n);
 }
 
+/* round(i, -n): exact integer arithmetic (going through a double loses
+   precision beyond 2**53, e.g. round(2**60+7, -1) came out wrong) */
 inline __ss_int ___round(__ss_int a, int n) {
     if (n >= 0) return a;  // int has no fractional digits to round
 
-    __ss_float p = pow((__ss_float)10, -n);
-    __ss_float x = (__ss_float)a / p;
-    __ss_float f = std::floor(x);
-    __ss_float diff = x - f;
-    __ss_float r;
-
-    if (diff < 0.5) r = f;
-    else if (diff > 0.5) r = f + 1.0;
-    else
-        // Tie-break: round to the nearest EVEN integer
-        r = (std::fmod(f, 2.0) == 0.0) ? f : (f + 1.0);
-
-    return (__ss_int)(r * p);
+    __ss_int p = 1;
+    for (int k = 0; k < -n; k++) {
+        if (p > std::numeric_limits<__ss_int>::max() / 10)
+            return 0; /* 10**-n out of range: |a| is less than half of it */
+        p *= 10;
+    }
+    __ss_int q = a / p;
+    __ss_int r = a - q * p;
+    if (r < 0) { q -= 1; r += p; } /* floor division, 0 <= r < p */
+    if (r > p - r || (r == p - r && (q & 1)))
+        q += 1; /* ties to even */
+    return q * p;
 }
 
 /* input */

@@ -21,10 +21,7 @@ template<class T> static str *__int_error(T s, __ss_int base) {
     return __add_strs(4, new str("invalid literal for int() with base "), __str(base), new str(": "), repr(s));
 }
 
-__ss_int __int(str *s, __ss_int base) {
-    /* unicode digits and whitespace -> ascii (see __ss_ascii_numeric) */
-    __GC_STRING a = __ss_ascii_numeric(s);
-    const char *start = a.c_str();
+template<class T> static __ss_int __int_parse(const char *start, T orig, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
@@ -34,34 +31,22 @@ __ss_int __int(str *s, __ss_int base) {
 #endif
     /* no digits at all: strtol happily returns 0 for '' or '   ' */
     if(cp == start)
-        throw new ValueError(__int_error(s, base));
+        throw new ValueError(__int_error(orig, base));
     while(*cp and isspace((unsigned char)*cp))
         cp++;
     if(*cp != '\0')
-        throw new ValueError(__int_error(s, base));
+        throw new ValueError(__int_error(orig, base));
     return i;
 }
 
+__ss_int __int(str *s, __ss_int base) {
+    /* unicode digits and whitespace -> ascii (see __ss_ascii_numeric) */
+    __GC_STRING a = __ss_ascii_numeric(s);
+    return __int_parse(a.c_str(), s, base);
+}
+
 __ss_int __int(bytes *s, __ss_int base) {
-    bytes *orig = s;
-    char *cp;
-    __ss_int i;
-#ifdef __SS_LONG
-    i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
-#else
-    i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
-#endif
-    if(*cp != '\0') {
-        s = s->rstrip();
-        #ifdef __SS_LONG
-            i = (__ss_int)strtoll(s->c_str(), &cp, (int)base);
-        #else
-            i = (__ss_int)strtol(s->c_str(), &cp, (int)base);
-        #endif
-        if(*cp != '\0')
-            throw new ValueError(__int_error(orig, base));
-    }
-    return i;
+    return __int_parse(s->c_str(), s, base);
 }
 
 /* float */

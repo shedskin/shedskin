@@ -39,6 +39,65 @@ static inline __codec_result __codec_err(size_t units, size_t errpos, const char
     return r;
 }
 
+/* classify a utf-8 start byte b0 >= 0x80: the number of continuation bytes,
+   the payload bits of b0, and the allowed range for the *first* continuation
+   byte (see the table below). false for an invalid start byte. shared by
+   __utf8_decode, __utf8_decode_one and __utf8_maximal_subpart. */
+static inline bool __utf8_lead(unsigned char b0, size_t *nfollow, __ss_char *bits,
+                               unsigned char *lo, unsigned char *hi) {
+    *lo = 0x80;
+    *hi = 0xbf;
+    if (b0 < 0xc2) /* continuation byte or overlong c0/c1 start */
+        return false;
+    if (b0 < 0xe0) {
+        *nfollow = 1;
+        *bits = (__ss_char)(b0 & 0x1fu);
+    } else if (b0 < 0xf0) {
+        *nfollow = 2;
+        *bits = (__ss_char)(b0 & 0x0fu);
+        if (b0 == 0xe0)
+            *lo = 0xa0;
+        else if (b0 == 0xed)
+            *hi = 0x9f;
+    } else if (b0 < 0xf5) {
+        *nfollow = 3;
+        *bits = (__ss_char)(b0 & 0x07u);
+        if (b0 == 0xf0)
+            *lo = 0x90;
+        else if (b0 == 0xf4)
+            *hi = 0x8f;
+    } else
+        return false;
+    return true;
+}
+
+/* write the utf-8 encoding of cp (no checks) to dst, returning its length.
+   shared by __utf8_encode, __utf8_append and __to_utf8. */
+static inline size_t __utf8_put(char *dst, __ss_char cp) {
+    if (cp < 0x80) {
+        dst[0] = (char)(unsigned char)cp;
+        return 1;
+    } else if (cp < 0x800) {
+        dst[0] = (char)(unsigned char)(0xc0u | (cp >> 6));
+        dst[1] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        return 2;
+    } else if (cp < 0x10000) {
+        dst[0] = (char)(unsigned char)(0xe0u | (cp >> 12));
+        dst[1] = (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
+        dst[2] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        return 3;
+    }
+    dst[0] = (char)(unsigned char)(0xf0u | (cp >> 18));
+    dst[1] = (char)(unsigned char)(0x80u | ((cp >> 12) & 0x3fu));
+    dst[2] = (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
+    dst[3] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
+    return 4;
+}
+
+static inline size_t __utf8_len(__ss_char cp) {
+    return cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
+}
+
 /* strict utf-8 decoder. valid sequences (inclusive byte ranges):
 
      00..7f
@@ -62,7 +121,7 @@ __codec_result __utf8_decode(const char *src, size_t len, __ss_char *dst) {
     while (pos < len) {
         unsigned char b0 = (unsigned char)src[pos];
         size_t nfollow;
-        unsigned char lo = 0x80, hi = 0xbf; /* allowed range for first continuation byte */
+        unsigned char lo, hi; /* allowed range for first continuation byte */
         __ss_char cp;
 
         if (b0 < 0x80) {
@@ -71,28 +130,9 @@ __codec_result __utf8_decode(const char *src, size_t len, __ss_char *dst) {
             units++;
             pos++;
             continue;
-        } else if (b0 < 0xc2) { /* continuation byte or overlong c0/c1 start */
-            return __codec_err(units, pos, ERR_START);
-        } else if (b0 < 0xe0) {
-            nfollow = 1;
-            cp = (__ss_char)(b0 & 0x1fu);
-        } else if (b0 < 0xf0) {
-            nfollow = 2;
-            cp = (__ss_char)(b0 & 0x0fu);
-            if (b0 == 0xe0)
-                lo = 0xa0;
-            else if (b0 == 0xed)
-                hi = 0x9f;
-        } else if (b0 < 0xf5) {
-            nfollow = 3;
-            cp = (__ss_char)(b0 & 0x07u);
-            if (b0 == 0xf0)
-                lo = 0x90;
-            else if (b0 == 0xf4)
-                hi = 0x8f;
-        } else {
-            return __codec_err(units, pos, ERR_START);
         }
+        if (!__utf8_lead(b0, &nfollow, &cp, &lo, &hi))
+            return __codec_err(units, pos, ERR_START);
 
         for (size_t k = 1; k <= nfollow; k++) {
             if (pos + k == len) /* truncated: errpos = start of the incomplete sequence */
@@ -123,30 +163,10 @@ size_t __utf8_decode_one(const char *src, size_t len, size_t pos, __ss_char *cp)
         return 1;
     }
     size_t nfollow;
-    unsigned char lo = 0x80, hi = 0xbf;
+    unsigned char lo, hi;
     __ss_char out;
-    if (b0 < 0xc2) {
+    if (!__utf8_lead(b0, &nfollow, &out, &lo, &hi))
         return 0;
-    } else if (b0 < 0xe0) {
-        nfollow = 1;
-        out = (__ss_char)(b0 & 0x1fu);
-    } else if (b0 < 0xf0) {
-        nfollow = 2;
-        out = (__ss_char)(b0 & 0x0fu);
-        if (b0 == 0xe0)
-            lo = 0xa0;
-        else if (b0 == 0xed)
-            hi = 0x9f;
-    } else if (b0 < 0xf5) {
-        nfollow = 3;
-        out = (__ss_char)(b0 & 0x07u);
-        if (b0 == 0xf0)
-            lo = 0x90;
-        else if (b0 == 0xf4)
-            hi = 0x8f;
-    } else {
-        return 0;
-    }
     if (pos + nfollow >= len)
         return 0;
     for (size_t k = 1; k <= nfollow; k++) {
@@ -166,37 +186,11 @@ __codec_result __utf8_encode(const __ss_char *src, size_t len, char *dst) {
 
     for (size_t pos = 0; pos < len; pos++) {
         __ss_char cp = src[pos];
-
-        if (cp < 0x80) {
-            if (dst)
-                dst[units] = (char)(unsigned char)cp;
-            units += 1;
-        } else if (cp < 0x800) {
-            if (dst) {
-                dst[units] = (char)(unsigned char)(0xc0u | (cp >> 6));
-                dst[units + 1] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
-            }
-            units += 2;
-        } else if (cp < 0x10000) {
-            if (cp >= 0xd800 && cp <= 0xdfff)
-                return __codec_err(units, pos, ERR_SURROGATE);
-            if (dst) {
-                dst[units] = (char)(unsigned char)(0xe0u | (cp >> 12));
-                dst[units + 1] = (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-                dst[units + 2] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
-            }
-            units += 3;
-        } else if (cp <= __MAX_CODEPOINT) {
-            if (dst) {
-                dst[units] = (char)(unsigned char)(0xf0u | (cp >> 18));
-                dst[units + 1] = (char)(unsigned char)(0x80u | ((cp >> 12) & 0x3fu));
-                dst[units + 2] = (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-                dst[units + 3] = (char)(unsigned char)(0x80u | (cp & 0x3fu));
-            }
-            units += 4;
-        } else {
+        if (cp > __MAX_CODEPOINT)
             return __codec_err(units, pos, ERR_RANGE);
-        }
+        if (cp >= 0xd800 && cp <= 0xdfff)
+            return __codec_err(units, pos, ERR_SURROGATE);
+        units += dst ? __utf8_put(dst + units, cp) : __utf8_len(cp);
     }
     return __codec_ok(units);
 }
@@ -472,17 +466,12 @@ __ss_errors __lookup_errors(str *errors) {
    CPython's 'replace' handler): the longest prefix that could still start
    a valid sequence, or 1 */
 static size_t __utf8_maximal_subpart(const char *src, size_t len, size_t pos) {
-    unsigned b0 = (unsigned char)src[pos];
-    size_t n = 0;
-    unsigned lo = 0x80, hi = 0xbf; /* valid range for the second byte */
-    if (b0 >= 0xc2 && b0 <= 0xdf) n = 2;
-    else if (b0 == 0xe0) { n = 3; lo = 0xa0; }
-    else if (b0 == 0xed) { n = 3; hi = 0x9f; }
-    else if (b0 >= 0xe1 && b0 <= 0xef) n = 3;
-    else if (b0 == 0xf0) { n = 4; lo = 0x90; }
-    else if (b0 >= 0xf1 && b0 <= 0xf3) n = 4;
-    else if (b0 == 0xf4) { n = 4; hi = 0x8f; }
-    else return 1;
+    size_t nfollow;
+    __ss_char bits;
+    unsigned char lo, hi; /* valid range for the second byte */
+    if (!__utf8_lead((unsigned char)src[pos], &nfollow, &bits, &lo, &hi))
+        return 1;
+    size_t n = nfollow + 1;
     size_t k = 1;
     while (k < n && pos + k < len) {
         unsigned b = (unsigned char)src[pos + k];
@@ -553,21 +542,8 @@ void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc
 }
 
 static inline void __utf8_append(__GC_BYTES &out, __ss_char cp) {
-    if (cp < 0x80)
-        out += (char)(unsigned char)cp;
-    else if (cp < 0x800) {
-        out += (char)(unsigned char)(0xc0u | (cp >> 6));
-        out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-    } else if (cp < 0x10000) {
-        out += (char)(unsigned char)(0xe0u | (cp >> 12));
-        out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-        out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-    } else {
-        out += (char)(unsigned char)(0xf0u | (cp >> 18));
-        out += (char)(unsigned char)(0x80u | ((cp >> 12) & 0x3fu));
-        out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-        out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-    }
+    char buf[4];
+    out.append(buf, __utf8_put(buf, cp));
 }
 
 void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err) {
@@ -636,18 +612,9 @@ __GC_BYTES __to_utf8(const __ss_char *s, size_t len) {
             out += (char)(unsigned char)cp;
         else if (cp >= 0xdc80 && cp <= 0xdcff) /* surrogateescape: back to the original byte */
             out += (char)(unsigned char)(cp & 0xffu);
-        else if (cp < 0x800) {
-            out += (char)(unsigned char)(0xc0u | (cp >> 6));
-            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-        } else if (cp < 0x10000) { /* note: other surrogates pass through (wtf-8) */
-            out += (char)(unsigned char)(0xe0u | (cp >> 12));
-            out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
-        } else {
-            out += (char)(unsigned char)(0xf0u | (cp >> 18));
-            out += (char)(unsigned char)(0x80u | ((cp >> 12) & 0x3fu));
-            out += (char)(unsigned char)(0x80u | ((cp >> 6) & 0x3fu));
-            out += (char)(unsigned char)(0x80u | (cp & 0x3fu));
+        else { /* note: other surrogates pass through (wtf-8) */
+            char buf[4];
+            out.append(buf, __utf8_put(buf, cp));
         }
     }
     return out;

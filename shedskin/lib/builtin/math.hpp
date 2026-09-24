@@ -169,8 +169,34 @@ template<> inline __ss_float __divs(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(
 
 inline __ss_float __divs(__ss_int a, __ss_int b) { __SS_ZERO_CHECK(b, "division by zero"); return (__ss_float)a/((__ss_float)b); }
 
+/* CPython's float_divmod(): the single source of truth for float //, % and
+   divmod(), so that they agree (q*b + r == a). floor(a/b) does not: the
+   rounded quotient can land on the wrong side of an integer, e.g. 1 // 0.1
+   gave 10.0 instead of 9.0, while 1 % 0.1 gave 0.0999... */
+inline __ss_float __float_divmod(__ss_float a, __ss_float b, __ss_float *mod) {
+    __ss_float m = std::fmod(a, b);
+    __ss_float div = (a - m) / b;
+    if (m != 0.0) {
+        if ((b < 0) != (m < 0)) {
+            m += b;
+            div -= 1.0;
+        }
+    } else
+        m = std::copysign(0.0, b); /* a zero result takes the sign of the divisor */
+    __ss_float floordiv;
+    if (div != 0.0) {
+        floordiv = std::floor(div);
+        if (div - floordiv > 0.5)
+            floordiv += 1.0;
+    } else
+        floordiv = std::copysign(0.0, a / b);
+    if (mod)
+        *mod = m;
+    return floordiv;
+}
+
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
-template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor(a/b); }
+template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return __float_divmod(a, b, NULL); }
 
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
@@ -189,8 +215,8 @@ template<> inline int __floordiv(int a, int b) {
     return r;
 }
 
-inline __ss_float __floordiv(__ss_int a, __ss_float b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor((__ss_float)a/b); }
-inline __ss_float __floordiv(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(b, "float floor division by zero"); return floor(a/((__ss_float)b)); }
+inline __ss_float __floordiv(__ss_int a, __ss_float b) { return __floordiv((__ss_float)a, b); }
+inline __ss_float __floordiv(__ss_float a, __ss_int b) { return __floordiv(a, (__ss_float)b); }
 
 /* modulo */
 
@@ -211,12 +237,9 @@ template<> inline int __mods(int a, int b) {
 }
 template<> inline __ss_float __mods(__ss_float a, __ss_float b) {
     __SS_ZERO_CHECK(b, "float modulo");
-    __ss_float f = fmod(a,b);
-    if(f == 0.0)
-        f = std::copysign(0.0, b); /* a zero result takes the sign of the divisor */
-    else if((f<0 && b>0)||(f>0 && b<0))
-        f+=b;
-    return f;
+    __ss_float m;
+    __float_divmod(a, b, &m);
+    return m;
 }
 
 template<class A, class B> __ss_float __mods(A a, B b);
@@ -232,7 +255,10 @@ template<> inline __ss_float __mods(__ss_float a, int b) { return __mods(a, (__s
 
 template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
 template<> inline tuple2<__ss_float, __ss_float> *divmod(__ss_float a, __ss_float b) {
-    return new tuple2<__ss_float, __ss_float>(2, __floordiv(a,b), __mods(a,b));
+    __SS_ZERO_CHECK(b, "float floor division by zero");
+    __ss_float m;
+    __ss_float q = __float_divmod(a, b, &m);
+    return new tuple2<__ss_float, __ss_float>(2, q, m);
 }
 #ifdef __SS_LONG
 template<> inline tuple2<__ss_int, __ss_int> *divmod(__ss_int a, __ss_int b) {
@@ -459,8 +485,8 @@ namespace __int___ {
 
 }
 
-namespace __bytes___ {
-    static signed char table_a2b_hex[] = { // TODO merge with binascii.. or use C++ function?
+/* hex digit values (-1: not a hex digit), shared by bytes.fromhex() and binascii */
+inline const signed char __ss_hexdigit[256] = {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -480,24 +506,24 @@ namespace __bytes___ {
         -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     };
 
-    inline bytes *fromhex(void *, str *s) { // merge with binascii.unhexlify? which does not ignore whitespace
-        __GC_STRING separator = " \n\r\t";
+namespace __bytes___ {
+
+    inline bytes *fromhex(void *, str *s) {
+        /* like CPython, skip any ascii whitespace between (not within) pairs */
         bytes *result = new bytes();
         size_t count = 0;
-        unsigned char high;
+        unsigned char high = 0;
         size_t i=0;
         for(; i < s->unit.size(); i++) {
-            char c = s->unit[i];
-            if(separator.find_first_of(c) != std::string::npos) {
+            __ss_char c = s->unit[i];
+            if(c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f') {
                 if(count == 1)
                     throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
             }
             else {
-                /* table_a2b_hex yields -1 for anything that is not a hex
-                   digit; without this check the -1 was folded straight into
-                   the result byte, so e.g. bytes.fromhex('zz') returned
-                   b'\xff' instead of raising (CPython: ValueError) */
-                signed char nibble = table_a2b_hex[(unsigned char)c];
+                /* (check the full code point: a non-ascii one must not be
+                   truncated into a hex digit, e.g. U+0131 into '1') */
+                signed char nibble = c < 0x80 ? __ss_hexdigit[c] : -1;
                 if(nibble == -1)
                     throw new ValueError(__add(new str("non-hexadecimal number found in fromhex() arg at position "), __str(i)));
                 if(count == 0) {

@@ -118,7 +118,6 @@ void __init() {
 
 /* helper functions */
 
-static __ss_int divmod(__ss_int x, __ss_int y, __ss_int *r);
 static __ss_int is_leap(__ss_int year);
 static __ss_int days_in_month(__ss_int year, __ss_int month);
 static __ss_int days_before_month(__ss_int year, __ss_int month);
@@ -382,11 +381,11 @@ tuple2<__ss_int, __ss_int> *date::isocalendar() {
     __ss_int  tmpweek;
     __ss_int  tmpday;
 
-    tmpweek = divmod(today - week1_monday, 7, &tmpday);
+    tmpweek = floordivmod(today - week1_monday, 7, &tmpday);
     if (tmpweek < 0) {
         --tmpyear;
         week1_monday = iso_week1_monday(tmpyear);
-        tmpweek = divmod(today - week1_monday, 7, &tmpday);
+        tmpweek = floordivmod(today - week1_monday, 7, &tmpday);
     }
     else if (tmpweek >= 52 && today >= iso_week1_monday(tmpyear + 1)) {
         ++tmpyear;
@@ -1453,30 +1452,6 @@ __ss_bool timedelta::__le__(timedelta *other) { return __mbool(__cmp__(other) !=
 
 /*functions taken and modified from cpython, to be copied to datetime.cpp later*/
 
-/* Compute Python divmod(x, y), returning the quotient and storing the
- * remainder into *r.  The quotient is the floor of x/y, and that's
- * the real point of this.  C will probably truncate instead (C99
- * requires truncation; C89 left it implementation-defined).
- * Simplification:  we *require* that y > 0 here.  That's appropriate
- * for all the uses made of it.  This simplifies the code and makes
- * the overflow case impossible (divmod(LONG_MIN, -1) is the only
- * overflow case).
- */
-static __ss_int
-divmod(__ss_int x, __ss_int y, __ss_int *r)
-{
-    __ss_int quo;
-
-    assert(y > 0);
-    quo = x / y;
-    *r = x - quo * y;
-    if (*r < 0) {
-        --quo;
-        *r += y;
-    }
-    assert(0 <= *r && *r < y);
-    return quo;
-}
 
 /* ---------------------------------------------------------------------------
  * General calendrical helper functions
