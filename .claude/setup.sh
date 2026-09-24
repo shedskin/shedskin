@@ -21,6 +21,9 @@ if [ ${#missing[@]} -gt 0 ]; then
     fi
 fi
 
-python3 -c 'import shedskin' 2>/dev/null || pip install -q -e "$repo_root"
+# Check for installed package metadata, not 'import shedskin': run from the repo
+# root, the import finds the source tree even when nothing is installed.
+python3 -c 'import importlib.metadata as m; m.version("shedskin")' 2>/dev/null \
+    || pip install -q -e "$repo_root"
 
 echo "setup.sh: ready (shedskin $(python3 -c 'import importlib.metadata as m; print(m.version("shedskin"))'))"
