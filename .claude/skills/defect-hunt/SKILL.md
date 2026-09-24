@@ -136,6 +136,44 @@ this file says it is. These numbers are the dial — raise or lower them here.
 Stopping early because the budget is spent is a correct outcome, not a failure —
 say so in the report and name what was left unexplored.
 
+## Start from the previous reports
+
+Each run starts in a fresh container, so earlier reports only reach you through
+the tracker. The maintainer attaches each week's report as a `.md` file to issue
+[#1286](https://github.com/shedskin/shedskin/issues/1286) ("weekly defect
+report"), in the issue body or in a comment, and notes there which findings
+have since been fixed and which are expected. Read these **before picking focus
+areas**:
+
+1. Read #1286 and all its comments with the GitHub MCP `issue_read` tool
+   (`get`, then `get_comments`). If #1286 has been closed or replaced, search
+   the issues for "weekly defect report" (any case, open or closed) and use the
+   most recent one.
+2. Fetch the most recent attached report, and the one before it if there is
+   one. The links look like `https://github.com/user-attachments/files/...`.
+   `curl` on them gets a 403 from the proxy, so use `WebFetch` instead. It
+   answers with a 302 to a signed `objects.githubusercontent.com` URL that is
+   valid for 5 minutes, so call `WebFetch` again on that URL right away. WebFetch
+   passes the page through a small model, so ask it to return the sections
+   **verbatim** rather than to summarise them.
+3. Apply what you read:
+   - The **skip list** and **"Deliberately not reported"** sections are
+     standing exclusions. Add them to every subagent's brief.
+   - **"Areas checked, nothing found"**: pick different areas this week, unless
+     recent commits have touched one of them.
+   - **"Recommendations" / "next hunt should focus on"**: use these as
+     candidates for your focus areas.
+   - Findings the maintainer marked as **fixed**: re-run their repro probes on
+     current `main`. If one still fails, it is a regression (see above). If a
+     finding is marked **expected**, drop it for good.
+   - Findings that are neither fixed nor marked expected are still known. Do not
+     report them again as new; list them under one "still open from previous
+     reports" line with their IDs.
+
+If the attachments cannot be fetched, say so in one line at the top of the
+report, work from the issue text, and carry on. Say in the report which
+previous reports you read.
+
 ## Where to look
 
 Rotate the focus each week rather than re-treading the same ground; say in the
@@ -292,8 +330,10 @@ independently, and between them one always gets through.
 **1. A file in the repo.** Write the report to
 `reports/defect-hunt/<YYYY-MM-DD>.md` and commit it to your working branch.
 This is what makes the reports an archive rather than a stream of emails: they
-accumulate, they diff against each other, and next week's run can read last
-week's instead of relying on the issue tracker. Commit it even if you cannot
+accumulate and they diff against each other. Until they land on `main`, next
+week's run reads them from #1286 (see "Start from the previous reports"), so
+keep the section headings stable: "Areas checked, nothing found", "Deliberately
+not reported", a skip list, and recommendations for the next run. Commit it even if you cannot
 push — the file still shows in the session's diff, where it can be read and
 downloaded, and it is ready to push the moment access allows.
 
