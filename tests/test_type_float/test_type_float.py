@@ -43,6 +43,18 @@ def test_division():
 
     assert 7.7 // 7.0 == 1
 
+    # //, % and divmod agree (q*b + r == a), like CPython
+    assert 1 // 0.1 == 9.0
+    assert 1.0 // 0.1 == 9.0
+    assert divmod(1.0, 0.1) == (9.0, 0.09999999999999995)
+    assert -1.0 // 0.1 == -10.0
+    assert 1.0 // -0.1 == -10.0
+    assert 7.5 // 2 == 3.0
+    assert str(0.0 // 1.5) == '0.0'
+    assert str(-0.0 // 1.5) == '-0.0'
+    assert str(0.0 // -1.5) == '-0.0'
+    assert str(-1e-300 // 1e300) == '-1.0'
+
 
 def test_modulo():
     assert 4.5 % 1.5 == 0.0

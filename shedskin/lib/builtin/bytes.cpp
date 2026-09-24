@@ -542,10 +542,28 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
 }
 
 bytes *bytes::expandtabs(__ss_int tabsize) {
-    size_t i;
-    __GC_STRING r = unit;
-    while((i = r.find("\t")) != std::string::npos)
-        r.replace(i, 1, (new bytes(" "))->__mul__(tabsize-(__ss_int)i%tabsize)->unit);
+    /* same algorithm as str::expandtabs: the column restarts after a newline,
+       and tabsize <= 0 drops tabs (instead of dividing by zero) */
+    __GC_STRING r;
+    size_t len = unit.size();
+    r.reserve(len);
+    __ss_int col = 0;
+    for(size_t i = 0; i < len; i++) {
+        char c = unit[i];
+        if(c == '\t') {
+            if(tabsize > 0) {
+                __ss_int spaces = tabsize - (col % tabsize);
+                r.append((size_t)spaces, ' ');
+                col += spaces;
+            }
+        } else {
+            r += c;
+            if(c == '\n' || c == '\r')
+                col = 0;
+            else
+                col++;
+        }
+    }
     return new bytes(r, frozen);
 }
 
