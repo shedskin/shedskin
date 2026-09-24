@@ -163,12 +163,28 @@ areas**:
      recent commits have touched one of them.
    - **"Recommendations" / "next hunt should focus on"**: use these as
      candidates for your focus areas.
-   - Findings the maintainer marked as **fixed**: re-run their repro probes on
-     current `main`. If one still fails, it is a regression (see above). If a
-     finding is marked **expected**, drop it for good.
-   - Findings that are neither fixed nor marked expected are still known. Do not
-     report them again as new; list them under one "still open from previous
-     reports" line with their IDs.
+   - If the maintainer marked a finding as **expected** (or "not a bug"), drop
+     it for good and add it to the standing exclusions.
+
+4. **Re-check every other previous finding yourself** on current `main`. Do
+   not rely on the maintainer's notes to decide what is fixed: a "fixed" note
+   may be wrong, and a finding with no note may have been fixed without anyone
+   saying so. Do this before the new hunt, in the main session, not in
+   subagents — it is a handful of `shedskin build` runs.
+   - Take the findings from the latest report's "Confirmed defects" and "Still
+     open from previous reports" sections. The latest report carries the older
+     open findings forward, so you do not need to go further back.
+   - Ask `WebFetch` for each repro **verbatim**, save it as a `.py`, run it under
+     CPython and under shedskin as in the core loop, and compare.
+   - Put each one in exactly one bucket: **fixed** (outputs now match; name the
+     fixing commit if `git log` makes it obvious), **still failing** (same
+     divergence as before), **changed** (still wrong, but differently: describe
+     how), or **could not re-check** (repro missing, garbled or no longer valid
+     Python; say which).
+   - A finding the maintainer marked fixed that is still failing is a
+     **regression** or an incomplete fix. Put it at the top of the report.
+   - Do not report still-failing findings again as new, and do not spend new
+     probes on them.
 
 If the attachments cannot be fetched, say so in one line at the top of the
 report, work from the issue text, and carry on. Say in the report which
@@ -373,6 +389,15 @@ Structure it the same way everywhere:
   a minimal reproducing `.py`, the CPython output, the shedskin output (or the
   translate/compile/runtime error), and a one-line note on the suspected cause
   with a `file:line` pointer where you have one.
+- **Status of previous findings** — a table with one row per finding re-checked
+  in step 4 of "Start from the previous reports": ID, one-line title, bucket
+  (fixed / still failing / changed / could not re-check), and the fixing commit
+  where known. Keep the original IDs, so the same finding has the same ID from
+  week to week.
+- **Still open from previous reports** — every finding that is still failing
+  or changed, each with its minimal reproducing `.py` copied through unchanged.
+  This carries open findings forward, so the next run only needs to read this
+  report.
 - **Unconfirmed suspicions** — only if genuinely worth a look; say what you tried
   and why it did not reproduce.
 - **Areas checked, nothing found** — so the next run can skip them.
