@@ -460,7 +460,28 @@ def test_tee_gc():
         assert len(junk) == 20000
 
 
+def test_index_arrays_edge_cases():
+    # index state of permutations/combinations/product, created on every call
+    data = [1, 2, 3]
+    assert list(itertools.permutations(data, 0)) == [()]
+    assert list(itertools.permutations(data, 4)) == []
+    assert list(itertools.permutations(data))[-1] == (3, 2, 1)
+    assert list(itertools.combinations(data, 0)) == [()]
+    assert list(itertools.combinations(data, 4)) == []
+    assert list(itertools.combinations_with_replacement(data, 0)) == [()]
+    assert list(itertools.combinations_with_replacement([0][:0], 2)) == []
+    assert len(list(itertools.combinations_with_replacement(data, 4))) == 15
+    assert list(itertools.product(data, [4, 5]))[-1] == (3, 5)
+    assert list(itertools.zip_longest(data, [4], data, fillvalue=0)) == [(1, 4, 1), (2, 0, 2), (3, 0, 3)]
+    t = 0
+    for i in range(1000):
+        for c in itertools.permutations(data, 2):
+            t += c[1]
+    assert t == 12000
+
+
 def test_all():
+    test_index_arrays_edge_cases()
     test_count()
     test_cycle()
     test_repeat()
