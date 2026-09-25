@@ -3,6 +3,8 @@
 #ifndef SS_BYTES_HPP
 #define SS_BYTES_HPP
 
+str *__hex_sep(bytes *sep); /* bytes separator for hex()/hexlify() as a str */
+
 class bytes : public pyseq<__ss_int> {
 protected:
 public:
@@ -112,6 +114,8 @@ public:
     bytes *rjust(__ss_int width, bytes *fillchar=0);
 
     str *hex(str *sep=0, __ss_int bytes_per_sep=1);
+    /* a bytes separator (a template, so that a NULL sep still picks the above) */
+    template<class S> str *hex(S *sep, __ss_int bytes_per_sep=1) { return hex(__hex_sep(sep), bytes_per_sep); }
 
     str *__str__();
     str *__repr__();
@@ -122,7 +126,6 @@ public:
     __ss_bool __eq__(pyobj *s);
     __ss_int __hash__();
 
-    __ss_bool __ctype_function(int (*cfunc)(int));
 
     bytes *__add__(bytes *b);
     bytes *__mul__(__ss_int n);
@@ -279,6 +282,7 @@ template<class T> bytes *__bytes(T *t) {
 bytes *__bytes(bytes *b);
  bytes *__bytes(__ss_int t);
 bytes *__bytes();
+bytes *__bytes(str *s, str *encoding=0, str *errors=0);
 
 template<class T> bytes *__bytearray(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
@@ -304,6 +308,7 @@ template<class T> bytes *__bytearray(T *t) {
 bytes *__bytearray(bytes *b);
 bytes *__bytearray(__ss_int t);
 bytes *__bytearray();
+bytes *__bytearray(str *s, str *encoding=0, str *errors=0);
 
 namespace __bytes___ {
     inline bytes *maketrans(void *, bytes *frm, bytes *to) {

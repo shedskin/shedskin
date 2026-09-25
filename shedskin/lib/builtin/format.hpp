@@ -90,15 +90,24 @@ template<> inline void __mod_int(str *result, size_t &, __ss_int arg, char f_fla
 template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
     __mod_int(result, pos, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
 }
+template<> inline void __mod_int(str *result, size_t &pos, __ss_bool arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
+    __mod_int(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
+}
 
 template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_integer(result, arg, 8, 'o', f_flag, f_width, f_precision, f_zero);
 }
+template<> inline void __mod_oct(str *result, size_t &pos, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_oct(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
+}
 
 template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_integer(result, arg, 16, c, f_flag, f_width, f_precision, f_zero);
+}
+template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_hex(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
@@ -142,6 +151,9 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
 }
 template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_float(result, pos, (char)c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
+}
+template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_float(result, pos, (char)c, (__ss_float)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
 template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, char f_flag, __ss_int f_width, __ss_int f_precision) {

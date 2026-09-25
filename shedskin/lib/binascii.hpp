@@ -77,6 +77,9 @@ __ss_int crc_hqx(bytes *data, __ss_int crc);
 __ss_int crc32(bytes *data, __ss_int crc=0);
 bytes *b2a_hex(bytes *data, str *sep=0, __ss_int bytes_per_sep=1);
 bytes *hexlify(bytes *data, str *sep=0, __ss_int bytes_per_sep=1);
+/* a bytes separator (templates, so that a NULL sep still picks the above) */
+template<class S> bytes *b2a_hex(bytes *data, S *sep, __ss_int bytes_per_sep=1) { return b2a_hex(data, __hex_sep(sep), bytes_per_sep); }
+template<class S> bytes *hexlify(bytes *data, S *sep, __ss_int bytes_per_sep=1) { return hexlify(data, __hex_sep(sep), bytes_per_sep); }
 bytes *a2b_hex(bytes *data, bytes *ignorechars=0);
 bytes *unhexlify(bytes *data, bytes *ignorechars=0);
 

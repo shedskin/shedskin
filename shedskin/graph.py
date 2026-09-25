@@ -2841,7 +2841,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.visit(child, cl.parent)
 
         # --- __iadd__ etc.
-        if not newclass.mv.module.builtin or newclass.ident in [
+        datetime_class = newclass.mv.module.builtin and newclass.ident in [
+            "date",
+            "datetime",
+            "timedelta",
+        ]
+        if datetime_class or not newclass.mv.module.builtin or newclass.ident in [
             "int_",
             "float_",
             "str_",
@@ -2851,6 +2856,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             msgs = ["add", "sub", "mul", "floordiv", "truediv"]
             if newclass.ident == "int_":
                 msgs += ["lshift", "rshift", "and", "xor", "or"]
+            if datetime_class:  # only the operators these classes have
+                msgs = [msg for msg in msgs if "__%s__" % msg in newclass.funcs]
             for msg in msgs:
                 method_name = "__i" + msg + "__"
                 if method_name not in newclass.funcs:

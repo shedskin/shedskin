@@ -594,7 +594,15 @@ def test_exception_attributes():
     assert ke.__notes__ == ['hmm']
 
 
+def test_repr_escapes_argument():
+    assert repr(ValueError("it's")) == 'ValueError("it\'s")'
+    assert repr(TypeError('a"b')) == "TypeError('a\"b')"
+    assert repr(ValueError('x')) == "ValueError('x')"
+    assert repr(ValueError()) == 'ValueError()'
+
+
 def test_all():
+    test_repr_escapes_argument()
     test_key_error()
     test_assert_error()
     test_index_error()

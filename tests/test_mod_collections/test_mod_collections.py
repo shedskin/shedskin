@@ -825,7 +825,16 @@ def test_counter_values():
     assert list(Counter().values()) == []
 
 
+def test_counter_delitem():
+    c = Counter('abc')
+    del c['z']  # missing key: no KeyError
+    assert len(c) == 3
+    del c['a']
+    assert sorted(c) == ['b', 'c']
+
+
 def test_all():
+    test_counter_delitem()
     test_defaultdict1()
     test_defaultdict2()
     test_defaultdict3()

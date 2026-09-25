@@ -279,6 +279,12 @@ bytes *__bytes(__ss_int t) {
     return b;
 }
 
+bytes *__bytes(str *s, str *encoding, str *errors) {
+    if(!encoding)
+        throw new TypeError(new str("string argument without an encoding"));
+    return s->encode(encoding, errors);
+}
+
 bytes *__bytearray() {
     return new bytes(0);
 }
@@ -292,6 +298,13 @@ bytes *__bytearray(bytes * b) {
 
 bytes *__bytearray(__ss_int t) {
     bytes *c = __bytes(t);
+    c->frozen = 0;
+    c->__class__ = cl_bytearray;
+    return c;
+}
+
+bytes *__bytearray(str *s, str *encoding, str *errors) {
+    bytes *c = __bytes(s, encoding, errors);
     c->frozen = 0;
     c->__class__ = cl_bytearray;
     return c;
@@ -490,50 +503,58 @@ __ss_bool bytes::endswith(tuple<bytes *> *s, __ss_int start, __ss_int end) {
     return False;
 }
 
+/* result of a method that leaves the value unchanged: bytes can be shared,
+   but a bytearray must be a new object (CPython never returns self) */
+static inline bytes *__unchanged(bytes *b) {
+    return b->frozen ? b : __bytearray(b);
+}
+
 bytes *bytes::removeprefix(bytes *prefix) {
     size_t l = prefix->unit.size();
     if(startswith(prefix))
-        return new bytes(unit.data()+l, unit.size()-l);
+        return new bytes(unit.data()+l, unit.size()-l, frozen);
     else
-        return this;
+        return __unchanged(this);
 }
 
 bytes *bytes::removesuffix(bytes *suffix) {
     size_t l = suffix->unit.size();
     if(endswith(suffix))
-        return new bytes(unit.data(), unit.size()-l);
+        return new bytes(unit.data(), unit.size()-l, frozen);
     else
-        return this;
+        return __unchanged(this);
 }
 
 __ss_int bytes::count(bytes *s, __ss_int start) { return count(s, start, __len__()); }
 __ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
-    __ss_int count, one = 1;
-    size_t i;
-    size_t ssize = s->unit.size();
-    slicenr(7, start, end, one, __len__());
+    /* as str::count: CPython's index adjustment (start is not clamped, so
+       b'abc'.count(b'', 5) is 0), and search only within [start:end]
+       (checking a match against end-len(s) wrapped around for a short end) */
+    __adjust_indices(start, end, __len__());
+    __ss_int ssize = (__ss_int)s->unit.size();
+    if(end - start < ssize)
+        return 0;
+    if(!ssize) /* empty subsequence: matches at every position, including the end */
+        return end - start + 1;
 
-    i = (size_t)start;
-    count = 0;
-    while( ((i = this->unit.find(s->unit, i)) != std::string::npos) && (i <= (size_t)end-ssize) )
-    {
-        i += ssize;
-        if(!ssize) /* empty separator: every position matches, so advance by one to avoid looping forever */
-            i++;
+    std::string_view view(unit.data() + start, (size_t)(end - start));
+    std::string_view sub(s->unit.data(), (size_t)ssize);
+
+    __ss_int count = 0;
+    size_t i = 0;
+    while((i = view.find(sub, i)) != std::string::npos) {
+        i += (size_t)ssize;
         count++;
     }
-
     return count;
 }
 
 __ss_int bytes::count(__ss_int b, __ss_int start) { return count(b, start, __len__()); }
 __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
-    __ss_int count, one = 1;
-    size_t i;
-    slicenr(7, start, end, one, __len__());
+    __adjust_indices(start, end, __len__());
 
-    count = 0;
-    for(i = (size_t)start; i < (size_t)end; i++) {
+    __ss_int count = 0;
+    for(__ss_int i = start; i < end; i++) {
         if((unsigned char)b == (unsigned char)unit[i])
             count++;
     }
@@ -567,49 +588,51 @@ bytes *bytes::expandtabs(__ss_int tabsize) {
     return new bytes(r, frozen);
 }
 
-__ss_bool bytes::__ctype_function(int (*cfunc)(int))
-{
-  size_t i, l = this->unit.size();
+/* ascii-only and locale-independent, as in CPython (the <cctype> functions
+   depend on the locale, which importing re sets, and passing them a
+   negative char is undefined behaviour) */
+static inline bool __ss_blower(unsigned char c) { return c >= 'a' && c <= 'z'; }
+static inline bool __ss_bupper(unsigned char c) { return c >= 'A' && c <= 'Z'; }
+static inline bool __ss_bdigit(unsigned char c) { return c >= '0' && c <= '9'; }
+static inline bool __ss_balpha(unsigned char c) { return __ss_blower(c) || __ss_bupper(c); }
 
-  if(!l)
-      return False;
-
-  for(i = 0; i < l; i++)
-      if(!cfunc((int)unit[i])) return False;
-
-  return True;
-}
-
-__ss_bool bytes::islower() { return __ctype_function(&::islower); }
-__ss_bool bytes::isupper() { return __ctype_function(&::isupper); }
-__ss_bool bytes::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
-__ss_bool bytes::isdigit() { return __ctype_function(&::isdigit); }
-__ss_bool bytes::isalpha() { return __ctype_function(&::isalpha); }
-__ss_bool bytes::isalnum() { return __ctype_function(&::isalnum); }
-
-__ss_bool bytes::istitle()
-{
-    size_t i, len;
-
-    len = this->unit.size();
-    if(!len)
-        return False;
-
-    for(i = 0; i < len; )
-    {
-        for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
-        if(i == len) break;
-
-        if(!::isupper((int)unit[i])) return False;
-        i++;
-
-        for( ; ::islower((int)unit[i]) && i < len; i++) ;
-        if(i == len) break;
-
-        if(::isalpha((int)unit[i])) return False;
+/* at least one cased byte, and none of the other case */
+__ss_bool bytes::islower() {
+    bool cased = false;
+    for(unsigned char c : unit) {
+        if(__ss_bupper(c)) return False;
+        cased = cased || __ss_blower(c);
     }
+    return __mbool(cased);
+}
+__ss_bool bytes::isupper() {
+    bool cased = false;
+    for(unsigned char c : unit) {
+        if(__ss_blower(c)) return False;
+        cased = cased || __ss_bupper(c);
+    }
+    return __mbool(cased);
+}
+__ss_bool bytes::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
+__ss_bool bytes::isdigit() { return __mbool(!unit.empty() && std::all_of(unit.begin(), unit.end(), [](unsigned char c) { return __ss_bdigit(c); })); }
+__ss_bool bytes::isalpha() { return __mbool(!unit.empty() && std::all_of(unit.begin(), unit.end(), [](unsigned char c) { return __ss_balpha(c); })); }
+__ss_bool bytes::isalnum() { return __mbool(!unit.empty() && std::all_of(unit.begin(), unit.end(), [](unsigned char c) { return __ss_balpha(c) || __ss_bdigit(c); })); }
 
-    return True;
+__ss_bool bytes::istitle() {
+    /* as CPython: an uppercase byte may only follow an uncased one, a
+       lowercase byte only a cased one, and there must be a cased byte */
+    bool cased = false, previous_cased = false;
+    for(unsigned char c : unit) {
+        if(__ss_bupper(c)) {
+            if(previous_cased) return False;
+            previous_cased = cased = true;
+        } else if(__ss_blower(c)) {
+            if(!previous_cased) return False;
+            previous_cased = cased = true;
+        } else
+            previous_cased = false;
+    }
+    return __mbool(cased);
 }
 
 __ss_bool bytes::__ss_isascii() {
@@ -689,11 +712,21 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     return new bytes(s, frozen);
 }
 
+str *__hex_sep(bytes *sep) {
+    if(!sep)
+        return NULL;
+    str *s = new str();
+    s->unit = __widen(sep->unit);
+    return s;
+}
+
 str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
     // output will be twice as long
     size_t len = unit.size();
     if(sep && sep->unit.size() != 1)
         throw new ValueError(new str("sep must be length 1."));
+    if(sep && sep->unit[0] > 127)
+        throw new ValueError(new str("sep must be ASCII."));
     if(len == 0)
         return new str();
     __GC_STRING hexstr = __GC_STRING(unit);
@@ -767,7 +800,7 @@ bytes *bytes::center(__ss_int w, bytes *fillchar) {
     /* see str::center: a negative width has to be rejected before the cast
        to size_t, which would wrap it to a huge value */
     if(w<=__len__())
-        return this;
+        return __unchanged(this);
 
     size_t width = (size_t)w;
     size_t len = unit.size();
@@ -791,7 +824,7 @@ bytes *bytes::copy() {
 }
 
 bytes *bytes::zfill(__ss_int width) {
-    if(width<=__len__()) return this;
+    if(width<=__len__()) return __unchanged(this);
     __GC_STRING s = unit;
     size_t offset = (__len__() > 0 and (unit[0] == '-' or unit[0] == '+')) ? 1 : 0;
     s.insert(offset, (size_t)(width-__len__()), '0');
@@ -802,7 +835,7 @@ bytes *bytes::zfill(__ss_int width) {
 
 bytes *bytes::ljust(__ss_int width, bytes *s) {
     __fillbyte_check(s, "ljust");
-    if(width<=__len__()) return this;
+    if(width<=__len__()) return __unchanged(this);
     if(!s) s = bsp;
     bytes *r = __add__(s->__mul__(width-__len__()));
     r->frozen = frozen;
@@ -811,7 +844,7 @@ bytes *bytes::ljust(__ss_int width, bytes *s) {
 
 bytes *bytes::rjust(__ss_int width, bytes *s) {
     __fillbyte_check(s, "rjust");
-    if(width<=__len__()) return this;
+    if(width<=__len__()) return __unchanged(this);
     if(!s) s = bsp;
     bytes *r = s->__mul__(width-__len__())->__add__(this);
     r->frozen = frozen;

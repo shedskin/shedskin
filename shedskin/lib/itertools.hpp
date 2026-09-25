@@ -632,7 +632,11 @@ template<class T, class U, class V, class W> inline isliceiter<T> *islice(pyiter
 
 /* allocated with plain new: derive from gc, so it is traced (its deque is
    GC-allocated and referenced only from here) and not malloc'ed */
+#ifdef __SS_NOGC
+template<class T> class teecache {
+#else
 template<class T> class teecache : public gc {
+#endif
 public:
     typedef std::pair<T, int> item;
 
@@ -824,7 +828,7 @@ template<class T, class U> tuple2<T, U> *zip_longestiter<T, U>::__next__() {
 template<class T> class zip_longestiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     unsigned int exhausted;
-    std::vector<char> exhausted_iter; // never use std::vector<bool> because this is *slow*
+    __GC_VECTOR(char) exhausted_iter; // never use a vector of bool because this is *slow*
     __GC_VECTOR(__iter<T> *) iters;
     T fillvalue;
 
@@ -1008,8 +1012,8 @@ template<class T> class productiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     bool exhausted;
     __GC_VECTOR(__GC_VECTOR(T)) values;
-    std::vector<unsigned int> iter;
-    std::vector<unsigned int> indices;
+    __GC_VECTOR(unsigned int) iter;
+    __GC_VECTOR(unsigned int) indices;
 
     tuple2<T, T> *__tuple_cache;
     int __tuple_count; 
@@ -1140,14 +1144,12 @@ public:
     __ss_int r;
     int len;
     int current;
-    unsigned int* indices;
-    unsigned int* cycles;
+    __GC_VECTOR(unsigned int) indices;
+    __GC_VECTOR(unsigned int) cycles;
     __GC_VECTOR(T) cache;
 
     permutationsiter();
     permutationsiter(pyiter<T> *iterable, __ss_int r, bool r_none=false);
-
-    ~permutationsiter();
 
     tuple2<T, T> *__next__();
 
@@ -1157,8 +1159,6 @@ private: // We might want to implement this, but we certainly don't want the def
 };
 
 template<class T> inline permutationsiter<T>::permutationsiter() {
-    this->indices = 0;
-    this->cycles = 0;
 }
 template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r_, bool r_none) {
     if(!r_none && r_ < 0)
@@ -1182,12 +1182,10 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
 
     if (r_ > this->len) {
         this->current = -1;
-        this->indices = 0;
-        this->cycles = 0;
     } else {
         this->current = this->r;
-        this->indices = new unsigned int[this->len];
-        this->cycles = new unsigned int[this->r];
+        this->indices.resize(this->len);
+        this->cycles.resize(this->r);
 
         for (int i = 0; i < this->len; ++i) {
             this->indices[i] = i;
@@ -1196,11 +1194,6 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
             this->cycles[i] = this->len - i;
         }
     }
-}
-
-template<class T> inline permutationsiter<T>::~permutationsiter() {
-    delete[] this->indices;
-    delete[] this->cycles;
 }
 
 template<class T> tuple2<T, T> *permutationsiter<T>::__next__() {
@@ -1254,13 +1247,11 @@ public:
     __ss_int r;
     int len;
     int current;
-    int* indices;
+    __GC_VECTOR(int) indices;
     __GC_VECTOR(T) cache;
 
     combinationsiter();
     combinationsiter(pyiter<T> *iterable, __ss_int r);
-
-    ~combinationsiter();
 
     tuple2<T, T> *__next__();
 
@@ -1270,7 +1261,6 @@ private: // We might want to implement this, but we certainly don't want the def
 };
 
 template<class T> inline combinationsiter<T>::combinationsiter() {
-    this->indices = 0;
 }
 template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterable, __ss_int r_) {
     if(r_ < 0)
@@ -1292,19 +1282,14 @@ template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterab
 
     if (r_ > this->len) {
         this->current = -1;
-        this->indices = 0;
     } else {
         this->current = r_;
-        this->indices = new int[r_];
+        this->indices.resize(r_);
 
         for (int i = 0; i < this->r; ++i) {
             this->indices[i] = i;
         }
     }
-}
-
-template<class T> inline combinationsiter<T>::~combinationsiter() {
-    delete[] this->indices;
 }
 
 template<class T> tuple2<T, T> *combinationsiter<T>::__next__() {
@@ -1358,13 +1343,11 @@ public:
     __ss_int r;
     int len;
     int current;
-    int* indices;
+    __GC_VECTOR(int) indices;
     __GC_VECTOR(T) cache;
 
     combinations_with_replacementiter();
     combinations_with_replacementiter(pyiter<T> *iterable, __ss_int r);
-
-    ~combinations_with_replacementiter();
 
     tuple2<T, T> *__next__();
 
@@ -1374,7 +1357,6 @@ private: // We might want to implement this, but we certainly don't want the def
 };
 
 template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter() {
-    this->indices = 0;
 }
 template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter(pyiter<T> *iterable, __ss_int r_) {
     if(r_ < 0)
@@ -1396,19 +1378,14 @@ template<class T> inline combinations_with_replacementiter<T>::combinations_with
 
     if (!this->len && r_) {
         this->current = -1;
-        this->indices = 0;
     } else {
         this->current = r_;
-        this->indices = new int[r_];
+        this->indices.resize(r_);
 
         for (int i = 0; i < this->r; ++i) {
             this->indices[i] = 0;
         }
     }
-}
-
-template<class T> inline combinations_with_replacementiter<T>::~combinations_with_replacementiter() {
-    delete[] this->indices;
 }
 
 template<class T> tuple2<T, T> *combinations_with_replacementiter<T>::__next__() {

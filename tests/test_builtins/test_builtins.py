@@ -39,6 +39,8 @@ class SubKlass(Klass): pass
 
 def test_abs():
     assert abs(-10) == 10
+    assert str(abs(-0.0)) == '0.0'
+    assert abs(-2.5) == 2.5
 
 class Bert:
     def __index__(self):
@@ -66,7 +68,24 @@ class MyString:
 def test_bytes():
     # s = MyString('sam')
     # assert bytes(s) == b'sam'
-    # assert bytes('a', encoding='utf8') == b'a'
+    assert bytes('a', encoding='utf8') == b'a'
+    assert bytes('\xf1', 'utf-8') == b'\xc3\xb1'
+    assert bytes('\xf1', 'ascii', 'replace') == b'?'
+    assert bytes('\xf1', 'ascii', errors='ignore') == b''
+    b = bytearray('\xf1', 'latin-1')
+    b.append(65)
+    assert b == bytearray(b'\xf1A')
+    try:
+        bytes('\xf1', 'ascii')
+        assert False
+    except UnicodeEncodeError:
+        pass
+    s = 'x'
+    try:
+        bytes(s)
+        assert False
+    except TypeError:
+        pass
     assert bytes() == b''
     assert bytes([1, 2, 3]) == b'\x01\x02\x03'
     assert bytes(set([1])) == b'\x01'
@@ -106,6 +125,12 @@ def test_divmod():
     assert divmod(-496, 3.0) == (-166.0, 2.0)
     assert divmod(-496, -3) == (165, -1)
     assert divmod(-496.0, -3.0) == (165.0, -1.0)
+    error = ''
+    try:
+        divmod(1.0, 0.0)
+    except ZeroDivisionError as e:
+        error = str(e)
+    assert error == 'float divmod()'
 
 
 def test_pow():
@@ -118,6 +143,8 @@ def test_pow():
     assert pow(5, 0, 1) == 0
     assert pow(0, 0, 7) == 1
     assert pow(7, 1, 7) == 0
+    assert pow(True, 2, 3) == 1
+    assert pow(False, 2, 3) == 0
 
     # the result takes the sign of the modulus
     assert pow(-2, 3, 5) == 2
@@ -579,6 +606,24 @@ def test_round():
     assert str(round(2.5, 1)) == '2.5'
     assert str(round(5, 2)) == '5'
     assert str(round(1234, -2)) == '1200'
+
+    # round(inf/nan) raises (it used to return INT64_MIN), round(x, n) doesn't
+    inf, nan = float('inf'), float('nan')
+    for x in [inf, -inf, nan]:
+        error = ''
+        try:
+            round(x)
+        except OverflowError as e:
+            error = 'OverflowError: ' + str(e)
+        except ValueError as e:
+            error = 'ValueError: ' + str(e)
+        if x != x:
+            assert error == 'ValueError: cannot convert float NaN to integer'
+        else:
+            assert error == 'OverflowError: cannot convert float infinity to integer'
+    assert round(inf, 2) == inf
+    assert round(-inf, -1) == -inf
+    assert str(round(nan, 2)) == 'nan'
 
 
 def test_set():

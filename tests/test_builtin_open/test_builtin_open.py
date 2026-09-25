@@ -312,7 +312,42 @@ def test_open_unicode_name():
     assert not os.path.exists(fn)
 
 
+def test_seek_returns_position():
+    with open('useek.bin', 'wb') as g:
+        g.write(b'abcdef')
+    with open('useek.bin') as f:
+        assert f.seek(2) == 2
+        assert f.read() == 'cdef'
+        assert f.seek(0, 2) == 6
+    with open('useek.bin', 'rb') as h:
+        assert h.seek(2) == 2
+        assert h.seek(-1, 2) == 5
+        assert h.seek(-2, 1) == 3
+        assert h.read() == b'def'
+    os.remove('useek.bin')
+
+
+def test_open_exclusive():
+    if os.path.exists('uexcl.txt'):
+        os.remove('uexcl.txt')
+    with open('uexcl.txt', 'x') as f:
+        f.write('hop')
+    assert rtext('uexcl.txt') == 'hop'
+    try:
+        open('uexcl.txt', 'x')
+        assert False
+    except FileExistsError:
+        pass
+    os.remove('uexcl.txt')
+    with open('uexcl.txt', 'xb') as g:
+        g.write(b'hop')
+    assert rbytes('uexcl.txt') == b'hop'
+    os.remove('uexcl.txt')
+
+
 def test_all():
+    test_seek_returns_position()
+    test_open_exclusive()
     test_open_unicode_name()
     test_open_encoding()
     test_open_utf8_sig()

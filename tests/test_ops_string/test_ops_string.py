@@ -212,12 +212,20 @@ def test_bytes_repr_is_ascii():
     assert b'%r' % b'x' == b"b'x'"
 
 
+def test_bool_argument():
+    b = True
+    assert '[%d]' % b == '[1]'
+    assert '[%x] [%.1f] [%5d]' % (b, b, False) == '[1] [1.0] [    0]'
+    assert '%o %X %e' % (b, b, False) == '1 1 0.000000e+00'
+
+    
 def test_all():
     test_combined_flags()
     test_alternate_form()
     test_most_negative_int()
     test_char_width()
     test_bytes_repr_is_ascii()
+    test_bool_argument()
     test_classic1()
     test_classic2()
     test_classic3()

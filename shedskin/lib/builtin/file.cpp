@@ -46,6 +46,14 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #endif // HAVE_STDIO_UNLOCKED
 
 static FILE *__ss_fopen(str *file_name, str *flags) {
+    /* exclusive creation: C11 only accepts 'x' as a trailing modifier
+       of a 'w' mode, e.g. 'x+' becomes 'w+x' */
+    size_t excl = flags->unit.find('x');
+    if (excl != std::string::npos) {
+        flags = new str(flags->unit);
+        flags->unit[excl] = 'w';
+        flags->unit += 'x';
+    }
 #ifdef WIN32
     return _wfopen(__ss_wpath(file_name).c_str(), __ss_wpath(flags).c_str());
 #else
@@ -163,13 +171,13 @@ void *file::writelines(pyiter<str *> *iter) {
 }
 
 __ss_int file::seek(__ss_int i, __ss_int w) {
-    int pos=-1;
     __check_closed();
     if(f) {
-        if((pos = fseek(f, i, (int)w)) == -1)
+        if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
+        return tell(); /* the new absolute position */
     }
-    return pos;
+    return -1;
 }
 
 __ss_int file::tell() {
@@ -453,13 +461,13 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
 }
 
 __ss_int file_binary::seek(__ss_int i, __ss_int w) {
-    int pos = -1;
     __check_closed();
     if(f) {
-        if((pos = fseek(f, i, (int)w)) == -1)
+        if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
+        return tell(); /* the new absolute position */
     }
-    return pos;
+    return -1;
 }
 
 __ss_int file_binary::tell() {
