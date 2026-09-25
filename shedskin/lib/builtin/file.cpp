@@ -72,6 +72,7 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
     if (newline) {
         if (newline->unit.empty() || newline->unit == U"\n") {
             options.universal_mode = false;
+            options.split_cr = newline->unit.empty();
             untranslated = true;
         } else if (newline->unit == U"\r" || newline->unit == U"\r\n")
             throw new ValueError(__add_strs(3, new str("newline="), repr(newline), new str(" is not supported by shedskin (only None, '' and '\\n')")));
@@ -170,9 +171,22 @@ void *file::writelines(pyiter<str *> *iter) {
     return NULL;
 }
 
+/* universal newlines translate '\r\n' lazily: after a '\r', the next read
+   skips a '\n' (so reading a line never blocks on the character after it).
+   settle that before the file position is used or changed */
+static void __settle_cr(FILE *f, __file_options &options) {
+    if(options.cr) {
+        options.cr = false;
+        int c = GETC(f);
+        if(c != '\n' && c != EOF)
+            ungetc(c, f);
+    }
+}
+
 __ss_int file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
+        __settle_cr(f, options);
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
         return tell(); /* the new absolute position */
@@ -183,6 +197,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
 __ss_int file::tell() {
     __check_closed();
     if(f) {
+        __settle_cr(f, options);
         long status = ftell(f);
         if(status == -1)
             __throw_oserror();
@@ -191,11 +206,18 @@ __ss_int file::tell() {
     return -1;
 }
 
+/* a utf-8 continuation byte never starts a character, so counting
+   non-continuation bytes counts code points; text-mode read(n) and readline(n) mean n
+   *characters* (as in CPython), so stop -- pushing the byte back -- when
+   character n+1 begins. */
+static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
+
 str *file::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
+    size_t chars = 0;
     if (options.universal_mode) {
-        for(size_t i = 0; i < size_t(n); ++i) {
+        for(;;) {
             int c = GETC(f);
             if(c == EOF)
                 break;
@@ -207,6 +229,13 @@ str *file::readline(__ss_int n) {
                         break;
                 }
             }
+            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
+                if(chars == size_t(n)) { /* character n+1 starts: not ours */
+                    ungetc(c, f); /* raw byte, before any cr translation */
+                    break;
+                }
+                chars++;
+            }
             if(c == '\r') {
                 options.cr = true;
                 c = '\n';
@@ -216,13 +245,28 @@ str *file::readline(__ss_int n) {
                 break;
         }
     } else {  /* If not universal mode, use the normal loop */
-        for(size_t i = 0; i < size_t(n); ++i) {
+        for(;;) {
             const int c = GETC(f);
             if(c == EOF)
                 break;
+            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
+                if(chars == size_t(n)) {
+                    ungetc(c, f);
+                    break;
+                }
+                chars++;
+            }
             __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
+            if(c == '\r' && options.split_cr) { /* '\r' or '\r\n' ends the line too */
+                const int d = GETC(f);
+                if(d == '\n' && chars < size_t(n))
+                    __read_cache.push_back('\n');
+                else if(d != EOF)
+                    ungetc(d, f);
+                break;
+            }
         }
     }
     if(__error())
@@ -234,12 +278,6 @@ str *file::readline(__ss_int n) {
 static void __throw_io_error() {
     __throw_oserror();
 }
-
-/* a utf-8 continuation byte never starts a character, so counting
-   non-continuation bytes counts code points; text-mode read(n) means n
-   *characters* (as in CPython), so stop -- pushing the byte back -- when
-   character n+1 begins. */
-static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
 
 str *file::read(__ss_int n) {
     __check_closed();

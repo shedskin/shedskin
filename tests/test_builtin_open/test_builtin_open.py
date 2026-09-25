@@ -345,9 +345,67 @@ def test_open_exclusive():
     os.remove('uexcl.txt')
 
 
+def test_newline_empty_splits_on_cr():
+    # newline='': lines end at '\r', '\n' and '\r\n', untranslated
+    with open('ucr.bin', 'wb') as g:
+        g.write(b'a\rb\r\nc\n\rd')
+    with open('ucr.bin', newline='') as f:
+        assert f.readlines() == ['a\r', 'b\r\n', 'c\n', '\r', 'd']
+    with open('ucr.bin', newline='') as f:
+        assert [l for l in f] == ['a\r', 'b\r\n', 'c\n', '\r', 'd']
+    with open('ucr.bin', newline='') as f:
+        assert f.readline(3) == 'a\r'
+        assert f.readline(2) == 'b\r'  # size limit between '\r' and '\n'
+        assert f.readline() == '\n'
+    with open('ucr.bin', newline='\n') as f:
+        assert f.readlines() == ['a\rb\r\n', 'c\n', '\rd']
+    os.remove('ucr.bin')
+
+
+def test_readline_size_counts_characters():
+    with open('usz.bin', 'wb') as g:
+        g.write('\xe4\xf6\n\u20acx\r\ny'.encode())
+    with open('usz.bin', encoding='utf-8') as f:
+        assert f.readline(1) == '\xe4'
+        assert f.readline(1) == '\xf6'
+        assert f.readline(1) == '\n'
+        assert f.readline(2) == '\u20acx'
+        assert f.readline(1) == '\n'
+        assert f.readline(0) == ''
+        assert f.readline(5) == 'y'
+    with open('usz.bin', encoding='utf-8', newline='') as f:
+        assert f.readline(2) == '\xe4\xf6'
+    os.remove('usz.bin')
+
+
+def test_pending_cr_seek_tell():
+    # '\r\n' is translated lazily: seek() must forget a pending '\r', and
+    # tell() must count the '\n' that belongs to it
+    with open('ucr2.bin', 'wb') as g:
+        g.write(b'\nq\r')
+    with open('ucr2.bin') as f:
+        f.readline()
+        f.readline()
+        f.seek(0)
+        assert f.readline() == '\n'
+    with open('ucr2.bin', 'wb') as g:
+        g.write(b'a\r\nb\r\n')
+    with open('ucr2.bin') as f:
+        f.readline()
+        assert f.tell() == 3
+        assert f.readline() == 'b\n'
+        assert f.tell() == 6
+        f.seek(3)
+        assert f.read() == 'b\n'
+    os.remove('ucr2.bin')
+
+
 def test_all():
     test_seek_returns_position()
     test_open_exclusive()
+    test_newline_empty_splits_on_cr()
+    test_readline_size_counts_characters()
+    test_pending_cr_seek_tell()
     test_open_unicode_name()
     test_open_encoding()
     test_open_utf8_sig()
