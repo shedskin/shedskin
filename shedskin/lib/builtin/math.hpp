@@ -132,6 +132,9 @@ inline int __power(int a, int b, int c) {
     return (int)__power((__ss_int)a, (__ss_int)b, (__ss_int)c);
 }
 #endif
+inline __ss_int __power(__ss_bool a, __ss_int b, __ss_int c) { /* else ambiguous */
+    return __power((__ss_int)a.value, b, c);
+}
 
 /* division */
 
@@ -255,7 +258,7 @@ template<> inline __ss_float __mods(__ss_float a, int b) { return __mods(a, (__s
 
 template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
 template<> inline tuple2<__ss_float, __ss_float> *divmod(__ss_float a, __ss_float b) {
-    __SS_ZERO_CHECK(b, "float floor division by zero");
+    __SS_ZERO_CHECK(b, "float divmod()");
     __ss_float m;
     __ss_float q = __float_divmod(a, b, &m);
     return new tuple2<__ss_float, __ss_float>(2, q, m);

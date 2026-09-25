@@ -106,6 +106,12 @@ def test_divmod():
     assert divmod(-496, 3.0) == (-166.0, 2.0)
     assert divmod(-496, -3) == (165, -1)
     assert divmod(-496.0, -3.0) == (165.0, -1.0)
+    error = ''
+    try:
+        divmod(1.0, 0.0)
+    except ZeroDivisionError as e:
+        error = str(e)
+    assert error == 'float divmod()'
 
 
 def test_pow():
@@ -118,6 +124,8 @@ def test_pow():
     assert pow(5, 0, 1) == 0
     assert pow(0, 0, 7) == 1
     assert pow(7, 1, 7) == 0
+    assert pow(True, 2, 3) == 1
+    assert pow(False, 2, 3) == 0
 
     # the result takes the sign of the modulus
     assert pow(-2, 3, 5) == 2

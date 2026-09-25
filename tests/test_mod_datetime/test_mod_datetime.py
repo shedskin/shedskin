@@ -975,7 +975,27 @@ def test_tzinfo_shared_offsets():
     assert east.zero == datetime.timedelta(0)
 
 
+def test_augmented_assignment():
+    d = datetime.date(2020, 1, 1)
+    d += datetime.timedelta(days=3)
+    d -= datetime.timedelta(days=1)
+    assert d == datetime.date(2020, 1, 3)
+    dt = datetime.datetime(2020, 1, 1, 12)
+    dt += datetime.timedelta(hours=13)
+    dt -= datetime.timedelta(minutes=1)
+    assert dt == datetime.datetime(2020, 1, 2, 0, 59)
+    t = datetime.timedelta(days=1)
+    t += datetime.timedelta(hours=1)
+    t -= datetime.timedelta(minutes=30)
+    t *= 3
+    t //= 2
+    assert t == datetime.timedelta(days=1, hours=12, minutes=45)
+    t /= 3
+    assert t == datetime.timedelta(hours=12, minutes=15)
+
+
 def test_all():
+        test_augmented_assignment()
         test_date()
         test_date_ctime()
         test_date_day_out_of_range()

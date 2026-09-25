@@ -246,7 +246,7 @@ str *BaseException::__str__() {
 
 str *BaseException::__repr__() {
     if(len(this->args) > 0)
-        return __add_strs(4, this->__class__->__name__, new str("('"), args->__getitem__(0), new str("')"));
+        return __add_strs(4, this->__class__->__name__, new str("("), repr(args->__getitem__(0)), new str(")"));
     else
         return __add_strs(2, this->__class__->__name__, new str("()"));
 }
