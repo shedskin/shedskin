@@ -640,7 +640,46 @@ def test_bin():
     assert s[2] == 0xba
 
 
+def test_count_start_end():
+    # CPython's index adjustment: no wraparound for a short end, and a start
+    # past the end is not clamped
+    assert b'aaaa'.count(b'aa', 0, 1) == 0
+    assert b'abcabc'.count(b'abc', 0, 2) == 0
+    assert b'abcabc'.count(b'abc', 1) == 1
+    assert b'abc'.count(b'', 5) == 0
+    assert b'abc'.count(b'', 3) == 1
+    assert b'abc'.count(b'', 0, 2) == 3
+    assert b'abc'.count(b'toolong') == 0
+    assert b'abcabc'.count(b'b', -2) == 1
+    assert b'aaa'.count(97, 1) == 2
+    assert b'aaa'.count(97, -1, -5) == 0
+
+
+def test_character_classes():
+    # islower/isupper: at least one cased byte, and none of the other case
+    assert b'a1'.islower()
+    assert b'A1'.isupper()
+    assert not b'1'.islower()
+    assert not b'1'.isupper()
+    assert not b'aA'.islower()
+    # istitle: needs a cased byte, uppercase only after an uncased byte
+    assert not b'1'.istitle()
+    assert not b' '.istitle()
+    assert b'Ab Cd'.istitle()
+    assert b'1A'.istitle()
+    assert not b'AB'.istitle()
+    assert not b'Ab cd'.istitle()
+    # ascii only, whatever the locale (importing re sets it)
+    assert not b'\xe9'.isalpha()
+    assert not b'\xc9'.isupper()
+    assert b'A\xc9'.isupper()
+    assert not b'\xb2'.isdigit()
+    assert not b'a\xe9'.isalnum()
+
+
 def test_all():
+    test_character_classes()
+    test_count_start_end()
     test_bytes_cmp()
     test_bytes_concat()
     test_capitalize()

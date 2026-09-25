@@ -122,7 +122,6 @@ public:
     __ss_bool __eq__(pyobj *s);
     __ss_int __hash__();
 
-    __ss_bool __ctype_function(int (*cfunc)(int));
 
     bytes *__add__(bytes *b);
     bytes *__mul__(__ss_int n);
