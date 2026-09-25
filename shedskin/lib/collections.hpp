@@ -495,6 +495,11 @@ public:
         return V();
     }
 
+    void *__delitem__(K key) { /* unlike dict, a missing key is ignored */
+        this->gcd.erase(key);
+        return NULL;
+    }
+
     void *__addtoitem__(K key, V value) { /* backs `counter[key] += n` */
         typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
         if(it == this->gcd.end())

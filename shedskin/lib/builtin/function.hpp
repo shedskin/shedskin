@@ -61,7 +61,7 @@ template<class T> inline T __abs(T t) { return t->__abs__(); }
 template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 #endif
 template<> inline int __abs(int a) { return a<0?-a:a; }
-template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
+template<> inline __ss_float __abs(__ss_float a) { return std::fabs(a); }
 inline int __abs(__ss_bool b) { return b.value; }
 
 /* repr */

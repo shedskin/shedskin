@@ -130,6 +130,9 @@ class Counter(dict):
     def __addtoitem__(self, key, value): # backs `counter[k] += n`
         self.__setunit__(key, value)
 
+    def __delitem__(self, key): # unlike dict, never raises KeyError
+        self.__key__(key)
+
     def __repr__(self):
         self.unit.__repr__()
         self.value.__repr__()
