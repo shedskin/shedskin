@@ -39,6 +39,8 @@ class SubKlass(Klass): pass
 
 def test_abs():
     assert abs(-10) == 10
+    assert str(abs(-0.0)) == '0.0'
+    assert abs(-2.5) == 2.5
 
 class Bert:
     def __index__(self):

@@ -177,7 +177,15 @@ def test_sign_padding():
     assert ("[%-12.3g]" % -2.5) == '[-2.5        ]'
 
 
+def test_bool_argument():
+    b = True
+    assert '[%d]' % b == '[1]'
+    assert '[%x] [%.1f] [%5d]' % (b, b, False) == '[1] [1.0] [    0]'
+    assert '%o %X %e' % (b, b, False) == '1 1 0.000000e+00'
+
+
 def test_all():
+    test_bool_argument()
     test_classic1()
     test_classic2()
     test_classic3()
