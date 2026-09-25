@@ -15,6 +15,24 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     return d->__getitem__(key);
 }
 
+/* conversion flags, combined in f_flag (CPython accepts any combination) */
+enum {
+    __SS_FMT_LEFT = 1,  /* '-' */
+    __SS_FMT_PLUS = 2,  /* '+' */
+    __SS_FMT_SPACE = 4, /* ' ' */
+    __SS_FMT_ALT = 8    /* '#' */
+};
+
+static inline std::string __mod_sign(bool negative, char f_flag) {
+    if (negative)
+        return "-";
+    if (f_flag & __SS_FMT_PLUS)
+        return "+";
+    if (f_flag & __SS_FMT_SPACE)
+        return " ";
+    return "";
+}
+
 // Compose a signed/zero-precision-padded numeric string ('sign' + 'digits')
 // into 'result', honoring the field width and the '-' (left-justify) and
 // '0' (zero-fill) flags the way CPython's %-formatting does: zero-fill
@@ -24,7 +42,7 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
 // '0' flag.
 static inline void __mod_pad_signed(str *result, const std::string &sign, const __GC_STR &digits, char f_flag, __ss_int f_width, bool f_zero) {
     __ss_int padlen = f_width - (__ss_int)(sign.size() + digits.size());
-    if (f_flag == '-') {
+    if (f_flag & __SS_FMT_LEFT) {
         result->unit += __gcs(sign) + digits;
         if (f_width != -1 && padlen > 0)
             result->unit += __GC_STR((size_t)padlen, ' ');
@@ -42,20 +60,32 @@ static inline void __mod_pad_signed(str *result, const std::string &sign, const 
     __mod_pad_signed(result, sign, __gcs(digits), f_flag, f_width, f_zero);
 }
 
+/* d/i/u, o, x and X: the digits of the magnitude (unsigned, so that the most
+   negative int does not overflow), zero-extended to the precision; the '#'
+   prefix (0o, 0x, 0X) goes with the sign, so that zero-fill comes after it */
+static inline void __mod_integer(str *result, __ss_int arg, int base, char c, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __ss_uint mag = arg < 0 ? (__ss_uint)0 - (__ss_uint)arg : (__ss_uint)arg;
+    const char *digit_chars = (c == 'X') ? "0123456789ABCDEF" : "0123456789abcdef";
+    std::string digits;
+    do {
+        digits += digit_chars[mag % (__ss_uint)base];
+        mag /= (__ss_uint)base;
+    } while (mag);
+    std::reverse(digits.begin(), digits.end());
+    if (f_precision != -1 && f_precision > (__ss_int)digits.size())
+        digits.insert(0, (size_t)f_precision - digits.size(), '0');
+
+    std::string sign = __mod_sign(arg < 0, f_flag);
+    if ((f_flag & __SS_FMT_ALT) && base != 10) {
+        sign += '0';
+        sign += (base == 8) ? 'o' : c;
+    }
+    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
+}
+
 template <class T> void __mod_int(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_int(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    std::string sabs = std::to_string(__abs(arg));
-    std::string sign;
-    if (arg < 0)
-        sign = "-";
-    else if (f_flag == '+')
-        sign = "+";
-    else if (f_flag == ' ')
-        sign = " ";
-    std::string digits = sabs;
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
-        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
-    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
+    __mod_integer(result, arg, 10, 'd', f_flag, f_width, f_precision, f_zero);
 }
 template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
     __mod_int(result, pos, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
@@ -64,45 +94,17 @@ template<> inline void __mod_int(str *result, size_t &pos, __ss_bool arg, char f
     __mod_int(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-// TODO same as mod_int different base?
 template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    std::string sabs(__narrow_std(__str(__abs(arg), (__ss_int)8)->unit));
-    std::string sign;
-    if (arg < 0)
-        sign = "-";
-    else if (f_flag == '+')
-        sign = "+";
-    else if (f_flag == ' ')
-        sign = " ";
-    std::string digits = sabs;
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
-        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
-    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
+    __mod_integer(result, arg, 8, 'o', f_flag, f_width, f_precision, f_zero);
 }
 template<> inline void __mod_oct(str *result, size_t &pos, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_oct(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-// TODO same as mod_int different base? almost, upper/lower x different
 template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
 template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    std::string sabs;
-    if (c == 'x')
-       sabs = __narrow_std(__str(__abs(arg), (__ss_int)16)->unit);
-    else
-       sabs = __narrow_std(__str(__abs(arg), (__ss_int)16)->upper()->unit);
-    std::string sign;
-    if (arg < 0)
-        sign = "-";
-    else if (f_flag == '+')
-        sign = "+";
-    else if (f_flag == ' ')
-        sign = " ";
-    std::string digits = sabs;
-    if (f_precision != -1 && f_precision-((__ss_int)sabs.size()) > 0)
-        digits = std::string((size_t)f_precision-sabs.size(), '0') + sabs;
-    __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
+    __mod_integer(result, arg, 16, c, f_flag, f_width, f_precision, f_zero);
 }
 template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_hex(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
@@ -113,13 +115,10 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
     std::stringstream t;
     std::string sign;
     __ss_float aarg = arg;
-    if (arg < 0 || (arg == 0 && std::signbit(arg))) { /* also catch -0.0 */
-        sign = "-";
+    bool negative = arg < 0 || (arg == 0 && std::signbit(arg)); /* also catch -0.0 */
+    if (negative)
         aarg = -arg;
-    } else if (f_flag == '+')
-        sign = "+";
-    else if (f_flag == ' ')
-        sign = " ";
+    sign = __mod_sign(negative, f_flag);
     /* the uppercase conversions ('E', 'F', 'G') format exactly like their
        lowercase counterparts, apart from using an uppercase exponent marker
        and uppercase 'INF'/'NAN' */
@@ -144,6 +143,8 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
         t.unsetf(std::ios::floatfield);
         t.precision(f_precision ? f_precision : 1);
     }
+    if (f_flag & __SS_FMT_ALT) /* '#': always a decimal point, and 'g' keeps trailing zeros */
+        t.setf(std::ios::showpoint);
     t << aarg;
 
     __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
@@ -159,7 +160,7 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
     __GC_STR s;
     if(c=='s')
         s = __str(arg)->unit;
-    else if(c=='a')
+    else if(c=='a' || flag) /* b'%r' means b'%a' */
         s = ascii(arg)->unit;
     else
         s = repr(arg)->unit; // TODO escaping?
@@ -185,16 +186,16 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
     __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 
-template <class T> void __mod_char(str *, size_t &, char, T) {}
-template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg) {
+template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
+template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
     if(arg < 0 || arg > 0x10ffff)
         throw new OverflowError(new str("%c arg not in range(0x110000)"));
-    result->unit += (__ss_char)arg;
+    __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
 }
-template<> inline void __mod_char(str *result, size_t &, char, str *arg) {
+template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
     if(arg->unit.size() != 1)
         throw new TypeError(new str("%c requires int or char"));
-    result->unit += arg->unit[0];
+    __mod_pad_signed(result, "", __GC_STR(1, arg->unit[0]), f_flag, f_width, false);
 }
 
 template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
@@ -248,7 +249,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             throw new ValueError(new str("unsupported format character"));
 
         /* extract flags, width, precision */
-        char f_flag = 'x';
+        char f_flag = 0;
         char d;
         __ss_int f_width = -1;
         __ss_int f_precision = -1;
@@ -260,9 +261,16 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
 
             switch(d) {
                 case '-':
+                    f_flag |= __SS_FMT_LEFT;
+                    break;
                 case '+':
+                    f_flag |= __SS_FMT_PLUS;
+                    break;
                 case ' ':
-                    f_flag = d;
+                    f_flag |= __SS_FMT_SPACE;
+                    break;
+                case '#':
+                    f_flag |= __SS_FMT_ALT;
                     break;
 
                 case '.':
@@ -356,10 +364,10 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
 
             case 'c':
                 if(name) {
-                    __mod_char(result, pos, (char)c, __mod_dict_arg(arg, name));
+                    __mod_char(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width);
                     break;
                 } else {
-                    __mod_char(result, pos, (char)c, arg);
+                    __mod_char(result, pos, (char)c, arg, f_flag, f_width);
                     return;
                 }
 
