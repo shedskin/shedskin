@@ -371,6 +371,43 @@ class ExtensionModule:
             write("    return __ss_truth;")
             write("}\n")
 
+        # The binary number slots are also called for reflected operations:
+        # for `1 + obj`, CPython calls obj's nb_add(1, obj), so `self` is not
+        # necessarily an instance of this class. Casting it blindly to our
+        # object type crashed the interpreter (confirmed: `1 + V(2)`
+        # segfaulted). Check the type first, and return NotImplemented so
+        # CPython can try the other operand or raise the usual TypeError.
+        binary_funcs = [
+            f for f in funcs if f.ident in OVERLOAD and f.ident not in OVERLOAD_SINGLE
+        ]
+        if binary_funcs:
+            assert isinstance(binary_funcs[0].parent, python.Class)
+            write("extern PyTypeObject %sObjectType;\n" % clname(binary_funcs[0].parent))
+        for f in binary_funcs:
+            assert isinstance(f.parent, python.Class)
+            target = "%s_%s" % (clname(f.parent), f.ident)
+            if f.ident == "__pow__":
+                # nb_power is `ternaryfunc` (self, other, modulo)
+                write(
+                    "static PyObject *%s_nb(PyObject *self, PyObject *other, PyObject *mod) {"
+                    % target
+                )
+            else:
+                write(
+                    "static PyObject *%s_nb(PyObject *self, PyObject *other) {"
+                    % target
+                )
+            write(
+                "    if (!PyObject_TypeCheck(self, &%sObjectType))"
+                % clname(f.parent)
+            )
+            write("        Py_RETURN_NOTIMPLEMENTED;")
+            if f.ident == "__pow__":
+                write("    return %s(self, other, mod);" % target)
+            else:
+                write("    return %s(self, other, NULL);" % target)
+            write("}\n")
+
         write("static PyNumberMethods %s_as_number = {" % ident)
         for overload in OVERLOAD:
             fs = [f for f in funcs if f.ident == overload]
@@ -386,18 +423,10 @@ class ExtensionModule:
                         "    (PyObject *(*)(PyObject *))%s_%s,"
                         % (clname(f.parent), overload)
                     )
-                elif overload == "__pow__":
-                    # nb_power is `ternaryfunc` (self, other, modulo):
-                    # PyObject *(*)(PyObject *, PyObject *, PyObject *).
-                    # This matches the generated method's real (self, args,
-                    # kwargs) signature exactly, unlike the PyCFunction cast
-                    # used below for the binary operators.
-                    write(
-                        "    (PyObject *(*)(PyObject *, PyObject *, PyObject *))%s_%s,"
-                        % (clname(f.parent), overload)
-                    )
                 else:
-                    write("    (PyCFunction){}_{},".format(clname(f.parent), overload))
+                    # binary slots (and ternary nb_power) go through the
+                    # type-checking *_nb wrappers generated above
+                    write("    %s_%s_nb," % (clname(f.parent), overload))
             else:
                 write("    0,")
         write("};\n")
