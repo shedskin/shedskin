@@ -357,7 +357,27 @@ def test_bytearray_take_bytes():
     assert ba == bytearray(b'abc')
 
 
+def test_unchanged_results_are_copies():
+    # methods that leave the value unchanged must not return the bytearray itself
+    b = bytearray(b'ab')
+    for i in range(6):
+        if i == 0: c = b.ljust(1)
+        elif i == 1: c = b.rjust(2)
+        elif i == 2: c = b.center(0)
+        elif i == 3: c = b.zfill(1)
+        elif i == 4: c = b.removeprefix(b'x')
+        else: c = b.removesuffix(b'x')
+        assert c == b
+        assert c is not b
+        c.append(49)
+        assert b == bytearray(b'ab')
+    assert b.removeprefix(b'a') == bytearray(b'b')
+    assert isinstance(b.removeprefix(b'a'), bytearray)
+    assert isinstance(b.removesuffix(b'b'), bytearray)
+
+
 def test_all():
+    test_unchanged_results_are_copies()
     test_bytearray()
     test_bytearray_clear()
     test_bytearray_resize()
