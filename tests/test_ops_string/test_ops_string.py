@@ -177,7 +177,47 @@ def test_sign_padding():
     assert ("[%-12.3g]" % -2.5) == '[-2.5        ]'
 
 
+def test_combined_flags():
+    # flags combine instead of the last one winning (B26)
+    x = 3.14159
+    assert '[%-+8.3f] [%+-6d] [%- 6d]' % (x, 5, 5) == '[+3.142  ] [+5    ] [ 5    ]'
+    assert '[%+ d] [% +d] [% 05d] [%-05d]' % (5, 5, 5, 5) == '[+5] [+5] [ 0005] [5    ]'
+
+
+def test_alternate_form():
+    # '#': 0o/0x/0X prefix, zero-fill after it (B10); floats keep the point
+    # and 'g' its trailing zeros (D11)
+    assert '%#x|%#o|%#X' % (255, 8, 255) == '0xff|0o10|0XFF'
+    assert '%#08x|%#-8x|%#.4x' % (255, 255, 255) == '0x0000ff|0xff    |0x00ff'
+    assert '%#x|%#o' % (-255, 0) == '-0xff|0o0'
+    assert '%#g|%#.3g|%#.0f|%#.0e' % (1.0, 2.0, 1.0, 1.0) == '1.00000|2.00|1.|1.e+00'
+    assert '%#d|%#s' % (5, 'a') == '5|a'
+
+
+def test_most_negative_int():
+    # the magnitude of -2**63 does not fit in a signed int64 (B25)
+    m = -2**62 * 2
+    assert '%d' % m == '-9223372036854775808'
+    assert '%x|%o' % (m, m) == '-8000000000000000|-1000000000000000000000'
+
+
+def test_char_width():
+    # %c honours width and '-' (B27)
+    assert '[%3c] [%-3c] [%3c]' % ('q', 'r', 65) == '[  q] [r  ] [  A]'
+
+
+def test_bytes_repr_is_ascii():
+    # b'%r' means b'%a' (B37)
+    assert b'%r' % 'caf\xe9' == b"'caf\\xe9'"
+    assert b'%r' % b'x' == b"b'x'"
+
+
 def test_all():
+    test_combined_flags()
+    test_alternate_form()
+    test_most_negative_int()
+    test_char_width()
+    test_bytes_repr_is_ascii()
     test_classic1()
     test_classic2()
     test_classic3()
