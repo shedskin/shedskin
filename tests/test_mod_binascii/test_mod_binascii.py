@@ -863,7 +863,15 @@ def test_ignorechars_default_is_empty():
         pass
 
 
+def test_hexlify_bytes_sep():
+    # the separator may also be bytes (it used to fail to compile)
+    assert binascii.hexlify(b'abcd', b'-') == b'61-62-63-64'
+    assert binascii.hexlify(b'\x01\x02\x03', b':', -2) == b'0102:03'
+    assert binascii.b2a_hex(b'\x01\x02', sep=b' ') == b'01 02'
+
+
 def test_all():
+    test_hexlify_bytes_sep()
     test_qp()
     test_incomplete()
     test_b2a_qp_leading_dot_at_end()

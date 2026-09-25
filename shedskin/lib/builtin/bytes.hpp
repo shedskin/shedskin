@@ -3,6 +3,8 @@
 #ifndef SS_BYTES_HPP
 #define SS_BYTES_HPP
 
+str *__hex_sep(bytes *sep); /* bytes separator for hex()/hexlify() as a str */
+
 class bytes : public pyseq<__ss_int> {
 protected:
 public:
@@ -112,6 +114,8 @@ public:
     bytes *rjust(__ss_int width, bytes *fillchar=0);
 
     str *hex(str *sep=0, __ss_int bytes_per_sep=1);
+    /* a bytes separator (a template, so that a NULL sep still picks the above) */
+    template<class S> str *hex(S *sep, __ss_int bytes_per_sep=1) { return hex(__hex_sep(sep), bytes_per_sep); }
 
     str *__str__();
     str *__repr__();

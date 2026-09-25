@@ -565,6 +565,16 @@ def test_hex():
     assert b'ABCD'.hex(sep='-', bytes_per_sep=3) == '41-424344'
     assert b'ABCD'.hex(sep='-', bytes_per_sep=30) == '41424344'
     assert b''.hex(':', 2) == ''
+    # a bytes separator works too; sep must be ascii
+    assert b'ABCD'.hex(b'-') == '41-42-43-44'
+    assert b'ABCD'.hex(b':', 2) == '4142:4344'
+    assert bytearray(b'AB').hex(b':') == '41:42'
+    error = ''
+    try:
+        b'AB'.hex('\xe9')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'sep must be ASCII.'
 
 
 def test_fromhex():

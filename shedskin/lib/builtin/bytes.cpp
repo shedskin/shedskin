@@ -689,11 +689,21 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     return new bytes(s, frozen);
 }
 
+str *__hex_sep(bytes *sep) {
+    if(!sep)
+        return NULL;
+    str *s = new str();
+    s->unit = __widen(sep->unit);
+    return s;
+}
+
 str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binascii.hexlify except return type?
     // output will be twice as long
     size_t len = unit.size();
     if(sep && sep->unit.size() != 1)
         throw new ValueError(new str("sep must be length 1."));
+    if(sep && sep->unit[0] > 127)
+        throw new ValueError(new str("sep must be ASCII."));
     if(len == 0)
         return new str();
     __GC_STRING hexstr = __GC_STRING(unit);
