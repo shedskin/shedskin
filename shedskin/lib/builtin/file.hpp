@@ -8,7 +8,8 @@ struct __file_options {
     int space;
     bool universal_mode;
     bool cr;
-    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false) {}
+    bool split_cr; /* newline='': lines also end at '\r' and '\r\n', untranslated */
+    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false), split_cr(false) {}
 };
 
 class file_binary;
