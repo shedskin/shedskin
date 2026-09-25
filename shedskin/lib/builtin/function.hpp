@@ -20,7 +20,13 @@ template<> inline __ss_int __int(__ss_float d) {
         throw new ValueError(new str("cannot convert float NaN to integer"));
     if(!std::isfinite(d))
         throw new OverflowError(new str("cannot convert float infinity to integer"));
-    return (__ss_int)d;
+    /* out-of-range float-to-int conversion is undefined behaviour (in
+       practice INT64_MIN); the limit is a power of two, so exact as a float */
+    const __ss_float limit = std::ldexp((__ss_float)1, (int)(8*sizeof(__ss_int)-1));
+    __ss_float t = std::trunc(d);
+    if(t < -limit || t >= limit)
+        throw new OverflowError(new str("float too large to convert to integer"));
+    return (__ss_int)t;
 }
 
 /* float */
@@ -1030,7 +1036,7 @@ inline __ss_float __round_half_even(__ss_float x) {
 }
 
 inline __ss_int ___round(__ss_float x) {
-    return (__ss_int)__round_half_even(x);
+    return __int(__round_half_even(x)); /* raises for inf/nan/out of range */
 }
 
 /* round(a, n) needs to match CPython's semantics: it rounds the *exact*

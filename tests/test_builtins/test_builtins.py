@@ -580,6 +580,24 @@ def test_round():
     assert str(round(5, 2)) == '5'
     assert str(round(1234, -2)) == '1200'
 
+    # round(inf/nan) raises (it used to return INT64_MIN), round(x, n) doesn't
+    inf, nan = float('inf'), float('nan')
+    for x in [inf, -inf, nan]:
+        error = ''
+        try:
+            round(x)
+        except OverflowError as e:
+            error = 'OverflowError: ' + str(e)
+        except ValueError as e:
+            error = 'ValueError: ' + str(e)
+        if x != x:
+            assert error == 'ValueError: cannot convert float NaN to integer'
+        else:
+            assert error == 'OverflowError: cannot convert float infinity to integer'
+    assert round(inf, 2) == inf
+    assert round(-inf, -1) == -inf
+    assert str(round(nan, 2)) == 'nan'
+
 
 def test_set():
     assert list(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]
