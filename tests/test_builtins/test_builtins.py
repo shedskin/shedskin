@@ -66,7 +66,24 @@ class MyString:
 def test_bytes():
     # s = MyString('sam')
     # assert bytes(s) == b'sam'
-    # assert bytes('a', encoding='utf8') == b'a'
+    assert bytes('a', encoding='utf8') == b'a'
+    assert bytes('\xf1', 'utf-8') == b'\xc3\xb1'
+    assert bytes('\xf1', 'ascii', 'replace') == b'?'
+    assert bytes('\xf1', 'ascii', errors='ignore') == b''
+    b = bytearray('\xf1', 'latin-1')
+    b.append(65)
+    assert b == bytearray(b'\xf1A')
+    try:
+        bytes('\xf1', 'ascii')
+        assert False
+    except UnicodeEncodeError:
+        pass
+    s = 'x'
+    try:
+        bytes(s)
+        assert False
+    except TypeError:
+        pass
     assert bytes() == b''
     assert bytes([1, 2, 3]) == b'\x01\x02\x03'
     assert bytes(set([1])) == b'\x01'

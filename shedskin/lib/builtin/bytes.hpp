@@ -279,6 +279,7 @@ template<class T> bytes *__bytes(T *t) {
 bytes *__bytes(bytes *b);
  bytes *__bytes(__ss_int t);
 bytes *__bytes();
+bytes *__bytes(str *s, str *encoding=0, str *errors=0);
 
 template<class T> bytes *__bytearray(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
@@ -304,6 +305,7 @@ template<class T> bytes *__bytearray(T *t) {
 bytes *__bytearray(bytes *b);
 bytes *__bytearray(__ss_int t);
 bytes *__bytearray();
+bytes *__bytearray(str *s, str *encoding=0, str *errors=0);
 
 namespace __bytes___ {
     inline bytes *maketrans(void *, bytes *frm, bytes *to) {
