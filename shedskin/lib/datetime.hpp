@@ -54,6 +54,8 @@ public:
     date *__add__(timedelta *other);
     date *__sub__(timedelta *other);
     timedelta *__sub__(date *other);
+    template<class T> auto __iadd__(T other) { return __add__(other); } /* d += x */
+    template<class T> auto __isub__(T other) { return __sub__(other); } /* d -= x */
 
     date *replace(__ss_int year=0, __ss_int month=0, __ss_int day=0);  //ok (how to handle keyword variables?)
     __time__::struct_time *timetuple();                 //ok (depends on function from cpython)
@@ -129,6 +131,8 @@ public:
     datetime *__add__(timedelta *other);
     datetime *__sub__(timedelta *other);
     timedelta *__sub__(datetime *other);
+    template<class T> auto __iadd__(T other) { return __add__(other); } /* d += x */
+    template<class T> auto __isub__(T other) { return __sub__(other); } /* d -= x */
 
     date *_date();									//why is it exactly these two have a _?
     time *_time();
@@ -228,6 +232,11 @@ public:
     timedelta *__truediv__(__ss_float f);
     timedelta *__neg__();
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
+    template<class T> auto __iadd__(T other) { return __add__(other); } /* d += x */
+    template<class T> auto __isub__(T other) { return __sub__(other); } /* d -= x */
+    template<class T> auto __imul__(T other) { return __mul__(other); } /* d *= x */
+    template<class T> auto __itruediv__(T other) { return __truediv__(other); } /* d /= x */
+    template<class T> auto __ifloordiv__(T other) { return __floordiv__(other); } /* d //= x */
     timedelta *__abs__();
     __ss_float total_seconds();
 

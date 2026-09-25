@@ -445,7 +445,20 @@ def test_utf8_sig():
     assert caught == 1
 
 
+def test_unknown_error_handler():
+    # an unknown handler name is a LookupError (a ValueError is not caught)
+    for i in range(2):
+        error = ''
+        try:
+            if i == 0: '\xe9'.encode('ascii', 'bogus')
+            else: b'\xe9'.decode('ascii', 'bogus')
+        except LookupError as e:
+            error = str(e)
+        assert error == "unknown error handler name 'bogus'"
+
+
 def test_all():
+    test_unknown_error_handler()
     test_encode_utf8()
     test_decode_utf8()
     test_roundtrip()

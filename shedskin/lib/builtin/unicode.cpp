@@ -457,6 +457,10 @@ __ss_errors __lookup_errors(str *errors) {
     if (errors->unit == U"replace")
         return __SS_ERR_REPLACE;
     char buf[192];
+    if (errors->unit != U"backslashreplace" && errors->unit != U"xmlcharrefreplace" && errors->unit != U"namereplace" && errors->unit != U"surrogatepass") {
+        snprintf(buf, sizeof(buf), "unknown error handler name '%s'", __to_utf8(errors->unit).c_str());
+        throw new LookupError(new str(buf)); /* as CPython, for a handler it doesn't know either */
+    }
     snprintf(buf, sizeof(buf), "error handler '%s' is not supported by shedskin (only 'strict', 'surrogateescape', 'ignore' and 'replace')", __to_utf8(errors->unit).c_str());
     throw new ValueError(new str(buf));
 }
