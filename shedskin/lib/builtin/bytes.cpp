@@ -279,6 +279,12 @@ bytes *__bytes(__ss_int t) {
     return b;
 }
 
+bytes *__bytes(str *s, str *encoding, str *errors) {
+    if(!encoding)
+        throw new TypeError(new str("string argument without an encoding"));
+    return s->encode(encoding, errors);
+}
+
 bytes *__bytearray() {
     return new bytes(0);
 }
@@ -292,6 +298,13 @@ bytes *__bytearray(bytes * b) {
 
 bytes *__bytearray(__ss_int t) {
     bytes *c = __bytes(t);
+    c->frozen = 0;
+    c->__class__ = cl_bytearray;
+    return c;
+}
+
+bytes *__bytearray(str *s, str *encoding, str *errors) {
+    bytes *c = __bytes(s, encoding, errors);
     c->frozen = 0;
     c->__class__ = cl_bytearray;
     return c;

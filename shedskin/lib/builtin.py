@@ -1072,11 +1072,11 @@ def str(object=None, encoding=None, errors=None):
     object.__repr__()
     return ''
 
-def bytes(source=None):
+def bytes(source=None, encoding=None, errors=None):
     source.__bytes__()
     return b''
 
-def bytearray(source=None):
+def bytearray(source=None, encoding=None, errors=None):
 #source.__bytes__()
     return b''
 
