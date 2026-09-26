@@ -193,6 +193,12 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])  # TODO inhcpa?
         )
 
+    def has_exported_method(
+        self, cl: "python.Class", name: str, funcs: list["python.Function"]
+    ) -> bool:
+        """Check if a class has a method that is actually exported"""
+        return self.has_method(cl, name) and cl.funcs[name] in funcs
+
     def _add_global(self, var: "python.Variable", ssmod: str) -> None:
         """Emit a single PyModule_AddObject call with its return value checked.
 
@@ -371,6 +377,43 @@ class ExtensionModule:
             write("    return __ss_truth;")
             write("}\n")
 
+        # The binary number slots are also called for reflected operations:
+        # for `1 + obj`, CPython calls obj's nb_add(1, obj), so `self` is not
+        # necessarily an instance of this class. Casting it blindly to our
+        # object type crashed the interpreter (confirmed: `1 + V(2)`
+        # segfaulted). Check the type first, and return NotImplemented so
+        # CPython can try the other operand or raise the usual TypeError.
+        binary_funcs = [
+            f for f in funcs if f.ident in OVERLOAD and f.ident not in OVERLOAD_SINGLE
+        ]
+        if binary_funcs:
+            assert isinstance(binary_funcs[0].parent, python.Class)
+            write("extern PyTypeObject %sObjectType;\n" % clname(binary_funcs[0].parent))
+        for f in binary_funcs:
+            assert isinstance(f.parent, python.Class)
+            target = "%s_%s" % (clname(f.parent), f.ident)
+            if f.ident == "__pow__":
+                # nb_power is `ternaryfunc` (self, other, modulo)
+                write(
+                    "static PyObject *%s_nb(PyObject *self, PyObject *other, PyObject *mod) {"
+                    % target
+                )
+            else:
+                write(
+                    "static PyObject *%s_nb(PyObject *self, PyObject *other) {"
+                    % target
+                )
+            write(
+                "    if (!PyObject_TypeCheck(self, &%sObjectType))"
+                % clname(f.parent)
+            )
+            write("        Py_RETURN_NOTIMPLEMENTED;")
+            if f.ident == "__pow__":
+                write("    return %s(self, other, mod);" % target)
+            else:
+                write("    return %s(self, other, NULL);" % target)
+            write("}\n")
+
         write("static PyNumberMethods %s_as_number = {" % ident)
         for overload in OVERLOAD:
             fs = [f for f in funcs if f.ident == overload]
@@ -386,18 +429,10 @@ class ExtensionModule:
                         "    (PyObject *(*)(PyObject *))%s_%s,"
                         % (clname(f.parent), overload)
                     )
-                elif overload == "__pow__":
-                    # nb_power is `ternaryfunc` (self, other, modulo):
-                    # PyObject *(*)(PyObject *, PyObject *, PyObject *).
-                    # This matches the generated method's real (self, args,
-                    # kwargs) signature exactly, unlike the PyCFunction cast
-                    # used below for the binary operators.
-                    write(
-                        "    (PyObject *(*)(PyObject *, PyObject *, PyObject *))%s_%s,"
-                        % (clname(f.parent), overload)
-                    )
                 else:
-                    write("    (PyCFunction){}_{},".format(clname(f.parent), overload))
+                    # binary slots (and ternary nb_power) go through the
+                    # type-checking *_nb wrappers generated above
+                    write("    %s_%s_nb," % (clname(f.parent), overload))
             else:
                 write("    0,")
         write("};\n")
@@ -645,6 +680,27 @@ class ExtensionModule:
             write("    return 0;")
             write("}\n")
 
+        # tp_hash is `hashfunc`: Py_hash_t (*)(PyObject *). Without it,
+        # hash() did not use the class' __hash__ at all (and CPython even
+        # considers the type unhashable, as __hash__ appears in its dict
+        # without a matching slot). Convert the result the same way as
+        # CPython's own slot_tp_hash: use the value as-is if it fits, fall
+        # back to the int hash if it doesn't, and avoid the reserved -1.
+        if self.has_exported_method(cl, "__hash__", funcs):
+            write("static Py_hash_t %s_tp_hash(PyObject *self) {" % clname(cl))
+            write("    PyObject *__ss_r = %s___hash__(self, NULL, NULL);" % clname(cl))
+            write("    if (!__ss_r)")
+            write("        return -1;")
+            write("    Py_hash_t __ss_h = PyLong_AsSsize_t(__ss_r);")
+            write("    if (__ss_h == -1 && PyErr_Occurred()) {")
+            write("        PyErr_Clear();")
+            write("        __ss_h = PyLong_Type.tp_hash(__ss_r);")
+            write("    } else if (__ss_h == -1)")
+            write("        __ss_h = -2;")
+            write("    Py_DECREF(__ss_r);")
+            write("    return __ss_h;")
+            write("}\n")
+
         # tp_new
         write(
             "PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {"
@@ -753,7 +809,10 @@ class ExtensionModule:
         write("    &%s_as_number," % clname(cl))
         write("    0,")
         write("    0,")
-        write("    0,")
+        if self.has_exported_method(cl, "__hash__", funcs):
+            write("    %s_tp_hash," % clname(cl))
+        else:
+            write("    0,")
         if self.has_method(cl, "__call__"):
             write("    %s___call__," % clname(cl))
         else:
