@@ -128,6 +128,17 @@ def test_dialects():
     assert dialect.skipinitialspace is False
     assert dialect.strict is False
 
+    # bools, not ints (used to print as '1 0')
+    dialect = csv.get_dialect('excel')
+    assert str(dialect.doublequote) == 'True'
+    assert str(dialect.skipinitialspace) == 'False'
+    assert repr((dialect.doublequote, dialect.skipinitialspace, dialect.strict)) == '(True, False, False)'
+    csv.register_dialect('dq', 'excel', doublequote=False, skipinitialspace=True)
+    dialect = csv.get_dialect('dq')
+    assert str(dialect.doublequote) == 'False'
+    assert str(dialect.skipinitialspace) == 'True'
+    csv.unregister_dialect('dq')
+
     reader = csv.reader(open(csvfile_in), dialect=csv.get_dialect('excel'), delimiter='|')
     assert next(reader) == ['aap', ' noot', ' 18', ' ole']
     assert next(reader) == ['aap', ' noot', ' 19', ' ole2']
@@ -514,6 +525,7 @@ def test_sniffer_sniff():
     assert d.quotechar == '"'
     assert d.doublequote is False
     assert d.skipinitialspace is False
+    assert str(d.doublequote) == 'False'
 
     d2 = s.sniff('name;age;score\n"Alice";34;88.5\n"Bob";29;91.2\n')
     assert d2.delimiter == ';'

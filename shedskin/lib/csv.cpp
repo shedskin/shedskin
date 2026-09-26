@@ -117,10 +117,10 @@ Dialect *_make_dialect(
         dialect->quotechar = quotechar;
     }
     if ((doublequote!=(-1))) {
-        dialect->doublequote = doublequote;
+        dialect->doublequote = __mbool(doublequote);
     }
     if ((skipinitialspace!=(-1))) {
-        dialect->skipinitialspace = skipinitialspace;
+        dialect->skipinitialspace = __mbool(skipinitialspace);
     }
     if ((lineterminator!=NULL)) {
         dialect->lineterminator = lineterminator;
@@ -1155,10 +1155,10 @@ Dialect *Sniffer::sniff(str *sample, str *delimiters) {
     Dialect *dialect = new Dialect();
     dialect->lineterminator = new str("\r\n");
     dialect->quoting = QUOTE_MINIMAL;
-    dialect->doublequote = qd.doublequote ? 1 : 0;
+    dialect->doublequote = __mbool(qd.doublequote);
     dialect->delimiter = new str(delimiter.c_str(), delimiter.size());
     dialect->quotechar = qd.quotechar.empty() ? new str("\"") : new str(qd.quotechar.c_str(), qd.quotechar.size());
-    dialect->skipinitialspace = skipinitialspace;
+    dialect->skipinitialspace = __mbool(skipinitialspace);
     dialect->escapechar = NULL;
     dialect->strict = False;
 
