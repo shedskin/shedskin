@@ -54,13 +54,13 @@ public:
 class Dialect : public pyobj {
 public:
     str *lineterminator;
-    __ss_int skipinitialspace;
+    __ss_bool skipinitialspace;
     __ss_int quoting;
-    __ss_bool strict; //TODO generalize __ss_bool
+    __ss_bool strict;
     str *delimiter;
     str *escapechar;
     str *quotechar;
-    __ss_int doublequote;
+    __ss_bool doublequote;
 
     Dialect() {
         this->__class__ = cl_Dialect;
