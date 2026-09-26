@@ -1263,7 +1263,9 @@ timedelta::timedelta(double days_, double seconds_, double microseconds_, double
     this->microseconds = us;
 
     if(this->days>999999999 || this->days<(-999999999)) {
-        throw new OverflowError();
+        char buf[64];
+        snprintf(buf, sizeof(buf), "days=%lld; must have magnitude <= 999999999", (long long)this->days);
+        throw new OverflowError(new str(buf));
     }
 }
 
@@ -1299,13 +1301,38 @@ timedelta *timedelta::__mul__(__ss_int n) {
     return new timedelta((double)(days*n), (double)(seconds*n), (double)(microseconds*n),0,0,0,0);
 }
 
-timedelta *timedelta::__mul__(__ss_float f) { /* not exact like cpython, but close enough */
-    return new timedelta(0, 0, (((double)days*86400+seconds)*1e6+microseconds)*f, 0, 0, 0, 0);
+/* cpython converts the float to an exact integer ratio first */
+static void timedelta_check_ratio(__ss_float f) {
+    if(std::isnan(f))
+        throw new ValueError(new str("cannot convert NaN to integer ratio"));
+    if(std::isinf(f))
+        throw new OverflowError(new str("cannot convert Infinity to integer ratio"));
+}
+
+timedelta *timedelta::__mul__(__ss_float f) {
+    /* not exact like cpython (which multiplies by the exact integer ratio of
+       f), but close: the components are scaled separately and combined by the
+       constructor, which is exact when f has few significant bits (1.0, 2.5,
+       ..). a negative timedelta is negated first, so that the components all
+       have the same sign and cannot cancel out. */
+    timedelta_check_ratio(f);
+    timedelta *t = this;
+    if(days < 0) {
+        t = __neg__();
+        f = -f;
+    }
+    double df = (double)t->days * f, sf = (double)t->seconds * f, uf = (double)t->microseconds * f;
+    /* as cpython: days must fit a C int (the constructor then checks the
+       range); this also keeps the conversions to integers from overflowing */
+    if(std::fabs(df) + std::fabs(sf) / 86400 + std::fabs(uf) / 864e8 > 2147483647.0)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
+    return new timedelta(df, sf, uf, 0, 0, 0, 0);
 }
 
 timedelta *timedelta::__truediv__(__ss_float f) {
+    timedelta_check_ratio(f);
     if(f==0)
-        throw new ZeroDivisionError(new str("division by zero"));
+        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     return __mul__(1/f);
 }
 

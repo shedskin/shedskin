@@ -994,8 +994,41 @@ def test_augmented_assignment():
     assert t == datetime.timedelta(hours=12, minutes=15)
 
 
+def test_timedelta_float_range():
+    # inf/nan and results out of range raise, instead of wrapping around
+    assert datetime.timedelta(days=150000000) * 1.0 == datetime.timedelta(days=150000000)
+    assert datetime.timedelta(days=12345678, microseconds=3) * 1.0 == datetime.timedelta(days=12345678, microseconds=3)
+    assert datetime.timedelta(days=999999999, hours=23) * 1.0 == datetime.timedelta(days=999999999, hours=23)
+    assert datetime.timedelta(microseconds=-1) * 1e10 == datetime.timedelta(microseconds=-10000000000)
+    assert datetime.timedelta(days=-2) * -1.5 == datetime.timedelta(days=3)
+    for i in range(6):
+        error = ''
+        try:
+            if i == 0: datetime.timedelta(days=1) * float('inf')
+            elif i == 1: datetime.timedelta(days=1) * float('nan')
+            elif i == 2: datetime.timedelta(days=1) * 1e10
+            elif i == 3: datetime.timedelta(days=1) / float('inf')
+            elif i == 4: datetime.timedelta(days=1) / 1e-10
+            else: datetime.timedelta(days=1) / 0.0
+        except OverflowError as e:
+            error = 'OverflowError: ' + str(e)
+        except ValueError as e:
+            error = 'ValueError: ' + str(e)
+        except ZeroDivisionError as e:
+            error = 'ZeroDivisionError'
+        if i == 0 or i == 3:
+            assert error == 'OverflowError: cannot convert Infinity to integer ratio'
+        elif i == 1:
+            assert error == 'ValueError: cannot convert NaN to integer ratio'
+        elif i == 5:
+            assert error == 'ZeroDivisionError'
+        else:
+            assert error.startswith('OverflowError')
+
+
 def test_all():
         test_augmented_assignment()
+        test_timedelta_float_range()
         test_date()
         test_date_ctime()
         test_date_day_out_of_range()

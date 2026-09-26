@@ -185,6 +185,17 @@ static void __settle_cr(FILE *f, __file_options &options) {
 
 __ss_int file::seek(__ss_int i, __ss_int w) {
     __check_closed();
+    /* text files only allow seeking to a tell() position or to the end, as
+       in cpython (which raises io.UnsupportedOperation, a subclass of both
+       OSError and ValueError, for the first two) */
+    if(w == 1 && i != 0)
+        throw new OSError(new str("can't do nonzero cur-relative seeks"));
+    if(w == 2 && i != 0)
+        throw new OSError(new str("can't do nonzero end-relative seeks"));
+    if(w < 0 || w > 2)
+        throw new ValueError(__add_strs(3, new str("invalid whence ("), __str(w), new str(", should be 0, 1 or 2)")));
+    if(i < 0)
+        throw new ValueError(__add_strs(2, new str("negative seek position "), __str(i)));
     if(f) {
         __settle_cr(f, options);
         if(fseek(f, i, (int)w) == -1)

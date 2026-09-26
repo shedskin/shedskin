@@ -400,12 +400,49 @@ def test_pending_cr_seek_tell():
     os.remove('ucr2.bin')
 
 
+def test_text_seek_restrictions():
+    # text files only seek to a tell() position or the end (cpython raises
+    # io.UnsupportedOperation, which is an OSError, for relative seeks)
+    with open('useek2.txt', 'wb') as g:  # no '\r\n' on windows
+        g.write(b'hello world\n')
+    with open('useek2.txt') as f:
+        for i in range(4):
+            error = ''
+            try:
+                if i == 0: f.seek(-6, 2)
+                elif i == 1: f.seek(3, 1)
+                elif i == 2: f.seek(-1)
+                else: f.seek(0, 3)
+            except OSError as e:
+                error = 'OSError: ' + str(e)
+            except ValueError as e:
+                error = 'ValueError: ' + str(e)
+            if i == 0:
+                assert error == "OSError: can't do nonzero end-relative seeks"
+            elif i == 1:
+                assert error == "OSError: can't do nonzero cur-relative seeks"
+            elif i == 2:
+                assert error == 'ValueError: negative seek position -1'
+            else:
+                assert error == 'ValueError: invalid whence (3, should be 0, 1 or 2)'
+        f.seek(0, 2)
+        assert f.read() == ''
+        f.seek(6)
+        f.seek(0, 1)
+        assert f.read() == 'world\n'
+    with open('useek2.txt', 'rb') as g:  # binary files may seek relatively
+        g.seek(-6, 2)
+        assert g.read() == b'world\n'
+    os.remove('useek2.txt')
+
+
 def test_all():
     test_seek_returns_position()
     test_open_exclusive()
     test_newline_empty_splits_on_cr()
     test_readline_size_counts_characters()
     test_pending_cr_seek_tell()
+    test_text_seek_restrictions()
     test_open_unicode_name()
     test_open_encoding()
     test_open_utf8_sig()
