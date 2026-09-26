@@ -782,6 +782,8 @@ Pattern *compile(str *pat, __ss_int flags)
     //extra info
     reobj->pattern = new str(pat->unit);
     reobj->flags = flags;
+    if(!(flags & ASCII))
+        reobj->flags |= __ss_UNICODE; //like CPython, for str patterns
     uint32_t capturecount;
     pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &capturecount);
     reobj->groups = (__ss_int) capturecount;

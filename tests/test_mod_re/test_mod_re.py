@@ -506,6 +506,16 @@ def test_re_escape_only_special():
 
 
 
+def test_pattern_flags_value():
+    # like CPython, str patterns implicitly get re.UNICODE unless re.ASCII
+    assert re.compile('a').flags == 32
+    assert re.compile('a', re.I).flags == 34
+    assert re.compile('a', re.I | re.M).flags == re.I | re.M | re.U
+    assert re.compile('a', re.U).flags == 32
+    assert re.compile('a', re.A).flags == 256
+    assert re.compile('a', re.A | re.I).flags == 258
+
+
 def test_flag_aliases():
     assert re.A == re.ASCII
     assert re.I == re.IGNORECASE
@@ -763,6 +773,7 @@ def test_all():
     test_re_start_of_unmatched_group()
     test_re_template_escapes()
     test_re_escape_only_special()
+    test_pattern_flags_value()
     test_flag_aliases()
     test_pattern_error()
 
