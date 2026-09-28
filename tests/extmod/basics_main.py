@@ -44,6 +44,15 @@ def test_functions():
     assert basics.nothing() is None
 
 
+def test_strings():
+    # all string kinds (ascii, latin-1, ucs-2, ucs-4) and a lone surrogate
+    # (as in os.listdir/sys.argv results) must survive the round trip
+    for s in ['', 'mario_bros.nes', 'caf\xe9 cr\xe8me', '\u20ac\u4e2d\u6587',
+              '\U0001f600 smile', 'bad\udcff.txt']:
+        assert basics.echo(s) == s, (basics.echo(s), s)
+        assert basics.length(s) == len(s)
+
+
 def test_exceptions():
     assert basics.fail(1) == 1
     assert raises(ValueError, basics.fail, -1)

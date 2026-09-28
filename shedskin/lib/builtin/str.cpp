@@ -972,7 +972,7 @@ str *str::capitalize() {
 }
 
 #ifdef __SS_BIND
-str::str(PyObject *p) : hash(-1) {
+str::str(PyObject *p) : hash(-1), charcache(0) {
     // if(!PyBytes_Check(p))
     if(!PyUnicode_Check(p))
     // if(!PyString_Check(p))
@@ -981,13 +981,19 @@ str::str(PyObject *p) : hash(-1) {
     __class__ = cl_str_;
     /* copy code points directly: going through utf-8 would fail for lone
        surrogates (PyUnicode_AsUTF8AndSize raises UnicodeEncodeError), and
-       CPython strings from os.listdir/sys.argv can contain those (PEP 383) */
-    Py_ssize_t sz = PyUnicode_GET_LENGTH(p);
-    int kind = PyUnicode_KIND(p);
-    const void *data = PyUnicode_DATA(p);
-    unit.resize((size_t)sz);
-    for (Py_ssize_t i = 0; i < sz; i++)
-        unit[(size_t)i] = (__ss_char)PyUnicode_READ(kind, data, i);
+       CPython strings from os.listdir/sys.argv can contain those (PEP 383).
+       use functions rather than the PyUnicode_DATA/KIND macros: these bake in
+       the object layout, which differs between python versions (e.g. 3.11 vs
+       3.12), so an extension built against the wrong headers would read the
+       characters from the wrong offset */
+    Py_ssize_t sz = PyUnicode_GetLength(p);
+    Py_UCS4 *data = PyUnicode_AsUCS4Copy(p);
+    if (!data) {
+        PyErr_Clear();
+        throw new MemoryError();
+    }
+    unit.assign((const __ss_char *)data, (size_t)sz);
+    PyMem_Free(data);
 }
 
 PyObject *str::__to_py__() {
