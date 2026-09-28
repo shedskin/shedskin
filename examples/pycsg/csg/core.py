@@ -1,5 +1,7 @@
 import math
 import operator
+import csg.geom
+print('loaded:', csg.geom)
 from csg.geom import *
 from functools import reduce
 
