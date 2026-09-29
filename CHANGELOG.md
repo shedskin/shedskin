@@ -4,14 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.14]
 
-- Type inference no longer fails to converge on 'function-data recursion' (a
-  recursive function creating objects it is later invoked on). Contours that
-  define each other are now detected and only unrolled to a constant depth, as
-  described in section 6.1 of the paper the analysis is based on. The `life`
-  example dropped from 18.3s and two 'maximum iterations' warnings to 3.1s and
-  none.
+- Full type inference rewrite. This solves 'max-iterations' for amaze, life, test_prog_nqueens, fixes a private 3000-line program (from uncertain 400 sec runs to
+  never failing 25 sec runs), and is generally much faster and with more predictable analysis times. It removes a few ugly heuristics also.
+
+- Unicode support (!). Shedskin str objects are now 4-bytes per char, which may be slower in certain situations, but this can be optimized later if needed. For now
+  this is much nicer for compatibility in many areas.
+
+- Almost full compatibility with Python 3.15, except for any platform-specific functionality, or constructs that currently cannot be supported.
+
+- Heterogenous 3-len tuples are now supported. This was actually easy to do, but it required the confidence of the upgraded type inference engine.. This means that
+  for example, os.walk could now also be supported.
+
+- A huge amount of bug fixes for edge cases, in part because of a new weekly defect run (see .claude).
+
+- Together, I think we are (finally) getting close to a 1.0 release!
 
 ## [0.9.13]
 
