@@ -105,8 +105,6 @@ template<class T> template <class ... Args> list<T>::list(int, Args ... args) {
 
 // and now for a bit of c++ poetry
 
-#include <type_traits>
-
 // 1. Define the helper trait using a template template parameter
 template <template <typename...> class BaseTemplate>
 struct is_base_of_template {
