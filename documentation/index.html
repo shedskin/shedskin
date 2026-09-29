@@ -1095,7 +1095,6 @@ in cases where they can't.</p>
 <li>ordered dicts</li>
 <li>multiple inheritance</li>
 <li>nested functions and classes</li>
-<li>full unicode/builtin utf-8 support (currently restricted to 1-byte characters)</li>
 <li>inheritance from builtins (excluding <code>Exception</code> and <code>object</code>)</li>
 <li>closures</li>
 </ul>
@@ -1117,42 +1116,43 @@ in cases where they can't.</p>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="c1"># bad, contained</span>
 </code></pre></div>
 <h2 id="library-limitations">Library Limitations<a class="headerlink" href="#library-limitations" title="Permanent link">&para;</a></h2>
-<p>At the moment, the following 33 modules are (partially) supported.</p>
+<p>At the moment, the following 33 modules are (partially) supported:</p>
 <ul>
 <li><code>array</code></li>
-<li><code>base64</code> (no 32, 85 variants)</li>
-<li><code>binascii</code> (no 16, 32, 85 variants)</li>
+<li><code>base64</code></li>
+<li><code>binascii</code></li>
 <li><code>bisect</code></li>
 <li><code>collections</code> (defaultdict, deque, Counter)</li>
 <li><code>colorsys</code></li>
 <li><code>configparser</code></li>
 <li><code>copy</code> (no replace)</li>
-<li><code>csv</code> (ASCII-only)</li>
-<li><code>datetime</code> (not well tested)</li>
+<li><code>csv</code></li>
+<li><code>datetime</code> (no timezones)</li>
 <li><code>fnmatch</code></li>
 <li><code>functools</code> (reduce)</li>
-<li><code>gc</code> (enable, disable, collect)</li>
+<li><code>gc</code></li>
 <li><code>getopt</code></li>
-<li><code>glob</code> (no recursive globbing, translate)</li>
+<li><code>glob</code></li>
 <li><code>heapq</code></li>
 <li><code>io</code> (BytesIO, StringIO)</li>
 <li><code>itertools</code> (no starmap)</li>
 <li><code>math</code></li>
 <li><code>math.integer</code></li>
-<li><code>mmap</code> (not well tested)</li>
-<li><code>os</code> (partial)</li>
-<li><code>os.path</code> (partial)</li>
+<li><code>mmap</code></li>
+<li><code>os</code></li>
+<li><code>os.path</code></li>
 <li><code>random</code></li>
 <li><code>re</code> (PCRE2-compatible syntax)</li>
-<li><code>select</code> (not well tested)</li>
+<li><code>select</code></li>
 <li><code>signal</code> (constants only)</li>
-<li><code>socket</code> (not well tested)</li>
+<li><code>socket</code></li>
 <li><code>stat</code></li>
 <li><code>string</code> (no Format, Template)</li>
 <li><code>struct</code> (no Struct, iter_unpack)</li>
-<li><code>sys</code> (partial)</li>
-<li><code>time</code> (partial, do not combine with --float32)</li>
+<li><code>sys</code></li>
+<li><code>time</code> (no timezones, do not combine with --float32)</li>
 </ul>
+<p>Platform-dependent functionality is currently not supported.</p>
 <p>Note that any other module, such as <code>pygame</code>, <code>pyqt</code> or <code>pickle</code>, may be used in combination with a Shed Skin generated extension module. For examples of this, see the <a href="https://github.com/shedskin/shedskin/tree/master/examples">Shed Skin examples</a>.</p>
 <p>See <a href="#how-to-help-out-in-development">How to help out in development</a> on how to help improve or add to the set of supported modules.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
