@@ -91,7 +91,6 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * ordered dicts
 * multiple inheritance
 * nested functions and classes
-* full unicode/builtin utf-8 support (currently restricted to 1-byte characters)
 * inheritance from builtins (excluding `Exception` and `object`)
 * closures
 
@@ -117,41 +116,43 @@ var = SomeClass # bad
 
 ## Library Limitations
 
-At the moment, the following 33 modules are (partially) supported.
+At the moment, the following 33 modules are (partially) supported:
 
 * `array`
-* `base64` (no 32, 85 variants)
-* `binascii` (no 16, 32, 85 variants)
+* `base64`
+* `binascii`
 * `bisect`
 * `collections` (defaultdict, deque, Counter)
 * `colorsys`
 * `configparser`
 * `copy` (no replace)
-* `csv` (ASCII-only)
-* `datetime` (not well tested)
+* `csv`
+* `datetime` (no timezones)
 * `fnmatch`
 * `functools` (reduce)
-* `gc` (enable, disable, collect)
+* `gc`
 * `getopt`
-* `glob` (no recursive globbing, translate)
+* `glob`
 * `heapq`
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)
 * `math`
 * `math.integer`
-* `mmap` (not well tested)
-* `os` (partial)
-* `os.path` (partial)
+* `mmap`
+* `os`
+* `os.path`
 * `random`
 * `re` (PCRE2-compatible syntax)
-* `select` (not well tested)
+* `select`
 * `signal` (constants only)
-* `socket` (not well tested)
+* `socket`
 * `stat`
 * `string` (no Format, Template)
 * `struct` (no Struct, iter_unpack)
-* `sys` (partial)
-* `time` (partial, do not combine with --float32)
+* `sys`
+* `time` (no timezones, do not combine with --float32)
+
+Platform-dependent functionality is currently not supported.
 
 Note that any other module, such as `pygame`, `pyqt` or `pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the [Shed Skin examples](https://github.com/shedskin/shedskin/tree/master/examples).
 
