@@ -966,6 +966,27 @@ class CMakeBuilder:
         """Create the build directory"""
         os.makedirs(self.build_dir, exist_ok=True)
 
+    def drop_stale_python_cache(self) -> None:
+        """Remove CMakeCache.txt if it was configured for another python
+
+        find_package(Python) cannot switch interpreters in an existing cache,
+        so a fresh configuration is needed.
+        """
+        cache = os.path.join(self.build_dir, "CMakeCache.txt")
+        if not os.path.isfile(cache):
+            return
+        with open(cache, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if line.startswith("Python_EXECUTABLE:"):
+                    cached = line.split("=", 1)[1].strip()
+                    if cached != sys.executable:
+                        self.log.info(
+                            f"python changed ({cached} -> {sys.executable}), "
+                            "removing CMakeCache.txt"
+                        )
+                        os.remove(cache)
+                    return
+
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
@@ -1025,6 +1046,15 @@ class CMakeBuilder:
         # cfg and bld options
 
         cfg_options.append("-DBUILD_EXECUTABLE=ON")
+
+        # build against the python running shedskin, rather than whatever
+        # find_package(Python) finds (or a stale one in CMakeCache.txt):
+        # an extension built against the headers of another python version
+        # may still import, but then misreads python objects
+        if not any(opt.startswith("-DPython_EXECUTABLE") for opt in cfg_options):
+            cfg_options.append(f'-DPython_EXECUTABLE="{sys.executable}"')
+            self.drop_stale_python_cache()
+
         if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
 

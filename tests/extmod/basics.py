@@ -26,6 +26,14 @@ def count(words):
     return d
 
 
+def echo(s):
+    return s
+
+
+def length(s):
+    return len(s)
+
+
 def nothing():
     return None
 
@@ -97,6 +105,8 @@ if __name__ == '__main__':
     scale(1.5, 3.0)
     join(['a', 'b'], '-')
     count(['a', 'b', 'a'])
+    echo('abc')
+    length('abc')
     nothing()
     fail(1)
     v = Vector(1, 2)
