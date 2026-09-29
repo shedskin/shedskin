@@ -1,13 +1,6 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#ifdef WIN32
-#include <io.h> // for _isatty
-#endif // WIN32
-
-#ifndef WIN32
-#include <unistd.h>
-#include <sys/stat.h>
-#endif
+/* system headers are included at the top of builtin.cpp, outside namespace __shedskin__ */
 
 /* Reject directories opened as regular files: on POSIX, fopen() succeeds on
  * a directory path, but subsequent reads/writes through the FILE* invoke

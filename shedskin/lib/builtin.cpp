@@ -9,6 +9,18 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
+#include <string_view>
+
+/* system headers must be included here, outside namespace __shedskin__:
+   the files under builtin/ are included below, from inside the namespace,
+   so any header they include for the first time (e.g. <sys/stat.h> on
+   FreeBSD) would get its declarations placed in the wrong namespace */
+#ifdef WIN32
+#include <io.h> // for _isatty
+#else
+#include <unistd.h>
+#include <sys/stat.h>
+#endif
 
 namespace __shedskin__ {
 

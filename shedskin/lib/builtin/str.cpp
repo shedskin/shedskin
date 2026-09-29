@@ -1,7 +1,5 @@
 /* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#include <string_view>
-
 /* str methods */
 
 /* CPython's final sigma rule for lower(): a capital sigma becomes a final
