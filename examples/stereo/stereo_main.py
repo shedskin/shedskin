@@ -12,6 +12,8 @@ interp1d=interpolate.interp1d
 
 from matplotlib.pyplot import imread
 
+import stereo
+print(stereo)
 from stereo import do_sweepsSS2
 
 ##############
@@ -118,4 +120,4 @@ unBels=getbeliefs(unPots,msgs)
 winners=getwinners(unBels)
 pl.figure();pl.imshow(winners,interpolation='nearest');pl.title('winners');pl.colorbar()
 pl.show()
-#input('<press enter>')
+input('<press enter>')
