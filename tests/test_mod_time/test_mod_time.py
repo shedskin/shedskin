@@ -181,13 +181,19 @@ def test_clock_invalid_id():
     # clock id (CPUCLOCK_BIT) for CPython, so there is nothing to check
     if sys.platform.startswith('freebsd'):
         return
-    for fn in [time.clock_gettime, time.clock_getres]:
-        caught = False
-        try:
-            fn(-1)
-        except OSError:
-            caught = True
-        assert caught
+    caught = False
+    try:
+        time.clock_gettime(-1)
+    except OSError:
+        caught = True
+    assert caught
+
+    caught = False
+    try:
+        time.clock_getres(-1)
+    except OSError:
+        caught = True
+    assert caught
 
     caught = False
     try:
