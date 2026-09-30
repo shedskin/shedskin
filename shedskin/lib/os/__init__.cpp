@@ -40,6 +40,7 @@
 #include <grp.h>
 #include <sysexits.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 #endif
 
 #ifdef __linux__

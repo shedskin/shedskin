@@ -15,6 +15,7 @@ def test_kill():
         assert False, 'expected an error for a non-existent pid'
     except ProcessLookupError as e:
         assert e.errno == 3  # ESRCH
+    os.killpg(os.getpgrp(), 0)
 
 
 def test_link_unlink_lstat_readlink():
