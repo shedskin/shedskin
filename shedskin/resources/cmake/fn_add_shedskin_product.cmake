@@ -313,6 +313,20 @@ function(add_shedskin_product)
         )
     endif()
 
+    # bdwgc is built with thread support, so (particularly when linking the
+    # static libgc) pthread must be linked explicitly: glibc >= 2.34 has it in
+    # libc, but e.g. FreeBSD keeps it in a separate libthr
+    if(UNIX)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
+        list(APPEND LIB_DEPS Threads::Threads)
+    endif()
+
+    # the BSDs keep forkpty/openpty in libutil
+    if(IMPORTS_OS_MODULE AND CMAKE_SYSTEM_NAME MATCHES "BSD")
+        list(APPEND LIB_DEPS util)
+    endif()
+
     if(DEBUG)
         message("LIB_DEPS: " ${LIB_DEPS})
         message("LIB_DIRS: " ${LIB_DIRS})
