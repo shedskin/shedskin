@@ -602,7 +602,7 @@ def test_constants():
     assert socket.IPPORT_RESERVED == 1024
     assert socket.EBADF == 9
     # errno values differ per platform: linux/windows CRT use 11, BSD/macOS 35
-    if sys.platform == 'darwin':
+    if sys.platform == 'darwin' or sys.platform.startswith('freebsd'):
         assert socket.EAGAIN == 35
     else:
         assert socket.EAGAIN == 11

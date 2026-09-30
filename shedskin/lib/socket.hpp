@@ -36,6 +36,11 @@ typedef SOCKET socket_type;
 
 #include <sys/types.h>
 #include <sys/socket.h>
+/* FreeBSD's <arpa/inet.h> renames inet_aton() etc. with macros (to
+ * __inet_aton ...), which then also applies to our own declarations below,
+ * so every translation unit must see it, not just socket.cpp */
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 typedef int socket_type;
 
