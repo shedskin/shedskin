@@ -5,6 +5,8 @@ import os
 def test_sys():
     assert sys.version
     assert sys.platform
+    assert (sys.platform in ('linux', 'darwin', 'win32') or
+            sys.platform.startswith('freebsd'))
     assert sys.copyright
     assert sys.byteorder in ['little', 'big']
     assert (sys.version_info[0], sys.version_info[1]) >= (2, 4)
