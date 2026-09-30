@@ -59,7 +59,6 @@
 #endif
 
 #ifdef __FreeBSD__
-#include <roken.h>
 #include <libutil.h>
 extern char **environ;
 #endif
