@@ -247,14 +247,15 @@ def test_kwarg_names():
 
 def test_mknod_default_mode():
     # CPython's default mode for os.mknod is 0o600 (a regular file).
-    # macOS only allows unprivileged mknod() for FIFOs (EPERM otherwise),
-    # so there pass S_IFIFO explicitly and just check the permission bits.
+    # macOS (EPERM) and FreeBSD (EINVAL) don't allow mknod() to create
+    # regular files, so there pass S_IFIFO explicitly and just check the
+    # permission bits.
     path = '/tmp/shedskin_test_mknod_default'
     if os.path.exists(path):
         os.remove(path)
     mask = os.umask(0o022)
     os.umask(mask)
-    if sys.platform == 'darwin':
+    if not sys.platform.startswith('linux'):
         os.mknod(path=path, mode=stat.S_IFIFO | 0o600)
         assert stat.S_ISFIFO(os.stat(path).st_mode)
     else:

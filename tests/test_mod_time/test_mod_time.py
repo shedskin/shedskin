@@ -1,3 +1,4 @@
+import sys
 import time
 
 #def test_mktime():
@@ -175,8 +176,11 @@ def test_get_clock_info():
     assert caught
 
 def test_clock_invalid_id():
-    # -1 is the "unavailable on this platform" id, and no platform has a
-    # clock with that id, so it must raise instead of silently succeeding
+    # -1 is the "unavailable on this platform" id, so it must raise instead
+    # of silently succeeding. on FreeBSD however it is a valid cpu-time
+    # clock id (CPUCLOCK_BIT) for CPython, so there is nothing to check
+    if sys.platform.startswith('freebsd'):
+        return
     caught = False
     try:
         time.clock_gettime(-1)
@@ -187,6 +191,13 @@ def test_clock_invalid_id():
     caught = False
     try:
         time.clock_getres(-1)
+    except OSError:
+        caught = True
+    assert caught
+
+    caught = False
+    try:
+        time.clock_gettime_ns(-1)
     except OSError:
         caught = True
     assert caught

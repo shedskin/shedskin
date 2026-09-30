@@ -358,6 +358,8 @@ __ss_int __ss_IP_OPTIONS = IP_OPTIONS;
 #endif
 #ifdef IP_PKTINFO
 __ss_int __ss_IP_PKTINFO = IP_PKTINFO;
+#else
+__ss_int __ss_IP_PKTINFO = 8; /* e.g. FreeBSD; value as on linux */
 #endif
 #ifdef IP_RECVTOS
 __ss_int __ss_IP_RECVTOS = IP_RECVTOS;

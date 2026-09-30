@@ -384,7 +384,7 @@ def test_connect_ex():
         # ECONNREFUSED
         if sys.platform == 'win32':
             assert e.errno == 10061
-        elif sys.platform == 'darwin':
+        elif sys.platform == 'darwin' or sys.platform.startswith('freebsd'):
             assert e.errno == 61
         else:
             assert e.errno == 111
@@ -602,7 +602,7 @@ def test_constants():
     assert socket.IPPORT_RESERVED == 1024
     assert socket.EBADF == 9
     # errno values differ per platform: linux/windows CRT use 11, BSD/macOS 35
-    if sys.platform == 'darwin':
+    if sys.platform == 'darwin' or sys.platform.startswith('freebsd'):
         assert socket.EAGAIN == 35
     else:
         assert socket.EAGAIN == 11
