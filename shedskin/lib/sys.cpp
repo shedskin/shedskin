@@ -47,6 +47,12 @@ void __init(int c, char **v) {
 #ifdef __APPLE__
     platform = new str("darwin");
 #endif
+#ifdef __FreeBSD__
+    /* like cpython, e.g. 'freebsd14' (__FreeBSD__ is the major version) */
+#define SS_PLATFORM_STR2(x) #x
+#define SS_PLATFORM_STR(x) SS_PLATFORM_STR2(x)
+    platform = new str("freebsd" SS_PLATFORM_STR(__FreeBSD__));
+#endif
 #ifdef WIN32
     platform = new str("win32");
 #endif

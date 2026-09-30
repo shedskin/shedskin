@@ -17,7 +17,11 @@
 #include <sys/stat.h>  // fstat
 #include <unistd.h>    // sysconf
 #define MMAP_PUSH(constant) __##constant = (constant)
+/* mremap() is Linux/NetBSD only; elsewhere (e.g. macOS, FreeBSD, OpenBSD)
+   resize() falls back to unmapping and mapping again */
+#if defined(__linux__) || defined(__NetBSD__)
 #define HAVE_MREMAP
+#endif
 #define HAVE_MADVISE
 #ifdef __linux__
 /* set_name() annotates an anonymous mapping so that it shows up by name in
@@ -453,11 +457,6 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
     return 0;
 }
 
-// since darwin doesn't have mremap
-#ifdef __APPLE__
-#undef HAVE_MREMAP
-#endif
-
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();
@@ -496,7 +495,7 @@ void *mmap::resize(__ss_int new_size)
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
 #else // !HAVE_MREMAP
-    /* No mremap() on this platform (e.g. macOS). CPython itself does not
+    /* No mremap() on this platform (e.g. macOS, FreeBSD). CPython itself does not
        require mremap() to support resize() here either: it falls back to
        growing/shrinking the backing file (if any), unmapping the old
        region, and creating a fresh mapping at the new size. As with the

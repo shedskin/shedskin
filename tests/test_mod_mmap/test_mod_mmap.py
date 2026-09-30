@@ -597,13 +597,15 @@ def test_offset():
     assert m[:] == b'LINE1\n'
     m.close()
 
-    # offset must be a multiple of ALLOCATIONGRANULARITY
-    error = False
-    try:
-        mmap.mmap(f.fileno(), 0, offset=G + 1)
-    except OSError:
-        error = True
-    assert error, "unaligned offset should raise OSError"
+    # offset must be a multiple of ALLOCATIONGRANULARITY (FreeBSD instead
+    # rounds it down, so there cpython doesn't raise either)
+    if not sys.platform.startswith('freebsd'):
+        error = False
+        try:
+            mmap.mmap(f.fileno(), 0, offset=G + 1)
+        except OSError:
+            error = True
+        assert error, "unaligned offset should raise OSError"
 
     # ..without leaving anything mapped: (on Windows) the file can still be resized
     f.truncate(G + 16)
