@@ -84,11 +84,6 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo(args)
 
-        if args.subcmd in ["analyze", "translate", "build", "run"]:
-            # v2 is the analysis now, and it generates code
-            gx.infer_v2 = True
-            gx.infer_v2_codegen = True
-
         if args.subcmd in ["build", "run", "runtests"]:
             # ensure cmake is available and installed.
             cmake.check_cmake_availability()

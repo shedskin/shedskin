@@ -504,98 +504,12 @@ class GlobalInfo:
         self._type_inference.orig_types = value
 
     @property
-    def alloc_info(
-        self,
-    ) -> dict[tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]]:
-        return self._type_inference.alloc_info
-
-    @alloc_info.setter
-    def alloc_info(
-        self,
-        value: dict[
-            tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]
-        ],
-    ) -> None:
-        self._type_inference.alloc_info = value
-
-    @property
-    def new_alloc_info(
-        self,
-    ) -> dict[tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]]:
-        return self._type_inference.new_alloc_info
-
-    @new_alloc_info.setter
-    def new_alloc_info(
-        self,
-        value: dict[
-            tuple[str, CartesianProduct, "ast.AST"], tuple["python.Class", int]
-        ],
-    ) -> None:
-        self._type_inference.new_alloc_info = value
-
-    @property
-    def iterations(self) -> int:
-        return self._type_inference.iterations
-
-    @iterations.setter
-    def iterations(self, value: int) -> None:
-        self._type_inference.iterations = value
-
-    @property
-    def total_iterations(self) -> int:
-        return self._type_inference.total_iterations
-
-    @total_iterations.setter
-    def total_iterations(self, value: int) -> None:
-        self._type_inference.total_iterations = value
-
-    @property
     def templates(self) -> int:
         return self._type_inference.templates
 
     @templates.setter
     def templates(self, value: int) -> None:
         self._type_inference.templates = value
-
-    @property
-    def added_allocs(self) -> int:
-        return self._type_inference.added_allocs
-
-    @added_allocs.setter
-    def added_allocs(self, value: int) -> None:
-        self._type_inference.added_allocs = value
-
-    @property
-    def added_allocs_set(self) -> set[Any]:
-        return self._type_inference.added_allocs_set
-
-    @added_allocs_set.setter
-    def added_allocs_set(self, value: set[Any]) -> None:
-        self._type_inference.added_allocs_set = value
-
-    @property
-    def added_funcs(self) -> int:
-        return self._type_inference.added_funcs
-
-    @added_funcs.setter
-    def added_funcs(self, value: int) -> None:
-        self._type_inference.added_funcs = value
-
-    @property
-    def added_funcs_set(self) -> set["python.Function"]:
-        return self._type_inference.added_funcs_set
-
-    @added_funcs_set.setter
-    def added_funcs_set(self, value: set["python.Function"]) -> None:
-        self._type_inference.added_funcs_set = value
-
-    @property
-    def cpa_clean(self) -> bool:
-        return self._type_inference.cpa_clean
-
-    @cpa_clean.setter
-    def cpa_clean(self, value: bool) -> None:
-        self._type_inference.cpa_clean = value
 
     @property
     def cpa_limit(self) -> int:
@@ -622,28 +536,12 @@ class GlobalInfo:
         self._type_inference.merged_inh = value
 
     @property
-    def maxhits(self) -> int:
-        return self._type_inference.maxhits
-
-    @maxhits.setter
-    def maxhits(self, value: int) -> None:
-        self._type_inference.maxhits = value
-
-    @property
     def retry_maxiters(self) -> int:
         return self._type_inference.retry_maxiters
 
     @retry_maxiters.setter
     def retry_maxiters(self, value: bool) -> None:
         self._type_inference.retry_maxiters = value
-
-    @property
-    def infer_v2(self) -> bool:
-        return self._type_inference.infer_v2
-
-    @infer_v2.setter
-    def infer_v2(self, value: bool) -> None:
-        self._type_inference.infer_v2 = value
 
     @property
     def infer_v2_open_contours(self) -> Optional[set[tuple[Any, int]]]:
@@ -663,13 +561,6 @@ class GlobalInfo:
     def infer_v2_core(self, value: Optional[Any]) -> None:
         self._type_inference.infer_v2_core = value
 
-    @property
-    def infer_v2_codegen(self) -> bool:
-        return self._type_inference.infer_v2_codegen
-
-    @infer_v2_codegen.setter
-    def infer_v2_codegen(self, value: bool) -> None:
-        self._type_inference.infer_v2_codegen = value
 
     def get_stats(self) -> dict[str, Any]:
         assert self.module_path is not None
@@ -696,13 +587,7 @@ class GlobalInfo:
             "n_parent_nodes": len(self.parent_nodes.keys()),
             "n_inherited": len(self.inherited),
             "n_assign_target": len(self.assign_target.keys()),
-            "n_alloc_info": len(self.alloc_info.keys()),
-            "n_new_alloc_info": len(self.new_alloc_info.keys()),
-            "n_iterations": self.iterations,
-            "total_iterations": self.total_iterations,
             "n_called": len(self.called),
-            "added_allocs": self.added_allocs,
-            "added_funcs": self.added_funcs,
             "cpa_limit": self.cpa_limit,
             # commandline-options
             "wrap_around_check": self.wrap_around_check,
