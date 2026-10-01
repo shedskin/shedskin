@@ -27,12 +27,11 @@ class TypeInferenceState:
         merged_inh: Merged inheritance type information.
         retry_maxiters: Set by --retry; no longer has any effect, but still
             passed on to the generated build files.
-        infer_v2_open_contours: While v2 probes, the set of (class, contour)
-            pairs allowed to receive inflow. Every other contour is frozen:
-            readable, but not writable. None disables the mechanism.
-        infer_v2_core: While v2 sweeps, the FrozenCore that owns allocation
-            site contours. ifa_seed_template asks it for the contour of a
-            mold in a newly created template. Set whenever propagation runs.
+        open_contours: During propagation, the (class, contour) pairs of
+            container contours that may receive types; all other container
+            contours are frozen (see shedskin.contours).
+        contour_core: During propagation, the contours.FrozenCore that
+            seed_template asks for the contour of each new allocation site.
     """
 
     constraints: Set[Tuple["infer.CNode", "infer.CNode"]] = field(default_factory=set)
@@ -44,5 +43,5 @@ class TypeInferenceState:
     cpa_limited: bool = False
     merged_inh: Dict[Any, Set[Tuple[Any, int]]] = field(default_factory=dict)
     retry_maxiters: bool = False
-    infer_v2_open_contours: Optional[Set[Tuple[Any, int]]] = None
-    infer_v2_core: Optional[Any] = None
+    open_contours: Optional[Set[Tuple[Any, int]]] = None
+    contour_core: Optional[Any] = None
