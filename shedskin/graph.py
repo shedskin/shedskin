@@ -271,9 +271,9 @@ class StrFormatRewriter(ast.NodeTransformer):
         return newnode
 
 
-def register_node(node: ast.AST, func: Optional["python.Function"]) -> None:
+def register_node(node: ast.AST, func: Optional[AllParent]) -> None:
     """Register a node with a function"""
-    if func:
+    if isinstance(func, python.Function):
         func.registered.append(node)
 
 
@@ -353,6 +353,184 @@ def is_property_setter(dec: ast.AST, parent: Optional["python.Class"] = None) ->
     return True
 
 
+class VisitContext:
+    def __init__(
+        self,
+        namespace: Union[AllParent, "python.Module"],
+        parent: Optional["VisitContext"] = None,
+    ):
+        self.namespace = namespace
+        self.parent = parent
+        self.live_local_writes: dict[str, set["infer.CNode"]] = {}
+        self.contained_local_writes: Optional[dict[str, "infer.CNode"]] = None
+        self.all_local_writes: dict[str, set["infer.CNode"]] = {}
+        self.incoming_definition: dict[str, "infer.CNode"] = {}
+        self.conditional_writes: set[str] = set()
+
+    def child(self) -> "VisitContext":
+        return VisitContext(self.namespace, self)
+
+    def child_with_class(
+        self, class_: Union["python.Class", "python.StaticClass"]
+    ) -> "VisitContext":
+        return VisitContext(class_, self)
+
+    def as_except_context(self) -> "VisitContext":
+        context = VisitContext(self.namespace, self.parent)
+        context.live_local_writes = {
+            name: values.copy() for name, values in self.all_local_writes.items()
+        }
+        context.incoming_definition = self.incoming_definition.copy()
+        context.conditional_writes = set(context.live_local_writes)
+        return context
+
+    def class_object(self) -> Optional["python.Class"]:
+        namespace = self.namespace
+        if isinstance(namespace, python.Class):
+            return namespace
+        return None
+
+    def function(self) -> Optional["python.Function"]:
+        namespace = self.namespace
+        if isinstance(namespace, python.Function):
+            return namespace
+        return None
+
+    def parent_object(self) -> Optional[AllParent]:
+        namespace = self.namespace
+        if isinstance(namespace, (python.Function, python.Class, python.StaticClass)):
+            return namespace
+        return None
+
+    def contained_write(self, node: ast.Name, cnode: "infer.CNode") -> None:
+        assert node.id not in self.all_local_writes
+        assert node.id not in self.live_local_writes
+        if self.contained_local_writes is None:
+            self.contained_local_writes = {}
+        else:
+            # assert node.id not in self.contained_local_writes
+            # this is apparently ok for comprehensions [i for i in range(2) for i in range(5,7)] => [5, 6, 5, 6]
+            pass
+        self.contained_local_writes[node.id] = cnode
+
+    def write(self, node: ast.Name, cnode: "infer.CNode") -> None:
+        all_writes = self.all_local_writes.setdefault(node.id, set())
+        all_writes.add(cnode)
+        defs = self.live_local_writes.setdefault(node.id, set())
+        defs.clear()
+        defs.add(cnode)
+        if node.id in self.conditional_writes:
+            self.conditional_writes.remove(node.id)
+
+    def read(self, mv: "ModuleVisitor", node: ast.Name) -> "infer.CNode":
+        name: str = node.id
+        assert isinstance(node.ctx, ast.Load)
+        func: AllParent | None = self.parent_object()
+        cnode = mv.gx.cnode.get((node, 0, 0))
+        if cnode is None:
+            cnode = infer.CNode(
+                mv.gx, mv, node, parent=func
+            )  # XXX: Should parent be self.parent_object()
+            mv.gx.types[cnode] = set()
+        self.namespace.variable_reads.setdefault(name, set()).add(cnode)
+        defs = self.live_local_writes.get(name)
+        if defs:
+            for c in defs:
+                mv.add_constraint((c, cnode), func)
+            return cnode
+        if self.contained_local_writes:
+            contained_def = self.contained_local_writes.get(name)
+            if contained_def:
+                mv.add_constraint((contained_def, cnode), func)
+                return cnode
+        incoming_def = self.incoming_definition.get(name)
+        if incoming_def is not None:
+            mv.add_constraint((incoming_def, cnode), func)
+            return cnode
+        if self.parent:
+            parent_cnode = self.parent.read(mv, node)
+            if parent_cnode != cnode:
+                mv.add_constraint((parent_cnode, cnode), func)
+            self.incoming_definition[name] = cnode
+        elif isinstance(func, python.Function):
+            func_parent = (
+                func.parent
+                if isinstance(func.parent, python.Function)
+                else None
+            )
+            var = python.lookup_var(node.id, func_parent, mv) or infer.default_var(
+                mv.gx, name, None, mv=mv
+            )
+            mv.add_constraint((infer.inode(mv.gx, var), cnode), func)
+            self.incoming_definition[name] = cnode
+        else:
+            var = python.lookup_var(node.id, func, mv) or infer.default_var(
+                mv.gx, name, None, mv=mv
+            )
+            mv.add_constraint((infer.inode(mv.gx, var), cnode), func)
+            self.incoming_definition[name] = cnode
+        return cnode
+
+    def feedback_loop_writes(
+        self, mv: "ModuleVisitor", loop_context: "VisitContext"
+    ) -> None:
+        for name, outgoing_cnodes in loop_context.live_local_writes.items():
+            incoming_cnode = self.incoming_definition.get(name)
+            if incoming_cnode is None:  # variable is not read before write
+                continue
+            for outgoing_cnode in outgoing_cnodes:
+                mv.add_constraint((outgoing_cnode, incoming_cnode), self.parent_object())
+
+    def merge_loop(self, mv: "ModuleVisitor", loop_context: "VisitContext") -> None:
+        self.feedback_loop_writes(mv, loop_context)
+        self.merge([loop_context], True)
+
+    def merge_loop_orelse(
+        self,
+        mv: "ModuleVisitor",
+        loop_context: "VisitContext",
+        orelse_context: "VisitContext",
+    ) -> None:
+        self.feedback_loop_writes(mv, loop_context)
+        self.merge([loop_context, orelse_context], False)
+
+    def merge(
+        self, children: list["VisitContext"], all_conditional: bool = True
+    ) -> None:
+        conditional: set[str] = set()
+        all_outgoing_cnodes: dict[str, set["infer.CNode"]] = {}
+        for c in children:
+            assert c.parent == self
+            conditional.update(c.conditional_writes)
+            for name, outgoing_cnodes in c.all_local_writes.items():
+                assert outgoing_cnodes
+                self.all_local_writes.setdefault(name, set()).update(outgoing_cnodes)
+            for name, outgoing_cnodes in c.live_local_writes.items():
+                assert outgoing_cnodes
+                all_outgoing_cnodes.setdefault(name, set()).update(outgoing_cnodes)
+        if all_conditional:
+            conditional.update(set(all_outgoing_cnodes))
+        else:
+            conditional.update(
+                {
+                    n
+                    for n in all_outgoing_cnodes
+                    if n not in conditional
+                    and not all(n in c.live_local_writes for c in children)
+                }
+            )
+        self.conditional_writes.update(conditional - set(self.live_local_writes))
+        if not all_conditional and len(all_outgoing_cnodes) > len(conditional):
+            self.conditional_writes.difference_update(
+                set(all_outgoing_cnodes) - conditional
+            )
+        for name, outgoing_cnodes in all_outgoing_cnodes.items():
+            local_writes = self.live_local_writes.setdefault(name, set())
+            if name not in conditional:
+                local_writes.clear()
+            local_writes.update(outgoing_cnodes)
+
+
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ast_utils.BaseNodeVisitor):
     """Module visitor for analyzing program and building constraint graph"""
@@ -377,7 +555,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.tempcount = self.gx.tempcount
         self.str_format_node: Optional[ast_utils.StrFormat] = None
         self.listcomps: list[
-            tuple[ast.ListComp, "python.Function", Optional["python.Function"]]
+            tuple[ast.ListComp, "python.Function", Optional[AllParent]]
         ] = []
         self.defaults: dict[ast.AST, tuple[int, "python.Function", int]] = {}
 
@@ -385,10 +563,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.funcnodes: list[ast.FunctionDef]
         self.classnodes: list[ast.ClassDef]
 
-    def visit(self, node: ast.AST, *args: Any) -> None:
+    def visit(self, node: ast.AST, context: VisitContext, *args: Any) -> None:
         """Visit a node"""
         if (node, 0, 0) not in self.gx.cnode:
-            ast_utils.BaseNodeVisitor.visit(self, node, *args)
+            ast_utils.BaseNodeVisitor.visit(self, node, context, *args)
 
     def fake_func(
         self,
@@ -396,9 +574,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         objexpr: ast.AST,
         attrname: str,
         args: list[ast.AST],
-        func: Optional[python.Function] = None,
+        context: VisitContext,
     ) -> ast.Call:
         """Generate a fake function"""
+        func: Optional[AllParent] = context.parent_object()
+
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
@@ -410,7 +590,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         fakefunc = ast.Call(ast.Attribute(objexpr, attrname, ast.Load()), args_expr, [])
         if hasattr(objexpr, "lineno"):
             fakefunc.lineno = objexpr.lineno
-        self.visit(fakefunc, func)
+        self.visit_Call(fakefunc, context)
         self.add_constraint((infer.inode(self.gx, fakefunc), newnode), func)
 
         infer.inode(self.gx, objexpr).fakefunc = fakefunc
@@ -475,7 +655,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self,
         node: ast.AST,
         cl: "python.Class",
-        func: Optional["python.Function"] = None,
+        func: Optional[AllParent] = None,
     ) -> None:
         """Generate an instance of a class"""
         if (node, 0, 0) in self.gx.cnode:  # XXX to create_node() func
@@ -497,9 +677,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self,
         node: Union[ast.Tuple, ast.List, ast.Dict, ast.Set],
         classname: str,
-        func: Optional["python.Function"],
+        context: VisitContext,
     ) -> None:
         """Generate a constructor"""
+        func: Optional[AllParent] = context.parent_object()
+
         cl = python.def_class(self.gx, classname)
         assert cl
 
@@ -514,13 +696,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 infer.default_var(self.gx, elemname, cl)
 
             for elem in node.elts:
-                self.visit(elem, func)
+                self.visit(elem, context)
 
             for elem in node.elts:
-                self.add_dynamic_constraint(node, elem, "unit", func)
+                self.add_dynamic_constraint(node, elem, "unit", context)
 
             for elem, elemname in zip(node.elts, elemnames):
-                self.add_dynamic_constraint(node, elem, elemname, func)
+                self.add_dynamic_constraint(node, elem, elemname, context)
 
             return
 
@@ -530,7 +712,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             infer.default_var(self.gx, "value", cl)
 
             for child in ast.iter_child_nodes(node):
-                self.visit(child, func)
+                self.visit(child, context)
 
             for key, value in zip(node.keys, node.values):  # XXX filter
                 if key is None:  # dict unpacking, e.g. {**d1, 'c': 3}
@@ -541,22 +723,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         mv=getmv(),
                     )
                 else:
-                    self.add_dynamic_constraint(node, key, "unit", func)
-                    self.add_dynamic_constraint(node, value, "value", func)
+                    self.add_dynamic_constraint(node, key, "unit", context)
+                    self.add_dynamic_constraint(node, value, "value", context)
         else:
             for child in node.elts:
-                self.visit(child, func)
+                self.visit(child, context)
 
             for child in self.filter_redundant_children(node):
-                self.add_dynamic_constraint(node, child, "unit", func)
+                self.add_dynamic_constraint(node, child, "unit", context)
 
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
     def filter_redundant_children(
         self, node: Union[ast.Tuple, ast.List, ast.Set]
-    ) -> list[ast.AST]:
+    ) -> list[ast.expr]:
         """Filter redundant children from a compound list/tuple/dict constructor"""
         done = set()
-        nonred: list[ast.AST] = []
+        nonred: list[ast.expr] = []
         for child in node.elts:
             type = self.child_type_rec(child)
             if not type or type not in done:
@@ -597,22 +779,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(
-        self,
-        parent: ast.AST,
-        child: ast.AST,
-        varname: str,
-        func: Optional["python.Function"],
+        self, parent: ast.expr, child: ast.expr, varname: str, context: VisitContext
     ) -> None:
         """Add a dynamic constraint for a constructor argument"""
+        func: Optional[AllParent] = context.parent_object()
+
         self.gx.assign_target[child] = parent
         cu = ast.Constant(varname)
-        self.visit(cu, func)
+        self.visit_Constant(cu, context)
         fakefunc = ast.Call(
             ast.Attribute(_as_expr(parent), "__setattr__", ast.Load()),
             [cu, _as_expr(child)],
             [],
         )
-        self.visit_Call(fakefunc, func, fake_attr=True)
+        self.visit_Call(fakefunc, context, fake_attr=True)
 
         fakechildnode = infer.CNode(
             self.gx, getmv(), (child, varname), parent=func
@@ -628,16 +808,24 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def add_constraint(
         self,
         constraint: tuple[infer.CNode, infer.CNode],
-        func: Optional["python.Function"],
+        func: Optional[AllParent],
     ) -> None:
         """Add a regular constraint to a function"""
+        in_cnode = constraint[0]
+        if (
+            isinstance(in_cnode.thing, python.Variable)
+            and func
+            and in_cnode.thing.parent == func
+        ):
+            assert False
+
         infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
         parent = python.outer_func(func)
         if parent:
             parent.constraints.add(constraint)
 
-    def struct_unpack(self, rvalue: ast.AST, func: Optional["python.Function"]) -> bool:
+    def struct_unpack(self, rvalue: ast.AST, func: Optional[AllParent]) -> bool:
         """Check if a call node is a struct unpack"""
         if isinstance(rvalue, ast.Call):
             struct_var = python.lookup_var("struct", func, self)
@@ -660,7 +848,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return False
 
     def struct_info(
-        self, node: ast.AST, func: Optional["python.Function"]
+        self, node: ast.AST, func: Optional[AllParent]
     ) -> list[tuple[str, str, str, int]]:
         """Get struct information"""
         if isinstance(node, ast.Name):
@@ -752,9 +940,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     result.append(ast.Constant(True))
         return ast.Tuple(result, ast.Load())
 
-    def visit_GeneratorExp(
-        self, node: ast.GeneratorExp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_GeneratorExp(self, node: ast.GeneratorExp, context: VisitContext) -> None:
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
@@ -767,12 +955,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         register_node(lc, func)
         self.gx.genexp_to_lc[node] = lc
-        self.visit(lc, func)
+        self.visit(lc, context)
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
-    def visit_JoinedStr(
-        self, node: ast.JoinedStr, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_JoinedStr(self, node: ast.JoinedStr, context: VisitContext) -> None:
         """Visit a joined string"""
         for value in node.values:
             method = "__str__"
@@ -800,12 +986,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         mv=getmv(),
                     )
                 value = value.value
-            self.visit(value, func)
-            self.fake_func(infer.inode(self.gx, value), value, method, [], func)
-        self.instance(node, python.def_class(self.gx, "str_"), func)
+            self.visit(value, context)
+            self.fake_func(infer.inode(self.gx, value), value, method, [], context)
+        self.instance(node, python.def_class(self.gx, "str_"), context.parent_object())
 
     def visit_StrFormat(
-        self, node: ast_utils.StrFormat, func: Optional["python.Function"] = None
+        self, node: ast_utils.StrFormat, context: VisitContext
     ) -> None:
         """Visit a literal str.format(..) call (see StrFormatRewriter)
 
@@ -814,13 +1000,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         side-effects or evaluation order issues). Constant arguments are
         always used directly.
         """
+        func: Optional[AllParent] = context.parent_object()
+
         direct = all(
             isinstance(arg, ast.Name) or ast_utils.is_constant(arg)
             for arg in node.args
         )
         temps: list[Optional[str]] = []
         for i, arg in enumerate(node.args):
-            self.visit(arg, func)
+            self.visit(arg, context)
             if direct or ast_utils.is_constant(arg):
                 temps.append(None)
             else:
@@ -831,7 +1019,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.str_format[node] = temps
 
         outer, self.str_format_node = self.str_format_node, node
-        self.visit(node.joined, func)
+        self.visit(node.joined, context)
         self.str_format_node = outer
 
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
@@ -839,9 +1027,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, node.joined), newnode), func)
 
     def visit_StrFormatArg(
-        self, node: ast_utils.StrFormatArg, func: Optional["python.Function"] = None
+        self, node: ast_utils.StrFormatArg, context: VisitContext
     ) -> None:
         """Visit a reference to a str.format(..) argument"""
+        func: Optional[AllParent] = context.parent_object()
+
         assert self.str_format_node
         arg = self.str_format_node.args[node.index]
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
@@ -849,17 +1039,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, arg), newnode), func)
 
     def visit_Expr(
-        self, node: ast.Expr, func: Optional["python.Function"] = None
+        self, node: ast.Expr, context: VisitContext
     ) -> None:
         """Visit an expression"""
         self.bool_test_add(node.value)
-        self.visit(node.value, func)
+        self.visit(node.value, context)
 
-    def visit_NamedExpr(
-        self, node: ast.NamedExpr, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_NamedExpr(self, node: ast.NamedExpr, context: VisitContext) -> None:
         """Visit a named expression"""
-        self.visit(node.value, func)
+        func: Optional[AllParent] = context.parent_object()
+        self.visit(node.value, context)
 
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
@@ -877,9 +1066,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lvar = self.default_var(
             node.target.id, parent
         )  # TODO shouldn't this be in orig func
+        context.write(node.target, newnode)
         self.add_constraint((newnode, infer.inode(self.gx, lvar)), parent)
 
-    def visit_Module(self, node: ast.Module) -> None:
+    def visit_Module(self, node: ast.Module, context: VisitContext) -> None:
         """Visit a module"""
         # --- literal str.format(..) calls become f-strings
         StrFormatRewriter(self.gx, getmv()).visit(node)
@@ -887,12 +1077,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- bootstrap built-in classes
         if self.module.ident == "builtin":
             for dummy in self.gx.builtins:
-                self.visit(ast.ClassDef(dummy, [], [], [ast.Pass()]))
+                self.visit_ClassDef(
+                    ast.ClassDef(dummy, [], [], [ast.Pass()], [], []), context
+                )
 
         if self.module.ident != "builtin":
             n = ast.ImportFrom("builtin", [ast.alias("*", None)], 0)  # Python2.5+
             getmv().importnodes.append(n)
-            self.visit(n)
+            self.visit_ImportFrom(n, context)
 
         # --- __name__
         if self.module.ident != "builtin":
@@ -908,7 +1100,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             n for n in node.body if isinstance(n, (ast.Import, ast.ImportFrom))
         )
         for child in node.body:
-            self.visit(child, None)
+            self.visit(child, context)
 
         # --- register classes
         for cl in getmv().classes.values():
@@ -927,6 +1119,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # for each base class, duplicate methods
         for cl in self.classes.values():
+            class_context = context.child_with_class(cl)
             for ancestor in cl.ancestors_upto(None)[1:]:
                 cl.staticmethods.extend(ancestor.staticmethods)
                 cl.classmethods.extend(ancestor.classmethods)
@@ -945,7 +1138,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     inherit_rec(self.gx, func.node, func_copy, func.mv)
                     tempmv, mv = getmv(), func.mv
                     setmv(mv)
-                    self.visit_FunctionDef(func_copy, cl, inherited_from=func)
+                    self.visit_FunctionDef(
+                        func_copy, class_context, inherited_from=func
+                    )
                     mv = tempmv
                     setmv(mv)
 
@@ -1064,9 +1259,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 result.extend(self.local_assignments(child, global_))
         return result
 
-    def visit_Import(
-        self, node: ast.Import, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Import(self, node: ast.Import, context: VisitContext) -> None:
         """Visit an import"""
         if node not in getmv().importnodes:
             error.error(
@@ -1125,9 +1318,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[infer.inode(self.gx, var)] = {(module, 0)}
         return module
 
-    def visit_ImportFrom(
-        self, node: ast.ImportFrom, parent: Optional["python.Function"] = None
-    ) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom, context: VisitContext) -> None:
         """Visit an import from"""
         if node.module == "typing":
             return
@@ -1232,11 +1423,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_FunctionDef(
         self,
         node: ast.FunctionDef,
-        parent: Optional["python.Class"] = None,
+        context: VisitContext,
         is_lambda: bool = False,
         inherited_from: Optional["python.Function"] = None,
     ) -> None:
         """Visit a function definition"""
+        parent: Optional["python.Class"] = context.class_object()
 
         if not getmv().module.builtin and (node.args.vararg or node.args.kwarg):
             error.error(
@@ -1290,7 +1482,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         "unsupported type of decorator", self.gx, dec, mv=getmv()
                     )
 
-        if parent:
+        if parent and not is_lambda:
             if (
                 not inherited_from
                 and func.ident not in parent.staticmethods
@@ -1347,9 +1539,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         func.defaults = node.args.defaults
 
+        func_context = VisitContext(func)
         for formal in func.formals:
+            formal_node = ast.Name(formal, ast.Store())
+            func.formal_nodes[formal] = formal_node
+            formal_cnode = infer.CNode(self.gx, getmv(), formal_node, parent=func)
+            self.gx.types[formal_cnode] = set()
+            func_context.write(formal_node, formal_cnode)
             var = infer.default_var(self.gx, formal, func)
             var.formal_arg = True
+            self.add_constraint((formal_cnode, infer.inode(self.gx, var)), func)
 
         # --- flow return expressions together into single node
         func.retnode = retnode = infer.CNode(self.gx, getmv(), node, parent=func)
@@ -1360,8 +1559,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.types[yieldnode] = set()
 
         for body_node in node.body:
-            self.visit(body_node, func)
+            self.visit(body_node, func_context)
 
+        defaults_context = VisitContext(func.parent or getmv().module)
         for i, default in enumerate(func.defaults):
             if (
                 not ast_utils.is_literal(default)
@@ -1371,12 +1571,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 )  # TODO fix is_literal
             ):
                 self.defaults[default] = (len(self.defaults), func, i)
-            self.visit(default, None)  # defaults are global
+            self.visit(default, defaults_context)  # defaults are global
 
         # --- add implicit 'return None' if no return expressions
         if not func.returnexpr:
-            func.fakeret = ast.Return(ast.Name("None", ast.Load()))
-            self.visit(func.fakeret, func)
+            fakeret = ast.Return(ast.Name("None", ast.Load()))
+            func.fakeret = fakeret
+            self.visit_Return(fakeret, func_context)
 
         # --- register function
         if isinstance(parent, python.Class):
@@ -1386,42 +1587,44 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
+        # XXX: Should add context.write for ast.Name(node.name,...)
 
-    def visit_Lambda(
-        self, node: ast.Lambda, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Lambda(self, node: ast.Lambda, context: VisitContext) -> None:
         """Visit a lambda function"""
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
-        self.visit(fakenode, None, True)
+        lambda_context = VisitContext(context.namespace)  # XXX: What should this be?
+        self.visit_FunctionDef(fakenode, lambda_context, True)
         f = self.lambdas[name]
         f.lambdanr = lambdanr
         self.lambdaname[node] = name
-        newnode = infer.CNode(self.gx, getmv(), node, parent=func)
+        newnode = infer.CNode(self.gx, getmv(), node, parent=context.parent_object())
         self.gx.types[newnode] = {(f, 0)}
         newnode.copymetoo = True
 
-    def visit_BoolOp(
-        self, node: ast.BoolOp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_BoolOp(self, node: ast.BoolOp, context: VisitContext) -> None:
         """Visit a boolean operation"""
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         for child in node.values:
             if node in self.gx.bool_test_only:
                 self.bool_test_add(child)
-            self.visit(child, func)
+            self.visit(child, context)
             self.add_constraint((infer.inode(self.gx, child), newnode), func)
             self.temp_var2(child, newnode, func)
 
     def visit_If(
         self,
         node: ast.If,
-        func: Optional["python.Function"] = None,
+        context: VisitContext,
         root_if: Optional[ast.If] = None,
     ) -> None:
         """Visit an if statement"""
+        func: Optional[AllParent] = context.parent_object()
+
         # add temp var for to split up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
         if not root_if:
             root_if = node
@@ -1433,81 +1636,79 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if chain_len > 100:
                 self.temp_var_int(root_if, func)
 
+        if_context = context.child()
         self.bool_test_add(node.test)
         faker = ast.Call(ast.Name("bool", ast.Load()), [node.test], [])
-        self.visit(faker, func)
+        self.visit(faker, if_context)
+        body_context = if_context.child()
         for child in node.body:
-            self.visit(child, func)
-        if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
-            self.visit_If(node.orelse[0], func, root_if)
+            self.visit(child, body_context)
+        if node.orelse:
+            orelse_context = if_context.child()
+            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+                self.visit_If(node.orelse[0], orelse_context, root_if)
+            else:
+                for child in node.orelse:
+                    self.visit(child, orelse_context)
+            if_context.merge([body_context, orelse_context], False)
         else:
-            for child in node.orelse:
-                self.visit(child, func)
+            if_context.merge([body_context], True)
+        context.merge([if_context], False)
 
-    def visit_IfExp(
-        self, node: ast.IfExp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_IfExp(self, node: ast.IfExp, context: VisitContext) -> None:
         """Visit an if expression"""
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
 
         for child in ast.iter_child_nodes(node):
-            self.visit(child, func)
+            self.visit(child, context)  # XXX: Should use new context?
 
         self.add_constraint((infer.inode(self.gx, node.body), newnode), func)
         self.add_constraint((infer.inode(self.gx, node.orelse), newnode), func)
 
-    def visit_Match(
-        self, node: ast.Match, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Match(self, node: ast.Match, context: VisitContext) -> None:
         """Visit a match statement"""
         error.error("match case statement not supported", self.gx, node, mv=getmv())
 
-    def visit_Global(self, node: ast.Global, func: "python.Function") -> None:
+    def visit_Global(self, node: ast.Global, context: VisitContext) -> None:
         """Visit a global statement"""
-        func.globals += node.names
+        func = context.parent_object()
+        assert func is not None
+        func.globals.update(node.names)
 
-    def visit_List(
-        self, node: ast.List, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_List(self, node: ast.List, context: VisitContext) -> None:
         """Visit a list"""
-        self.constructor(node, "list", func)
+        self.constructor(node, "list", context)
 
-    def visit_Dict(
-        self, node: ast.Dict, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Dict(self, node: ast.Dict, context: VisitContext) -> None:
         """Visit a dictionary"""
-        self.constructor(node, "dict", func)
+        self.constructor(node, "dict", context)
 
-    def visit_Set(
-        self, node: ast.Set, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Set(self, node: ast.Set, context: VisitContext) -> None:
         """Visit a set"""
-        self.constructor(node, "set", func)
+        self.constructor(node, "set", context)
 
-    def visit_Tuple(
-        self, node: ast.Tuple, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Tuple(self, node: ast.Tuple, context: VisitContext) -> None:
         """Visit a tuple"""
         if isinstance(node.ctx, ast.Load):
             if len(node.elts) == 2:
-                self.constructor(node, "tuple2", func)
+                self.constructor(node, "tuple2", context)
             elif len(node.elts) == 3:
-                self.constructor(node, "tuple3", func)
+                self.constructor(node, "tuple3", context)
             else:
-                self.constructor(node, "tuple", func)
+                self.constructor(node, "tuple", context)
         else:
             error.error("unsupported tuple ctx", self.gx, node, mv=getmv())
 
-    def visit_Subscript(
-        self, node: ast.Subscript, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Subscript(self, node: ast.Subscript, context: VisitContext) -> None:
         """Visit a subscript"""
         # XXX merge __setitem__, __getitem__
         if isinstance(node.slice, ast.Slice):
             nslice = node.slice
             self.slice(
-                node, node.value, [nslice.lower, nslice.upper, nslice.step], func
+                node, node.value, [nslice.lower, nslice.upper, nslice.step], context
             )
 
         elif isinstance(node.slice, ast.Del):
@@ -1526,16 +1727,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 subscript = node.slice
 
             if isinstance(node.ctx, ast.Del):
-                self.fake_func(node, node.value, "__delitem__", [subscript], func)
+                self.fake_func(node, node.value, "__delitem__", [subscript], context)
             elif isinstance(subscript, (ast.List, ast.Tuple)):
-                self.fake_func(node, node.value, "__getitem__", [subscript], func)
+                self.fake_func(node, node.value, "__getitem__", [subscript], context)
             else:
                 ident = "__getitem__"
-                self.fake_func(node, node.value, ident, [subscript], func)
+                self.fake_func(node, node.value, ident, [subscript], context)
 
-    def visit_Slice(
-        self, node: ast.Slice, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Slice(self, node: ast.Slice, context: VisitContext) -> None:
         """Visit a slice"""
         assert False
 
@@ -1544,22 +1743,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         node: Union[ast.Slice, ast.Subscript],
         expr: ast.AST,
         nodes: list[Optional[ast.AST]],
-        func: Optional["python.Function"],
+        context: VisitContext,
         replace: Optional[ast.AST] = None,
     ) -> None:
         """Slice a node"""
         nodes2 = slice_nums(nodes)
         if replace:
-            self.fake_func(node, expr, "__setslice__", nodes2 + [replace], func)
+            self.fake_func(node, expr, "__setslice__", nodes2 + [replace], context)
         elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Del):
-            self.fake_func(node, expr, "__delete__", nodes2, func)
+            self.fake_func(node, expr, "__delete__", nodes2, context)
         else:
-            self.fake_func(node, expr, "__slice__", nodes2, func)
+            self.fake_func(node, expr, "__slice__", nodes2, context)
 
-    def visit_UnaryOp(
-        self, node: ast.UnaryOp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_UnaryOp(self, node: ast.UnaryOp, context: VisitContext) -> None:
         """Visit a unary operation"""
+        func: Optional[AllParent] = context.parent_object()
+
         op_type = type(node.op)
         if op_type == ast.Not:
             self.bool_test_add(node.operand)
@@ -1568,25 +1767,25 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[newnode] = {
                 (python.def_class(self.gx, "bool_"), 0)
             }  # XXX new type?
-            self.visit(node.operand, func)
+            self.visit(node.operand, context)
         else:
             op_map = {
                 ast.USub: "__neg__",
                 ast.UAdd: "__pos__",
                 ast.Invert: "__invert__",
             }
-            self.fake_func(node, node.operand, op_map[op_type], [], func)
+            self.fake_func(node, node.operand, op_map[op_type], [], context)
 
-    def visit_Compare(
-        self, node: ast.Compare, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Compare(self, node: ast.Compare, context: VisitContext) -> None:
         """Visit a comparison"""
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         newnode.copymetoo = True
         self.gx.types[newnode] = {
             (python.def_class(self.gx, "bool_"), 0)
         }  # XXX new type?
-        self.visit(node.left, func)
+        self.visit(node.left, context)
         msgs = {
             ast.Eq: "eq",
             ast.NotEq: "ne",
@@ -1599,11 +1798,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         }  # 'Is' and IsNot only in cpp
         left = node.left
         for op, right in zip(node.ops, node.comparators):
-            self.visit(right, func)
+            self.visit(right, context)
             msg = msgs.get(type(op))
 
             if msg == "contains":
-                self.fake_func(node, right, "__" + msg + "__", [left], func)
+                self.fake_func(node, right, "__" + msg + "__", [left], context)
 
                 if (
                     isinstance(right, (ast.List, ast.Tuple)) and right.elts
@@ -1617,9 +1816,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     ast.Name("__%s" % msg, ast.Load()), [left, right], []
                 )
                 fakefunc.lineno = left.lineno
-                self.visit(fakefunc, func)
+                self.visit(fakefunc, context)
             elif msg:
-                self.fake_func(node, left, "__" + msg + "__", [right], func)
+                self.fake_func(node, left, "__" + msg + "__", [right], context)
             left = right
 
         # tempvars, e.g. (t1=fun())
@@ -1627,9 +1826,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if not (isinstance(term, ast.Name) or ast_utils.is_constant(term)):
                 self.temp_var2(term, infer.inode(self.gx, term), func)
 
-    def visit_BinOp(
-        self, node: ast.BinOp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_BinOp(self, node: ast.BinOp, context: VisitContext) -> None:
         """Visit a binary operation"""
         if isinstance(node.op, ast.Add):
             self.fake_func(
@@ -1637,7 +1834,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "add"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.Sub):
             self.fake_func(
@@ -1645,7 +1842,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "sub"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.Mult):
             self.fake_func(
@@ -1653,7 +1850,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "mul"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.Div):
             self.fake_func(
@@ -1661,7 +1858,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "truediv"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.FloorDiv):
             self.fake_func(
@@ -1669,29 +1866,29 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "floordiv"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.Pow):
             if not getmv().module.builtin:
                 node.right = ast_utils.float_negative_exponent(node.right)
-            self.fake_func(node, node.left, "__pow__", [node.right], func)
+            self.fake_func(node, node.left, "__pow__", [node.right], context)
         elif isinstance(node.op, ast.Mod):
             if isinstance(node.right, ast.Tuple):
-                self.fake_func(node, node.left, "__mod__", [], func)
+                self.fake_func(node, node.left, "__mod__", [], context)
                 for child in node.right.elts:
-                    self.visit(child, func)
+                    self.visit(child, context)
                     self.fake_func(
-                        infer.inode(self.gx, child), child, "__str__", [], func
+                        infer.inode(self.gx, child), child, "__str__", [], context
                     )
             else:
-                self.fake_func(node, node.left, "__mod__", [node.right], func)
+                self.fake_func(node, node.left, "__mod__", [node.right], context)
         elif isinstance(node.op, ast.LShift):
             self.fake_func(
                 node,
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "lshift"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.RShift):
             self.fake_func(
@@ -1699,14 +1896,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.left,
                 ast_utils.aug_msg(self.gx, node, "rshift"),
                 [node.right],
-                func,
+                context,
             )
         elif isinstance(node.op, ast.BitOr):
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "or"), func)
+            self.visit_impl_bitpair(
+                node, ast_utils.aug_msg(self.gx, node, "or"), context
+            )
         elif isinstance(node.op, ast.BitXor):
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "xor"), func)
+            self.visit_impl_bitpair(
+                node, ast_utils.aug_msg(self.gx, node, "xor"), context
+            )
         elif isinstance(node.op, ast.BitAnd):
-            self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "and"), func)
+            self.visit_impl_bitpair(
+                node, ast_utils.aug_msg(self.gx, node, "and"), context
+            )
         # PY3: elif isinstance(node.op, MatMult):
         else:
             error.error(
@@ -1717,20 +1920,21 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
     def visit_impl_bitpair(
-        self, node: ast.BinOp, msg: str, func: Optional["python.Function"] = None
+        self, node: ast.BinOp, msg: str, context: VisitContext
     ) -> None:
         """Visit an implementation of a bitwise pair operation"""
-        infer.CNode(self.gx, getmv(), node, parent=func)
+        infer.CNode(self.gx, getmv(), node, parent=context.parent_object())
         self.gx.types[infer.inode(self.gx, node)] = set()
-        faker = self.fake_func((node.left, 0), node.left, msg, [node.right], func)
+        faker = self.fake_func((node.left, 0), node.left, msg, [node.right], context)
         self.add_constraint(
-            (infer.inode(self.gx, faker), infer.inode(self.gx, node)), func
+            (infer.inode(self.gx, faker), infer.inode(self.gx, node)),
+            context.parent_object(),
         )
 
-    def visit_AugAssign(
-        self, node: ast.AugAssign, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_AugAssign(self, node: ast.AugAssign, context: VisitContext) -> None:
         """Visit an augmented assignment"""
+        func: Optional[AllParent] = context.parent_object()
+
         # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
@@ -1753,7 +1957,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(node.target, ast.Subscript):
             t1 = self.temp_var(node.target.value, func)
             a1 = ast.Assign([ast.Name(t1.name, ast.Store())], node.target.value)
-            self.visit(a1, func)
+            self.visit_Assign(a1, context)
             self.add_constraint(
                 (infer.inode(self.gx, node.target.value), infer.inode(self.gx, t1)),
                 func,
@@ -1766,9 +1970,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 subs = node.target.slice
             t2 = self.temp_var(subs, func)
             a2 = ast.Assign([ast.Name(t2.name, ast.Store())], subs)
-
-            self.visit(a1, func)
-            self.visit(a2, func)
+            self.visit_Assign(a2, context)
             self.add_constraint(
                 (infer.inode(self.gx, subs), infer.inode(self.gx, t2)), func
             )
@@ -1799,12 +2001,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         assign = ast.Assign([blah], blah2)
         register_node(assign, func)
         infer.inode(self.gx, node).assignhop = assign
-        self.visit(assign, func)
+        self.visit_Assign(assign, context)
 
     def temp_var(
         self,
         node: Any,
-        func: Optional["python.Function"] = None,
+        func: Optional[AllParent] = None,
         looper: Optional[ast.AST] = None,
         wopper: Optional[ast.AST] = None,
         exc_name: bool = False,
@@ -1826,7 +2028,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return var
 
     def temp_var2(
-        self, node: Any, source: Any, func: Optional["python.Function"]
+        self, node: Any, source: Any, func: Optional[AllParent]
     ) -> "python.Variable":
         """Create a temporary variable from a source"""
         tvar = self.temp_var(node, func)
@@ -1834,7 +2036,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return tvar
 
     def temp_var_int(
-        self, node: Any, func: Optional["python.Function"]
+        self, node: Any, func: Optional[AllParent]
     ) -> "python.Variable":
         """Create a temporary integer variable"""
         var = self.temp_var(node, func)
@@ -1844,104 +2046,134 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         infer.inode(self.gx, var).copymetoo = True
         return var
 
-    def visit_Raise(
-        self, node: ast.Raise, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Raise(self, node: ast.Raise, context: VisitContext) -> None:
         """Visit a raise statement"""
         if node.exc is None or node.cause is not None:
             error.error("unsupported raise syntax", self.gx, node, mv=getmv())
         for child in ast.iter_child_nodes(node):
-            self.visit(child, func)
+            self.visit(child, context)
 
-    def visit_Assert(
-        self, node: ast.Assert, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Assert(self, node: ast.Assert, context: VisitContext) -> None:
         """Visit an assert statement"""
-        self.visit(node.test, func)
+        self.visit(node.test, context)
         if node.msg:
-            self.visit(node.msg, func)
+            self.visit(node.msg, context)
 
-    def visit_Try(
-        self, node: ast.Try, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Try(self, node: ast.Try, context: VisitContext) -> None:
         """Visit a try statement"""
+        func: Optional[AllParent] = context.parent_object()
+
+        try_context = context.child()
+        body_context = try_context.child()
         for child in node.body:
-            self.visit(child, func)
+            self.visit(child, body_context)
 
+        child_contexts: list[VisitContext] = [body_context]
         for handler in node.handlers:
-            if not handler.type:
-                continue
-
-            if isinstance(handler.type, ast.Tuple):
-                pairs = [(n, handler.name) for n in handler.type.elts]
-            else:
-                pairs = [(handler.type, handler.name)]
-
-            for h0, h1 in pairs:
-                if isinstance(h0, ast.Name) and h0.id in [
-                    "int",
-                    "float",
-                    "str",
-                    "class",
-                ]:
-                    continue  # handle in python.lookup_class
-                cl = python.lookup_class(h0, getmv())
-                if not cl:
-                    if isinstance(h0, ast.Name):
-                        name = "('" + h0.id + "')"
-                    else:
-                        name = ""
-                    error.error(
-                        "unknown/unsupported exception type %s" % name,
-                        self.gx,
-                        h0,
-                        mv=getmv(),
-                    )
-
-                if isinstance(h1, str):
-                    var = self.default_var(h1, func, exc_name=True)
-                elif isinstance(h1, ast.Name):  # py2
-                    var = self.default_var(h1.id, func, exc_name=True)
+            handler_context = (
+                body_context.as_except_context()
+            )  # XXX: which context to use as parent
+            child_contexts.append(handler_context)
+            if handler.type is not None:
+                if isinstance(handler.type, ast.Tuple):
+                    pairs = [(n, handler.name) for n in handler.type.elts]
+                    if len(pairs) > 1:
+                        for h0, h1 in pairs:
+                            self.gx.handler_body[h0] = copy.deepcopy(handler.body)
                 else:
-                    var = self.temp_var(h0, func, exc_name=True)
+                    pairs = [(handler.type, handler.name)]
 
-                var.invisible = True
-                infer.inode(self.gx, var).copymetoo = True
-                self.gx.types[infer.inode(self.gx, var)] = {(cl, 1)}
+                for h0, h1 in pairs:
+                    if isinstance(h0, ast.Name) and h0.id in [
+                        "int",
+                        "float",
+                        "str",
+                        "class",
+                    ]:
+                        # XXX: Wouldn't this imply catching basic type as exception?
+                        continue  # handle in python.lookup_class
+
+                    handler_body = self.gx.handler_body.get(h0, handler.body)
+
+                    cl = python.lookup_class(h0, getmv())
+                    if not cl:
+                        if isinstance(h0, ast.Name):
+                            name = "('" + h0.id + "')"
+                        else:
+                            name = ""
+                        error.error(
+                            "unknown/unsupported exception type %s" % name,
+                            self.gx,
+                            h0,
+                            mv=getmv(),
+                        )
+
+                    varname: Optional["ast.Name"] = None
+                    if isinstance(h1, str):
+                        varname = ast.Name(h1, ast.Store())
+                        var = self.default_var(h1, func, exc_name=True)
+                    elif isinstance(h1, ast.Name):  # py2
+                        varname = h1
+                        var = self.default_var(h1.id, func, exc_name=True)
+                    else:
+                        var = self.temp_var(h0, func, exc_name=True)
+
+                    cnode = self.gx.cnode.get((h0, 0, 0)) or infer.CNode(
+                        self.gx, getmv(), h0, parent=func
+                    )
+                    self.gx.types[cnode] = {(cl, 1)}
+
+                    var.invisible = True
+                    var_cnode = infer.inode(self.gx, var)
+                    var_cnode.copymetoo = True
+                    self.add_constraint((cnode, var_cnode), func)
+
+                    if varname:
+                        handler_context.contained_write(varname, cnode)
+                    for child in handler_body:
+                        self.visit(child, handler_context)
+            else:
+                for child in handler.body:
+                    self.visit(child, handler_context)
 
         if node.finalbody:
             error.error("'try..finally' is not supported", self.gx, node, mv=getmv())
 
-        for handler in node.handlers:
-            for child in handler.body:
-                self.visit(child, func)
-
         # else
         if node.orelse:
+            # XXX: which context to use as parent
             for child in node.orelse:
-                self.visit(child, func)
+                self.visit(child, body_context)  # Should a child be created and merged?
             self.temp_var_int((node, "orelse"), func)
 
-    def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
+        try_context.merge(child_contexts, False)
+        context.merge([try_context], False)
+
+    def visit_Yield(self, node: ast.Yield, context: VisitContext) -> None:
         """Visit a yield statement"""
+        func: Optional["python.Function"] = context.function()
+        assert func is not None
+
         func.isGenerator = True
         func.yieldNodes.append(node)
-        if not node.value:
-            node.value = ast.Name("None", ast.Load())
-        self.visit(
-            ast.Return(ast.Call(ast.Name("__iter", ast.Load()), [node.value], [])),
-            func,
+        node_value = node.value
+        if not node_value:
+            node_value = ast.Name("None", ast.Load())
+            node.value = node_value
+        self.visit_Return(
+            ast.Return(ast.Call(ast.Name("__iter", ast.Load()), [node_value], [])),
+            context,
         )
         self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
-    def visit_YieldFrom(self, node: ast.YieldFrom, func: "python.Function") -> None:
+    def visit_YieldFrom(self, node: ast.YieldFrom, context: VisitContext) -> None:
         """Visit a 'yield from' expression"""
         error.error("'yield from' is not supported", self.gx, node, mv=getmv())
 
-    def visit_For(
-        self, node: ast.For, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_For(self, node: ast.For, context: VisitContext) -> None:
         """Visit a for statement"""
+        func: Optional[AllParent] = context.parent_object()
+
         # --- iterable contents -> assign node
         assnode = infer.CNode(self.gx, getmv(), node.target, parent=func)
         self.gx.types[assnode] = set()
@@ -1949,13 +2181,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         get_iter = ast.Call(ast.Attribute(node.iter, "__iter__", ast.Load()), [], [])
         fakefunc = ast.Call(ast.Attribute(get_iter, "__next__", ast.Load()), [], [])
 
-        self.visit(fakefunc, func)
+        for_context = context.child()
+        self.visit_Call(fakefunc, for_context)
         self.add_constraint((infer.inode(self.gx, fakefunc), assnode), func)
 
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.target, ast.Name):
             # for x in..
             lvar = self.default_var(node.target.id, func)
+            context.write(node.target, assnode)
             self.add_constraint((assnode, infer.inode(self.gx, lvar)), func)
 
         elif ast_utils.is_assign_attribute(node.target):  # XXX experimental :)
@@ -1972,34 +2206,40 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 [ast.Constant(node.target.attr), fakefunc],
                 [],
             )
-            self.visit(fakefunc2, func)
+            self.visit_Call(fakefunc2, context)
 
         elif ast_utils.is_assign_list_or_tuple(node.target):
             # for (a,b, ..) in..
-            self.tuple_flow(node.target, node.target, func)
+            self.tuple_flow(node.target, node.target, context)
         else:
             error.error("unsupported type of assignment", self.gx, node, mv=getmv())
 
         self.do_for(node, assnode, get_iter, func)
 
+        # --- loop body
+        self.gx.loopstack.append(node)
+        body_context = for_context.child()
+        for child in node.body:
+            self.visit(child, body_context)
+        self.gx.loopstack.pop()
+
         # --- for-else
         if node.orelse:
             self.temp_var_int((node, "orelse"), func)
+            orelse_context = for_context.child()
             for child in node.orelse:
-                self.visit(child, func)
-
-        # --- loop body
-        self.gx.loopstack.append(node)
-        for child in node.body:
-            self.visit(child, func)
-        self.gx.loopstack.pop()
+                self.visit(child, orelse_context)
+            for_context.merge_loop_orelse(getmv(), body_context, orelse_context)
+        else:
+            for_context.merge_loop(getmv(), body_context)
+        context.merge([for_context], False)
 
     def do_for(
         self,
         node: Union[ast.For, ast.comprehension],
         assnode: "infer.CNode",
         get_iter: ast.Call,
-        func: Optional["python.Function"],
+        func: Optional[AllParent],
     ) -> None:
         """Process a for statement"""
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
@@ -2055,76 +2295,84 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ):
             self.gx.bool_test_only.add(node)
 
-    def visit_While(
-        self, node: ast.While, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_While(self, node: ast.While, context: VisitContext) -> None:
         """Visit a while statement"""
+        func: Optional[AllParent] = context.parent_object()
+
+        while_context = context.child()
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
-        for child in ast.iter_child_nodes(node):
-            self.visit(child, func)
+        self.visit(node.test, context)
+        body_context = while_context.child()
+        for child in node.body:
+            self.visit(child, body_context)
         self.gx.loopstack.pop()
 
         if node.orelse:
             self.temp_var_int((node, "orelse"), func)
+            orelse_context = while_context.child()
             for child in node.orelse:
-                self.visit(child, func)
+                self.visit(child, orelse_context)
+            while_context.merge_loop_orelse(getmv(), body_context, orelse_context)
+        else:
+            while_context.merge_loop(getmv(), body_context)
+        context.merge([while_context], False)
 
-    def visit_Continue(
-        self, node: ast.Continue, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Continue(self, node: ast.Continue, context: VisitContext) -> None:
         """Visit a continue statement"""
         pass
 
-    def visit_Break(
-        self, node: ast.Break, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Break(self, node: ast.Break, context: VisitContext) -> None:
         """Visit a break statement"""
         pass
 
-    def visit_With(
-        self, node: ast.With, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_With(self, node: ast.With, context: VisitContext) -> None:
         """Visit a with statement"""
+        func: Optional[AllParent] = context.parent_object()
+
         if len(node.items) > 1:
             error.error(
                 "with-construct with multiple 'as' terms", self.gx, node, mv=getmv()
             )
         item = node.items[0]
 
-        self.visit(item.context_expr, func)
+        self.visit(item.context_expr, context)
 
         if item.optional_vars:
             if isinstance(item.optional_vars, ast.Name):
                 varnode = infer.CNode(self.gx, getmv(), item.optional_vars, parent=func)
                 self.gx.types[varnode] = set()
-                self.add_constraint(
-                    (infer.inode(self.gx, item.context_expr), varnode), func
-                )
+                assnode = infer.inode(self.gx, item.context_expr)
+                context.write(item.optional_vars, assnode)
+                self.add_constraint((assnode, varnode), func)
                 lvar = self.default_var(item.optional_vars.id, func)
                 self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
             else:
                 error.error("unsupported with syntax", self.gx, item, mv=getmv())
 
+        body_context = context.child()
         for child in node.body:
-            self.visit(child, func)
+            self.visit(child, body_context)
+        context.merge([body_context], False)
 
-    def visit_ListComp(
-        self, node: ast.ListComp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_ListComp(self, node: ast.ListComp, context: VisitContext) -> None:
         """Visit a list/set/dict/generator comprehension"""
         # --- [expr for iter in list for .. if cond ..]
         # --- {..}
         # --- {a: b for .. }
         # --- (expr for .. }
-        lcfunc = python.Function(self.gx, getmv())
+        func: Optional[AllParent] = context.parent_object()
+
+        lcfunc = python.Function(self.gx, getmv(), parent=func)
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
-        lcfunc.parent = func
+        lc_context = VisitContext(lcfunc)
 
         for qual in node.generators:
             # iter
-            assnode = infer.CNode(self.gx, getmv(), qual.target, parent=func)
+            assnode = infer.CNode(
+                self.gx, getmv(), qual.target, parent=lc_context.parent_object()
+            )
             self.gx.types[assnode] = set()
 
             # list.unit->iter
@@ -2132,9 +2380,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ast.Attribute(qual.iter, "__iter__", ast.Load()), [], []
             )
             fakefunc = ast.Call(ast.Attribute(get_iter, "__next__", ast.Load()), [], [])
-            self.visit(fakefunc, lcfunc)
+            self.visit_Call(fakefunc, lc_context)
+            fakefunc_cnode = infer.inode(self.gx, fakefunc)
             self.add_constraint(
-                (infer.inode(self.gx, fakefunc), infer.inode(self.gx, qual.target)),
+                (fakefunc_cnode, infer.inode(self.gx, qual.target)),
                 lcfunc,
             )
 
@@ -2146,15 +2395,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     (infer.inode(self.gx, qual.target), infer.inode(self.gx, lvar)),
                     lcfunc,
                 )
+                lc_context.contained_write(qual.target, fakefunc_cnode)
             else:  # AssTuple, AssList
-                self.tuple_flow(qual.target, qual.target, lcfunc)
+                self.tuple_flow(qual.target, qual.target, lc_context, True)
 
             self.do_for(qual, assnode, get_iter, lcfunc)
 
             # cond
             for child in qual.ifs:
                 self.bool_test_add(child)
-                self.visit(child, lcfunc)
+                self.visit(child, lc_context)
 
         # node type
         if node in self.gx.genexp_to_lc.values():  # converted generator expression
@@ -2169,21 +2419,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # expr->instance.unit
         if node in self.gx.dictcomp_to_lc.values():
             assert isinstance(node.elt, ast.Tuple)
-            self.visit(node.elt.elts[0], lcfunc)
-            self.add_dynamic_constraint(node, node.elt.elts[0], "unit", lcfunc)
-            self.visit(node.elt.elts[1], lcfunc)
-            self.add_dynamic_constraint(node, node.elt.elts[1], "value", lcfunc)
+            assert len(node.elt.elts) == 2
+            self.visit(node.elt.elts[0], lc_context)
+            self.add_dynamic_constraint(node, node.elt.elts[0], "unit", lc_context)
+            self.visit(node.elt.elts[1], lc_context)
+            self.add_dynamic_constraint(node, node.elt.elts[1], "value", lc_context)
         else:
-            self.visit(node.elt, lcfunc)
-            self.add_dynamic_constraint(node, node.elt, "unit", lcfunc)
+            self.visit(node.elt, lc_context)
+            self.add_dynamic_constraint(node, node.elt, "unit", lc_context)
 
         lcfunc.ident = "list_comp_" + str(len(self.listcomps))
         self.listcomps.append((node, lcfunc, func))
 
-    def visit_DictComp(
-        self, node: ast.DictComp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_DictComp(self, node: ast.DictComp, context: VisitContext) -> None:
         """Visit a dictionary comprehension"""
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
@@ -2196,13 +2447,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         register_node(lc, func)
         self.gx.dictcomp_to_lc[node] = lc
-        self.visit(lc, func)
+        self.visit_ListComp(lc, context)
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
-    def visit_SetComp(
-        self, node: ast.SetComp, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_SetComp(self, node: ast.SetComp, context: VisitContext) -> None:
         """Visit a set comprehension"""
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
@@ -2215,45 +2466,46 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         )
         register_node(lc, func)
         self.gx.setcomp_to_lc[node] = lc
-        self.visit(lc, func)
+        self.visit_ListComp(lc, context)
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
-    def visit_Return(self, node: ast.Return, func: "python.Function") -> None:
+    def visit_Return(self, node: ast.Return, context: VisitContext) -> None:
         """Visit a return statement"""
-        if node.value is None:
-            node.value = ast.Name("None", ast.Load())
-        self.visit(node.value, func)
-        func.returnexpr.append(node.value)
+        func: Optional["python.Function"] = context.function()
+        assert func is not None
+
+        node_value = node.value
+        if node_value is None:
+            node_value = ast.Name("None", ast.Load())
+            node.value = node_value
+        self.visit(node_value, context)
+        func.returnexpr.append(node_value)
         if node.value is not None:  # Not naked return
             newnode = infer.CNode(self.gx, getmv(), node, parent=func)
             self.gx.types[newnode] = set()
         if func.retnode:
             self.add_constraint((infer.inode(self.gx, node.value), func.retnode), func)
 
-    def visit_Delete(
-        self, node: ast.Delete, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Delete(self, node: ast.Delete, context: VisitContext) -> None:
         """Visit a delete statement"""
         for child in node.targets:
             #            assert isinstance(child.ctx, ast.Del)
-            self.visit(child, func)
+            self.visit(child, context)
 
-    def visit_AnnAssign(
-        self, node: ast.AnnAssign, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_AnnAssign(self, node: ast.AnnAssign, context: VisitContext) -> None:
         """Visit an annotated assignment"""
         if node.value is None:
             return
         assign = ast.Assign([node.target], node.value)
-        self.visit(assign, func)
+        self.visit(assign, context)
 
-    def visit_Assign(
-        self, node: ast.Assign, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Assign(self, node: ast.Assign, context: VisitContext) -> None:
         """Visit an assignment"""
         # skip type annotations
         if node.value is None:
             return
+
+        func: Optional[AllParent] = context.parent_object()
 
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:
@@ -2267,10 +2519,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     n for n in lvalue2.elts if ast_utils.is_assign_list_or_tuple(n)
                 ]
             ):
-                self.visit(node.value, func)
+                self.visit(node.value, context)
                 sinfo = self.struct_info(rvalue2.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
-                self.visit(ast.Assign(node.targets, faketuple), func)
+                self.visit_Assign(ast.Assign(node.targets, faketuple), context)
                 tvar = self.temp_var2(
                     rvalue2.args[1], infer.inode(self.gx, rvalue2.args[1]), func
                 )
@@ -2312,30 +2564,32 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     lvalue.slice, (ast.Slice, ast.Del)
                 ):
                     self.assign_pair(
-                        lvalue, rvalue, func
+                        lvalue, rvalue, context
                     )  # XXX use here generally, and in tuple_flow
 
                 # expr.attr = expr
                 elif ast_utils.is_assign_attribute(lvalue):
-                    self.assign_pair(lvalue, rvalue, func)
+                    self.assign_pair(lvalue, rvalue, context)
 
                 # name = expr
                 elif isinstance(lvalue, ast.Name):
                     if (rvalue, 0, 0) not in self.gx.cnode:  # XXX generalize
-                        self.visit(rvalue, func)
-                    self.visit(lvalue, func)
+                        self.visit(rvalue, context)
+                    self.visit_Name(lvalue, context)
                     lvar = self.default_var(lvalue.id, func)
                     if ast_utils.is_constant(rvalue):
                         assert isinstance(rvalue, ast.Constant)
                         lvar.const_assign.append(rvalue)
+                    context.write(lvalue, infer.inode(self.gx, rvalue))
                     self.add_constraint(
-                        (infer.inode(self.gx, rvalue), infer.inode(self.gx, lvar)), func
+                        (infer.inode(self.gx, rvalue), infer.inode(self.gx, lvar)),
+                        func,
                     )
 
                 # (a,(b,c), ..) = expr
                 elif ast_utils.is_assign_list_or_tuple(lvalue):
-                    self.visit(rvalue, func)
-                    self.tuple_flow(lvalue, rvalue, func)
+                    self.visit(rvalue, context)
+                    self.tuple_flow(lvalue, rvalue, context)
 
                 # expr[a:b] = expr # XXX bla()[1:3] = [1]
                 elif isinstance(lvalue, ast.Slice):
@@ -2359,7 +2613,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         lvalue,
                         lvalue.value,
                         [lslice.lower, lslice.upper, lslice.step],
-                        func,
+                        context,
                         rvalue,
                     )
 
@@ -2384,10 +2638,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.temp_var2(node.value, infer.inode(self.gx, node.value), func)
 
     def assign_pair(
-        self, lvalue: ast.AST, rvalue: ast.AST, func: Optional["python.Function"]
+        self, lvalue: ast.AST, rvalue: ast.AST, context: VisitContext
     ) -> None:
         """Assign a pair of values"""
         # expr[expr] = expr
+        func: Optional[AllParent] = context.parent_object()
+
         if isinstance(lvalue, ast.Subscript) and not isinstance(
             lvalue.slice, (ast.Slice, ast.Del)
         ):
@@ -2405,7 +2661,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 [subscript, rvalue],
                 [],
             )
-            self.visit(fakefunc, func)
+            self.visit_Call(fakefunc, context)
             infer.inode(self.gx, lvalue.value).fakefunc = fakefunc
 
             if not isinstance(lvalue.value, ast.Name):
@@ -2423,21 +2679,27 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 [ast.Constant(lvalue.attr), rvalue],
                 [],
             )
-            self.visit(fakefunc, func)
+            self.visit_Call(fakefunc, context)
 
     def default_var(
-        self, name: str, func: Optional["python.Function"], exc_name: bool = False
+        self, name: str, func: Optional[AllParent], exc_name: bool = False
     ) -> "python.Variable":
         """Get the default variable for a name"""
-        if isinstance(func, python.Function) and name in func.globals:
+        if isinstance(func, (python.Function, python.Class, python.StaticClass)) and name in func.globals:
             return infer.default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
             return infer.default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
 
     def tuple_flow(
-        self, lvalue: ast.AST, rvalue: ast.AST, func: Optional["python.Function"] = None
+        self,
+        lvalue: ast.AST,
+        rvalue: ast.AST,
+        context: VisitContext,
+        is_contained: bool = False,
     ) -> None:
         """Handle tuple flow"""
+        func: Optional[AllParent] = context.parent_object()
+
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
         lvalues: list[ast.expr]
@@ -2461,18 +2723,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
             fakenode.callfuncs.append(fakefunc)
-            self.visit_Call(fakefunc, func, fake_attr=True)
+            self.visit_Call(fakefunc, context, fake_attr=True)
 
             self.gx.item_rvalue[item] = rvalue
             if isinstance(item, ast.Name):
                 lvar = self.default_var(item.id, func)
+                fakefunc_cnode = infer.inode(self.gx, fakefunc)
                 self.add_constraint(
-                    (infer.inode(self.gx, fakefunc), infer.inode(self.gx, lvar)), func
+                    (fakefunc_cnode, infer.inode(self.gx, lvar)), func,
                 )
+                if is_contained:
+                    context.contained_write(item, fakefunc_cnode)
+                else:
+                    context.write(item, fakefunc_cnode)
             elif isinstance(item, ast.Subscript) or ast_utils.is_assign_attribute(item):
-                self.assign_pair(item, fakefunc, func)
+                self.assign_pair(item, fakefunc, context)
             elif ast_utils.is_assign_list_or_tuple(item):  # recursion
-                self.tuple_flow(item, fakefunc, func)
+                self.tuple_flow(item, fakefunc, context)
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 
@@ -2512,7 +2779,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return None
 
     def visit_Pass(
-        self, node: ast.Pass, func: Optional["python.Function"] = None
+        self, node: ast.Pass, context: VisitContext
     ) -> None:
         """Visit a pass statement"""
         pass
@@ -2520,11 +2787,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Call(
         self,
         node: ast.Call,
-        func: Optional["python.Function"] = None,
+        context: VisitContext,
         fake_attr: bool = False,
     ) -> None:
         """Visit a call statement"""
         # XXX clean up!!
+        func: Optional[AllParent] = context.parent_object()
+
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
 
@@ -2543,16 +2812,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     node.args.insert(0, ast.Name("None", ast.Load()))
 
             # rewrite super(..) call
-            base = self.super_call(node, func)
-            if base:
-                node.func = ast.Attribute(
-                    copy.deepcopy(base), node.func.attr, ast.Load()
-                )
-                node.args.insert(0, ast.Name("self", ast.Load()))
+            if isinstance(func, python.Function):
+                base = self.super_call(node, func)
+                if base:
+                    node.func = ast.Attribute(
+                        copy.deepcopy(base), node.func.attr, ast.Load()
+                    )
+                    node.args.insert(0, ast.Name("self", ast.Load()))
 
             # method call
             if not fake_attr:
-                self.visit_Attribute(node.func, func, callfunc=True)
+                self.visit_Attribute(node.func, context, callfunc=True)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
                 )  # XXX iterative dataflow analysis: move there?
@@ -2661,12 +2931,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.gx.fuse_reduce_op[node.args[0]] = ident
 
             if shadowed or python.lookup_var(ident, func, getmv()):
-                self.visit(node.func, func)
+                self.visit(node.func, context)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
                 )  # XXX iterative dataflow analysis: move there
         else:
-            self.visit(node.func, func)
+            self.visit(node.func, context)
             infer.inode(self.gx, node.func).callfuncs.append(
                 node
             )  # XXX iterative dataflow analysis: move there
@@ -2678,7 +2948,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
         for arg in get_arg_nodes(node):
-            self.visit(arg, func)
+            self.visit(arg, context)
             infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
         # --- handle instantiation or call
@@ -2692,9 +2962,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node
             )  # XXX see above, investigate
 
-    def visit_ClassDef(
-        self, node: ast.ClassDef, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_ClassDef(self, node: ast.ClassDef, context: VisitContext) -> None:
         """Visit a class definition"""
         if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
@@ -2748,6 +3016,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             getmv().classes[node.name] = newclass
             return
 
+        newclass_context = context.child_with_class(newclass)
+
         # --- built-in functions
         for ident in ["__setattr__", "__getattr__"]:
             func = python.Function(self.gx, getmv())
@@ -2756,13 +3026,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             if ident == "__setattr__":
                 func.formals = ["name", "whatsit"]
+                function_context = VisitContext(func)
                 retexpr = ast.Return(value=None)
-                self.visit(retexpr, func)
+                self.visit_Return(retexpr, function_context)
             elif ident == "__getattr__":
                 func.formals = ["name"]
 
             assert newclass
             newclass.funcs[ident] = func
+            # XXX: Add newclass_context.write for ast.Name(ident,...)
 
         newstaticclass = newclass.parent  # TODO copy-paste of above for mypy --strict
         for ident in ["__setattr__", "__getattr__"]:
@@ -2773,7 +3045,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__setattr__":
                 func.formals = ["name", "whatsit"]
                 retexpr = ast.Return(value=None)
-                self.visit(retexpr, func)
+                function_context = VisitContext(func)
+                self.visit(retexpr, function_context)
             elif ident == "__getattr__":
                 func.formals = ["name"]
 
@@ -2831,14 +3104,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     skip.append(child)
 
         # --- children
+        cl = self.classes[node.name]
+        class_context = context.child_with_class(cl)
+        staticclass_context = context.child_with_class(cl.parent)
         for child in node.body:
             if child not in skip:
-                cl = self.classes[node.name]
                 if isinstance(child, ast.FunctionDef):
-                    self.visit(child, cl)
+                    self.visit(child, class_context)
                 else:
                     cl.parent.static_nodes.append(child)
-                    self.visit(child, cl.parent)
+                    self.visit(child, staticclass_context)
 
         # --- __iadd__ etc.
         datetime_class = newclass.mv.module.builtin and newclass.ident in [
@@ -2866,7 +3141,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                             "def %s(self, other): return self.__%s__(other)"
                             % (method_name, msg)
                         ).body[0],
-                        newclass,
+                        newclass_context,
                     )
                     newclass.funcs[method_name].invisible = True
 
@@ -2889,7 +3164,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     ],
                     [],
                 ),
-                newclass,
+                newclass_context,
             )
             newclass.funcs["__str__"].invisible = True
         if not newclass.mv.module.builtin and "__hash__" not in newclass.funcs:
@@ -2900,17 +3175,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     [ast.Return(ast.Constant(0))],
                     [],
                 ),
-                newclass,
+                newclass_context,
             )
             newclass.funcs["__hash__"].invisible = True
+        # XXX: Should add context.write for ast.Name(node.name,...)
 
     def visit_Attribute(
         self,
         node: ast.Attribute,
-        func: Optional["python.Function"] = None,
+        context: VisitContext,
         callfunc: bool = False,
     ) -> None:
         """Visit an attribute"""
+        func: Optional[AllParent] = context.parent_object()
+
         if isinstance(node.ctx, ast.Load):
             if node.attr in ["__doc__"]:
                 error.error(
@@ -2928,12 +3206,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 [ast.Constant(node.attr)],
                 [],
             )
-            self.visit(node.value, func)
-            self.visit_Call(fakefunc, func, fake_attr=True)
+            self.visit(node.value, context)
+            self.visit_Call(fakefunc, context, fake_attr=True)
             self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
             if not callfunc:
-                self.fncl_passing(node, newnode, func)
+                self.fncl_passing(node, newnode, context)
         elif isinstance(node.ctx, ast.Del):
             error.error(
                 "unsupported attribute delete",
@@ -2950,10 +3228,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 mv=getmv(),
             )
 
-    def visit_Constant(
-        self, node: ast.Constant, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Constant(self, node: ast.Constant, context: VisitContext) -> None:
         """Visit a constant"""
+        func: Optional[AllParent] = context.parent_object()
+
         if node.value.__class__.__name__ == "ellipsis":
             error.error("ellipsis is not supported", self.gx, node, mv=getmv())
         else:
@@ -2969,14 +3247,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
 
     def fncl_passing(
-        self, node: ast.AST, newnode: infer.CNode, func: Optional["python.Function"]
+        self, node: ast.AST, newnode: "infer.CNode", context: VisitContext
     ) -> bool:
         """Handle function or class lookup for assignment"""
         lfunc = python.lookup_func(node, getmv())
         lclass = python.lookup_class(node, getmv())
         if lfunc:
             if lfunc.mv.module.builtin:
-                lfunc = self.builtin_wrapper(node, func)
+                lfunc = self.builtin_wrapper(node, context)
             elif lfunc.ident not in lfunc.mv.lambdas:
                 lfunc.lambdanr = len(lfunc.mv.lambdas)
                 lfunc.mv.lambdas[lfunc.ident] = lfunc
@@ -2984,7 +3262,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif lclass:
             lclass2: Union["python.Function", "python.StaticClass"]
             if lclass.mv.module.builtin:
-                lclass2 = self.builtin_wrapper(node, func)
+                lclass2 = self.builtin_wrapper(node, context)
             else:
                 lclass2 = lclass.parent
             self.gx.types[newnode] = {(lclass2, 0)}
@@ -2993,10 +3271,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         newnode.copymetoo = True  # XXX merge into some kind of 'seeding' function
         return True
 
-    def visit_Name(
-        self, node: ast.Name, func: Optional["python.Function"] = None
-    ) -> None:
+    def visit_Name(self, node: ast.Name, context: VisitContext) -> None:
         """Visit a name"""
+        func: Optional[AllParent] = context.parent_object()
+
         if isinstance(node.ctx, ast.Load):
             newnode = infer.CNode(self.gx, getmv(), node, parent=func)
             self.gx.types[newnode] = set()
@@ -3018,12 +3296,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             var: Optional["python.Variable"]
 
-            if isinstance(func, python.Function) and node.id in func.globals:
+            if (
+                isinstance(func, (python.Function, python.Class))
+                and node.id in func.globals
+            ):
                 var = infer.default_var(self.gx, node.id, None, mv=getmv())
+                self.add_constraint((infer.inode(self.gx, var), newnode), func)
             else:
                 var = python.lookup_var(node.id, func, getmv())
                 if not var:
-                    if self.fncl_passing(node, newnode, func):
+                    if self.fncl_passing(node, newnode, context):
                         pass
                     elif node.id in ["int", "float", "str"]:  # XXX
                         cl = self.ext_classes[node.id + "_"]
@@ -3031,8 +3313,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         newnode.copymetoo = True
                     else:
                         var = infer.default_var(self.gx, node.id, None, mv=getmv())
-            if var:
-                self.add_constraint((infer.inode(self.gx, var), newnode), func)
+                if var:
+                    context.read(getmv(), node)
 
         elif isinstance(node.ctx, ast.Store):
             # Adding vars for ast.Name store are handled elsewhere
@@ -3049,7 +3331,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
     def builtin_wrapper(
-        self, node: ast.AST, func: Optional["python.Function"]
+        self, node: ast.AST, context: VisitContext
     ) -> "python.Function":
         """Create a wrapper for a builtin function"""
         assert isinstance(node, ast.expr)
@@ -3057,7 +3339,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in "abcde"], []
         )
         lam = ast.Lambda(make_arg_list(list("abcde")), node2)
-        self.visit(lam, func)
+        self.visit_Lambda(lam, context)
         self.lwrapper[node] = self.lambdaname[lam]
         self.gx.lambdawrapper[node2] = self.lambdaname[lam]
         f = self.lambdas[self.lambdaname[lam]]
@@ -3116,7 +3398,8 @@ def parse_module(
     module.mv = mv = ModuleVisitor(module, gx)
     setmv(mv)
 
-    mv.visit(module.ast)
+    module_context = VisitContext(module)
+    mv.visit(module.ast, module_context)
     module.import_order = gx.import_order
     gx.import_order += 1
 
