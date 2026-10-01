@@ -99,11 +99,10 @@ logger = logging.getLogger("infer")
 #
 #   1. Inventory the constructor nodes, separating module-level allocation
 #      sites from in-function molds.
-#   2. Sweep the module-level sites over a frozen core until a whole sweep
-#      learns nothing.
+#   2. Give every module-level container site a contour of its own.
 #   3. Propagate unfrozen and keep the templates, so the molds that become
 #      allocation sites inside them can be seen.
-#   4. Rounds: sweep to convergence with every owned contour open, observe
+#   4. Rounds: sweep once with every owned contour open, observe
 #      contents, resignature and rekey, then mint every discovered product
 #      that has a name of its own (all of them per round by default; see
 #      V2_SITES_PER_ROUND). Stop when a round mints nothing, learns nothing,
@@ -139,11 +138,6 @@ V2_PROBE_ROUNDS = 20
 # contour rather than the fastest route to a fixpoint. Still bounded, and a
 # probe that hits it is reported as truncated.
 V2_CPA_LIMIT = 1000
-
-# V2_MAX_SWEEPS: safety bound on the sweep loop. Each sweep only adds facts,
-# so the loop must converge; reaching this means it is not, which is the
-# symptom a contour-creation cycle would produce.
-V2_MAX_SWEEPS = 20
 
 # V2_MAX_ROUNDS: safety bound on the outer loop. The loop stops on its own
 # when a round mints nothing, learns nothing, moves no signature and defers
@@ -1142,7 +1136,6 @@ class RoundStats(NamedTuple):
     """
 
     round: int
-    sweeps: int
     minted: int
     waiting: int
     learned: int
@@ -1529,7 +1522,7 @@ def sweep_once(
     )
 
 
-def sweep_to_convergence(
+def sweep_round(
     gx: "config.GlobalInfo",
     probes: list[AllocationSite],
     core: FrozenCore,
@@ -1537,73 +1530,32 @@ def sweep_to_convergence(
     sites: list[AllocationSite],
     round_no: int,
     collect: bool,
-) -> tuple[SweepResult, int]:
-    """Sweep until a whole sweep learns nothing, then return the last one.
+) -> SweepResult:
+    """Sweep once for a round.
 
-    Nothing is committed here. A sweep is repeated because a site whose
-    contents only arrive through some object's attribute cannot learn
-    anything until that attribute has been populated by another site, so one
-    sweep is not enough to settle the round; and it is the settled state, not
-    any intermediate one, that the caller is allowed to commit.
-
-    The repeated sweeps re-derive the same provisional bindings each time,
-    because each starts from the same committed core and propagation is
-    deterministic. What changes between them is only how much has arrived.
+    One sweep is the whole round. Every sweep restores the pristine network,
+    applies the same core and propagates from scratch, and contents are not
+    seeded back (see apply_core), so a second sweep in the same round would
+    start from exactly the same state as the first and see exactly the same
+    thing. What a site learns through another site's contents is picked up
+    the next round, once the core has changed.
     """
-    last: Optional[SweepResult] = None
-    sweep = 0
-    seen: dict[tuple[Any, str], infer.Types] = {}
-    while sweep < V2_MAX_SWEEPS:
-        sweep += 1
-        result = sweep_once(
-            gx,
-            probes,
-            core,
-            baseline_dcpa,
-            probes_and_molds=sites,
-            collect=collect,
-        )
-        last = result
-
-        # a sweep has settled when it saw nothing it had not seen before;
-        # this compares against the previous sweep of the same round rather
-        # than against the core, because the core has not been told any of
-        # this yet
-        fresh = 0
-        for site, inflow in result.probe_inflow.items():
-            for name, types in inflow.items():
-                key = (site.node, name)
-                if types - seen.get(key, set()):
-                    seen.setdefault(key, set()).update(types)
-                    fresh += 1
-        for alloc_id, inflow in result.mold_inflow.items():
-            for name, types in inflow.items():
-                key = (alloc_id, name)
-                if types - seen.get(key, set()):
-                    seen.setdefault(key, set()).update(types)
-                    fresh += 1
-
-        logger.debug(
-            "  round %d sweep %d: %d contour variable(s) grew,"
-            " %d provisional site(s)%s (%d propagation round(s))",
-            round_no,
-            sweep,
-            fresh,
-            len(result.provisional),
-            ", %d not reached" % result.unreached if result.unreached else "",
-            result.rounds,
-        )
-        if not fresh:
-            break
-    else:
-        logger.warning(
-            "infer v2: round %d stopped after %d sweeps without settling",
-            round_no,
-            V2_MAX_SWEEPS,
-        )
-
-    assert last is not None
-    return last, sweep
+    result = sweep_once(
+        gx,
+        probes,
+        core,
+        baseline_dcpa,
+        probes_and_molds=sites,
+        collect=collect,
+    )
+    logger.debug(
+        "  round %d sweep: %d provisional site(s)%s (%d propagation round(s))",
+        round_no,
+        len(result.provisional),
+        ", %d not reached" % result.unreached if result.unreached else "",
+        result.rounds,
+    )
+    return result
 
 
 def report_round_learning(
@@ -1673,11 +1625,10 @@ def report_added_site(
 def report_round(stats: RoundStats) -> None:
     """One line summarising a round, and the numbers a hang would show in."""
     logger.debug(
-        "[infer v2: round %d done: %d sweep(s), %d site(s) minted"
+        "[infer v2: round %d done: %d site(s) minted"
         " (%d waiting), %d learned, %d template(s),"
         " %d contour(s) total]",
         stats.round,
-        stats.sweeps,
         stats.minted,
         stats.waiting,
         stats.learned,
@@ -1701,9 +1652,8 @@ def report_growth(history: list[RoundStats]) -> None:
     """
     logger.debug("[infer v2: growth per round]")
     logger.debug(
-        "    %-6s %-7s %-7s %-8s %-8s %-9s %-10s %-7s %-5s",
+        "    %-6s %-7s %-8s %-8s %-9s %-10s %-7s %-5s",
         "round",
-        "sweeps",
         "minted",
         "waiting",
         "learned",
@@ -1714,9 +1664,8 @@ def report_growth(history: list[RoundStats]) -> None:
     )
     for stats in history:
         logger.debug(
-            "    %-6d %-7d %-7d %-8d %-8d %-9d %-10d %-7d %-5d",
+            "    %-6d %-7d %-8d %-8d %-9d %-10d %-7d %-5d",
             stats.round,
-            stats.sweeps,
             stats.minted,
             stats.waiting,
             stats.learned,
@@ -1732,12 +1681,11 @@ def probe_allocation_sites(
 ) -> FrozenCore:
     """Accumulate a frozen core over rounds, until a round adds nothing.
 
-    A round is: sweep until the sweeps stop learning, then commit everything
-    that settled — the contents of the contours, the bindings of the sites
-    discovered along the way, and the merges of the ones whose signatures
-    turned out to agree. Commit happens once, at the end, for all of it
-    together, because bindings and contents are trustworthy for the same
-    reason and no earlier.
+    A round is: sweep once, then commit everything the sweep saw — the
+    contents of the contours, the bindings of the sites discovered along the
+    way, and the merges of the ones whose signatures turned out to agree.
+    Commit happens once, at the end, for all of it together, because bindings
+    and contents are trustworthy for the same reason and no earlier.
 
     Module-level sites are bound before the first sweep rather than when they
     first learn something. Otherwise a site swept early sees its neighbours
@@ -1785,7 +1733,7 @@ def probe_allocation_sites(
         round_no += 1
         logger.debug("[infer v2: round %d]", round_no)
 
-        result, sweeps = sweep_to_convergence(
+        result = sweep_round(
             gx, probes, core, baseline_dcpa, sites, round_no, collect=True
         )
 
@@ -1813,7 +1761,6 @@ def probe_allocation_sites(
 
         stats = RoundStats(
             round=round_no,
-            sweeps=sweeps,
             minted=len(batch),
             waiting=waiting,
             learned=commit.learned,
@@ -1967,19 +1914,14 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
 
     Stage 1: inventory the constructor nodes, separating module-level
         allocation sites from in-function molds.
-    Stage 2: sweep the module-level sites, each owning a contour of its own,
-        committing what flows in to an append-only core until a whole sweep
-        learns nothing.
+    Stage 2: give every module-level container site a contour of its own.
     Stage 3: keep the templates each sweep creates, so the molds that become
         allocation sites inside them can be seen.
-    Stage 4: let those molds become sites. A mold is given a contour when its
-        template is created, learns over the round's sweeps, and is committed
-        at the end of the round — reusing a contour whose settled signature
-        it matches, or keeping its own. Rounds repeat until one adds nothing.
-
-    There is no stage that infers enough to generate code, so this stops here
-    rather than falling back to the existing analysis. Run without --infer-v2
-    to compile.
+    Stage 4: let those molds become sites. A mold found in a round's sweep is
+        minted a contour at the end of the round, unless its name (its
+        cartesian product in signature terms) is already bound, in which
+        case it shares that contour. Rounds repeat until one adds nothing.
+    Stage 5: materialise the result for code generation.
     """
     logger.info("[analyzing types..]")
     all_sites = collect_allocation_sites(gx, builtins=True)
