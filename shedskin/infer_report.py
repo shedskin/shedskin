@@ -22,6 +22,48 @@ if TYPE_CHECKING:
 logger = logging.getLogger("infer")
 
 
+# allocating expressions are logged as source, truncated to this length
+SOURCE_MAXLEN = 40
+
+
+def node_source(node: Any) -> str:
+    """An AST node as source, collapsed to one line and truncated."""
+    try:
+        text = " ".join(ast.unparse(node).split())
+    except Exception:  # pragma: no cover - defensive
+        text = ""
+    if not text:
+        return "<%s>" % type(node).__name__
+    if len(text) > SOURCE_MAXLEN:
+        text = text[: SOURCE_MAXLEN - 3] + "..."
+    return text
+
+
+def site_kind(site: "infer2.AllocationSite") -> str:
+    """'container', 'scalar' or 'instance', for the inventory."""
+    if infer2.is_container(site.cl):
+        return "container"
+    if site.cl.ident in infer.SCALAR_CLASS_IDENTS:
+        return "scalar"
+    return "instance"
+
+
+def site_location(site: "infer2.AllocationSite") -> str:
+    """'module:line' for a site."""
+    lineno = site.lineno
+    return "%s:%s" % (site.module.ident, "-" if lineno is None else lineno)
+
+
+def site_scope(site: "infer2.AllocationSite") -> str:
+    """The function a site is written in, or '<module>'."""
+    func = site.parent
+    if not isinstance(func, python.Function):
+        return "<module>"
+    if isinstance(func.parent, (python.Class, python.StaticClass)):
+        return "%s.%s" % (func.parent.ident, func.ident)
+    return func.ident
+
+
 # V2_MAX_TEMPLATE_LINES: cap on how many templates are listed individually.
 # A large program creates thousands; the counts stay exact, only the listing
 # is truncated.
@@ -34,7 +76,7 @@ def report_allocation_sites(
     """Log the allocation site inventory."""
     by_kind: dict[str, list["infer2.AllocationSite"]] = {}
     for site in sites:
-        by_kind.setdefault(site.kind, []).append(site)
+        by_kind.setdefault(site_kind(site), []).append(site)
 
     logger.debug("[infer v2: allocation site inventory]")
     logger.debug(
@@ -42,12 +84,10 @@ def report_allocation_sites(
         len(sites),
         builtin_count,
     )
-    for kind in (infer2.ALLOC_CONTAINER, infer2.ALLOC_INSTANCE, infer2.ALLOC_SCALAR):
+    for kind in ("container", "instance", "scalar"):
         logger.debug("    %-10s %d", kind, len(by_kind.get(kind, [])))
 
-    contoured = by_kind.get(infer2.ALLOC_CONTAINER, []) + by_kind.get(
-        infer2.ALLOC_INSTANCE, []
-    )
+    contoured = by_kind.get("container", []) + by_kind.get("instance", [])
     contoured.sort(
         key=lambda s: (s.module.ident, s.lineno if s.lineno is not None else -1)
     )
@@ -59,11 +99,11 @@ def report_allocation_sites(
         for site in group:
             logger.debug(
                 "    %-20s %-10s dcpa %-4d %-22s %s",
-                site.location(),
+                site_location(site),
                 site.cl.ident,
                 site.dcpa,
-                site.scope(),
-                site.source(),
+                site_scope(site),
+                node_source(site.node),
             )
 
     log_group(
@@ -76,13 +116,13 @@ def report_allocation_sites(
     )
 
     if logger.isEnabledFor(logging.DEBUG):
-        for site in by_kind.get(infer2.ALLOC_SCALAR, []):
+        for site in by_kind.get("scalar", []):
             logger.debug(
                 "    %-20s %-10s scalar    %-22s %s",
-                site.location(),
+                site_location(site),
                 site.cl.ident,
-                site.scope(),
-                site.source(),
+                site_scope(site),
+                node_source(site.node),
             )
 
 
@@ -176,7 +216,7 @@ def molds_by_function(
     """Group in-function constructor nodes by the function they live in."""
     grouped: dict["python.Function", list["infer2.AllocationSite"]] = {}
     for site in sites:
-        if site.kind == infer2.ALLOC_SCALAR or site.module_level:
+        if site_kind(site) == "scalar" or site.module_level:
             continue
         assert isinstance(site.parent, python.Function)
         grouped.setdefault(site.parent, []).append(site)
@@ -243,10 +283,10 @@ def report_templates(records: list[TemplateRecord]) -> None:
         for mold, alloc in record.molds:
             logger.debug(
                 "      %-20s %-10s %-14s %s",
-                mold.location(),
+                site_location(mold),
                 mold.cl.ident,
                 format_type(alloc) if alloc else "?",
-                mold.source(),
+                node_source(mold.node),
             )
 
     per_builtin: dict[str, int] = {}
@@ -258,18 +298,6 @@ def report_templates(records: list[TemplateRecord]) -> None:
             per_builtin, key=lambda n: (-per_builtin[n], n)
         )[:V2_MAX_TEMPLATE_LINES]:
             logger.debug("    %-40s %d", name, per_builtin[name])
-
-
-def alloc_id_source(alloc_id: Any) -> str:
-    """Render the AST node of an alloc_id as source, for logging."""
-    node = alloc_id[2]
-    try:
-        text = " ".join(ast.unparse(node).split())
-    except Exception:  # pragma: no cover - defensive
-        return "<%s>" % type(node).__name__
-    if len(text) > infer2.ALLOC_SOURCE_MAXLEN:
-        text = text[: infer2.ALLOC_SOURCE_MAXLEN - 3] + "..."
-    return text
 
 
 def alloc_id_location(alloc_id: Any) -> str:
@@ -293,7 +321,7 @@ def report_added_site(
         cl.ident,
         contour,
     )
-    logger.debug("      %s   cart %s", alloc_id_source(key), infer2.repr_cart(key[1]))
+    logger.debug("      %s   cart %s", node_source(key[2]), infer2.repr_cart(key[1]))
 
 
 def report_round(stats: RoundStats) -> None:
@@ -420,7 +448,7 @@ def report_site_signatures(gx: "config.GlobalInfo", core: "infer2.FrozenCore") -
         groups = molds[mold]
         node = mold[1]
         where = "%s:%s" % (mold[0], getattr(node, "lineno", "-"))
-        source = alloc_id_source((mold[0], (), node))
+        source = node_source(node)
         count = sum(len(v) for v in groups.values())
         if len(groups) == 1:
             signature, bindings = next(iter(groups.items()))

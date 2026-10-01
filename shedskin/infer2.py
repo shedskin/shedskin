@@ -86,7 +86,6 @@ without a contour of their own: such a site keeps a frozen contour, and
 whatever it holds is missing from the result.
 """
 
-import ast
 import os
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional
@@ -98,16 +97,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("infer")
 
-
-ALLOC_CONTAINER = "container"  # builtin container: carries contours
-ALLOC_INSTANCE = "instance"  # class instance: one contour per class
-ALLOC_SCALAR = "scalar"  # int/str/None/..: never gets a contour
-
-# allocating expressions are logged as source, truncated to this length
-ALLOC_SOURCE_MAXLEN = 40
-
-# safety bound on the propagate-to-fixpoint loop of one sweep
-V2_PROBE_ROUNDS = 20
 
 # cartesian product limit while propagating
 V2_CPA_LIMIT = 1000
@@ -126,15 +115,12 @@ class AllocationSite:
     mold: the sites are its copies in each template of the function.
     """
 
-    __slots__ = ("cnode", "cl", "dcpa", "kind", "parent", "module")
+    __slots__ = ("cnode", "cl", "dcpa", "parent", "module")
 
-    def __init__(
-        self, cnode: infer.CNode, cl: "python.Class", dcpa: int, kind: str
-    ) -> None:
+    def __init__(self, cnode: infer.CNode, cl: "python.Class", dcpa: int) -> None:
         self.cnode = cnode
         self.cl = cl
         self.dcpa = dcpa
-        self.kind = kind
         self.parent = cnode.parent
         self.module = cnode.mv.module
 
@@ -165,77 +151,17 @@ class AllocationSite:
         """Source line, or None for nodes shedskin synthesized itself."""
         return getattr(self.cnode.thing, "lineno", None)
 
-    def location(self) -> str:
-        """Human-readable 'module:line' for this site."""
-        lineno = self.lineno
-        if lineno is None:
-            return "%s:-" % self.module.ident
-        return "%s:%d" % (self.module.ident, lineno)
 
-    def source(self, maxlen: int = ALLOC_SOURCE_MAXLEN) -> str:
-        """The allocating expression as source, collapsed to one line.
-
-        Shedskin synthesizes nodes that did not come from the source and may
-        not be unparseable, so this falls back to the node's type name.
-        """
-        node = self.cnode.thing
-        text = ""
-        if isinstance(node, ast.AST):
-            try:
-                text = ast.unparse(node)
-            except Exception:  # pragma: no cover - defensive
-                text = ""
-        if not text:
-            return "<%s>" % type(node).__name__
-        text = " ".join(text.split())
-        if len(text) > maxlen:
-            text = text[: maxlen - 3] + "..."
-        return text
-
-    def scope(self) -> str:
-        """Human-readable name of the enclosing function, or '<module>'."""
-        func = self.parent
-        if not isinstance(func, python.Function):
-            return "<module>"
-        if isinstance(func.parent, (python.Class, python.StaticClass)):
-            return "%s.%s" % (func.parent.ident, func.ident)
-        return func.ident
-
-    def __repr__(self) -> str:
-        return "<AllocationSite %s %s(%d) %s %s>" % (
-            self.location(),
-            self.cl.ident,
-            self.dcpa,
-            self.kind,
-            self.source(),
-        )
+def is_container(cl: Any) -> bool:
+    """Whether a class is a builtin container, which is split into contours."""
+    return (
+        isinstance(cl, python.Class)
+        and cl.mv.module.builtin
+        and cl.ident in infer.SPLIT_CLASS_IDENTS
+    )
 
 
-def allocation_site_kind(cl: "python.Class") -> str:
-    """Classify an allocation site by the class it allocates."""
-    if cl.mv.module.builtin and cl.ident in infer.SPLIT_CLASS_IDENTS:
-        return ALLOC_CONTAINER
-    if cl.ident in infer.SCALAR_CLASS_IDENTS:
-        return ALLOC_SCALAR
-    return ALLOC_INSTANCE
-
-
-def allocation_site_type(
-    gx: "config.GlobalInfo", cnode: infer.CNode
-) -> Optional[tuple["python.Class", int]]:
-    """The (class, dcpa) a constructor node allocates, or None."""
-    for table in (gx.types, gx.orig_types):
-        types = table.get(cnode, set())
-        if len(types) == 1:
-            cl, dcpa = next(iter(types))
-            if isinstance(cl, python.Class):
-                return (cl, dcpa)
-    return None
-
-
-def collect_allocation_sites(
-    gx: "config.GlobalInfo", builtins: bool = False
-) -> list[AllocationSite]:
+def collect_allocation_sites(gx: "config.GlobalInfo") -> list[AllocationSite]:
     """Collect the constructor nodes of the program, at (node, 0, 0).
 
     Sorted, so that two runs over the same program see the same order.
@@ -244,16 +170,12 @@ def collect_allocation_sites(
     for (_thing, dcpa, cpa), cnode in gx.cnode.items():
         if not cnode.constructor or dcpa != 0 or cpa != 0:
             continue
-        if not builtins and cnode.mv.module.builtin:
-            continue
-        site_type = allocation_site_type(gx, cnode)
-        if site_type is None:
-            # a constructor node should allocate exactly one class
-            continue
-        cl, site_dcpa = site_type
-        sites.append(
-            AllocationSite(cnode, cl, site_dcpa, allocation_site_kind(cl))
-        )
+        types = gx.types.get(cnode, set())
+        if len(types) != 1:
+            continue  # a constructor node should allocate exactly one class
+        cl, site_dcpa = next(iter(types))
+        if isinstance(cl, python.Class):
+            sites.append(AllocationSite(cnode, cl, site_dcpa))
 
     def sort_key(site: AllocationSite) -> tuple[Any, ...]:
         return (
@@ -269,23 +191,17 @@ def collect_allocation_sites(
     return sites
 
 
-def v2_propagate(gx: "config.GlobalInfo") -> int:
+def v2_propagate(gx: "config.GlobalInfo") -> None:
     """Propagate to a fixpoint, with the cartesian product limit raised."""
-    rounds = 0
+    gx.cpa_limit = V2_CPA_LIMIT
     gx.cpa_limited = False
-    while rounds < V2_PROBE_ROUNDS:
-        rounds += 1
-        # gx.cpa_limit defaults to 0, which would template nothing
-        gx.cpa_limit = V2_CPA_LIMIT
-        before = sum(len(types) for types in gx.types.values())
-        infer.propagate(gx)
-        if not gx.cpa_limited:
-            # propagate() runs to a fixpoint unless cpa() refused a product
-            # as too large; only then can another pass find more
-            break
-        if sum(len(types) for types in gx.types.values()) == before:
-            break
-    return rounds
+    infer.propagate(gx)
+    if gx.cpa_limited:
+        logger.warning(
+            "infer v2: a call has more than %d argument type combinations;"
+            " its result types are incomplete",
+            V2_CPA_LIMIT,
+        )
 
 
 def contour_variables(
@@ -373,7 +289,7 @@ class FrozenCore:
     def bind_module_site(self, site: AllocationSite) -> None:
         """Give a module-level container site a contour of its own."""
         assert site.module_level, "only module-level sites own a contour here"
-        assert site.kind == ALLOC_CONTAINER, "only builtin containers are split"
+        assert is_container(site.cl), "only builtin containers are split"
         self.bindings[site.node] = (site.cl, self.new_contour(site.cl))
 
     # --- keys
@@ -470,11 +386,8 @@ class FrozenCore:
         if len(types) != 1:
             return None
         cl, _dcpa = next(iter(types))
-        if not isinstance(cl, python.Class):
-            return None
-        if allocation_site_kind(cl) != ALLOC_CONTAINER:
-            # user classes are not split, scalars have no contours
-            return None
+        if not is_container(cl):
+            return None  # user classes are not split, scalars have no contours
         if self.mentions_bucket(alloc_id, node.parent):
             return None
 
@@ -509,10 +422,7 @@ class FrozenCore:
         for item in cart:
             if not (isinstance(item, tuple) and len(item) == 2):
                 continue
-            cl, _contour = item
-            if not isinstance(cl, python.Class):
-                continue
-            if allocation_site_kind(cl) != ALLOC_CONTAINER:
+            if not is_container(item[0]):
                 continue
             if owned is None:
                 owned = self.owned_contours()
@@ -641,7 +551,6 @@ class SweepResult(NamedTuple):
     contour_contents: dict[
         tuple["python.Class", int], dict[str, infer.Types]
     ]
-    rounds: int
     templates: list["infer_report.TemplateRecord"]
 
 
@@ -650,7 +559,6 @@ def sweep(
     core: FrozenCore,
     pristine: infer.Backup,
     sites: list[AllocationSite],
-    round_no: int,
 ) -> SweepResult:
     """Propagate once with every owned contour open, and read them all.
 
@@ -665,7 +573,7 @@ def sweep(
     gx.infer_v2_open_contours = core.owned_contours()
     gx.infer_v2_core = core
     try:
-        rounds = v2_propagate(gx)
+        v2_propagate(gx)
         # read what every contour holds before the graph is restored
         contour_contents: dict[
             tuple["python.Class", int], dict[str, infer.Types]
@@ -690,13 +598,8 @@ def sweep(
                         # unowned contours reached from owned ones need a
                         # signature too, or a list holding one never looks
                         # like a list holding an equal owned one
-                        if item in contour_contents:
-                            continue
-                        if not isinstance(item[0], python.Class):
-                            continue
-                        if allocation_site_kind(item[0]) != ALLOC_CONTAINER:
-                            continue
-                        following.add(item)
+                        if item not in contour_contents and is_container(item[0]):
+                            following.add(item)
             frontier = following
 
         templates = (
@@ -711,15 +614,14 @@ def sweep(
         for klass, dcpa in core.baseline_dcpa.items():
             klass.dcpa = dcpa
 
-    logger.debug("  round %d sweep: %d propagation round(s)", round_no, rounds)
-    return SweepResult(contour_contents, rounds, templates)
+    return SweepResult(contour_contents, templates)
 
 
 def run_rounds(
     gx: "config.GlobalInfo", sites: list[AllocationSite]
 ) -> FrozenCore:
     """Run rounds until one changes nothing (see the module header)."""
-    containers = [site for site in sites if site.kind == ALLOC_CONTAINER]
+    containers = [site for site in sites if is_container(site.cl)]
     module_sites = [site for site in containers if site.module_level]
     molds = len(containers) - len(module_sites)
     logger.debug(
@@ -751,7 +653,7 @@ def run_rounds(
         round_no += 1
         logger.debug("[infer v2: round %d]", round_no)
 
-        result = sweep(gx, core, pristine, sites, round_no)
+        result = sweep(gx, core, pristine, sites)
 
         changed = core.resignature(result.contour_contents)
         core.rekey()
@@ -795,7 +697,7 @@ def run_rounds(
 def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
     """Entry point: find the contours, then materialize them."""
     logger.info("[analyzing types..]")
-    all_sites = collect_allocation_sites(gx, builtins=True)
+    all_sites = collect_allocation_sites(gx)
     # module-level allocations in builtin modules (sys.argv) are sites
     # too; molds in builtin modules are not, since builtin methods are
     # analysed through them
@@ -825,14 +727,13 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     gx.infer_v2_core = core
     core.misses = 0
     try:
-        rounds = v2_propagate(gx)
+        v2_propagate(gx)
     finally:
         gx.infer_v2_core = None
         gx.infer_v2_open_contours = None
     logger.debug(
-        "[infer v2: materialised in %d propagation round(s); %d contour(s);"
+        "[infer v2: materialised %d contour(s);"
         " %d site(s) left without a contour of their own]",
-        rounds,
         len(core.owned_contours()),
         core.misses,
     )
