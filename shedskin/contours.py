@@ -1,6 +1,6 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.infer2: deciding which container contours exist
+"""shedskin.contours: deciding which container contours exist
 
 `shedskin.infer` builds the constraint graph and propagates types through it,
 with CPA (the cartesian product algorithm) copying each function into one
@@ -79,8 +79,8 @@ move down as well as up), but in practice they converge in a few dozen rounds
 at most. Recursive container types (`l.append(l)`) are not supported.
 
 Debugging: `-d3` logs each round, the growth table and the final signature
-per site (see `shedskin.infer_report`); SS_V2_UPGRADES=1 shows how
-signatures change, SS_V2_SIGDUMP=1 lists all signatures, and SS_V2_ROUNDS
+per site (see `shedskin.contours_report`); SS_CONTOUR_UPGRADES=1 shows how
+signatures change, SS_CONTOUR_SIGDUMP=1 lists all signatures, and SS_CONTOUR_ROUNDS
 caps the number of rounds. The last -d3 line should report 0 sites left
 without a contour of their own: such a site keeps a frozen contour, and
 whatever it holds is missing from the result.
@@ -90,7 +90,7 @@ import os
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional
 
-from . import infer, infer_report, python
+from . import infer, contours_report, python
 
 if TYPE_CHECKING:
     from . import config
@@ -99,13 +99,13 @@ logger = logging.getLogger("infer")
 
 
 # cartesian product limit while propagating
-V2_CPA_LIMIT = 1000
+CPA_LIMIT = 1000
 
 # safety bound on the number of rounds; real programs need a few dozen
-V2_MAX_ROUNDS = int(os.environ.get("SS_V2_ROUNDS", 20000))
+MAX_ROUNDS = int(os.environ.get("SS_CONTOUR_ROUNDS", 20000))
 
 # bound on the signature fixpoint, i.e. on container nesting depth
-V2_SIGNATURE_ROUNDS = 12
+SIGNATURE_ROUNDS = 12
 
 
 class AllocationSite:
@@ -191,16 +191,16 @@ def collect_allocation_sites(gx: "config.GlobalInfo") -> list[AllocationSite]:
     return sites
 
 
-def v2_propagate(gx: "config.GlobalInfo") -> None:
+def propagate(gx: "config.GlobalInfo") -> None:
     """Propagate to a fixpoint, with the cartesian product limit raised."""
-    gx.cpa_limit = V2_CPA_LIMIT
+    gx.cpa_limit = CPA_LIMIT
     gx.cpa_limited = False
     infer.propagate(gx)
     if gx.cpa_limited:
         logger.warning(
-            "infer v2: a call has more than %d argument type combinations;"
+            "contours: a call has more than %d argument type combinations;"
             " its result types are incomplete",
-            V2_CPA_LIMIT,
+            CPA_LIMIT,
         )
 
 
@@ -342,7 +342,7 @@ class FrozenCore:
         )
         previous = dict(self.contour_signature)
 
-        for _ in range(V2_SIGNATURE_ROUNDS):
+        for _ in range(SIGNATURE_ROUNDS):
             snapshot = self.contour_signature
             scratch: dict[tuple["python.Class", int], int] = {}
             for binding in subjects:
@@ -360,7 +360,7 @@ class FrozenCore:
             for binding in previous.keys() | current.keys()
             if previous.get(binding) != current.get(binding)
         ]
-        infer_report.report_upgrades(self, previous, changed)
+        contours_report.report_upgrades(self, previous, changed)
         return len(changed)
 
     # --- sites in templates
@@ -370,7 +370,7 @@ class FrozenCore:
     ) -> Optional[tuple["python.Class", int]]:
         """The contour for a mold in a newly created template, if known.
 
-        Called from infer.ifa_seed_template. A product is looked up by
+        Called from infer.seed_template. A product is looked up by
         itself first (it owns a contour), then by name (it shares one).
         Otherwise it is only recorded in `discovered`, and keeps its class's
         frozen default contour for this sweep.
@@ -551,7 +551,7 @@ class SweepResult(NamedTuple):
     contour_contents: dict[
         tuple["python.Class", int], dict[str, infer.Types]
     ]
-    templates: list["infer_report.TemplateRecord"]
+    templates: list["contours_report.TemplateRecord"]
 
 
 def sweep(
@@ -570,16 +570,16 @@ def sweep(
 
     # only container contours are frozen; freezing user class
     # attributes too would starve template creation
-    gx.infer_v2_open_contours = core.owned_contours()
-    gx.infer_v2_core = core
+    gx.open_contours = core.owned_contours()
+    gx.contour_core = core
     try:
-        v2_propagate(gx)
+        propagate(gx)
         # read what every contour holds before the graph is restored
         contour_contents: dict[
             tuple["python.Class", int], dict[str, infer.Types]
         ] = {}
         frontier = set(core.owned_contours())
-        for _ in range(V2_SIGNATURE_ROUNDS):
+        for _ in range(SIGNATURE_ROUNDS):
             if not frontier:
                 break
             following: set[tuple["python.Class", int]] = set()
@@ -603,13 +603,13 @@ def sweep(
             frontier = following
 
         templates = (
-            infer_report.collect_templates(gx, sites)
+            contours_report.collect_templates(gx, sites)
             if logger.isEnabledFor(logging.DEBUG)
             else []
         )
     finally:
-        gx.infer_v2_open_contours = None
-        gx.infer_v2_core = None
+        gx.open_contours = None
+        gx.contour_core = None
         infer.restore_network(gx, pristine)
         for klass, dcpa in core.baseline_dcpa.items():
             klass.dcpa = dcpa
@@ -625,7 +625,7 @@ def run_rounds(
     module_sites = [site for site in containers if site.module_level]
     molds = len(containers) - len(module_sites)
     logger.debug(
-        "[infer v2: %d module-level container site(s);"
+        "[contours: %d module-level container site(s);"
         " %d in-function mold(s) to be discovered per template]",
         len(module_sites),
         molds,
@@ -640,18 +640,18 @@ def run_rounds(
         core.bind_module_site(site)
 
     # every sweep starts from this graph. Molds keep their pristine types
-    # throughout, and are what ifa_seed_template and note_mold read them for.
+    # throughout, and are what seed_template and note_mold read them for.
     pristine = infer.backup_network(gx)
     gx.orig_types = {
         node: types.copy() for node, types in gx.types.items() if node.constructor
     }
 
-    history: list[infer_report.RoundStats] = []
+    history: list[contours_report.RoundStats] = []
     round_no = 0
-    last_templates: list[infer_report.TemplateRecord] = []
-    while round_no < V2_MAX_ROUNDS:
+    last_templates: list[contours_report.TemplateRecord] = []
+    while round_no < MAX_ROUNDS:
         round_no += 1
-        logger.debug("[infer v2: round %d]", round_no)
+        logger.debug("[contours: round %d]", round_no)
 
         result = sweep(gx, core, pristine, sites)
 
@@ -662,11 +662,11 @@ def run_rounds(
         waiting = core.pending_count()
 
         for entry in batch:
-            infer_report.report_added_site(core, entry, round_no)
+            contours_report.report_added_site(core, entry, round_no)
         if result.templates:
             last_templates = result.templates
 
-        stats = infer_report.RoundStats(
+        stats = contours_report.RoundStats(
             round=round_no,
             minted=len(batch),
             waiting=waiting,
@@ -676,25 +676,25 @@ def run_rounds(
             signatures=len(core.signature_ids),
         )
         history.append(stats)
-        infer_report.report_round(stats)
+        contours_report.report_round(stats)
 
         # nothing the next sweep depends on has changed
         if not batch and not changed and not core.deferred:
             break
     else:
         logger.warning(
-            "infer v2: stopped after %d rounds without converging;"
+            "contours: stopped after %d rounds without converging;"
             " see the growth table for whether it was still climbing",
-            V2_MAX_ROUNDS,
+            MAX_ROUNDS,
         )
 
-    infer_report.report_growth(history)
-    infer_report.report_core(core, round_no)
-    infer_report.report_templates(last_templates)
+    contours_report.report_growth(history)
+    contours_report.report_core(core, round_no)
+    contours_report.report_templates(last_templates)
     return core
 
 
-def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
+def analyze(gx: "config.GlobalInfo") -> None:
     """Entry point: find the contours, then materialize them."""
     logger.info("[analyzing types..]")
     all_sites = collect_allocation_sites(gx)
@@ -707,9 +707,9 @@ def infer_v2_analysis(gx: "config.GlobalInfo") -> None:
         if not site.builtin or site.module_level
     ]
     builtin_count = len(all_sites) - len(sites)
-    infer_report.report_allocation_sites(gx, sites, builtin_count)
+    contours_report.report_allocation_sites(gx, sites, builtin_count)
     core = run_rounds(gx, sites)
-    infer_report.report_site_signatures(gx, core)
+    contours_report.report_site_signatures(gx, core)
 
     materialize(gx, core)
 
@@ -723,16 +723,16 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     """
     baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
     apply_core(gx, core, baseline_dcpa)
-    gx.infer_v2_open_contours = core.owned_contours()
-    gx.infer_v2_core = core
+    gx.open_contours = core.owned_contours()
+    gx.contour_core = core
     core.misses = 0
     try:
-        v2_propagate(gx)
+        propagate(gx)
     finally:
-        gx.infer_v2_core = None
-        gx.infer_v2_open_contours = None
+        gx.contour_core = None
+        gx.open_contours = None
     logger.debug(
-        "[infer v2: materialised %d contour(s);"
+        "[contours: materialised %d contour(s);"
         " %d site(s) left without a contour of their own]",
         len(core.owned_contours()),
         core.misses,

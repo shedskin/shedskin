@@ -1,11 +1,11 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.infer_report: debug reporting for the type analysis
+"""shedskin.contours_report: debug reporting for the type analysis
 
-Everything `shedskin.infer2` logs about what it is doing: the allocation
+Everything `shedskin.contours` logs about what it is doing: the allocation
 site inventory, the templates created during propagation, what each round
 minted, the growth table, and the final signatures per site.
-None of it influences the analysis; see the header of `shedskin.infer2` for
+None of it influences the analysis; see the header of `shedskin.contours` for
 how to read a -d3 log and the environment knobs that add to it.
 """
 
@@ -14,7 +14,7 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional
 
-from . import infer, infer2, python
+from . import infer, contours, python
 
 if TYPE_CHECKING:
     from . import config
@@ -39,22 +39,22 @@ def node_source(node: Any) -> str:
     return text
 
 
-def site_kind(site: "infer2.AllocationSite") -> str:
+def site_kind(site: "contours.AllocationSite") -> str:
     """'container', 'scalar' or 'instance', for the inventory."""
-    if infer2.is_container(site.cl):
+    if contours.is_container(site.cl):
         return "container"
     if site.cl.ident in infer.SCALAR_CLASS_IDENTS:
         return "scalar"
     return "instance"
 
 
-def site_location(site: "infer2.AllocationSite") -> str:
+def site_location(site: "contours.AllocationSite") -> str:
     """'module:line' for a site."""
     lineno = site.lineno
     return "%s:%s" % (site.module.ident, "-" if lineno is None else lineno)
 
 
-def site_scope(site: "infer2.AllocationSite") -> str:
+def site_scope(site: "contours.AllocationSite") -> str:
     """The function a site is written in, or '<module>'."""
     func = site.parent
     if not isinstance(func, python.Function):
@@ -64,21 +64,21 @@ def site_scope(site: "infer2.AllocationSite") -> str:
     return func.ident
 
 
-# V2_MAX_TEMPLATE_LINES: cap on how many templates are listed individually.
+# MAX_TEMPLATE_LINES: cap on how many templates are listed individually.
 # A large program creates thousands; the counts stay exact, only the listing
 # is truncated.
-V2_MAX_TEMPLATE_LINES = 200
+MAX_TEMPLATE_LINES = 200
 
 
 def report_allocation_sites(
-    gx: "config.GlobalInfo", sites: list["infer2.AllocationSite"], builtin_count: int
+    gx: "config.GlobalInfo", sites: list["contours.AllocationSite"], builtin_count: int
 ) -> None:
     """Log the allocation site inventory."""
-    by_kind: dict[str, list["infer2.AllocationSite"]] = {}
+    by_kind: dict[str, list["contours.AllocationSite"]] = {}
     for site in sites:
         by_kind.setdefault(site_kind(site), []).append(site)
 
-    logger.debug("[infer v2: allocation site inventory]")
+    logger.debug("[contours: allocation site inventory]")
     logger.debug(
         "  program constructor nodes: %d (builtin scanned: %d)",
         len(sites),
@@ -92,7 +92,7 @@ def report_allocation_sites(
         key=lambda s: (s.module.ident, s.lineno if s.lineno is not None else -1)
     )
 
-    def log_group(header: str, group: list["infer2.AllocationSite"]) -> None:
+    def log_group(header: str, group: list["contours.AllocationSite"]) -> None:
         if not group:
             return
         logger.debug(header, len(group))
@@ -139,7 +139,7 @@ def render_signature(signature: tuple) -> str:
     for name, types in signature:
         if not types:
             continue
-        rendered = [infer2.render_item(item) for item in sorted(types, key=str)]
+        rendered = [contours.render_item(item) for item in sorted(types, key=str)]
         parts.append("%s=%s" % (name, "|".join(rendered)))
     return "{" + " ".join(parts) + "}" if parts else "{}"
 
@@ -181,7 +181,7 @@ class TemplateRecord(NamedTuple):
     dcpa: int
     cpa: int
     cart: tuple
-    molds: list[tuple["infer2.AllocationSite", Optional[tuple["python.Class", int]]]]
+    molds: list[tuple["contours.AllocationSite", Optional[tuple["python.Class", int]]]]
 
     @property
     def builtin(self) -> bool:
@@ -211,10 +211,10 @@ def format_type(item: tuple["python.Class", int]) -> str:
 
 
 def molds_by_function(
-    sites: list["infer2.AllocationSite"],
-) -> dict["python.Function", list["infer2.AllocationSite"]]:
+    sites: list["contours.AllocationSite"],
+) -> dict["python.Function", list["contours.AllocationSite"]]:
     """Group in-function constructor nodes by the function they live in."""
-    grouped: dict["python.Function", list["infer2.AllocationSite"]] = {}
+    grouped: dict["python.Function", list["contours.AllocationSite"]] = {}
     for site in sites:
         if site_kind(site) == "scalar" or site.module_level:
             continue
@@ -224,7 +224,7 @@ def molds_by_function(
 
 
 def collect_templates(
-    gx: "config.GlobalInfo", sites: list["infer2.AllocationSite"]
+    gx: "config.GlobalInfo", sites: list["contours.AllocationSite"]
 ) -> list[TemplateRecord]:
     """Every template that exists in the current network, with its molds."""
     grouped = molds_by_function(sites)
@@ -246,7 +246,7 @@ def collect_templates(
     # cpa numbering depends on the order templates happened to be created,
     # so it is not a stable tiebreak; the argument signature is a property of
     # the program and is
-    records.sort(key=lambda r: (r.builtin, r.name(), r.dcpa, infer2.repr_cart(r.cart)))
+    records.sort(key=lambda r: (r.builtin, r.name(), r.dcpa, contours.repr_cart(r.cart)))
     return records
 
 
@@ -257,7 +257,7 @@ def report_templates(records: list[TemplateRecord]) -> None:
     enabling = [r for r in program if r.molds]
     new_sites = sum(len(r.molds) for r in program)
 
-    logger.debug("[infer v2: templates created during propagation]")
+    logger.debug("[contours: templates created during propagation]")
     logger.debug(
         "  templates: %d (program: %d, builtin: %d)",
         len(records),
@@ -272,7 +272,7 @@ def report_templates(records: list[TemplateRecord]) -> None:
 
     shown = 0
     for record in enabling:
-        if shown >= V2_MAX_TEMPLATE_LINES:
+        if shown >= MAX_TEMPLATE_LINES:
             logger.debug(
                 "  ... %d more template(s) not listed",
                 len(enabling) - shown,
@@ -296,7 +296,7 @@ def report_templates(records: list[TemplateRecord]) -> None:
         logger.debug("  builtin templates by function:")
         for name in sorted(
             per_builtin, key=lambda n: (-per_builtin[n], n)
-        )[:V2_MAX_TEMPLATE_LINES]:
+        )[:MAX_TEMPLATE_LINES]:
             logger.debug("    %-40s %d", name, per_builtin[name])
 
 
@@ -308,7 +308,7 @@ def alloc_id_location(alloc_id: Any) -> str:
 
 
 def report_added_site(
-    core: "infer2.FrozenCore",
+    core: "contours.FrozenCore",
     added: tuple[Any, tuple["python.Class", int]],
     round_no: int,
 ) -> None:
@@ -321,13 +321,13 @@ def report_added_site(
         cl.ident,
         contour,
     )
-    logger.debug("      %s   cart %s", node_source(key[2]), infer2.repr_cart(key[1]))
+    logger.debug("      %s   cart %s", node_source(key[2]), contours.repr_cart(key[1]))
 
 
 def report_round(stats: RoundStats) -> None:
     """One line summarising a round, and the numbers a hang would show in."""
     logger.debug(
-        "[infer v2: round %d done: %d site(s) minted"
+        "[contours: round %d done: %d site(s) minted"
         " (%d waiting), %d template(s),"
         " %d contour(s) total]",
         stats.round,
@@ -351,7 +351,7 @@ def report_growth(history: list[RoundStats]) -> None:
     without the minted count falling off. Convergence shows up as both
     flattening and the last round minting nothing.
     """
-    logger.debug("[infer v2: growth per round]")
+    logger.debug("[contours: growth per round]")
     logger.debug(
         "    %-6s %-7s %-8s %-9s %-10s %-7s %-5s",
         "round",
@@ -375,15 +375,15 @@ def report_growth(history: list[RoundStats]) -> None:
         )
 
 
-def report_signature_table(core: "infer2.FrozenCore") -> None:
+def report_signature_table(core: "contours.FrozenCore") -> None:
     """Dump the interned signatures and who holds them (diagnostic)."""
-    if not os.environ.get("SS_V2_SIGDUMP"):
+    if not os.environ.get("SS_CONTOUR_SIGDUMP"):
         return
     holders: dict[int, list] = {}
     for binding, sid in core.contour_signature.items():
         holders.setdefault(sid, []).append(binding)
     by_id = {v: k for k, v in core.signature_ids.items()}
-    logger.debug("[infer v2: signature table: %d signature(s)]", len(by_id))
+    logger.debug("[contours: signature table: %d signature(s)]", len(by_id))
     for sid in sorted(by_id):
         cl, signature = by_id[sid]
         owners = sorted(holders.get(sid, []), key=lambda cc: cc[1])
@@ -398,7 +398,7 @@ def report_signature_table(core: "infer2.FrozenCore") -> None:
             logger.debug("        %-8s = %s", name, sorted(str(t) for t in types))
 
 
-def report_site_signatures(gx: "config.GlobalInfo", core: "infer2.FrozenCore") -> None:
+def report_site_signatures(gx: "config.GlobalInfo", core: "contours.FrozenCore") -> None:
     """Final overview: every allocation site and the signature deduced for it.
 
     Module-level sites are listed one per line. In-function sites are grouped
@@ -416,7 +416,7 @@ def report_site_signatures(gx: "config.GlobalInfo", core: "infer2.FrozenCore") -
             return "(no signature)"
         return render_signature(by_id.get(sid, (None, ()))[1]) or "{}"
 
-    logger.debug("[infer v2: deduced signature per allocation site]")
+    logger.debug("[contours: deduced signature per allocation site]")
 
     if core.bindings:
         logger.debug("  module-level sites (%d):", len(core.bindings))
@@ -477,11 +477,11 @@ def report_site_signatures(gx: "config.GlobalInfo", core: "infer2.FrozenCore") -
         logger.debug("        %s", source)
 
 
-def report_core(core: "infer2.FrozenCore", rounds: int) -> None:
+def report_core(core: "contours.FrozenCore", rounds: int) -> None:
     """Summarise what the rounds established."""
     report_signature_table(core)
     logger.debug(
-        "[infer v2: frozen core after %d round(s): %d module-level site(s),"
+        "[contours: frozen core after %d round(s): %d module-level site(s),"
         " %d in-function site(s), %d contour(s)]",
         rounds,
         len(core.bindings),
@@ -496,12 +496,12 @@ def report_core(core: "infer2.FrozenCore", rounds: int) -> None:
 
 
 def report_upgrades(
-    core: "infer2.FrozenCore",
+    core: "contours.FrozenCore",
     previous: dict[tuple["python.Class", int], int],
     changed: list[tuple["python.Class", int]],
 ) -> None:
-    """With SS_V2_UPGRADES=1, show how the signatures that moved changed."""
-    if not os.environ.get("SS_V2_UPGRADES"):
+    """With SS_CONTOUR_UPGRADES=1, show how the signatures that moved changed."""
+    if not os.environ.get("SS_CONTOUR_UPGRADES"):
         return
     by_id = {v: k for k, v in core.signature_ids.items()}
     for binding in sorted(changed, key=lambda cc: (cc[0].ident, cc[1]))[:12]:

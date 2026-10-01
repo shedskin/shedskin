@@ -150,12 +150,12 @@ class TestGlobalInfo:
         assert isinstance(gx.constraints, set)
         assert isinstance(gx.cnode, dict)
         assert isinstance(gx.types, dict)
-        assert gx.iterations == 0
+        assert gx.templates == 0
 
     def test_type_inference_setters(self, gx):
         """TypeInferenceState properties should be settable."""
-        gx.iterations = 5
-        assert gx.iterations == 5
+        gx.templates = 5
+        assert gx.templates == 5
 
         gx.cpa_limit = 20
         assert gx.cpa_limit == 20
@@ -224,9 +224,9 @@ class TestStateObjects:
     def test_type_inference_state_defaults(self):
         """TypeInferenceState should have correct defaults."""
         state = TypeInferenceState()
-        assert state.iterations == 0
+        assert state.templates == 0
         assert state.cpa_limit == 0
-        assert state.cpa_clean is False
+        assert state.cpa_limited is False
         assert len(state.constraints) == 0
 
 

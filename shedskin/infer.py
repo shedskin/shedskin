@@ -1,49 +1,42 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""shedskin.infer: infer types
+"""shedskin.infer: type inference
 
-Type inference in Shed Skin works by propagating types along a constraint graph.
-The graph is built during the analysis phase in `shedskin.graph`.
+Shed Skin infers a static type for every expression by propagating types
+through a constraint graph: a node per expression and variable (`CNode`), and
+an edge wherever types flow from one to the other (`add_constraint`). The
+graph is built from the AST by `shedskin.graph`; this module solves it.
 
-The inference starts from known type "seeds" - for example, when a variable 'x'
-is assigned a literal integer value like '0', that integer type propagates to
-everywhere 'x' is used.
+Seeds start the process, e.g. the int in `x = 0`, and `propagate()` moves
+types along the edges until nothing changes. Precision comes from copying
+parts of the graph, so that different uses of the same code do not mix their
+types. Each node is therefore identified by (thing, dcpa, cpa), and there are
+two kinds of copies:
 
-A key challenge is handling cases where types flow together and mix. This happens
-in scenarios like:
-- An identity function called with different argument types, leading to an
-  imprecise return type.
-- Lists containing elements of different types.
+- function polymorphism: `cpa()` (Agesen's cartesian product algorithm)
+  copies a function into one *template* per combination of argument types it
+  is called with, so that e.g. an identity function returns an int where it
+  is called with an int (`cpa` numbers the template).
+- container polymorphism: builtin container classes are copied into
+  *contours* (`dcpa` numbers them), so that a list of ints and a list of strs
+  are different types. Which contours exist, and which allocations share one,
+  is decided by `shedskin.contours`, which drives the propagation here in
+  rounds.
 
-To maintain precision, Shed Skin duplicates parts of the constraint graph during
-analysis. This allows different uses of functions (parametric polymorphism) and
-containers (data polymorphism) to be analyzed separately.
+The sections below, in order:
 
-Function polymorphism is handled by Agesen's Cartesian Product Algorithm (CPA),
-in `cpa()`: a function is duplicated per point in the cartesian product of its
-argument types, so a return type that depends on the argument types stays
-precise.
+- the driver, `analyze()`, and the solver, `propagate()`
+- the constraint graph: nodes, edges, the worklist
+- call analysis: what a call expression can call, and how its actual
+  arguments map onto formal parameters; also used by code generation
+- CPA: the cartesian product of a call, and creating templates
+- copying parts of the graph for a template or contour, and seeding the
+  allocation sites in a new template
+- backing up and restoring the graph, between sweeps of `shedskin.contours`
+- after analysis: merging the copies again, for code generation
 
-Data polymorphism is handled by `shedskin.infer2`, which owns the driver loop.
-This module provides the constraint graph itself and the machinery the driver
-calls into:
-
-- `propagate()`, which moves types along the constraint graph
-- `cpa()`, which creates function templates from cartesian products
-- `ifa_seed_template()`, which seeds the allocation sites in a new template
-- `class_copy()` / `func_copy()`, which duplicate parts of the graph
-- `backup_network()` / `restore_network()`, which the driver uses to reset
-  the graph between sweeps
-
-In each node of `shedskin.graph`, two integers are used by `shedskin.infer`
-to represent duplicate parts of the constraint graph along two dimensions
-(class duplicate, function duplicate).
-
-For more details, see:
-- The docstring of `shedskin.infer2`
-- The docstring of `shedskin.graph`
-- Ole Agesen's PhD thesis on the CPA algorithm
-- Mark Dufour's MSc thesis on Shed Skin's implementation
+For more details, see Ole Agesen's PhD thesis on CPA, Mark Dufour's MSc
+thesis on Shed Skin, and the docstring of `shedskin.contours`.
 """
 
 import ast
@@ -100,20 +93,6 @@ class MaxIterationsException(Exception):
     pass
 
 
-def _const_str(node: ast.AST) -> str:
-    """Return string value from a constant node."""
-    assert isinstance(node, ast.Constant)
-    assert isinstance(node.value, str)
-    return node.value
-
-
-def _const_num(node: ast.AST) -> Union[int, float]:
-    """Return numeric value from a constant node."""
-    assert isinstance(node, ast.Constant)
-    assert isinstance(node.value, (int, float))
-    return node.value
-
-
 # SPLIT_CLASS_IDENTS: builtin classes that carry contours, i.e. the classes
 # that are duplicated per allocation site so that (say) a list of ints and a
 # list of strings can be told apart. These are the only classes that split.
@@ -133,12 +112,217 @@ SPLIT_CLASS_IDENTS = (
     "array",
 )
 
+
 # SCALAR_CLASS_IDENTS: builtin classes that are never duplicated per allocation
 # site. Allocation sites of these classes always live at dcpa 0 and so can
 # never gain contours.
 SCALAR_CLASS_IDENTS = frozenset(
     ["int_", "float_", "str_", "bytes_", "none", "class_", "bool_"]
 )
+
+
+# ---------------------------------------------------------------------------
+# the driver and the solver
+# ---------------------------------------------------------------------------
+
+
+def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
+    """Analyze a module"""
+    from . import graph  # TODO improve separation to avoid circular imports..
+    from .typestr import nodetypestr
+    from .virtual import analyze_virtuals
+
+    # --- build dataflow graph from source code
+    gx.main_module = graph.parse_module(module_name, gx)
+
+    # --- seed class_.__name__ attributes..
+    for cl in gx.allclasses:
+        if cl.ident == "class_":
+            var = default_var(gx, "__name__", cl)
+            gx.types[inode(gx, var)] = {(python.def_class(gx, "str_"), 0)}
+
+    # --- copy classes for each allocation site
+    for cl in gx.allclasses:
+        if cl.ident in SCALAR_CLASS_IDENTS:
+            continue
+        if cl.ident == "list":
+            cl.dcpa = len(gx.list_types) + 2
+        elif cl.ident != "__iter":  # XXX huh
+            cl.dcpa = 2
+
+        for dcpa in range(1, cl.dcpa):
+            class_copy(gx, cl, dcpa)
+
+    # --- seed str/bytes unit
+    cl = python.def_class(gx, "str_")
+    var = default_var(gx, "unit", cl)
+    gx.types[inode(gx, var)] = {(cl, 0)}
+
+    cl = python.def_class(gx, "bytes_")
+    var = default_var(gx, "unit", cl)
+    gx.types[inode(gx, var)] = {(python.def_class(gx, "int_"), 0)}
+
+    # --- cartesian product algorithm & frozen-core sweep
+    from . import contours
+
+    contours.analyze(gx)
+
+    logger.info("[generating c++ code..]")
+
+    for cl in gx.allclasses:
+        for name in cl.vars:
+            if name in cl.parent.vars and not name.startswith("__"):
+                error.error(
+                    "instance variable '%s' of class '%s' shadows class variable"
+                    % (name, cl.ident),
+                    gx,
+                    warning=True,
+                )
+
+    gx.merged_inh = merged(gx, gx.types, inheritance=True)
+    analyze_virtuals(gx)
+    determine_classes(gx)
+
+    # --- add inheritance relationships for non-original Nodes (and temp_vars?); XXX register more, right solution?
+    for func in gx.allfuncs:
+        if func in gx.inheritance_relations:
+            for inhfunc in gx.inheritance_relations[func]:
+                assert isinstance(inhfunc, python.Function)
+                for c, d in zip(func.registered, inhfunc.registered):
+                    graph.inherit_rec(gx, c, d, func.mv)
+
+                for a, b in zip(
+                    func.registered_temp_vars, inhfunc.registered_temp_vars
+                ):  # XXX more general
+                    gx.inheritance_temp_vars.setdefault(a, []).append(b)
+
+    gx.merged_inh = merged(gx, gx.types, inheritance=True)
+
+    # error for dynamic expression without explicit type declaration
+    for node in gx.merged_inh:
+        if (
+            isinstance(node, ast.AST)
+            and not ast_utils.is_assign_attribute(node)
+            and not inode(gx, node).mv.module.builtin
+        ):
+            nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
+
+
+def propagate(gx: "config.GlobalInfo") -> None:
+    """Propagate constraints through the graph"""
+    logger.debug("propagate")
+
+    # --- initialize working sets
+    worklist: list[CNode] = []
+    changed = set()
+    for node in gx.types:
+        if gx.types[node]:
+            add_to_worklist(worklist, node)
+        expr = node.thing
+        if (
+            isinstance(expr, ast.Call) and not expr.args
+        ) or expr in gx.lambdawrapper:  # XXX
+            changed.add(node)
+
+    for node in changed:
+        cpa(gx, node, worklist)
+
+    builtins = set(gx.builtins)
+    types = gx.types
+
+    # --- the freeze (see shedskin.contours): container contours outside
+    # --- gx.open_contours still pass on what they hold, but receive nothing
+    open_contours = gx.open_contours
+    split_idents = SPLIT_CLASS_IDENTS
+
+    # --- iterative dataflow analysis
+    while worklist:
+        callnodes = set()
+        while worklist:
+            a = worklist.pop(0)
+            a.in_list = 0
+
+            for callfunc in a.callfuncs:
+                t = (callfunc, a.dcpa, a.cpa)
+                if t in gx.cnode:
+                    callnodes.add(gx.cnode[t])
+
+            for b in a.out.copy():  # XXX can change...?
+                # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
+                if isinstance(b.thing, python.Variable) and isinstance(
+                    b.thing.parent, python.Class
+                ):
+                    parent_ident = b.thing.parent.ident
+
+                    if (
+                        open_contours is not None
+                        and parent_ident in split_idents
+                        and b.thing.parent.mv.module.builtin
+                        and (b.thing.parent, b.dcpa) not in open_contours
+                    ):
+                        continue
+
+                    if parent_ident in builtins:
+                        if parent_ident in [
+                            "int_",
+                            "float_",
+                            "str_",
+                            "none",
+                            "bool_",
+                            "bytes_",
+                        ]:
+                            continue
+                        elif (
+                            parent_ident
+                            in [
+                                "list",
+                                "tuple",
+                                "frozenset",
+                                "set",
+                                "file",
+                                "__iter",
+                                "deque",
+                                "array",
+                            ]
+                            and b.thing.name != "unit"
+                        ):
+                            continue
+                        elif parent_ident in (
+                            "dict",
+                            "frozendict",
+                            "defaultdict",
+                            "Counter",
+                        ) and b.thing.name not in ["unit", "value"]:
+                            continue
+                        elif parent_ident == "tuple2" and b.thing.name not in [
+                            "unit",
+                            "first",
+                            "second",
+                        ]:
+                            continue
+                        elif parent_ident == "tuple3" and b.thing.name not in [
+                            "unit",
+                            "first",
+                            "second",
+                            "third",
+                        ]:
+                            continue
+
+                typesa = types[a]
+                typesb = types[b]
+                oldsize = len(typesb)
+
+                typesb.update(typesa)
+                if len(typesb) > oldsize:
+                    add_to_worklist(worklist, b)
+
+        for callnode in callnodes:
+            cpa(gx, callnode, worklist)
+
+
+# ---------------------------------------------------------------------------
+# the constraint graph
+# ---------------------------------------------------------------------------
 
 
 class CNode:
@@ -260,323 +444,84 @@ class CNode:
         return repr((self.thing, self.dcpa, self.cpa))
 
 
-def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
-    """Get the number of arguments of a call node"""
-    cnode = inode(gx, node)
-    if cnode.lambdawrapper:
-        return cnode.lambdawrapper.largs
-    return len(node.args)
+def inode(gx: "config.GlobalInfo", node: Any) -> CNode:
+    """Get the constraint node for a given object"""
+    return gx.cnode[node, 0, 0]
 
 
-def called(func: "python.Function") -> bool:
-    """Check if a function has been called"""
-    return bool([cpas for cpas in func.cp.values() if cpas])
+def add_constraint(
+    gx: "config.GlobalInfo", a: CNode, b: CNode, worklist: Optional[list[CNode]] = None
+) -> None:
+    """Add a constraint to the graph"""
+    gx.constraints.add((a, b))
+    in_out(a, b)
+    add_to_worklist(worklist, a)
 
 
-def get_types(
+def in_out(a: CNode, b: CNode) -> None:
+    """Add an outgoing edge to a node"""
+    a.out.add(b)
+    b.in_.add(a)
+
+
+def add_to_worklist(
+    worklist: Optional[list[CNode]], node: CNode
+) -> None:  # XXX to infer.py
+    """Add a node to the worklist"""
+    if worklist is not None and not node.in_list:
+        worklist.append(node)
+        node.in_list = 1
+
+
+def default_var(
     gx: "config.GlobalInfo",
-    expr: ast.Call,
-    node: Optional[CNode],
-    merge: Optional[Merged],
-) -> Types:
-    """Get the types of a call node"""
-    types = set()
-    if merge:
-        if expr.func in merge:
-            types = merge[expr.func]
-    elif node:
-        node2 = (expr.func, node.dcpa, node.cpa)
-        if node2 in gx.cnode:
-            types = gx.cnode[node2].types()
-    return types
-
-
-def get_starargs(node: ast.Call) -> Optional[ast.AST]:
-    """Get the starred argument of a call node"""
-    for arg in node.args:
-        if isinstance(arg, ast.Starred):
-            return arg.value
-    return None
-
-
-def is_anon_callable(
-    gx: "config.GlobalInfo",
-    expr: ast.Call,
-    node: Optional[CNode],
-    merge: Optional[Merged] = None,
-) -> tuple[bool, bool]:
-    """Check if an anonymous function is callable"""
-    types = get_types(gx, expr, node, merge)
-    anon = bool([t for t in types if isinstance(t[0], python.Function)])
-    call = bool(
-        [
-            t
-            for t in types
-            if isinstance(t[0], python.Class) and "__call__" in t[0].funcs
-        ]
-    )
-    return anon, call
-
-
-def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional["python.Function"]:
-    """Get the parent function of a node"""
-    return python.outer_func(inode(gx, thing).parent)
-
-
-def analyze_args(
-    gx: "config.GlobalInfo",
-    expr: ast.Call,
-    func: "python.Function",
-    node: Optional[CNode] = None,
-    skip_defaults: bool = False,
-    merge: Optional[Merged] = None,
-) -> tuple[
-    list[Optional[ast.AST]], list[str], list[ast.AST], list[Optional[ast.AST]], bool
-]:
-    """Analyze the arguments of a call node"""
-    (
-        objexpr,
-        ident,
-        direct_call,
-        method_call,
-        constructor,
-        parent_constr,
-        anon_func,
-    ) = analyze_callfunc(gx, expr, node, merge)
-
-    args: list[Optional[ast.AST]] = []
-    kwdict = {}
-    for a in expr.args:
-        args.append(a)
-    for b in expr.keywords:
-        kwdict[b.arg] = b.value
-    formal_args = func.formals[:]
-    assert func.node
-    if func.node.args.vararg:
-        formal_args = formal_args[:-1]
-    default_start = len(formal_args) - len(func.defaults)
-
-    if ident in ["__getattr__", "__setattr__"]:  # property?
-        args = args[1:]
-
-    if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
-        args.insert(0, None)
-
-    kwextra = []
-    for kw in kwdict:
-        if kw not in formal_args and f"__kw_{kw}" not in formal_args:
-            kwextra.append(kw)
-
-    argnr = 0
-    actuals: list[Optional[ast.AST]] = []
-    formals = []
-    defaults: list[ast.AST] = []
-    missing = False
-    for i, formal in enumerate(formal_args):
-        if formal in kwdict:
-            actuals.append(kwdict[formal])
-            formals.append(formal)
-        elif formal.startswith("__kw_") and formal[5:] in kwdict:
-            actuals.insert(0, kwdict[formal[5:]])
-            formals.insert(0, formal)
-        elif argnr < len(args) and not formal.startswith("__kw_"):
-            actuals.append(args[argnr])
-            argnr += 1
-            formals.append(formal)
-        elif i >= default_start:
-            default = func.defaults[i - default_start]
-            if not skip_defaults:
-                if formal.startswith("__kw_"):
-                    actuals.insert(0, default)
-                    formals.insert(0, formal)
-                else:
-                    actuals.append(default)
-                    formals.append(formal)
-                defaults.append(default)
-            elif func.mv.module.ident == "bisect":  # TODO generalize
-                if formal.startswith("__kw_"):
-                    actuals.insert(0, default)
-                    formals.insert(0, formal)
+    name: str,
+    parent: Optional[AllParent],
+    worklist: Optional[list[CNode]] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+    exc_name: bool = False,
+) -> "python.Variable":
+    """Create a default variable"""
+    if parent:
+        mv = parent.mv
+    assert mv
+    var = python.lookup_var(name, parent, mv, local=True)
+    if not var:
+        var = python.Variable(name, parent)
+        if parent:  # XXX move to python.Variable?
+            parent.vars[name] = var
+        elif exc_name:
+            mv.exc_names[name] = var
         else:
-            missing = True
+            mv.globals[name] = var
+        gx.allvars.add(var)
 
-    extra = args[argnr:]
+    if (var, 0, 0) not in gx.cnode:
+        newnode = CNode(gx, mv, var, parent=parent)
+        if parent:
+            newnode.mv = parent.mv
+        else:
+            newnode.mv = mv
+        add_to_worklist(worklist, newnode)
+        gx.types[newnode] = set()
 
-    _error = bool(
-        (missing or extra or kwextra)
-        and not func.node.args.vararg
-        and not func.node.args.kwarg
-        and not get_starargs(expr)
-        and func.lambdanr is None
-        and expr not in gx.lambdawrapper
-    )  # XXX
+    if isinstance(parent, python.Function) and parent.listcomp and not var.registered:
+        register_temp_var(var, python.outer_func(parent))
 
-    if func.node.args.vararg:
-        for arg in extra:
-            actuals.append(arg)
-            formals.append(func.formals[-1])
-
-    return actuals, formals, defaults, extra, _error
+    return var
 
 
-def connect_actual_formal(
-    gx: "config.GlobalInfo",
-    expr: ast.Call,
-    func: "python.Function",
-    parent_constr: bool = False,
-    merge: Optional[Merged] = None,
-) -> tuple[list[tuple[ast.AST, "python.Variable"]], int, bool]:
-    """Connect actual and formal arguments"""
-
-    pairs = []
-
-    actuals: list[Optional[ast.AST]] = [
-        a for a in expr.args if not isinstance(a, ast.keyword)
-    ]
-    if isinstance(func.parent, python.Class):
-        formals = [f for f in func.formals if f != "self"]
-    else:
-        formals = [f for f in func.formals]
-
-    if parent_constr:
-        actuals = actuals[1:]
-
-    # TODO replace all this with __ss_void approach?
-    skip_defaults = (
-        False  # XXX investigate and further narrow down cases where we want to skip
-    )
-    if (
-        (
-            func.mv.module.ident
-            in [
-                "time",
-                "string",
-                "collections",
-                "bisect",
-                "array",
-                "math",
-                "integer",
-                "cStringIO",
-                "getopt",
-            ]
-        )
-        or (func.mv.module.ident == "random" and func.ident == "randrange")
-        or (
-            func.mv.module.ident == "builtin"
-            and func.ident
-            not in (
-                "sort",
-                "sorted",
-                "min",
-                "__min1",
-                "max",
-                "__max1",
-                "__print",
-                "zip",
-                "split",
-                "rsplit",
-                "map",
-                "to_bytes",
-                "from_bytes",
-                # emit all (None) defaults, so that e.g. decode(errors=..)
-                # does not pass 'errors' as the encoding
-                "encode",
-                "decode",
-                "open",  # open(f, encoding=..) must not pass it as the mode
-                "open_binary",
-            )
-        )
-    ):
-        if (
-            not (
-                func.mv.module.ident == "math"
-                and func.ident == "isclose"
-            )
-            and not (
-                func.mv.module.ident == "collections"
-                and func.ident == "__init__"
-                and isinstance(func.parent, python.Class)
-                and func.parent.ident == 'deque'
-            )
-        ):
-            skip_defaults = True
-
-    actuals, formals, _, extra, _error = analyze_args(
-        gx, expr, func, skip_defaults=skip_defaults, merge=merge
-    )
-
-    for actual, formal in zip(actuals, formals):
-        if not (isinstance(func.parent, python.Class) and formal == "self"):
-            assert actual
-            pairs.append((actual, func.vars[formal]))
-
-    return pairs, len(extra), _error
+def register_temp_var(var: "python.Variable", parent: Optional[AllParent]) -> None:
+    """Register a temporary variable"""
+    if isinstance(parent, python.Function):
+        parent.registered_temp_vars.append(var)
 
 
-# --- return list of potential call targets
-def callfunc_targets(
-    gx: "config.GlobalInfo", node: ast.Call, merge: Merged
-) -> list["python.Function"]:
-    """Get the potential call targets of a call node"""
-
-    (
-        objexpr,
-        ident,
-        direct_call,
-        method_call,
-        constructor,
-        parent_constr,
-        anon_func,
-    ) = analyze_callfunc(gx, node, merge=merge)
-    funcs = []
-
-    if node.func in merge and [
-        t for t in merge[node.func] if isinstance(t[0], python.Function)
-    ]:  # anonymous function call
-        funcs = [t[0] for t in merge[node.func] if isinstance(t[0], python.Function)]
-
-    elif constructor:
-        if (
-            constructor.mv.module.builtin
-            and ident in ("list", "tuple", "set", "frozenset")
-            and nrargs(gx, node) == 1
-        ):
-            funcs = [constructor.funcs["__inititer__"]]
-        elif (
-            constructor.mv.module.builtin
-            and (ident, nrargs(gx, node)) in (
-                ("dict", 1),
-                ("frozendict", 1),
-                ("defaultdict", 2),
-                ("Counter", 1),
-            )
-        ):  # XXX merge infer.redirect
-            funcs = [constructor.funcs["__initdict__"]]  # XXX __inititer__?
-        elif sys.platform == "win32" and "__win32__init__" in constructor.funcs:
-            funcs = [constructor.funcs["__win32__init__"]]
-        elif "__init__" in constructor.funcs:
-            funcs = [constructor.funcs["__init__"]]
-
-    elif parent_constr:
-        if ident != "__init__":
-            func = inode(gx, node).parent
-            assert isinstance(func, python.Function)
-            cl = func.parent
-            assert isinstance(cl, python.Class)
-            assert isinstance(ident, str)
-            funcs = [cl.funcs[ident]]
-
-    elif direct_call:
-        funcs = [direct_call]
-
-    elif method_call:
-        classes = {t[0] for t in merge[objexpr] if isinstance(t[0], python.Class)}
-        funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
-
-    return funcs
+# ---------------------------------------------------------------------------
+# call analysis
+# ---------------------------------------------------------------------------
 
 
-# --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(
     gx: "config.GlobalInfo",
     node: ast.Call,
@@ -694,288 +639,661 @@ def analyze_callfunc(
     )
 
 
-# --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
-# e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(
-    gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance: bool = False
-) -> Merged:
-    """Merge constraint networks along given dimensions"""
-
-    merge: Merged = {}
-
-    if inheritance:  # XXX do we really need this crap
-        mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
-        mergenoinh = merged(gx, [n for n in nodes if n.thing not in gx.inherited])
-
-    for node in nodes:
-        # --- merge node types
-        sortdefault = merge.setdefault(node.thing, set())
-        sortdefault.update(gx.types[node])
-
-        # --- merge inheritance nodes
-        if inheritance:
-            inh = gx.inheritance_relations.get(node.thing, [])
-
-            # merge function variables with their inherited versions (we don't customize!)
-            if isinstance(node.thing, python.Variable) and isinstance(
-                node.thing.parent, python.Function
-            ):
-                var = node.thing
-                for inhfunc in gx.inheritance_relations.get(node.thing.parent, []):
-                    assert isinstance(inhfunc, python.Function)
-                    if var.name in inhfunc.vars:
-                        if inhfunc.vars[var.name] in mergenoinh:
-                            sortdefault.update(mergenoinh[inhfunc.vars[var.name]])
-                for inhvar in gx.inheritance_temp_vars.get(var, []):  # XXX more general
-                    if inhvar in mergenoinh:
-                        sortdefault.update(mergenoinh[inhvar])
-
-            # node is not a function variable
-            else:
-                for n in inh:
-                    if n in mergeinh:  # XXX ook mergenoinh?
-                        sortdefault.update(mergeinh[n])
-    return merge
-
-
-def inode(gx: "config.GlobalInfo", node: Any) -> CNode:
-    """Get the constraint node for a given object"""
-    return gx.cnode[node, 0, 0]
-
-
-def add_constraint(
-    gx: "config.GlobalInfo", a: CNode, b: CNode, worklist: Optional[list[CNode]] = None
-) -> None:
-    """Add a constraint to the graph"""
-    gx.constraints.add((a, b))
-    in_out(a, b)
-    add_to_worklist(worklist, a)
-
-
-def in_out(a: CNode, b: CNode) -> None:
-    """Add an outgoing edge to a node"""
-    a.out.add(b)
-    b.in_.add(a)
-
-
-# --- shared, immutable stand-in for an empty set, so that snapshots of the
-# --- constraint network do not allocate one empty set per node. It must never
-# --- be stored where a mutable set is expected.
-EMPTY_SET: frozenset = frozenset()
-
-
-def add_to_worklist(
-    worklist: Optional[list[CNode]], node: CNode
-) -> None:  # XXX to infer.py
-    """Add a node to the worklist"""
-    if worklist is not None and not node.in_list:
-        worklist.append(node)
-        node.in_list = 1
-
-
-def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
-    """Copy a class"""
-    for var in cl.vars.values():  # XXX
-        if (var, 0, 0) not in gx.cnode or inode(gx, var) not in gx.types:
-            continue  # XXX research later, triggered for doom example
-
-        inode(gx, var).copy(dcpa, 0)
-        gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
-
-        for n in inode(gx, var).in_:  # XXX
-            if isinstance(n.thing, ast.Constant):
-                add_constraint(gx, n, gx.cnode[var, dcpa, 0])
-
-    for func in cl.funcs.values():
-        func_copy(gx, func, dcpa, 0)
-
-        # --- a method copied here is not a template yet, so its allocation
-        # --- sites are not seeded (cart is None), and CNode.copy has given
-        # --- each constructor node the types of the base copy: the shared
-        # --- bucket contour. Propagation reads that before the template is
-        # --- created for real and seeded from the core, and a bucket
-        # --- iterator is already flowing out of list.__iter__(7) by the time
-        # --- the site gets its own contour. The old analysis special-cased
-        # --- __iter__ for the same reason; the sweep owns every site, so
-        # --- nothing is known here and the node holds nothing.
-        for node in func.nodes:
-            if node.constructor and isinstance(
-                node.thing,
-                (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call),
-            ):
-                copied = gx.cnode.get((node.thing, dcpa, 0))
-                if copied is not None and copied is not node:
-                    gx.types[copied] = set()
-
-
-# --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
-
-
-def func_copy(
+def is_anon_callable(
     gx: "config.GlobalInfo",
+    expr: ast.Call,
+    node: Optional[CNode],
+    merge: Optional[Merged] = None,
+) -> tuple[bool, bool]:
+    """Check if an anonymous function is callable"""
+    types = get_types(gx, expr, node, merge)
+    anon = bool([t for t in types if isinstance(t[0], python.Function)])
+    call = bool(
+        [
+            t
+            for t in types
+            if isinstance(t[0], python.Class) and "__call__" in t[0].funcs
+        ]
+    )
+    return anon, call
+
+
+def get_types(
+    gx: "config.GlobalInfo",
+    expr: ast.Call,
+    node: Optional[CNode],
+    merge: Optional[Merged],
+) -> Types:
+    """Get the types of a call node"""
+    types = set()
+    if merge:
+        if expr.func in merge:
+            types = merge[expr.func]
+    elif node:
+        node2 = (expr.func, node.dcpa, node.cpa)
+        if node2 in gx.cnode:
+            types = gx.cnode[node2].types()
+    return types
+
+
+def redirect_func(
     func: "python.Function",
+    callfunc: ast.Call,
+) -> "python.Function":
+    """ redirect based on number of arguments (__%s%d syntax in builtins) """
+
+    if func.mv.module.builtin:
+        if isinstance(func.parent, python.Class):
+            funcs = func.parent.funcs
+        else:
+            funcs = func.mv.funcs
+        nargs = len(
+            [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
+        )
+        if func.ident == 'groupby':  # TODO avoid special case..
+            nargs += len([a for a in callfunc.keywords if a.arg == 'key'])
+        redir = "__%s%d" % (func.ident, nargs)
+        func = funcs.get(redir, func)
+    return func
+
+
+def callfunc_targets(
+    gx: "config.GlobalInfo", node: ast.Call, merge: Merged
+) -> list["python.Function"]:
+    """Get the potential call targets of a call node"""
+
+    (
+        objexpr,
+        ident,
+        direct_call,
+        method_call,
+        constructor,
+        parent_constr,
+        anon_func,
+    ) = analyze_callfunc(gx, node, merge=merge)
+    funcs = []
+
+    if node.func in merge and [
+        t for t in merge[node.func] if isinstance(t[0], python.Function)
+    ]:  # anonymous function call
+        funcs = [t[0] for t in merge[node.func] if isinstance(t[0], python.Function)]
+
+    elif constructor:
+        if (
+            constructor.mv.module.builtin
+            and ident in ("list", "tuple", "set", "frozenset")
+            and nrargs(gx, node) == 1
+        ):
+            funcs = [constructor.funcs["__inititer__"]]
+        elif (
+            constructor.mv.module.builtin
+            and (ident, nrargs(gx, node)) in (
+                ("dict", 1),
+                ("frozendict", 1),
+                ("defaultdict", 2),
+                ("Counter", 1),
+            )
+        ):  # XXX merge infer.redirect
+            funcs = [constructor.funcs["__initdict__"]]  # XXX __inititer__?
+        elif sys.platform == "win32" and "__win32__init__" in constructor.funcs:
+            funcs = [constructor.funcs["__win32__init__"]]
+        elif "__init__" in constructor.funcs:
+            funcs = [constructor.funcs["__init__"]]
+
+    elif parent_constr:
+        if ident != "__init__":
+            func = inode(gx, node).parent
+            assert isinstance(func, python.Function)
+            cl = func.parent
+            assert isinstance(cl, python.Class)
+            assert isinstance(ident, str)
+            funcs = [cl.funcs[ident]]
+
+    elif direct_call:
+        funcs = [direct_call]
+
+    elif method_call:
+        classes = {t[0] for t in merge[objexpr] if isinstance(t[0], python.Class)}
+        funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
+
+    return funcs
+
+
+def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
+    """Get the number of arguments of a call node"""
+    cnode = inode(gx, node)
+    if cnode.lambdawrapper:
+        return cnode.lambdawrapper.largs
+    return len(node.args)
+
+
+def analyze_args(
+    gx: "config.GlobalInfo",
+    expr: ast.Call,
+    func: "python.Function",
+    node: Optional[CNode] = None,
+    skip_defaults: bool = False,
+    merge: Optional[Merged] = None,
+) -> tuple[
+    list[Optional[ast.AST]], list[str], list[ast.AST], list[Optional[ast.AST]], bool
+]:
+    """Analyze the arguments of a call node"""
+    (
+        objexpr,
+        ident,
+        direct_call,
+        method_call,
+        constructor,
+        parent_constr,
+        anon_func,
+    ) = analyze_callfunc(gx, expr, node, merge)
+
+    args: list[Optional[ast.AST]] = []
+    kwdict = {}
+    for a in expr.args:
+        args.append(a)
+    for b in expr.keywords:
+        kwdict[b.arg] = b.value
+    formal_args = func.formals[:]
+    assert func.node
+    if func.node.args.vararg:
+        formal_args = formal_args[:-1]
+    default_start = len(formal_args) - len(func.defaults)
+
+    if ident in ["__getattr__", "__setattr__"]:  # property?
+        args = args[1:]
+
+    if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
+        args.insert(0, None)
+
+    kwextra = []
+    for kw in kwdict:
+        if kw not in formal_args and f"__kw_{kw}" not in formal_args:
+            kwextra.append(kw)
+
+    argnr = 0
+    actuals: list[Optional[ast.AST]] = []
+    formals = []
+    defaults: list[ast.AST] = []
+    missing = False
+    for i, formal in enumerate(formal_args):
+        if formal in kwdict:
+            actuals.append(kwdict[formal])
+            formals.append(formal)
+        elif formal.startswith("__kw_") and formal[5:] in kwdict:
+            actuals.insert(0, kwdict[formal[5:]])
+            formals.insert(0, formal)
+        elif argnr < len(args) and not formal.startswith("__kw_"):
+            actuals.append(args[argnr])
+            argnr += 1
+            formals.append(formal)
+        elif i >= default_start:
+            default = func.defaults[i - default_start]
+            if not skip_defaults:
+                if formal.startswith("__kw_"):
+                    actuals.insert(0, default)
+                    formals.insert(0, formal)
+                else:
+                    actuals.append(default)
+                    formals.append(formal)
+                defaults.append(default)
+            elif func.mv.module.ident == "bisect":  # TODO generalize
+                if formal.startswith("__kw_"):
+                    actuals.insert(0, default)
+                    formals.insert(0, formal)
+        else:
+            missing = True
+
+    extra = args[argnr:]
+
+    _error = bool(
+        (missing or extra or kwextra)
+        and not func.node.args.vararg
+        and not func.node.args.kwarg
+        and not get_starargs(expr)
+        and func.lambdanr is None
+        and expr not in gx.lambdawrapper
+    )  # XXX
+
+    if func.node.args.vararg:
+        for arg in extra:
+            actuals.append(arg)
+            formals.append(func.formals[-1])
+
+    return actuals, formals, defaults, extra, _error
+
+
+def get_starargs(node: ast.Call) -> Optional[ast.AST]:
+    """Get the starred argument of a call node"""
+    for arg in node.args:
+        if isinstance(arg, ast.Starred):
+            return arg.value
+    return None
+
+
+def connect_actual_formal(
+    gx: "config.GlobalInfo",
+    expr: ast.Call,
+    func: "python.Function",
+    parent_constr: bool = False,
+    merge: Optional[Merged] = None,
+) -> tuple[list[tuple[ast.AST, "python.Variable"]], int, bool]:
+    """Connect actual and formal arguments"""
+
+    pairs = []
+
+    actuals: list[Optional[ast.AST]] = [
+        a for a in expr.args if not isinstance(a, ast.keyword)
+    ]
+    if isinstance(func.parent, python.Class):
+        formals = [f for f in func.formals if f != "self"]
+    else:
+        formals = [f for f in func.formals]
+
+    if parent_constr:
+        actuals = actuals[1:]
+
+    # TODO replace all this with __ss_void approach?
+    skip_defaults = (
+        False  # XXX investigate and further narrow down cases where we want to skip
+    )
+    if (
+        (
+            func.mv.module.ident
+            in [
+                "time",
+                "string",
+                "collections",
+                "bisect",
+                "array",
+                "math",
+                "integer",
+                "cStringIO",
+                "getopt",
+            ]
+        )
+        or (func.mv.module.ident == "random" and func.ident == "randrange")
+        or (
+            func.mv.module.ident == "builtin"
+            and func.ident
+            not in (
+                "sort",
+                "sorted",
+                "min",
+                "__min1",
+                "max",
+                "__max1",
+                "__print",
+                "zip",
+                "split",
+                "rsplit",
+                "map",
+                "to_bytes",
+                "from_bytes",
+                # emit all (None) defaults, so that e.g. decode(errors=..)
+                # does not pass 'errors' as the encoding
+                "encode",
+                "decode",
+                "open",  # open(f, encoding=..) must not pass it as the mode
+                "open_binary",
+            )
+        )
+    ):
+        if (
+            not (
+                func.mv.module.ident == "math"
+                and func.ident == "isclose"
+            )
+            and not (
+                func.mv.module.ident == "collections"
+                and func.ident == "__init__"
+                and isinstance(func.parent, python.Class)
+                and func.parent.ident == 'deque'
+            )
+        ):
+            skip_defaults = True
+
+    actuals, formals, _, extra, _error = analyze_args(
+        gx, expr, func, skip_defaults=skip_defaults, merge=merge
+    )
+
+    for actual, formal in zip(actuals, formals):
+        if not (isinstance(func.parent, python.Class) and formal == "self"):
+            assert actual
+            pairs.append((actual, func.vars[formal]))
+
+    return pairs, len(extra), _error
+
+
+def actuals_formals(
+    gx: "config.GlobalInfo",
+    expr: ast.Call,
+    func: "python.Function",
+    node: CNode,
     dcpa: int,
     cpa: int,
-    worklist: Optional[list[CNode]] = None,
-    cart: Optional[CartesianProduct] = None,
+    types: CartesianProduct,
+    analysis: Analysis,
+    worklist: list[CNode],
 ) -> None:
-    """Copy a function"""
-    # print 'funccopy', func, cart, dcpa, cpa
+    """Connect actual and formal arguments"""
+    (
+        objexpr,
+        ident,
+        direct_call,
+        method_call,
+        constructor,
+        parent_constr,
+        anon_func,
+    ) = analysis
 
-    # --- copy local end points of each constraint
-    for a, b in func.constraints:
+    starargs = get_starargs(expr)
+    if starargs:  # XXX only in lib/
+        formals = func.formals
+        actuals: list[Optional[ast.AST]] = []
+        for _ in range(len(formals)):
+            actuals.append(starargs)
+        types = len(formals) * types
+    else:
+        actuals, formals, _, _, _error = analyze_args(gx, expr, func, node)
+        if _error:
+            return
+
+    for actual, formal, formaltype in zip(actuals, formals, types):
+        formalnode = gx.cnode[func.vars[formal], dcpa, cpa]
+
         if (
-            not (
-                isinstance(a.thing, python.Variable)
-                and parent_func(gx, a.thing) != func
+            formaltype[1] != 0
+        ):  # ifa: remember dataflow information for non-simple types
+            if actual is None:
+                if constructor:
+                    objexpr = node.thing
+
+                if method_call or constructor:
+                    formalnode.in_.add(gx.cnode[objexpr, node.dcpa, node.cpa])
+            else:
+                if actual in func.defaults:
+                    formalnode.in_.add(gx.cnode[actual, 0, 0])
+                else:
+                    formalnode.in_.add(gx.cnode[actual, node.dcpa, node.cpa])
+
+        gx.types[formalnode].add(formaltype)
+        add_to_worklist(worklist, formalnode)
+
+
+def connect_getsetattr(
+    gx: "config.GlobalInfo",
+    func: "python.Function",
+    callnode: CNode,
+    callfunc: ast.Call,
+    dcpa: int,
+    worklist: list[CNode],
+) -> bool:
+    """Connect a get/setattr call to the target attribute"""
+
+    if (
+        isinstance(callfunc.func, ast.Attribute)
+        and callfunc.func.attr in ["__setattr__", "__getattr__"]
+        and not (
+            isinstance(func.parent, python.Class)
+            and callfunc.args
+            and ast_utils.is_str(callfunc.args[0])
+            and _const_str(callfunc.args[0]) in func.parent.properties
+        )
+    ):
+        assert ast_utils.is_str(callfunc.args[0])
+        varname = _const_str(callfunc.args[0])
+        parent = func.parent
+        assert isinstance(parent, (python.Class, python.StaticClass))
+
+        var = default_var(
+            gx, varname, parent, worklist, mv=parent.module.mv
+        )  # XXX always make new var??
+        inode(gx, var).copy(dcpa, 0, worklist)
+
+        if gx.cnode[var, dcpa, 0] not in gx.types:
+            gx.types[gx.cnode[var, dcpa, 0]] = set()
+
+        gx.cnode[var, dcpa, 0].mv = parent.module.mv  # XXX move into default_var
+
+        if callfunc.func.attr == "__setattr__":
+            add_constraint(
+                gx,
+                gx.cnode[callfunc.args[1], callnode.dcpa, callnode.cpa],
+                gx.cnode[var, dcpa, 0],
+                worklist,
             )
-            and a.dcpa == 0
-        ):
-            a = a.copy(dcpa, cpa, worklist)
-        if (
-            not (
-                isinstance(b.thing, python.Variable)
-                and parent_func(gx, b.thing) != func
+        else:
+            add_constraint(gx, gx.cnode[var, dcpa, 0], callnode, worklist)
+        return True
+    return False
+
+
+def redirect(
+    gx: "config.GlobalInfo",
+    c: CartesianProduct,
+    dcpa: int,
+    func: "python.Function",
+    callfunc: ast.Call,
+    ident: Optional[str],
+    callnode: CNode,
+    direct_call: Optional["python.Function"],
+    constructor: Optional["python.Class"],
+) -> tuple[CartesianProduct, int, "python.Function"]:
+    """Redirect a call node"""
+    func = redirect_func(func, callfunc)
+
+    # staticmethod
+    if isinstance(func.parent, python.Class) and (
+        func.ident in func.parent.staticmethods
+        or func.ident in func.parent.classmethods
+    ):
+        dcpa = 1
+
+    # dict.__init__
+    if (
+        constructor
+        and constructor.mv.module.builtin
+        and (ident, nrargs(gx, callfunc)) in (
+            ("dict", 1),
+            ("frozendict", 1),
+            ("defaultdict", 2),
+            ("Counter", 1),
+        )
+    ):
+        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
+        if "dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames:
+            func = list(callnode.types())[0][0].funcs["__initdict__"]
+        else:
+            func = list(callnode.types())[0][0].funcs["__inititer__"]
+
+    # dict.{update, __ior__}, Counter.{update, subtract}
+    if (
+        func.ident in ("update", "__ior__", "subtract")
+        and isinstance(func.parent, python.Class)
+        and func.parent.mv.module.builtin
+        and func.parent.ident in ("dict", "frozendict", "defaultdict", "Counter")
+    ):
+        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
+        if not ("dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames):
+            func = func.parent.funcs[func.ident + "iter"]
+
+    # list, tuple
+    if (
+        constructor
+        and ident in ("list", "tuple", "set", "frozenset")
+        and nrargs(gx, callfunc) == 1
+    ):
+        func = list(callnode.types())[0][0].funcs["__inititer__"]  # XXX use __init__?
+
+    # array
+    if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
+        typecode = _const_str(callfunc.args[0])
+        array_type = None
+        if typecode in "bBhHiIlLqQ":
+            array_type = "int"
+        elif typecode in "fd":
+            array_type = "float"
+        elif typecode in "uw":
+            # unicode typecodes: elements are single-character strings
+            # ('u' is deprecated in CPython since 3.3 and removed in 3.16,
+            # 'w' is its replacement, added in 3.13)
+            array_type = "str"
+        if array_type is not None:
+            func = list(callnode.types())[0][0].funcs["__init_%s__" % array_type]
+
+    # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
+    # tuple3.__getitem__(0/1/2) -> __getfirst__/__getsecond__/__getthird__
+    if (
+        isinstance(callfunc.func, ast.Attribute)
+        and callfunc.func.attr in ("__getitem__", "__getunit__")
+        and ast_utils.is_num(callfunc.args[0])
+        and func.parent
+        and func.parent.mv.module.builtin
+        and (
+            (func.parent.ident == "tuple2" and _const_num(callfunc.args[0]) in (0, 1))
+            or (
+                func.parent.ident == "tuple3"
+                and _const_num(callfunc.args[0]) in (0, 1, 2)
             )
-            and b.dcpa == 0
-        ):
-            b = b.copy(dcpa, cpa, worklist)
+        )
+    ):
+        assert isinstance(func.parent, python.Class)
+        getter = ["__getfirst__", "__getsecond__", "__getthird__"][
+            _const_num(callfunc.args[0])
+        ]
+        func = func.parent.funcs[getter]
 
-        add_constraint(gx, a, b, worklist)
-
-    # --- copy other nodes
-    for node in func.nodes:
-        node.copy(dcpa, cpa, worklist)
-
-    # --- iterative flow analysis: seed allocation sites in new template
-    ifa_seed_template(gx, func, cart, dcpa, cpa, worklist)
-
-
-# --- iterative dataflow analysis
-def propagate(gx: "config.GlobalInfo") -> None:
-    """Propagate constraints through the graph"""
-    logger.debug("propagate")
-
-    # --- initialize working sets
-    worklist: list[CNode] = []
-    changed = set()
-    for node in gx.types:
-        if gx.types[node]:
-            add_to_worklist(worklist, node)
-        expr = node.thing
+    # property
+    if isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in [
+        "__setattr__",
+        "__getattr__",
+    ]:
         if (
-            isinstance(expr, ast.Call) and not expr.args
-        ) or expr in gx.lambdawrapper:  # XXX
-            changed.add(node)
+            isinstance(func.parent, python.Class)
+            and callfunc.args
+            and ast_utils.is_str(callfunc.args[0])
+            and _const_str(callfunc.args[0]) in func.parent.properties
+        ):
+            arg = _const_str(callfunc.args[0])
+            if callfunc.func.attr == "__setattr__":
+                assert isinstance(func.parent, python.Class)
+                func = func.parent.funcs[func.parent.properties[arg][1]]
+            else:
+                assert isinstance(func.parent, python.Class)
+                func = func.parent.funcs[func.parent.properties[arg][0]]
+            c = c[1:]
 
-    for node in changed:
-        cpa(gx, node, worklist)
+    # win32
+    if (
+        sys.platform == "win32"
+        and func.mv.module.builtin
+        and isinstance(func.parent, python.Class)
+        and "__win32" + func.ident in func.parent.funcs
+    ):
+        func = func.parent.funcs["__win32" + func.ident]
 
-    builtins = set(gx.builtins)
-    types = gx.types
-
-    # --- infer v2: while sweeping, container contours outside the open set
-    # --- are frozen. They still propagate what they already hold, they just
-    # --- cannot receive anything new, so whatever arrives in an open contour
-    # --- came from a site that owns one rather than from the rest of the
-    # --- program merging into itself. The open set is the committed sites
-    # --- plus the ones minted during this sweep; it grows as the frozen core
-    # --- fills in.
-    # ---
-    # --- Only classes that carry contours are frozen. Freezing user class
-    # --- attributes as well starves template creation: a call whose argument
-    # --- comes out of an object attribute gets no argument types, so it
-    # --- forms no cartesian product and creates no template, and the molds
-    # --- inside it are never discovered.
-    open_contours = gx.infer_v2_open_contours
-    split_idents = SPLIT_CLASS_IDENTS
-
-    # --- iterative dataflow analysis
-    while worklist:
-        callnodes = set()
-        while worklist:
-            a = worklist.pop(0)
-            a.in_list = 0
-
-            for callfunc in a.callfuncs:
-                t = (callfunc, a.dcpa, a.cpa)
-                if t in gx.cnode:
-                    callnodes.add(gx.cnode[t])
-
-            for b in a.out.copy():  # XXX can change...?
-                # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-                if isinstance(b.thing, python.Variable) and isinstance(
-                    b.thing.parent, python.Class
-                ):
-                    parent_ident = b.thing.parent.ident
-
-                    if (
-                        open_contours is not None
-                        and parent_ident in split_idents
-                        and b.thing.parent.mv.module.builtin
-                        and (b.thing.parent, b.dcpa) not in open_contours
-                    ):
-                        continue
-
-                    if parent_ident in builtins:
-                        if parent_ident in [
-                            "int_",
-                            "float_",
-                            "str_",
-                            "none",
-                            "bool_",
-                            "bytes_",
-                        ]:
-                            continue
-                        elif (
-                            parent_ident
-                            in [
-                                "list",
-                                "tuple",
-                                "frozenset",
-                                "set",
-                                "file",
-                                "__iter",
-                                "deque",
-                                "array",
-                            ]
-                            and b.thing.name != "unit"
-                        ):
-                            continue
-                        elif parent_ident in (
-                            "dict",
-                            "frozendict",
-                            "defaultdict",
-                            "Counter",
-                        ) and b.thing.name not in ["unit", "value"]:
-                            continue
-                        elif parent_ident == "tuple2" and b.thing.name not in [
-                            "unit",
-                            "first",
-                            "second",
-                        ]:
-                            continue
-                        elif parent_ident == "tuple3" and b.thing.name not in [
-                            "unit",
-                            "first",
-                            "second",
-                            "third",
-                        ]:
-                            continue
-
-                typesa = types[a]
-                typesb = types[b]
-                oldsize = len(typesb)
-
-                typesb.update(typesa)
-                if len(typesb) > oldsize:
-                    add_to_worklist(worklist, b)
-
-        for callnode in callnodes:
-            cpa(gx, callnode, worklist)
+    return c, dcpa, func
 
 
-# --- determine cartesian product of possible function and argument types
+def _const_str(node: ast.AST) -> str:
+    """Return string value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, str)
+    return node.value
+
+
+def _const_num(node: ast.AST) -> Union[int, float]:
+    """Return numeric value from a constant node."""
+    assert isinstance(node, ast.Constant)
+    assert isinstance(node.value, (int, float))
+    return node.value
+
+
+# ---------------------------------------------------------------------------
+# CPA: one template per cartesian product of argument types
+# ---------------------------------------------------------------------------
+
+
+def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None:
+    """Perform the cartesian product algorithm"""
+
+    analysis = analyze_callfunc(gx, callnode.thing, callnode)
+
+    # loop over cartesian product of possible funcs, arg types
+    functypes = possible_functions(gx, callnode, analysis)
+    if not functypes:
+        return
+    argtypes = possible_argtypes(gx, callnode, functypes, analysis, worklist)
+    cp = list(itertools.product(*argtypes))
+    if not cp:
+        return
+
+    if (len(functypes) * len(cp)) > gx.cpa_limit:
+        gx.cpa_limited = True
+        return
+
+    (
+        objexpr,
+        ident,
+        direct_call,
+        method_call,
+        constructor,
+        parent_constr,
+        anon_func,
+    ) = analysis
+
+    # --- iterate over function/argument type combinations
+    for functype in functypes:
+        for c in cp:
+            (func, dcpa, objtype) = functype
+
+            objtype2: CartesianProduct  # TODO wrong name for type!
+            if objtype:
+                objtype2 = (objtype,)
+            else:
+                objtype2 = ()
+
+            # redirect in special cases
+            callfunc = callnode.thing
+            c, dcpa, func = redirect(
+                gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor
+            )
+
+            # already connected to template
+            if (func, objtype2, c) in callnode.nodecp:
+                continue
+            callnode.nodecp.add((func, objtype2, c))
+
+            # create new template
+            if dcpa not in func.cp or c not in func.cp[dcpa]:
+                create_template(gx, func, dcpa, c, worklist)
+            cpa = func.cp[dcpa][c]
+            func.xargs[dcpa, cpa] = len(c)
+
+            # __getattr__, __setattr__
+            if connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
+                continue
+
+            # connect actuals and formals
+            actuals_formals(
+                gx,
+                callfunc,
+                func,
+                callnode,
+                dcpa,
+                cpa,
+                objtype2 + c,
+                analysis,
+                worklist,
+            )
+
+            # connect call and return expressions
+            if func.retnode and not constructor:
+                retnode = gx.cnode[func.retnode.thing, dcpa, cpa]
+                add_constraint(gx, retnode, callnode, worklist)
+
+
 def possible_functions(
     gx: "config.GlobalInfo", node: CNode, analysis: Analysis
 ) -> PossibleFuncs:
@@ -1137,284 +1455,6 @@ def possible_argtypes(
     return argtypes
 
 
-def redirect_func(
-    func: "python.Function",
-    callfunc: ast.Call,
-) -> "python.Function":
-    """ redirect based on number of arguments (__%s%d syntax in builtins) """
-
-    if func.mv.module.builtin:
-        if isinstance(func.parent, python.Class):
-            funcs = func.parent.funcs
-        else:
-            funcs = func.mv.funcs
-        nargs = len(
-            [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
-        )
-        if func.ident == 'groupby':  # TODO avoid special case..
-            nargs += len([a for a in callfunc.keywords if a.arg == 'key'])
-        redir = "__%s%d" % (func.ident, nargs)
-        func = funcs.get(redir, func)
-    return func
-
-
-def redirect(
-    gx: "config.GlobalInfo",
-    c: CartesianProduct,
-    dcpa: int,
-    func: "python.Function",
-    callfunc: ast.Call,
-    ident: Optional[str],
-    callnode: CNode,
-    direct_call: Optional["python.Function"],
-    constructor: Optional["python.Class"],
-) -> tuple[CartesianProduct, int, "python.Function"]:
-    """Redirect a call node"""
-    func = redirect_func(func, callfunc)
-
-    # staticmethod
-    if isinstance(func.parent, python.Class) and (
-        func.ident in func.parent.staticmethods
-        or func.ident in func.parent.classmethods
-    ):
-        dcpa = 1
-
-    # dict.__init__
-    if (
-        constructor
-        and constructor.mv.module.builtin
-        and (ident, nrargs(gx, callfunc)) in (
-            ("dict", 1),
-            ("frozendict", 1),
-            ("defaultdict", 2),
-            ("Counter", 1),
-        )
-    ):
-        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if "dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames:
-            func = list(callnode.types())[0][0].funcs["__initdict__"]
-        else:
-            func = list(callnode.types())[0][0].funcs["__inititer__"]
-
-    # dict.{update, __ior__}, Counter.{update, subtract}
-    if (
-        func.ident in ("update", "__ior__", "subtract")
-        and isinstance(func.parent, python.Class)
-        and func.parent.mv.module.builtin
-        and func.parent.ident in ("dict", "frozendict", "defaultdict", "Counter")
-    ):
-        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
-        if not ("dict" in clnames or "defaultdict" in clnames or "frozendict" in clnames or "Counter" in clnames):
-            func = func.parent.funcs[func.ident + "iter"]
-
-    # list, tuple
-    if (
-        constructor
-        and ident in ("list", "tuple", "set", "frozenset")
-        and nrargs(gx, callfunc) == 1
-    ):
-        func = list(callnode.types())[0][0].funcs["__inititer__"]  # XXX use __init__?
-
-    # array
-    if constructor and ident == "array" and ast_utils.is_str(callfunc.args[0]):
-        typecode = _const_str(callfunc.args[0])
-        array_type = None
-        if typecode in "bBhHiIlLqQ":
-            array_type = "int"
-        elif typecode in "fd":
-            array_type = "float"
-        elif typecode in "uw":
-            # unicode typecodes: elements are single-character strings
-            # ('u' is deprecated in CPython since 3.3 and removed in 3.16,
-            # 'w' is its replacement, added in 3.13)
-            array_type = "str"
-        if array_type is not None:
-            func = list(callnode.types())[0][0].funcs["__init_%s__" % array_type]
-
-    # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
-    # tuple3.__getitem__(0/1/2) -> __getfirst__/__getsecond__/__getthird__
-    if (
-        isinstance(callfunc.func, ast.Attribute)
-        and callfunc.func.attr in ("__getitem__", "__getunit__")
-        and ast_utils.is_num(callfunc.args[0])
-        and func.parent
-        and func.parent.mv.module.builtin
-        and (
-            (func.parent.ident == "tuple2" and _const_num(callfunc.args[0]) in (0, 1))
-            or (
-                func.parent.ident == "tuple3"
-                and _const_num(callfunc.args[0]) in (0, 1, 2)
-            )
-        )
-    ):
-        assert isinstance(func.parent, python.Class)
-        getter = ["__getfirst__", "__getsecond__", "__getthird__"][
-            _const_num(callfunc.args[0])
-        ]
-        func = func.parent.funcs[getter]
-
-    # property
-    if isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in [
-        "__setattr__",
-        "__getattr__",
-    ]:
-        if (
-            isinstance(func.parent, python.Class)
-            and callfunc.args
-            and ast_utils.is_str(callfunc.args[0])
-            and _const_str(callfunc.args[0]) in func.parent.properties
-        ):
-            arg = _const_str(callfunc.args[0])
-            if callfunc.func.attr == "__setattr__":
-                assert isinstance(func.parent, python.Class)
-                func = func.parent.funcs[func.parent.properties[arg][1]]
-            else:
-                assert isinstance(func.parent, python.Class)
-                func = func.parent.funcs[func.parent.properties[arg][0]]
-            c = c[1:]
-
-    # win32
-    if (
-        sys.platform == "win32"
-        and func.mv.module.builtin
-        and isinstance(func.parent, python.Class)
-        and "__win32" + func.ident in func.parent.funcs
-    ):
-        func = func.parent.funcs["__win32" + func.ident]
-
-    return c, dcpa, func
-
-
-# --- cartesian product algorithm; adds interprocedural constraints
-
-
-def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None:
-    """Perform the cartesian product algorithm"""
-
-    analysis = analyze_callfunc(gx, callnode.thing, callnode)
-
-    # loop over cartesian product of possible funcs, arg types
-    functypes = possible_functions(gx, callnode, analysis)
-    if not functypes:
-        return
-    argtypes = possible_argtypes(gx, callnode, functypes, analysis, worklist)
-    cp = list(itertools.product(*argtypes))
-    if not cp:
-        return
-
-    if (len(functypes) * len(cp)) > gx.cpa_limit:
-        gx.cpa_limited = True
-        return
-
-    (
-        objexpr,
-        ident,
-        direct_call,
-        method_call,
-        constructor,
-        parent_constr,
-        anon_func,
-    ) = analysis
-
-    # --- iterate over function/argument type combinations
-    for functype in functypes:
-        for c in cp:
-            (func, dcpa, objtype) = functype
-
-            objtype2: CartesianProduct  # TODO wrong name for type!
-            if objtype:
-                objtype2 = (objtype,)
-            else:
-                objtype2 = ()
-
-            # redirect in special cases
-            callfunc = callnode.thing
-            c, dcpa, func = redirect(
-                gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor
-            )
-
-            # already connected to template
-            if (func, objtype2, c) in callnode.nodecp:
-                continue
-            callnode.nodecp.add((func, objtype2, c))
-
-            # create new template
-            if dcpa not in func.cp or c not in func.cp[dcpa]:
-                create_template(gx, func, dcpa, c, worklist)
-            cpa = func.cp[dcpa][c]
-            func.xargs[dcpa, cpa] = len(c)
-
-            # __getattr__, __setattr__
-            if connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
-                continue
-
-            # connect actuals and formals
-            actuals_formals(
-                gx,
-                callfunc,
-                func,
-                callnode,
-                dcpa,
-                cpa,
-                objtype2 + c,
-                analysis,
-                worklist,
-            )
-
-            # connect call and return expressions
-            if func.retnode and not constructor:
-                retnode = gx.cnode[func.retnode.thing, dcpa, cpa]
-                add_constraint(gx, retnode, callnode, worklist)
-
-
-def connect_getsetattr(
-    gx: "config.GlobalInfo",
-    func: "python.Function",
-    callnode: CNode,
-    callfunc: ast.Call,
-    dcpa: int,
-    worklist: list[CNode],
-) -> bool:
-    """Connect a get/setattr call to the target attribute"""
-
-    if (
-        isinstance(callfunc.func, ast.Attribute)
-        and callfunc.func.attr in ["__setattr__", "__getattr__"]
-        and not (
-            isinstance(func.parent, python.Class)
-            and callfunc.args
-            and ast_utils.is_str(callfunc.args[0])
-            and _const_str(callfunc.args[0]) in func.parent.properties
-        )
-    ):
-        assert ast_utils.is_str(callfunc.args[0])
-        varname = _const_str(callfunc.args[0])
-        parent = func.parent
-        assert isinstance(parent, (python.Class, python.StaticClass))
-
-        var = default_var(
-            gx, varname, parent, worklist, mv=parent.module.mv
-        )  # XXX always make new var??
-        inode(gx, var).copy(dcpa, 0, worklist)
-
-        if gx.cnode[var, dcpa, 0] not in gx.types:
-            gx.types[gx.cnode[var, dcpa, 0]] = set()
-
-        gx.cnode[var, dcpa, 0].mv = parent.module.mv  # XXX move into default_var
-
-        if callfunc.func.attr == "__setattr__":
-            add_constraint(
-                gx,
-                gx.cnode[callfunc.args[1], callnode.dcpa, callnode.cpa],
-                gx.cnode[var, dcpa, 0],
-                worklist,
-            )
-        else:
-            add_constraint(gx, gx.cnode[var, dcpa, 0], callnode, worklist)
-        return True
-    return False
-
-
 def create_template(
     gx: "config.GlobalInfo",
     func: "python.Function",
@@ -1435,66 +1475,97 @@ def create_template(
     func_copy(gx, func, dcpa, cpa, worklist, c)
 
 
-def actuals_formals(
+def called(func: "python.Function") -> bool:
+    """Check if a function has been called"""
+    return bool([cpas for cpas in func.cp.values() if cpas])
+
+
+# ---------------------------------------------------------------------------
+# copying parts of the graph
+# ---------------------------------------------------------------------------
+
+
+def func_copy(
     gx: "config.GlobalInfo",
-    expr: ast.Call,
     func: "python.Function",
-    node: CNode,
     dcpa: int,
     cpa: int,
-    types: CartesianProduct,
-    analysis: Analysis,
-    worklist: list[CNode],
+    worklist: Optional[list[CNode]] = None,
+    cart: Optional[CartesianProduct] = None,
 ) -> None:
-    """Connect actual and formal arguments"""
-    (
-        objexpr,
-        ident,
-        direct_call,
-        method_call,
-        constructor,
-        parent_constr,
-        anon_func,
-    ) = analysis
+    """Copy a function"""
+    # print 'funccopy', func, cart, dcpa, cpa
 
-    starargs = get_starargs(expr)
-    if starargs:  # XXX only in lib/
-        formals = func.formals
-        actuals: list[Optional[ast.AST]] = []
-        for _ in range(len(formals)):
-            actuals.append(starargs)
-        types = len(formals) * types
-    else:
-        actuals, formals, _, _, _error = analyze_args(gx, expr, func, node)
-        if _error:
-            return
-
-    for actual, formal, formaltype in zip(actuals, formals, types):
-        formalnode = gx.cnode[func.vars[formal], dcpa, cpa]
-
+    # --- copy local end points of each constraint
+    for a, b in func.constraints:
         if (
-            formaltype[1] != 0
-        ):  # ifa: remember dataflow information for non-simple types
-            if actual is None:
-                if constructor:
-                    objexpr = node.thing
+            not (
+                isinstance(a.thing, python.Variable)
+                and parent_func(gx, a.thing) != func
+            )
+            and a.dcpa == 0
+        ):
+            a = a.copy(dcpa, cpa, worklist)
+        if (
+            not (
+                isinstance(b.thing, python.Variable)
+                and parent_func(gx, b.thing) != func
+            )
+            and b.dcpa == 0
+        ):
+            b = b.copy(dcpa, cpa, worklist)
 
-                if method_call or constructor:
-                    formalnode.in_.add(gx.cnode[objexpr, node.dcpa, node.cpa])
-            else:
-                if actual in func.defaults:
-                    formalnode.in_.add(gx.cnode[actual, 0, 0])
-                else:
-                    formalnode.in_.add(gx.cnode[actual, node.dcpa, node.cpa])
+        add_constraint(gx, a, b, worklist)
 
-        gx.types[formalnode].add(formaltype)
-        add_to_worklist(worklist, formalnode)
+    # --- copy other nodes
+    for node in func.nodes:
+        node.copy(dcpa, cpa, worklist)
+
+    # --- iterative flow analysis: seed allocation sites in new template
+    seed_template(gx, func, cart, dcpa, cpa, worklist)
 
 
-# --- seed allocation sites in newly created templates (called by function.copy())
+def parent_func(gx: "config.GlobalInfo", thing: Any) -> Optional["python.Function"]:
+    """Get the parent function of a node"""
+    return python.outer_func(inode(gx, thing).parent)
 
 
-def ifa_seed_template(
+def class_copy(gx: "config.GlobalInfo", cl: "python.Class", dcpa: int) -> None:
+    """Copy a class"""
+    for var in cl.vars.values():  # XXX
+        if (var, 0, 0) not in gx.cnode or inode(gx, var) not in gx.types:
+            continue  # XXX research later, triggered for doom example
+
+        inode(gx, var).copy(dcpa, 0)
+        gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
+
+        for n in inode(gx, var).in_:  # XXX
+            if isinstance(n.thing, ast.Constant):
+                add_constraint(gx, n, gx.cnode[var, dcpa, 0])
+
+    for func in cl.funcs.values():
+        func_copy(gx, func, dcpa, 0)
+
+        # --- a method copied here is not a template yet, so its allocation
+        # --- sites are not seeded (cart is None), and CNode.copy has given
+        # --- each constructor node the types of the base copy: the shared
+        # --- bucket contour. Propagation reads that before the template is
+        # --- created for real and seeded from the core, and a bucket
+        # --- iterator is already flowing out of list.__iter__(7) by the time
+        # --- the site gets its own contour. The old analysis special-cased
+        # --- __iter__ for the same reason; the sweep owns every site, so
+        # --- nothing is known here and the node holds nothing.
+        for node in func.nodes:
+            if node.constructor and isinstance(
+                node.thing,
+                (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call),
+            ):
+                copied = gx.cnode.get((node.thing, dcpa, 0))
+                if copied is not None and copied is not node:
+                    gx.types[copied] = set()
+
+
+def seed_template(
     gx: "config.GlobalInfo",
     func: "python.Function",
     cart: Optional[CartesianProduct],
@@ -1505,14 +1576,14 @@ def ifa_seed_template(
     """Seed allocation sites in newly created templates
 
     A mold in a newly created template becomes a real allocation site here,
-    so this is where it is given its contour: the one the infer v2 core
+    so this is where it is given its contour: the one the contours core
     already has for this (function, cart, node), or its class's shared bucket
     if the core has none yet.
     """
     if cart is None:  # not in the process of propagation
         return
-    core = gx.infer_v2_core
-    assert core is not None, "templates are only created while infer v2 runs"
+    core = gx.contour_core
+    assert core is not None, "templates are only created during contour analysis"
     if isinstance(func.parent, python.Class):  # self
         cart = ((func.parent, dcpa),) + cart
 
@@ -1540,7 +1611,17 @@ def ifa_seed_template(
                 add_to_worklist(worklist, alloc_node)
 
 
-# --- backup constraint network
+# ---------------------------------------------------------------------------
+# backing up and restoring the graph
+# ---------------------------------------------------------------------------
+
+
+# --- shared, immutable stand-in for an empty set, so that snapshots of the
+# --- constraint network do not allocate one empty set per node. It must never
+# --- be stored where a mutable set is expected.
+EMPTY_SET: frozenset = frozenset()
+
+
 def backup_network(gx: "config.GlobalInfo") -> Backup:
     """Backup the constraint network
 
@@ -1568,7 +1649,6 @@ def backup_network(gx: "config.GlobalInfo") -> Backup:
     return (beforetypes, beforeconstr, beforeinout, beforecnode)
 
 
-# --- restore constraint network, introducing new types
 def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
     """Restore the constraint network"""
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
@@ -1608,6 +1688,55 @@ def restore_network(gx: "config.GlobalInfo", backup: Backup) -> None:
         if stale:
             func.nodes -= stale
             func.nodes_ordered = [n for n in func.nodes_ordered if n not in stale]
+
+
+# ---------------------------------------------------------------------------
+# after analysis
+# ---------------------------------------------------------------------------
+
+
+# --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
+# e.g. for annotation we merge everything; for code generation, we might want to create specialized code
+def merged(
+    gx: "config.GlobalInfo", nodes: Iterable[CNode], inheritance: bool = False
+) -> Merged:
+    """Merge constraint networks along given dimensions"""
+
+    merge: Merged = {}
+
+    if inheritance:  # XXX do we really need this crap
+        mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
+        mergenoinh = merged(gx, [n for n in nodes if n.thing not in gx.inherited])
+
+    for node in nodes:
+        # --- merge node types
+        sortdefault = merge.setdefault(node.thing, set())
+        sortdefault.update(gx.types[node])
+
+        # --- merge inheritance nodes
+        if inheritance:
+            inh = gx.inheritance_relations.get(node.thing, [])
+
+            # merge function variables with their inherited versions (we don't customize!)
+            if isinstance(node.thing, python.Variable) and isinstance(
+                node.thing.parent, python.Function
+            ):
+                var = node.thing
+                for inhfunc in gx.inheritance_relations.get(node.thing.parent, []):
+                    assert isinstance(inhfunc, python.Function)
+                    if var.name in inhfunc.vars:
+                        if inhfunc.vars[var.name] in mergenoinh:
+                            sortdefault.update(mergenoinh[inhfunc.vars[var.name]])
+                for inhvar in gx.inheritance_temp_vars.get(var, []):  # XXX more general
+                    if inhvar in mergenoinh:
+                        sortdefault.update(mergenoinh[inhvar])
+
+            # node is not a function variable
+            else:
+                for n in inh:
+                    if n in mergeinh:  # XXX ook mergenoinh?
+                        sortdefault.update(mergeinh[n])
+    return merge
 
 
 def get_classes(gx: "config.GlobalInfo", var: "python.Variable") -> set["python.Class"]:
@@ -1681,132 +1810,6 @@ def determine_classes(gx: "config.GlobalInfo") -> None:  # XXX modeling..?
     var = func.vars[func.formals[0]]
     for cl in deepcopy_classes(gx, nested_classes(gx, var)):
         cl.has_deepcopy = True
-
-
-def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
-    """Analyze a module"""
-    from . import graph  # TODO improve separation to avoid circular imports..
-    from .typestr import nodetypestr
-    from .virtual import analyze_virtuals
-
-    # --- build dataflow graph from source code
-    gx.main_module = graph.parse_module(module_name, gx)
-
-    # --- seed class_.__name__ attributes..
-    for cl in gx.allclasses:
-        if cl.ident == "class_":
-            var = default_var(gx, "__name__", cl)
-            gx.types[inode(gx, var)] = {(python.def_class(gx, "str_"), 0)}
-
-    # --- copy classes for each allocation site
-    for cl in gx.allclasses:
-        if cl.ident in SCALAR_CLASS_IDENTS:
-            continue
-        if cl.ident == "list":
-            cl.dcpa = len(gx.list_types) + 2
-        elif cl.ident != "__iter":  # XXX huh
-            cl.dcpa = 2
-
-        for dcpa in range(1, cl.dcpa):
-            class_copy(gx, cl, dcpa)
-
-    # --- seed str/bytes unit
-    cl = python.def_class(gx, "str_")
-    var = default_var(gx, "unit", cl)
-    gx.types[inode(gx, var)] = {(cl, 0)}
-
-    cl = python.def_class(gx, "bytes_")
-    var = default_var(gx, "unit", cl)
-    gx.types[inode(gx, var)] = {(python.def_class(gx, "int_"), 0)}
-
-    # --- cartesian product algorithm & frozen-core sweep
-    from . import infer2
-
-    infer2.infer_v2_analysis(gx)
-
-    logger.info("[generating c++ code..]")
-
-    for cl in gx.allclasses:
-        for name in cl.vars:
-            if name in cl.parent.vars and not name.startswith("__"):
-                error.error(
-                    "instance variable '%s' of class '%s' shadows class variable"
-                    % (name, cl.ident),
-                    gx,
-                    warning=True,
-                )
-
-    gx.merged_inh = merged(gx, gx.types, inheritance=True)
-    analyze_virtuals(gx)
-    determine_classes(gx)
-
-    # --- add inheritance relationships for non-original Nodes (and temp_vars?); XXX register more, right solution?
-    for func in gx.allfuncs:
-        if func in gx.inheritance_relations:
-            for inhfunc in gx.inheritance_relations[func]:
-                assert isinstance(inhfunc, python.Function)
-                for c, d in zip(func.registered, inhfunc.registered):
-                    graph.inherit_rec(gx, c, d, func.mv)
-
-                for a, b in zip(
-                    func.registered_temp_vars, inhfunc.registered_temp_vars
-                ):  # XXX more general
-                    gx.inheritance_temp_vars.setdefault(a, []).append(b)
-
-    gx.merged_inh = merged(gx, gx.types, inheritance=True)
-
-    # error for dynamic expression without explicit type declaration
-    for node in gx.merged_inh:
-        if (
-            isinstance(node, ast.AST)
-            and not ast_utils.is_assign_attribute(node)
-            and not inode(gx, node).mv.module.builtin
-        ):
-            nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
-
-
-def register_temp_var(var: "python.Variable", parent: Optional[AllParent]) -> None:
-    """Register a temporary variable"""
-    if isinstance(parent, python.Function):
-        parent.registered_temp_vars.append(var)
-
-
-def default_var(
-    gx: "config.GlobalInfo",
-    name: str,
-    parent: Optional[AllParent],
-    worklist: Optional[list[CNode]] = None,
-    mv: Optional["graph.ModuleVisitor"] = None,
-    exc_name: bool = False,
-) -> "python.Variable":
-    """Create a default variable"""
-    if parent:
-        mv = parent.mv
-    assert mv
-    var = python.lookup_var(name, parent, mv, local=True)
-    if not var:
-        var = python.Variable(name, parent)
-        if parent:  # XXX move to python.Variable?
-            parent.vars[name] = var
-        elif exc_name:
-            mv.exc_names[name] = var
-        else:
-            mv.globals[name] = var
-        gx.allvars.add(var)
-
-    if (var, 0, 0) not in gx.cnode:
-        newnode = CNode(gx, mv, var, parent=parent)
-        if parent:
-            newnode.mv = parent.mv
-        else:
-            newnode.mv = mv
-        add_to_worklist(worklist, newnode)
-        gx.types[newnode] = set()
-
-    if isinstance(parent, python.Function) and parent.listcomp and not var.registered:
-        register_temp_var(var, python.outer_func(parent))
-
-    return var
 
 
 def var_types(gx: "config.GlobalInfo", var: "python.Variable") -> Types:

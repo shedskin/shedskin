@@ -544,22 +544,22 @@ class GlobalInfo:
         self._type_inference.retry_maxiters = value
 
     @property
-    def infer_v2_open_contours(self) -> Optional[set[tuple[Any, int]]]:
-        return self._type_inference.infer_v2_open_contours
+    def open_contours(self) -> Optional[set[tuple[Any, int]]]:
+        return self._type_inference.open_contours
 
-    @infer_v2_open_contours.setter
-    def infer_v2_open_contours(
+    @open_contours.setter
+    def open_contours(
         self, value: Optional[set[tuple[Any, int]]]
     ) -> None:
-        self._type_inference.infer_v2_open_contours = value
+        self._type_inference.open_contours = value
 
     @property
-    def infer_v2_core(self) -> Optional[Any]:
-        return self._type_inference.infer_v2_core
+    def contour_core(self) -> Optional[Any]:
+        return self._type_inference.contour_core
 
-    @infer_v2_core.setter
-    def infer_v2_core(self, value: Optional[Any]) -> None:
-        self._type_inference.infer_v2_core = value
+    @contour_core.setter
+    def contour_core(self, value: Optional[Any]) -> None:
+        self._type_inference.contour_core = value
 
 
     def get_stats(self) -> dict[str, Any]:

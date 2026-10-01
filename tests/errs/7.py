@@ -1,4 +1,4 @@
-#l = []  # TODO detect recursive types in infer2? or does it hang in typestr?
+#l = []  # TODO detect recursive types in contours? or does it hang in typestr?
 #l.append(l)
 #r = []
 #r = l
