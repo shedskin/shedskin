@@ -4,7 +4,7 @@
 
 Everything `shedskin.infer2` logs about what it is doing: the allocation
 site inventory, the templates created during propagation, what each round
-minted and learned, the growth table, and the final signatures per site.
+minted, the growth table, and the final signatures per site.
 None of it influences the analysis; see the header of `shedskin.infer2` for
 how to read a -d3 log and the environment knobs that add to it.
 """
@@ -107,26 +107,20 @@ def render_signature(signature: tuple) -> str:
 class RoundStats(NamedTuple):
     """What one outer round of stage 4 did.
 
-    `minted` is how many discovered in-function sites got a contour of their
-    own this round; `waiting` is how many were still without one after the
-    mint, deferred ones included. `learned` counts sites whose contour
-    gained a type it did not have before. A round that mints nothing and
-    learns nothing is the fixpoint.
-
-    `upgrades` is how many contours moved to a larger signature this round,
-    which is how a site whose contour was empty comes to be looked up under
-    a bigger key. `signatures` is how many distinct signatures exist, which
-    is the quantity the number of keys — and so the number of sites — is
-    bounded by. Both flattening is convergence.
+    `minted` is how many discovered sites got a contour of their own this
+    round; `waiting` is how many were still without one after the mint,
+    deferred ones included. `changed` is how many contours got a different
+    signature (new contours included), and `signatures` how many distinct
+    signatures exist. A round that mints nothing, defers nothing and changes
+    no signature is the fixpoint.
     """
 
     round: int
     minted: int
     waiting: int
-    learned: int
     templates: int
     contours: int
-    upgrades: int
+    changed: int
     signatures: int
 
 
@@ -266,34 +260,6 @@ def report_templates(records: list[TemplateRecord]) -> None:
             logger.debug("    %-40s %d", name, per_builtin[name])
 
 
-def report_round_learning(
-    core: "infer2.FrozenCore",
-    commit: "infer2.CommitResult",
-    round_no: int,
-) -> None:
-    """Log what the module-level sites learned in this round.
-
-    Only what was new to the core. A site that saw the same types again has
-    not learned anything, and the round loop stops on exactly that.
-    """
-    for site, fresh in sorted(
-        commit.probe_fresh.items(), key=lambda kv: kv[0].location()
-    ):
-        cl, contour = core.bindings[site.node]
-        logger.debug(
-            "  round %d  %-20s %-10s contour %-4d %s",
-            round_no,
-            site.location(),
-            cl.ident,
-            contour,
-            site.source(),
-        )
-        for name in sorted(fresh):
-            if name in infer2.CONTOUR_SIGNATURE_SKIP:
-                continue
-            logger.debug("      %-8s <- %s", name, format_types(fresh[name]))
-
-
 def alloc_id_source(alloc_id: Any) -> str:
     """Render the AST node of an alloc_id as source, for logging."""
     node = alloc_id[2]
@@ -334,20 +300,19 @@ def report_round(stats: RoundStats) -> None:
     """One line summarising a round, and the numbers a hang would show in."""
     logger.debug(
         "[infer v2: round %d done: %d site(s) minted"
-        " (%d waiting), %d learned, %d template(s),"
+        " (%d waiting), %d template(s),"
         " %d contour(s) total]",
         stats.round,
         stats.minted,
         stats.waiting,
-        stats.learned,
         stats.templates,
         stats.contours,
     )
-    if stats.upgrades:
+    if stats.changed:
         logger.debug(
-            "  round %d: %d contour(s) moved to a larger signature",
+            "  round %d: %d contour signature(s) changed",
             stats.round,
-            stats.upgrades,
+            stats.changed,
         )
 
 
@@ -360,26 +325,24 @@ def report_growth(history: list[RoundStats]) -> None:
     """
     logger.debug("[infer v2: growth per round]")
     logger.debug(
-        "    %-6s %-7s %-8s %-8s %-9s %-10s %-7s %-5s",
+        "    %-6s %-7s %-8s %-9s %-10s %-7s %-5s",
         "round",
         "minted",
         "waiting",
-        "learned",
         "contours",
         "templates",
-        "upgrade",
+        "changed",
         "sigs",
     )
     for stats in history:
         logger.debug(
-            "    %-6d %-7d %-8d %-8d %-9d %-10d %-7d %-5d",
+            "    %-6d %-7d %-8d %-9d %-10d %-7d %-5d",
             stats.round,
             stats.minted,
             stats.waiting,
-            stats.learned,
             stats.contours,
             stats.templates,
-            stats.upgrades,
+            stats.changed,
             stats.signatures,
         )
 
@@ -491,12 +454,11 @@ def report_core(core: "infer2.FrozenCore", rounds: int) -> None:
     report_signature_table(core)
     logger.debug(
         "[infer v2: frozen core after %d round(s): %d module-level site(s),"
-        " %d in-function site(s), %d contour(s), %d contour variable(s)]",
+        " %d in-function site(s), %d contour(s)]",
         rounds,
         len(core.bindings),
         len(core.alloc_bindings),
         len(core.owned_contours()),
-        len(core.contents),
     )
     per_class: dict[str, int] = {}
     for cl, _contour in core.owned_contours():
@@ -514,9 +476,9 @@ def report_upgrades(
     if not os.environ.get("SS_V2_UPGRADES"):
         return
     by_id = {v: k for k, v in core.signature_ids.items()}
-    for binding in changed[:12]:
-        was = by_id.get(previous[binding], (None, ()))[1]
-        now = by_id.get(core.contour_signature[binding], (None, ()))[1]
+    for binding in sorted(changed, key=lambda cc: (cc[0].ident, cc[1]))[:12]:
+        was = by_id.get(previous.get(binding, -1), (None, ()))[1]
+        now = by_id.get(core.contour_signature.get(binding, -1), (None, ()))[1]
         logger.debug(
             "    upgrade %s(%d): %s  ->  %s",
             binding[0].ident,
