@@ -2,21 +2,23 @@ import heapq
 
 
 def test_heapify():
-    l = []
+    ls = [[], [42, 45, 35, 3]]
+    l = ls[0]
     heapq.heapify(l)
     assert l == []
 
-    l = [42, 45, 35, 3]
+    l = ls[1]
     heapq.heapify(l)
     assert l == [3, 42, 35, 45]
 
 
 def test_heapify_max():
-    l = []
+    ls = [[], [42, 45, 35, 3]]
+    l = ls[0]
     heapq.heapify_max(l)
     assert l == []
 
-    l = [42, 45, 35, 3]
+    l = ls[1]
     heapq.heapify_max(l)
     assert l == [45, 42, 35, 3]
 

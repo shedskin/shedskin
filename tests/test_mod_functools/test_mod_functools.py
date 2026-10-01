@@ -11,8 +11,7 @@ def test_reduce():
     assert reduce(lambda a,b: a+b, [[3,4],[5,6]]) == [3,4,5,6]
     assert reduce(lambda a,b: a+b, [[3,4],[5,6]], [1, 2]) == [1,2,3,4,5,6]
 
-    a = [1]
-    a = []
+    a = [1] if False else []
     assert reduce(lambda a,b: a+b, a, 7) == 7
 
     error = False

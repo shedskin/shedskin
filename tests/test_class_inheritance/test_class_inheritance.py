@@ -155,8 +155,7 @@ class MyOtherChild(MyBase):
 
 
 def test_virtual_dunder():
-    a = MyChild()
-    a = MyOtherChild()
+    a = MyOtherChild() if True else MyChild()
     assert a(2, 'hop') == 'hophop'
 
 
@@ -192,19 +191,17 @@ class Jort(Bert):
 
 def test_virtual_case():
     # hophop is called for Jort, but only via inheritance
-    b = Jort()
+    b = [Jort(), Arie(), Gert()]
     error = ''
     try:
-        l = b.hophop(12)
+        l = b[0].hophop(12)
     except NotImplementedError as e:
         error = str(e)
     assert error == 'oops'
 
-    b = Arie()
-    l = b.hophop(17)
+    l = b[1].hophop(17)
     assert l == 'flap'
-    b = Gert()
-    l = b.hophop(17)
+    l = b[2].hophop(17)
     assert l == 'flup'
 
 
