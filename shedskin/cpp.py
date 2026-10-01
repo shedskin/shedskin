@@ -4751,7 +4751,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                                 self.append(self.module.full_path() + "::")
                             self.append(self.cpp_name(var.var))
                         else:
-                            self.append(node.id)  # XXX
+                            self.append(self.cpp_name(node.id))  # XXX
         else:
             error.error(
                 "unknown ctx type for Name, " + str(type(node.ctx)),
