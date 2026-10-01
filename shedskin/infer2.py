@@ -648,23 +648,17 @@ class SweepResult(NamedTuple):
 def sweep(
     gx: "config.GlobalInfo",
     core: FrozenCore,
+    pristine: infer.Backup,
     sites: list[AllocationSite],
     round_no: int,
 ) -> SweepResult:
     """Propagate once with every owned contour open, and read them all.
 
     Every site owns its own contour, so everything can be open at once
-    without losing track of what flowed where. The graph is restored
-    afterwards, so each sweep starts from the same pristine state.
+    without losing track of what flowed where. The graph is restored to
+    `pristine` afterwards, so each sweep starts from the same state.
     """
-    baseline_dcpa = core.baseline_dcpa
-    saved_dcpa = dict(baseline_dcpa)
-    saved_orig_types = gx.orig_types
-    backup = infer.backup_network(gx)
-
-    apply_core(gx, core, baseline_dcpa)
-
-    gx.orig_types = {node: types.copy() for node, types in gx.types.items()}
+    apply_core(gx, core, core.baseline_dcpa)
 
     # only container contours are frozen; freezing user class
     # attributes too would starve template creation
@@ -713,9 +707,8 @@ def sweep(
     finally:
         gx.infer_v2_open_contours = None
         gx.infer_v2_core = None
-        infer.restore_network(gx, backup)
-        gx.orig_types = saved_orig_types
-        for klass, dcpa in saved_dcpa.items():
+        infer.restore_network(gx, pristine)
+        for klass, dcpa in core.baseline_dcpa.items():
             klass.dcpa = dcpa
 
     logger.debug("  round %d sweep: %d propagation round(s)", round_no, rounds)
@@ -744,6 +737,13 @@ def run_rounds(
     for site in module_sites:
         core.bind_module_site(site)
 
+    # every sweep starts from this graph. Molds keep their pristine types
+    # throughout, and are what ifa_seed_template and note_mold read them for.
+    pristine = infer.backup_network(gx)
+    gx.orig_types = {
+        node: types.copy() for node, types in gx.types.items() if node.constructor
+    }
+
     history: list[infer_report.RoundStats] = []
     round_no = 0
     last_templates: list[infer_report.TemplateRecord] = []
@@ -751,7 +751,7 @@ def run_rounds(
         round_no += 1
         logger.debug("[infer v2: round %d]", round_no)
 
-        result = sweep(gx, core, sites, round_no)
+        result = sweep(gx, core, pristine, sites, round_no)
 
         changed = core.resignature(result.contour_contents)
         core.rekey()
@@ -821,7 +821,6 @@ def materialize(gx: "config.GlobalInfo", core: FrozenCore) -> None:
     """
     baseline_dcpa = {cl: cl.dcpa for cl in gx.allclasses}
     apply_core(gx, core, baseline_dcpa)
-    gx.orig_types = {node: types.copy() for node, types in gx.types.items()}
     gx.infer_v2_open_contours = core.owned_contours()
     gx.infer_v2_core = core
     core.misses = 0
