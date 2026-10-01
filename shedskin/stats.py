@@ -88,9 +88,6 @@ CREATE TABLE IF NOT EXISTS pymodule (
 
 EXCLUDE_FIELDS = [
     "n_inherited",  # redundant with n_constraints
-    "n_new_alloc_info",  # redundant with n_alloc_info
-    "added_allocs",  # always 0
-    "added_funcs",  # always 0
 ]
 
 

@@ -35,8 +35,6 @@ calls into:
 - `backup_network()` / `restore_network()`, which the driver uses to reset
   the graph between sweeps
 
-Allocation point types are maintained in `gx.alloc_info`.
-
 In each node of `shedskin.graph`, two integers are used by `shedskin.infer`
 to represent duplicate parts of the constraint graph along two dimensions
 (class duplicate, function duplicate).
@@ -69,7 +67,6 @@ if TYPE_CHECKING:
 Types: TypeAlias = set[
     tuple["python.Class", int]
 ]  # TODO merge with other modules, reuse common types
-FTypes: TypeAlias = frozenset[tuple["python.Class", int]]
 CartesianProduct: TypeAlias = tuple[
     tuple["python.Class", int], ...
 ]  # TODO wrong name!!
@@ -116,32 +113,6 @@ def _const_num(node: ast.AST) -> Union[int, float]:
     assert isinstance(node.value, (int, float))
     return node.value
 
-
-# Type inference tuning parameters
-# ---------------------------------
-# These constants control how much of the program `cpa()` is allowed to pull
-# into the analysis at a time. Processing happens incrementally to show
-# progress and avoid memory issues on large programs.
-
-# INCREMENTAL: Enable incremental analysis mode. When True, functions are
-# added to analysis gradually rather than all at once. This provides
-# progress feedback and better memory behavior for large programs.
-INCREMENTAL = True
-
-# INCREMENTAL_FUNCS: Number of new functions to add per incremental round.
-# After adding this many new functions to analysis, the propagation loop
-# restarts to incorporate their type information before adding more.
-INCREMENTAL_FUNCS = 5
-
-# INCREMENTAL_DATA: Enable incremental allocation tracking. When True,
-# new object allocations trigger analysis restarts to track type flow
-# through newly discovered allocation sites.
-INCREMENTAL_DATA = True
-
-# INCREMENTAL_ALLOCS: Number of new allocations before restarting analysis.
-# Lower values give more frequent restarts (finer granularity) but may
-# increase total iterations.
-INCREMENTAL_ALLOCS = 1
 
 # SPLIT_CLASS_IDENTS: builtin classes that carry contours, i.e. the classes
 # that are duplicated per allocation site so that (say) a list of ints and a
@@ -190,8 +161,6 @@ class CNode:
         "in_list",
         "callfuncs",
         "nodecp",
-        "paths",
-        "csites",
         "assignhop",
         "temp1",
         "temp2",
@@ -240,9 +209,6 @@ class CNode:
         self.nodecp: set[
             tuple["python.Function", CartesianProduct, CartesianProduct]
         ] = set()  # already analyzed cp's # XXX kill!?
-
-        self.csites: set[CNode]
-        self.paths: list[FTypes]
 
         self.temp1: str
         self.temp2: str
@@ -1336,7 +1302,7 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None
     if not cp:
         return
 
-    if (len(functypes) * len(cp)) > gx.cpa_limit and not gx.cpa_clean:
+    if (len(functypes) * len(cp)) > gx.cpa_limit:
         gx.cpa_limited = True
         return
 
@@ -1354,21 +1320,6 @@ def cpa(gx: "config.GlobalInfo", callnode: CNode, worklist: list[CNode]) -> None
     for functype in functypes:
         for c in cp:
             (func, dcpa, objtype) = functype
-
-            if INCREMENTAL:
-                if (
-                    not func.mv.module.builtin
-                    and func not in gx.added_funcs_set
-                    and func.ident not in ["__getattr__", "__setattr__"]
-                ):
-                    if INCREMENTAL_DATA:
-                        if gx.added_allocs >= INCREMENTAL_ALLOCS:
-                            continue
-                    if gx.added_funcs >= INCREMENTAL_FUNCS:
-                        continue
-                    gx.added_funcs += 1
-                    gx.added_funcs_set.add(func)
-                    logger.debug("adding func %s", func)
 
             objtype2: CartesianProduct  # TODO wrong name for type!
             if objtype:
@@ -1551,109 +1502,42 @@ def ifa_seed_template(
     cpa: int,
     worklist: Optional[list[CNode]],
 ) -> None:
-    """Seed allocation sites in newly created templates"""
-    if cart is not None:  # (None means we are not in the process of propagation)
-        # print 'funccopy', func.ident #, func.nodes
-        if isinstance(func.parent, python.Class):  # self
-            cart = ((func.parent, dcpa),) + cart
+    """Seed allocation sites in newly created templates
 
-        added = gx.added_allocs_set
-        added_new = 0
+    A mold in a newly created template becomes a real allocation site here,
+    so this is where it is given its contour: the one the infer v2 core
+    already has for this (function, cart, node), or its class's shared bucket
+    if the core has none yet.
+    """
+    if cart is None:  # not in the process of propagation
+        return
+    core = gx.infer_v2_core
+    assert core is not None, "templates are only created while infer v2 runs"
+    if isinstance(func.parent, python.Class):  # self
+        cart = ((func.parent, dcpa),) + cart
 
-        for node in func.nodes_ordered:
-            if node.constructor and isinstance(
-                node.thing, (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call)
-            ):
-                if node.thing not in added:
-                    if INCREMENTAL_DATA and not func.mv.module.builtin:
-                        if gx.added_allocs >= INCREMENTAL_ALLOCS:
-                            continue
-                        added_new += 1
-                        gx.added_allocs += 1
-                    added.add(node.thing)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug("adding alloc %s (%s:%s)", ast.unparse(node.thing), node.mv.module.ident, getattr(node.thing, 'lineno', None))
+    for node in func.nodes_ordered:
+        if node.constructor and isinstance(
+            node.thing, (ast.List, ast.Dict, ast.Set, ast.Tuple, ast.ListComp, ast.Call)
+        ):
+            assert isinstance(node.parent, python.Function)
+            parent = node.parent
+            while isinstance(parent.parent, python.Function):
+                parent = parent.parent
 
-                # --- contour is specified in alloc_info
-                assert isinstance(node.parent, python.Function)
-                parent = node.parent
-                while isinstance(parent.parent, python.Function):
-                    parent = parent.parent
+            alloc_id: tuple[str, CartesianProduct, ast.AST] = (
+                parent.ident,
+                cart,
+                node.thing,
+            )  # XXX ident?
+            alloc_node = gx.cnode[node.thing, dcpa, cpa]
 
-                alloc_id: tuple[str, CartesianProduct, ast.AST] = (
-                    parent.ident,
-                    cart,
-                    node.thing,
-                )  # XXX ident?
-                alloc_node = gx.cnode[node.thing, dcpa, cpa]
-
-                # --- infer v2: the frozen core owns allocation site contours.
-                # --- A mold in a newly created template becomes a real site
-                # --- here, so this is where it is given its contour: the one
-                # --- the core already has for this (function, cart, node),
-                # --- or its class's shared bucket if the core has none yet.
-                # --- The answer is used directly rather than memoised in
-                # --- gx.alloc_info; v2 does not split, so the mother-contour
-                # --- search below (which carries a contour across an IFA
-                # --- split) has nothing to do for it.
-                if gx.infer_v2_core is not None:
-                    binding = gx.infer_v2_core.note_mold(gx, alloc_id, node)
-                    if binding is None and gx.orig_types[node]:
-                        binding = list(gx.orig_types[node])[0]
-                    if binding is not None:
-                        gx.types[alloc_node] = {binding}
-                        add_to_worklist(worklist, alloc_node)
-                    continue
-
-                if alloc_id in gx.alloc_info:
-                    pass
-                #                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
-                # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
-                else:
-                    mother_alloc_id = alloc_id
-
-                    for id, c, thing in gx.alloc_info:
-                        if id == parent.ident and thing is node.thing:
-                            for a, b in zip(cart, c):
-                                if a != b and not (
-                                    isinstance(a[0], python.Class)
-                                    and a[0] is b[0]
-                                    and a[1] in a[0].splits
-                                    and a[0].splits[a[1]] == b[1]
-                                ):
-                                    break
-                            else:
-                                mother_alloc_id = (id, c, thing)
-                                break
-
-                    # print 'not specified.. mother id:', mother_alloc_id
-                    if mother_alloc_id in gx.alloc_info:
-                        gx.alloc_info[alloc_id] = gx.alloc_info[mother_alloc_id]
-                        # print 'mothered', alloc_node, gx.alloc_info[mother_alloc_id]
-                    elif gx.orig_types[
-                        node
-                    ]:  # empty constructors that do not flow to assignments have no type
-                        # print 'no mother', func.ident, cart, mother_alloc_id, alloc_node, gx.types[node]
-                        gx.alloc_info[alloc_id] = list(gx.orig_types[node])[0]
-                    else:
-                        # print 'oh boy'
-                        for id, c, thing in gx.alloc_info:  # XXX vhy?
-                            if id == parent.ident and thing is node.thing:
-                                mother_alloc_id = (id, c, thing)
-                                gx.alloc_info[alloc_id] = gx.alloc_info[mother_alloc_id]
-                                break
-
-                if alloc_id in gx.alloc_info:
-                    gx.new_alloc_info[alloc_id] = gx.alloc_info[alloc_id]
-                    gx.types[alloc_node] = set()
-                    gx.types[alloc_node].add(gx.alloc_info[alloc_id])
-                    add_to_worklist(worklist, alloc_node)
-
-        if added_new and not func.mv.module.builtin:  # TODO improve logging
-            logger.debug("%d seed(s): %s", added_new, func)
-
-
-# --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
+            binding = core.note_mold(gx, alloc_id, node)
+            if binding is None and gx.orig_types[node]:
+                binding = list(gx.orig_types[node])[0]
+            if binding is not None:
+                gx.types[alloc_node] = {binding}
+                add_to_worklist(worklist, alloc_node)
 
 
 # --- backup constraint network

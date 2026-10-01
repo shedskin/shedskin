@@ -158,7 +158,6 @@ class Class(PyObject):
         self.bases: list["Class"] = []
         self.children: list["Class"] = []
         self.dcpa = 1
-        self.newdcpa: int
         self.vars: dict[str, "Variable"] = {}
         self.funcs: dict[str, "Function"] = {}
         self.virtuals: dict[str, set["Class"]] = {}  # 'virtually' called methods
@@ -166,12 +165,6 @@ class Class(PyObject):
         self.properties: dict[str, list[str]] = {}
         self.staticmethods: list[str] = []
         self.classmethods: list[str] = []
-        self.splits: dict[
-            int, int
-        ] = {}  # contour: old contour (used between iterations)
-        # how far a contour on a cycle has been peeled (infer.ifa_contour_sccs);
-        # never reset, so the depth survives ifa() calls and restore_network
-        self.scc_depth: dict[int, int] = {}
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
