@@ -1180,7 +1180,7 @@ bytes *str::encode(str *encoding, str *errors) {
     }
     bytes *b = new bytes();
     if (err != __SS_ERR_STRICT || __ss_charmap(enc)) {
-        __encode_into(b->unit, this, enc, err);
+        __encode_into(b->unit, this, enc, err, errors);
         return b;
     }
     __codec_result r;

@@ -277,6 +277,30 @@ def test_open_bad_args():
     assert caught == 3
 
 
+def test_open_unknown_errors():
+    # as cpython, an unknown error handler is only looked up when needed
+    with open('uerr.txt', 'w', encoding='ascii', errors='bogus') as f:
+        f.write('abc\n')
+        error = ''
+        try:
+            f.write('\xe9')
+        except LookupError as e:
+            error = str(e)
+        assert error == "unknown error handler name 'bogus'"
+    with open('uerr.txt', errors='bogus') as f:
+        assert f.read() == 'abc\n'
+    with open('uerr.txt', 'wb') as g:
+        g.write(b'abc\xff\n')
+    error = ''
+    try:
+        with open('uerr.txt', errors='bogus') as f:
+            f.read()
+    except LookupError as e:
+        error = str(e)
+    assert error == "unknown error handler name 'bogus'"
+    os.remove('uerr.txt')
+
+
 def test_open_mode_keyword():
     # (own file: a checkout may turn testdata into crlf, e.g. git autocrlf on Windows)
     with open('umode.txt', mode='wb') as f:
@@ -447,6 +471,7 @@ def test_all():
     test_open_encoding()
     test_open_utf8_sig()
     test_open_bad_args()
+    test_open_unknown_errors()
     test_open_mode_keyword()
     test_open_newline()
     test_read_chars_unicode()

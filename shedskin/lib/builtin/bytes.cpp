@@ -1059,7 +1059,7 @@ str *bytes::decode(str *encoding, str *errors) {
     }
     str *s = new str();
     if (err != __SS_ERR_STRICT || __ss_charmap(enc)) {
-        __decode_into(s->unit, unit.data(), unit.size(), enc, err);
+        __decode_into(s->unit, unit.data(), unit.size(), enc, err, errors);
         return s;
     }
 

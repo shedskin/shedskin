@@ -102,9 +102,10 @@ def test_errors_arg():
     assert 'x'.encode('utf-8', 'strict') == b'x'
     assert b'x'.decode('utf-8', 'strict') == 'x'
     assert 'x'.encode(encoding='ascii', errors='strict') == b'x'
-    # note: shedskin rejects unsupported handlers ('backslashreplace', ...)
-    # eagerly with ValueError; cpython only looks the handler up when an
-    # error occurs, so that is not asserted here
+    # as cpython, a handler is only looked up when an error occurs (shedskin
+    # then raises ValueError for unsupported ones, such as 'backslashreplace')
+    assert 'x'.encode('ascii', 'backslashreplace') == b'x'
+    assert b'x'.decode('ascii', 'backslashreplace') == 'x'
 
 
 def test_error_handlers_decode():
@@ -455,6 +456,23 @@ def test_unknown_error_handler():
         except LookupError as e:
             error = str(e)
         assert error == "unknown error handler name 'bogus'"
+    # .. but only when it is needed
+    assert 'x\xe9'.encode('latin-1', 'bogus') == b'x\xe9'
+    assert 'x'.encode('ascii', 'bogus') == b'x'
+    assert 'x'.encode('cp1252', 'bogus') == b'x'
+    assert b'x\xc3\xa9'.decode('utf-8', 'bogus') == 'x\xe9'
+    assert b'\xff'.decode('latin-1', 'bogus') == '\xff'
+    assert b'x'.decode('utf-8-sig', 'bogus') == 'x'
+    caught = 0
+    for i in range(4):
+        try:
+            if i == 0: b'x\xff'.decode('utf-8', 'bogus')
+            elif i == 1: '\ud800'.encode('utf-8', 'bogus')
+            elif i == 2: b'\x81'.decode('cp1252', 'bogus')
+            else: '\u20ac\u4e00'.encode('cp1252', 'bogus')
+        except LookupError:
+            caught += 1
+    assert caught == 4
 
 
 def test_all():
