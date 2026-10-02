@@ -259,6 +259,32 @@ def test_makedirs_exist_ok():
     os.removedirs(path)
 
 
+def test_makedirs_error_subclass():
+    # the error is rethrown with its own type, not as plain OSError
+    path = '/tmp/shedskin_test_makedirs_error_subclass'
+    os.makedirs(path, exist_ok=True)
+    caught = ''
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        caught = 'FileExistsError'
+    except OSError:
+        caught = 'OSError'
+    assert caught == 'FileExistsError'
+    f = open(path + '/file', 'w')
+    f.close()
+    caught = ''
+    try:
+        os.makedirs(path + '/file/sub/dir')
+    except NotADirectoryError:
+        caught = 'NotADirectoryError'
+    except OSError:
+        caught = 'OSError'
+    assert caught == 'NotADirectoryError'
+    os.remove(path + '/file')
+    os.rmdir(path)
+
+
 def test_makedirs_parent_mode():
     base = '/tmp/shedskin_test_makedirs_parent_mode'
     leaf = base + '/a/b/c'
@@ -1316,6 +1342,7 @@ def test_all():
     test_unsetenv()
 
     test_makedirs_exist_ok()
+    test_makedirs_error_subclass()
     test_cpu_count()
     test_replace()
     test_replace_missing_source()

@@ -339,6 +339,9 @@ list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
     list<bytes *> *result = new list<bytes *>();
     __ss_int splits = 0;
 
+    if(sep_ and sep_->unit.empty())
+        throw new ValueError(new str("empty separator"));
+
     if(sep_ == NULL) {
         pos_start = unit.find_first_not_of(ws, pos_start);
         if (pos_start == std::string::npos)
@@ -352,11 +355,11 @@ list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
             pos_end = unit.find(sep_->unit, pos_start);
 
         if(pos_end == std::string::npos || ((maxsplit >= 0) && splits >= maxsplit)) {
-            result->append(new bytes(unit.substr(pos_start, unit.size()-pos_start)));
+            result->append(new bytes(unit.substr(pos_start, unit.size()-pos_start), frozen));
             break;
         }
 
-        result->append(new bytes(unit.substr(pos_start, pos_end-pos_start)));
+        result->append(new bytes(unit.substr(pos_start, pos_end-pos_start), frozen));
         splits += 1;
 
         if(sep_ == NULL) {
@@ -366,7 +369,7 @@ list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
         } else {
             pos_start = pos_end + sep_->unit.size();
             if(pos_start == unit.size()) {
-                result->append(new bytes(unit.substr(pos_start, unit.size()-pos_start)));
+                result->append(new bytes(unit.substr(pos_start, unit.size()-pos_start), frozen));
                 break;
             }
         }
@@ -930,7 +933,7 @@ bytes *bytes::translate(bytes *table, bytes *delete_chars) {
     if(table && len(table) != 256)
         throw new ValueError(new str("translation table must be 256 characters long"));
 
-    bytes *newbytes = new bytes();
+    bytes *newbytes = new bytes(frozen);
 
     size_t self_size = this->unit.size();
     for(size_t i = 0; i < self_size; i++) {

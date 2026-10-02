@@ -322,6 +322,18 @@ def test_split():
     assert b"hoei hoei".split() == [b'hoei', b'hoei']
     assert b"hoei hoei\\n".split() == [b'hoei', b'hoei\\n']
 
+def test_split_empty_separator():
+    for i in range(4):
+        error = ''
+        try:
+            if i == 0: b'abc'.split(b'')
+            elif i == 1: b'abc'.rsplit(b'')
+            elif i == 2: bytearray(b'abc').split(b'')
+            else: bytearray(b'abc').rsplit(bytearray())
+        except ValueError as e:
+            error = str(e)
+        assert error == 'empty separator'
+
 def test_splitlines():
     assert b"ab\ncd\r\nef\rghi\n".splitlines() == [b'ab', b'cd', b'ef', b'ghi']
     assert b"ab\ncd\r\nef\rghi\n".splitlines(1) == [b'ab\n', b'cd\r\n', b'ef\r', b'ghi\n']
@@ -733,6 +745,7 @@ def test_all():
     test_rsplit()
     test_rstrip()
     test_split()
+    test_split_empty_separator()
     test_splitlines()
     test_startswith()
     test_strip()

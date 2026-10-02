@@ -421,7 +421,7 @@ void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mo
             makedirs(head, recurse_mode, exist_ok, parent_mode);
         } catch (OSError *e) {
             if (e->__ss_errno != EEXIST) {
-                throw (e);
+                throw; /* keep the dynamic type (FileExistsError..) */
             }
         }
         if (__eq(tail, __path__::curdir)) {
@@ -432,7 +432,7 @@ void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mo
         mkdir(name_, mode);
     } catch (OSError *e) {
         if (!(exist_ok.value && e->__ss_errno == EEXIST && __path__::isdir(name_).value)) {
-            throw (e);
+            throw;
         }
     }
     return NULL;
