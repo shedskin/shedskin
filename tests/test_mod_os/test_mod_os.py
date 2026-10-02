@@ -278,9 +278,15 @@ def test_makedirs_error_subclass():
         os.makedirs(path + '/file/sub/dir')
     except NotADirectoryError:
         caught = 'NotADirectoryError'
+    except FileNotFoundError:
+        caught = 'FileNotFoundError'
     except OSError:
         caught = 'OSError'
-    assert caught == 'NotADirectoryError'
+    # windows reports ERROR_PATH_NOT_FOUND here (as does CPython)
+    if os.name == 'nt':
+        assert caught == 'FileNotFoundError'
+    else:
+        assert caught == 'NotADirectoryError'
     os.remove(path + '/file')
     os.rmdir(path)
 
