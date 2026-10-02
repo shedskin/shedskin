@@ -212,6 +212,108 @@ def test_bytes_repr_is_ascii():
     assert b'%r' % b'x' == b"b'x'"
 
 
+def test_argument_count():
+    # too few arguments
+    for fmt in ['%s %s', '%s %d %s', '%s%%%s']:
+        error = ''
+        try:
+            s = fmt % ('a',)
+        except TypeError as e:
+            error = str(e)
+        assert error == 'not enough arguments for format string'
+    error = ''
+    try:
+        s = '%s' % ()
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not enough arguments for format string'
+    error = ''
+    try:
+        bs = b'%s %s' % (b'a',)
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not enough arguments for format string'
+
+    # too many arguments
+    for fmt in ['%s', 'abc', '%s %%', '%%%s%%']:
+        error = ''
+        try:
+            s = fmt % ('a', 'b')
+        except TypeError as e:
+            error = str(e)
+        assert error == 'not all arguments converted during string formatting'
+    t = ('a', 'b')
+    error = ''
+    try:
+        s = '%s' % t
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during string formatting'
+    t2 = (1, 'a', 2.0)
+    error = ''
+    try:
+        s = '%d %s' % t2
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during string formatting'
+    error = ''
+    try:
+        s = 'abc' % 5
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during string formatting'
+    error = ''
+    try:
+        s = 'abc' % 'x'
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during string formatting'
+    t3 = ([1],)
+    error = ''
+    try:
+        s = 'abc' % t3
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during string formatting'
+    for b in [b'abc', b'%s']:
+        error = ''
+        try:
+            bs = b % (b'a', b'b')
+        except TypeError as e:
+            error = str(e)
+        assert error == 'not all arguments converted during bytes formatting'
+    error = ''
+    try:
+        bs = b'abc' % b'x'
+    except TypeError as e:
+        error = str(e)
+    assert error == 'not all arguments converted during bytes formatting'
+
+    # a single mapping or sequence may go unused (for %(name) directives)
+    assert 'abc' % {'a': 1} == 'abc'
+    assert '%(a)s' % {'a': 1} == '1'
+    assert '%(a)s %(b)s!' % {'a': 1, 'b': 2} == '1 2!'
+    assert 'abc' % [1] == 'abc'
+    assert 'abc' % b'x' == 'abc'
+    assert '%s' % [1] == '[1]'
+    assert '%s' % ((1, 2),) == '(1, 2)'
+
+    # exact counts
+    assert '%d%%' % (5,) == '5%'
+    assert '%s-%s' % t == 'a-b'
+    assert '%d %s %.1f' % t2 == '1 a 2.0'
+    assert b'%s-%s' % (b'a', b'b') == b'a-b'
+
+    # a trailing '%' is an incomplete format
+    for fmt in ['100%', '%s %']:
+        error = ''
+        try:
+            s = fmt % ('a',)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'incomplete format'
+
+
 def test_bool_argument():
     b = True
     assert '[%d]' % b == '[1]'
@@ -235,6 +337,7 @@ def test_all():
     test_width_and_justify()
     test_float_conversions()
     test_sign_padding()
+    test_argument_count()
 
 
 if __name__ == "__main__":

@@ -198,7 +198,7 @@ template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_
     __mod_pad_signed(result, "", __GC_STR(1, arg->unit[0]), f_flag, f_width, false);
 }
 
-template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
+template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
     size_t namepos, startpos;
     str *name = NULL;
     __GC_STR fmtchars = __gcs("0123456789# -+.*");
@@ -314,7 +314,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_int(result, pos, arg, f_flag, f_width, f_precision, f_zero);
-                    return;
+                    return true;
                 }
 
             case 'o':
@@ -323,7 +323,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_oct(result, pos, arg, f_flag, f_width, f_precision, f_zero);
-                    return;
+                    return true;
                 }
 
             case 'x':
@@ -333,7 +333,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_hex(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
-                    return;
+                    return true;
                 }
 
             case 'e':
@@ -347,7 +347,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_float(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
-                    return;
+                    return true;
                 }
                 break;
 
@@ -359,7 +359,7 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_str(flag, result, pos, (char)c, arg, f_flag, f_width, f_precision);
-                    return;
+                    return true;
                 }
 
             case 'c':
@@ -368,14 +368,43 @@ template<class T> void __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                     break;
                 } else {
                     __mod_char(result, pos, (char)c, arg, f_flag, f_width);
-                    return;
+                    return true;
                 }
 
             default:
                 throw new ValueError(new str("unsupported format character"));
         }
     }
+    return name != NULL; /* the format ran out: only used by %(name) directives */
 }
+
+/* like CPython, a single argument that is a mapping or sequence (but not a
+   str, or a bytes/bytearray when formatting bytes) may go unused, as it
+   might have been intended for %(name) directives */
+template<class T> inline bool __mod_mapping(int, T) { return false; }
+template<class K, class V> inline bool __mod_mapping(int, dict<K, V> *) { return true; }
+template<class T> inline bool __mod_mapping(int, list<T> *) { return true; }
+inline bool __mod_mapping(int flag, bytes *) { return flag == 0; }
+
+[[noreturn]] inline void __mod_not_all_converted(int flag) {
+    throw new TypeError(new str(flag ? "not all arguments converted during bytes formatting" : "not all arguments converted during string formatting"));
+}
+
+/* copy the rest of the format, after all arguments have been used */
+inline void __mod_rest(str *fmt, size_t fmtlen, size_t &j, str *result) {
+    for(; j < fmtlen; j++) {
+        __ss_char c = fmt->unit[j];
+        if(c == '%') {
+            if(j+1 >= fmtlen)
+                throw new ValueError(new str("incomplete format"));
+            if(fmt->unit[j+1] != '%')
+                throw new TypeError(new str("not enough arguments for format string"));
+            j++;
+        }
+        result->unit += c;
+    }
+}
+
 
 template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     str *result = new str();
@@ -383,15 +412,12 @@ template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     size_t fmtlen = fmt->unit.size();
     size_t j = 0;
 
-    (__mod_one(0, fmt, fmtlen, j, result, pos, args), ...);
+    bool unused = false;
+    ((unused |= !__mod_one(0, fmt, fmtlen, j, result, pos, args)), ...);
+    if(unused and not (sizeof...(args) == 1 and (__mod_mapping(0, args) and ...)))
+        __mod_not_all_converted(0);
 
-    for(; j < fmtlen; j++) {
-        __ss_char c = fmt->unit[j];
-        result->unit += c;
-        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
-            j++;
-    }
-
+    __mod_rest(fmt, fmtlen, j, result);
     return result;
 }
 
@@ -403,7 +429,7 @@ template<class A, class B, class C> str *__modtuple(str *fmt, tuple3<A,B,C> *t) 
     return __mod6(fmt, 3, t->__getfirst__(), t->__getsecond__(), t->__getthird__());
 }
 
-template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
+template<class T> str *__modtuple(int flag, str *fmt, tuple2<T,T> *t) {
     str *result = new str();
     size_t pos = 0;
     size_t fmtlen = fmt->unit.size();
@@ -411,16 +437,15 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
 
     size_t l = t->units.size();
     for(size_t i=0;i<l; i++)
-        __mod_one(0, fmt, fmtlen, j, result, pos, t->units[i]);
+        if(!__mod_one(flag, fmt, fmtlen, j, result, pos, t->units[i]))
+            __mod_not_all_converted(flag);
 
-    for(; j < fmtlen; j++) {
-        __ss_char c = fmt->unit[j];
-        result->unit += c;
-        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%') // TODO incomplete format exception if % is last char
-            j++;
-    }
-
+    __mod_rest(fmt, fmtlen, j, result);
     return result;
+}
+
+template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
+    return __modtuple(0, fmt, t);
 }
 
 /* TODO optimize bytes variants */
@@ -434,15 +459,12 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
     str *sfmt = new str();
     sfmt->unit = __widen(fmt->unit);
 
-    (__mod_one(1, sfmt, fmtlen, j, result, pos, args), ...);
+    bool unused = false;
+    ((unused |= !__mod_one(1, sfmt, fmtlen, j, result, pos, args)), ...);
+    if(unused and not (sizeof...(args) == 1 and (__mod_mapping(1, args) and ...)))
+        __mod_not_all_converted(1);
 
-    for(; j < fmtlen; j++) {
-        __ss_char c = fmt->unit[j];
-        result->unit += c;
-        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
-            j++;
-    }
-
+    __mod_rest(sfmt, fmtlen, j, result);
     r->unit = __narrow(result->unit);
     return r;
 }
@@ -451,7 +473,7 @@ template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
     str *fmt = new str();
     fmt->unit = __widen(bfmt->unit);
 
-    str *result = __modtuple(fmt, t);
+    str *result = __modtuple(1, fmt, t);
 
     bytes *r = new bytes();
     r->unit = __narrow(result->unit);
