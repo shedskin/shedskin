@@ -313,7 +313,7 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
-    *const_25, *const_26, *const_27, *const_28, *const_29;
+    *const_25, *const_26, *const_27, *const_28, *const_29, *const_30;
 
 str *__name__;
 class_ *cl_mmap;
@@ -778,20 +778,6 @@ void mmap::__exit__()
     close();
 }
 
-__ss_int mmap::find(bytes *needle, __ss_int start, __ss_int end)
-{
-    __raise_if_closed_or_not_readable();
-    if (start == -1)
-    {
-        start = (__ss_int)__tell();
-    }
-    if( end == -1)
-    {
-        end = (__ss_int)__size();
-    }
-    return __find(needle->unit, start, end);
-}
-
 void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 {
     __raise_if_closed_or_not_readable();
@@ -839,7 +825,7 @@ __ss_int mmap::read_byte()
     __raise_if_closed_or_not_readable();
     if(m_position < m_end)
     {
-        return *m_position++;
+        return (unsigned char)*m_position++;
     }
     else
     {
@@ -867,20 +853,6 @@ bytes *mmap::readline(__ss_int size, const char eol)
         m_position = at + size;
     }
     return new bytes(at, (size_t)(m_position - at), 1);
-}
-
-__ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
-{
-    __raise_if_closed_or_not_readable();
-    if (start == -1)
-    {
-        start = (__ss_int)__tell();
-    }
-    if( end == -1)
-    {
-        end = (__ss_int)__size();
-    }
-    return __find(needle->unit, start, end, true);
 }
 
 void *mmap::seek(__ss_int offset, __ss_int whence)
@@ -1081,7 +1053,7 @@ __ss_bool mmap::__contains__(bytes *string)
     /* like CPython, which compares against the items (single bytes) */
     if (string == 0 or string->unit.size() != 1)
         return False;
-    return __mbool(find(string, 0) != -1);
+    return __mbool(__find(string->unit, 0, (__ss_int)__size()) != -1);
 }
 
 __iter<bytes *> *mmap::__iter__()
@@ -1100,84 +1072,65 @@ __ss_int mmap::__len__()
 __ss_int mmap::__getitem__(__ss_int index)
 {
     __raise_if_closed_or_not_readable();
-    return m_begin[__subscript(index)];
+    return (unsigned char)m_begin[__subscript(index)];
 }
 
 void *mmap::__setitem__(__ss_int index, __ss_int character)
 {
     __raise_if_closed_or_not_writable();
     size_t id = __subscript(index);
+    if (character < 0 or character > 255)
+    {
+        throw new ValueError(const_30);
+    }
     m_begin[id] = (char)character;
     return NULL;
 }
 
-bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
+bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step)
 {
     __raise_if_closed_or_not_readable();
+    slicenr(kind, lower, upper, step, (__ss_int)__size());
 
-    lower = __clamp(lower);
-    upper = __clamp(upper);
-
-    iterator start = m_begin;
-    size_t size = 0;
-    switch (kind)
+    if (step == 1)
     {
-    case 0: // [:]
-        start = m_begin;
-        size = (size_t)(m_end - m_begin);
-        break;
-    case 1: // step[x:]
-        start = m_begin + __subscript(lower, true);
-        size = (size_t)(m_end - start);
-        break;
-    case 2: // step[:x]
-        start = m_begin;
-        size = __subscript(upper, true);
-        break;
-    case 3: // step[x:y]
-        start = m_begin + __subscript(lower, true);
-        size = __subscript(upper, true) - __subscript(lower, true);
-        break;
-    default:
-        assert(false);
+        return new bytes(m_begin + lower, (upper > lower) ? (size_t)(upper - lower) : 0, 1);
     }
-    bytes *b = new bytes(start, size, 1);
-    return b;
+
+    __GC_STRING r;
+    if (step > 0)
+    {
+        for (__ss_int i = lower; i < upper; i += step)
+            r += m_begin[i];
+    }
+    else
+    {
+        for (__ss_int i = lower; i > upper; i += step)
+            r += m_begin[i];
+    }
+    return new bytes(r, 1);
 }
 
-void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int, bytes *sequence)
+void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step, bytes *sequence)
 {
     __raise_if_closed_or_not_writable();
-    iterator start = m_end;
-    iterator finish = m_end;
-    switch (kind)
-    {
-    case 0: // [:]
-        start = m_begin;
-        finish= m_end;
-        break;
-    case 1: // step[x:]
-        start = m_begin + __subscript(lower, true);
-        finish= m_end;
-        break;
-    case 2: // step[:x]
-        start = m_begin;
-        finish= m_begin + __subscript(upper, true);
-        break;
-    case 3: // step[x:y]
-        start = m_begin + __subscript(lower, true);
-        finish= m_begin + __subscript(upper, true);
-        break;
-    default:
-        assert(false);
-    }
-
-    if (sequence->unit.size() != (size_t)(finish - start))
+    __ss_int slicesize = __extslice_size(kind, lower, upper, step, (__ss_int)__size());
+    if ((__ss_int)sequence->unit.size() != slicesize)
     {
         throw new IndexError(const_10);
     }
+    slicenr(kind, lower, upper, step, (__ss_int)__size());
 
-    memcpy(start, sequence->unit.data(), (size_t)(finish - start));
+    const char *data = sequence->unit.data();
+    if (step == 1)
+    {
+        memcpy(m_begin + lower, data, (size_t)slicesize);
+    }
+    else
+    {
+        for (__ss_int i = 0, j = lower; i < slicesize; i++, j += step)
+            m_begin[j] = data[i];
+    }
     return NULL;
 }
 
@@ -1240,12 +1193,6 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
     return (size_t)index;
 }
 
-__ss_int mmap::__clamp(__ss_int index) const
-{
-    __ss_int length = (__ss_int)__size();
-    return std::min(std::max(index, -length), length);
-}
-
 mmap::iterator mmap::__next_line(const char eol)
 {
     return static_cast<iterator>(
@@ -1254,10 +1201,6 @@ mmap::iterator mmap::__next_line(const char eol)
 
 __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse)
 {
-    if (end == 0)
-    {
-        end = (__ss_int)__size();
-    }
     size_t length = needle.size();
     // Taken from Python 3.2.
     const char *p, *start_p, *end_p;
@@ -1343,6 +1286,7 @@ void __init()
         const_27 = new str("cannot mmap an empty file");
         const_28 = new str("mmap offset is greater than file size");
         const_29 = new str("mmap length is greater than file size");
+        const_30 = new str("mmap item value must be in range(0, 256)");
 
         __name__ = new str("mmap");
 

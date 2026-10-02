@@ -1005,12 +1005,16 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
             f->flush();
     }
     else {
-        __GC_BYTES b = __to_utf8(s->unit); /* utf-8 at the boundary */
-        fwrite(b.data(), 1, b.size(), stdout);
+        /* utf-8 at the boundary. a failed write raises (e.g. BrokenPipeError
+           when piped into 'head'), instead of silently carrying on */
+        __GC_BYTES b = __to_utf8(s->unit);
+        if(fwrite(b.data(), 1, b.size(), stdout) != b.size())
+            __throw_oserror();
         b = __to_utf8(end->unit);
-        fwrite(b.data(), 1, b.size(), stdout);
-        if(flush)
-            fflush(stdout);
+        if(fwrite(b.data(), 1, b.size(), stdout) != b.size())
+            __throw_oserror();
+        if(flush and fflush(stdout) != 0)
+            __throw_oserror();
     }
 }
 

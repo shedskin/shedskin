@@ -128,13 +128,20 @@ class mmap: public pyiter<bytes *>
     void     __exit__();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
     void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
-    __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
+    /* start/end are __ss_void_struct when omitted (start then defaults
+       to the current position, end to the size), so that negative values
+       can be passed and are relative to the end, as in CPython */
+    template<class S=__ss_void_struct, class E=__ss_void_struct> __ss_int find(bytes *s, S start=__ss_void, E end=__ss_void) {
+        return __find_args(s, start, end, false);
+    }
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
     bytes *    read(__ss_int size=all);
     __ss_int   read_byte();
     bytes *    readline(__ss_int size=all, const char eol='\n');
     void *   resize(__ss_int newsize);
-    __ss_int rfind(bytes *string, __ss_int start=-1, __ss_int end=-1);
+    template<class S=__ss_void_struct, class E=__ss_void_struct> __ss_int rfind(bytes *s, S start=__ss_void, E end=__ss_void) {
+        return __find_args(s, start, end, true);
+    }
     void *   seek(__ss_int offset, __ss_int whence=0);
     __ss_bool seekable();
     void *   set_name(str *name);
@@ -199,10 +206,23 @@ class mmap: public pyiter<bytes *>
     void *__seek_failed();
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
-    inline __ss_int __clamp(__ss_int index) const;
     inline size_t __tell() const { return (size_t)(m_position - m_begin); }
     iterator __next_line(const char eol);
     __ss_int __find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse=false);
+
+    template<class S, class E> __ss_int __find_args(bytes *needle, S start, E end, bool reverse) {
+        __raise_if_closed_or_not_readable();
+        __ss_int start_, end_;
+        if constexpr (std::is_same_v<S, __ss_void_struct>)
+            start_ = (__ss_int)__tell();
+        else
+            start_ = start;
+        if constexpr (std::is_same_v<E, __ss_void_struct>)
+            end_ = (__ss_int)__size();
+        else
+            end_ = end;
+        return __find(needle->unit, start_, end_, reverse);
+    }
 };
 
 /**

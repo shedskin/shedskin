@@ -20,6 +20,7 @@
 #else
 #include <unistd.h>
 #include <sys/stat.h>
+#include <signal.h>
 #endif
 
 namespace __shedskin__ {
@@ -72,6 +73,13 @@ void __init() {
 #ifdef __SS_BIND
     Py_Initialize();
     __ss_proxy = new dict<void *, void *>();
+#endif
+
+#if !defined(WIN32) && !defined(__SS_BIND)
+    /* like CPython: writing to a closed pipe or socket raises BrokenPipeError
+       (EPIPE), instead of silently killing the process (extension modules
+       leave this to the interpreter, which does the same) */
+    ::signal(SIGPIPE, SIG_IGN);
 #endif
 
     cl_class_ = new class_ ("class");
@@ -256,29 +264,33 @@ void terminate_handler() {
         throw;
 
     } catch (SystemExit *s) {
-        __add_missing_newline(); /* XXX s->message -> stderr? */
-        if(s->show_message)
-            print_(0, False, __ss_stderr, NULL, NULL, s->message);
         code = (int)s->code;
+        try {
+            __add_missing_newline(); /* XXX s->message -> stderr? */
+            if(s->show_message)
+                print_(0, False, __ss_stderr, NULL, NULL, s->message);
+        } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
 
     } catch (BaseException *e) {
-        __add_missing_newline();
+        code = 1;
+        try {
+            __add_missing_newline();
 
 #ifndef WIN32
 #ifdef __SS_BACKTRACE
-        print_traceback(stdout);
+            print_traceback(stdout);
 #endif
 #endif
 
-        str *s = __str(e);
-        if(___bool(s))
-            print_(0, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
-        else
-            print_(0, False, NULL, NULL, NULL, e->__class__->__name__);
-        if(e->__notes__)
-            for(__ss_int i=0; i<len(e->__notes__); i++)
-                print_(0, False, NULL, NULL, NULL, e->__notes__->__getfast__(i));
-        code = 1;
+            str *s = __str(e);
+            if(___bool(s))
+                print_(0, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
+            else
+                print_(0, False, NULL, NULL, NULL, e->__class__->__name__);
+            if(e->__notes__)
+                for(__ss_int i=0; i<len(e->__notes__); i++)
+                    print_(0, False, NULL, NULL, NULL, e->__notes__->__getfast__(i));
+        } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
     }
 
     std::exit(code);
