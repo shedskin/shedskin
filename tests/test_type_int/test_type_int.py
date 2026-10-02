@@ -244,6 +244,109 @@ def test_int_error_message():
     assert error == "invalid literal for int() with base 16: b'zz '"
 
 
+def int_error(value, base):
+    try:
+        int(value, base)
+    except ValueError as e:
+        return 'VE: ' + str(e)
+    except OverflowError:
+        return 'OE'
+    return ''
+
+
+def int_no_clamp(value, base):
+    # an out-of-range value raises OverflowError (CPython: just a big int),
+    # but is never silently clamped to the extremes
+    try:
+        i = int(value, base)
+    except OverflowError:
+        return True
+    return i != 9223372036854775807 and i != -9223372036854775807 - 1
+
+
+def bytes_int_no_clamp(value, base):
+    try:
+        i = int(value, base)
+    except OverflowError:
+        return True
+    return i != 9223372036854775807 and i != -9223372036854775807 - 1
+
+
+def test_int_from_str_syntax():
+    # underscores between digits, and right after a base prefix
+    assert int('1_000') == 1000
+    assert int(b'1_000') == 1000
+    assert int('1_2_3', 16) == 0x123
+    assert int('0x_1f', 16) == 31
+    assert int('0b_1_0', 0) == 2
+    assert int(b'0x_ff', 0) == 255
+    assert int_error('_1', 10) == "VE: invalid literal for int() with base 10: '_1'"
+    assert int_error('1_', 10) != ''
+    assert int_error('1__0', 10) != ''
+    assert int_error('0x__1', 16) != ''
+    assert int_error('0x_', 16) != ''
+    assert int_error('0_x1', 0) != ''
+    assert int_error('1_ ', 10) != ''
+
+    # base prefixes
+    assert int('0o17', 0) == 15
+    assert int('0o17', 8) == 15
+    assert int('0O17', 0) == 15
+    assert int('0X1F', 0) == 31
+    assert int('0B11', 2) == 3
+    assert int(' -0x10 ', 0) == -16
+    assert int('+0b101', 0) == 5
+    assert int('0b1', 16) == 0xb1  # prefix only skipped for its own base
+    assert int_error('0x', 16) != ''
+    assert int_error('0x', 0) != ''
+    assert int_error('0o8', 0) != ''
+    assert int_error('0b2', 2) != ''
+    assert int_error('0o17', 10) != ''
+
+    # base 0: no leading zeros in a non-zero decimal number
+    assert int_error('010', 0) == "VE: invalid literal for int() with base 0: '010'"
+    assert int_error('0_1', 0) != ''
+    assert int('00', 0) == 0
+    assert int('0_0', 0) == 0
+    assert int('-0', 0) == 0
+    assert int('010') == 10
+    assert int('٠x1', 0) == 1
+
+    # all bases, letters in either case
+    assert int('z', 36) == 35
+    assert int('Z', 36) == 35
+    assert int('zz', 36) == 1295
+    assert int_error('z', 35) != ''
+    assert int('0' * 30 + '1') == 1
+    assert int_error('1', 1) == 'VE: int() base must be >= 2 and <= 36, or 0'
+    assert int_error('1', 37) == 'VE: int() base must be >= 2 and <= 36, or 0'
+    assert int_error('1', -1) != ''
+
+    # whitespace and signs
+    assert int('\t\n\x0b\x0c\r 7 \r') == 7
+    assert int_error('\x1c1', 10) != ''
+    assert int_error('- 1', 10) != ''
+    assert int_error('--1', 10) != ''
+    assert int_error('+', 10) != ''
+
+    # extremes: no silent clamping
+    assert int('9223372036854775807') == 9223372036854775807
+    assert int('-9223372036854775808') == -9223372036854775807 - 1
+    assert int('7fffffffffffffff', 16) == 9223372036854775807
+    assert int('-0x8000000000000000', 0) == -9223372036854775807 - 1
+    assert int('-0b' + '1' + '0' * 63, 0) == -9223372036854775807 - 1
+    assert int_no_clamp('9223372036854775808', 10)
+    assert int_no_clamp('-9223372036854775809', 10)
+    assert int_no_clamp('99999999999999999999', 10)
+    assert int_no_clamp('-99999999999999999999', 10)
+    assert int_no_clamp('0x10000000000000000', 0)
+    assert int_no_clamp('zzzzzzzzzzzzzzz', 36)
+    assert bytes_int_no_clamp(b'99999999999999999999', 10)
+    # but a syntax error still wins
+    assert int_error('99999999999999999999x', 10).startswith('VE')
+    assert int_error('099999999999999999999', 0).startswith('VE')
+
+
 def test_all():
     test_int()
     test_division()
@@ -257,6 +360,7 @@ def test_all():
     test_from_bytes()
     test_int_from_unicode_str()
     test_int_error_message()
+    test_int_from_str_syntax()
 
 
 if __name__ == "__main__":
