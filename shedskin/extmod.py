@@ -835,7 +835,7 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         write("    0,")
-        if self.has_method(cl, "__repr__"):
+        if self.has_exported_method(cl, "__repr__", funcs):
             write("    (PyObject *(*)(PyObject *))%s___repr__," % clname(cl))
         else:
             write("    0,")
@@ -846,11 +846,11 @@ class ExtensionModule:
             write("    %s_tp_hash," % clname(cl))
         else:
             write("    0,")
-        if self.has_method(cl, "__call__"):
+        if self.has_exported_method(cl, "__call__", funcs):
             write("    %s___call__," % clname(cl))
         else:
             write("    0,")
-        if self.has_method(cl, "__str__"):
+        if self.has_exported_method(cl, "__str__", funcs):
             write("    (PyObject *(*)(PyObject *))%s___str__," % clname(cl))
         else:
             write("    0,")
