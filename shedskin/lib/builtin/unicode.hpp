@@ -162,18 +162,21 @@ enum __ss_errors {
     __SS_ERR_SURROGATEESCAPE,
     __SS_ERR_IGNORE,
     __SS_ERR_REPLACE,
+    __SS_ERR_UNKNOWN, /* unknown or unsupported: reported only when needed */
 };
 
-/* normalize an errors= argument (0 means 'strict'); raises ValueError for
-   anything unsupported */
+/* normalize an errors= argument (0 means 'strict'). as CPython, an unknown
+   handler is only reported once it is actually needed (for a character that
+   cannot be encoded/decoded), via __unknown_errors */
 __ss_errors __lookup_errors(str *errors);
+void __unknown_errors(str *errors); /* raises LookupError or ValueError */
 
 /* generic (error-handler aware) codecs, appending to out. decode errors
    with __SS_ERR_STRICT raise UnicodeDecodeError, reporting positions
    relative to src; replace follows CPython (one U+FFFD per maximal
    subpart of an ill-formed utf-8 sequence; '?' when encoding). */
-void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err);
-void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err);
+void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err, str *errors);
+void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, str *errors);
 
 /* widen an ascii c-string / std::string to __GC_STR (repr building etc.) */
 __GC_STR __gcs(const char *s);

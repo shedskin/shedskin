@@ -456,6 +456,10 @@ __ss_errors __lookup_errors(str *errors) {
         return __SS_ERR_IGNORE;
     if (errors->unit == U"replace")
         return __SS_ERR_REPLACE;
+    return __SS_ERR_UNKNOWN;
+}
+
+void __unknown_errors(str *errors) {
     char buf[192];
     if (errors->unit != U"backslashreplace" && errors->unit != U"xmlcharrefreplace" && errors->unit != U"namereplace" && errors->unit != U"surrogatepass") {
         snprintf(buf, sizeof(buf), "unknown error handler name '%s'", __to_utf8(errors->unit).c_str());
@@ -486,7 +490,7 @@ static size_t __utf8_maximal_subpart(const char *src, size_t len, size_t pos) {
     return k;
 }
 
-void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err) {
+void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err, str *errors) {
     if (enc == __SS_ENC_UTF8_SIG) /* (the bom is up to the caller) */
         enc = __SS_ENC_UTF8;
     if (enc == __SS_ENC_LATIN1) { /* cannot fail */
@@ -530,6 +534,8 @@ void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc
             pos += n;
             continue;
         }
+        if (err == __SS_ERR_UNKNOWN)
+            __unknown_errors(errors);
         if (err == __SS_ERR_STRICT) /* (charmaps only, see above) */
             __throw_decode_error("charmap", new bytes(src, len), pos, pos + 1, ERR_CHARMAP);
         if (err == __SS_ERR_SURROGATEESCAPE) /* each bad byte on its own */
@@ -550,7 +556,7 @@ static inline void __utf8_append(__GC_BYTES &out, __ss_char cp) {
     out.append(buf, __utf8_put(buf, cp));
 }
 
-void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err) {
+void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, str *errors) {
     if (enc == __SS_ENC_UTF8_SIG)
         enc = __SS_ENC_UTF8;
     const __GC_STR &u = s->unit;
@@ -567,6 +573,8 @@ void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err) 
                 out += (char)(unsigned char)cp;
             continue;
         }
+        if (err == __SS_ERR_UNKNOWN)
+            __unknown_errors(errors);
         if (err == __SS_ERR_SURROGATEESCAPE && cp >= 0xdc80 && cp <= 0xdcff)
             out += (char)(unsigned char)(cp & 0xffu);
         else if (err == __SS_ERR_REPLACE)

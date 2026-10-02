@@ -20,7 +20,7 @@ CPython side.
 """
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from collections.abc import Iterable
 
 from . import infer, python, typestr
@@ -491,6 +491,28 @@ class ExtensionModule:
         for i, formal in enumerate(formals):
             self.gv.start("")
             typ = typestr.nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
+            if func.ident == "__pow__" and i == 1:
+                assert isinstance(func.parent, python.Class)
+                # nb_power is ternary: the *_nb wrapper passes the modulo in
+                # through 'kwargs', as Py_None when not given (pow(a, b), a**b)
+                if i >= len(formals) - len(func.defaults):
+                    self.gv.append(
+                        "        %(type)sarg_1 = (kwargs && kwargs != Py_None) ? __to_ss<%(type)s>(kwargs) : "
+                        % {"type": typ}
+                    )
+                    self.do_extmod_default(func, formals, i)
+                    self.gv.eol()
+                else:
+                    write("        if (!kwargs || kwargs == Py_None)")
+                    write(
+                        "            throw new TypeError(new str(\"%s.__pow__() missing 1 required positional argument: '%s'\"));"
+                        % (func.parent.ident, formal)
+                    )
+                    write(
+                        "        %(type)sarg_1 = __to_ss<%(type)s>(kwargs);"
+                        % {"type": typ}
+                    )
+                continue
             if func.ident in OVERLOAD:
                 write(
                     "        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);"
@@ -503,28 +525,20 @@ class ExtensionModule:
             )
             if i >= len(formals) - len(func.defaults):
                 self.gv.append("1, ")
-                defau = func.defaults[i - (len(formals) - len(func.defaults))]
-                if defau in func.mv.defaults:
-                    if self.gv.mergeinh[defau] == {
-                        (python.def_class(self.gx, "none"), 0)
-                    }:
-                        self.gv.append("0")
-                    else:
-                        self.gv.append(
-                            "%s::default_%d"
-                            % (
-                                "__" + func.mv.module.ident + "__",
-                                func.mv.defaults[defau][0],
-                            )
-                        )
-                else:
-                    self.gv.visit(defau, func)
+                self.do_extmod_default(func, formals, i)
             elif typ.strip() == "__ss_bool":
                 self.gv.append("0, False")
             else:
                 self.gv.append("0, 0")
             self.gv.append(", args, kwargs)")
             self.gv.eol()
+        if func.ident == "__pow__" and len(formals) == 1:
+            assert isinstance(func.parent, python.Class)
+            write("        if (kwargs && kwargs != Py_None)")
+            write(
+                '            throw new TypeError(new str("%s.__pow__() takes 2 positional arguments but 3 were given"));'
+                % func.parent.ident
+            )
         write("")
 
         # call
@@ -550,6 +564,25 @@ class ExtensionModule:
         write("        return 0;")
         write("    }")
         write("}\n")
+
+    def do_extmod_default(
+        self, func: "python.Function", formals: List[str], i: int
+    ) -> None:
+        """Generate the default value for formal argument i"""
+        defau = func.defaults[i - (len(formals) - len(func.defaults))]
+        if defau in func.mv.defaults:
+            if self.gv.mergeinh[defau] == {(python.def_class(self.gx, "none"), 0)}:
+                self.gv.append("0")
+            else:
+                self.gv.append(
+                    "%s::default_%d"
+                    % (
+                        "__" + func.mv.module.ident + "__",
+                        func.mv.defaults[defau][0],
+                    )
+                )
+        else:
+            self.gv.visit(defau, func)
 
     def do_extmod(self) -> None:
         """Generate an python c-api extension module"""

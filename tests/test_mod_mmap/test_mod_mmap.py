@@ -244,8 +244,8 @@ def test_tougher_find():
     for start in range(n + 1):
         for finish in range(start, n + 1):
             slice = data[start:finish]
-            # print(m.find(slice), data.find(slice))
-            # print(m.find(slice + b"x") == -1)
+            assert m.find(slice) == data.find(slice)
+            assert m.find(slice + b"x") == -1
 
     tearDown(m)
 
@@ -286,6 +286,104 @@ def test_contains():
     assert b'cd' not in m
     assert b'ab' not in m
     assert b'' not in m
+    m.close()
+
+
+def test_find_args():
+    # start/end are optional (start: current position, end: size);
+    # negative values are relative to the end, as for bytes
+    m = mmap.mmap(-1, 8)
+    m[:] = b'abcabcab'
+    data = b'abcabcab'
+    assert m.find(b'a') == 0
+    assert m.rfind(b'a') == 6
+    for start in range(-10, 11):
+        assert m.find(b'a', start) == data.find(b'a', start)
+        assert m.rfind(b'a', start) == data.rfind(b'a', start)
+        if start <= 8:
+            assert m.find(b'', start) == data.find(b'', start)
+        for end in range(-10, 11):
+            assert m.find(b'a', start, end) == data.find(b'a', start, end)
+            assert m.rfind(b'a', start, end) == data.rfind(b'a', start, end)
+            assert m.find(b'ab', start, end) == data.find(b'ab', start, end)
+            assert m.rfind(b'ab', start, end) == data.rfind(b'ab', start, end)
+    assert m.find(b'a', -1) == -1
+    assert m.rfind(b'a', -1) == -1
+    assert m.find(b'a', 0, 0) == -1
+    assert m.find(b'', 9) == 8  # unlike bytes, start is clamped to the size
+    assert m.find(b'', 3, 2) == -1
+    # start defaults to the current position
+    m.seek(2)
+    assert m.find(b'a') == 3
+    assert m.rfind(b'a') == 6
+    assert m.find(b'a', 0) == 0
+    m.seek(7)
+    assert m.find(b'a') == -1
+    assert m.rfind(b'b') == 7
+    m.close()
+
+
+def test_slices():
+    data = b'abcabcab'
+    m = mmap.mmap(-1, 8)
+    m[:] = data
+    # read slicing, including reversed and extended slices
+    assert m[5:2] == b''
+    assert m[::2] == b'acba'
+    assert m[::-1] == b'bacbacba'
+    assert m[-3::-2] == b'cab'
+    assert m[100:] == b''
+    assert m[-100:2] == b'ab'
+    assert m[1:7:3] == b'bb'
+    for i in range(-10, 11):
+        for j in range(-10, 11):
+            assert m[i:j] == data[i:j]
+            for k in [-9, -3, -2, -1, 2, 3, 9]:
+                assert m[i:j:k] == data[i:j:k]
+                assert m[:j:k] == data[:j:k]
+                assert m[i::k] == data[i::k]
+    try:
+        m[::0]
+        assert False
+    except ValueError:
+        pass
+
+    # slice assignment, including extended slices
+    m[0:4:2] = b'QQ'
+    assert m[:] == b'QbQabcab'
+    m[5:2] = b''
+    m[6:100] = b'zz'
+    m[-100:1] = b'y'
+    assert m[:] == b'ybQabczz'
+    m[::-1] = b'12345678'
+    assert m[:] == b'87654321'
+    m[::-3] = b'xyz'
+    assert m[:] == b'8z65y32x'
+    for l, u, s in [(0, 4, 2), (0, 2, 1), (5, 2, 1), (0, 8, -1)]:
+        error = ''
+        try:
+            m[l:u:s] = b'xyz'
+        except IndexError as e:
+            error = str(e)
+        assert error == 'mmap slice assignment is wrong size'
+    assert m[:] == b'8z65y32x'
+
+    # item assignment: byte values only
+    m[0] = 0
+    m[-1] = 255
+    m[1] = 128
+    assert m[0] == 0 and m[7] == 255 and m[1] == 128  # unsigned
+    m.seek(6)
+    assert m.read_byte() == 0x32
+    assert m.read_byte() == 255
+    for v in [256, -1, 300]:
+        error = ''
+        try:
+            m[0] = v
+        except ValueError as e:
+            error = str(e)
+        assert error == 'mmap item value must be in range(0, 256)'
+    assert m[0] == 0
     m.close()
 
 
@@ -677,6 +775,8 @@ def test_all():
         test_tougher_find()
         test_explicit_iter()
         test_contains()
+        test_find_args()
+        test_slices()
         test_ctx_mgr()
         test_closed()
         test_resize_grows_backing_file()
