@@ -376,8 +376,26 @@ def test_unchanged_results_are_copies():
     assert isinstance(b.removesuffix(b'b'), bytearray)
 
 
+def test_split_translate_types():
+    # (repr, as isinstance(x, bytearray) is not supported)
+    ba = bytearray(b'a b,c')
+    for part in ba.split() + ba.rsplit() + ba.split(b',') + ba.rsplit(b',', 1) + ba.split(None, 0):
+        assert repr(part).startswith('bytearray(')
+    assert repr(ba.split()) == "[bytearray(b'a'), bytearray(b'b,c')]"
+    assert repr(ba.rsplit(b',')) == "[bytearray(b'a b'), bytearray(b'c')]"
+    assert repr(ba.translate(None, b'a')) == "bytearray(b' b,c')"
+    t = ba.translate(bytes(range(256)))
+    assert repr(t) == "bytearray(b'a b,c')"
+    t.append(49)
+    assert ba == bytearray(b'a b,c')
+    # and bytes stay bytes
+    assert repr(b'a b'.split()) == "[b'a', b'b']"
+    assert repr(b'ab'.translate(None, b'a')) == "b'b'"
+
+
 def test_all():
     test_unchanged_results_are_copies()
+    test_split_translate_types()
     test_bytearray()
     test_bytearray_clear()
     test_bytearray_resize()
