@@ -342,12 +342,12 @@ template <class ... Args> __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file
 
 
 #ifndef WIN32
-__ss_int __ss_WCOREDUMP(__ss_int status);
+__ss_bool __ss_WCOREDUMP(__ss_int status);
 __ss_int __ss_WEXITSTATUS(__ss_int status);
-__ss_int __ss_WIFCONTINUED(__ss_int status);
-__ss_int __ss_WIFEXITED(__ss_int status);
-__ss_int __ss_WIFSIGNALED(__ss_int status);
-__ss_int __ss_WIFSTOPPED(__ss_int status);
+__ss_bool __ss_WIFCONTINUED(__ss_int status);
+__ss_bool __ss_WIFEXITED(__ss_int status);
+__ss_bool __ss_WIFSIGNALED(__ss_int status);
+__ss_bool __ss_WIFSTOPPED(__ss_int status);
 __ss_int __ss_WSTOPSIG(__ss_int status);
 __ss_int __ss_WTERMSIG(__ss_int status);
 

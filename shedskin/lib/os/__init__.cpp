@@ -331,7 +331,7 @@ void *remove(str *path) {
 #ifdef WIN32
     if(::_wremove(__to_wide(path).c_str()) == -1) {
 #else
-    if(std::remove(path->c_str()) == -1) {
+    if(::unlink(path->c_str()) == -1) { /* not std::remove: that also removes empty directories */
 #endif
         __throw_oserror(path);
     }
@@ -392,7 +392,7 @@ void *mkdir(str *path, __ss_int mode) {
 }
 
 void _exit(__ss_int code) {
-    ::exit((int)code);
+    ::_exit((int)code); /* no atexit handlers or stdio flushing (matters after fork) */
 }
 
 void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mode) {
@@ -1299,28 +1299,28 @@ __ss_bool isatty(__ss_int fd) {
 /* UNIX-only functionality */
 
 #ifndef WIN32
-__ss_int __ss_WCOREDUMP(__ss_int status) {
-    return WCOREDUMP(status);
+__ss_bool __ss_WCOREDUMP(__ss_int status) {
+    return __mbool(WCOREDUMP(status));
 }
 
 __ss_int __ss_WEXITSTATUS(__ss_int status) {
     return WEXITSTATUS(status);
 }
 
-__ss_int __ss_WIFCONTINUED(__ss_int status) {
-    return WIFCONTINUED(status);
+__ss_bool __ss_WIFCONTINUED(__ss_int status) {
+    return __mbool(WIFCONTINUED(status));
 }
 
-__ss_int __ss_WIFEXITED(__ss_int status) {
-    return WIFEXITED(status);
+__ss_bool __ss_WIFEXITED(__ss_int status) {
+    return __mbool(WIFEXITED(status));
 }
 
-__ss_int __ss_WIFSIGNALED(__ss_int status) {
-    return WIFSIGNALED(status);
+__ss_bool __ss_WIFSIGNALED(__ss_int status) {
+    return __mbool(WIFSIGNALED(status));
 }
 
-__ss_int __ss_WIFSTOPPED(__ss_int status) {
-    return WIFSTOPPED(status);
+__ss_bool __ss_WIFSTOPPED(__ss_int status) {
+    return __mbool(WIFSTOPPED(status));
 }
 
 __ss_int __ss_WSTOPSIG(__ss_int status) {

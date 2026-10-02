@@ -307,6 +307,8 @@ def test_rsplit():
     assert b'bla'.rsplit(b'l') == [b'b', b'a']
     assert b'b l a'.rsplit() == [b'b', b'l', b'a']
     assert b'haajaaja'.rsplit(b'aa') == [b'h', b'j', b'ja']
+    assert b'a,b,c'.rsplit(b',', -5) == [b'a', b'b', b'c']  # any negative maxsplit
+    assert b'a b c'.rsplit(None, -2) == [b'a', b'b', b'c']
 
 def test_rstrip():
     assert b'bla'.rstrip(b'a') == b'bl'
@@ -315,6 +317,8 @@ def test_split():
     assert b'bla'.split(b'l') == [b'b', b'a']
     assert b'b l a'.split() == [b'b', b'l', b'a']
     assert b'haajaaja'.split(b'aa') == [b'h', b'j', b'ja']
+    assert b'a,b,c'.split(b',', -2) == [b'a', b'b', b'c']  # any negative maxsplit
+    assert b'a b c'.split(None, -100) == [b'a', b'b', b'c']
     assert b"hoei hoei".split() == [b'hoei', b'hoei']
     assert b"hoei hoei\\n".split() == [b'hoei', b'hoei\\n']
 

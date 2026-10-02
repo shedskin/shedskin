@@ -172,7 +172,8 @@ def test_popen_spawn():
     assert pid > 0
     wpid, status = os.waitpid(pid, 0)
     assert wpid == pid
-    assert os.WIFEXITED(status)
+    assert os.WIFEXITED(status) is True
+    assert os.WIFSIGNALED(status) is False
     assert os.WEXITSTATUS(status) == 7
 
 
@@ -224,6 +225,24 @@ def test_oserror_subclasses():
         ok = True
     assert ok
     os.remove(path)
+
+    # remove/unlink must not delete (empty) directories
+    # (IsADirectoryError on Linux, PermissionError on macOS)
+    path = 'shedskin_test_emptydir'
+    os.mkdir(path)
+    ok = False
+    try:
+        os.remove(path)
+    except OSError:
+        ok = True
+    assert ok and os.path.isdir(path)
+    ok = False
+    try:
+        os.unlink(path)
+    except OSError:
+        ok = True
+    assert ok and os.path.isdir(path)
+    os.rmdir(path)
 
 
 def test_kwarg_names():
@@ -301,6 +320,9 @@ def test_waitstatus_signals():
     pid2, status = os.waitpid(pid, 0)
     assert pid2 == pid
     assert os.waitstatus_to_exitcode(status) == 7
+
+    # TODO os._exit in a forked child should not flush the parent's (inherited)
+    # stdio buffers; check with fork + _exit while stdout is redirected to a file
 
 
 def test_pty_terminal():

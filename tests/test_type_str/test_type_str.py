@@ -107,6 +107,19 @@ def test_count_embedded_null():
     assert 'abc\x00defXYZ\x00defghi'.count('\x00def') == 2
 
 
+def test_literal_embedded_null_non_ascii():
+    # regression test: the length passed for a literal with an embedded NUL
+    # counted code points instead of utf-8 bytes, truncating the literal
+    s = '\x00\xe9'
+    assert len(s) == 2
+    assert ascii(s) == "'\\x00\\xe9'"
+    t = 'a\x00\u4e2d\U0001F600b'
+    assert len(t) == 5
+    assert ascii(t) == "'a\\x00\\u4e2d\\U0001f600b'"
+    assert '\xe9\x00' == '\xe9' + '\x00'
+    assert hash('\xe9\x00') == hash('\xe9' + '\x00')
+
+
 # def test_encode():
 #     assert 'astring'.encode('utf-8') == b'astring'
 
@@ -928,6 +941,7 @@ def test_all():
     test_fillchar()
     test_count()
     test_count_embedded_null()
+    test_literal_embedded_null_non_ascii()
     # test_encode()
     test_endswith()
     test_expandtabs()
