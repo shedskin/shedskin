@@ -16,16 +16,24 @@ template<class A, class B> static inline void __check_pow_zero(A a, B b) {
 #define __SS_POW_ZERO_CHECK(a, b) ((void)0)
 #endif
 
-inline __ss_float __power(__ss_int a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow((__ss_float)a,b); }
+/* like CPython, a finite base and exponent giving an infinite result raise
+   OverflowError (10.0**400), instead of returning inf */
+static inline __ss_float __pow_range_check(__ss_float r, __ss_float a, __ss_float b) {
+    if(std::isinf(r) && std::isfinite(a) && std::isfinite(b))
+        __throw_pow_overflow();
+    return r;
+}
+
+inline __ss_float __power(__ss_int a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return __pow_range_check(pow((__ss_float)a,b), (__ss_float)a, b); }
 inline __ss_float __power(__ss_float a, __ss_int b) { 
     __SS_POW_ZERO_CHECK(a, b);
-    if(b==2) return a*a;
-    else if(b==3) return a*a*a;
-    else return pow(a,(__ss_float)b); 
+    if(b==2) return __pow_range_check(a*a, a, 0);
+    else if(b==3) return __pow_range_check(a*a*a, a, 0);
+    else return __pow_range_check(pow(a,(__ss_float)b), a, 0);
 }
 
 template<class A> A __power(A a, A b);
-template<> inline __ss_float __power(__ss_float a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return pow(a,b); }
+template<> inline __ss_float __power(__ss_float a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return __pow_range_check(pow(a,b), a, b); }
 
 template<> inline __ss_int __power(__ss_int a, __ss_int b) {
     __SS_POW_ZERO_CHECK(a, b);

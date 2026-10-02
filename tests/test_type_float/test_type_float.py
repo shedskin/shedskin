@@ -163,6 +163,56 @@ def test_float_from_unicode_str():
     assert float_fails('1.5\x00')
 
 
+def pow_overflows(a, b):
+    try:
+        a ** b
+    except OverflowError as e:
+        assert str(e) == "(34, 'Numerical result out of range')"
+        return True
+    return False
+
+
+def pow_int_overflows(a, n):
+    try:
+        a ** n
+    except OverflowError:
+        return True
+    return False
+
+
+def test_pow_overflow():
+    # a finite base and exponent giving an infinite result raise OverflowError
+    assert pow_overflows(10.0, 400.0)
+    assert pow_overflows(-10.0, 401.0)
+    assert pow_overflows(1e200, 2.0)
+    assert pow_int_overflows(10.0, 400)
+    assert pow_int_overflows(1e200, 2)  # 'a*a' fast path
+    assert pow_int_overflows(-1e200, 3)  # 'a*a*a' fast path
+    n = 10
+    try:
+        n ** 400.0
+        assert False
+    except OverflowError:
+        pass
+    try:
+        print(10.0 ** 400)
+        assert False
+    except OverflowError:
+        pass
+    # but not underflow, or inf/nan operands
+    inf = float('inf')
+    assert not pow_overflows(10.0, -400.0)
+    assert 10.0 ** -400.0 == 0.0
+    assert not pow_overflows(inf, 2.0)
+    assert not pow_int_overflows(inf, 2)
+    assert not pow_int_overflows(-inf, 3)
+    assert not pow_overflows(2.0, inf)
+    assert not pow_overflows(0.5, -inf)
+    assert 2.0 ** inf == inf
+    assert 1e200 ** 1.0 == 1e200
+    assert 1.5 ** 2 == 2.25
+
+
 def test_all():
     test_float()
     test_inf()
@@ -175,6 +225,7 @@ def test_all():
     test_repr_roundtrip()
     test_repr_formatting()
     test_float_from_unicode_str()
+    test_pow_overflow()
 
 
 if __name__ == "__main__":

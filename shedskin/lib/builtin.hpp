@@ -298,6 +298,7 @@ void __throw_index_out_of_range(const char *msg="index out of range");
 void __throw_range_step_zero();
 void __throw_stop_iteration();
 void __throw_zero_division(const char *msg);
+void __throw_pow_overflow();
 
 #ifdef __GNUC__
 #define unlikely(x)       __builtin_expect((x), 0)
