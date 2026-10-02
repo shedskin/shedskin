@@ -313,6 +313,21 @@ def test_urandom():
     bts = os.urandom(10)
     assert len(bts) == 10
     assert bts.__class__.__name__ == 'bytes'
+    assert os.urandom(0) == b''
+    assert len(os.urandom(100000)) == 100000
+    fd = os.open(os.devnull, os.O_RDONLY)
+    os.close(fd)
+    for i in range(10):
+        error = ''
+        try:
+            os.urandom(-1)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'negative argument not allowed'
+    fd2 = os.open(os.devnull, os.O_RDONLY)  # no fd was leaked
+    os.close(fd2)
+    assert fd2 == fd
+    assert len(os.urandom(1)) == 1
 
 
 def test_getrandom():

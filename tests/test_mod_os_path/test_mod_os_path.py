@@ -637,6 +637,38 @@ def test_os_path_kwarg_names():
     assert os.path.expandvars(path='noexpand') == 'noexpand'
 
 
+def test_os_path_realpath_relative():
+    # the first component of a relative path is resolved too
+    if os.name == "nt":
+        return  # see test_os_path_realpath_strict
+
+    base = join(realpath("/tmp"), "shedskin_test_realpath_relative")
+    os.system("rm -rf " + base)
+    os.mkdir(base)
+    cwd = os.getcwd()
+    os.chdir(base)
+    os.mkdir("realdir")
+    os.mkdir(join("realdir", "sub"))
+    os.symlink("realdir", "dirlink")
+    os.symlink("sub", join("realdir", "sublink"))
+    assert realpath("dirlink") == join(base, "realdir")
+    assert realpath("./dirlink") == join(base, "realdir")
+    assert realpath(join("dirlink", "sub")) == join(base, "realdir", "sub")
+    assert realpath(join("dirlink", "sublink")) == join(base, "realdir", "sub")
+    assert realpath(join("realdir", "sublink", "x")) == join(base, "realdir", "sub", "x")
+    assert realpath("") == base
+    assert realpath("", strict=True) == base
+    assert realpath(join("dirlink", "sub"), strict=True) == join(base, "realdir", "sub")
+    for path in ["missing", join("dirlink", "missing"), join("missing", "x")]:
+        try:
+            realpath(path, strict=True)
+            assert False, "expected FileNotFoundError"
+        except FileNotFoundError:
+            pass
+    os.chdir(cwd)
+    os.system("rm -rf " + base)
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -651,6 +683,7 @@ def test_all():
     test_os_path_realpath_strict()
     test_os_path_realpath_all_but_last()
     test_os_path_realpath_symlink_loop()
+    test_os_path_realpath_relative()
     # test_os_path_realpath_through_symlink()  # os.symlink is #ifndef
     # WIN32'd out of __os__ in lib/os/__init__.hpp, and shedskin translates
     # this function's body to C++ unconditionally (the `os.name == "nt"`
