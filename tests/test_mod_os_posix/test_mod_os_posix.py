@@ -325,6 +325,39 @@ def test_waitstatus_signals():
     # stdio buffers; check with fork + _exit while stdout is redirected to a file
 
 
+def test_broken_pipe():
+    # SIGPIPE is ignored, as in CPython, so writing to a pipe without a
+    # reader raises BrokenPipeError instead of killing the process
+    r, w = os.pipe()
+    os.close(r)
+    error = 0
+    try:
+        os.write(w, b'x')
+    except BrokenPipeError as e:
+        error = e.errno
+    assert error == 32
+    os.close(w)
+
+    # the same for print() (e.g. when piped into 'head')
+    r, w = os.pipe()
+    os.close(r)
+    sys.stdout.flush()
+    pid = os.fork()
+    if pid == 0:
+        os.dup2(w, 1)
+        code = 1
+        try:
+            for i in range(100000):
+                print('x' * 100)
+        except BrokenPipeError:
+            code = 0
+        os._exit(code)
+    os.close(w)
+    pid2, status = os.waitpid(pid, 0)
+    assert os.WIFEXITED(status)
+    assert os.WEXITSTATUS(status) == 0
+
+
 def test_pty_terminal():
     master, slave = os.openpty()
     assert os.device_encoding(slave) == 'utf-8'
@@ -435,6 +468,7 @@ def test_all():
     test_direntry_inode_symlink()
     test_mknod_default_mode()
     test_waitstatus_signals()
+    test_broken_pipe()
     test_pty_terminal()
 
 

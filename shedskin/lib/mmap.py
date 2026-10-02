@@ -49,6 +49,8 @@ MADV_PROTECT = -1
 MADV_FREE_REUSABLE = -1
 MADV_FREE_REUSE = -1
 
+__void = 0  # 'start/end not given' sentinel for find/rfind
+
 class mmap(pyiter):
     # flags/prot defaults are spelled as literals (MAP_SHARED, PROT_READ |
     # PROT_WRITE), so no default_N variables are needed in mmap.cpp; the
@@ -74,7 +76,7 @@ class mmap(pyiter):
     def madvise(self, option, start=0, length=-1):
         pass
 
-    def find(self, string, start=-1, end=-1):
+    def find(self, string, start=__void, end=__void):
         return -1
 
     def move(self, destination, source, count):
@@ -92,7 +94,7 @@ class mmap(pyiter):
     def resize(self, newsize):
         pass
 
-    def rfind(self, string, start=-1, end=-1):
+    def rfind(self, string, start=__void, end=__void):
         return -1
 
     def seek(self, offset, whence=0):
