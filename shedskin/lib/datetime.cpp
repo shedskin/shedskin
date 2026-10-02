@@ -1409,6 +1409,38 @@ timedelta *timedelta::__truediv__(__ss_int n) {
     return result;
 }
 
+/* t / u and t // u, on the total number of microseconds: exact for t // u
+   when that fits an __ss_int (|days| < 106751 with 64-bit ints), and in
+   double precision otherwise */
+static __ss_float timedelta_us(timedelta *t) {
+    return ((__ss_float)t->days * 86400.0 + (__ss_float)t->seconds) * 1e6 + (__ss_float)t->microseconds;
+}
+
+static bool timedelta_is_zero(timedelta *t) {
+    return !t->days && !t->seconds && !t->microseconds;
+}
+
+__ss_float timedelta::__truediv__(timedelta *other) {
+    if(timedelta_is_zero(other))
+        throw new ZeroDivisionError(new str("division by zero"));
+    return timedelta_us(this) / timedelta_us(other);
+}
+
+__ss_int timedelta::__floordiv__(timedelta *other) {
+    if(timedelta_is_zero(other))
+        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+    if(sizeof(__ss_int) >= 8 && days > -106751 && days < 106751 && other->days > -106751 && other->days < 106751) {
+        __ss_int a = (days * 86400 + seconds) * 1000000 + microseconds;
+        __ss_int b = (other->days * 86400 + other->seconds) * 1000000 + other->microseconds;
+        __ss_int r;
+        return floordivmod(a, b, &r);
+    }
+    __ss_float q = std::floor(timedelta_us(this) / timedelta_us(other));
+    if(q >= 9223372036854775808.0 || q < -9223372036854775808.0)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
+    return (__ss_int)q;
+}
+
 timedelta *timedelta::__neg__() {
     return new timedelta((double)-days, (double)-seconds, (double)-microseconds,0,0,0,0);
 }

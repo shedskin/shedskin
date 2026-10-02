@@ -232,6 +232,13 @@ public:
     timedelta *__truediv__(__ss_float f);
     timedelta *__neg__();
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
+    __ss_float __truediv__(timedelta *other);                /* t / u -> float */
+    __ss_int __floordiv__(timedelta *other);                 /* t // u -> int */
+    timedelta *__floordiv__(__ss_float f) = delete;          /* t // 2.5: TypeError in CPython */
+    /* a bool is an int (the int and float overloads are ambiguous otherwise) */
+    timedelta *__mul__(__ss_bool b) { return __mul__((__ss_int)b.value); }
+    timedelta *__truediv__(__ss_bool b) { return __truediv__((__ss_int)b.value); }
+    timedelta *__floordiv__(__ss_bool b) { return __floordiv__((__ss_int)b.value); }
     template<class T> auto __iadd__(T other) { return __add__(other); } /* d += x */
     template<class T> auto __isub__(T other) { return __sub__(other); } /* d -= x */
     template<class T> auto __imul__(T other) { return __mul__(other); } /* d *= x */

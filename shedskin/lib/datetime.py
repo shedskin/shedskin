@@ -316,10 +316,13 @@ class timedelta:
         return self
 
     def __truediv__(self, n):
-        return self
+        return n.__with_timedelta__(self, 1.0)  # timedelta for a number, float for a timedelta
 
     def __floordiv__(self, n):
-        return self
+        return n.__with_timedelta__(self, 1)  # timedelta for a number, int for a timedelta
+
+    def __with_timedelta__(self, td, other):
+        return other
 
     def __abs__(self):
         return self
