@@ -32,7 +32,11 @@ inline __ss_float __power(__ss_float a, __ss_int b) {
     else return __pow_range_check(pow(a,(__ss_float)b), a, 0);
 }
 
-template<class A> A __power(A a, A b);
+template<class A> A __power(A a, A b) requires (!std::is_pointer_v<A>);
+
+/* a user class with __pow__ (the pointer constraint above keeps two
+   instances of the same class from being ambiguous with this) */
+template<class A, class B> inline auto __power(A *a, B b) -> decltype(a->__pow__(b)) { return a->__pow__(b); }
 template<> inline __ss_float __power(__ss_float a, __ss_float b) { __SS_POW_ZERO_CHECK(a, b); return __pow_range_check(pow(a,b), a, b); }
 
 template<> inline __ss_int __power(__ss_int a, __ss_int b) {
