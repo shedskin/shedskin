@@ -21,32 +21,135 @@ template<class T> static str *__int_error(T s, __ss_int base) {
     return __add_strs(4, new str("invalid literal for int() with base "), __str(base), new str(": "), repr(s));
 }
 
-template<class T> static __ss_int __int_parse(const char *start, T orig, __ss_int base) {
-    char *cp;
-    __ss_int i;
-#ifdef __SS_LONG
-    i = (__ss_int)strtoll(start, &cp, (int)base);
-#else
-    i = (__ss_int)strtol(start, &cp, (int)base);
-#endif
-    /* no digits at all: strtol happily returns 0 for '' or '   ' */
-    if(cp == start)
-        throw new ValueError(__int_error(orig, base));
-    while(*cp and isspace((unsigned char)*cp))
-        cp++;
-    if(*cp != '\0')
-        throw new ValueError(__int_error(orig, base));
-    return i;
+/* int() from a string, following CPython's PyLong_FromString: optional
+ * sign, base prefix (0x/0o/0b, also with base 16/8/2), single underscores
+ * between digits (or right after a prefix), no leading zeros in a non-zero
+ * base 0 literal, and an OverflowError instead of silently clamping when
+ * the value does not fit in __ss_int. code units are scanned in place, so
+ * nothing is allocated unless an exception is thrown. */
+
+/* code unit -> ascii; 0 means 'not valid anywhere in an int literal'.
+ * for str, non-ascii whitespace becomes ' ' and non-ascii decimal digits
+ * become ascii ones, as in _PyUnicode_TransformDecimalAndSpaceToASCII */
+static inline unsigned __int_unit(char c) {
+    unsigned char u = (unsigned char)c;
+    return u < 0x80 ? u : 0;
+}
+
+static inline unsigned __int_unit(__ss_char c) {
+    if(c < 0x80)
+        return c;
+    if(__ss_char_space(c))
+        return ' ';
+    int d = __ss_char_rec(c)->decimal;
+    return d >= 0 ? '0' + (unsigned)d : 0;
+}
+
+static inline bool __int_space(unsigned c) {
+    return c == ' ' or (c >= '\t' and c <= '\r');
+}
+
+/* ascii -> digit value, 99 if not a digit in any base */
+struct __int_digit_table {
+    unsigned char v[128];
+    constexpr __int_digit_table() : v() {
+        for(int i = 0; i < 128; i++)
+            v[i] = 99;
+        for(int i = 0; i < 10; i++)
+            v['0' + i] = (unsigned char)i;
+        for(int i = 0; i < 26; i++)
+            v['a' + i] = v['A' + i] = (unsigned char)(10 + i);
+    }
+};
+static constexpr __int_digit_table __int_digits;
+
+template<class U, class T> static __ss_int __int_parse(const U *p, const U *end, T orig, __ss_int base) {
+    if(base != 0 and (base < 2 or base > 36))
+        throw new ValueError(new str("int() base must be >= 2 and <= 36, or 0"));
+    __ss_int orig_base = base;
+
+    while(p < end and __int_space(__int_unit(*p)))
+        p++;
+
+    bool neg = false;
+    if(p < end) {
+        unsigned c = __int_unit(*p);
+        if(c == '-' or c == '+') {
+            neg = (c == '-');
+            p++;
+        }
+    }
+
+    /* base prefix */
+    bool after_prefix = false; /* an underscore may directly follow it */
+    bool zero_rule = false; /* base 0 literal starting with '0' */
+    if(p < end and __int_unit(*p) == '0') {
+        unsigned c = (p+1 < end) ? (__int_unit(p[1]) | 0x20) : 0;
+        if(c == 'x' and (base == 0 or base == 16))
+            base = 16;
+        else if(c == 'o' and (base == 0 or base == 8))
+            base = 8;
+        else if(c == 'b' and (base == 0 or base == 2))
+            base = 2;
+        else
+            c = 0;
+        if(c) {
+            p += 2;
+            after_prefix = true;
+        } else if(base == 0) {
+            base = 10;
+            zero_rule = true;
+        }
+    } else if(base == 0)
+        base = 10;
+
+    /* digits: accumulate the magnitude unsigned, detecting overflow as strtol does */
+    unsigned ubase = (unsigned)base;
+    __ss_uint limit = ((__ss_uint)-1 >> 1) + (neg ? 1 : 0); /* max, or -min */
+    __ss_uint cutoff = limit / ubase;
+    unsigned cutlim = (unsigned)(limit % ubase);
+    __ss_uint acc = 0;
+    bool any = false, overflow = false;
+
+    for(; p < end; p++) {
+        unsigned c = __int_unit(*p);
+        if(c == '_') {
+            if(not (any or after_prefix) or p+1 == end)
+                throw new ValueError(__int_error(orig, orig_base));
+            c = __int_unit(*++p);
+            if(__int_digits.v[c] >= ubase)
+                throw new ValueError(__int_error(orig, orig_base));
+        }
+        unsigned d = __int_digits.v[c];
+        if(d >= ubase)
+            break;
+        if(acc > cutoff or (acc == cutoff and d > cutlim))
+            overflow = true;
+        else
+            acc = acc * ubase + d;
+        any = true;
+    }
+
+    if(not any)
+        throw new ValueError(__int_error(orig, orig_base));
+    while(p < end and __int_space(__int_unit(*p)))
+        p++;
+    if(p != end or (zero_rule and (acc != 0 or overflow)))
+        throw new ValueError(__int_error(orig, orig_base));
+    if(overflow)
+        throw new OverflowError(__add_strs(2, new str("int too large to convert: "), repr(orig)));
+
+    return neg ? (__ss_int)(0 - acc) : (__ss_int)acc;
 }
 
 __ss_int __int(str *s, __ss_int base) {
-    /* unicode digits and whitespace -> ascii (see __ss_ascii_numeric) */
-    __GC_STRING a = __ss_ascii_numeric(s);
-    return __int_parse(a.c_str(), s, base);
+    const __ss_char *p = s->unit.data();
+    return __int_parse(p, p + s->unit.size(), s, base);
 }
 
 __ss_int __int(bytes *s, __ss_int base) {
-    return __int_parse(s->c_str(), s, base);
+    const char *p = s->unit.data();
+    return __int_parse(p, p + s->unit.size(), s, base);
 }
 
 /* float */
