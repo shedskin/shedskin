@@ -1078,10 +1078,9 @@ void *mmap::write_byte(__ss_int value)
 __ss_bool mmap::__contains__(bytes *string)
 {
     __raise_if_closed_or_not_readable();
+    /* like CPython, which compares against the items (single bytes) */
     if (string == 0 or string->unit.size() != 1)
-    {
-        throw new ValueError(const_8);
-    }
+        return False;
     return __mbool(find(string, 0) != -1);
 }
 

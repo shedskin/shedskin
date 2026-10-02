@@ -601,6 +601,41 @@ def test_repr_escapes_argument():
     assert repr(ValueError()) == 'ValueError()'
 
 
+def test_keyerror_str():
+    # a single argument (the key) is repr'd
+    try:
+        raise KeyError('a')
+    except KeyError as e:
+        assert str(e) == "'a'"
+        assert repr(e) == "KeyError('a')"
+        assert e.args[0] == 'a'
+    try:
+        raise KeyError()
+    except KeyError as e:
+        assert str(e) == ''
+    try:
+        raise KeyError('')
+    except KeyError as e:
+        assert str(e) == "''"
+    # also as a LookupError/Exception
+    try:
+        raise KeyError('b')
+    except Exception as e:
+        assert str(e) == "'b'"
+    # lookup failures are not repr'd twice
+    d = {'a': 1}
+    try:
+        d['b']
+    except KeyError as e:
+        assert str(e) == "'b'"
+    s = set([1])
+    s.clear()
+    try:
+        s.pop()
+    except KeyError as e:
+        assert str(e) == "'pop from an empty set'"
+
+
 def test_all():
     test_repr_escapes_argument()
     test_key_error()
@@ -624,6 +659,7 @@ def test_all():
     test_more_builtin_exceptions()
     test_warnings()
     test_exception_attributes()
+    test_keyerror_str()
 
 
 if __name__ == '__main__':

@@ -251,6 +251,15 @@ str *BaseException::__repr__() {
         return __add_strs(2, this->__class__->__name__, new str("()"));
 }
 
+/* KeyError */
+
+str *KeyError::__str__() {
+    /* as in CPython, a single argument (the key) is repr'd */
+    if(len(this->args) == 1)
+        return repr(args->__getitem__(0));
+    return BaseException::__str__();
+}
+
 /* SystemExit */
 
 SystemExit::SystemExit(__ss_int c) {

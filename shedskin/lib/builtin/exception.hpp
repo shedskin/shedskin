@@ -183,6 +183,7 @@ public:
 class KeyError : public LookupError {
 public:
     KeyError(str *msg=0) : LookupError(msg) { this->__class__ = cl_keyerror; }
+    str *__str__(); /* a single argument (the key) is repr'd */
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
 #endif
@@ -207,6 +208,7 @@ template<class T> class KeyErrorT : public KeyError {
 public:
     T key;
     KeyErrorT(T key) : KeyError(repr(key)), key(key) {}
+    str *__str__() { return BaseException::__str__(); } /* message is repr(key) already */
 #ifdef __SS_BIND
     PyObject *__py_args__() {
         if constexpr (__ss_has_to_py<T>::value)

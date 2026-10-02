@@ -1247,13 +1247,13 @@ void *utime(void *, str *path, void *) {
 }
 
 bytes *urandom(__ss_int n) {
+    if(n < 0)
+        throw new ValueError(new str("negative argument not allowed"));
 #ifdef WIN32
     /* like cpython: BCryptGenRandom with the system-preferred rng; looked up
        at run-time, so no extra link library is needed */
     typedef LONG (WINAPI *genrandom_t)(void *, PUCHAR, ULONG, ULONG);
     static genrandom_t genrandom = NULL;
-    if(n < 0)
-        throw new ValueError(new str("negative argument not allowed"));
     if(!genrandom) {
         HMODULE lib = LoadLibraryA("bcrypt.dll");
         if(lib)
@@ -1273,8 +1273,22 @@ bytes *urandom(__ss_int n) {
     return s;
 #else
     __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
-    bytes *s = read(fd, n);
-    close(fd);
+    bytes *s = new bytes();
+    s->unit.resize((size_t)n);
+    size_t done = 0;
+    while(done < (size_t)n) { /* a single read may return less (32MB max on linux) */
+        auto r = ::read((int)fd, &s->unit[done], (size_t)n - done);
+        if(r <= 0) {
+            if(r < 0 and errno == EINTR)
+                continue;
+            int err = (r < 0) ? errno : EIO;
+            ::close((int)fd); /* don't leak the fd */
+            errno = err;
+            __throw_oserror(new str("/dev/urandom"));
+        }
+        done += (size_t)r;
+    }
+    ::close((int)fd);
     return s;
 #endif
 }

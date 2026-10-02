@@ -561,16 +561,19 @@ str *realpath(str *filename, __ss_bool strict) {
     allow_missing = __mbool(strict.value == ALLOW_MISSING.value);
     all_but_last = __mbool(strict.value == ALL_BUT_LAST.value);
 
+    __ss_int first; /* number of bits in the first component to check */
     if (isabs(filename)) {
         bits = ((new list<str *>(1, const_4)))->__add__((filename->split(const_4))->__slice__(1, 1, 0, 0));
+        first = 2; /* skip the root */
     }
     else {
         bits = filename->split(const_4);
+        first = 1;
     }
 
-    FAST_FOR(i,2,(len(bits)+1),1,40,41)
+    FAST_FOR(i,first,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
-        if (strict.value && (!allow_missing.value) && (!lexists(component).value)) {
+        if (strict.value && (!allow_missing.value) && len(component) && (!lexists(component).value)) {
             if (!(all_but_last.value && (i == len(bits)))) {
                 errno = ENOENT;
                 __throw_oserror(component);

@@ -276,6 +276,19 @@ def test_explicit_iter():
     tearDown(m)
 
 
+def test_contains():
+    # 'in' compares against the items (single bytes), as in CPython
+    m = mmap.mmap(-1, 8)
+    m[:] = b'abcabcab'
+    assert b'a' in m
+    assert b'c' in m
+    assert b'z' not in m
+    assert b'cd' not in m
+    assert b'ab' not in m
+    assert b'' not in m
+    m.close()
+
+
 def test_ctx_mgr():
     with open(TESTFILE_IN, "rb") as f:
         with mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ) as mm:
@@ -663,6 +676,7 @@ def test_all():
         test_rfind()
         test_tougher_find()
         test_explicit_iter()
+        test_contains()
         test_ctx_mgr()
         test_closed()
         test_resize_grows_backing_file()
