@@ -246,8 +246,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                 else:
                     self.append('new str("%s"' % self.expand_special_chars(value))
-                    if "\0" in value:
-                        self.append(", %d" % len(value))
+                    if "\0" in value:  # byte count, not code points
+                        self.append(", %d" % len(value.encode("utf-8")))
                     self.append(")")
             else:
                 if len(value) == 1:

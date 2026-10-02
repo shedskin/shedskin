@@ -604,17 +604,17 @@ def mknod(path, mode=0o600, device=0):
     pass
 
 def WCOREDUMP(status):
-    return 1
+    return True
 def WEXITSTATUS(status):
     return 1
 def WIFCONTINUED(status):
-    return 1
+    return True
 def WIFEXITED(status):
-    return 1
+    return True
 def WIFSIGNALED(status):
-    return 1
+    return True
 def WIFSTOPPED(status):
-    return 1
+    return True
 def WSTOPSIG(status):
     return 1
 def WTERMSIG(status):

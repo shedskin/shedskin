@@ -351,7 +351,7 @@ list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
         else
             pos_end = unit.find(sep_->unit, pos_start);
 
-        if(pos_end == std::string::npos || ((maxsplit != -1) && splits >= maxsplit)) {
+        if(pos_end == std::string::npos || ((maxsplit >= 0) && splits >= maxsplit)) {
             result->append(new bytes(unit.substr(pos_start, unit.size()-pos_start)));
             break;
         }
