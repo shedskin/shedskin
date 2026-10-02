@@ -214,6 +214,9 @@ void __throw_stop_iteration() {
 void __throw_zero_division(const char *msg) {
     throw new ZeroDivisionError(new str(msg));
 }
+void __throw_pow_overflow() {
+    throw new OverflowError(new str("(34, 'Numerical result out of range')")); /* as CPython (ERANGE) */
+}
 
 /* BaseException */
 
