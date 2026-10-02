@@ -129,11 +129,58 @@ def test_vector2d():
      assert u.length() == 1.0
 
 
+class Power:
+    def __init__(self, x):
+        self.x = x
+
+    def __pow__(self, n):
+        return Power(self.x ** n)
+
+
+class PowerOf:
+    def __init__(self, x):
+        self.x = x
+
+    def __pow__(self, other):
+        return PowerOf(self.x ** other.x)
+
+
+class PowBase:
+    def __pow__(self, n):
+        return n
+
+
+class PowSub(PowBase):
+    def __pow__(self, n):
+        return n * 10
+
+
+class PowFloat:
+    def __pow__(self, e):
+        return 2.5 * e
+
+
+def test_pow():
+    # a user-defined __pow__ (2-arg) used to fail to compile
+    a = Power(3)
+    assert (a ** 2).x == 9
+    assert pow(a, 3).x == 27
+    a **= 2
+    assert a.x == 9
+    assert (PowerOf(3) ** PowerOf(2)).x == 9
+    assert [o ** 4 for o in [PowBase(), PowSub()]] == [4, 40]
+    assert PowFloat() ** 2.0 == 5.0
+    # builtin types are unaffected
+    assert 2 ** 10 == 1024
+    assert 2.0 ** 3 == 8.0
+
+
 def test_all():
     test_int_class()
     test_float_class()
     test_vector2d()
     test_num()
+    test_pow()
 
 
 if __name__ == '__main__':
