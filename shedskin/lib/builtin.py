@@ -73,6 +73,8 @@ class int_:
 
     def __div_int__(self):
         return 1.0
+    def __with_timedelta__(self, td, other):  # timedelta / number -> timedelta
+        return td
     def __with_int__(self):
         return 1
     def __with_float__(self):
@@ -131,6 +133,8 @@ class bool_:
 
     def __div_int__(self):
         return 1.0
+    def __with_timedelta__(self, td, other):  # timedelta / number -> timedelta
+        return td
     def __with_int__(self):
         return 1
     def __with_float__(self):
@@ -195,6 +199,8 @@ class float_:
 
     def __div_int__(self):
         return 1.0
+    def __with_timedelta__(self, td, other):  # timedelta / number -> timedelta
+        return td
     def __with_int__(self):
         return 1.0
     def __with_float__(self):

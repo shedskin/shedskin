@@ -1026,8 +1026,66 @@ def test_timedelta_float_range():
             assert error.startswith('OverflowError')
 
 
+def test_timedelta_division():
+    t = datetime.timedelta(days=1, hours=6)
+    u = datetime.timedelta(hours=7, microseconds=5)
+    n = datetime.timedelta(hours=-30)
+
+    # t / u -> float
+    f = t / u
+    assert f == 4.285714284863945
+    assert n / u == -4.285714284863945
+    assert datetime.timedelta(hours=3) / datetime.timedelta(hours=2) == 1.5
+    assert datetime.timedelta(days=-1) / datetime.timedelta(hours=6) == -4.0
+    assert datetime.timedelta(days=50000) / datetime.timedelta(days=1) == 50000.0
+
+    # t // u -> int (floor)
+    i = t // u
+    assert i == 4
+    assert n // u == -5
+    assert datetime.timedelta(hours=3) // datetime.timedelta(hours=2) == 1
+    assert datetime.timedelta(hours=-3) // datetime.timedelta(hours=2) == -2
+    assert datetime.timedelta(microseconds=-1) // datetime.timedelta(days=1) == -1
+    assert datetime.timedelta(days=500000) // datetime.timedelta(days=7) == 71428  # beyond the int64-microseconds range
+    assert datetime.timedelta(days=-500000) // datetime.timedelta(days=7) == -71429
+
+    # dividing by a number still gives a timedelta
+    assert t / 4 == datetime.timedelta(seconds=27000)
+    assert t / 7 == datetime.timedelta(seconds=15428, microseconds=571429)
+    assert t / 0.5 == datetime.timedelta(days=2, seconds=43200)
+    assert t // 4 == datetime.timedelta(seconds=27000)
+    assert t // 7 == datetime.timedelta(seconds=15428, microseconds=571428)
+    assert n // 7 == datetime.timedelta(days=-1, seconds=70971, microseconds=428571)
+
+    # a bool is an int
+    assert t / True == t
+    assert t // True == t
+    assert t * True == t
+    assert t * False == datetime.timedelta(0)
+
+    # division by zero
+    for k in range(4):
+        error = ''
+        try:
+            if k == 0:
+                f = t / datetime.timedelta(0)
+            elif k == 1:
+                i = t // datetime.timedelta(0)
+            elif k == 2:
+                t / 0
+            else:
+                t / False
+        except ZeroDivisionError as e:
+            error = str(e)
+        if k == 0:
+            assert error == 'division by zero'
+        else:
+            assert error == 'integer division or modulo by zero'
+
+
 def test_all():
         test_augmented_assignment()
+        test_timedelta_division()
         test_timedelta_float_range()
         test_date()
         test_date_ctime()
