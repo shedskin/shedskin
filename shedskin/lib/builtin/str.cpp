@@ -555,6 +555,26 @@ str *str::translate(dict<__ss_int, str *> *table) {
     return newstr;
 }
 
+str *str::translate(dict<__ss_int, __ss_int> *table) {
+    str *newstr = new str();
+
+    size_t self_size = this->unit.size();
+    newstr->unit.reserve(self_size);
+    for(size_t i = 0; i < self_size; i++) {
+        __ss_int ord = (__ss_int)unit[i];
+        if(table->__contains__(ord)) {
+            __ss_int repl = table->__getitem__(ord);
+            if(repl < 0 || repl > 0x10ffff)
+                throw new ValueError(new str("character mapping must be in range(0x110000)"));
+            newstr->unit += (__ss_char)repl;
+        } else {
+            newstr->unit += unit[i];
+        }
+    }
+
+    return newstr;
+}
+
 /* str.maketrans(x, y[, z]): x, y equal-length strings mapping ord(x[i])->y[i];
    chars in optional z are mapped to None (deletion). Note: unlike CPython's own
    maketrans (whose dict values may be raw int ordinals, strings, or None all in

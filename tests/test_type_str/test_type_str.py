@@ -591,6 +591,24 @@ def test_maketrans_translate():
     assert 'x\x03z'.translate(td) == 'y\x03z'
 
 
+def test_translate_ordinals():
+    # a table with int (ordinal) values, as in CPython
+    assert 'abc'.translate({97: 0x1F600, 98: 0xE9}) == '\U0001f600\xe9c'
+    assert 'a\U0001f600b'.translate({0x1F600: 97}) == 'aab'
+    assert 'abc'.translate({97: 0}) == '\x00bc'
+    empty = {1: 1}
+    del empty[1]
+    assert 'abc'.translate(empty) == 'abc'
+    for value in [-1, 0x110000]:
+        error = ''
+        try:
+            'abc'.translate({98: value})
+        except ValueError as e:
+            error = str(e)
+        assert error == 'character mapping must be in range(0x110000)'
+    assert 'xyz'.translate({98: -1}) == 'xyz'  # only checked when used
+
+
 def test_upper():
     assert 'bla'.upper() == 'BLA'
 
@@ -987,6 +1005,7 @@ def test_all():
     test_title()
     test_translate()
     test_maketrans_translate()
+    test_translate_ordinals()
     test_upper()
     test_zfill()
     test_iadd()
