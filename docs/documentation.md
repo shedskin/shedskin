@@ -506,8 +506,8 @@ usage: shedskin translate [-h] [--collect-stats] [--int32] [--int64]
                           [--float32] [--float64] [--noassert] [-b] [--nogc]
                           [-w] [-z] [--boost] [--predict] [-d DEBUG] [-e]
                           [-I INCLUDE_DIRS] [-L LINK_DIRS] [-l LINK_LIBS]
-                          [-X EXTRA_LIB] [-o OUTPUTDIR] [--retry] [-s] [-t]
-                          [-x] [-c] [-F FLAGS] [-S] [-m MAKEFILE] [-r] [-D]
+                          [-X EXTRA_LIB] [-o OUTPUTDIR] [-s] [-t] [-x] [-c]
+                          [-F FLAGS] [-S] [-m MAKEFILE] [-r] [-D]
                           [--nomakefile] [--nocleanup] [--local-deps]
                           name
 
@@ -541,7 +541,6 @@ options:
                         Add an extra builtins library directory
   -o OUTPUTDIR, --outputdir OUTPUTDIR
                         Specify output directory for generated files
-  --retry               Retry analysis when hitting max iterations
   -s, --silent          Silent mode, only show warnings
   -t, --traceback       Print traceback for uncaught exceptions
   -x, --executable      Generate executable
@@ -587,9 +586,8 @@ print(a / b) # ZeroDivisionError
 
 Note that as of 0.9.13, integers default to 64-bit (`--int64`); use `--int32` to restore the previous, narrower default.
 
-Three options added in 0.9.13 are worth knowing about:
+Two options added in 0.9.13 are worth knowing about:
 
-* `--retry` restarts the analysis when it hits 'max iterations'. This often helps for larger programs, so there is no need to retry manually.
 * `--boost` switches the generated code over to (bundled) boost containers. This can help a lot for programs that lean on dictionaries or sets, or that create many very short lists.
 * `--predict` tries to predict maximum list sizes before (re)allocating storage, by sampling at run time per allocation site. This can greatly improve performance when reallocation is the bottleneck.
 
@@ -603,8 +601,8 @@ usage: shedskin build [-h] [--collect-stats] [--int32] [--int64] [--float32]
                       [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
                       [--boost] [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
                       [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
-                      [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
-                      [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+                      [-o OUTPUTDIR] [-s] [-t] [-x] [--generator G] [--jobs N]
+                      [--build-type T] [--test] [--reset] [--spm]
                       [--fetchcontent] [--local-deps] [--ccache]
                       [--target TARGET [TARGET ...]] [--nowarnings]
                       name
@@ -639,7 +637,6 @@ options:
                         Add an extra builtins library directory
   -o OUTPUTDIR, --outputdir OUTPUTDIR
                         Specify output directory for generated files
-  --retry               Retry analysis when hitting max iterations
   -s, --silent          Silent mode, only show warnings
   -t, --traceback       Print traceback for uncaught exceptions
   -x, --executable      Generate executable
@@ -667,8 +664,8 @@ usage: shedskin run [-h] [--collect-stats] [--int32] [--int64] [--float32]
                     [--float64] [--noassert] [-b] [--nogc] [-w] [-z] [--boost]
                     [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
                     [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
-                    [-o OUTPUTDIR] [--retry] [-s] [-t] [-x] [--generator G]
-                    [--jobs N] [--build-type T] [--test] [--reset] [--spm]
+                    [-o OUTPUTDIR] [-s] [-t] [-x] [--generator G] [--jobs N]
+                    [--build-type T] [--test] [--reset] [--spm]
                     [--fetchcontent] [--local-deps] [--ccache]
                     [--target TARGET [TARGET ...]] [--nowarnings]
                     name
@@ -703,7 +700,6 @@ options:
                         Add an extra builtins library directory
   -o OUTPUTDIR, --outputdir OUTPUTDIR
                         Specify output directory for generated files
-  --retry               Retry analysis when hitting max iterations
   -s, --silent          Silent mode, only show warnings
   -t, --traceback       Print traceback for uncaught exceptions
   -x, --executable      Generate executable
