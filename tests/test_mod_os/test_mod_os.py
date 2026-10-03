@@ -2,6 +2,7 @@
 
 import os
 import stat
+from os import fdopen as os_fdopen
 
 def test_getcwd():
     assert len(os.getcwd()) > 1
@@ -596,6 +597,25 @@ def test_pipe_fdopen():
     assert f.read() == 'hello fdopen\n'
     f.close()
     os.remove(path)
+
+
+def test_fdopen_binary():
+    # a binary mode gives a binary file, as with open()
+    r, w = os.pipe()
+    f = os.fdopen(w, 'wb')
+    assert f.write(b'bin\x00ary') == 7
+    assert f.mode == 'wb'
+    f.close()
+    g = os.fdopen(r, mode='rb')
+    assert g.read() == b'bin\x00ary'
+    assert g.mode == 'rb'
+    g.close()
+
+    r, w = os.pipe()
+    with os_fdopen(w, 'wb') as f2:
+        f2.write(b'abc')
+    with os_fdopen(r, 'rb') as g2:
+        assert g2.read() == b'abc'
 
 
 def test_pids():
@@ -1366,6 +1386,7 @@ def test_all():
     test_open_flags()
     test_fd_ops()
     test_pipe_fdopen()
+    test_fdopen_binary()
     test_pids()
     test_rename_renames()
     test_utime()

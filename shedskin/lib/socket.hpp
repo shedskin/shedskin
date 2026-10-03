@@ -158,7 +158,8 @@ public:
     void *set_inheritable(__ss_bool inheritable);
     socket *bind(inet_address address);
     socket *bind(pyseq<str *> *address);
-    file *makefile(str *flags=NULL);
+    file *makefile(str *mode=NULL);
+    file_binary *makefile_binary(str *mode=NULL);
     socket *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
     socket *connect(inet_address address);
     socket *connect(pyseq<str *> *address);

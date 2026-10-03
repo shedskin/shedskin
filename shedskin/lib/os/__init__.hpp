@@ -157,6 +157,7 @@ __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable=True);
 void *close(__ss_int fd);
 __ss_int open(str *name_, __ss_int flags, __ss_int mode=0777);
 file* fdopen(__ss_int fd, str* mode=NULL, __ss_int bufsize=-1);
+file_binary* fdopen_binary(__ss_int fd, str* mode=NULL, __ss_int bufsize=-1);
 bytes *read(__ss_int fd, __ss_int n);
 __ss_int write(__ss_int fd, bytes *s);
 __ss_int readinto(__ss_int fd, bytes *buffer);

@@ -230,8 +230,11 @@ class socket(object):
     def sendfile(self, file, offset=0, count=-1):
         return 0
 
-    def makefile(self, flags=None):
-        return file('', flags)
+    def makefile(self, mode=None):
+        return file('', mode)
+
+    def makefile_binary(self, mode=None):  # makefile('rb'), see infer.redirect
+        return file_binary('', mode)
 
     def listen(self, backlog):
         return self
