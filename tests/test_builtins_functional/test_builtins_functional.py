@@ -55,6 +55,46 @@ def test_zip_strict():
     assert error
 
 
+def test_zip_exhaustion():
+    # arguments of different lengths, repeatedly
+    for n in range(4):
+        assert list(zip(list(range(n)), list(range(n + 1)))) == [(i, i) for i in range(n)]
+    assert list(zip('abc', [1, 2])) == [('a', 1), ('b', 2)]
+    assert list(zip([1, 2, 3], [4, 5], [6, 7, 8])) == [(1, 4, 6), (2, 5, 7)]
+    assert [a + b for a, b in zip([1, 2, 3], (10, 20))] == [11, 22]
+    assert list(zip((x * x for x in range(4)), [1, 2])) == [(0, 1), (1, 2)]
+    assert dict(zip(['a', 'b'], [1, 2, 3])) == {'a': 1, 'b': 2}
+
+    # next() on an exhausted zip object keeps raising StopIteration
+    z = zip([1], [2])
+    assert next(z) == (1, 2)
+    stops = 0
+    for i in range(2):
+        try:
+            next(z)
+        except StopIteration:
+            stops += 1
+    assert stops == 2
+
+    # arguments after the first exhausted one are not advanced
+    it = iter([1, 2, 3])
+    assert list(zip('ab', it)) == [('a', 1), ('b', 2)]
+    assert list(it) == [3]
+    it2 = iter([1, 2, 3])
+    assert list(zip([5], [6], it2)) == [(5, 6, 1)]
+    assert list(it2) == [2, 3]
+
+    # .. but strict=True checks all of them
+    it3 = iter([1, 2, 3])
+    error = False
+    try:
+        list(zip([5], [6], it3, strict=True))
+    except ValueError:
+        error = True
+    assert error
+    assert list(zip([5, 6], [7, 8], [9, 10], strict=True)) == [(5, 7, 9), (6, 8, 10)]
+
+
 def test_map():
     assert list(map(lambda a: 2 * a, [1, 2, 3])) == [2, 4, 6]
     assert list(map(lambda a, b: a * b, [1, 2, 3], [4, 5])) == [4, 10]
@@ -93,6 +133,7 @@ def test_all():
     test_range()
     test_zip()
     test_zip_strict()
+    test_zip_exhaustion()
     test_map()
     test_map_nested()
 
