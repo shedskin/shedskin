@@ -58,7 +58,7 @@ public:
     __ss_int __len__();
     str *__repr__();
     __ss_bool has_key(K k);
-    __ss_bool __contains__(K key);
+    __ss_bool __contains__(K key) final;
     void *clear();
     dict<K,V> *copy();
     V get(K k);
@@ -367,7 +367,7 @@ template<class K, class V> __ss_int dict<K,V>::__len__() {
     return (__ss_int)gcd.size();
 }
 
-template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
+template <class K, class V> inline __ss_bool dict<K,V>::__contains__(K key) {
     return __mbool(gcd.find(key) != gcd.end());
 }
 
