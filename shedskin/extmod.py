@@ -48,6 +48,8 @@ OVERLOAD = [
     "__divmod__",
     "__pow__",
 ] + OVERLOAD_SINGLE
+# methods called through a unary slot: PyObject *(*)(PyObject *)
+UNARY_SLOTS = ["__repr__", "__str__", "__iter__", "__next__", "__neg__", "__pos__", "__abs__"]
 # rich comparison methods, dispatched through a single tp_richcompare slot
 RICHCMP = {
     "__lt__": "Py_LT",
@@ -57,6 +59,15 @@ RICHCMP = {
     "__gt__": "Py_GT",
     "__ge__": "Py_GE",
 }
+
+
+def c_string(s: str) -> str:
+    """C string literal holding s as utf-8 (octal escapes, as a hex escape
+    would swallow any hex digits that follow it)"""
+    return '"%s"' % "".join(
+        chr(b) if 32 <= b < 127 and chr(b) not in '"\\' else "\\%03o" % b
+        for b in s.encode("utf-8")
+    )
 
 
 def clname(cl: "python.Class") -> str:
@@ -397,6 +408,18 @@ class ExtensionModule:
             write("    return __ss_truth;")
             write("}\n")
 
+        # the unary slots (tp_repr, tp_str, tp_iter, tp_iternext, and
+        # nb_negative/nb_positive/nb_absolute) are PyObject *(*)(PyObject *).
+        # casting the generated (self, args, kwargs) methods into them left
+        # args/kwargs as garbage, which the argument check then read.
+        for f in funcs:
+            if f.ident in UNARY_SLOTS and not f.isGenerator:
+                assert isinstance(f.parent, python.Class)
+                target = "%s_%s" % (clname(f.parent), f.ident)
+                write("static PyObject *%s_slot(PyObject *self) {" % target)
+                write("    return %s(self, NULL, NULL);" % target)
+                write("}\n")
+
         # The binary number slots are also called for reflected operations:
         # for `1 + obj`, CPython calls obj's nb_add(1, obj), so `self` is not
         # necessarily an instance of this class. Casting it blindly to our
@@ -443,12 +466,8 @@ class ExtensionModule:
                 if overload == "__bool__":
                     write("    %s_nb_bool," % (clname(f.parent) + "___bool__"))
                 elif overload in OVERLOAD_SINGLE:
-                    # nb_negative/nb_positive/nb_absolute are `unaryfunc`:
-                    # PyObject *(*)(PyObject *)
-                    write(
-                        "    (PyObject *(*)(PyObject *))%s_%s,"
-                        % (clname(f.parent), overload)
-                    )
+                    # nb_negative/nb_positive/nb_absolute are `unaryfunc`
+                    write("    %s_%s_slot," % (clname(f.parent), overload))
                 else:
                     # binary slots (and ternary nb_power) go through the
                     # type-checking *_nb wrappers generated above
@@ -507,6 +526,33 @@ class ExtensionModule:
         write("PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {" % id)
         write("    (void)self; (void)args; (void)kwargs;")
         write("    try {")
+
+        # reject extra positional arguments and unknown/duplicate keywords,
+        # and name missing arguments, as CPython does (see __ss_check_args).
+        # the number slots (and so __pow__) and comparison methods are left
+        # out: their wrappers do not get a regular args tuple, or check it
+        # themselves
+        if func.ident not in OVERLOAD and func.ident != "__pow__" and not (
+            is_method and func.ident in RICHCMP and len(formals) == 1
+        ):
+            if is_method:
+                assert isinstance(func.parent, python.Class)
+                fname = func.parent.ident + "." + func.ident
+            else:
+                fname = func.ident
+            names = ", ".join(c_string(formal) for formal in formals)
+            if formals:
+                write("        static const char *const __ss_names[] = {%s};" % names)
+            write(
+                "        __ss_check_args(%s, %d, %d, %d, %s, args, kwargs);"
+                % (
+                    c_string(fname),
+                    int(is_method),
+                    len(formals),
+                    len(formals) - len(func.defaults),
+                    "__ss_names" if formals else "NULL",
+                )
+            )
 
         # comparison methods (also called by tp_richcompare, see
         # do_extmod_class) return NotImplemented for an argument they cannot
@@ -572,6 +618,8 @@ class ExtensionModule:
                 self.do_extmod_default(func, formals, i)
             elif typ.strip() == "__ss_bool":
                 self.gv.append("0, False")
+            elif typ.strip() == "complex":
+                self.gv.append("0, mcomplex()")
             else:
                 self.gv.append("0, 0")
             self.gv.append(", args, kwargs)")
@@ -832,6 +880,20 @@ class ExtensionModule:
             % clname(cl)
         )
         write("    (void)args; (void)kwargs;")
+        # without an __init__ (also not from a base class), arguments are an
+        # error, as with object.__new__
+        if not self.has_method(cl, "__init__"):
+            write(
+                "    if (type->tp_init == PyBaseObject_Type.tp_init && "
+                "((args && PyTuple_Size(args)) || (kwargs && PyDict_Size(kwargs)))) {"
+            )
+            write("        const char *name = strrchr(type->tp_name, '.');")
+            write(
+                '        PyErr_Format(PyExc_TypeError, "%s() takes no arguments", '
+                "name ? name + 1 : type->tp_name);"
+            )
+            write("        return NULL;")
+            write("    }")
         write(
             "    %sObject *self = (%sObject *)type->tp_alloc(type, 0);"
             % (clname(cl), clname(cl))
@@ -928,7 +990,7 @@ class ExtensionModule:
         write("    0,")
         write("    0,")
         if self.has_exported_method(cl, "__repr__", funcs):
-            write("    (PyObject *(*)(PyObject *))%s___repr__," % clname(cl))
+            write("    %s___repr___slot," % clname(cl))
         else:
             write("    0,")
         write("    &%s_as_number," % clname(cl))
@@ -943,7 +1005,7 @@ class ExtensionModule:
         else:
             write("    0,")
         if self.has_exported_method(cl, "__str__", funcs):
-            write("    (PyObject *(*)(PyObject *))%s___str__," % clname(cl))
+            write("    %s___str___slot," % clname(cl))
         else:
             write("    0,")
         write("    0,")
@@ -963,14 +1025,14 @@ class ExtensionModule:
             and cl.funcs["__iter__"] in funcs
             and not cl.funcs["__iter__"].isGenerator
         ):  # TODO what if not called? also for other slots
-            write("    (PyObject *(*)(PyObject *))%s___iter__," % clname(cl))
+            write("    %s___iter___slot," % clname(cl))
         else:
             write("    0,")
         if (
             self.has_method(cl, "__next__")
             and cl.funcs["__next__"] in funcs
         ):
-            write("    (PyObject *(*)(PyObject *))%s___next__," % clname(cl))
+            write("    %s___next___slot," % clname(cl))
         else:
             write("    0,")
         write("    %sMethods," % clname(cl))

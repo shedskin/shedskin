@@ -106,8 +106,18 @@ template<> complex __power(complex a, complex b) {
 /* glue */
 
 #ifdef __SS_BIND
+void throw_exception();
+
 template<> complex __to_ss(PyObject *p) {
-    return mcomplex(PyComplex_RealAsDouble(p), PyComplex_ImagAsDouble(p));
+    /* both return -1.0 with an exception set on failure: a non-number, or
+       an int too large for a double */
+    double real = PyComplex_RealAsDouble(p);
+    if (real == -1.0 && PyErr_Occurred() != NULL)
+        throw_exception();
+    double imag = PyComplex_ImagAsDouble(p);
+    if (imag == -1.0 && PyErr_Occurred() != NULL)
+        throw_exception();
+    return mcomplex(real, imag);
 }
 
 template<> PyObject *__to_py(complex c) {
