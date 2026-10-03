@@ -78,6 +78,71 @@ extern dict<void *, void *> *__ss_proxy;
 /* binding args */
 
 #ifdef __SS_BIND
+/* check the arguments of a call against the formals, as CPython does for a
+   Python function (same order of checks, same messages), before __ss_arg
+   picks them up: otherwise extra positional arguments and unknown or
+   duplicate keywords were silently ignored. 'names' holds the 'nformals'
+   names of the formals (without 'self'), the first 'nrequired' of which have
+   no default. args/kwargs may be NULL (e.g. when called from tp_hash). */
+inline void __ss_check_args(const char *fname, int is_method, int nformals, int nrequired, const char *const *names, PyObject *args, PyObject *kwargs) {
+    Py_ssize_t nargs = args ? PyTuple_Size(args) : 0;
+    std::string prefix = std::string(fname) + "() ";
+
+    /* keywords */
+    if (kwargs && PyDict_Check(kwargs)) {
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(kwargs, &pos, &key, &value)) {
+            if (!PyUnicode_Check(key)) /* f(**{1: 2}) gets here for a C function */
+                throw new TypeError(new str("keywords must be strings"));
+            int index = -1;
+            const char *utf8 = PyUnicode_AsUTF8(key);
+            if (!utf8)
+                PyErr_Clear(); /* e.g. a lone surrogate: matches no formal */
+            else {
+                for (int i = 0; i < nformals; i++) {
+                    if (strcmp(utf8, names[i]) == 0) {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+            if (index == -1 || index < nargs) {
+                str *name = new str(key);
+                const char *what = index == -1 ? "got an unexpected keyword argument '" : "got multiple values for argument '";
+                throw new TypeError((new str((prefix + what).c_str()))->__add__(name)->__add__(new str("'")));
+            }
+        }
+    }
+
+    /* too many positional arguments ('self' counts, as in CPython) */
+    if (nargs > nformals) {
+        std::string msg = prefix + "takes ";
+        if (nrequired == nformals)
+            msg += std::to_string(nformals + is_method) + " positional argument" + (nformals + is_method == 1 ? "" : "s");
+        else
+            msg += "from " + std::to_string(nrequired + is_method) + " to " + std::to_string(nformals + is_method) + " positional arguments";
+        msg += " but " + std::to_string(nargs + is_method) + (nargs + is_method == 1 ? " was" : " were") + " given";
+        throw new TypeError(new str(msg.c_str()));
+    }
+
+    /* missing arguments */
+    std::vector<std::string> missing;
+    for (int i = (int)nargs; i < nrequired; i++)
+        if (!kwargs || !PyDict_Check(kwargs) || !PyDict_GetItemString(kwargs, names[i]))
+            missing.push_back(std::string("'") + names[i] + "'");
+    if (!missing.empty()) {
+        size_t n = missing.size();
+        std::string msg = prefix + "missing " + std::to_string(n) + " required positional argument" + (n == 1 ? "" : "s") + ": ";
+        for (size_t i = 0; i < n; i++) {
+            if (i > 0)
+                msg += n == 2 ? " and " : (i == n - 1 ? ", and " : ", ");
+            msg += missing[i];
+        }
+        throw new TypeError(new str(msg.c_str()));
+    }
+}
+
 template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
     PyObject *kwarg;
     Py_ssize_t nrofargs = PyTuple_Size(args);

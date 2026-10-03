@@ -366,10 +366,16 @@ void throw_exception() {
         }
     }
 
+    /* keep an OverflowError (an int too large for a double, say): a
+       conversion failure is otherwise a TypeError */
+    bool overflow = ptype && PyErr_GivenExceptionMatches(ptype, PyExc_OverflowError);
+
     Py_XDECREF(ptype);
     Py_XDECREF(pvalue);
     Py_XDECREF(ptraceback);
 
+    if (overflow)
+        throw new OverflowError(message);
     throw new TypeError(message);
 }
 
@@ -380,12 +386,24 @@ template<> __ss_int __to_ss(PyObject *p) {
         int num = 1;
         bool little_endian = (*(char *)&num == 1);
         _PyLong_AsByteArray((PyLongObject *)p, (unsigned char *)&result, sizeof(__ss_int), little_endian, 1);
-#else
-        result = (__ss_int)PyLong_AsLongLong(p);
-#endif
         if (result == -1 && PyErr_Occurred() != NULL) {
             throw_exception();
         }
+#else
+        /* check the range before narrowing: under --int32, a value that
+           fits in a long long but not in __ss_int was silently truncated */
+        int overflow;
+        long long value = PyLong_AsLongLongAndOverflow(p, &overflow);
+        if (value == -1 && PyErr_Occurred() != NULL)
+            throw_exception();
+        if (overflow)
+            throw new OverflowError(new str("Python int too large to convert to 64-bit int"));
+        if constexpr (sizeof(__ss_int) < sizeof(long long)) {
+            if (value < std::numeric_limits<__ss_int>::min() || value > std::numeric_limits<__ss_int>::max())
+                throw new OverflowError(new str("Python int too large to convert to 32-bit int"));
+        }
+        result = (__ss_int)value;
+#endif
         return result;
     }
 
@@ -401,7 +419,10 @@ template<> __ss_bool __to_ss(PyObject *p) {
 template<> __ss_float __to_ss(PyObject *p) {
     if(!PyLong_Check(p) and !PyFloat_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (float or int expected)"));
-    return PyFloat_AsDouble(p);
+    double d = PyFloat_AsDouble(p);
+    if (d == -1.0 && PyErr_Occurred() != NULL) /* int too large (OverflowError) */
+        throw_exception();
+    return d;
 }
 
 template<> void * __to_ss(PyObject *p) {
