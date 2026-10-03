@@ -761,10 +761,7 @@ void *socket::set_inheritable(__ss_bool inheritable) {
     return NULL;
 }
 
-file *socket::makefile(str *mode) {
-    if(!mode)
-        mode = new str("r");
-
+static FILE *__makefile(socket_type _fd, str *mode) {
 #ifdef WIN32
 	intptr_t fd;
 #else
@@ -784,7 +781,20 @@ file *socket::makefile(str *mode) {
 		return s->errorhandler(); */
         throw make_error("makefile");
 	}
-    file *f = new file(fp);
+    return fp;
+}
+
+file *socket::makefile(str *mode) {
+    if(!mode)
+        mode = new str("r");
+    file *f = new file(__makefile(_fd, mode));
+    f->name = new str("<socket>");
+    f->mode = mode;
+    return f;
+}
+
+file_binary *socket::makefile_binary(str *mode) {
+    file_binary *f = new file_binary(__makefile(_fd, mode));
     f->name = new str("<socket>");
     f->mode = mode;
     return f;

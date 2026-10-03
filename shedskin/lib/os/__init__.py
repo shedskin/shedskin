@@ -393,6 +393,9 @@ def reload_environ():
 def fdopen(fd, mode=None, buffering=-1):
     return file('/bin/sh')
 
+def fdopen_binary(fd, mode=None, buffering=-1):  # fdopen(fd, 'rb'), see graph.py
+    return file_binary('/bin/sh')
+
 def pipe():
     return (0,0)
 

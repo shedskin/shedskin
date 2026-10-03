@@ -697,6 +697,17 @@ def redirect_func(
     return func
 
 
+def is_socket_makefile(func: "python.Function") -> bool:
+    """Whether a function is socket.socket.makefile"""
+    return (
+        func.ident == "makefile"
+        and func.mv.module.builtin
+        and func.mv.module.ident == "socket"
+        and isinstance(func.parent, python.Class)
+        and func.parent.ident == "socket"
+    )
+
+
 def callfunc_targets(
     gx: "config.GlobalInfo", node: ast.Call, merge: Merged
 ) -> list["python.Function"]:
@@ -1082,6 +1093,11 @@ def redirect(
 ) -> tuple[CartesianProduct, int, "python.Function"]:
     """Redirect a call node"""
     func = redirect_func(func, callfunc)
+
+    # socket.makefile('rb') returns a binary file (cpp.py renames the call)
+    if is_socket_makefile(func) and ast_utils.is_binary_mode(callfunc, 0):
+        assert isinstance(func.parent, python.Class)
+        func = func.parent.funcs["makefile_binary"]
 
     # staticmethod
     if isinstance(func.parent, python.Class) and (

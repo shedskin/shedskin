@@ -358,6 +358,22 @@ def test_makefile():
     b.close()
 
 
+def test_makefile_binary():
+    if sys.platform == 'win32':
+        return
+    a, b = socket.socketpair()
+    f = a.makefile('wb')
+    f.write(b'bin\x00ary\n')
+    f.flush()
+    g = b.makefile(mode='rb')
+    assert g.readline() == b'bin\x00ary\n'
+    assert g.mode == 'rb'
+    f.close()
+    g.close()
+    a.close()
+    b.close()
+
+
 def test_connect_ex():
     server = socket.create_server(('127.0.0.1', 0))
     port = server.getsockname()[1]
@@ -766,6 +782,7 @@ def test_all():
     test_udp()
     test_stream_methods()
     test_makefile()
+    test_makefile_binary()
     test_connect_ex()
     test_create_connection()
     test_fileno_close_dup()

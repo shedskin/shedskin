@@ -1065,16 +1065,27 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
     return fp;
 }
 
-file* fdopen(__ss_int fd, str* mode, __ss_int) {
-    if(!mode)
-        mode = new str("r");
+static FILE *__fdopen(__ss_int fd, str *mode) {
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
     FILE* fp = ::fdopen((int)fd, mode->c_str());
     if(fp == NULL)
         __throw_oserror(new str("os.fdopen failed"));
+    return fp;
+}
 
-    file* ret = new file(fp);
+file* fdopen(__ss_int fd, str* mode, __ss_int) {
+    if(!mode)
+        mode = new str("r");
+    file* ret = new file(__fdopen(fd, mode));
     ret->name = new str("<fdopen>");
+    ret->mode = mode;
+    return ret;
+}
+
+file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int) {
+    file_binary* ret = new file_binary(__fdopen(fd, mode));
+    ret->name = new str("<fdopen>");
+    ret->mode = mode;
     return ret;
 }
 

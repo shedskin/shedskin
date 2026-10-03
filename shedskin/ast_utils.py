@@ -62,6 +62,21 @@ def is_str(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
+def mode_arg(node: ast.Call, pos: int) -> Optional[ast.expr]:
+    """The 'mode' argument of a call to open() and friends, if passed"""
+    arg = node.args[pos] if len(node.args) > pos else None
+    for kw in node.keywords:
+        if kw.arg == "mode":
+            arg = kw.value
+    return arg
+
+
+def is_binary_mode(node: ast.Call, pos: int) -> bool:
+    """Whether a call to open() and friends passes a constant binary mode"""
+    arg = mode_arg(node, pos)
+    return arg is not None and is_str(arg) and "b" in arg.value
+
+
 def is_num(node: ast.AST) -> bool:
     """Check if a node is a numeric constant"""
     return isinstance(node, ast.Constant) and isinstance(node.value, (int, float))

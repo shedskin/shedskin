@@ -631,6 +631,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             func = module.mv.funcs[name]
                             if func.cp or module.builtin:
                                 self.print(using + self.cpp_name(func) + ";")
+                            # fdopen(fd, 'rb') becomes fdopen_binary (see graph.py)
+                            binary = module.mv.funcs.get(name + "_binary")
+                            if binary and module.builtin:
+                                self.print(using + self.cpp_name(binary) + ";")
                         else:
                             self.print(using + self.namer.nokeywords(name) + ";")
         self.print()
@@ -3113,6 +3117,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         elif method_call:
             assert objexpr
+            # socket.makefile('rb'): see infer.redirect
+            if (
+                funcs
+                and all(infer.is_socket_makefile(f) for f in funcs)
+                and ast_utils.is_binary_mode(node, 0)
+            ):
+                assert isinstance(node.func, ast.Attribute)
+                ident = node.func.attr = "makefile_binary"
+
             for cl, _ in self.mergeinh[objexpr]:
                 if (
                     isinstance(cl, python.Class)

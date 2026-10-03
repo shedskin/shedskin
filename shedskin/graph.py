@@ -2530,6 +2530,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # XXX import math; math.e
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.ctx, ast.Load):
+            # os.fdopen(fd, 'rb') returns a binary file, as open(.., 'rb')
+            if node.func.attr == "fdopen" and ast_utils.is_binary_mode(node, 1):
+                module = python.lookup_module(node.func.value, getmv())
+                if module and module.ident == "os":
+                    node.func.attr = "fdopen_binary"
+
             # classmethod: insert 'cls' arg (None for now)
             if not fake_attr and isinstance(node.func.value, ast.Name):
                 if node.func.value.id in (
@@ -2598,10 +2604,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ident = node.func.id = "__print"  # XXX
 
             if ident == "open" and not shadowed:
-                mode_arg = node.args[1] if len(node.args) > 1 else None
-                for kw in node.keywords:
-                    if kw.arg == "mode":
-                        mode_arg = kw.value
+                mode_arg = ast_utils.mode_arg(node, 1)
             else:
                 mode_arg = None
             if mode_arg is not None:
@@ -2616,6 +2619,18 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         node.func,
                         mv=getmv(),
                     )
+
+            # from os import fdopen; fdopen(fd, 'rb'): as os.fdopen above
+            ext_func = getmv().ext_funcs.get(ident)
+            if (
+                not shadowed
+                and ext_func
+                and ext_func.ident == "fdopen"
+                and ext_func.mv.module.ident == "os"
+                and ast_utils.is_binary_mode(node, 1)
+            ):
+                ident = node.func.id = "fdopen_binary"
+                getmv().ext_funcs[ident] = ext_func.mv.funcs[ident]
 
             if (
                 not shadowed
