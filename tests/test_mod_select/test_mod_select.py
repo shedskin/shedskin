@@ -98,6 +98,12 @@ def test_select_sockets():
     a, b = socket.socketpair()
     c, d = socket.socketpair()
     b.send(b"hello")
+    # first wait for the data to arrive: select() returns as soon as any fd
+    # is ready, and the sockets are writable right away, while loopback
+    # delivery is asynchronous on some platforms (macOS)
+    rl0, wl0, xl0 = select.select([a, c], [], [], 1.0)
+    assert len(rl0) == 1
+    assert rl0[0] is a
     rl, wl, xl = select.select([a, c], [a, c], [a, c], 1.0)
     assert len(rl) == 1
     assert rl[0] is a
