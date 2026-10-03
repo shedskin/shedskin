@@ -48,6 +48,15 @@ OVERLOAD = [
     "__divmod__",
     "__pow__",
 ] + OVERLOAD_SINGLE
+# rich comparison methods, dispatched through a single tp_richcompare slot
+RICHCMP = {
+    "__lt__": "Py_LT",
+    "__le__": "Py_LE",
+    "__eq__": "Py_EQ",
+    "__ne__": "Py_NE",
+    "__gt__": "Py_GT",
+    "__ge__": "Py_GE",
+}
 
 
 def clname(cl: "python.Class") -> str:
@@ -198,6 +207,17 @@ class ExtensionModule:
     ) -> bool:
         """Check if a class has a method that is actually exported"""
         return self.has_method(cl, name) and cl.funcs[name] in funcs
+
+    def richcmp_funcs(
+        self, cl: "python.Class", funcs: list["python.Function"]
+    ) -> list["python.Function"]:
+        """Exported comparison methods of a class that can fill tp_richcompare"""
+        return [
+            cl.funcs[name]
+            for name in RICHCMP
+            if self.has_exported_method(cl, name, funcs)
+            and len(cl.funcs[name].formals) == 2
+        ]
 
     def _add_global(self, var: "python.Variable", ssmod: str) -> None:
         """Emit a single PyModule_AddObject call with its return value checked.
@@ -488,7 +508,31 @@ class ExtensionModule:
         write("    (void)self; (void)args; (void)kwargs;")
         write("    try {")
 
-        for i, formal in enumerate(formals):
+        # comparison methods (also called by tp_richcompare, see
+        # do_extmod_class) return NotImplemented for an argument they cannot
+        # handle, so CPython can try the reflected operation, or fall back to
+        # identity for '=='/'!='. raising instead made 'obj == 3' an error,
+        # and None converts to NULL, which crashed in 'obj == None'.
+        unconverted = formals
+        if is_method and func.ident in RICHCMP and len(formals) == 1:
+            assert isinstance(func.parent, python.Class)
+            typ = typestr.nodetypestr(self.gx, func.vars[formals[0]], func, mv=self.gv.mv)
+            write("        if (PyTuple_Size(args) != 1 || (kwargs && PyDict_Size(kwargs)))")
+            write(
+                '            throw new TypeError(new str("%s.%s() takes exactly one argument"));'
+                % (func.parent.ident, func.ident)
+            )
+            write("        PyObject *__ss_other = PyTuple_GetItem(args, 0);")
+            write("        if (__ss_other == Py_None)")
+            write("            Py_RETURN_NOTIMPLEMENTED;")
+            write("        %sarg_0;" % typ)
+            write("        try {")
+            write("            arg_0 = __to_ss<%s>(__ss_other);" % typ)
+            write("        } catch (TypeError *) {")
+            write("            Py_RETURN_NOTIMPLEMENTED;")
+            write("        }")
+            unconverted = []
+        for i, formal in enumerate(unconverted):
             self.gv.start("")
             typ = typestr.nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
             if func.ident == "__pow__" and i == 1:
@@ -734,6 +778,54 @@ class ExtensionModule:
             write("    return __ss_h;")
             write("}\n")
 
+        # tp_richcompare is `richcmpfunc`: PyObject *(*)(PyObject *, PyObject *,
+        # int). Without it, '==' and '!=' compared identity and '<' and the
+        # like raised TypeError, whatever comparison methods the class has.
+        # Comparisons the class does not define itself are left to the base
+        # type, as CPython does: this finds those of an exported base class,
+        # and ends at object, which gives the usual defaults ('!=' inverts
+        # '==', the others return NotImplemented so the reflected method of
+        # the other operand is tried).
+        cmp_funcs = self.richcmp_funcs(cl, funcs)
+        if cmp_funcs:
+            write("extern PyTypeObject %sObjectType;\n" % clname(cl))
+            write(
+                "static PyObject *%s_tp_richcompare(PyObject *self, PyObject *other, int op) {"
+                % clname(cl)
+            )
+            write("    PyObject *(*method)(PyObject *, PyObject *, PyObject *);")
+            write("    switch (op) {")
+            for f in cmp_funcs:
+                write("    case %s: method = %s_%s; break;" % (RICHCMP[f.ident], clname(cl), f.ident))
+            write("    default:")
+            write("        for (PyTypeObject *base = %sObjectType.tp_base; base; base = base->tp_base)" % clname(cl))
+            write("            if (base->tp_richcompare)")
+            write("                return base->tp_richcompare(self, other, op);")
+            write("        Py_RETURN_NOTIMPLEMENTED;")
+            write("    }")
+            write("    PyObject *args = PyTuple_Pack(1, other);")
+            write("    if (!args)")
+            write("        return NULL;")
+            write("    PyObject *result = method(self, args, NULL);")
+            write("    Py_DECREF(args);")
+            write("    return result;")
+            write("}\n")
+
+        # CPython only inherits tp_hash together with tp_richcompare, so a class
+        # that has the latter needs its own tp_hash, or it becomes unhashable.
+        # that is right when it defines __eq__ (and no __hash__), as in
+        # CPython, but not when it only adds, say, __lt__: then keep the hash
+        # of the base type (which may still be unhashable).
+        inherit_hash = (
+            bool(cmp_funcs)
+            and not self.has_exported_method(cl, "__hash__", funcs)
+            and "__eq__" not in [f.ident for f in cmp_funcs]
+        )
+        if inherit_hash:
+            write("static Py_hash_t %s_tp_hash(PyObject *self) {" % clname(cl))
+            write("    return %sObjectType.tp_base->tp_hash(self);" % clname(cl))
+            write("}\n")
+
         # tp_new
         write(
             "PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {"
@@ -842,7 +934,7 @@ class ExtensionModule:
         write("    &%s_as_number," % clname(cl))
         write("    0,")
         write("    0,")
-        if self.has_exported_method(cl, "__hash__", funcs):
+        if self.has_exported_method(cl, "__hash__", funcs) or inherit_hash:
             write("    %s_tp_hash," % clname(cl))
         else:
             write("    0,")
@@ -859,10 +951,13 @@ class ExtensionModule:
         write("    0,")
         write("    Py_TPFLAGS_DEFAULT,")
         write('    PyDoc_STR("Custom objects"),')  # XXX needs class docstring
-        write("    0,")
-        write("    0,")
-        write("    0,")
-        write("    0,")
+        write("    0,")  # tp_traverse
+        write("    0,")  # tp_clear
+        if cmp_funcs:
+            write("    %s_tp_richcompare," % clname(cl))
+        else:
+            write("    0,")
+        write("    0,")  # tp_weaklistoffset
         if (
             self.has_method(cl, "__iter__")
             and cl.funcs["__iter__"] in funcs

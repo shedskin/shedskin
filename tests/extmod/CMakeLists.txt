@@ -146,6 +146,11 @@ add_shedskin_product(
 )
 add_shedskin_product(
     BUILD_EXTENSION
+    NAME richcmp
+    MAIN_MODULE richcmp.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
     NAME typeslots
     MAIN_MODULE typeslots.py
     NAME numslots
