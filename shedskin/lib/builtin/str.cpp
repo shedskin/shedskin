@@ -1070,15 +1070,15 @@ template<class T> static str *__str_signed(T i, T base) {
 
 #ifdef __SS_LONG
 str *__str(__ss_int i, __ss_int base) {
-    if(i<10 && i>=0 && base==10)
-        return __char_cache[((unsigned char)('0'+i))];
+    if(base==10 && i>=0 && i<256)
+        return __int_str_cache[i];
     return __str_signed<__ss_int>(i, base);
 }
 #endif
 
 str *__str(int i, int base) {
-    if(base==10 && i<10 && i>=0)
-        return __char_cache[((unsigned char)('0'+i))];
+    if(base==10 && i>=0 && i<256)
+        return __int_str_cache[i];
     return __str_signed<int>(i, base);
 }
 
