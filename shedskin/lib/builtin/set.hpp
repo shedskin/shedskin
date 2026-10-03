@@ -35,7 +35,7 @@ public:
 
     str* __repr__();
 
-    __ss_bool __contains__(T key);
+    __ss_bool __contains__(T key) final;
     __ss_int __len__();
 
     void *clear();
@@ -329,7 +329,7 @@ template<class T> __ss_int set<T>::__len__() {
     return (__ss_int)gcs.size();
 }
 
-template <class T> __ss_bool set<T>::__contains__(T key) {
+template <class T> inline __ss_bool set<T>::__contains__(T key) {
     return __mbool(gcs.find(key) != gcs.end());
 }
 
