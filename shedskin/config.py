@@ -536,14 +536,6 @@ class GlobalInfo:
         self._type_inference.merged_inh = value
 
     @property
-    def retry_maxiters(self) -> int:
-        return self._type_inference.retry_maxiters
-
-    @retry_maxiters.setter
-    def retry_maxiters(self, value: bool) -> None:
-        self._type_inference.retry_maxiters = value
-
-    @property
     def open_contours(self) -> Optional[set[tuple[Any, int]]]:
         return self._type_inference.open_contours
 
