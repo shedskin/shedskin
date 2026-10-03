@@ -226,8 +226,17 @@ bytes *getcwdb() {
 #endif
 }
 
+/* like CPython: utf-8 with surrogateescape on posix, so only U+DC80..U+DCFF
+   escapes map back to bytes and other lone surrogates raise. Windows uses
+   surrogatepass, which the lenient (wtf-8) internal conversions match */
 bytes *fsencode(str *filename) {
+#ifdef WIN32
     return new bytes(__to_utf8(filename->unit));
+#else
+    bytes *b = new bytes(1);
+    __encode_into(b->unit, filename, __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+    return b;
+#endif
 }
 
 bytes *fsencode(bytes *filename) {
@@ -235,7 +244,13 @@ bytes *fsencode(bytes *filename) {
 }
 
 str *fsdecode(bytes *filename) {
+#ifdef WIN32
     return new str(__from_utf8(filename->unit));
+#else
+    str *s = new str();
+    __decode_into(s->unit, filename->unit.data(), filename->unit.size(), __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+    return s;
+#endif
 }
 
 str *fsdecode(str *filename) {

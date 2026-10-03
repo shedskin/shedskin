@@ -838,6 +838,18 @@ def test_fsencode_fsdecode():
     s = os.fsdecode(b'a\xffb')
     assert s == 'a\udcffb'
     assert os.fsencode(s) == b'a\xffb'
+    assert os.fsencode('x\udcffy\udc80') == b'x\xffy\x80'
+    # posix (utf-8 + surrogateescape): other lone surrogates do not pass
+    # through; windows uses surrogatepass instead
+    if os.name != 'nt':
+        assert os.fsdecode(b'a\xed\xa0\x80\xffb') == 'a\udced\udca0\udc80\udcffb'
+        error = ''
+        try:
+            os.fsencode('a\ud800b')
+        except UnicodeEncodeError as e:
+            error = str(e)
+            assert e.start == 1 and e.end == 2
+        assert error == "'utf-8' codec can't encode character '\\ud800' in position 1: surrogates not allowed"
 
 
 def test_process_cpu_count():
