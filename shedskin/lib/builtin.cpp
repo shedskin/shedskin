@@ -38,6 +38,7 @@ bytes *bsp;
 
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
+str *__int_str_cache[256];
 __GC_VECTOR(bytes *) __byte_cache;
 
 __ss_bool True;
@@ -118,6 +119,17 @@ void __init() {
         str *charstr = new str(__GC_STR(1, (__ss_char)i));
         charstr->charcache = 1;
         __char_cache.push_back(charstr);
+    }
+
+    /* str(i) for 0 <= i < 256 (strs are immutable, so they can be shared) */
+    for(int i=0;i<256;i++) {
+        if(i < 10)
+            __int_str_cache[i] = __char_cache[(unsigned char)('0'+i)];
+        else {
+            char buf[4];
+            int n = snprintf(buf, sizeof(buf), "%d", i);
+            __int_str_cache[i] = new str(buf, (size_t)n);
+        }
     }
 
     for(int i=0;i<256;i++) {
