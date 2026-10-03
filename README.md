@@ -148,3 +148,7 @@ The following people have contributed to Shed Skin development:
 - Jason Ye
 - Liu Zhenhai
 - Joris van Zwieten
+
+## Related projects
+
+[TurboPython](https://tpy-lang.org/) is a similar restricted-Python to C++ language/transpiler, but adds RUST-like memory management.
