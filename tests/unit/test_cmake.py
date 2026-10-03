@@ -5,13 +5,16 @@
 'shedskin build' generates a CMake project whose build step shells out to a
 separate 'shedskin translate ... ${opts} <file>' subprocess -- that
 subprocess (not the outer 'build' process) is where type-inference-time-only
-flags like --retry actually take effect. These tests guard against such
+flags like --silent actually take effect. These tests guard against such
 flags silently failing to be forwarded into CMDLINE_OPTIONS.
 """
 
 import argparse
 from pathlib import Path
 
+import pytest
+
+from shedskin import Shedskin
 from shedskin import cmake, graph, infer
 from shedskin.config import GlobalInfo
 
@@ -45,17 +48,16 @@ def _generate_cmakelists(tmp_path, monkeypatch, **gx_attrs):
     return (tmp_path / "CMakeLists.txt").read_text()
 
 
-def test_retry_forwarded_to_cmdline_options(tmp_path, monkeypatch):
-    """--retry only affects the internal translate subprocess's own
-    type-inference loop, so it must be forwarded via CMDLINE_OPTIONS."""
-    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, retry_maxiters=True)
-    assert "--retry" in cmakelists
-
-
-def test_no_retry_by_default(tmp_path, monkeypatch):
-    """Without --retry, CMDLINE_OPTIONS must not mention it."""
-    cmakelists = _generate_cmakelists(tmp_path, monkeypatch, retry_maxiters=False)
-    assert "--retry" not in cmakelists
+def test_retry_removed():
+    """--retry was removed (the rewritten type inference no longer hits
+    'max iterations'), so it must neither be accepted on the command line
+    nor be forwarded into CMDLINE_OPTIONS."""
+    for cmd in ("translate", "build", "run"):
+        with pytest.raises(SystemExit) as exc:
+            Shedskin.commandline([cmd, "--retry", "test.py"])
+        assert exc.value.code == 2  # argparse: unrecognized arguments
+    root = Path(__file__).parents[2] / "shedskin"
+    assert "--retry" not in (root / "cmake.py").read_text()
 
 def test_silent_forwarded_to_cmdline_options(tmp_path, monkeypatch):
     """--silent must reach the internal 'translate' subprocess too, since

@@ -105,9 +105,6 @@ class Shedskin:
                 if args.debug >= 3:
                     self.infer_log.setLevel(logging.DEBUG)
 
-            if args.retry:
-                gx.retry_maxiters = True
-
             if args.int32 and args.int64:
                 self.log.error("--int32 and --int64 are mutually exclusive")
                 sys.exit(1)
@@ -353,7 +350,6 @@ class Shedskin:
         grp("-l", "--link-libs", help="Add a link library", action="append")
         grp("-X", "--extra-lib", help="Add an extra builtins library directory")
         grp("-o", "--outputdir", help="Specify output directory for generated files")
-        grp("--retry", help="Retry analysis when hitting max iterations", action="store_true")
         grp(
             "-s",
             "--silent",

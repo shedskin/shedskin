@@ -25,8 +25,6 @@ class TypeInferenceState:
         cpa_limit: Limit for Cartesian Product Algorithm.
         cpa_limited: Whether CPA limit was reached.
         merged_inh: Merged inheritance type information.
-        retry_maxiters: Set by --retry; no longer has any effect, but still
-            passed on to the generated build files.
         open_contours: During propagation, the (class, contour) pairs of
             container contours that may receive types; all other container
             contours are frozen (see shedskin.contours).
@@ -42,6 +40,5 @@ class TypeInferenceState:
     cpa_limit: int = 0
     cpa_limited: bool = False
     merged_inh: Dict[Any, Set[Tuple[Any, int]]] = field(default_factory=dict)
-    retry_maxiters: bool = False
     open_contours: Optional[Set[Tuple[Any, int]]] = None
     contour_core: Optional[Any] = None
