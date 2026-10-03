@@ -470,6 +470,10 @@ class GlobalInfo:
     def list_types(self) -> dict[tuple[int, "ast.AST"], int]:
         return self._graph_context.list_types
 
+    @property
+    def handler_body(self) -> dict["ast.expr", list["ast.stmt"]]:
+        return self._graph_context.handler_body
+
     # TypeInferenceState delegation
     @property
     def constraints(self) -> set[tuple["infer.CNode", "infer.CNode"]]:

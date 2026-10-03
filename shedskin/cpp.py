@@ -1348,7 +1348,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for handler in node.handlers:
             pairs: list[tuple[Optional[ast.expr], Optional[str], list[ast.stmt]]]
             if isinstance(handler.type, ast.Tuple):
-                pairs = [(n, handler.name, handler.body) for n in handler.type.elts]
+                pairs = [
+                    (n, handler.name, self.gx.handler_body.get(n, handler.body))
+                    for n in handler.type.elts
+                ]
             else:
                 pairs = [(handler.type, handler.name, handler.body)]
 
@@ -3994,7 +3997,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             )
 
     def lc_args(
-        self, lcfunc: "python.Function", func: Optional["python.Function"]
+        self, lcfunc: "python.Function", func: Optional[AllParent]
     ) -> list[tuple[str, str]]:
         """Generate the arguments for a list comprehension
 

@@ -56,3 +56,4 @@ class GraphBuildingContext:
     parent_nodes: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     from_module: Dict[ast.AST, "python.Module"] = field(default_factory=dict)
     list_types: Dict[Tuple[int, ast.AST], int] = field(default_factory=dict)
+    handler_body: Dict["ast.expr", list["ast.stmt"]] = field(default_factory=dict)
