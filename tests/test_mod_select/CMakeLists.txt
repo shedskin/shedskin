@@ -5,6 +5,7 @@ if(NOT WIN32)
     add_shedskin_product(
         SYS_MODULES
             select
+            socket
             os
             os.path
             stat
