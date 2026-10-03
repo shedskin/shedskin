@@ -1083,9 +1083,60 @@ def test_timedelta_division():
             assert error == 'integer division or modulo by zero'
 
 
+def test_timedelta_modulo():
+    t = datetime.timedelta(seconds=10)
+    u = datetime.timedelta(seconds=4)
+
+    # t % u -> timedelta, with the sign of u (like int %)
+    assert t % u == datetime.timedelta(seconds=2)
+    assert -t % u == datetime.timedelta(seconds=2)
+    assert t % -u == datetime.timedelta(seconds=-2)
+    assert -t % -u == datetime.timedelta(seconds=-2)
+    assert datetime.timedelta(minutes=100) % datetime.timedelta(hours=1) == datetime.timedelta(minutes=40)
+    assert datetime.timedelta(days=-3, seconds=7, microseconds=11) % datetime.timedelta(hours=7) == datetime.timedelta(seconds=18007, microseconds=11)
+    assert datetime.timedelta(hours=6) % datetime.timedelta(hours=2) == datetime.timedelta(0)
+
+    # beyond the int64-microseconds range
+    assert datetime.timedelta(days=500000000, microseconds=3) % datetime.timedelta(days=106751, seconds=1) == datetime.timedelta(days=85066, seconds=81717, microseconds=3)
+    assert datetime.timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999) % datetime.timedelta(microseconds=999999) == datetime.timedelta(microseconds=400085)
+    assert datetime.timedelta(days=-999999999) % datetime.timedelta(days=500000000, microseconds=3) == datetime.timedelta(days=1, microseconds=6)
+
+    # divmod(t, u) -> (int, timedelta)
+    assert divmod(t, u) == (2, datetime.timedelta(seconds=2))
+    assert divmod(-t, u) == (-3, datetime.timedelta(seconds=2))
+    assert divmod(datetime.timedelta(days=500000), datetime.timedelta(days=7)) == (71428, datetime.timedelta(days=4))
+    q, r = divmod(datetime.timedelta(days=-3, seconds=7, microseconds=11), datetime.timedelta(hours=7))
+    assert q == -11
+    assert r == datetime.timedelta(seconds=18007, microseconds=11)
+
+    # t //= u gives an int, t %= u a timedelta
+    v = datetime.timedelta(minutes=100)
+    v %= datetime.timedelta(hours=1)
+    assert v == datetime.timedelta(minutes=40)
+
+    # the remainder is exact, even when the quotient would not fit in 64 bits
+    assert datetime.timedelta(days=999999999) % datetime.timedelta(microseconds=7) == datetime.timedelta(microseconds=2)
+
+    # division by zero
+    for k in range(2):
+        error = ''
+        try:
+            if k == 0:
+                t % datetime.timedelta(0)
+            else:
+                divmod(t, datetime.timedelta(0))
+        except ZeroDivisionError as e:
+            error = str(e)
+        if k == 0:
+            assert error == 'integer modulo by zero'
+        else:
+            assert error == 'integer division or modulo by zero'
+
+
 def test_all():
         test_augmented_assignment()
         test_timedelta_division()
+        test_timedelta_modulo()
         test_timedelta_float_range()
         test_date()
         test_date_ctime()

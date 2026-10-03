@@ -1426,19 +1426,123 @@ __ss_float timedelta::__truediv__(timedelta *other) {
     return timedelta_us(this) / timedelta_us(other);
 }
 
-__ss_int timedelta::__floordiv__(timedelta *other) {
-    if(timedelta_is_zero(other))
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
-    if(sizeof(__ss_int) >= 8 && days > -106751 && days < 106751 && other->days > -106751 && other->days < 106751) {
-        __ss_int a = (days * 86400 + seconds) * 1000000 + microseconds;
-        __ss_int b = (other->days * 86400 + other->seconds) * 1000000 + other->microseconds;
-        __ss_int r;
-        return floordivmod(a, b, &r);
+/* exact divmod of two timedeltas, without forming their microsecond counts
+ * as single integers (these exceed 64 bits for large day counts). the
+ * magnitudes are kept as (seconds, microseconds) pairs, which add, subtract
+ * and double exactly, and are divided by binary long division. */
+struct timedelta_mag {
+    long long s, us; /* 0 <= us < 1000000 */
+};
+
+static timedelta_mag timedelta_magnitude(timedelta *t, bool *neg) {
+    timedelta_mag m = {(long long)t->days * 86400 + t->seconds, (long long)t->microseconds};
+    *neg = m.s < 0;
+    if(*neg) {
+        if(m.us) {
+            m.s += 1;
+            m.us = 1000000 - m.us;
+        }
+        m.s = -m.s;
     }
-    __ss_float q = std::floor(timedelta_us(this) / timedelta_us(other));
-    if(q >= 9223372036854775808.0 || q < -9223372036854775808.0)
-        throw new OverflowError(new str("Python int too large to convert to C int"));
-    return (__ss_int)q;
+    return m;
+}
+
+static bool timedelta_mag_lt(timedelta_mag a, timedelta_mag b) {
+    return a.s < b.s || (a.s == b.s && a.us < b.us);
+}
+
+static timedelta_mag timedelta_mag_sub(timedelta_mag a, timedelta_mag b) {
+    timedelta_mag m = {a.s - b.s, a.us - b.us};
+    if(m.us < 0) {
+        m.us += 1000000;
+        m.s -= 1;
+    }
+    return m;
+}
+
+static timedelta *timedelta_from_magnitude(timedelta_mag m, bool neg) {
+    if(neg) {
+        if(m.us) {
+            m.s += 1;
+            m.us = 1000000 - m.us;
+        }
+        m.s = -m.s;
+    }
+    long long d = m.s / 86400, s = m.s % 86400;
+    if(s < 0) {
+        s += 86400;
+        d -= 1;
+    }
+    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
+    result->days = (__ss_int)d;
+    result->seconds = (__ss_int)s;
+    result->microseconds = (__ss_int)m.us;
+    return result;
+}
+
+/* *q is only computed if q is non-NULL (and raises OverflowError if it does not fit) */
+static timedelta *timedelta_divmod(timedelta *a, timedelta *b, __ss_int *q) {
+    if(timedelta_is_zero(b))
+        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+    bool aneg, bneg;
+    timedelta_mag A = timedelta_magnitude(a, &aneg);
+    timedelta_mag B = timedelta_magnitude(b, &bneg);
+
+    /* |a| < 2**67 microseconds and |b| >= 1, so at most 68 doublings */
+    timedelta_mag mult[70];
+    int k = 0;
+    mult[0] = B;
+    while(!timedelta_mag_lt(A, mult[k])) {
+        timedelta_mag m = {2 * mult[k].s, 2 * mult[k].us};
+        if(m.us >= 1000000) {
+            m.us -= 1000000;
+            m.s += 1;
+        }
+        mult[++k] = m;
+    }
+    unsigned long long q0 = 0;
+    bool overflow = false;
+    timedelta_mag R = A;
+    for(int i = k - 1; i >= 0; i--) {
+        if(!timedelta_mag_lt(R, mult[i])) {
+            R = timedelta_mag_sub(R, mult[i]);
+            if(i >= 63)
+                overflow = true;
+            else
+                q0 |= 1ULL << i;
+        }
+    }
+
+    /* python floor semantics: the remainder has the sign of b */
+    bool rzero = (R.s == 0 && R.us == 0);
+    if(aneg != bneg && !rzero) {
+        R = timedelta_mag_sub(B, R);
+        q0 += 1;
+    }
+    if(q) {
+        if(overflow || q0 > (unsigned long long)std::numeric_limits<__ss_int>::max())
+            throw new OverflowError(new str("Python int too large to convert to C int"));
+        *q = (aneg != bneg) ? -(__ss_int)q0 : (__ss_int)q0;
+    }
+    return timedelta_from_magnitude(R, bneg);
+}
+
+__ss_int timedelta::__floordiv__(timedelta *other) {
+    __ss_int q;
+    timedelta_divmod(this, other, &q);
+    return q;
+}
+
+timedelta *timedelta::__mod__(timedelta *other) {
+    if(timedelta_is_zero(other))
+        throw new ZeroDivisionError(new str("integer modulo by zero"));
+    return timedelta_divmod(this, other, NULL);
+}
+
+tuple2<__ss_int, timedelta *> *timedelta::__divmod__(timedelta *other) {
+    __ss_int q;
+    timedelta *r = timedelta_divmod(this, other, &q);
+    return new tuple2<__ss_int, timedelta *>(2, q, r);
 }
 
 timedelta *timedelta::__neg__() {

@@ -234,6 +234,8 @@ public:
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
     __ss_float __truediv__(timedelta *other);                /* t / u -> float */
     __ss_int __floordiv__(timedelta *other);                 /* t // u -> int */
+    timedelta *__mod__(timedelta *other);                    /* t % u -> timedelta */
+    tuple2<__ss_int, timedelta *> *__divmod__(timedelta *other); /* divmod(t, u) -> (int, timedelta) */
     timedelta *__floordiv__(__ss_float f) = delete;          /* t // 2.5: TypeError in CPython */
     /* a bool is an int (the int and float overloads are ambiguous otherwise) */
     timedelta *__mul__(__ss_bool b) { return __mul__((__ss_int)b.value); }
@@ -244,6 +246,7 @@ public:
     template<class T> auto __imul__(T other) { return __mul__(other); } /* d *= x */
     template<class T> auto __itruediv__(T other) { return __truediv__(other); } /* d /= x */
     template<class T> auto __ifloordiv__(T other) { return __floordiv__(other); } /* d //= x */
+    template<class T> auto __imod__(T other) { return __mod__(other); } /* d %= x */
     timedelta *__abs__();
     __ss_float total_seconds();
 
@@ -259,6 +262,10 @@ public:
     __ss_bool __eq__(pyobj *other) { return __eq__((timedelta *)other); }
     __ss_bool __ne__(pyobj *other) { return __ne__((timedelta *)other); }
 };
+
+/* divmod(t, u) -> (int, timedelta); found by ADL, so the generic divmod (which
+   expects both tuple elements to have the argument type) is not used */
+inline tuple2<__ss_int, timedelta *> *divmod(timedelta *a, timedelta *b) { return a->__divmod__(b); }
 
 
 } // module namespace

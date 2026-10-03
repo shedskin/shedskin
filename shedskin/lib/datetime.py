@@ -321,6 +321,12 @@ class timedelta:
     def __floordiv__(self, n):
         return n.__with_timedelta__(self, 1)  # timedelta for a number, int for a timedelta
 
+    def __mod__(self, other):
+        return self
+
+    def __divmod__(self, other):
+        return (1, self)
+
     def __with_timedelta__(self, td, other):
         return other
 
