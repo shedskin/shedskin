@@ -1143,7 +1143,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     (var, t[1], 0) in self.gx.cnode for var in elemvars
                 ):
                     elemtypes = [self.gx.cnode[var, t[1], 0].types() for var in elemvars]
-                    if any(types_ != elemtypes[0] for types_ in elemtypes[1:]):
+                    # compare the C++ types, as typestr does to decide between
+                    # tuple and tuple2/tuple3 (element types can be different
+                    # contours of the same class, e.g. lists from separate
+                    # allocation sites)
+                    elemstrs = [typestr.typestr(self.gx, types_, mv=self.mv) for types_ in elemtypes]
+                    if any(ts != elemstrs[0] for ts in elemstrs[1:]):
                         return names
         return None
 

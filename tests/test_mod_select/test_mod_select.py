@@ -1,5 +1,6 @@
 import os
 import select
+import socket
 
 
 def test_select_basic():
@@ -90,6 +91,51 @@ def test_select_omitted_timeout_still_works():
     os.close(w)
 
 
+def test_select_sockets():
+    # like CPython, objects with a fileno() method can be passed, and the
+    # ready objects themselves are returned (this used to cast the socket
+    # pointer to a file descriptor, raising ValueError)
+    a, b = socket.socketpair()
+    c, d = socket.socketpair()
+    b.send(b"hello")
+    rl, wl, xl = select.select([a, c], [a, c], [a, c], 1.0)
+    assert len(rl) == 1
+    assert rl[0] is a
+    assert rl[0].recv(10) == b"hello"
+    assert len(wl) == 2
+    assert xl == []
+    # (socket, fd) element types differ per argument
+    r, w = os.pipe()
+    rl2, wl2, xl2 = select.select([a], [w], [], 0.05)
+    assert rl2 == []
+    assert wl2 == [w]
+    assert xl2 == []
+    for s in (a, b, c, d):
+        s.close()
+    os.close(r)
+    os.close(w)
+
+
+class FilenoWrapper:
+    def __init__(self, sock):
+        self.sock = sock
+
+    def fileno(self):
+        return self.sock.fileno()
+
+
+def test_select_fileno_method():
+    a, b = socket.socketpair()
+    b.send(b"x")
+    wrapper = FilenoWrapper(a)
+    rl, wl, xl = select.select([wrapper], [], [], 1.0)
+    assert len(rl) == 1
+    assert rl[0] is wrapper
+    assert rl[0].sock.recv(1) == b"x"
+    a.close()
+    b.close()
+
+
 def test_all():
     test_select_basic()
     test_select_timeout_no_ready_fds()
@@ -98,6 +144,8 @@ def test_all():
     test_select_negative_timeout_raises()
     test_select_explicit_negative_one_raises()
     test_select_omitted_timeout_still_works()
+    test_select_sockets()
+    test_select_fileno_method()
 
 
 if __name__ == '__main__':
