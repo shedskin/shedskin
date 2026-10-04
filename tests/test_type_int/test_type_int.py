@@ -35,6 +35,37 @@ def test_int():
     assert error == "cannot convert float NaN to integer"
 
 
+def test_int_from_float():
+    # truncation towards zero
+    assert int(8.8) == 8
+    assert int(-8.8) == -8
+    assert int(0.5) == 0
+    assert int(-0.5) == 0
+    assert int(-0.0) == 0
+    xs = [2.7, -2.7, 1e-300, -1e-300]
+    assert [int(x) for x in xs] == [2, -2, 0, 0]
+
+    # large values (exact as floats)
+    assert int(1e18) == 1000000000000000000
+    assert int(-1e18) == -1000000000000000000
+    assert int(2.0 ** 62) == 4611686018427387904
+    assert int(-(2.0 ** 63)) == -9223372036854775807 - 1
+
+    error = ''
+    try:
+        int(float('inf'))
+    except OverflowError as e:
+        error = str(e)
+    assert error == "cannot convert float infinity to integer"
+
+    error = ''
+    try:
+        int(-float('nan'))
+    except ValueError as e:
+        error = str(e)
+    assert error == "cannot convert float NaN to integer"
+
+
 def test_multiplication():
     assert 9 * 2 == 18
     assert -9 * 2 == -18
@@ -366,6 +397,7 @@ def test_int_from_str_syntax():
 
 def test_all():
     test_int()
+    test_int_from_float()
     test_division()
     test_multiplication()
     test_is_integer()
