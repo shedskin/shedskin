@@ -151,6 +151,23 @@ using __ss_allocator = std::allocator< T >;
 #else
 template <class T>
 using __ss_allocator = gc_allocator< T >;
+
+/* gc_allocator uses GC_MALLOC_ATOMIC (memory that is never scanned for
+ * pointers) only for types declared pointer-free. libgc declares just the
+ * plain char/short/int/long/float/double types, so also declare the other
+ * pointer-free types we store in containers, such as the str code points */
+} // namespace __shedskin__
+GC_DECLARE_PTRFREE(char32_t);
+GC_DECLARE_PTRFREE(signed long long);
+GC_DECLARE_PTRFREE(unsigned long long);
+#ifdef __SIZEOF_INT128__
+GC_DECLARE_PTRFREE(__int128);
+GC_DECLARE_PTRFREE(unsigned __int128);
+#endif
+GC_DECLARE_PTRFREE(bool);
+GC_DECLARE_PTRFREE(__shedskin__::__ss_bool);
+GC_DECLARE_PTRFREE(__shedskin__::complex);
+namespace __shedskin__ {
 #endif
 
 #ifdef __SS_BOOST
