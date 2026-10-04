@@ -4,7 +4,7 @@ a = 1
 a = lambda x: x
 
 import re
-re.findall('pat', 'str')
+re.findall('p(a)t', 'str')
 
 import socket
 socket.socket().gettimeout()

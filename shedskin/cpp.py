@@ -2916,8 +2916,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
         funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
 
-        if self.library_func(funcs, "re", None, "findall") or self.library_func(
-            funcs, "re", "Pattern", "findall"
+        # a literal pattern without '(' cannot have groups
+        if self.library_func(funcs, "re", "Pattern", "findall") or (
+            self.library_func(funcs, "re", None, "findall")
+            and not (
+                node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and "(" not in node.args[0].value
+            )
         ):
             error.error(
                 "'findall' does not work with groups (use 'finditer' instead)",
