@@ -60,6 +60,17 @@
 #define __SS_FP_TO_CHARS 1
 #endif
 
+/* force inlining of small, very common methods such as __getfast__. otherwise
+ * gcc stops inlining them once a (large) translation unit has grown by a
+ * certain amount (--param inline-unit-growth) */
+#if defined(_MSC_VER)
+#define __SS_ALWAYS_INLINE __forceinline
+#elif defined(__GNUC__)
+#define __SS_ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define __SS_ALWAYS_INLINE inline
+#endif
+
 
 #ifndef WIN32
 #include <cxxabi.h>

@@ -165,7 +165,7 @@ template<class T> T tuple2<T, T>::__getfirst__() {
 template<class T> T tuple2<T, T>::__getsecond__() {
     return this->units[1];
 }
-template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
+template<class T> __SS_ALWAYS_INLINE T tuple2<T, T>::__getfast__(__ss_int i) {
     i = __wrap(this, i, "tuple index out of range");
     return this->units[(size_t)i];
 }
