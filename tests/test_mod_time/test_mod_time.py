@@ -26,6 +26,11 @@ def test_strftime():
                 "2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")
         ) == "12 Nov 2001 18:31:01"
     assert time.strftime("%Y", time.strptime("2001", "%Y")) == '2001'
+    try:
+        time.strftime("%Y\x00%m")  # used to be cut short at the NUL
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
 
 def test_conversions():
     t = time.time()

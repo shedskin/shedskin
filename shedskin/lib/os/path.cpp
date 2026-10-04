@@ -286,6 +286,8 @@ __ss_bool islink(str *path) {
     /**
     Test whether a path is a symbolic link
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -300,6 +302,8 @@ __ss_bool exists(str *path) {
     /**
     Test whether a path exists.  Returns False for broken symbolic links
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     try {
         __os__::stat(path);
     } catch (__os__::error *) {
@@ -312,6 +316,8 @@ __ss_bool lexists(str *path) {
     /**
     Test whether a path exists.  Returns True for broken symbolic links
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
 
     try {
         __os__::lstat(path);
@@ -325,6 +331,8 @@ __ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -339,6 +347,8 @@ __ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -403,6 +413,8 @@ __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *s1, *s2;
     str *parent;
 
@@ -553,6 +565,7 @@ str *realpath(str *filename, __ss_bool strict) {
     a broken symlink's *target* is not specially detected as missing, only
     path components that don't exist as a direct directory entry.
     */
+    __ss_check_nul(filename);
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;
@@ -646,7 +659,7 @@ str *expanduser(str *path) {
     if (i != 1) {
         /* ~user: look up the user's home directory via getpwnam() */
         str *username = path->__slice__(3, 1, i, 0);
-        struct passwd *pw = getpwnam(username->c_str());
+        struct passwd *pw = getpwnam(__ss_cpath(username));
         if (!pw)
             return path;
         userhome = new str(pw->pw_dir);
@@ -1004,6 +1017,8 @@ __ss_bool exists(str *path) {
     /**
     Test whether a path exists
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -1022,6 +1037,8 @@ __ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -1036,6 +1053,8 @@ __ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     __os__::__cstat *st;
 
     try {
@@ -1054,6 +1073,8 @@ __ss_bool isjunction(str *path) {
     tag is reported in WIN32_FIND_DATA::dwReserved0, which is only
     meaningful when FILE_ATTRIBUTE_REPARSE_POINT is set.
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     DWORD attr;
     HANDLE handle;
     WIN32_FIND_DATAW data;
@@ -1170,6 +1191,8 @@ __ss_bool isdevdrive(str *path) {
     Like CPython's os.path.isdevdrive(), any OS error (non-existent path,
     unsupported file system, pre-Dev-Drive Windows, ...) yields False.
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     HANDLE h;
     FILE_FS_PERSISTENT_VOLUME_INFORMATION volume_state;
     DWORD bytes_returned;
@@ -1202,6 +1225,8 @@ __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point (a drive root or a UNC share root)
     */
+    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+        return False;
     tuple2<str *, str *> *__sd;
     str *root, *rest, *x, *y;
     wchar_t volpath[MAX_PATH];
@@ -1367,6 +1392,7 @@ str *realpath(str *path, __ss_bool strict) {
     strict is ALL_BUT_LAST, only the last component may be missing; if
     strict is ALLOW_MISSING, missing paths are tolerated.
     */
+    __ss_check_nul(path);
     if (strict.value && (strict.value != ALLOW_MISSING.value)) {
         if (!exists(path).value) {
             if (!((strict.value == ALL_BUT_LAST.value) && exists(dirname(abspath(path))).value)) {

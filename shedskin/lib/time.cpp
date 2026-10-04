@@ -623,6 +623,9 @@ str *ctime(const __ss_float seconds) {
 }
 
 str *strftime(str *format, struct_time* tuple) {
+    /* (an embedded NUL would also end the format early, or make it empty) */
+    if (__ss_has_nul(format))
+        throw new ValueError(new str("embedded null character"));
     tm *time_tuple = tuple2tm_checked(tuple);
     size_t size = format->unit.size();
     size_t n;
