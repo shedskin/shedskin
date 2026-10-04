@@ -116,6 +116,23 @@ def test_str_extremes():
     assert bin(-10) == '-0b1010'
 
 
+def test_str_small():
+    # str() of 0..255 comes from a cache
+    assert str(0) == '0'
+    assert str(9) == '9'
+    assert str(10) == '10'
+    assert str(99) == '99'
+    assert str(100) == '100'
+    assert str(255) == '255'
+    assert str(256) == '256'
+    assert str(-1) == '-1'
+    assert str(-255) == '-255'
+    assert '-'.join([str(i) for i in range(8, 12)]) == '8-9-10-11'
+    for i in range(-300, 300):
+        assert int(str(i)) == i
+        assert len(str(i)) == len(repr(i))
+
+
 def test_to_bytes():
     assert (0).to_bytes() == b'\x00'
     assert (0).to_bytes(signed=True) == b'\x00'
@@ -356,6 +373,7 @@ def test_all():
     test_bit_count()
     test_power()
     test_str_extremes()
+    test_str_small()
     test_to_bytes()
     test_from_bytes()
     test_int_from_unicode_str()

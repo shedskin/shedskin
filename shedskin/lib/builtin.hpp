@@ -207,6 +207,7 @@ extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *
               *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes, *cl_bytearray, *cl_frozendict;
 
 extern __GC_VECTOR(str *) __char_cache;
+extern str *__int_str_cache[256];
 extern __GC_VECTOR(bytes *) __byte_cache;
 
 extern str *nl;
