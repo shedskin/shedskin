@@ -304,7 +304,7 @@ template<class T> void *list<T>::extend(str *s) {
     return NULL;
 }
 
-template<class T> inline T list<T>::__getfast__(__ss_int i) {
+template<class T> __SS_ALWAYS_INLINE T list<T>::__getfast__(__ss_int i) {
     i = __wrap(this, i, "list index out of range");
     return this->units[(size_t)i];
 }
