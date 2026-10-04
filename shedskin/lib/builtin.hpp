@@ -376,6 +376,7 @@ public:
     __seqiter();
     __seqiter(pyseq<T> *p);
     T __next__();
+    T __get_next();
 };
 
 template <class T> __iter<T> *___iter(pyiter<T> *p) {
@@ -563,6 +564,14 @@ template<class T> __seqiter<T>::__seqiter(pyseq<T> *seq) {
 template<class T> T __seqiter<T>::__next__() {
     if(counter==size)
         __throw_stop_iteration();
+    return p->__getitem__(counter++);
+}
+
+template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see __iter) */
+    if(counter==size) {
+        this->__stop_iteration = true;
+        return T();
+    }
     return p->__getitem__(counter++);
 }
 
