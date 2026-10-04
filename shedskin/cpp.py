@@ -983,6 +983,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.indent()
         self.class_variables(cl)
 
+        # --- pointer-free instances need not be scanned by the collector
+        if clnames == ["pyobj"] and self.pointer_free(cl):
+            self.output("#ifndef __SS_NOGC")
+            self.output(
+                "static void *operator new(size_t n) { void *p = gc::operator new(n, PointerFreeGC); memset(p, 0, n); return p; }"
+            )
+            self.output("#endif")
+
         # --- constructor
         need_init = False
         if "__init__" in cl.funcs:
@@ -1067,6 +1075,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}")
             self.print()
+
+    def pointer_free(self, cl: "python.Class") -> bool:
+        """Check if class instances only contain scalars (besides the vtable
+        and __class__ pointers, which point to static/global data), so they
+        can be allocated atomically. as operator new is inherited, only
+        consider classes without bases or subclasses"""
+        if cl.bases or cl.children:
+            return False
+        for var in cl.vars.values():
+            if var.invisible:
+                continue
+            if var in self.gx.merged_inh and self.gx.merged_inh[var]:
+                ts = typestr.nodetypestr(self.gx, var, cl, mv=self.mv).strip()
+                if ts not in ("__ss_int", "__ss_float", "__ss_bool", "complex"):
+                    return False
+        return True
 
     def class_variables(self, cl: "python.Class") -> None:
         """Generate class variable declarations"""
