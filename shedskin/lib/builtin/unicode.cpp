@@ -564,6 +564,10 @@ void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, 
     out.reserve(out.size() + len);
     for (size_t i = 0; i < len; i++) {
         __ss_char cp = u[i];
+        if (cp < 0x80) { /* ascii: the same byte in every supported codec */
+            out += (char)cp;
+            continue;
+        }
         if (__encodable(enc, cp)) {
             if (enc == __SS_ENC_UTF8)
                 __utf8_append(out, cp);
