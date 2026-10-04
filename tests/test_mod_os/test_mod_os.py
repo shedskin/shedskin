@@ -343,8 +343,9 @@ def test_setgroups_overflow():
 
 
 def test_embedded_nul():
-    # C apis stop at the first NUL, so these used to silently act on 'nul'
-    bad = 'nul\x00x.txt'
+    # C apis stop at the first NUL, so these used to silently act on 'ss_nul'
+    # (not 'nul': on windows that is the null device, which always exists)
+    bad = 'ss_nul\x00x.txt'
     for i in range(6):
         try:
             if i == 0:
@@ -367,7 +368,7 @@ def test_embedded_nul():
     assert not os.path.lexists(bad)
     assert not os.path.isfile(bad)
     assert not os.path.isdir('.\x00x')
-    assert not os.path.exists('nul')
+    assert not os.path.exists('ss_nul')
 
 
 def test_urandom():
