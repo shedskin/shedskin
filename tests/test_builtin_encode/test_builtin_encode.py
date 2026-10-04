@@ -429,6 +429,22 @@ def test_cp1250_cp1251():
     assert caught == 2
 
 
+def test_ascii_mixed():
+    s = 'ab c\xe9de\u20acf'
+    assert s.encode('utf-8') == b'ab c\xc3\xa9de\xe2\x82\xacf'
+    assert s.encode('cp1252') == b'ab c\xe9de\x80f'
+    assert s.encode('latin-1', 'replace') == b'ab c\xe9de?f'
+    assert s.encode('ascii', 'replace') == b'ab c?de?f'
+    assert s.encode('ascii', 'ignore') == b'ab cdef'
+    caught = False
+    try:
+        s.encode('ascii')
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end) == (4, 5)
+        caught = True
+    assert caught
+
+
 def test_utf8_sig():
     assert b'\xef\xbb\xbfab'.decode('utf-8-sig') == 'ab'
     assert b'ab'.decode('UTF_8_SIG') == 'ab'
@@ -491,6 +507,7 @@ def test_all():
     test_error_handlers_encode()
     test_cp1252()
     test_cp1250_cp1251()
+    test_ascii_mixed()
     test_utf8_sig()
     test_str_decode()
     test_literal_consistency()
