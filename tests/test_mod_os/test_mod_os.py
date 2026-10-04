@@ -342,6 +342,34 @@ def test_setgroups_overflow():
         assert str(e) == "too many groups"
 
 
+def test_embedded_nul():
+    # C apis stop at the first NUL, so these used to silently act on 'nul'
+    bad = 'nul\x00x.txt'
+    for i in range(6):
+        try:
+            if i == 0:
+                open(bad, 'w')
+            elif i == 1:
+                os.stat(bad)
+            elif i == 2:
+                os.mkdir(bad)
+            elif i == 3:
+                os.remove(bad)
+            elif i == 4:
+                os.listdir('.\x00x')
+            else:
+                os.path.realpath(bad)
+            assert False
+        except ValueError as e:
+            assert str(e) == 'embedded null byte'
+    # predicates return False instead
+    assert not os.path.exists(bad)
+    assert not os.path.lexists(bad)
+    assert not os.path.isfile(bad)
+    assert not os.path.isdir('.\x00x')
+    assert not os.path.exists('nul')
+
+
 def test_urandom():
     bts = os.urandom(10)
     assert len(bts) == 10
@@ -1433,6 +1461,7 @@ def test_all():
     test_process_compile_only()
     test_urandom()
     test_getrandom()
+    test_embedded_nul()
 
     if os.name == 'nt':
         test_nt()

@@ -110,10 +110,20 @@ public:
     }
 };
 
+/* paths, commands and environment entries handed to the OS: the C apis stop
+   at the first NUL, so (as in CPython) refuse these instead of silently
+   operating on a truncated name */
+inline bool __ss_has_nul(str *s) { return s->unit.find((__ss_char)0) != std::string::npos; }
+inline void __ss_check_nul(str *s) {
+    if (__ss_has_nul(s))
+        throw new ValueError(new str("embedded null byte"));
+}
+inline char *__ss_cpath(str *s) { __ss_check_nul(s); return s->c_str(); }
+
 #ifdef WIN32
 /* file names on Windows: utf-16 for the wide apis (the narrow ones go
    through the lossy ansi code page), lone surrogates kept as in CPython */
-inline std::wstring __ss_wpath(str *s) { return __to_utf16<wchar_t>(s->unit); }
+inline std::wstring __ss_wpath(str *s) { __ss_check_nul(s); return __to_utf16<wchar_t>(s->unit); }
 #endif
 
 file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);

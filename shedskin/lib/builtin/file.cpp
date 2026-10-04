@@ -50,7 +50,7 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
 #ifdef WIN32
     return _wfopen(__ss_wpath(file_name).c_str(), __ss_wpath(flags).c_str());
 #else
-    return fopen(file_name->c_str(), flags->c_str());
+    return fopen(__ss_cpath(file_name), flags->c_str());
 #endif
 }
 
