@@ -1676,9 +1676,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # elements of the choice list may have different concrete C++ types
         # (e.g. instances of different subclasses, or int/float literals)
         # even though shedskin infers a single unified Python type for them,
-        # so 'auto' brace-init deduction can fail to compile
+        # so 'auto' brace-init deduction can fail to compile. the same holds
+        # for the range itself (None is just NULL), so spell out its type too
         target_type = typestr.nodetypestr(self.gx, node.target, mv=self.mv).strip()
-        self.visitm("for(", target_type, " ", tempvar, " : {", func)
+        self.visitm(
+            "for(", target_type, " ", tempvar,
+            " : std::initializer_list<", target_type, ">{", func
+        )
         assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
         target_types = self.mergeinh[node.target]
         for elem in node.iter.elts:

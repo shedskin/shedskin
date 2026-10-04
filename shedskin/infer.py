@@ -172,6 +172,10 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
     for cl in gx.allclasses:
         for name in cl.vars:
             if name in cl.parent.vars and not name.startswith("__"):
+                # reading a method via its class (Base.method(self), which is
+                # also what super().method() becomes) registers it as a variable
+                if any(name in c.funcs for c in cl.ancestors(inclusive=True)):
+                    continue
                 error.error(
                     "instance variable '%s' of class '%s' shadows class variable"
                     % (name, cl.ident),

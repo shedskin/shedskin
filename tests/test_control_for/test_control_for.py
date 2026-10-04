@@ -175,6 +175,23 @@ def test_for_choice_mixed_subclass():
     assert names == ["base", "sub"]
 
 
+def test_for_choice_none():
+    # None has no pointer type of its own in C++ (NULL), so it cannot take
+    # part in initializer-list deduction either
+    result = []
+    for s in [None, 'a']:
+        result.append(s)
+    assert result == [None, 'a']
+    names = []
+    for x in [ChoiceSub("sub"), None, ChoiceBase("base")]:
+        names.append(x.name if x else '-')
+    assert names == ["sub", "-", "base"]
+    lens = []
+    for l in [[1], None, [2, 3]]:
+        lens.append(len(l) if l is not None else -1)
+    assert lens == [1, -1, 2]
+
+
 def test_all():
     test_for_range()
     test_for_chain()
@@ -189,6 +206,7 @@ def test_all():
     test_for_else()
     test_for_choice_mixed_numeric()
     test_for_choice_mixed_subclass()
+    test_for_choice_none()
 
 if __name__ == '__main__':
     test_all() 

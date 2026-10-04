@@ -47,9 +47,37 @@ def test_init():
     assert c.z == 'c'
 
 
+class A2:
+    def step(self):
+        return 1
+
+
+class B2(A2):
+    def step(self):
+        return super().step() + 10
+
+
+class C2(B2):
+    pass
+
+
+class D2(C2):
+    def step(self):
+        return C2.step(self) + 100  # inherited method, via the class
+
+
+def test_super_method():
+    # A2 is also instantiated, so 'step' is read via both class and instance
+    assert A2().step() == 1
+    assert B2().step() == 11
+    assert C2().step() == 11
+    assert D2().step() == 111
+
+
 def test_all():
     test_super()
     test_init()
+    test_super_method()
 
 
 if __name__ == '__main__':
