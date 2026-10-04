@@ -15,18 +15,14 @@ template<> inline __ss_int __int(__ss_int i) { return i; }
 template<> inline __ss_int __int(int i) { return i; }
 template<> inline __ss_int __int(str *s) { return __int(s, 10); }
 template<> inline __ss_int __int(__ss_bool b) { return b.value; }
+__ss_int __int_float_checked(__ss_float d);
 template<> inline __ss_int __int(__ss_float d) {
-    if(std::isnan(d))
-        throw new ValueError(new str("cannot convert float NaN to integer"));
-    if(!std::isfinite(d))
-        throw new OverflowError(new str("cannot convert float infinity to integer"));
-    /* out-of-range float-to-int conversion is undefined behaviour (in
-       practice INT64_MIN); the limit is a power of two, so exact as a float */
+    /* fast path (false for nan): in range, so the truncating cast is defined.
+       the limit is a power of two, so exact as a float */
     const __ss_float limit = std::ldexp((__ss_float)1, (int)(8*sizeof(__ss_int)-1));
-    __ss_float t = std::trunc(d);
-    if(t < -limit || t >= limit)
-        throw new OverflowError(new str("float too large to convert to integer"));
-    return (__ss_int)t;
+    if(d >= -limit && d < limit)
+        return (__ss_int)d;
+    return __int_float_checked(d);
 }
 
 /* float */
