@@ -54,8 +54,17 @@ CartesianProduct: TypeAlias = tuple[tuple["Class", int], ...]
 Types: TypeAlias = set[tuple["Class", int]]
 
 
-class PyObject:
+class Namespace:
+    def __init__(self) -> None:
+        self.globals: set[str] = set()
+        self.variable_reads: dict[str, set["infer.CNode"]] = {}
+
+
+class PyObject(Namespace):
     """Mixin for py objects"""
+
+    def __init__(self) -> None:
+        super().__init__()
 
     ident: str
 
@@ -91,6 +100,7 @@ class Module(PyObject):
         node: Optional[ast.AST],
         ast: ast.Module,
     ):
+        super().__init__()
         # set name and its dependent fields
         self.name = name
         self.name_list = name.split(".")
@@ -149,7 +159,8 @@ class Class(PyObject):
         node: ast.ClassDef,
         mv: "graph.ModuleVisitor",
         module: Module,
-    ):
+    ) -> None:
+        super().__init__()
         self.gx = gx
         self.node = node
         self.mv = mv
@@ -240,6 +251,7 @@ class StaticClass(PyObject):
     """Static class class"""
 
     def __init__(self, cl: "Class", mv: "graph.ModuleVisitor"):
+        super().__init__()
         self.vars: dict[str, Variable] = {}
         self.static_nodes: list[ast.AST] = []
         self.funcs: dict[str, Function] = {}
@@ -259,7 +271,7 @@ def extract_argnames(arg_struct: ast.arguments) -> list[str]:
     return argnames
 
 
-class Function:
+class Function(Namespace):
     """Python function class"""
 
     def __init__(
@@ -270,6 +282,7 @@ class Function:
         parent: Optional[AllParent] = None,
         inherited_from: Optional["Function"] = None,
     ):
+        super().__init__()
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
@@ -295,7 +308,7 @@ class Function:
         self.lambdawrapper = False
         self.constraints: set[tuple["infer.CNode", "infer.CNode"]] = set()
         self.vars: dict[str, Variable] = {}
-        self.globals: list[str] = []
+        self.formal_nodes: dict[str, ast.expr] = {}
         self.mv = mv
         self.nodes: set["infer.CNode"] = set()
         self.nodes_ordered: list["infer.CNode"] = []
