@@ -175,7 +175,65 @@ def test_pow():
     assert 2.0 ** 3 == 8.0
 
 
+class V3:
+    def __init__(self, x, y, z):
+        self.x, self.y, self.z = x, y, z
+
+    def __add__(self, o):
+        return V3(self.x + o.x, self.y + o.y, self.z + o.z)
+
+    def __sub__(self, o):
+        return V3(self.x - o.x, self.y - o.y, self.z - o.z)
+
+    def __mul__(self, s):
+        return V3(self.x * s, self.y * s, self.z * s)
+
+    def dot(self, o):
+        return self.x * o.x + self.y * o.y + self.z * o.z
+
+    def normalize(self):  # mutates self
+        n = self.dot(self) ** 0.5
+        self.x, self.y, self.z = self.x / n, self.y / n, self.z / n
+        return self
+
+made = []
+
+class Tracked:
+    def __init__(self, v):
+        self.v = v
+        made.append(self)  # escapes, even when the caller drops it
+
+last = None
+
+def keep(v):
+    global last
+    last = v  # escapes through a global
+    return v.x
+
+def test_temporaries():
+    # temporaries that the C++ compiler may elide must behave identically
+    a, b = V3(1.0, 2.0, 3.0), V3(4.0, 5.0, 6.0)
+    total = 0.0
+    for i in range(1000):
+        d = (a + b * i) - a  # only d.x etc. are used
+        total += d.dot(V3(1.0, 0.0, 0.0)) + (a - b).normalize().x
+    assert abs(total - (sum(4.0 * i for i in range(1000)) - 1000 / 3 ** 0.5)) < 1e-6
+    # aliasing and identity
+    c = a + b
+    e = c
+    e.normalize()
+    assert c is e and c.x == e.x and abs(c.dot(c) - 1.0) < 1e-12
+    assert (a + b) is not (a + b)
+    # escaping through __init__ and through a global
+    for i in range(10):
+        Tracked(V3(i, i, i) * 2.0)
+    assert [t.v.x for t in made] == [2.0 * i for i in range(10)]
+    assert keep(V3(7.0, 8.0, 9.0) - V3(1.0, 1.0, 1.0)) == 6.0
+    assert last.y == 7.0 and last.z == 8.0
+
+
 def test_all():
+    test_temporaries()
     test_int_class()
     test_float_class()
     test_vector2d()

@@ -17,6 +17,7 @@
    FreeBSD) would get its declarations placed in the wrong namespace */
 #ifdef WIN32
 #include <io.h> // for _isatty
+#include <malloc.h> // for _aligned_malloc
 #else
 #include <unistd.h>
 #include <sys/stat.h>
@@ -619,3 +620,35 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int, __ss_int a, __ss_int b) {
 
 
 } // namespace __shedskin__
+
+#if !defined(__SS_NOGC) && !defined(__SS_BIND)
+/* see __SS_NEW. other (over-aligned) requests are served like libstdc++ does */
+void *operator new(std::size_t n, std::align_val_t al) {
+    void *r;
+    if (al == __shedskin__::__ss_gc_tag)
+        r = GC_MALLOC(n);
+    else {
+        std::size_t a = (std::size_t)al;
+#ifdef WIN32
+        r = _aligned_malloc(n ? n : 1, a);
+#else
+        r = std::aligned_alloc(a, (n + a - 1) & ~(a - 1));
+#endif
+    }
+    if (!r)
+        throw std::bad_alloc();
+    return r;
+}
+void operator delete(void *p, std::align_val_t al) noexcept {
+    if (al != __shedskin__::__ss_gc_tag) {
+#ifdef WIN32
+        _aligned_free(p);
+#else
+        std::free(p);
+#endif
+    }
+}
+void operator delete(void *p, std::size_t, std::align_val_t al) noexcept {
+    operator delete(p, al);
+}
+#endif
