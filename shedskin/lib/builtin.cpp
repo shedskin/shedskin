@@ -621,7 +621,7 @@ tuple<__ss_int >*__ss_tuple_int(__ss_int, __ss_int a, __ss_int b) {
 
 } // namespace __shedskin__
 
-#if !defined(__SS_NOGC) && !defined(__SS_BIND)
+#ifdef __SS_ELIDE_NEW
 /* see __SS_NEW. other (over-aligned) requests are served like libstdc++ does */
 void *operator new(std::size_t n, std::align_val_t al) {
     void *r;
