@@ -1811,6 +1811,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             )
         self.print()
 
+    def single_module(self) -> bool:
+        """Check if the program consists of a single (non-builtin) module"""
+        return len([m for m in self.gx.modules.values() if not m.builtin]) == 1
+
     def func_header(
         self, func: "python.Function", declare: bool, is_init: bool = False
     ) -> None:
@@ -1899,6 +1903,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             formaldecs = ["int __ss_init"]
         if func.ident.startswith("__lambda"):  # XXX
             header = "static inline " + header
+        elif declare and func.parent is None and self.single_module():
+            # internal linkage allows e.g. gcc to inline functions called once
+            header = "static " + header
 
         # --- output
         self.append(header + "(" + ", ".join(formaldecs) + ")")
