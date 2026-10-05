@@ -1172,7 +1172,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             site_id = self._ss_list_site_ids[id(node)]
             self.append("(__ss_list<" + ts[5:-3] + ", " + str(site_id) + ">(")
         else:
-            self.append("(new " + ts[:-2] + "(")
+            self.append("(__SS_NEW " + ts[:-2] + "(")
         return argtypes
 
     def visit_Dict(
@@ -3055,7 +3055,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if ts.startswith("pyseq") or ts.startswith("pyiter"):  # XXX
                         argtypes = self.gx.merged_inh[node]
                         ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
-                self.append("(new " + ts[:-2] + "(")
+                self.append("(__SS_NEW " + ts[:-2] + "(")
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append("1")  # don't call default constructor
 

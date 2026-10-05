@@ -242,6 +242,25 @@ extern str *nl;
 extern str *sp;
 extern str *byteorder_big, *byteorder_little;
 
+/* __SS_NEW allocates via a replaceable global allocation function (the
+ * align_val_t variant, with a tag value that is never a real over-alignment),
+ * so the C++ compiler may elide allocations that do not escape (C++14
+ * [expr.new]), for example temporaries in vector arithmetic. not for extension
+ * modules, as their operator new should not be visible to other libraries.
+ * not for MSVC either: it rejects passing a std::align_val_t as placement
+ * argument (error C2956, as operator delete(void *, std::align_val_t) is a
+ * usual deallocation function), and it does not elide allocations anyway. */
+#if !defined(__SS_NOGC) && !defined(__SS_BIND) && !(defined(_MSC_VER) && !defined(__clang__))
+#define __SS_ELIDE_NEW
+#endif
+
+#ifndef __SS_ELIDE_NEW
+#define __SS_NEW new
+#else
+inline constexpr std::align_val_t __ss_gc_tag{1};
+#define __SS_NEW ::new (__shedskin__::__ss_gc_tag)
+#endif
+
 /* root object class */
 
 #ifdef __SS_NOGC
