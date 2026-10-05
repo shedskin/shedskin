@@ -69,6 +69,39 @@ void __init() {
 #ifndef __SS_NOGC
     GC_INIT();
     GC_set_warn_proc(gc_warning_handler);
+
+    /* GC tuning. bdwgc collects once it has allocated about (live pointer data + roots) /
+       free_space_divisor bytes since the last collection, so a program that allocates many
+       short-lived objects but keeps little alive would otherwise do a full collection after every
+       few hundred KB of allocation. note that bdwgc reads some environment variables in GC_INIT
+       (GC_INITIAL_HEAP_SIZE, GC_MAXIMUM_HEAP_SIZE, GC_FREE_SPACE_DIVISOR, GC_FULL_FREQUENCY,
+       GC_ENABLE_INCREMENTAL, GC_PRINT_STATS, ..), and the calls below override these. */
+
+#if GC_VERSION_MAJOR > 8 || (GC_VERSION_MAJOR == 8 && GC_VERSION_MINOR >= 2)
+    /* allocate at least this many bytes between collections (bdwgc default: 1) */
+    GC_set_min_bytes_allocd(4 << 20);
+#else
+    GC_expand_hp(4 << 20); /* older bdwgc: no GC_set_min_bytes_allocd, use a larger initial heap instead */
+#endif
+
+    /* grow the initial heap by this many bytes (bdwgc default initial heap: 64KB) */
+    // GC_expand_hp(4 << 20);
+
+    /* higher: collect more often, smaller heap; lower: fewer collections, larger heap (default: 3) */
+    // GC_set_free_space_divisor(3);
+
+    /* heap size limit in bytes, after which allocation fails with MemoryError (default: 0, no limit) */
+    // GC_set_max_heap_size(1UL << 30);
+
+    /* never grow the heap by itself, only collect (default: 0) */
+    // GC_set_dont_expand(1);
+
+    /* incremental/generational collection (uses virtual memory dirty bits; default: off) */
+    // GC_enable_incremental();
+    /* with incremental collection: do a full collection every n+1 collections (default: 19) */
+    // GC_set_full_freq(19);
+    /* with incremental collection: target pause time in ms (default: GC_TIME_UNLIMITED with parallel marking, else 15) */
+    // GC_set_time_limit(15);
 #endif
 
 #ifdef __SS_BIND
