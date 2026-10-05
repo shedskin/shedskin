@@ -147,7 +147,7 @@ inline str *str::__getitem__(__ss_int i) {
     return __char_str(unit[(size_t)i]);
 }
 
-inline str *str::__getfast__(__ss_int i) {
+__SS_ALWAYS_INLINE str *str::__getfast__(__ss_int i) {
     i = __wrap(this, i, "string index out of range");
     return __char_str(unit[(size_t)i]);
 }

@@ -172,7 +172,7 @@ inline __ss_int bytes::__getitem__(__ss_int i) {
     return (unsigned char)(unit[(size_t)i]);
 }
 
-inline __ss_int bytes::__getfast__(__ss_int i) {
+__SS_ALWAYS_INLINE __ss_int bytes::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     return (unsigned char)(unit[(size_t)i]);
 }

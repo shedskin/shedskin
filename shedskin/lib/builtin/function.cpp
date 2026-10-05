@@ -152,6 +152,20 @@ __ss_int __int(bytes *s, __ss_int base) {
     return __int_parse(p, p + s->unit.size(), s, base);
 }
 
+__ss_int __int_float_checked(__ss_float d) { /* slow path of __int(__ss_float) */
+    if(std::isnan(d))
+        throw new ValueError(new str("cannot convert float NaN to integer"));
+    if(!std::isfinite(d))
+        throw new OverflowError(new str("cannot convert float infinity to integer"));
+    /* out-of-range float-to-int conversion is undefined behaviour (in
+       practice INT64_MIN); the limit is a power of two, so exact as a float */
+    const __ss_float limit = std::ldexp((__ss_float)1, (int)(8*sizeof(__ss_int)-1));
+    __ss_float t = std::trunc(d);
+    if(t < -limit || t >= limit)
+        throw new OverflowError(new str("float too large to convert to integer"));
+    return (__ss_int)t;
+}
+
 /* float */
 
 /* strtod is much more permissive than CPython's float(): it stops at the

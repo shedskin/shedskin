@@ -119,6 +119,26 @@ def test_pointer_free_objects():
         assert copies[i].i == i
         assert copies[i].z == complex(i * 0.5, i)
 
+def test_ptrfree_containers():
+    # str code points, bools, complexes and ints are allocated as pointer-free
+    # memory; make sure they survive collections intact. keep references to
+    # pyobjs in neighbouring containers, which must still be scanned.
+    strs = [str(i) * 50 + chr(0x10000 + i) for i in range(200)]
+    bools = [i % 3 == 0 for i in range(1000)]
+    complexes = [complex(i, -i) for i in range(1000)]
+    ints = [i * 7919 for i in range(1000)]
+    objs = [[str(i)] for i in range(200)]
+    for rnd in range(5):
+        junk = [str(i) * 20 for i in range(2000)]
+        gc.collect()
+    assert len(junk) == 2000
+    for i in range(200):
+        assert strs[i] == str(i) * 50 + chr(0x10000 + i)
+        assert objs[i] == [str(i)]
+    for i in range(1000):
+        assert bools[i] == (i % 3 == 0)
+        assert complexes[i] == complex(i, -i)
+        assert ints[i] == i * 7919
 
 def test_all():
     test_gc()
@@ -129,6 +149,7 @@ def test_all():
     test_count()
     test_threshold()
     test_pointer_free_objects()
+    test_ptrfree_containers()
 
 if __name__ == '__main__':
     test_all()
