@@ -16,7 +16,7 @@ public:
     B __getsecond__();
 
     str *__repr__();
-    __ss_int __len__();
+    __ss_int __len__() final;
 
     __ss_bool __eq__(pyobj *p);
     __ss_int __cmp__(pyobj *p);
@@ -46,7 +46,7 @@ public:
     C __getthird__();
 
     str *__repr__();
-    __ss_int __len__();
+    __ss_int __len__() final;
 
     __ss_bool __eq__(pyobj *p);
     __ss_int __cmp__(pyobj *p);
@@ -80,7 +80,7 @@ public:
     inline T __getfast__(__ss_int i);
     inline T __getitem__(__ss_int i);
 
-    inline __ss_int __len__();
+    inline __ss_int __len__() final;
 
     str *__repr__();
 

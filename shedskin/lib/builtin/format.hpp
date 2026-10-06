@@ -40,18 +40,26 @@ static inline std::string __mod_sign(bool negative, char f_flag) {
 // justification puts the space padding *before* the sign, and '-' always
 // left-justifies using space padding after the digits, regardless of the
 // '0' flag.
+static inline void __mod_append_ascii(str *result, const std::string &s) { /* without temporaries */
+    for (char ch : s)
+        result->unit += (__ss_char)(unsigned char)ch;
+}
+
 static inline void __mod_pad_signed(str *result, const std::string &sign, const __GC_STR &digits, char f_flag, __ss_int f_width, bool f_zero) {
     __ss_int padlen = f_width - (__ss_int)(sign.size() + digits.size());
-    if (f_flag & __SS_FMT_LEFT) {
-        result->unit += __gcs(sign) + digits;
-        if (f_width != -1 && padlen > 0)
-            result->unit += __GC_STR((size_t)padlen, ' ');
+    if (f_width == -1 || padlen <= 0) { /* common case: no padding */
+        __mod_append_ascii(result, sign);
+        result->unit += digits;
+    } else if (f_flag & __SS_FMT_LEFT) {
+        __mod_append_ascii(result, sign);
+        result->unit += digits;
+        result->unit.append((size_t)padlen, ' ');
     } else {
-        if (f_width != -1 && padlen > 0 && !f_zero)
-            result->unit += __GC_STR((size_t)padlen, ' ');
-        result->unit += __gcs(sign);
-        if (f_width != -1 && padlen > 0 && f_zero)
-            result->unit += __GC_STR((size_t)padlen, '0');
+        if (!f_zero)
+            result->unit.append((size_t)padlen, ' ');
+        __mod_append_ascii(result, sign);
+        if (f_zero)
+            result->unit.append((size_t)padlen, '0');
         result->unit += digits;
     }
 }
@@ -190,7 +198,10 @@ template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
 template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
     if(arg < 0 || arg > 0x10ffff)
         throw new OverflowError(new str("%c arg not in range(0x110000)"));
-    __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
+    if(f_width == -1)
+        result->unit += (__ss_char)arg;
+    else
+        __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
 }
 template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
     if(arg->unit.size() != 1)
@@ -201,7 +212,7 @@ template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_
 template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
     size_t namepos, startpos;
     str *name = NULL;
-    __GC_STR fmtchars = __gcs("0123456789# -+.*");
+    static const __ss_char fmtchars[] = U"0123456789# -+.*";
 
     for(; j<fmtlen;) {
         __ss_char c = fmt->unit[j++];

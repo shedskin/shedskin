@@ -44,7 +44,7 @@ public:
     str *__mul__(__ss_int n);
     inline str *__getitem__(__ss_int n);
     inline str *__getfast__(__ss_int i);
-    inline __ss_int __len__();
+    inline __ss_int __len__() final;
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     bytes *encode(str *encoding=0, str *errors=0); /* 0 -> 'utf-8'/'strict' */
