@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS pymodule (
     float64 bool default false,
     silent bool default false,
     nogc bool default false,
-    boost bool default false,
+    boost bool default true,
     backtrace bool default false,
 
     ran_at datetime default current_timestamp

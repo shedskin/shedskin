@@ -143,7 +143,9 @@ class Shedskin:
             #            if args.random:
             #                gx.fast_random = True
 
-            if args.boost:
+            if args.noboost:
+                gx.boost = False
+            elif args.boost:
                 gx.boost = True
 
             if args.predict:
@@ -337,7 +339,9 @@ class Shedskin:
         grp("--nogc", help="Disable garbage collection", action="store_true")
         grp("-w", "--nowrap", help="Disable wrap-around checking", action="store_true")
         grp("-z", "--nozero", help="Disable zero-division checking", action="store_true")
-        grp("--boost", help="Use (builtin) boost containers", action="store_true")
+        # boost containers are the default; --boost/--noboost are hidden switches
+        grp("--boost", help=argparse.SUPPRESS, action="store_true")
+        grp("--noboost", help=argparse.SUPPRESS, action="store_true")
         grp("--predict", help="Try to predict list sizes", action="store_true")
 
         # Compiler options (debug, extmod, dirs, output, etc.)
