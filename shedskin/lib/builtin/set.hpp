@@ -36,7 +36,7 @@ public:
     str* __repr__();
 
     __ss_bool __contains__(T key) final;
-    __ss_int __len__();
+    __ss_int __len__() final;
 
     void *clear();
     set<T> *copy();

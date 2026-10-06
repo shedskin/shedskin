@@ -71,6 +71,17 @@
 #define __SS_ALWAYS_INLINE inline
 #endif
 
+/* for module __init functions of single-module programs, in which functions
+ * are 'static', so gcc may inline those that are called once. the __init
+ * frame is long-lived though (it holds the main loop), so pointers left in its
+ * stack slots after inlining keep garbage alive for the conservative GC (in
+ * examples/dijkstra2 the previous graph, slowing down every collection) */
+#if defined(__GNUC__) && !defined(__clang__)
+#define __SS_INIT_ATTR __attribute__((optimize("no-inline-functions-called-once")))
+#else
+#define __SS_INIT_ATTR
+#endif
+
 
 #ifndef WIN32
 #include <cxxabi.h>

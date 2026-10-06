@@ -292,6 +292,38 @@ def test_list_index_error_message():
     assert error == '2.5 is not in list'
 
 
+def test_list_slice_assign_same_size():
+    a = list(range(10))
+    a[2:5] = [20, 30, 40]
+    assert a == [0, 1, 20, 30, 40, 5, 6, 7, 8, 9]
+    a[-3:] = [70, 80, 90]
+    assert a == [0, 1, 20, 30, 40, 5, 6, 70, 80, 90]
+    a[0:0] = []
+    assert len(a) == 10
+    a[4:2] = [-1]  # empty slice: insert
+    assert a == [0, 1, 20, 30, -1, 40, 5, 6, 70, 80, 90]
+    b = [1, 2, 3]
+    b[0:3] = b
+    assert b == [1, 2, 3]
+    b[:] = b
+    assert b == [1, 2, 3]
+    d = [1, 2, 3]
+    d[1:2] = d
+    assert d == [1, 1, 2, 3, 3]
+    d = [1, 2, 3]
+    d[3:] = d
+    assert d == [1, 2, 3, 1, 2, 3]
+    c = [1, 2, 3]
+    c[1:2] = [7, 8]
+    assert c == [1, 7, 8, 3]
+    c[1:3] = [9]
+    assert c == [1, 9, 3]
+    rows = [0] * 12
+    for y in range(3):
+        rows[y*4:y*4+4] = [y] * 4
+    assert rows == [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+
+
 def test_all():
     test_list_append()
     test_list_assign()
@@ -314,6 +346,7 @@ def test_all():
     test_list_imul()
     test_list_iadd()
     test_list_index_error_message()
+    test_list_slice_assign_same_size()
 
 
 if __name__ == "__main__":

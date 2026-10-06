@@ -679,9 +679,7 @@ std::string __narrow_std(const __GC_STR &u) {
     return out;
 }
 
-str *__char_str(__ss_char cp) {
-    if (cp < 256)
-        return __char_cache[cp];
+str *__char_str_slow(__ss_char cp) {
     return new str(__GC_STR(1, cp));
 }
 

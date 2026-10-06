@@ -23,7 +23,7 @@ public:
 
     template<class U> bytes *join(U *);
 
-    inline __ss_int __len__();
+    inline __ss_int __len__() final;
     bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     bytes *rstrip(bytes *chars=0);

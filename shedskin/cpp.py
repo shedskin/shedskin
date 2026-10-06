@@ -668,7 +668,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child)
 
         # --- __init
-        self.output("void __init() {")
+        if self.single_module():  # see __SS_INIT_ATTR
+            self.output("__SS_INIT_ATTR void __init() {")
+        else:
+            self.output("void __init() {")
         self.indent()
 
         if self.module == self.gx.main_module and not self.gx.pyextension_product:

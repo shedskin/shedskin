@@ -189,8 +189,14 @@ __GC_STR __widen(const __GC_BYTES &b);
 __GC_BYTES __narrow(const __GC_STR &u);
 std::string __narrow_std(const __GC_STR &u);
 
-/* single-character str for a code point (cached below 256) */
-str *__char_str(__ss_char cp);
+/* single-character str for a code point (cached below 256). the cached case
+   is inline, as it is very hot (indexing or iterating over a str) */
+str *__char_str_slow(__ss_char cp);
+__SS_ALWAYS_INLINE str *__char_str(__ss_char cp) {
+    if (cp < 256)
+        return __char_cache[cp];
+    return __char_str_slow(cp);
+}
 
 /* character database for the str methods: character classes and full
    case mappings, generated from CPython's own str methods by

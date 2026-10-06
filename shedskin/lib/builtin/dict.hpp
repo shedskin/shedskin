@@ -55,7 +55,7 @@ public:
     void *__setitem__(K k, V v);
     V __getitem__(K k);
     void *__delitem__(K k);
-    __ss_int __len__();
+    __ss_int __len__() final;
     str *__repr__();
     __ss_bool has_key(K k);
     __ss_bool __contains__(K key) final;

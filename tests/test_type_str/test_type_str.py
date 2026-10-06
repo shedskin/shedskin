@@ -948,6 +948,82 @@ def test_startswith_range():
     assert not 'abc'.endswith(('x', ''), 5)
 
 
+def test_find_search():
+    # substring search (str.find and friends use their own search loop)
+    s = 'abcabcabd'
+    assert s.find('abd') == 6
+    assert s.find('abc', 1) == 3
+    assert s.find('abc', 1, 5) == -1
+    assert s.find('abc', 1, 6) == 3
+    assert s.find('d') == 8
+    assert s.find('ab', 7) == -1
+    assert s.find('', 9) == 9
+    assert s.find('', 10) == -1
+    assert s.find('abcabcabdx') == -1
+    assert s.find(s) == 0
+    assert 'aaaaab'.find('aab') == 3
+    assert '0101101'.find('1101') == 3
+    assert 'x\u20acy\u20acz'.find('\u20acz') == 3
+    assert 'x\u20acy\u20acz'.find('y\u20ac') == 2
+    assert '\U0001f600ab\U0001f600'.find('b\U0001f600') == 2
+    assert 'abd' in s
+    assert 'abe' not in s
+    assert '\u20acz' in 'x\u20acy\u20acz'
+    assert s.count('ab') == 3
+    assert 'aaaa'.count('aa') == 2
+    assert 'a\u20aca\u20aca'.count('a\u20ac') == 2
+    assert s.index('cab') == 2
+    assert 'a--b--c'.split('--') == ['a', 'b', 'c']
+    assert 'a--b--c'.split('--', 1) == ['a', 'b--c']
+    assert 'a\u20ac\u20acb'.split('\u20ac\u20ac') == ['a', 'b']
+    assert 'a--b--c'.partition('--') == ('a', '--', 'b--c')
+    assert 'abcabc'.replace('bc', 'X') == 'aXaX'
+    assert 'abcabc'.replace('bc', 'X', 1) == 'aXabc'
+    assert 'abc'.replace('', '-') == '-a-b-c-'
+    assert 'a\u20acb\u20ac'.replace('b\u20ac', '!') == 'a\u20ac!'
+
+
+def test_case_ascii_mixed():
+    # ascii fast paths of isupper/islower/swapcase, mixed with non-ascii
+    assert 'RNBQKBNR'.isupper()
+    assert not 'RNBQKBNr'.isupper()
+    assert 'rnbq.kbnr'.islower()
+    assert not 'rnbq.Kbnr'.islower()
+    assert not '...'.isupper()
+    assert not '...'.islower()
+    assert 'AB\u00c9'.isupper()
+    assert not 'AB\u00e9'.isupper()
+    assert 'ab\u00e9'.islower()
+    assert not 'ab\u00c9'.islower()
+    assert ' rnbQ.K \n'.swapcase() == ' RNBq.k \n'
+    assert 'a\u00e9B\u00c9'.swapcase() == 'A\u00c9b\u00e9'
+    assert 'abc'[::-1].swapcase() == 'CBA'
+
+
+def test_char_index():
+    # single characters, cached (below 256) or not
+    s = 'a\u00ff\u0100\u20ac'
+    assert s[0] == 'a'
+    assert s[1] == '\u00ff'
+    assert s[2] == '\u0100'
+    assert s[-1] == '\u20ac'
+    assert [c for c in s] == ['a', '\u00ff', '\u0100', '\u20ac']
+    assert ord(s[3]) == 0x20ac
+
+
+def test_mod_format():
+    assert '%c%c%c' % (65, 66, 67) == 'ABC'
+    assert '%c' % 0x20ac == '\u20ac'
+    assert '%3c|%-3c|' % (65, 66) == '  A|B  |'
+    assert '%d|%5d|%-5d|%05d' % (1, 2, 3, 4) == '1|    2|3    |00004'
+    assert '%+d|%+5d|%+05d|% d' % (1, 2, 3, 4) == '+1|   +2|+0003| 4'
+    assert '%d|%5d|%-5d|%05d' % (-1, -2, -3, -4) == '-1|   -2|-3   |-0004'
+    assert '%x|%#x|%#6x|%o' % (255, 255, 255, 8) == 'ff|0xff|  0xff|10'
+    assert '%s|%5s|%-5s|' % ('a', 'b', 'c') == 'a|    b|c    |'
+    assert b'%c%c%c' % (1, 2, 255) == bytes([1, 2, 255])
+    assert b'%i %i\n%i\n' % (20, 30, 255) == b'20 30\n255\n'
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -1022,6 +1098,10 @@ def test_all():
     test_count_range()
     test_partition_empty_separator()
     test_startswith_range()
+    test_find_search()
+    test_case_ascii_mixed()
+    test_char_index()
+    test_mod_format()
 
 
 if __name__ == "__main__":

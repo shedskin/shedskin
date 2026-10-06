@@ -2,6 +2,28 @@
 
 /* str methods */
 
+/* substring search, with the semantics of std::basic_string::find. the
+   std::u32string(_view) version goes through char_traits<char32_t>, whose
+   find and compare are plain scalar loops (unlike those for char, which use
+   memchr/memcmp), which made for example the lz2 example around 5 times
+   slower. so check the first and last characters, and memcmp the rest */
+static size_t __ss_find(const __ss_char *hd, size_t n, const __ss_char *pd, size_t m, size_t start=0) {
+    if(start > n || m > n - start)
+        return std::string::npos;
+    if(m == 0)
+        return start;
+    const __ss_char first = pd[0], last = pd[m-1];
+    const __ss_char *end = hd + (n - m);
+    for(const __ss_char *q = hd + start; q <= end; q++)
+        if(*q == first && q[m-1] == last && (m <= 2 || memcmp(q+1, pd+1, (m-2)*sizeof(__ss_char)) == 0))
+            return (size_t)(q - hd);
+    return std::string::npos;
+}
+
+static inline size_t __ss_find(const __GC_STR &h, const __GC_STR &p, size_t start=0) {
+    return __ss_find(h.data(), h.size(), p.data(), p.size(), start);
+}
+
 /* CPython's final sigma rule for lower(): a capital sigma becomes a final
    sigma when it is preceded by a cased character and not followed by one,
    skipping over case-ignorable characters in both directions */
@@ -121,7 +143,7 @@ __ss_int str::__int__() {
 __ss_bool str::__contains__(str *s) {
     if(s->charcache)
         return __mbool(unit.find(s->unit[0]) != std::string::npos);
-    return __mbool(unit.find(s->unit) != std::string::npos);
+    return __mbool(__ss_find(unit, s->unit) != std::string::npos);
 }
 
 str *str::operator+ (const char *rhs) {
@@ -177,7 +199,13 @@ __ss_bool str::islower() { /* has a cased char, and no upper-case or title-case 
     size_t l = unit.size();
     bool cased = false;
     for(size_t i = 0; i < l; i++) {
-        unsigned short f = __ss_char_rec(unit[i])->flags;
+        __ss_char c = unit[i];
+        if(c < 0x80) { /* ascii fast path */
+            if(c >= 'A' && c <= 'Z') return False;
+            if(c >= 'a' && c <= 'z') cased = true;
+            continue;
+        }
+        unsigned short f = __ss_char_rec(c)->flags;
         if(f & (__SS_CHAR_UPPER | __SS_CHAR_TITLE)) return False;
         if(f & __SS_CHAR_LOWER) cased = true;
     }
@@ -188,7 +216,13 @@ __ss_bool str::isupper() { /* has a cased char, and no lower-case or title-case 
     size_t l = unit.size();
     bool cased = false;
     for(size_t i = 0; i < l; i++) {
-        unsigned short f = __ss_char_rec(unit[i])->flags;
+        __ss_char c = unit[i];
+        if(c < 0x80) { /* ascii fast path */
+            if(c >= 'a' && c <= 'z') return False;
+            if(c >= 'A' && c <= 'Z') cased = true;
+            continue;
+        }
+        unsigned short f = __ss_char_rec(c)->flags;
         if(f & (__SS_CHAR_LOWER | __SS_CHAR_TITLE)) return False;
         if(f & __SS_CHAR_UPPER) cased = true;
     }
@@ -348,7 +382,7 @@ tuple2<str *, str *> *str::partition(str *separator)
     if(separator->unit.empty())
         throw new ValueError(new str("empty separator"));
 
-    i = this->unit.find(separator->unit);
+    i = __ss_find(this->unit, separator->unit);
     if(i != std::string::npos)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
@@ -479,7 +513,7 @@ list<str *> *str::split(str *sep_, __ss_int maxsplit) {
         if(sep_ == NULL)
             pos_end = __first_space(unit, pos_start);
         else
-            pos_end = unit.find(sep_->unit, pos_start);
+            pos_end = __ss_find(unit, sep_->unit, pos_start);
 
         if(pos_end == std::string::npos || ((maxsplit >= 0) && splits >= maxsplit)) {
             count = unit.size()-pos_start;
@@ -633,6 +667,15 @@ str *str::swapcase() {
     r.reserve(len);
     for(size_t i=0; i<len; i++) {
         __ss_char c = unit[i];
+        if(c < 0x80) { /* ascii fast path */
+            if(c >= 'A' && c <= 'Z')
+                r += c + 32;
+            else if(c >= 'a' && c <= 'z')
+                r += c - 32;
+            else
+                r += c;
+            continue;
+        }
         unsigned short f = __ss_char_rec(c)->flags;
         if(f & __SS_CHAR_UPPER)
             __lower_to(r, unit, i);
@@ -771,8 +814,7 @@ __ss_int str::find(str *s, __ss_int a, __ss_int b) {
     __ss_int ssize = s->__len__();
     if(b - a < ssize)
         return -1;
-    std::u32string_view view(this->unit.data() + (size_t)a, (size_t)(b - a));
-    size_t pos = view.find(std::u32string_view(s->unit.data(), (size_t)ssize));
+    size_t pos = __ss_find(this->unit.data() + (size_t)a, (size_t)(b - a), s->unit.data(), (size_t)ssize);
     if(pos == std::string::npos)
         return -1;
     return (__ss_int)pos + a;
@@ -821,12 +863,12 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     /* search only within [start:end]: checking the match position against
        end-len(s) underflowed when s is longer than end, so that matches
        running past end were still counted ('abcabc'.count('abc', 0, 2)) */
-    std::u32string_view view(unit.data() + start, (size_t)(end - start));
-    std::u32string_view sub(s->unit.data(), (size_t)ssize);
+    const __ss_char *h = unit.data() + start;
+    size_t n = (size_t)(end - start);
 
     __ss_int count = 0;
     size_t i = 0;
-    while((i = view.find(sub, i)) != std::string::npos) {
+    while((i = __ss_find(h, n, s->unit.data(), (size_t)ssize, i)) != std::string::npos) {
         i += (size_t)ssize;
         count++;
     }
@@ -891,7 +933,7 @@ str *str::replace(str *a, str *b, __ss_int c) {
     size_t bsize = b->unit.size();
     size_t c2 = (size_t)c;
     j = p = 0;
-    while( ((c2==std::string::npos) || (j++ != c2)) && (i = s.find(a->unit, p)) != std::string::npos ) {
+    while( ((c2==std::string::npos) || (j++ != c2)) && (i = __ss_find(s, a->unit, p)) != std::string::npos ) {
       s.replace(i, asize, b->unit);
       p = i + bsize + (asize?0:1);
     }
