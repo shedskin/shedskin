@@ -2516,6 +2516,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if python.def_class(self.gx, "complex") not in (
                     t[0] for t in rtypes
                 ):  # XXX
+                    # division by a non-zero float literal: no zero check needed
+                    if (
+                        inline == "/"
+                        and isinstance(right, ast.Constant)
+                        and type(right.value) is float
+                        and right.value != 0.0
+                        and ltypes.issubset(inttype | floattype)
+                    ):
+                        self.append("(")
+                        self.visit(left, func)
+                        self.append("/")
+                        self.visit(right, func)
+                        self.append(")")
+                        return
                     self.append({"%": "__mods", "/": "__divs"}[inline] + "(")
                     self.visit(left, func)
                     self.append(", ")

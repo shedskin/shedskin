@@ -821,8 +821,8 @@ void __init() {
 }
 
 __ss_float random() {
-
-    return _inst->random();
+    /* _inst is always a plain Random, so avoid the two virtual calls */
+    return static_cast<__ss_float>(_inst->Random::_next_word() >> 11) * 0x1.0p-53;
 }
 
 bytes *getstate() {
