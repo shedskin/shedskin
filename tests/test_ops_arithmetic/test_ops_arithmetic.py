@@ -93,10 +93,39 @@ def test_misc():
     assert e == {(4, 5): 0}
 
 
+def test_true_division():
+    # a non-zero float literal divisor needs no zero check
+    w = 7
+    f = 3.0
+    assert w / 2.0 == 3.5
+    assert f / 2.0 == 1.5
+    assert -w / 0.5 == -14.0
+    assert (w + 1) / 4.0 == 2.0
+    assert w / 2 == 3.5
+    assert 1 / 4 == 0.25
+    zero = 0.0
+    try:
+        f / zero
+        assert False
+    except ZeroDivisionError:
+        pass
+    try:
+        f / 0.0
+        assert False
+    except ZeroDivisionError:
+        pass
+    try:
+        w / 0
+        assert False
+    except ZeroDivisionError:
+        pass
+
+
 def test_all():
     test_addition()
     test_subtraction()
     test_misc()
+    test_true_division()
 
 
 if __name__ == '__main__':
