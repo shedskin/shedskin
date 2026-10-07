@@ -611,5 +611,86 @@ template<class T> list<T> *__mul_list_elt(T t, __ss_int n) {
     return c;
 }
 
+/* concatenation of (contiguous slices of) lists without temporary lists, for
+   'a[i:j] + b + c[k:]' and 'a[i:j] = b[k:] + c[:k]' (see cpp.py). each part is
+   a view on a list, so all parts must be computed before the result is written */
+
+template<class T> struct __list_part {
+    T *data;
+    size_t size;
+};
+
+/* slicenr() for slices without step */
+inline void __slicenr1(__ss_int x, __ss_int &l, __ss_int &u, __ss_int len) {
+    if(!(x&1))
+        l = 0;
+    else if(l < 0) {
+        l += len;
+        if(l < 0)
+            l = 0;
+    } else if(l > len)
+        l = len;
+    if(!(x&2))
+        u = len;
+    else if(u < 0) {
+        u += len;
+        if(u < 0)
+            u = 0;
+    } else if(u > len)
+        u = len;
+    if(u < l)
+        u = l;
+}
+
+template<class T> inline __list_part<T> __lpart(list<T> *l) {
+    return {l->units.data(), l->units.size()};
+}
+
+template<class T> inline __list_part<T> __lpart(list<T> *l, __ss_int x, __ss_int lo, __ss_int hi) {
+    __slicenr1(x, lo, hi, (__ss_int)l->units.size());
+    return {l->units.data()+lo, (size_t)(hi-lo)};
+}
+
+template<class T, class ... P> list<T> *__add_lists(__list_part<T> p, P ... ps) {
+    list<T> *c = new list<T>();
+    c->units.reserve(p.size + (ps.size + ... + 0));
+    c->units.insert(c->units.end(), p.data, p.data+p.size);
+    (c->units.insert(c->units.end(), ps.data, ps.data+ps.size), ...);
+    return c;
+}
+
+template<class T> void __replace_slice(list<T> *d, __ss_int l, __ss_int u, T *b, size_t n) {
+    if((size_t)(u-l) == n) /* same size: overwrite in place */
+        std::copy(b, b+n, d->units.begin()+l);
+    else {
+        d->units.erase(d->units.begin()+l, d->units.begin()+u);
+        d->units.insert(d->units.begin()+l, b, b+n);
+    }
+}
+
+template<class T, class ... P> void *__setslice_lists(list<T> *d, __ss_int x, __ss_int l, __ss_int u, __list_part<T> p, P ... ps) {
+    size_t n = p.size + (ps.size + ... + 0);
+    __slicenr1(x, l, u, d->__len__());
+    /* the parts may point into d, so copy them out first: on the stack if
+       possible (which the GC scans), else into a temporary vector */
+    constexpr size_t bufsize = 4096 / sizeof(T);
+    if constexpr (std::is_trivially_copyable_v<T>) {
+        if(n <= bufsize) {
+            alignas(T) unsigned char raw[bufsize * sizeof(T)];
+            T *b = reinterpret_cast<T *>(raw), *q = b;
+            q = std::copy(p.data, p.data+p.size, q);
+            ((q = std::copy(ps.data, ps.data+ps.size, q)), ...);
+            __replace_slice(d, l, u, b, n);
+            return NULL;
+        }
+    }
+    __GC_VECTOR(T) v;
+    v.reserve(n);
+    v.insert(v.end(), p.data, p.data+p.size);
+    (v.insert(v.end(), ps.data, ps.data+ps.size), ...);
+    __replace_slice(d, l, u, v.data(), n);
+    return NULL;
+}
+
 #endif
 #endif
