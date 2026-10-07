@@ -655,6 +655,22 @@ def test_startswith_range():
     assert b'abc'.endswith(b'c', -1)
 
 
+def test_copy_independent():
+    b = b'abcdefghijklmnopqrstuvwxyz0123456789'
+    ba = bytearray(b)
+    ba[0] = ord('X')
+    assert b[0] == ord('a')
+    c = bytes(ba)
+    ba[1] = ord('Y')
+    assert c == b'Xbcdefghijklmnopqrstuvwxyz0123456789'
+    assert ba == bytearray(b'XYcdefghijklmnopqrstuvwxyz0123456789')
+    ba2 = bytearray(ba)
+    ba2[2] = ord('Z')
+    assert ba[2] == ord('c')
+    assert bytes(b) == b
+    assert hash(bytes(ba)) == hash(b'XYcdefghijklmnopqrstuvwxyz0123456789')
+
+
 def test_bin():
     s = b'\xab'
     assert len(s) == 1
@@ -768,6 +784,7 @@ def test_all():
     test_partition_empty_separator()
     test_startswith_range()
     test_bin()
+    test_copy_independent()
 
 
 if __name__ == "__main__":

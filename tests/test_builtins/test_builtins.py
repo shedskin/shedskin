@@ -364,6 +364,13 @@ def test_ord():
     assert ord('z') == 122
     assert ord('1') == 49
     assert ord('9') == 57
+    # constant arguments are folded at compile time
+    assert ord(' ') + ord(b'*') == 74
+    assert ord('\xe9') == 233
+    assert ord('\u20ac') == 0x20ac
+    assert ord(b'\xff') == 255
+    c = 'q'
+    assert ord(c) == ord('q')
 
 
 class Account:
