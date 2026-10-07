@@ -616,5 +616,13 @@ template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
     return c;
 }
 
+/* [t] * n: a single allocation, without the temporary one-element list */
+template<class T> list<T> *__mul_list_elt(T t, __ss_int n) {
+    list<T> *c = new list<T>();
+    if(n > 0)
+        c->units.assign((size_t)n, t);
+    return c;
+}
+
 #endif
 #endif
