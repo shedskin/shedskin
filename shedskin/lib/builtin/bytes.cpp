@@ -13,19 +13,18 @@ bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(__GC_STRING s, int frozen_) : unit(s), hash(-1), frozen(frozen_) {
+bytes::bytes(__GC_STRING s, int frozen_) : unit(std::move(s)), hash(-1), frozen(frozen_) {
     if(frozen)
         __class__ = cl_bytes;
     else
         __class__ = cl_bytearray;
 }
 
-bytes::bytes(bytes *b, int frozen_) : hash(-1), frozen(frozen_) {
+bytes::bytes(bytes *b, int frozen_) : unit(b->unit), hash(-1), frozen(frozen_) {
     if(frozen)
         __class__ = cl_bytes;
     else
         __class__ = cl_bytearray;
-    unit = b->unit;
 }
 
 bytes::bytes(const char *s, size_t size, int frozen_) : unit(s, size), hash(-1), frozen(frozen_) { /* '\0' delimiter in C */
@@ -267,7 +266,7 @@ bytes *__bytes() {
 }
 
 bytes *__bytes(bytes *b) {
-    return new bytes(b->unit);
+    return new bytes(b, 1);
 }
 
 bytes *__bytes(__ss_int t) {
@@ -290,10 +289,7 @@ bytes *__bytearray() {
 }
 
 bytes *__bytearray(bytes * b) {
-    bytes *c = __bytes(b);
-    c->frozen = 0;
-    c->__class__ = cl_bytearray;
-    return c;
+    return new bytes(b, 0);
 }
 
 bytes *__bytearray(__ss_int t) {

@@ -73,7 +73,7 @@ str::str(const char *s, size_t size) : unit(__from_utf8(s, size)), hash(-1), cha
     __class__ = cl_str_;
 }
 
-str::str(__GC_STR s) : unit(s), hash(-1), charcache(0) { /* code points, no conversion */
+str::str(__GC_STR s) : unit(std::move(s)), hash(-1), charcache(0) { /* code points, no conversion */
     __class__ = cl_str_;
 }
 

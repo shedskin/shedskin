@@ -3091,6 +3091,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ):
                 self.visit(node.args[0], func)
                 return
+            # ord('x') -> integer literal
+            if (
+                ident == "ord"
+                and direct_call.mv.module.builtin
+                and len(node.args) == 1
+                and not node.keywords
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, (str, bytes))
+                and len(node.args[0].value) == 1
+            ):
+                self.visit(ast.Constant(ord(node.args[0].value)), func)
+                return
             if ident in [
                 "abs",
                 "int",
