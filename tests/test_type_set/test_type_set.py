@@ -316,7 +316,27 @@ def test_set_literal_in_method():
     assert list(sorted(h.s)) == [1, 3]
 
 
+def test_set_churn():
+    # many inserts and removes (erased slots, rehashing)
+    s = set()
+    for i in range(2000):
+        s.add(i)
+    for i in range(0, 2000, 2):
+        s.remove(i)
+    assert len(s) == 1000 and 3 in s and 4 not in s
+    for i in range(0, 2000, 2):
+        s.add(i)
+    assert len(s) == 2000
+    s.difference_update(set(range(1000)))
+    assert min(s) == 1000 and len(s) == 1000
+    t = set(['a', 'b', 'c'])
+    t.discard('b')
+    t.add('d')
+    assert sorted(t) == ['a', 'c', 'd']
+
+
 def test_all():
+    test_set_churn()
     test_set1()
     test_set2()
     test_set3()

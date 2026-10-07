@@ -278,9 +278,12 @@ template<class T> void *list<T>::extend(list<T> *p) {
     size_t l1, l2;
     l2 = p->units.size();
     if(l2 > 0) {
-        l1 = this->units.size();
-        this->units.resize(l1+l2);
-        std::copy(p->units.begin(), p->units.begin()+l2, this->units.begin()+l1);
+        if(p == this) { /* inserting a range of the vector itself is not allowed */
+            l1 = this->units.size();
+            this->units.resize(l1+l2);
+            std::copy(p->units.begin(), p->units.begin()+l2, this->units.begin()+l1);
+        } else
+            this->units.insert(this->units.end(), p->units.begin(), p->units.end());
     }
     return NULL;
 }
@@ -329,10 +332,8 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
     list<T> *c = new list<T>();
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        if(u > l) {
-            c->units.resize((size_t)(u-l));
-            std::copy(this->units.begin()+l, this->units.begin()+u, c->units.begin());
-        }
+        if(u > l) /* not resize() and copy, which first zero-fills */
+            c->units.assign(this->units.begin()+l, this->units.begin()+u);
     } else if(s > 0) {
         if(u > l)
             c->units.reserve((size_t)((u-l+s-1)/s));
@@ -438,21 +439,9 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     size_t l2 = b->units.size();
 
     list<T> *c = new list<T>();
-    c->units.resize(l1+l2);
-
-    if(l1==0)
-        ;
-    else if(l1==1)
-        c->units[0] = this->units[0];
-    else
-        std::copy(this->units.begin(), this->units.end(), c->units.begin());
-
-    if(l2==0)
-        ;
-    else if(l2==1)
-        c->units[l1] = b->units[0];
-    else
-        std::copy(b->units.begin(), b->units.end(), c->units.begin()+l1);
+    c->units.reserve(l1+l2); /* not resize() and copy, which first zero-fills */
+    c->units.insert(c->units.end(), this->units.begin(), this->units.end());
+    c->units.insert(c->units.end(), b->units.begin(), b->units.end());
 
     return c;
 }

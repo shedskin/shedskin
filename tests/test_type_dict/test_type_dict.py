@@ -293,7 +293,34 @@ def test_keyerror_message():
         assert str(e) == '(3, 4)'
 
 
+def test_dict_churn():
+    # many inserts and deletes (erased slots, rehashing)
+    d = {}
+    for i in range(2000):
+        d[i] = i * 2
+    for i in range(0, 2000, 2):
+        del d[i]
+    assert len(d) == 1000
+    assert all(d[i] == i * 2 for i in range(1, 2000, 2))
+    assert 4 not in d
+    for i in range(0, 2000, 2):
+        d[i] = -i
+    assert len(d) == 2000 and d[4] == -4 and d[5] == 10
+    for i in range(2000):
+        d.pop(i)
+    assert d == {}
+    s = {}
+    for i in range(500):
+        s[str(i)] = [i]
+    for i in range(500):
+        if i % 3:
+            del s[str(i)]
+    assert sorted(s) == sorted(str(i) for i in range(0, 500, 3))
+    assert s['3'] == [3]
+
+
 def test_all():
+    test_dict_churn()
     test_dict()
     test_dict_get()
     test_dict_del()
