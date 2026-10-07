@@ -765,8 +765,6 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_NOASSERT")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
-    if gx.predict:
-        compile_options.append("-D__SS_PREDICT")
     if gx.boost:
         compile_options.append("-D__SS_BOOST")
     compile_opts = " ".join(compile_options)
