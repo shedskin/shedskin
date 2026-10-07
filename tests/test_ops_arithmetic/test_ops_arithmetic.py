@@ -121,11 +121,28 @@ def test_true_division():
         pass
 
 
+def test_float_power_zero():
+    z = 0.0
+    assert z ** float('-inf') == float('inf')
+    for b in [-1.0, -0.5]:
+        try:
+            z ** b
+            assert False
+        except ZeroDivisionError:
+            pass
+    try:
+        z ** -1
+        assert False
+    except ZeroDivisionError:
+        pass
+
+
 def test_all():
     test_addition()
     test_subtraction()
     test_misc()
     test_true_division()
+    test_float_power_zero()
 
 
 if __name__ == '__main__':
