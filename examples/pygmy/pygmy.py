@@ -88,12 +88,12 @@ class plane(renderobject):
     def intersect(self,l):
         vd = self.plane.dot(l.vec())
         if vd == 0:
-            return "none",(vec(0.0, 0.0, 0.0),vec(0.0, 0.0, 0.0))
+            return ("none", vec(0.0, 0.0, 0.0), vec(0.0, 0.0, 0.0))
         v0 = -(self.plane.dot(l.start)+self.dist)
         t = v0/vd
         if t<0 or t>1:
-            return "none",(vec(0.0, 0.0, 0.0),vec(0.0, 0.0, 0.0))
-        return "one", (l.start+(l.vec()*t), self.plane)
+            return ("none", vec(0.0, 0.0, 0.0), vec(0.0, 0.0, 0.0))
+        return ("one", l.start+(l.vec()*t), self.plane)
 
 
 class sphere(renderobject):
@@ -132,13 +132,13 @@ class sphere(renderobject):
             else:
                 intersectiontype="none"
 
-        return intersectiontype, (pos, norm)
+        return intersectiontype, pos, norm
 
 class light:
     def checkshadow(self, obj, objects,l):
         for ob in objects:
             if ob is not obj:
-                intersects,(pos, norm) = ob.intersect(l)
+                intersects, pos, norm = ob.intersect(l)
                 if intersects != "none":
                     return 1
         return 0
@@ -202,7 +202,7 @@ class shader:
             # todo - depth test
             for ob in objects:
                 if ob is not obj:
-                    intersects,(position,normal) = ob.intersect(reflected)
+                    intersects, position, normal = ob.intersect(reflected)
                     if intersects != "none":
                         newshaderinfo.thisobj = ob
                         newshaderinfo.position = position
@@ -218,7 +218,7 @@ class shader:
         # todo - depth test
         for ob in objects:
             if ob is not obj:
-                intersects,(position,normal) = ob.intersect(test)
+                intersects, position, normal = ob.intersect(test)
                 if intersects != "none":
                     return 1
         return 0
@@ -281,7 +281,7 @@ class world:
                 shaderinfo.depth = 2
 
                 for obj in self.objects:
-                    intersects,(position,normal) = obj.intersect(ray)
+                    intersects, position, normal = obj.intersect(ray)
                     if intersects != "none":
                         if position.z<depth and position.z>0:
                             depth = position.z
