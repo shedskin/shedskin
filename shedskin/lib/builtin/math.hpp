@@ -9,7 +9,8 @@
 
 #ifndef __SS_NOZERO
 template<class A, class B> static inline void __check_pow_zero(A a, B b) {
-    if(a == 0 && b < 0) __throw_zero_division("0.0 cannot be raised to a negative power");
+    if(a == 0 && b < 0 && !std::isinf(b)) /* like CPython, 0.0 ** -inf is inf */
+        __throw_zero_division("0.0 cannot be raised to a negative power");
 }
 #define __SS_POW_ZERO_CHECK(a, b) __check_pow_zero(a, b)
 #else
