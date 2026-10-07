@@ -386,11 +386,36 @@ template<class T> static inline __ss_int __wrap(T a, __ss_int i, const char *msg
 #include "builtin/compare.hpp"
 
 #ifdef __SS_BOOST
+#ifndef __SS_NOGC
+/* boost's flat (open addressing) maps and sets store elements in a slot array,
+ * and erasing a trivially destructible element leaves its bytes in place. as
+ * the slot array is scanned by the (conservative) GC, an erased pointer would
+ * keep its object alive until the slot is reused. so clear the slot when the
+ * element is destroyed. (examples/pycsg: the extension module __ss_proxy dict
+ * retained many dead objects this way, tripling GC time) */
+template <class T> class __ss_erasing_allocator : public __ss_allocator<T> {
+public:
+    typedef T value_type;
+    template <class U> struct rebind { typedef __ss_erasing_allocator<U> other; };
+    __ss_erasing_allocator() noexcept {}
+    template <class U> __ss_erasing_allocator(const __ss_erasing_allocator<U> &) noexcept {}
+    template <class U> void destroy(U *p) {
+        p->~U();
+        memset((void *)p, 0, sizeof(U));
+    }
+};
+template <class T, class U> inline bool operator==(const __ss_erasing_allocator<T> &, const __ss_erasing_allocator<U> &) { return true; }
+template <class T, class U> inline bool operator!=(const __ss_erasing_allocator<T> &, const __ss_erasing_allocator<U> &) { return false; }
+#define __SS_HASH_ALLOCATOR __ss_erasing_allocator
+#else
+#define __SS_HASH_ALLOCATOR __ss_allocator
+#endif
+
 template <class K, class V>
-using __GC_DICT = boost::unordered_flat_map<K, V, ss_hash<K>, ss_eq<K>, __ss_allocator< std::pair<const K, V> > >;
+using __GC_DICT = boost::unordered_flat_map<K, V, ss_hash<K>, ss_eq<K>, __SS_HASH_ALLOCATOR< std::pair<const K, V> > >;
 
 template <class T>
-using __GC_SET = boost::unordered_flat_set<T, ss_hash<T>, ss_eq<T>, __ss_allocator< T > >;
+using __GC_SET = boost::unordered_flat_set<T, ss_hash<T>, ss_eq<T>, __SS_HASH_ALLOCATOR< T > >;
 
 #else
 template <class K, class V>

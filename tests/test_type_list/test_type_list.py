@@ -324,7 +324,23 @@ def test_list_slice_assign_same_size():
     assert rows == [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
 
 
+def test_list_copy_paths():
+    a = [1, 2, 3]
+    a.extend(a)
+    assert a == [1, 2, 3, 1, 2, 3]
+    assert a + a == [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+    assert [] + a[:2] == [1, 2]
+    assert a[:0] + [] == []
+    assert a[1:4] == [2, 3, 1]
+    assert a[4:1] == []
+    b = ['x']
+    b.extend(['y', 'z'])
+    b += b[:1]
+    assert b == ['x', 'y', 'z', 'x']
+
+
 def test_all():
+    test_list_copy_paths()
     test_list_append()
     test_list_assign()
     test_list_cmp()
