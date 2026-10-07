@@ -148,9 +148,6 @@ class Shedskin:
             elif args.boost:
                 gx.boost = True
 
-            if args.predict:
-                gx.predict = True
-
             if args.noassert:
                 gx.assertions = False
 
@@ -342,7 +339,6 @@ class Shedskin:
         # boost containers are the default; --boost/--noboost are hidden switches
         grp("--boost", help=argparse.SUPPRESS, action="store_true")
         grp("--noboost", help=argparse.SUPPRESS, action="store_true")
-        grp("--predict", help="Try to predict list sizes", action="store_true")
 
         # Compiler options (debug, extmod, dirs, output, etc.)
         parsers["compiler"] = argparse.ArgumentParser(add_help=False)

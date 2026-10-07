@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Heterogenous 3-len tuples are now supported. This was actually easy to do, but it required the confidence of the upgraded type inference engine.. This means that
   for example, os.walk could now also be supported.
 
+- Removed the `--predict` option (per-site list size prediction).
+
 - A huge amount of bug fixes for edge cases, in part because of a new weekly defect run (see .claude).
 
 - Together, I think we are (finally) getting close to a 1.0 release!

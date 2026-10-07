@@ -48,7 +48,7 @@ static inline list<str *> *list_comp_0(list<str *> *names) {
 
     list<str *> *__ss_result = new list<str *>();
 
-    __SS_LIST_RESERVE(__ss_result, 4);
+    __ss_result->units.reserve(4);
     FOR_IN(x,names,52,54,55)
         if (__NOT(_ishidden(x))) {
             __ss_result->append(x);
@@ -67,7 +67,7 @@ static inline list<str *> *list_comp_1(str *dirname, list<str *> *names) {
 
     list<str *> *__ss_result = new list<str *>();
 
-    __SS_LIST_RESERVE(__ss_result, 4);
+    __ss_result->units.reserve(4);
     FOR_IN(x,names,63,65,66)
         if (__os__::__path__::isdir(__os__::__path__::join(2, dirname, x))) {
             __ss_result->append(x);
@@ -343,7 +343,7 @@ list<str *> *_glob0(str *dirname, str *basename, __ss_int dir_fd, __ss_bool diro
     else if (_isdir(dirname, dir_fd)) {
         return (new list<str *>(1,basename));
     }
-    return (__ss_list<str *, 0>());
+    return (__ss_list<str *>());
 }
 
 class __gen__glob2 : public __iter<str *> {
@@ -486,7 +486,7 @@ list<str *> *_listdir(str *dirname, __ss_int dir_fd, __ss_bool dironly) {
     if (_has_dir_fd(dir_fd)) {
 #ifdef WIN32
         _dir_fd_unsupported();
-        return (__ss_list<str *, 1>());
+        return (__ss_list<str *>());
 #else
         return _listdir_at(dirname, dir_fd, dironly);
 #endif
@@ -497,7 +497,7 @@ list<str *> *_listdir(str *dirname, __ss_int dir_fd, __ss_bool dironly) {
     try {
         names = __os__::listdir(dirname);
     } catch (OSError *) {
-        return (__ss_list<str *, 1>());
+        return (__ss_list<str *>());
     }
     if (dironly) {
         names = list_comp_1(dirname, names);

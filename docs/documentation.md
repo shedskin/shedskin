@@ -504,7 +504,7 @@ The shedskin translate command can be given the following options:
 ```
 usage: shedskin translate [-h] [--collect-stats] [--int32] [--int64]
                           [--float32] [--float64] [--noassert] [-b] [--nogc]
-                          [-w] [-z] [--predict] [-d DEBUG] [-e]
+                          [-w] [-z] [-d DEBUG] [-e]
                           [-I INCLUDE_DIRS] [-L LINK_DIRS] [-l LINK_LIBS]
                           [-X EXTRA_LIB] [-o OUTPUTDIR] [-s] [-t] [-x] [-c]
                           [-F FLAGS] [-S] [-m MAKEFILE] [-r] [-D]
@@ -526,7 +526,6 @@ options:
   --nogc                Disable garbage collection
   -w, --nowrap          Disable wrap-around checking
   -z, --nozero          Disable zero-division checking
-  --predict             Try to predict list sizes
   -d DEBUG, --debug DEBUG
                         Set debug level
   -e, --extmod          Generate extension module
@@ -587,10 +586,6 @@ Note that as of 0.9.13, integers default to 64-bit (`--int64`); use `--int32` to
 
 The generated code uses (bundled) boost containers by default. This can help a lot for programs that lean on dictionaries or sets, or that create many very short lists.
 
-Another option added in 0.9.13 is worth knowing about:
-
-* `--predict` tries to predict maximum list sizes before (re)allocating storage, by sampling at run time per allocation site. This can greatly improve performance when reallocation is the bottleneck.
-
 ### build
 
 The `build` command calls `shedskin translate` on a target via cmake, generates a suitable `CMakeLists.txt` file and then builds it, placing build artefacts in a `build` directory.
@@ -599,7 +594,7 @@ The `build` command calls `shedskin translate` on a target via cmake, generates 
 $ shedskin build --help
 usage: shedskin build [-h] [--collect-stats] [--int32] [--int64] [--float32]
                       [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
-                      [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+                      [-d DEBUG] [-e] [-I INCLUDE_DIRS]
                       [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
                       [-o OUTPUTDIR] [-s] [-t] [-x] [--generator G] [--jobs N]
                       [--build-type T] [--test] [--reset] [--spm]
@@ -622,7 +617,6 @@ options:
   --nogc                Disable garbage collection
   -w, --nowrap          Disable wrap-around checking
   -z, --nozero          Disable zero-division checking
-  --predict             Try to predict list sizes
   -d DEBUG, --debug DEBUG
                         Set debug level
   -e, --extmod          Generate extension module
@@ -661,7 +655,7 @@ The `run` command does everything the `build` command does and then runs the res
 $ shedskin run --help
 usage: shedskin run [-h] [--collect-stats] [--int32] [--int64] [--float32]
                     [--float64] [--noassert] [-b] [--nogc] [-w] [-z]
-                    [--predict] [-d DEBUG] [-e] [-I INCLUDE_DIRS]
+                    [-d DEBUG] [-e] [-I INCLUDE_DIRS]
                     [-L LINK_DIRS] [-l LINK_LIBS] [-X EXTRA_LIB]
                     [-o OUTPUTDIR] [-s] [-t] [-x] [--generator G] [--jobs N]
                     [--build-type T] [--test] [--reset] [--spm]
@@ -684,7 +678,6 @@ options:
   --nogc                Disable garbage collection
   -w, --nowrap          Disable wrap-around checking
   -z, --nozero          Disable zero-division checking
-  --predict             Try to predict list sizes
   -d DEBUG, --debug DEBUG
                         Set debug level
   -e, --extmod          Generate extension module
@@ -780,7 +773,6 @@ options:
 * Small memory allocations (e.g. creating a new tuple, list or class instance..) typically do not slow down Python programs by much. However, after compilation to C++, they can quickly become a bottleneck. This is because for each allocation, memory has to be requested from the system, the memory has to be garbage-collected, and many memory allocations are further likely to cause cache misses. The key to getting very good performance is often to reduce the number of small allocations, for example by rewriting a small list comprehension by a for loop or by avoiding intermediate tuples in some calculation.
 * But note that for the idiomatic `for a, b in enumerate(..)`, `for a, b in zip(..)` and `for a, b in somedict.items()`, the intermediate small objects are optimized away, and that 1-length strings are cached.
 * Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section [Command-line options](#command-line-options) for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
-* The `--predict` option exists specifically to speed up allocation-heavy code: it samples list sizes at run time to avoid repeated reallocation. It is worth trying before reaching for more invasive rewrites. (Boost containers, which help with dictionaries, sets and short lists, are used by default.)
 * Attribute access is faster in the generated code than indexing. For example, `v.x * v.y * v.z` is faster than `v[0] * v[1] * v[2]`.
 * Shed Skin takes the flags it sends to the C++ compiler from the `FLAGS*` files in the Shed Skin installation directory. These flags can be modified, or overruled by creating a local file named `FLAGS`.
 * When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding -ffast-math can sometimes greatly improve performance.

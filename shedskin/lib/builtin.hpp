@@ -671,10 +671,10 @@ template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see
         throw new ValueError(new str("not enough values to unpack"));
 #endif
 
-template<class T, int SiteId> list<T> *__ss_list() {
+template<class T> list<T> *__ss_list() {
     list<T> *l = new list<T>();
-#if defined(__SS_PREDICT) || !defined(__SS_BOOST)
-    __SS_LIST_RESERVE(l, 4);
+#ifndef __SS_BOOST
+    l->units.reserve(4);
 #endif
     return l;
 }

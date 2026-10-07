@@ -199,7 +199,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
-        self._ss_list_site_ids: dict[int, int] = {}
         self.str_format_node: Optional[ast_utils.StrFormat] = None
 
     def cpp_name(self, obj: Any) -> str:
@@ -1170,10 +1169,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if ts == "tuple<__ss_int> *" and isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 2:
             self.append("(__ss_tuple_int(")
         elif isinstance(node, ast.List) and not node.elts:
-            if id(node) not in self._ss_list_site_ids:
-                self._ss_list_site_ids[id(node)] = len(self._ss_list_site_ids)
-            site_id = self._ss_list_site_ids[id(node)]
-            self.append("(__ss_list<" + ts[5:-3] + ", " + str(site_id) + ">(")
+            self.append("(__ss_list<" + ts[5:-3] + ">(")
         else:
             self.append("(__SS_NEW " + ts[:-2] + "(")
         return argtypes
@@ -4298,7 +4294,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.output(f"__ss_result->resize({qual.iter.args[0].value});")
                 elif qual is node.generators[0]:
                     self.output(
-                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
+                        f"__ss_result->units.reserve({4 * len(node.generators)});"
                     )
 
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr, fuse_reduce)
@@ -4333,7 +4329,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.output("__ss_result->resize(len(" + itervar + "));")
                 else:
                     self.output(
-                        f"__SS_LIST_RESERVE(__ss_result, {4 * len(node.generators)});"
+                        f"__ss_result->units.reserve({4 * len(node.generators)});"
                     )
 
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)

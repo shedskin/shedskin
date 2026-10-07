@@ -259,7 +259,7 @@ defect worth reporting.
 
 Behaviour that differs only under a flag is a defect too. When a probe passes
 cleanly, it is cheap to re-run it under `--int32`, `--int64`, `--nogc`, `-b`,
-`--predict`, `--boost`, `-w` or `-z` and diff again.
+`--boost`, `-w` or `-z` and diff again.
 
 Mind what the disabling flags actually mean — they are all *off* switches, and
 reading them the other way produces confident false positives. `-b` is

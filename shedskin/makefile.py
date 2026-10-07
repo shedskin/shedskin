@@ -753,8 +753,6 @@ class ShedskinBuilder(Builder):
             self.add_cxxflags("-D__SS_NOGC")
         if self.gx.boost:
             self.add_cxxflags("-D__SS_BOOST")
-        if self.gx.predict:
-            self.add_cxxflags("-D__SS_PREDICT")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
@@ -1302,8 +1300,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
             self.add_cxxflags("-D__SS_NOGC")
         if self.gx.boost:
             self.add_cxxflags("-D__SS_BOOST")
-        if self.gx.predict:
-            self.add_cxxflags("-D__SS_PREDICT")
 
     def _add_user_options(self) -> None:
         """Add user-specified commandline options"""
