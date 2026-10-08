@@ -2339,7 +2339,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Visit a binary operation"""
         if isinstance(node.op, ast.Add):
             str_nodes = self.rec_string_addition(node)
-            if len(str_nodes) > 2:
+            list_parts = self.list_concat_parts(node)
+            if list_parts:
+                self.append("__add_lists(")
+                self.visit_list_parts(list_parts, func)
+                self.append(")")
+            elif len(str_nodes) > 2:
                 self.append("__add_strs(%d, " % len(str_nodes))
                 for i, str_node in enumerate(str_nodes):
                     self.visit(str_node, func)
@@ -2428,6 +2433,98 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 node,
                 mv=self.mv,
             )
+
+    def list_concat_parts(
+        self, node: ast.AST, single: bool = False
+    ) -> Optional[list[ast.AST]]:
+        """Split 'a[i:j] + b + c[k:]' into its parts, if these are all
+        (step-less slices of) lists of the same type, without side-effects.
+        __add_lists/__setslice_lists can then concatenate them without
+        temporary lists. With 'single', a lone slice also qualifies."""
+        parts = self.rec_list_addition(node)
+        if len(parts) < 2 and not (single and isinstance(node, ast.Subscript)):
+            return None
+        ts = self.list_typestr(node)
+        if ts is None:
+            return None
+        for part in parts:
+            if self.list_typestr(part) != ts:
+                return None
+            if isinstance(part, ast.Subscript):
+                if not (
+                    isinstance(part.slice, ast.Slice)
+                    and part.slice.step is None
+                    and self.is_pure_expr(part.value)
+                    and self.is_pure_expr(part.slice.lower)
+                    and self.is_pure_expr(part.slice.upper)
+                ):
+                    return None
+            elif not self.is_pure_expr(part):
+                return None
+        return parts
+
+    def rec_list_addition(self, node: ast.AST) -> list[ast.AST]:
+        """Flatten an addition chain into its operands"""
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            return self.rec_list_addition(node.left) + self.rec_list_addition(
+                node.right
+            )
+        return [node]
+
+    def list_typestr(self, node: ast.AST) -> Optional[str]:
+        """C++ type of a node, if it can only be a list"""
+        types = self.mergeinh[node]
+        if not types or any(t[0].ident != "list" for t in types):
+            return None
+        return typestr.typestr(self.gx, types, mv=self.mv)
+
+    def is_pure_expr(self, node: Optional[ast.AST]) -> bool:
+        """Whether evaluating a node cannot have side-effects (such as
+        changing a list that is being sliced)"""
+        if node is None or isinstance(node, (ast.Constant, ast.Name)):
+            return True
+        if isinstance(node, ast.Attribute):
+            for t in self.mergeinh[node.value]:
+                if isinstance(t[0], python.Class) and any(
+                    node.attr in cl.properties for cl in t[0].ancestors(True)
+                ):
+                    return False
+            return self.is_pure_expr(node.value)
+        inttype = {(python.def_class(self.gx, "int_"), 0)}
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+            return self.mergeinh[node] == inttype and self.is_pure_expr(node.operand)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult)):
+            return (
+                self.mergeinh[node] == inttype
+                and self.is_pure_expr(node.left)
+                and self.is_pure_expr(node.right)
+            )
+        return False
+
+    def visit_list_parts(
+        self, parts: list[ast.AST], func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate the parts for __add_lists/__setslice_lists"""
+        for i, part in enumerate(parts):
+            if i:
+                self.append(", ")
+            if isinstance(part, ast.Subscript):
+                fakefunc = infer.inode(self.gx, part.value).fakefunc
+                assert fakefunc and isinstance(fakefunc.func, ast.Attribute)
+                self.visitm(
+                    "__lpart(",
+                    fakefunc.func.value,
+                    ", ",
+                    fakefunc.args[0],
+                    ", ",
+                    fakefunc.args[1],
+                    ", ",
+                    fakefunc.args[2],
+                    ")",
+                    func,
+                )
+            else:
+                self.visitm("__lpart(", part, ")", func)
 
     def rec_string_addition(self, node: ast.AST) -> list[ast.AST]:
         """Recursively find string addition nodes"""
@@ -3938,6 +4035,37 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
                     assert fakefunc
                     assert isinstance(fakefunc.func, ast.Attribute)
+
+                    # a[i:j] = b[k:] + c[:k]: no temporary lists
+                    assert isinstance(lvalue.slice, ast.Slice)
+                    list_parts = self.list_concat_parts(fakefunc.args[4], single=True)
+                    if (
+                        list_parts
+                        and fakefunc.args[4] not in self.mv.tempcount
+                        and lvalue.slice.step is None
+                        and self.list_typestr(lvalue.value)
+                        == self.list_typestr(fakefunc.args[4])
+                        and self.is_pure_expr(lvalue.value)
+                        and self.is_pure_expr(lvalue.slice.lower)
+                        and self.is_pure_expr(lvalue.slice.upper)
+                    ):
+                        self.visitm(
+                            "__setslice_lists(",
+                            fakefunc.func.value,
+                            ", ",
+                            fakefunc.args[0],
+                            ", ",
+                            fakefunc.args[1],
+                            ", ",
+                            fakefunc.args[2],
+                            ", ",
+                            func,
+                        )
+                        self.visit_list_parts(list_parts, func)
+                        self.append(")")
+                        self.eol()
+                        continue
+
                     self.visitm(
                         "(",
                         fakefunc.func.value,

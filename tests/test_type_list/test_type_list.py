@@ -386,6 +386,111 @@ def test_list_mul_elt():
     assert _mul_x == 2
 
 
+class Deck:
+    def __init__(self):
+        self.cards = list(range(1, 11))
+
+    def cut(self, n):
+        self.cards[:-1] = self.cards[n:-1] + self.cards[:n]
+
+
+class Counted:
+    def __init__(self):
+        self.calls = 0
+        self._items = [1, 2, 3]
+
+    @property
+    def items(self):
+        self.calls += 1
+        self._items.append(self.calls)
+        return self._items
+
+
+def bump(l):
+    l.append(99)
+    return 1
+
+
+def test_list_concat_parts():
+    # concatenation of 2 or more (slices of) lists
+    a = [1, 2, 3, 4, 5]
+    b = [6, 7]
+    c = [8, 9, 10]
+    assert a[:2] + b == [1, 2, 6, 7]
+    assert a + b + c == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert a[3:] + b[:1] + c[1:] + a[:1] == [4, 5, 6, 9, 10, 1]
+    assert a[-2:] + a[:-3] + a[1:-1] == [4, 5, 1, 2, 2, 3, 4]
+    assert a[10:] + a[-10:2] + a[4:2] + b == [1, 2, 6, 7]
+    i, j = 1, 3
+    assert a[i:j+1] + a[j*1:] + a[-i:] + a[:-j] == [2, 3, 4, 4, 5, 5, 1, 2]
+    x = a[i:] + a[:i]
+    x.append(0)
+    assert x == [2, 3, 4, 5, 1, 0]
+    assert a == [1, 2, 3, 4, 5]
+
+    # slice assignment, also from the target itself
+    d = list(range(10))
+    d[:] = d[7:] + d[3:7] + d[:3]  # same size
+    assert d == [7, 8, 9, 3, 4, 5, 6, 0, 1, 2]
+    d[1:] = d[-1:] + d[1:-1]
+    assert d == [7, 2, 8, 9, 3, 4, 5, 6, 0, 1]
+    d[:-1] = d[4:-1] + d[:4]
+    assert d == [3, 4, 5, 6, 0, 7, 2, 8, 9, 1]
+    d[2:4] = d + a[:1]  # grow
+    assert d == [3, 4, 3, 4, 5, 6, 0, 7, 2, 8, 9, 1, 1, 0, 7, 2, 8, 9, 1]
+    d[1:-1] = d[:2] + d[-2:]  # shrink
+    assert d == [3, 3, 4, 9, 1, 1]
+    d[3:3] = d[:1] + b  # insert
+    assert d == [3, 3, 4, 3, 6, 7, 9, 1, 1]
+    d[5:2] = b[1:] + b[:1]  # empty target slice: insert
+    assert d == [3, 3, 4, 3, 6, 7, 6, 7, 9, 1, 1]
+    d[-100:100] = c[1:] + c[:1]
+    assert d == [9, 10, 8]
+    d[:] = a[2:4]  # single slice
+    assert d == [3, 4]
+    d[1:] = d[:0] + d[5:]  # delete
+    assert d == [3]
+
+    # pointers, floats
+    s = ['a', 'b', 'c', 'd']
+    s[:] = s[2:] + s[:2]
+    assert s == ['c', 'd', 'a', 'b']
+    assert s[:1] + s[3:] + s[1:3] == ['c', 'b', 'd', 'a']
+    f = [1.5, 2.5, 3.5]
+    f[1:] = f[2:] + f[:1] + f[1:2]
+    assert f == [1.5, 3.5, 1.5, 2.5]
+
+    # larger than the stack buffer
+    big = list(range(2000))
+    big[:] = big[1000:] + big[:1000]
+    assert big[0] == 1000 and big[999] == 1999 and big[1000] == 0 and len(big) == 2000
+    big[1:] = big[1500:] + big[:1]
+    assert len(big) == 502 and big[:3] == [1000, 500, 501] and big[-1] == 1000
+
+    # attributes
+    deck = Deck()
+    deck.cut(3)
+    assert deck.cards == [4, 5, 6, 7, 8, 9, 1, 2, 3, 10]
+    deck.cards[:] = deck.cards[5:] + deck.cards[:5]
+    assert deck.cards == [9, 1, 2, 3, 10, 4, 5, 6, 7, 8]
+
+    # side-effects: evaluated in order
+    cnt = Counted()
+    assert cnt.items[:2] + cnt.items[3:] == [1, 2, 1, 2]
+    assert cnt.calls == 2
+    e = [1, 2, 3]
+    assert e[:] + e[bump(e):] == [1, 2, 3, 2, 3, 99]
+    e = [1, 2, 3]
+    e[bump(e):] = b[1:] + c[:1]  # (C++ argument order is unspecified)
+    assert e == [1, 7, 8]
+
+    # multiple targets
+    g = [1, 2, 3]
+    h = [0, 0]
+    g[:1] = h[:] = g[1:] + g[:1]
+    assert g == [2, 3, 1, 2, 3] and h == [2, 3, 1]
+
+
 def test_all():
     test_list_copy_paths()
     test_list_append()
@@ -411,6 +516,7 @@ def test_all():
     test_list_index_error_message()
     test_list_slice_assign_same_size()
     test_list_mul_elt()
+    test_list_concat_parts()
 
 
 if __name__ == "__main__":
