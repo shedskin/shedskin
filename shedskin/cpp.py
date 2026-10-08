@@ -52,7 +52,7 @@ from typing import (
 )
 from collections.abc import Iterator
 
-from . import ast_utils, error, extmod, infer, python, typestr, virtual
+from . import ast_utils, error, extmod, infer, loopidiom, python, typestr, virtual
 
 if TYPE_CHECKING:
     from . import config
@@ -200,6 +200,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
         self.str_format_node: Optional[ast_utils.StrFormat] = None
+        self.append_reserve: dict[ast.Expr, tuple[ast.expr, str]] = {}
+        # --- string-builder loops (see loopidiom)
+        self.sb_loops: dict["python.Function", loopidiom.Accumulators] = {}
+        self.sb_active: dict[ast.AugAssign, str] = {}
+        self.sb_count = 0
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -756,6 +761,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Expr, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an expression node"""
+        if node in self.append_reserve:
+            lst, args = self.append_reserve[node]
+            self.start("__append_reserve(")
+            self.visitm(lst, ", " + args + ")", func)
+            self.eol()
         if not ast_utils.is_str(node.value):
             self.start("")
             self.visit(node.value, func)
@@ -881,6 +891,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.While, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a while node"""
+        opened = self.sb_begin(node, func)
+        self.impl_visit_while(node, func)
+        self.sb_end(opened, func)
+
+    def impl_visit_while(
+        self, node: ast.While, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a while loop"""
         self.print()
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
@@ -1420,7 +1438,39 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.visitm(self.mv.tempcount[arg], " = ", arg, func)
                     self.eol()
         self.fastfor(qual, iter, func)
+        if isinstance(node, ast.For):
+            self.find_append_idioms(node)
         self.forbody(node, quals, iter, func, False, genexpr, fuse_reduce)
+
+    def find_append_idioms(self, node: ast.For) -> None:
+        """for i in range(..): .. l.append(x) ..: when l has to grow, make
+        room for the remaining iterations at once (see loopidiom.py)"""
+        assert isinstance(node.iter, ast.Call)
+        args = node.iter.args
+        if len(args) < 3:
+            step = "1"
+        else:
+            step_node = args[2]
+            sign = ""
+            if isinstance(step_node, ast.UnaryOp) and isinstance(step_node.op, ast.USub):
+                step_node, sign = step_node.operand, "-"
+            if not (
+                isinstance(step_node, ast.Constant)
+                and type(step_node.value) is int
+                and step_node.value != 0
+            ):
+                return
+            step = sign + str(step_node.value)
+        ivar, evar = self.mv.tempcount[node.target], self.mv.tempcount[node.iter]
+        self.add_append_idioms(node, "%s, %s, %s" % (ivar, evar, step))
+
+    def add_append_idioms(self, node: ast.For, loopargs: str) -> None:
+        """Register appends for __append_reserve, given the arguments that
+        tell how many iterations are left (range bounds, or a sequence and
+        the number of iterations done)"""
+        for stmt, lst, count in loopidiom.append_idioms(node):
+            if self.list_typestr(lst) is not None and self.is_pure_expr(lst):
+                self.append_reserve[stmt] = (lst, "%s, %d" % (loopargs, count))
 
     # XXX generalize?
     def impl_visit_temp(self, node: ast.AST, func: Optional["python.Function"]) -> None:
@@ -1538,10 +1588,64 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             t for t in self.mergeinh[node] if self.effective_class(t) not in classes
         ]
 
+    def sb_begin(
+        self, node: ast.stmt, func: Optional["python.Function"]
+    ) -> list[tuple[str, loopidiom.Accumulator]]:
+        """Open a string-builder loop, if this loop qualifies (see loopidiom)
+
+        Emits a buffer per accumulator, seeded with its current value, and
+        routes the loop's '+=' statements into it. Each buffer is a fresh str
+        that nothing else can reach until sb_end publishes it, so appending
+        into it in place is not observable.
+        """
+        # despite the annotation, the visitor's 'func' is whatever parent the
+        # caller had: class_cpp passes a class for code in a class body, where
+        # a loop is not inside a function at all and has no accumulator to find
+        if not isinstance(func, python.Function):
+            return []
+        if func not in self.sb_loops:
+            self.sb_loops[func] = loopidiom.loop_accumulators(
+                func, self.gx, self.mergeinh
+            )
+
+        opened = []
+        for acc in self.sb_loops[func].get(node, []):
+            name = "__ss_sb%d" % self.sb_count
+            self.sb_count += 1
+            var = self.cpp_name(acc.name)
+            # seeded by copy, so any pre-loop alias of the accumulator keeps
+            # pointing at the original, unmodified string
+            self.output(
+                "str *%s = %s?(new str(%s->unit)):(new str());" % (name, var, var)
+            )
+            for aug in acc.augassigns:
+                self.sb_active[aug] = name
+            opened.append((name, acc))
+        return opened
+
+    def sb_end(
+        self,
+        opened: list[tuple[str, loopidiom.Accumulator]],
+        func: Optional["python.Function"],
+    ) -> None:
+        """Publish the string-builder results and stop routing their '+='"""
+        for name, acc in opened:
+            for aug in acc.augassigns:
+                del self.sb_active[aug]
+            self.output("%s = %s;" % (self.cpp_name(acc.name), name))
+
     def visit_For(
         self, node: ast.For, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a for loop node"""
+        opened = self.sb_begin(node, func)
+        self.impl_visit_for(node, func)
+        self.sb_end(opened, func)
+
+    def impl_visit_for(
+        self, node: ast.For, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a for loop"""
         if isinstance(node.target, ast.Name):
             assname = node.target.id
         elif ast_utils.is_assign_attribute(node.target):
@@ -1560,6 +1664,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.do_fastfor(node, node, None, assname, func, False, False)
         elif self.fastenumerate(node, func):
             self.do_fastenumerate(node, func, False)
+            self.add_append_idioms(
+                node, "%s, %s" % (self.mv.tempcount[(node, 2)], self.mv.tempcount[node.iter])
+            )
             self.forbody(node, None, assname, func, True, False, False)
         elif self.fastzip2(node, func):
             self.do_fastzip2(node, func, False)
@@ -1578,6 +1685,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start("FOR_IN{}({},".format(pref, assname))
             self.visit(node.iter, func)
             self.print(self.line + "," + tail + ")")
+            if self.only_classes(
+                node.iter,
+                ("list", "tuple", "str_", "bytes_", "set", "frozenset", "dict"),
+            ):
+                self.add_append_idioms(
+                    node, "%s, %s" % (self.mv.tempcount[node], self.mv.tempcount[node.iter])
+                )
             self.forbody(node, None, assname, func, False, False, False)
         self.print()
 
@@ -2301,6 +2415,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AugAssign, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an augmented assignment"""
+        # inside a string-builder loop, append into the buffer instead of
+        # reallocating and copying the whole accumulator (see loopidiom)
+        if node in self.sb_active:
+            self.start(self.sb_active[node] + "->unit.append((")
+            self.visitm(node.value, ")->unit)", func)
+            self.eol()
+            return
+
         if isinstance(node.target, ast.Subscript):
             self.start()
             if {
@@ -2477,6 +2599,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if not types or any(t[0].ident != "list" for t in types):
             return None
         return typestr.typestr(self.gx, types, mv=self.mv)
+
+    def is_fresh_list(self, node: ast.AST) -> bool:
+        """Whether a node always evaluates to a newly created list"""
+        if self.list_typestr(node) is None:
+            return False
+        if isinstance(node, (ast.List, ast.ListComp)):
+            return True
+        if isinstance(node, ast.Subscript):
+            return isinstance(node.slice, ast.Slice)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mult)):
+            return True
+        return False
 
     def is_pure_expr(self, node: Optional[ast.AST]) -> bool:
         """Whether evaluating a node cannot have side-effects (such as
@@ -3196,6 +3330,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if arg is not node.args[0].args[-1]:
                         self.append(",")
                 self.append(")")
+                return
+
+            # list(a[i:j]), list(a + b), ..: no need to copy a fresh list
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id == "list"
+                and len(node.args) == 1
+                and not node.keywords
+                and self.is_fresh_list(node.args[0])
+                and self.list_typestr(node.args[0]) == self.list_typestr(node)
+            ):
+                self.visit(node.args[0], func)
                 return
 
             ts = self.namer.nokeywords(
