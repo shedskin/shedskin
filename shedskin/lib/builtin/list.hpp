@@ -2,7 +2,8 @@
 
 #ifdef SS_DECL
 
-template <class T> class list : public pyseq<T> {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+template <class T> class list final : public pyseq<T> {
 public:
     __GC_VECTOR(T) units;
 

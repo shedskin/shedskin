@@ -16,7 +16,8 @@ public:
     T __next__();
 };
 
-template<class T> class set : public pyiter<T> {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+template<class T> class set final : public pyiter<T> {
 public:
     int frozen;
     __ss_int hash;
