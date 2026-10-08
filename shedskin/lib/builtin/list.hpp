@@ -672,16 +672,18 @@ template<class T> void __replace_slice(list<T> *d, __ss_int l, __ss_int u, T *b,
 /* 'for .. in ..: .. a.append(x) ..', with k such appends per iteration (see
    loopidiom.py): when the list has to grow, make room for the remaining
    iterations at once. this only changes capacity, but in case the loop is
-   left early (by an exception), don't reserve too much */
+   left early (by an exception), don't reserve too much. always grow at least
+   geometrically though: reserve() gives the exact capacity asked for, so for
+   an inner loop that appends to a list shared by all iterations of an outer
+   loop, growing by just the remaining inner iterations would copy the whole
+   list again for each outer iteration (quadratic) */
 
 constexpr size_t __APPEND_RESERVE_MAX = 1 << 16;
 
 template<class T> inline void __append_reserve_left(list<T> *a, size_t n, size_t k) {
     size_t size = a->units.size();
-    if(n <= __APPEND_RESERVE_MAX / k)
-        a->units.reserve(size + n * k);
-    else if(size < __APPEND_RESERVE_MAX)
-        a->units.reserve(size + __APPEND_RESERVE_MAX);
+    size_t extra = (n <= __APPEND_RESERVE_MAX / k) ? n * k : __APPEND_RESERVE_MAX;
+    a->units.reserve(std::max(size + extra, 2 * a->units.capacity()));
 }
 
 /* for i in range(l, u, s): i is the current value */

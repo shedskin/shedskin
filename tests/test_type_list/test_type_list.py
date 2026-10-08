@@ -554,6 +554,14 @@ def test_list_append_reserve():
     for i in range(100000):
         big.append(i)
     assert len(big) == 100000 and big[-1] == 99999
+    # inner loop appending to a list shared by the outer loop: must still
+    # grow geometrically (minpng regression)
+    img = []
+    for y in range(300):
+        for x in range(200):
+            img.append(x + y)
+    assert len(img) == 60000 and img[0] == 0 and img[-1] == 498
+    assert sum(img) == 60000 * 249
     s = []
     for i in range(3):
         s.append(str(i))
