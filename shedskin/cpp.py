@@ -2363,6 +2363,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 func,
             )
         elif isinstance(node.op, ast.Mult):
+            if self.mul_list_elt(node, func):
+                return
             self.impl_visit_binary(
                 node.left,
                 node.right,
@@ -2489,6 +2491,49 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm("__power(", left, ", ", right, ")", func)
 
     # XXX cleanup please
+    def mul_list_elt(
+        self, node: ast.BinOp, func: Optional["python.Function"] = None
+    ) -> bool:
+        """Generate '[x] * n' as a single allocation"""
+        left, right = node.left, node.right
+        if not (
+            isinstance(left, ast.List)
+            and len(left.elts) == 1
+            and not isinstance(left.elts[0], ast.Starred)
+            and self.mergeinh[right] == {(python.def_class(self.gx, "int_"), 0)}
+        ):
+            return False
+
+        # python evaluates x before n, but C++ function arguments are unordered
+        def pure(e: ast.AST) -> bool:
+            if isinstance(e, ast.UnaryOp):
+                return isinstance(e.operand, ast.Constant)
+            if isinstance(e, (ast.List, ast.Tuple)):
+                return all(pure(elt) for elt in e.elts)
+            return isinstance(e, (ast.Constant, ast.Name))
+
+        elem = left.elts[0]
+        if not pure(elem):
+            return False
+        if any(isinstance(e, ast.Name) for e in ast.walk(elem)) and not pure(right):
+            return False
+
+        if isinstance(func, python.Class):  # XXX
+            func = None
+        argtypes = self.gx.merged_inh[left]
+        ts = typestr.typestr(self.gx, argtypes, mv=self.mv)
+        if not ts.startswith("list<") or ts != typestr.nodetypestr(
+            self.gx, node, func, mv=self.mv
+        ):
+            return False
+
+        self.append("__mul_list_elt<" + ts[5:-3] + ">(")
+        self.impl_visit_conv(elem, self.subtypes(argtypes, "unit"), func)
+        self.append(", ")
+        self.visit(right, func)
+        self.append(")")
+        return True
+
     def impl_visit_binary(
         self,
         left: ast.AST,

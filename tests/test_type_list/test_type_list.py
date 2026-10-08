@@ -339,6 +339,53 @@ def test_list_copy_paths():
     assert b == ['x', 'y', 'z', 'x']
 
 
+class Elt:
+    pass
+
+
+class SubElt(Elt):
+    pass
+
+
+_mul_x = 1
+
+
+def _mul_count():
+    global _mul_x
+    _mul_x = 2
+    return 3
+
+
+def test_list_mul_elt():
+    total = 5
+    counts = [0] * total
+    assert counts == [0, 0, 0, 0, 0]
+    counts[2] += 1
+    assert counts == [0, 0, 1, 0, 0]
+    assert [7] * 0 == []
+    assert [7] * -2 == []
+    assert [-1] * 2 == [-1, -1]
+    assert ['ab'] * 3 == ['ab', 'ab', 'ab']
+    assert [None] * 2 == [None, None]
+    floats = [0] * 3  # int literal converted to float elements
+    floats[1] = 1.5
+    assert floats == [0.0, 1.5, 0.0]
+    x = 4
+    assert [x] * total == [4, 4, 4, 4, 4]
+    rows = [[]] * 3  # the same inner list, three times
+    rows[0].append(1)
+    assert rows == [[1], [1], [1]]
+    grid = [[0] * 3] * 2
+    assert grid == [[0, 0, 0], [0, 0, 0]]
+    e = Elt()
+    elts = [e] * 2
+    elts.append(SubElt())
+    assert elts[0] is e and elts[1] is e and len(elts) == 3
+    # the element is evaluated before the count
+    assert [_mul_x] * _mul_count() == [1, 1, 1]
+    assert _mul_x == 2
+
+
 def test_all():
     test_list_copy_paths()
     test_list_append()
@@ -363,6 +410,7 @@ def test_all():
     test_list_iadd()
     test_list_index_error_message()
     test_list_slice_assign_same_size()
+    test_list_mul_elt()
 
 
 if __name__ == "__main__":
