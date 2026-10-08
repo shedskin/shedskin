@@ -7,13 +7,15 @@ template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)
 template<> inline __ss_bool __eq(__ss_int a, __ss_int b) { return __mbool(a == b); }
 #endif
 template<> __SS_ALWAYS_INLINE __ss_bool __eq(str *a, str *b) { /* forced: not inlined with -flto */
+    if(a == b) /* identity, e.g. the same constant, or both None */
+        return True;
     if(a&&b) {
-        if (a->charcache && b->charcache) 
-            return __mbool(a==b);
+        if (a->charcache && b->charcache)
+            return False;
         else
             return __mbool(a->__eq__(b));
     } else
-        return __mbool(a==b);
+        return False;
 }
 template<> inline __ss_bool __eq(int a, int b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a == b); }

@@ -1024,6 +1024,36 @@ def test_mod_format():
     assert b'%i %i\n%i\n' % (20, 30, 255) == b'20 30\n255\n'
 
 
+def _eq_kind(x):
+    if x > 0:
+        return "two"
+    elif x == 0:
+        return "one"
+    return "none"
+
+
+def test_eq_identity():
+    # identity fast path in str ==/!=, and the paths around it
+    s = _eq_kind(-1)
+    assert s == "none"
+    assert not (s != "none")
+    assert s == s and not (s != s)
+    t = _eq_kind(1)
+    assert t != "none" and not (t == "none")
+    u = ''.join(['no', 'ne'])  # equal content, distinct object
+    assert u == s and not (u != s)
+    assert 'a' == 'a' and 'a' != 'b'
+    assert ''.join(['a']) == 'a'
+    n = None
+    if len(s) > 10:
+        n = s
+    assert n is None and not (n == s) and n != s and not (s == n)
+    m = None
+    if len(s) > 10:
+        m = s
+    assert n == m and not (n != m)
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -1102,6 +1132,7 @@ def test_all():
     test_case_ascii_mixed()
     test_char_index()
     test_mod_format()
+    test_eq_identity()
 
 
 if __name__ == "__main__":
