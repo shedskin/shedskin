@@ -481,8 +481,8 @@ def test_list_concat_parts():
     e = [1, 2, 3]
     assert e[:] + e[bump(e):] == [1, 2, 3, 2, 3, 99]
     e = [1, 2, 3]
-    e[bump(e):] = e[:1] + e[3:]
-    assert e == [1, 1]
+    e[bump(e):] = b[1:] + c[:1]  # (C++ argument order is unspecified)
+    assert e == [1, 7, 8]
 
     # multiple targets
     g = [1, 2, 3]
