@@ -726,6 +726,8 @@ __ss_int str::__cmp__(pyobj *p) {
 
 __ss_bool str::__eq__(pyobj *p) {
     str *q = (str *)p;
+    if(this == q)
+        return True;
     size_t len = this->unit.size();
     if(len != q->unit.size() or (hash != -1 and q->hash != -1 and hash != q->hash))
         return False;
