@@ -1,5 +1,5 @@
 """Loops that only append to a local str are rewritten to build into a single
-buffer (see shedskin/strbuild.py). These check that the rewrite preserves
+buffer (see shedskin/loopidiom.py). These check that the rewrite preserves
 semantics, and -- just as importantly -- that it stays off in the cases where
 it would not."""
 

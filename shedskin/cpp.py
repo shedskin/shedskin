@@ -52,7 +52,7 @@ from typing import (
 )
 from collections.abc import Iterator
 
-from . import ast_utils, error, extmod, infer, loopidiom, python, strbuild, typestr, virtual
+from . import ast_utils, error, extmod, infer, loopidiom, python, typestr, virtual
 
 if TYPE_CHECKING:
     from . import config
@@ -201,8 +201,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.done: set[ast.AST]
         self.str_format_node: Optional[ast_utils.StrFormat] = None
         self.append_reserve: dict[ast.Expr, tuple[ast.expr, str]] = {}
-        # --- string-builder loops (see strbuild)
-        self.sb_loops: dict["python.Function", strbuild.Accumulators] = {}
+        # --- string-builder loops (see loopidiom)
+        self.sb_loops: dict["python.Function", loopidiom.Accumulators] = {}
         self.sb_active: dict[ast.AugAssign, str] = {}
         self.sb_count = 0
 
@@ -1590,8 +1590,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def sb_begin(
         self, node: ast.stmt, func: Optional["python.Function"]
-    ) -> list[tuple[str, strbuild.Accumulator]]:
-        """Open a string-builder loop, if this loop qualifies (see strbuild)
+    ) -> list[tuple[str, loopidiom.Accumulator]]:
+        """Open a string-builder loop, if this loop qualifies (see loopidiom)
 
         Emits a buffer per accumulator, seeded with its current value, and
         routes the loop's '+=' statements into it. Each buffer is a fresh str
@@ -1604,7 +1604,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if not isinstance(func, python.Function):
             return []
         if func not in self.sb_loops:
-            self.sb_loops[func] = strbuild.loop_accumulators(
+            self.sb_loops[func] = loopidiom.loop_accumulators(
                 func, self.gx, self.mergeinh
             )
 
@@ -1625,7 +1625,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def sb_end(
         self,
-        opened: list[tuple[str, strbuild.Accumulator]],
+        opened: list[tuple[str, loopidiom.Accumulator]],
         func: Optional["python.Function"],
     ) -> None:
         """Publish the string-builder results and stop routing their '+='"""
@@ -2416,7 +2416,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit an augmented assignment"""
         # inside a string-builder loop, append into the buffer instead of
-        # reallocating and copying the whole accumulator (see strbuild)
+        # reallocating and copying the whole accumulator (see loopidiom)
         if node in self.sb_active:
             self.start(self.sb_active[node] + "->unit.append((")
             self.visitm(node.value, ")->unit)", func)

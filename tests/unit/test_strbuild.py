@@ -1,13 +1,13 @@
 # SHED SKIN Python-to-C++ Compiler
 # Copyright 2005-2026 Mark Dufour and contributors; GNU GPL version 3 (See LICENSE)
-"""Unit tests for shedskin.strbuild module."""
+"""Unit tests for the string builder idiom in shedskin.loopidiom."""
 
 import argparse
 import ast
 
 import pytest
 
-from shedskin import graph, python, strbuild
+from shedskin import graph, loopidiom, python
 from shedskin.config import GlobalInfo
 
 
@@ -49,7 +49,7 @@ def analyze(gx, source, str_vars=("out", "a", "b", "total"), is_generator=False)
         if isinstance(node, ast.AugAssign):
             mergeinh[node.value] = {(str_class, 0)}
 
-    return strbuild.loop_accumulators(func, gx, mergeinh)
+    return loopidiom.loop_accumulators(func, gx, mergeinh)
 
 
 def accumulated_names(result):
