@@ -491,6 +491,22 @@ def test_list_concat_parts():
     assert g == [2, 3, 1, 2, 3] and h == [2, 3, 1]
 
 
+def test_list_fresh_copy():
+    # list(..) of a fresh list need not copy it
+    a = [1, 2, 3]
+    b = list(a[1:])
+    b.append(4)
+    c = list(a + b)
+    c[0] = 9
+    d = list([x * 2 for x in a])
+    e = list(a * 2)
+    f = list([7, 8])
+    g = list(a[:])
+    assert a == [1, 2, 3] and b == [2, 3, 4] and c == [9, 2, 3, 2, 3, 4]
+    assert d == [2, 4, 6] and e == [1, 2, 3, 1, 2, 3] and f == [7, 8]
+    assert g == a and g is not a
+
+
 def test_all():
     test_list_copy_paths()
     test_list_append()
@@ -517,6 +533,7 @@ def test_all():
     test_list_slice_assign_same_size()
     test_list_mul_elt()
     test_list_concat_parts()
+    test_list_fresh_copy()
 
 
 if __name__ == "__main__":

@@ -2478,6 +2478,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return None
         return typestr.typestr(self.gx, types, mv=self.mv)
 
+    def is_fresh_list(self, node: ast.AST) -> bool:
+        """Whether a node always evaluates to a newly created list"""
+        if self.list_typestr(node) is None:
+            return False
+        if isinstance(node, (ast.List, ast.ListComp)):
+            return True
+        if isinstance(node, ast.Subscript):
+            return isinstance(node.slice, ast.Slice)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mult)):
+            return True
+        return False
+
     def is_pure_expr(self, node: Optional[ast.AST]) -> bool:
         """Whether evaluating a node cannot have side-effects (such as
         changing a list that is being sliced)"""
@@ -3196,6 +3208,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if arg is not node.args[0].args[-1]:
                         self.append(",")
                 self.append(")")
+                return
+
+            # list(a[i:j]), list(a + b), ..: no need to copy a fresh list
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id == "list"
+                and len(node.args) == 1
+                and not node.keywords
+                and self.is_fresh_list(node.args[0])
+                and self.list_typestr(node.args[0]) == self.list_typestr(node)
+            ):
+                self.visit(node.args[0], func)
                 return
 
             ts = self.namer.nokeywords(
