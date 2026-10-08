@@ -5,7 +5,8 @@
 
 str *__hex_sep(bytes *sep); /* bytes separator for hex()/hexlify() as a str */
 
-class bytes : public pyseq<__ss_int> {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+class bytes final : public pyseq<__ss_int> {
 protected:
 public:
     __GC_BYTES unit;

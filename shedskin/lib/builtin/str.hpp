@@ -3,7 +3,8 @@
 #ifndef SS_STR_HPP
 #define SS_STR_HPP
 
-class str : public pyseq<str *> {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+class str final : public pyseq<str *> {
 protected:
 public:
     __GC_STR unit;

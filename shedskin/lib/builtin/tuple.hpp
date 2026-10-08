@@ -3,7 +3,8 @@
 #ifndef SS_TUPLE_HPP
 #define SS_TUPLE_HPP
 
-template<class A, class B> class tuple2 : public pyobj {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+template<class A, class B> class tuple2 final : public pyobj {
 public:
     A first;
     B second;
@@ -61,7 +62,8 @@ public:
 #endif
 };
 
-template<class T> class tuple2<T,T> : public pyseq<T> {
+/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
+template<class T> class tuple2<T,T> final : public pyseq<T> {
 public:
     __GC_VECTOR(T) units;
 
