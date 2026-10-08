@@ -206,6 +206,25 @@ def test_tuple_in_list():
     assert (1,2) in list4
 
 
+class NeverEqual:
+    def __eq__(self, other):
+        return False
+
+    def __hash__(self):
+        return 1
+
+
+def test_list_contains_identity():
+    # like CPython, containment checks identity before calling __eq__
+    a, b = NeverEqual(), NeverEqual()
+    assert a in [b, a]
+    assert b not in [a]
+    assert not (a == a)
+    assert a in (b, a)
+    t = (1, 2)
+    assert t in [(3, 4), t]
+
+
 def test_list_assign():
     list5 = [(1,2),(3,4)]
     list5[0] = (2,2)
@@ -639,6 +658,7 @@ def test_all():
     test_list_subsets()
     test_list_copy()
     test_tuple_in_list()
+    test_list_contains_identity()
     test_list_imul()
     test_list_iadd()
     test_list_index_error_message()

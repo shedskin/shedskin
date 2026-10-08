@@ -319,6 +319,30 @@ def test_dict_churn():
     assert s['3'] == [3]
 
 
+class NeverEqualKey:
+    def __eq__(self, other):
+        return False
+
+    def __hash__(self):
+        return 1
+
+
+def test_dict_key_identity():
+    # like CPython, key lookup checks identity before calling __eq__
+    a, b = NeverEqualKey(), NeverEqualKey()
+    d = {a: 1, b: 2}
+    assert len(d) == 2
+    assert d[a] == 1 and d[b] == 2
+    d[a] = 3
+    assert len(d) == 2 and d[a] == 3
+    assert a in d and a in set([a])
+    corners = [(0, 0, 0), (255, 0, 0), (0, 255, 0)]
+    dd = dict([(c, 1.0) for c in corners])
+    for c in corners:
+        dd[c] -= 0.5
+    assert dd[(255, 0, 0)] == 0.5 and dd[corners[2]] == 0.5
+
+
 def test_all():
     test_dict_churn()
     test_dict()
@@ -339,6 +363,7 @@ def test_all():
     test_frozendict()
     test_view_len_bool()
     test_keyerror_message()
+    test_dict_key_identity()
 
 
 if __name__ == "__main__":

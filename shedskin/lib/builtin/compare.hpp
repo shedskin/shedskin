@@ -22,6 +22,16 @@ template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a ==
 template<> inline __ss_bool __eq(__ss_float a, __ss_float b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
 
+/* containment/lookup equality: like CPython's PyObject_RichCompareBool, an
+   object is always considered equal to itself (skips a virtual __eq__ call) */
+
+template<class T> inline bool __eq_id(T a, T b) {
+    if constexpr (std::is_pointer<T>::value)
+        if(a == b)
+            return true;
+    return __eq<T>(a, b);
+}
+
 /* ne */
 
 template<class T> inline __ss_bool __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):__mbool(a!=b)); }
@@ -190,7 +200,7 @@ public:
 template<class T> class ss_eq {
     public:
         bool operator()(const T a, const T b) const {
-            return __eq<T>(a, b);
+            return __eq_id<T>(a, b);
         }
 
 };

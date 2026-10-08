@@ -229,7 +229,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
 
 template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
     for(size_t i=0; i<this->units.size(); i++)
-        if(__eq(this->units[i], a))
+        if(__eq_id(this->units[i], a))
             return True;
     return False;
 }
