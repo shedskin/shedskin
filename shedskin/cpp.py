@@ -52,7 +52,7 @@ from typing import (
 )
 from collections.abc import Iterator
 
-from . import ast_utils, error, extmod, infer, python, typestr, virtual
+from . import ast_utils, error, extmod, infer, loopidiom, python, typestr, virtual
 
 if TYPE_CHECKING:
     from . import config
@@ -200,6 +200,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.extmod = extmod.ExtensionModule(self.gx, self)
         self.done: set[ast.AST]
         self.str_format_node: Optional[ast_utils.StrFormat] = None
+        self.append_reserve: dict[ast.Expr, tuple[ast.expr, str]] = {}
 
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
@@ -756,6 +757,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Expr, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an expression node"""
+        if node in self.append_reserve:
+            lst, args = self.append_reserve[node]
+            self.start("__append_reserve(")
+            self.visitm(lst, ", " + args + ")", func)
+            self.eol()
         if not ast_utils.is_str(node.value):
             self.start("")
             self.visit(node.value, func)
@@ -1420,7 +1426,39 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.visitm(self.mv.tempcount[arg], " = ", arg, func)
                     self.eol()
         self.fastfor(qual, iter, func)
+        if isinstance(node, ast.For):
+            self.find_append_idioms(node)
         self.forbody(node, quals, iter, func, False, genexpr, fuse_reduce)
+
+    def find_append_idioms(self, node: ast.For) -> None:
+        """for i in range(..): .. l.append(x) ..: when l has to grow, make
+        room for the remaining iterations at once (see loopidiom.py)"""
+        assert isinstance(node.iter, ast.Call)
+        args = node.iter.args
+        if len(args) < 3:
+            step = "1"
+        else:
+            step_node = args[2]
+            sign = ""
+            if isinstance(step_node, ast.UnaryOp) and isinstance(step_node.op, ast.USub):
+                step_node, sign = step_node.operand, "-"
+            if not (
+                isinstance(step_node, ast.Constant)
+                and type(step_node.value) is int
+                and step_node.value != 0
+            ):
+                return
+            step = sign + str(step_node.value)
+        ivar, evar = self.mv.tempcount[node.target], self.mv.tempcount[node.iter]
+        self.add_append_idioms(node, "%s, %s, %s" % (ivar, evar, step))
+
+    def add_append_idioms(self, node: ast.For, loopargs: str) -> None:
+        """Register appends for __append_reserve, given the arguments that
+        tell how many iterations are left (range bounds, or a sequence and
+        the number of iterations done)"""
+        for stmt, lst, count in loopidiom.append_idioms(node):
+            if self.list_typestr(lst) is not None and self.is_pure_expr(lst):
+                self.append_reserve[stmt] = (lst, "%s, %d" % (loopargs, count))
 
     # XXX generalize?
     def impl_visit_temp(self, node: ast.AST, func: Optional["python.Function"]) -> None:
@@ -1560,6 +1598,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.do_fastfor(node, node, None, assname, func, False, False)
         elif self.fastenumerate(node, func):
             self.do_fastenumerate(node, func, False)
+            self.add_append_idioms(
+                node, "%s, %s" % (self.mv.tempcount[(node, 2)], self.mv.tempcount[node.iter])
+            )
             self.forbody(node, None, assname, func, True, False, False)
         elif self.fastzip2(node, func):
             self.do_fastzip2(node, func, False)
@@ -1578,6 +1619,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start("FOR_IN{}({},".format(pref, assname))
             self.visit(node.iter, func)
             self.print(self.line + "," + tail + ")")
+            if self.only_classes(
+                node.iter,
+                ("list", "tuple", "str_", "bytes_", "set", "frozenset", "dict"),
+            ):
+                self.add_append_idioms(
+                    node, "%s, %s" % (self.mv.tempcount[node], self.mv.tempcount[node.iter])
+                )
             self.forbody(node, None, assname, func, False, False, False)
         self.print()
 

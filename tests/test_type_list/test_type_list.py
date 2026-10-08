@@ -491,6 +491,110 @@ def test_list_concat_parts():
     assert g == [2, 3, 1, 2, 3] and h == [2, 3, 1]
 
 
+class Rows:
+    def __init__(self):
+        self.rows = []
+
+    def fill(self, n):
+        for i in range(n):
+            self.rows.append(i)
+
+
+def test_list_append_reserve():
+    # 'for i in range(..): l.append(..)': reserve for remaining iterations
+    a = [1, 2]
+    for i in range(10):
+        a.append(i)
+    assert a == [1, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    b = []
+    c = []
+    for i in range(20, 3, -3):
+        b.append(i)
+        c.append(-i)
+        b.append(i // 2)
+    assert b == [20, 10, 17, 8, 14, 7, 11, 5, 8, 4, 5, 2]
+    assert c == [-20, -17, -14, -11, -8, -5]
+    for i in range(5, 5):
+        b.append(i)
+    assert len(b) == 12
+    d = [[0]]
+    for i in range(1, 4):
+        d.append([])
+        for j in range(i):
+            d[i].append(j)
+    assert d == [[0], [0], [0, 1], [0, 1, 2]]
+    e = []
+    for i in range(0, 100, 7):
+        i = i * 2  # does not change the iteration count
+        e.append(i)
+    assert e == [0, 14, 28, 42, 56, 70, 84, 98, 112, 126, 140, 154, 168, 182, 196]
+    f = []
+    for i in range(3):
+        f.append(i)
+        f = f + [9]
+    assert f == [0, 9, 1, 9, 2, 9]
+    g = []
+    try:
+        for i in range(10**15):
+            g.append(i)
+            if i == 3:
+                raise ValueError
+    except ValueError:
+        pass
+    assert g == [0, 1, 2, 3]
+    h = []
+    for i in range(10**15, 0, -10**14):
+        h.append(i // 10**14)
+    assert h == [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    r = Rows()
+    r.fill(3)
+    r.fill(2)
+    assert r.rows == [0, 1, 2, 0, 1]
+    big = []
+    for i in range(100000):
+        big.append(i)
+    assert len(big) == 100000 and big[-1] == 99999
+    s = []
+    for i in range(3):
+        s.append(str(i))
+    else:
+        s.append('x')
+    assert s == ['0', '1', '2', 'x']
+
+    # other sized iterables
+    src = [3, 1, 2]
+    t = [0]
+    for x in src:
+        t.append(x * 2)
+        t.append(x)
+    assert t == [0, 6, 3, 2, 1, 4, 2]
+    u = []
+    for ch in 'abc':
+        u.append(ch)
+    for num in (1, 2):
+        u.append(str(num))
+    for key in {'z': 1}:
+        u.append(key)
+    for elem in {5}:
+        u.append(str(elem))
+    for i, ch2 in enumerate('pq'):
+        u.append(ch2 * (i + 1))
+    assert u == ['a', 'b', 'c', '1', '2', 'z', '5', 'p', 'qq']
+    v = [1, 2, 3]
+    w = []
+    for x in v:
+        w.append(x)
+        if x < 3:
+            v.append(x + 3)  # iterated list grows
+    assert w == [1, 2, 3, 4, 5] and v == [1, 2, 3, 4, 5]
+    v = [1, 2, 3, 4]
+    w = []
+    for x in v:
+        w.append(x)
+        del v[-1]  # iterated list shrinks
+    assert w == [1, 2]
+
+
 def test_list_fresh_copy():
     # list(..) of a fresh list need not copy it
     a = [1, 2, 3]
@@ -533,6 +637,7 @@ def test_all():
     test_list_slice_assign_same_size()
     test_list_mul_elt()
     test_list_concat_parts()
+    test_list_append_reserve()
     test_list_fresh_copy()
 
 

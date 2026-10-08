@@ -669,6 +669,43 @@ template<class T> void __replace_slice(list<T> *d, __ss_int l, __ss_int u, T *b,
     }
 }
 
+/* 'for .. in ..: .. a.append(x) ..', with k such appends per iteration (see
+   loopidiom.py): when the list has to grow, make room for the remaining
+   iterations at once. this only changes capacity, but in case the loop is
+   left early (by an exception), don't reserve too much */
+
+constexpr size_t __APPEND_RESERVE_MAX = 1 << 16;
+
+template<class T> inline void __append_reserve_left(list<T> *a, size_t n, size_t k) {
+    size_t size = a->units.size();
+    if(n <= __APPEND_RESERVE_MAX / k)
+        a->units.reserve(size + n * k);
+    else if(size < __APPEND_RESERVE_MAX)
+        a->units.reserve(size + __APPEND_RESERVE_MAX);
+}
+
+/* for i in range(l, u, s): i is the current value */
+template<class T> inline void __append_reserve(list<T> *a, __ss_int i, __ss_int u, __ss_int s, size_t k) {
+    if(a->units.size() == a->units.capacity()) {
+        using U = std::make_unsigned_t<__ss_int>;
+        size_t n; /* iterations left, including this one */
+        if(s > 0)
+            n = (size_t)(((U)u - (U)i + (U)s - 1) / (U)s);
+        else
+            n = (size_t)(((U)i - (U)u - (U)s - 1) / ((U)0 - (U)s));
+        __append_reserve_left(a, n, k);
+    }
+}
+
+/* for x in seq: i iterations done before this one */
+template<class T, class S> inline void __append_reserve(list<T> *a, S seq, __ss_int i, size_t k) {
+    if(a->units.size() == a->units.capacity()) {
+        __ss_int n = len(seq) - i;
+        if(n > 0)
+            __append_reserve_left(a, (size_t)n, k);
+    }
+}
+
 template<class T, class ... P> void *__setslice_lists(list<T> *d, __ss_int x, __ss_int l, __ss_int u, __list_part<T> p, P ... ps) {
     size_t n = p.size + (ps.size + ... + 0);
     __slicenr1(x, l, u, d->__len__());
