@@ -95,6 +95,44 @@ def test_zip_exhaustion():
     assert list(zip([5, 6], [7, 8], [9, 10], strict=True)) == [(5, 7, 9), (6, 8, 10)]
 
 
+def test_zip_sequences():
+    # list arguments are indexed directly: like a list iterator, zip sees
+    # items appended to or removed from a list during iteration
+    l = [1, 2]
+    z = zip(l, (5, 6, 7, 8))
+    assert next(z) == (1, 5)
+    l.append(3)
+    assert list(z) == [(2, 6), (3, 7)]
+    l2 = [1, 2, 3]
+    z2 = zip(('a', 'b', 'c'), l2)
+    assert next(z2) == ('a', 1)
+    l2.pop()
+    assert list(z2) == [('b', 2)]
+
+    # mixed with iterators: those after an exhausted argument are not advanced
+    it = iter([1, 2, 3])
+    assert list(zip([7], it)) == [(7, 1)]
+    assert list(it) == [2, 3]
+    it2 = iter('xyz')
+    assert list(zip(it2, (1, 2))) == [('x', 1), ('y', 2)]
+    assert list(it2) == []  # 'z' was consumed before the tuple ran out
+
+    error = False
+    try:
+        list(zip((1, 2), [3], strict=True))
+    except ValueError:
+        error = True
+    assert error
+    assert list(zip((1, 2), [3, 4], strict=True)) == [(1, 3), (2, 4)]
+
+    # other argument types
+    d = {'a': 1, 'b': 2, 'c': 3}
+    assert sorted(zip(d, 'xyz')) == [('a', 'x'), ('b', 'y'), ('c', 'z')]
+    assert dict(zip('ab', [1.5, 2.5])) == {'a': 1.5, 'b': 2.5}
+    assert list(zip(range(3), (4, 5, 6))) == [(0, 4), (1, 5), (2, 6)]
+    assert sorted(zip({7, 8}, [1, 1])) == [(7, 1), (8, 1)]
+
+
 def test_map():
     assert list(map(lambda a: 2 * a, [1, 2, 3])) == [2, 4, 6]
     assert list(map(lambda a, b: a * b, [1, 2, 3], [4, 5])) == [4, 10]
@@ -134,6 +172,7 @@ def test_all():
     test_zip()
     test_zip_strict()
     test_zip_exhaustion()
+    test_zip_sequences()
     test_map()
     test_map_nested()
 
