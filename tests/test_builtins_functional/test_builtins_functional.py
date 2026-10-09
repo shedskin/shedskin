@@ -127,7 +127,7 @@ def test_zip_sequences():
 
     # other argument types
     d = {'a': 1, 'b': 2, 'c': 3}
-    assert sorted(zip(d, 'xyz')) == [('a', 'x'), ('b', 'y'), ('c', 'z')]
+    assert sorted(zip(d, 'xxx')) == [('a', 'x'), ('b', 'x'), ('c', 'x')]  # dict order is unspecified
     assert dict(zip('ab', [1.5, 2.5])) == {'a': 1.5, 'b': 2.5}
     assert list(zip(range(3), (4, 5, 6))) == [(0, 4), (1, 5), (2, 6)]
     assert sorted(zip({7, 8}, [1, 1])) == [(7, 1), (8, 1)]
