@@ -500,6 +500,23 @@ class Rows:
             self.rows.append(i)
 
 
+def test_listcomp_append_reserve():
+    # single-loop list comprehensions reserve for the remaining iterations
+    n = 10
+    assert [i * i for i in range(n)] == [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    assert [i for i in range(20, 3, -3)] == [20, 17, 14, 11, 8, 5]
+    assert [i for i in range(n, n)] == []
+    assert [[j for j in range(i)] for i in range(1, 4)] == [[0], [0, 1], [0, 1, 2]]
+    s = 'abcdefgh'
+    assert [c * i for i, c in enumerate(s)] == ['', 'b', 'cc', 'ddd', 'eeee', 'fffff', 'gggggg', 'hhhhhhh']
+    d = {}
+    for i in range(9):
+        d[i] = str(i)
+    assert sorted([(v, k) for k, v in d.items()]) == [(str(i), i) for i in range(9)]
+    assert sorted([k for k, v in d.items() if k % 2]) == [1, 3, 5, 7]
+    assert [k for k, v in {}.items()] == []
+
+
 def test_list_append_reserve():
     # 'for i in range(..): l.append(..)': reserve for remaining iterations
     a = [1, 2]
@@ -646,6 +663,7 @@ def test_all():
     test_list_mul_elt()
     test_list_concat_parts()
     test_list_append_reserve()
+    test_listcomp_append_reserve()
     test_list_fresh_copy()
 
 
