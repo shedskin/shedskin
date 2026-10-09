@@ -612,7 +612,7 @@ __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_in
 
 } // namespace __shedskin__
 
-#ifdef __SS_ELIDE_NEW
+#ifdef __SS_FREE_LISTS
 /* small objects are served from free lists that are refilled in bulk by GC_malloc_many.
    this is the inline allocation scheme of bdwgc's gc_inline.h (GC_FAST_MALLOC_GRANS), which
    bdwgc itself uses for thread-local allocation. it avoids a call into the (shared) library,
@@ -625,37 +625,39 @@ __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_in
      byte at the end for interior pointers by default). larger granules or no extra byte only
      waste a little space, objects are never too small.
    - objects come back cleared, except for the link word, which is reset here.
-   - not thread-safe: generated code is single-threaded (extension modules, which may be
-     called from multiple threads, do not define __SS_ELIDE_NEW).
+   - not thread-safe: generated code is single-threaded. extension modules rely on the GIL
+     (they never release it), so this breaks if generated code is ever run without it.
    - unlike GC_FAST_MALLOC_GRANS, this does not call GC_end_stubborn_change/GC_reachable_here,
      which are only needed for incremental collection (see GC_enable_incremental in __init).
 
    TODO: a single-threaded bdwgc compiled into the program (its amalgamation extra/gc.c, with
    LTO) gives the same speed without this, as the fast path of GC_malloc can then be inlined,
    and would also remove the libgc dependency for executables. */
-static void *__ss_free_lists[17];
+namespace __shedskin__ {
+void *__ss_free_lists[17];
 
-static void *__ss_gc_malloc(std::size_t n) {
+void *__ss_gc_malloc_slow(std::size_t n) {
     std::size_t g = (n >> 4) + 1;
     if (g < 17) {
-        void *p = __ss_free_lists[g];
-        if (__builtin_expect(p == nullptr, 0)) {
-            p = GC_malloc_many(16*g-1);
-            if (!p)
-                return nullptr;
-        }
+        void *p = GC_malloc_many(16*g-1);
+        if (!p)
+            return nullptr;
         __ss_free_lists[g] = GC_NEXT(p);
         GC_NEXT(p) = nullptr;
         return p;
     }
     return GC_MALLOC(n);
 }
+} // namespace __shedskin__
+#endif
+
+#ifdef __SS_ELIDE_NEW
 
 /* see __SS_NEW. other (over-aligned) requests are served like libstdc++ does */
 void *operator new(std::size_t n, std::align_val_t al) {
     void *r;
     if (al == __shedskin__::__ss_gc_tag)
-        r = __ss_gc_malloc(n);
+        r = __shedskin__::__ss_gc_malloc(n);
     else {
         std::size_t a = (std::size_t)al;
 #ifdef WIN32
@@ -680,4 +682,13 @@ void operator delete(void *p, std::align_val_t al) noexcept {
 void operator delete(void *p, std::size_t, std::align_val_t al) noexcept {
     operator delete(p, al);
 }
+
+#elif defined(__SS_FREE_LISTS)
+void *operator new(std::size_t n, __shedskin__::__ss_gc_tag_t) {
+    void *r = __shedskin__::__ss_gc_malloc(n);
+    if (!r)
+        throw std::bad_alloc();
+    return r;
+}
+void operator delete(void *, __shedskin__::__ss_gc_tag_t) noexcept {}
 #endif

@@ -165,14 +165,63 @@ template <class T> class __iter;
 template<class T>
 using tuple = tuple2<T, T>;
 
+/* small objects are allocated from free lists (see builtin.cpp) */
+#if !defined(__SS_NOGC) && !(defined(_MSC_VER) && !defined(__clang__))
+#define __SS_FREE_LISTS
+#ifndef __SS_BIND
+#define __SS_ELIDE_NEW
+#endif
+#endif
+
+#ifdef __SS_FREE_LISTS
+extern void *__ss_free_lists[17];
+void *__ss_gc_malloc_slow(std::size_t n);
+
+inline void *__ss_gc_malloc(std::size_t n) {
+    std::size_t g = (n >> 4) + 1;
+    if (g < 17) {
+        void *p = __ss_free_lists[g];
+        if (__builtin_expect(p != nullptr, 1)) {
+            __ss_free_lists[g] = GC_NEXT(p);
+            GC_NEXT(p) = nullptr;
+            return p;
+        }
+    }
+    return __ss_gc_malloc_slow(n);
+}
+#endif
+
 /* STL types */
 
 #ifdef __SS_NOGC
 template <class T>
 using __ss_allocator = std::allocator< T >;
+#elif defined(__SS_FREE_LISTS)
+/* gc_allocator, but with small (scanned) objects from the free lists */
+template <class T> class __ss_allocator : public gc_allocator<T> {
+public:
+    typedef T value_type;
+    template <class U> struct rebind { typedef __ss_allocator<U> other; };
+    __ss_allocator() noexcept {}
+    __ss_allocator(const __ss_allocator &) noexcept {}
+    template <class U> __ss_allocator(const __ss_allocator<U> &) noexcept {}
+    T *allocate(std::size_t n, const void * = 0) {
+        if constexpr (std::is_same_v<decltype(GC_type_traits<T>().GC_is_ptr_free), GC_true_type>)
+            return gc_allocator<T>::allocate(n);
+        void *p = __ss_gc_malloc(n * sizeof(T));
+        if (!p)
+            throw std::bad_alloc();
+        return static_cast<T *>(p);
+    }
+};
+template <class T, class U> inline bool operator==(const __ss_allocator<T> &, const __ss_allocator<U> &) { return true; }
+template <class T, class U> inline bool operator!=(const __ss_allocator<T> &, const __ss_allocator<U> &) { return false; }
 #else
 template <class T>
 using __ss_allocator = gc_allocator< T >;
+#endif
+
+#ifndef __SS_NOGC
 
 /* gc_allocator uses GC_MALLOC_ATOMIC (memory that is never scanned for
  * pointers) only for types declared pointer-free. libgc declares just the
@@ -261,15 +310,22 @@ extern str *byteorder_big, *byteorder_little;
  * not for MSVC either: it rejects passing a std::align_val_t as placement
  * argument (error C2956, as operator delete(void *, std::align_val_t) is a
  * usual deallocation function), and it does not elide allocations anyway. */
-#if !defined(__SS_NOGC) && !defined(__SS_BIND) && !(defined(_MSC_VER) && !defined(__clang__))
-#define __SS_ELIDE_NEW
-#endif
-
-#ifndef __SS_ELIDE_NEW
-#define __SS_NEW new
-#else
+/* extension modules use the same free lists, via a placement operator new with
+ * a tag type of their own, which is not replaceable and so not visible to other
+ * libraries (but cannot be elided either). */
+#if defined(__SS_ELIDE_NEW)
 inline constexpr std::align_val_t __ss_gc_tag{1};
 #define __SS_NEW ::new (__shedskin__::__ss_gc_tag)
+#elif defined(__SS_FREE_LISTS)
+struct __ss_gc_tag_t {};
+inline constexpr __ss_gc_tag_t __ss_gc_tag{};
+} // namespace __shedskin__
+void *operator new(std::size_t n, __shedskin__::__ss_gc_tag_t);
+void operator delete(void *p, __shedskin__::__ss_gc_tag_t) noexcept;
+namespace __shedskin__ {
+#define __SS_NEW ::new (__shedskin__::__ss_gc_tag)
+#else
+#define __SS_NEW new
 #endif
 
 /* root object class */
@@ -280,6 +336,16 @@ class pyobj {
 class pyobj : public gc {
 #endif
 public:
+#ifdef __SS_FREE_LISTS
+    /* library code allocates with plain new */
+    using gc::operator new;
+    static void *operator new(std::size_t n) {
+        void *p = __ss_gc_malloc(n);
+        if (!p)
+            throw std::bad_alloc();
+        return p;
+    }
+#endif
     class_ *__class__;
 
     virtual str *__repr__();
