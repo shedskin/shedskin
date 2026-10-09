@@ -417,7 +417,7 @@ template<class T> void *list<T>::__delslice__(__ss_int a, __ss_int b) {
 template<class T> __ss_bool list<T>::__contains__(T a) {
     size_t size = this->units.size();
     for(size_t i=0; i<size; i++)
-        if(__eq(this->units[i], a))
+        if(__eq_id(this->units[i], a))
             return True;
     return False;
 }
