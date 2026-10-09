@@ -554,6 +554,66 @@ template<class T> inline izipiter<T, T> *__zip(int, __ss_bool strict_, pyiter<T>
 template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict_, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new izipiter<T, U>(strict_, iterable1, iterable2);
 }
+
+/* zip with two arguments of known type: advance each argument with its own
+   for_in_* methods, as a for-loop over it would (for lists and tuples: direct
+   indexing, checking the current length at each step), instead of allocating
+   an iterator and making a virtual call per element */
+
+template<class A, class B> class izipiter2 : public __iter<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> {
+public:
+    typedef typename A::for_in_unit TA;
+    typedef typename B::for_in_unit TB;
+
+    A *first;
+    B *second;
+    typename A::for_in_loop loop1;
+    typename B::for_in_loop loop2;
+    bool exhausted;
+    __ss_bool strict;
+
+    izipiter2(__ss_bool strict_, A *iterable1, B *iterable2) {
+        this->__stop_iteration = false;
+        exhausted = false;
+        strict = strict_;
+        first = iterable1;
+        second = iterable2;
+        loop1 = first->for_in_init();
+        loop2 = second->for_in_init();
+    }
+
+    tuple2<TA, TB> *__get_next() {
+        if (!this->exhausted) {
+            size_t n_exhausted = 0;
+
+            if (!first->for_in_has_next(loop1))
+                n_exhausted += 1;
+            if ((!n_exhausted || this->strict) && !second->for_in_has_next(loop2))
+                n_exhausted += 1;
+
+            if (!n_exhausted) {
+                TA a = first->for_in_next(loop1);
+                TB b = second->for_in_next(loop2);
+                if constexpr (std::is_same_v<TA, __ss_int> && std::is_same_v<TB, __ss_int>)
+                    return __ss_tuple_int(2, a, b);
+                else
+                    return new tuple2<TA, TB>(2, a, b);
+            }
+
+            this->exhausted = true;
+            if (this->strict and n_exhausted != 2)
+                throw new ValueError(new str("zip() arguments of different lengths"));
+        }
+        this->__stop_iteration = true;
+        return NULL;
+    }
+
+    inline str *__str__() { return new str("<zip object>"); }
+};
+
+template<class A, class B> inline izipiter2<A, B> *__zip(int, __ss_bool strict_, A *iterable1, B *iterable2) {
+    return new izipiter2<A, B>(strict_, iterable1, iterable2);
+}
 template<class T, class ... Args> inline izipiter<T, T> *__zip(int, __ss_bool strict_, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict_, iterable);
 
