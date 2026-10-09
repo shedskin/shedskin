@@ -171,6 +171,22 @@ def test_tuple3():
     assert sum(h) == 6
 
 
+def test_int_pairs():
+    # (a, b) of ints: cached for small values, allocated otherwise
+    pairs = []
+    for a in (-21, -20, 0, 19, 20, 1000):
+        for b in (-21, -20, 19, 20):
+            pairs.append((a, b))
+    assert len(pairs) == 24
+    assert pairs[0] == (-21, -21) and pairs[5] == (-20, -20)
+    assert pairs[-1] == (1000, 20)
+    assert sum(a * b for a, b in pairs) == sum(a * b for a in (-21, -20, 0, 19, 20, 1000) for b in (-21, -20, 19, 20))
+    d = {}
+    for x in range(30):
+        d[(x, x + 1)] = x
+    assert d[(25, 26)] == 25 and d[(5, 6)] == 5 and len(d) == 30
+
+
 def test_all():
     test_tuple()
     test_equivalence()
@@ -183,6 +199,7 @@ def test_all():
     test_index()
     test_count()
     test_tuple3()
+    test_int_pairs()
 
 
 
