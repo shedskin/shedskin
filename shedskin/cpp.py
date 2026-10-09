@@ -201,7 +201,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.done: set[ast.AST]
         self.str_format_node: Optional[ast_utils.StrFormat] = None
         self.append_reserve: dict[ast.Expr, tuple[ast.expr, str]] = {}
-        self.listcomp_append_reserve: Optional[str] = None
         # --- string-builder loops (see loopidiom)
         self.sb_loops: dict["python.Function", loopidiom.Accumulators] = {}
         self.sb_active: dict[ast.AugAssign, str] = {}
@@ -1446,13 +1445,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def find_append_idioms(self, node: ast.For) -> None:
         """for i in range(..): .. l.append(x) ..: when l has to grow, make
         room for the remaining iterations at once (see loopidiom.py)"""
-        loopargs = self.range_loopargs(node)
-        if loopargs:
-            self.add_append_idioms(node, loopargs)
-
-    def range_loopargs(self, node: Union[ast.For, ast.comprehension]) -> Optional[str]:
-        """__append_reserve arguments for a fast range loop: its current value,
-        upper bound and (constant) step"""
         assert isinstance(node.iter, ast.Call)
         args = node.iter.args
         if len(args) < 3:
@@ -1467,10 +1459,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and type(step_node.value) is int
                 and step_node.value != 0
             ):
-                return None
+                return
             step = sign + str(step_node.value)
         ivar, evar = self.mv.tempcount[node.target], self.mv.tempcount[node.iter]
-        return "%s, %s, %s" % (ivar, evar, step)
+        self.add_append_idioms(node, "%s, %s, %s" % (ivar, evar, step))
 
     def add_append_idioms(self, node: ast.For, loopargs: str) -> None:
         """Register appends for __append_reserve, given the arguments that
@@ -4516,7 +4508,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # recursion ends when we processed all quals TODO this part to separate function?
         if not quals:
-            reserve, self.listcomp_append_reserve = self.listcomp_append_reserve, None
             if fuse_reduce:  # TODO what happens with an empty list, without default arg?
                 op = self.fuse_reduce_op(node)
                 if op == "sum":
@@ -4584,8 +4575,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.start("__ss_result->units[" + tv + "] = ")
                 self.visit(node.elt, lcfunc)
             else:
-                if reserve:
-                    self.output("__append_reserve(__ss_result, %s, 1);" % reserve)
                 self.start("__ss_result->append(")
                 self.visit(node.elt, lcfunc)
                 self.append(")")
@@ -4609,21 +4598,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node not in self.gx.setcomp_to_lc.values()
             and node not in self.gx.dictcomp_to_lc.values()
         )
-
-        # one loop and one append per iteration: reserve room for the remaining
-        # iterations when the result has to grow, as for appends in for-loops
-        # (see add_append_idioms). the appends so far are len(__ss_result)
-        if try_reserve and len(node.generators) == 1 and not qual.ifs:
-            if ast_utils.is_fastfor(qual, lcfunc, self.mv):
-                self.listcomp_append_reserve = self.range_loopargs(qual)
-            elif self.fastenumerate(qual, lcfunc):
-                self.listcomp_append_reserve = "%s, %s" % (
-                    self.mv.tempcount[(qual, 2)], self.mv.tempcount[qual.iter]
-                )
-            elif self.fastdictiter(qual):
-                self.listcomp_append_reserve = (
-                    "%s, len(__ss_result)" % self.mv.tempcount[(qual, 7)]
-                )
 
         if ast_utils.is_fastfor(qual, lcfunc, self.mv):
             if try_reserve:
