@@ -467,7 +467,8 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
-tuple<__ss_int >*__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
+extern tuple<__ss_int> *__ss_tuple_cache[1600];
+inline tuple<__ss_int> *__ss_tuple_int(__ss_int n, __ss_int a, __ss_int b);
 
 /* slicing */
 
@@ -536,6 +537,14 @@ private:
 #include "builtin/bool.hpp"
 #include "builtin/extmod.hpp"
 #include "builtin/tuple.hpp"
+
+/* (a, b) for ints: small ones are cached, others come from the free lists (__SS_NEW) */
+inline tuple<__ss_int> *__ss_tuple_int(__ss_int, __ss_int a, __ss_int b) {
+    if(-20 <= a && a < 20 && -20 <= b && b < 20)
+        return __ss_tuple_cache[(a+20)*40+(b+20)];
+    else
+        return __SS_NEW tuple<__ss_int>(2, a, b);
+}
 #include "builtin/function.hpp"
 #include "builtin/list.hpp"
 #include "builtin/bytes.hpp"
