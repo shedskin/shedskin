@@ -132,6 +132,20 @@ def test_zip_sequences():
     assert list(zip(range(3), (4, 5, 6))) == [(0, 4), (1, 5), (2, 6)]
     assert sorted(zip({7, 8}, [1, 1])) == [(7, 1), (8, 1)]
 
+    # consumers that iterate a zip object directly: list(), sorted(), dict(),
+    # comprehensions and for-loops, also after it was partly consumed
+    z3 = zip([1, 2, 3], (4, 5, 6))
+    assert next(z3) == (1, 4)
+    assert [a + b for a, b in z3] == [7, 9]
+    assert list(z3) == []
+    z4 = zip('abc', [3, 1, 2])
+    total = 0
+    for k, v in z4:
+        total += v
+    assert total == 6 and list(z4) == []
+    assert sorted(zip([3, 1], ['x', 'y'])) == [(1, 'y'), (3, 'x')]
+    assert dict(zip([1, 2], [1.5, 2.5])) == {1: 1.5, 2: 2.5}
+
 
 def test_map():
     assert list(map(lambda a: 2 * a, [1, 2, 3])) == [2, 4, 6]

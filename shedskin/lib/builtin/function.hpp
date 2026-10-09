@@ -560,10 +560,14 @@ template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict_, 
    indexing, checking the current length at each step), instead of allocating
    an iterator and making a virtual call per element */
 
-template<class A, class B> class izipiter2 : public __iter<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> {
+template<class A, class B> class izipiter2 final : public __iter<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> {
 public:
     typedef typename A::for_in_unit TA;
     typedef typename B::for_in_unit TB;
+
+    /* iterated directly (non-virtually) by code that knows the type, such as
+       list(zip(..)), instead of via the __iter interface */
+    typedef izipiter2<A, B> *for_in_loop;
 
     A *first;
     B *second;
@@ -606,6 +610,18 @@ public:
         }
         this->__stop_iteration = true;
         return NULL;
+    }
+
+    inline izipiter2<A, B> *for_in_init() {
+        this->__stop_iteration = false;
+        return this;
+    }
+    inline bool for_in_has_next(izipiter2<A, B> *) {
+        this->__result = this->__get_next();
+        return !this->__stop_iteration;
+    }
+    inline tuple2<TA, TB> *for_in_next(izipiter2<A, B> *) {
+        return this->__result;
     }
 
     inline str *__str__() { return new str("<zip object>"); }
