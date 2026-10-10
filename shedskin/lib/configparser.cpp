@@ -710,7 +710,12 @@ list<str *> *RawConfigParser::read(list<str *> *filenames, str *encoding) {
         } catch (OSError *) {
             continue;
         }
-        this->_read(fp, filename);
+        try {
+            this->_read(fp, filename);
+        } catch (...) {
+            fp->close(); /* like 'with open(..)': on Windows, an open file cannot be removed */
+            throw;
+        }
         fp->close();
         read_ok->append(filename);
     END_FOR
