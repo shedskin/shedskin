@@ -2524,7 +2524,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 func,
             )
         elif isinstance(node.op, ast.Pow):
-            self.power(node.left, node.right, None, func)
+            if node in self.gx.augment and not typestr.unboxable(
+                self.gx, self.mergeinh[node.left]
+            ):
+                self.impl_visit_binary(node.left, node.right, "__ipow__", "", func)
+            else:
+                self.power(node.left, node.right, None, func)
         elif isinstance(node.op, ast.Mod):
             self.impl_visit_mod(node, func)
         elif isinstance(node.op, ast.LShift):
@@ -4805,7 +4810,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             for t in self.gx.merged_inh[node.left]
             if t[0].ident not in ("str_", "bytes_")
         ]:
-            self.impl_visit_binary(node.left, node.right, "__mod__", "%", func)
+            self.impl_visit_binary(
+                node.left,
+                node.right,
+                ast_utils.aug_msg(self.gx, node, "mod"),
+                "%",
+                func,
+            )
             return
 
         # --- str % non-constant tuple

@@ -175,6 +175,68 @@ def test_pow():
     assert 2.0 ** 3 == 8.0
 
 
+class InPlace:
+    def __init__(self, x):
+        self.x = x
+
+    def __mod__(self, n):
+        return InPlace(self.x % n)
+
+    def __imod__(self, n):
+        return InPlace(-1)
+
+    def __pow__(self, n):
+        return InPlace(self.x ** n)
+
+    def __ipow__(self, n):
+        return InPlace(-2)
+
+
+class ModPow:  # no __imod__/__ipow__: falls back to __mod__/__pow__
+    def __init__(self, x):
+        self.x = x
+
+    def __mod__(self, n):
+        return ModPow(self.x % n)
+
+    def __pow__(self, n):
+        return ModPow(self.x ** n)
+
+
+def test_imod_ipow():
+    # %= and **= used to ignore __imod__/__ipow__
+    a = InPlace(7)
+    assert (a % 3).x == 1 and (a ** 2).x == 49
+    a %= 3
+    assert a.x == -1
+    a **= 2
+    assert a.x == -2
+    l = [InPlace(5)]
+    l[0] %= 2
+    assert l[0].x == -1
+    b = ModPow(7)
+    b %= 4
+    assert b.x == 3
+    b **= 2
+    assert b.x == 9
+    # builtin types are unaffected
+    i = 17
+    i %= 5
+    i **= 3
+    assert i == 8
+    f = 7.5
+    f %= 2
+    f **= 2
+    assert f == 2.25
+    s = 'x%dy'
+    s %= 4
+    assert s == 'x4y'
+    bs = b'%d!'
+    bs %= 5
+    assert bs == b'5!'
+
+
+
 class V3:
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
@@ -294,6 +356,7 @@ def test_all():
     test_num()
     test_pow()
     test_bitwise_inplace()
+    test_imod_ipow()
 
 
 if __name__ == '__main__':
