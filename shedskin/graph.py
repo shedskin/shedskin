@@ -2869,7 +2869,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             "complex",
         ]:
             msgs = ["add", "sub", "mul", "floordiv", "truediv"]
-            if newclass.ident == "int_":
+            if newclass.ident == "int_" or not newclass.mv.module.builtin:
                 msgs += ["lshift", "rshift", "and", "xor", "or"]
             if datetime_class:  # only the operators these classes have
                 msgs = [msg for msg in msgs if "__%s__" % msg in newclass.funcs]
