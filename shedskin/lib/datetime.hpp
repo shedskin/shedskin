@@ -231,6 +231,7 @@ public:
     timedelta *__mul__(__ss_float f);
     timedelta *__truediv__(__ss_float f);
     timedelta *__neg__();
+    timedelta *__pos__();
     timedelta *__floordiv__(__ss_int n);                     //what's the difference between this and __truediv__?
     __ss_float __truediv__(timedelta *other);                /* t / u -> float */
     __ss_int __floordiv__(timedelta *other);                 /* t // u -> int */

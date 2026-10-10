@@ -375,6 +375,14 @@ def test_timedelta_arithmetic():
     assert a + a == datetime.timedelta(days=2, seconds=60)
     assert a - a == datetime.timedelta()
 
+    # unary plus/minus (1009-C5)
+    c = datetime.timedelta(days=-2, seconds=5)
+    assert +c == c
+    assert +c is not c
+    assert str(+c) == '-2 days, 0:00:05'
+    assert -(+c) == datetime.timedelta(days=1, seconds=86395)
+    assert +(-a) == -a
+
 
 def test_datetime_isoformat():
     # regression test: isoformat()'s 'sep' parameter used to be given a

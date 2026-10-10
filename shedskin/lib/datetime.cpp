@@ -1549,6 +1549,10 @@ timedelta *timedelta::__neg__() {
     return new timedelta((double)-days, (double)-seconds, (double)-microseconds,0,0,0,0);
 }
 
+timedelta *timedelta::__pos__() {
+    return new timedelta(this);
+}
+
 timedelta *timedelta::__floordiv__(__ss_int n) {
     if(n==0) {
        throw new ZeroDivisionError(new str("integer division or modulo by zero"));

@@ -42,6 +42,9 @@ def test_complex():
 
     assert hash(h) == 669002024
 
+    assert +complex(1, -2) == complex(1, -2)
+    assert -complex(1, -2) == complex(-1, 2)
+
 
 def test_from_string():
     assert complex(" 2.4+0j") == complex(2.4)

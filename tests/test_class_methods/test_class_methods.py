@@ -53,6 +53,9 @@ class C:
     def __neg__(self):
         return self
 
+    def __pos__(self):
+        return self
+
     def __repr__(self):
         return "C"
 
@@ -64,6 +67,9 @@ def test_numlike1():
     c = C()
     assert abs(c) == c
     assert -abs(c) == c
+    assert +c == c
+    assert +(-c) == c
+    assert +3 == 3 and +(-1.5) == -1.5 and +True == 1
 
 
 class D:
