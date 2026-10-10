@@ -232,6 +232,60 @@ def test_temporaries():
     assert last.y == 7.0 and last.z == 8.0
 
 
+class Bits:
+    def __init__(self, x):
+        self.x = x
+
+    def __or__(self, n):
+        return Bits(self.x | n)
+
+    def __xor__(self, n):
+        return Bits(self.x ^ n)
+
+    def __and__(self, n):
+        return Bits(self.x & n)
+
+    def __lshift__(self, n):
+        return Bits(self.x << n)
+
+    def __rshift__(self, n):
+        return Bits(self.x >> n)
+
+
+class OwnIor:
+    def __init__(self, x):
+        self.x = x
+
+    def __or__(self, n):
+        return OwnIor(self.x | n)
+
+    def __ior__(self, n):
+        self.x = -n
+        return self
+
+
+def test_bitwise_inplace():
+    # |=, ^=, &=, <<=, >>= fall back to __or__ etc.
+    b = Bits(5)
+    c = b
+    b |= 2
+    assert b.x == 7 and c.x == 5
+    b ^= 3
+    assert b.x == 4
+    b &= 6
+    assert b.x == 4
+    b <<= 3
+    assert b.x == 32
+    b >>= 2
+    assert b.x == 8
+
+    # __ior__ is preferred when defined
+    o = OwnIor(5)
+    p = o
+    o |= 2
+    assert o.x == -2 and o is p
+
+
 def test_all():
     test_temporaries()
     test_int_class()
@@ -239,6 +293,7 @@ def test_all():
     test_vector2d()
     test_num()
     test_pow()
+    test_bitwise_inplace()
 
 
 if __name__ == '__main__':
