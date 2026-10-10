@@ -2,42 +2,69 @@
 
 /* complex methods */
 
+static bool __complex_scan_float(const char *&p, __ss_float &d) {
+    __GC_STRING clean;
+    if(not __float_scan_number(p, clean))
+        return false;
+    d = strtod(clean.c_str(), NULL);
+    if(std::isnan(d))
+        d = NAN; // avoid "-nan"
+    return true;
+}
+
+/* follows CPython's complex_from_string_inner */
 complex mcomplex(str *s) {
-    const char *ptr = s->strip()->c_str();
-    char *ptr2;
-    __ss_float real, imag = 0;
+    __GC_STRING a = __ss_ascii_numeric(s); /* unicode digits/whitespace */
+    const char *p = a.c_str();
+    __ss_float real = 0, imag = 0, z;
+    bool bracket = false;
 
-    if (*ptr == 0) {
-        goto error;
+    while(isspace((unsigned char)*p))
+        p++;
+    if(*p == '(') {
+        bracket = true;
+        p++;
+        while(isspace((unsigned char)*p))
+            p++;
     }
 
-    real = strtod(ptr, &ptr2);
-    if (ptr != ptr2 && *ptr2 == 'j') {
-        if (ptr2[1] != 0) {
+    if(__complex_scan_float(p, z)) {
+        if(*p == '+' or *p == '-') { /* <float><signed-float>j | <float><sign>j */
+            real = z;
+            if(not __complex_scan_float(p, imag))
+                imag = (*p++ == '+') ? 1.0 : -1.0;
+            if(*p != 'j' and *p != 'J')
+                goto error;
+            p++;
+        } else if(*p == 'j' or *p == 'J') { /* <float>j */
+            imag = z;
+            p++;
+        } else /* <float> */
+            real = z;
+    } else { /* <sign>j | j */
+        if(*p == '+' or *p == '-')
+            imag = (*p++ == '+') ? 1.0 : -1.0;
+        else
+            imag = 1.0;
+        if(*p != 'j' and *p != 'J')
             goto error;
-        }
-        imag = real;
-        real = 0;
-    } else if (*ptr2 != 0) {
-        char *ptr3;
-        imag = strtod(ptr2, &ptr3);
-        if (ptr2 == ptr3) {
-            // No number before 'j', but possibly sign. Or completely malformed string
-            imag = 1;
-            if (*ptr3 == '-') {
-                imag = -1;
-                ptr3++;
-            } else if (*ptr3 == '+') {
-                ptr3++;
-            }
-        }
-        if (*ptr3 != 'j' || ptr3[1] != 0) {
-error:
-            throw ((new ValueError(new str("complex() arg is a malformed string"))));
-        }
+        p++;
     }
 
-    return mcomplex(real, imag);
+    while(isspace((unsigned char)*p))
+        p++;
+    if(bracket) {
+        if(*p != ')')
+            goto error;
+        p++;
+        while(isspace((unsigned char)*p))
+            p++;
+    }
+
+    if(*p == '\0')
+        return mcomplex(real, imag);
+error:
+    throw new ValueError(new str("complex() arg is a malformed string"));
 }
 
 
