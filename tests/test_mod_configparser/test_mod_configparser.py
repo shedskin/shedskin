@@ -1348,6 +1348,24 @@ def test_interpolation_before_methods():
         assert ok
 
 
+def test_read_encoding():
+    f = open(writefile, 'w', encoding='latin-1')
+    f.write('[sec]\nkey = caf\xe9\n')
+    f.close()
+    cp = configparser.ConfigParser()
+    assert cp.read(writefile, encoding='latin-1') == [writefile]
+    assert cp.get('sec', 'key') == 'caf\xe9'
+    cp2 = configparser.ConfigParser()
+    assert cp2.read([writefile], 'latin-1') == [writefile]
+    assert cp2.get('sec', 'key') == 'caf\xe9'
+    cp3 = configparser.ConfigParser()
+    try:
+        cp3.read(writefile)
+        assert False
+    except UnicodeDecodeError:
+        pass
+    os.remove(writefile)
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1402,6 +1420,7 @@ def test_all():
     test_unnamed_section()
     test_interpolation_before_methods()
     test_add_default_section_error()
+    test_read_encoding()
 
 if __name__ == '__main__':
     test_all()
