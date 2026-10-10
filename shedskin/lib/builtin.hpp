@@ -189,6 +189,29 @@ inline void *__ss_gc_malloc(std::size_t n) {
     }
     return __ss_gc_malloc_slow(n);
 }
+
+/* pointer-free (atomic) objects, such as str/bytes buffers. the collector does not
+   scan these, so they cannot be linked through themselves: keep them in (scanned)
+   arrays instead (see builtin.cpp) */
+#define __SS_ATOMIC_STACK 256
+extern void *__ss_atomic_stacks[17][__SS_ATOMIC_STACK];
+extern unsigned __ss_atomic_counts[17];
+void *__ss_gc_malloc_atomic_slow(std::size_t n);
+
+inline void *__ss_gc_malloc_atomic(std::size_t n) {
+    std::size_t g = (n >> 4) + 1;
+    if (g < 17) {
+        unsigned c = __ss_atomic_counts[g];
+        if (__builtin_expect(c != 0, 1)) {
+            void **slot = &__ss_atomic_stacks[g][c-1];
+            void *p = *slot;
+            *slot = nullptr;
+            __ss_atomic_counts[g] = c-1;
+            return p;
+        }
+    }
+    return __ss_gc_malloc_atomic_slow(n);
+}
 #endif
 
 /* STL types */
@@ -197,7 +220,7 @@ inline void *__ss_gc_malloc(std::size_t n) {
 template <class T>
 using __ss_allocator = std::allocator< T >;
 #elif defined(__SS_FREE_LISTS)
-/* gc_allocator, but with small (scanned) objects from the free lists */
+/* gc_allocator, but with small objects from the free lists */
 template <class T> class __ss_allocator : public gc_allocator<T> {
 public:
     typedef T value_type;
@@ -206,9 +229,11 @@ public:
     __ss_allocator(const __ss_allocator &) noexcept {}
     template <class U> __ss_allocator(const __ss_allocator<U> &) noexcept {}
     T *allocate(std::size_t n, const void * = 0) {
+        void *p;
         if constexpr (std::is_same_v<decltype(GC_type_traits<T>().GC_is_ptr_free), GC_true_type>)
-            return gc_allocator<T>::allocate(n);
-        void *p = __ss_gc_malloc(n * sizeof(T));
+            p = __ss_gc_malloc_atomic(n * sizeof(T));
+        else
+            p = __ss_gc_malloc(n * sizeof(T));
         if (!p)
             throw std::bad_alloc();
         return static_cast<T *>(p);

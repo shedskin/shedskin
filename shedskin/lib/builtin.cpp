@@ -633,6 +633,8 @@ __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_in
    TODO: a single-threaded bdwgc compiled into the program (its amalgamation extra/gc.c, with
    LTO) gives the same speed without this, as the fast path of GC_malloc can then be inlined,
    and would also remove the libgc dependency for executables. */
+#include <gc/gc_inline.h> /* GC_generic_malloc_many */
+
 namespace __shedskin__ {
 void *__ss_free_lists[17];
 
@@ -647,6 +649,31 @@ void *__ss_gc_malloc_slow(std::size_t n) {
         return p;
     }
     return GC_MALLOC(n);
+}
+
+/* GC_generic_malloc_many links pointer-free objects through their first word, which the
+   collector does not trace, so move them into the (scanned) stack right away. any objects
+   that do not fit are simply reclaimed again by the next collection. */
+void *__ss_atomic_stacks[17][__SS_ATOMIC_STACK];
+unsigned __ss_atomic_counts[17];
+
+void *__ss_gc_malloc_atomic_slow(std::size_t n) {
+    std::size_t g = (n >> 4) + 1;
+    if (g < 17) {
+        void *p;
+        GC_generic_malloc_many(16*g, GC_I_PTRFREE, &p); /* unlike GC_malloc_many, takes the raw granule size */
+        if (!p)
+            return nullptr;
+        void *q = GC_NEXT(p);
+        unsigned c = 0;
+        while (q && c < __SS_ATOMIC_STACK) {
+            __ss_atomic_stacks[g][c++] = q;
+            q = GC_NEXT(q);
+        }
+        __ss_atomic_counts[g] = c;
+        return p;
+    }
+    return GC_MALLOC_ATOMIC(n);
 }
 } // namespace __shedskin__
 #endif

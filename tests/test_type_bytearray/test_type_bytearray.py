@@ -138,6 +138,22 @@ def test_bytearray_addition_assign():
     assert ba == bytearray(b'blaab')
     ba *= 2
     assert ba == bytearray(b'blaabblaab')
+    ba2 = ba
+    ba *= 1
+    assert ba == bytearray(b'blaabblaab')
+    assert ba is ba2
+    ba *= 0
+    assert ba == bytearray(b'')
+    assert ba is ba2
+    ba = bytearray(b'abc')
+    ba *= -1
+    assert ba == bytearray(b'')
+    ba = bytearray(b'x')
+    ba *= 3
+    assert ba == bytearray(b'xxx')
+    by = b'ab'
+    by *= 0
+    assert by == b''
 
 
 def test_bytearray_insert():
