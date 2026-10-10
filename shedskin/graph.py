@@ -1674,7 +1674,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(node.op, ast.Pow):
             if not getmv().module.builtin:
                 node.right = ast_utils.float_negative_exponent(node.right)
-            self.fake_func(node, node.left, "__pow__", [node.right], func)
+            self.fake_func(
+                node,
+                node.left,
+                ast_utils.aug_msg(self.gx, node, "pow"),
+                [node.right],
+                func,
+            )
         elif isinstance(node.op, ast.Mod):
             if isinstance(node.right, ast.Tuple):
                 self.fake_func(node, node.left, "__mod__", [], func)
@@ -1684,7 +1690,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         infer.inode(self.gx, child), child, "__str__", [], func
                     )
             else:
-                self.fake_func(node, node.left, "__mod__", [node.right], func)
+                self.fake_func(
+                    node,
+                    node.left,
+                    ast_utils.aug_msg(self.gx, node, "mod"),
+                    [node.right],
+                    func,
+                )
         elif isinstance(node.op, ast.LShift):
             self.fake_func(
                 node,
@@ -2873,17 +2885,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 msgs += ["lshift", "rshift", "and", "xor", "or"]
             if datetime_class:  # only the operators these classes have
                 msgs = [msg for msg in msgs if "__%s__" % msg in newclass.funcs]
-            for msg in msgs:
-                method_name = "__i" + msg + "__"
-                if method_name not in newclass.funcs:
-                    self.visit(
-                        ast.parse(
-                            "def %s(self, other): return self.__%s__(other)"
-                            % (method_name, msg)
-                        ).body[0],
-                        newclass,
-                    )
-                    newclass.funcs[method_name].invisible = True
+        else:
+            msgs = []
+        for msg in ("mod", "pow"):  # e.g. 'x %= y' for any class with __mod__
+            if not newclass.mv.module.builtin or "__%s__" % msg in newclass.funcs:
+                msgs.append(msg)
+        for msg in msgs:
+            method_name = "__i" + msg + "__"
+            if method_name not in newclass.funcs:
+                self.visit(
+                    ast.parse(
+                        "def %s(self, other): return self.__%s__(other)"
+                        % (method_name, msg)
+                    ).body[0],
+                    newclass,
+                )
+                newclass.funcs[method_name].invisible = True
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and "__str__" not in newclass.funcs:
