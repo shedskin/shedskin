@@ -210,9 +210,14 @@ bytes *bytes::__imul__(__ss_int n) {
     if (frozen)
         return __mul__(n);
     else {
-        __GC_STRING s = unit;
-        for(__ss_int i=0; i<n-1; i++)
-            unit += s;
+        if(n <= 0)
+            unit.clear();
+        else if(n > 1) {
+            __GC_STRING s = unit;
+            unit.reserve(s.size()*(size_t)n);
+            for(__ss_int i=0; i<n-1; i++)
+                unit += s;
+        }
         return this;
     }
 }
