@@ -55,6 +55,30 @@ def test_from_string():
     assert complex("j") == complex(0, 1)
     assert complex("0j") == complex(0, 0)
 
+    # same grammar as CPython (1009-B7)
+    assert complex("١+٢j") == complex(1, 2)
+    assert complex(" 1j ") == complex(0, 1)
+    assert complex(" ( 1+2j ) ") == complex(1, 2)
+    assert complex("(j)") == complex(0, 1)
+    assert complex("1+2J") == complex(1, 2)
+    assert complex("-J") == complex(0, -1)
+    assert complex("1e3J") == complex(0, 1000)
+    assert complex("1_000") == complex(1000)
+    assert complex("1e1_0j") == complex(0, 1e10)
+    assert complex("+1-j") == complex(1, -1)
+    assert complex("-1e-3-4.5e+2j") == complex(-0.001, -450)
+    assert complex("1.e3j") == complex(0, 1000)
+    assert str(complex("-inf+infj")) == "(-inf+infj)"
+    assert str(complex("nanj")) == "nanj"
+    for s in ["1 +2j", "1+ 2j", "0x10", "1+2j\x00", "\x1c1j", "1+2j)",
+              "(1+2j", "()", "1+-2j", "1..j", "1j+2", "1 j", "1_+2j",
+              "1__0j", "_1j", "+", "", " ", "1+2jj", "infinit"]:
+        try:
+            complex(s)
+            assert False, s
+        except ValueError:
+            pass
+
 
 class PI:
     def __complex__(self):

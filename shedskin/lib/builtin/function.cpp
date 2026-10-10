@@ -199,40 +199,54 @@ static bool __float_scan_digits(const char *&p, __GC_STRING &clean) {
     return any;
 }
 
-static bool __float_scan(const char *p, __GC_STRING &clean) {
-    while(*p and isspace((unsigned char)*p))
-        p++;
+/* a float without surrounding whitespace; on success, advance p past it
+ * and append a strtod-digestible version to clean (also used by complex) */
+bool __float_scan_number(const char *&p, __GC_STRING &clean) {
+    const char *q = p;
+    __GC_STRING c;
 
-    if(*p == '+' or *p == '-')
-        clean += *p++;
+    if(*q == '+' or *q == '-')
+        c += *q++;
 
-    if(__float_word(p, "infinity")) {
-        clean += "inf";
-        p += 8;
-    } else if(__float_word(p, "inf")) {
-        clean += "inf";
-        p += 3;
-    } else if(__float_word(p, "nan")) {
-        clean += "nan";
-        p += 3;
+    if(__float_word(q, "infinity")) {
+        c += "inf";
+        q += 8;
+    } else if(__float_word(q, "inf")) {
+        c += "inf";
+        q += 3;
+    } else if(__float_word(q, "nan")) {
+        c += "nan";
+        q += 3;
     } else {
-        bool digits = __float_scan_digits(p, clean);
-        if(*p == '.') {
-            clean += *p++;
-            if(__float_scan_digits(p, clean))
+        bool digits = __float_scan_digits(q, c);
+        if(*q == '.') {
+            c += *q++;
+            if(__float_scan_digits(q, c))
                 digits = true;
         }
         if(not digits)
             return false;
-        if(*p == 'e' or *p == 'E') {
-            clean += 'e';
-            p++;
-            if(*p == '+' or *p == '-')
-                clean += *p++;
-            if(not __float_scan_digits(p, clean))
+        if(*q == 'e' or *q == 'E') {
+            c += 'e';
+            q++;
+            if(*q == '+' or *q == '-')
+                c += *q++;
+            if(not __float_scan_digits(q, c))
                 return false;
         }
     }
+
+    p = q;
+    clean += c;
+    return true;
+}
+
+static bool __float_scan(const char *p, __GC_STRING &clean) {
+    while(*p and isspace((unsigned char)*p))
+        p++;
+
+    if(not __float_scan_number(p, clean))
+        return false;
 
     while(*p and isspace((unsigned char)*p))
         p++;
