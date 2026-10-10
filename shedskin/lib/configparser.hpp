@@ -400,8 +400,8 @@ public:
     void *_join_value(dict<str *, str *> *cursect, str *optname, list<str *> *curval);
     void *add_section(str *section);
     list<str *> *sections();
-    list<str *> *read(str *filename);
-    list<str *> *read(list<str *> *filenames);
+    list<str *> *read(str *filename, str *encoding=0);
+    list<str *> *read(list<str *> *filenames, str *encoding=0);
     void *read_string(str *string_, str *source=NULL);
     void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
     void *read_file(file *fp, str *source=NULL);

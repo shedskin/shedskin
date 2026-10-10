@@ -150,7 +150,7 @@ class RawConfigParser:
         return True
     def options(self, section):
         return ['']
-    def read(self, filenames):
+    def read(self, filenames, encoding=None):
         return ['']
     def read_string(self, string, source=None):
         pass

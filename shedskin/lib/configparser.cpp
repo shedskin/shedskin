@@ -678,11 +678,11 @@ str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, s
     return (this->_interpolation)->before_get(this, section, option, value, d);
 }
 
-list<str *> *RawConfigParser::read(str *filename) {
-    return read(new list<str *>(1, filename));
+list<str *> *RawConfigParser::read(str *filename, str *encoding) {
+    return read(new list<str *>(1, filename), encoding);
 }
 
-list<str *> *RawConfigParser::read(list<str *> *filenames) {
+list<str *> *RawConfigParser::read(list<str *> *filenames, str *encoding) {
     /**
     Read and parse a filename or a list of filenames.
 
@@ -706,11 +706,16 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
 
     FOR_IN(filename,filenames,7,9,123)
         try {
-            fp = open(filename);
+            fp = open(filename, 0, encoding);
         } catch (OSError *) {
             continue;
         }
-        this->_read(fp, filename);
+        try {
+            this->_read(fp, filename);
+        } catch (...) {
+            fp->close(); /* like 'with open(..)': on Windows, an open file cannot be removed */
+            throw;
+        }
         fp->close();
         read_ok->append(filename);
     END_FOR

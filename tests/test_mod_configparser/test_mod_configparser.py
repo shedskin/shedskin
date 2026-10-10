@@ -1348,6 +1348,26 @@ def test_interpolation_before_methods():
         assert ok
 
 
+def test_read_encoding():
+    # separate file: earlier tests leave 'writefile' handles open, so it can't be removed on Windows
+    encfile = os.path.join(testdata, 'configparser_encoding_test.ini')
+    f = open(encfile, 'w', encoding='latin-1')
+    f.write('[sec]\nkey = caf\xe9\n')
+    f.close()
+    cp = configparser.ConfigParser()
+    assert cp.read(encfile, encoding='latin-1') == [encfile]
+    assert cp.get('sec', 'key') == 'caf\xe9'
+    cp2 = configparser.ConfigParser()
+    assert cp2.read([encfile], 'latin-1') == [encfile]
+    assert cp2.get('sec', 'key') == 'caf\xe9'
+    cp3 = configparser.ConfigParser()
+    try:
+        cp3.read(encfile, encoding='utf-8')
+        assert False
+    except UnicodeDecodeError:
+        pass
+    os.remove(encfile)
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1402,6 +1422,7 @@ def test_all():
     test_unnamed_section()
     test_interpolation_before_methods()
     test_add_default_section_error()
+    test_read_encoding()
 
 if __name__ == '__main__':
     test_all()
