@@ -272,6 +272,30 @@ def test_symmetric_difference_update():
     assert v == w
 
 
+def test_symmetric_difference():
+    x = {1, 2, 3, 5}
+    assert sorted(x.symmetric_difference({5, 11})) == [1, 2, 3, 11]
+    assert sorted(x) == [1, 2, 3, 5]
+
+    # any iterable, duplicates harmless
+    assert sorted(x.symmetric_difference([5, 11])) == [1, 2, 3, 11]
+    assert sorted(x.symmetric_difference([5, 5, 11, 11])) == [1, 2, 3, 11]
+    assert sorted(x.symmetric_difference((1, 4))) == [2, 3, 4, 5]
+    assert sorted(x.symmetric_difference(range(4))) == [0, 5]
+    assert sorted(x.symmetric_difference({5: 'a', 6: 'b'})) == [1, 2, 3, 6]
+    assert sorted(x.symmetric_difference(iter([2, 7]))) == [1, 3, 5, 7]
+    assert sorted(x.symmetric_difference(i for i in [3, 8])) == [1, 2, 5, 8]
+    assert x.symmetric_difference(x) == set()
+    assert sorted(x) == [1, 2, 3, 5]
+
+    assert sorted({'a', 'c'}.symmetric_difference('abb')) == ['b', 'c']
+
+    f = frozenset([1, 2])
+    g = f.symmetric_difference([2, 3])
+    assert g == frozenset([1, 3])
+    assert hash(g) == hash(frozenset([1, 3]))
+
+
 def test_pop_empty():
     s = {1}
     assert s.pop() == 1
@@ -349,6 +373,7 @@ def test_all():
     test_set_proper_subset_superset()
     test_set_binary_elem()
     test_set_augmented_assign()
+    test_symmetric_difference()
     test_symmetric_difference_update()
     test_pop_empty()
     test_set_syntax()
