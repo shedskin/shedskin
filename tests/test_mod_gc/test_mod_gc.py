@@ -86,6 +86,31 @@ def test_ptrfree_containers():
         assert complexes[i] == complex(i, -i)
         assert ints[i] == i * 7919
 
+def test_ptrfree_free_lists():
+    # small pointer-free buffers (bytes, str) come from free lists; keep many
+    # of every size class alive across collections, interleaved with garbage
+    # and with buffers that grow (and so are reallocated)
+    keepb = []
+    keeps = []
+    for rnd in range(20):
+        for size in range(1, 300, 7):
+            keepb.append(bytes(bytearray([size % 256]) * size))
+            keeps.append(chr(97 + size % 26) * size)
+            junk = bytearray(b'x') * size
+            junk += b'y' * size
+        gc.collect()
+    grown = bytearray()
+    for i in range(1000):
+        grown.append(i % 256)
+    gc.collect()
+    pos = 0
+    for rnd in range(20):
+        for size in range(1, 300, 7):
+            assert keepb[pos] == bytes([size % 256]) * size
+            assert keeps[pos] == chr(97 + size % 26) * size
+            pos += 1
+    assert grown == bytearray([i % 256 for i in range(1000)])
+
 def test_all():
     test_gc()
     test_collect_generation()
@@ -95,6 +120,7 @@ def test_all():
     test_count()
     test_threshold()
     test_ptrfree_containers()
+    test_ptrfree_free_lists()
 
 if __name__ == '__main__':
     test_all()
