@@ -655,7 +655,16 @@ def test_list_fresh_copy():
     assert g == a and g is not a
 
 
+def test_list_literal_long():
+    # more elements than the inline storage of the backing small_vector
+    l = [(0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2), (2, 2), (3, 3)]
+    assert len(l) == 8
+    assert l[7] == (3, 3)
+    assert sum([a + b for a, b in l]) == 18
+
+
 def test_all():
+    test_list_literal_long()
     test_list_copy_paths()
     test_list_append()
     test_list_assign()

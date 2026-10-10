@@ -187,7 +187,16 @@ def test_int_pairs():
     assert d[(25, 26)] == 25 and d[(5, 6)] == 5 and len(d) == 30
 
 
+def test_tuple_literal_long():
+    # more elements than the inline storage of the backing small_vector
+    t = (1, 2, 3, 4, 5, 6, 7, 8)
+    assert len(t) == 8
+    assert t[7] == 8
+    assert sum(t) == 36
+
+
 def test_all():
+    test_tuple_literal_long()
     test_tuple()
     test_equivalence()
     test_membership()
