@@ -95,6 +95,43 @@ def test_zip_exhaustion():
     assert list(zip([5, 6], [7, 8], [9, 10], strict=True)) == [(5, 7, 9), (6, 8, 10)]
 
 
+def zip_strict_error(z):
+    try:
+        for t in z:
+            pass
+    except ValueError as e:
+        return str(e)
+    return ''
+
+
+def test_zip_strict_messages():
+    # which argument is shorter or longer than the ones before it
+    assert zip_strict_error(zip([1, 2], [3], strict=True)) == 'zip() argument 2 is shorter than argument 1'
+    assert zip_strict_error(zip([1], [3, 4], strict=True)) == 'zip() argument 2 is longer than argument 1'
+    assert zip_strict_error(zip(iter([1, 2]), iter([3]), strict=True)) == 'zip() argument 2 is shorter than argument 1'
+    assert zip_strict_error(zip((x for x in [1]), [3, 4], strict=True)) == 'zip() argument 2 is longer than argument 1'
+    assert zip_strict_error(zip([1, 2], [3, 4], [5], strict=True)) == 'zip() argument 3 is shorter than arguments 1-2'
+    assert zip_strict_error(zip([1, 2], [3], [5, 6], strict=True)) == 'zip() argument 2 is shorter than argument 1'
+    assert zip_strict_error(zip([1], [3], [5, 6], strict=True)) == 'zip() argument 3 is longer than arguments 1-2'
+    assert zip_strict_error(zip([1], [3], [5], [7, 8], strict=True)) == 'zip() argument 4 is longer than arguments 1-3'
+    assert zip_strict_error(zip([1], [3], [5, 6], [7, 8], strict=True)) == 'zip() argument 3 is longer than arguments 1-2'
+    assert zip_strict_error(zip([1, 2], [3, 4], [5, 6], [7], strict=True)) == 'zip() argument 4 is shorter than arguments 1-3'
+    assert zip_strict_error(zip([1, 2], [3, 4], [5, 6], strict=True)) == ''
+
+    error = ''
+    try:
+        list(zip('ab', [1], strict=True))
+    except ValueError as e:
+        error = str(e)
+    assert error == 'zip() argument 2 is shorter than argument 1'
+
+    # arguments after a shorter one are not advanced
+    a, b, c = iter([1, 9]), iter([2]), iter([3, 4, 5])
+    assert zip_strict_error(zip(a, b, c, strict=True)) == 'zip() argument 2 is shorter than argument 1'
+    assert list(a) == []
+    assert list(c) == [4, 5]
+
+
 def test_zip_sequences():
     # list arguments are indexed directly: like a list iterator, zip sees
     # items appended to or removed from a list during iteration
@@ -158,6 +195,27 @@ def test_map():
     assert error
 
 
+def map_strict_error(m):
+    try:
+        for x in m:
+            pass
+    except ValueError as e:
+        return str(e)
+    return ''
+
+
+def test_map_strict_messages():
+    f2 = lambda a, b: a + b
+    f3 = lambda a, b, c: a + b + c
+    assert map_strict_error(map(f2, [1, 2], [3], strict=True)) == 'map() argument 2 is shorter than argument 1'
+    assert map_strict_error(map(f2, [1], [3, 4], strict=True)) == 'map() argument 2 is longer than argument 1'
+    assert map_strict_error(map(f3, [1, 2], [3, 4], [5], strict=True)) == 'map() argument 3 is shorter than arguments 1-2'
+    assert map_strict_error(map(f3, [1, 2], [3], [5, 6], strict=True)) == 'map() argument 2 is shorter than argument 1'
+    assert map_strict_error(map(f3, [1], [3], [5, 6], strict=True)) == 'map() argument 3 is longer than arguments 1-2'
+    assert map_strict_error(map(f3, [1], [3, 4], [5], strict=True)) == 'map() argument 2 is longer than argument 1'
+    assert map_strict_error(map(f3, [1], [3], [5], strict=True)) == ''
+
+
 def test_map_nested():
     foo3 = lambda a, b, c: "%d %.2f %s" % (a, b, c)
     flats = (chr(ord("A") + x) for x in range(3))
@@ -172,8 +230,10 @@ def test_all():
     test_zip()
     test_zip_strict()
     test_zip_exhaustion()
+    test_zip_strict_messages()
     test_zip_sequences()
     test_map()
+    test_map_strict_messages()
     test_map_nested()
 
 if __name__ == '__main__':

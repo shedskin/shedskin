@@ -92,6 +92,11 @@ template<class T> str *ascii(T t) { return __ascii(repr(t)); }
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
 template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.size(); } /* XXX more general solution? */
 
+/* zip/map with strict=True: argument i (0-based, > 0) is the first one found
+   to be shorter or longer than the ones before it */
+
+ValueError *__strict_length_error(const char *name, size_t i, bool shorter);
+
 #else
 
 #ifndef SS_FUNCTION_HPP
@@ -399,8 +404,10 @@ template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x, __ss_i
 
 /* zip iterators implement __get_next instead of __next__, and advance their
    arguments in the same way, so exhausting them throws no exceptions. as in
-   cpython, arguments after the first exhausted one are not advanced (except
-   with strict=True, which must see whether they are exhausted as well) */
+   cpython, arguments after the first exhausted one are not advanced. with
+   strict=True, if the first argument is exhausted, the others are advanced
+   until one is not, which is then 'longer'; if a later one is exhausted, it
+   is 'shorter' */
 
 template<class T> inline bool __zip_advance(__iter<T> *iter, T &result) {
     iter->__stop_iteration = false;
@@ -441,19 +448,18 @@ template<class T, class U> tuple2<T, U> *izipiter<T, U>::__get_next() {
     if (!this->exhausted) {
         T a;
         U b;
-        size_t n_exhausted = 0;
 
-        if (!__zip_advance(this->first, a))
-            n_exhausted += 1;
-        if ((!n_exhausted || this->strict) && !__zip_advance(this->second, b))
-            n_exhausted += 1;
-
-        if (!n_exhausted)
-            return new tuple2<T, U>(2, a, b);
-
-        this->exhausted = true;
-        if (this->strict and n_exhausted != 2)
-            throw new ValueError(new str("zip() arguments of different lengths"));
+        if (__zip_advance(this->first, a)) {
+            if (__zip_advance(this->second, b))
+                return new tuple2<T, U>(2, a, b);
+            this->exhausted = true;
+            if (this->strict)
+                throw __strict_length_error("zip", 1, true);
+        } else {
+            this->exhausted = true;
+            if (this->strict && __zip_advance(this->second, b))
+                throw __strict_length_error("zip", 1, false);
+        }
     }
     this->__stop_iteration = true;
     return NULL;
@@ -502,44 +508,44 @@ template<class T> void izipiter<T, T>::push_iter(pyiter<T> *iterable) {
 
 template<class T> tuple2<T, T> *izipiter<T, T>::__get_next() {
     if (!this->exhausted) {
-        tuple2<T, T> *tuple = NULL;
-        size_t n_exhausted = 0;
+        size_t n = this->iters.size();
+        size_t i; /* first exhausted argument */
 
-        if(this->iters.size() == 2) {
+        if(n == 2) {
             T first, second;
 
             if (!__zip_advance(this->iters[0], first))
-                n_exhausted += 1;
-            if ((!n_exhausted || this->strict) && !__zip_advance(this->iters[1], second))
-                n_exhausted += 1;
-
-            if(!n_exhausted) {
-                if constexpr (std::is_same_v<T, __ss_int>) { // TODO make __ss_tuple_int do this check
-                    tuple = __ss_tuple_int(2, first, second);
-                } else {
-                    tuple = new tuple2<T, T>(2, first, second);
-                }
-            }
+                i = 0;
+            else if (!__zip_advance(this->iters[1], second))
+                i = 1;
+            else if constexpr (std::is_same_v<T, __ss_int>) // TODO make __ss_tuple_int do this check
+                return __ss_tuple_int(2, first, second);
+            else
+                return new tuple2<T, T>(2, first, second);
 
         } else {
-            tuple = new tuple2<T, T>();
-            tuple->units.reserve(this->iters.size());
+            tuple2<T, T> *tuple = new tuple2<T, T>();
+            tuple->units.reserve(n);
 
             T e;
-            for (unsigned int i = 0; i < this->iters.size(); ++i) {
-                if (__zip_advance(this->iters[i], e))
-                    tuple->units.push_back(e);
-                else if (++n_exhausted && !this->strict)
+            for (i = 0; i < n; ++i) {
+                if (!__zip_advance(this->iters[i], e))
                     break;
+                tuple->units.push_back(e);
             }
+            if (i == n)
+                return tuple;
         }
 
-        if (!n_exhausted)
-            return tuple;
-
         this->exhausted = true;
-        if (this->strict and n_exhausted != this->iters.size())
-            throw new ValueError(new str("zip() arguments of different lengths"));
+        if (this->strict) {
+            if (i > 0)
+                throw __strict_length_error("zip", i, true);
+            T e;
+            for (size_t j = 1; j < n; ++j)
+                if (__zip_advance(this->iters[j], e))
+                    throw __strict_length_error("zip", j, false);
+        }
     }
     this->__stop_iteration = true;
     return NULL;
@@ -585,14 +591,15 @@ public:
 
     tuple2<TA, TB> *__get_next() {
         if (!this->exhausted) {
-            size_t n_exhausted = 0;
-
-            if (!first->for_in_has_next(loop1))
-                n_exhausted += 1;
-            if ((!n_exhausted || this->strict) && !second->for_in_has_next(loop2))
-                n_exhausted += 1;
-
-            if (!n_exhausted) {
+            if (!first->for_in_has_next(loop1)) {
+                this->exhausted = true;
+                if (this->strict && second->for_in_has_next(loop2))
+                    throw __strict_length_error("zip", 1, false);
+            } else if (!second->for_in_has_next(loop2)) {
+                this->exhausted = true;
+                if (this->strict)
+                    throw __strict_length_error("zip", 1, true);
+            } else {
                 TA a = first->for_in_next(loop1);
                 TB b = second->for_in_next(loop2);
                 if constexpr (std::is_same_v<TA, __ss_int> && std::is_same_v<TB, __ss_int>)
@@ -600,10 +607,6 @@ public:
                 else
                     return new tuple2<TA, TB>(2, a, b);
             }
-
-            this->exhausted = true;
-            if (this->strict and n_exhausted != 2)
-                throw new ValueError(new str("zip() arguments of different lengths"));
         }
         this->__stop_iteration = true;
         return NULL;
@@ -735,23 +738,23 @@ template<class R, class T1, class T2> R imapiter2<R, T1, T2 >::__next__ ()
     T1 t1;
     T2 t2;
 
-    size_t n_exhausted = 0;
+    bool e1 = false, e2 = false; /* exhausted */
 
     try  {
         t1 = this->iter1->__next__();
     } catch (StopIteration *) {
-        n_exhausted += 1;
+        e1 = true;
     }
     try  {
         t2 = this->iter2->__next__();
     } catch (StopIteration *) {
-        n_exhausted += 1;
+        e2 = true;
     }
 
-    if (n_exhausted) {
+    if (e1 || e2) {
         this->exhausted = true;
-        if (this->strict and n_exhausted != 2)
-            throw new ValueError(new str("map() arguments of different lengths"));
+        if (this->strict && e1 != e2)
+            throw __strict_length_error("map", 1, e2);
         else
             throw new StopIteration();
     }
@@ -810,29 +813,32 @@ template<class R, class T1, class T2, class T3> R imapiter3< R, T1, T2, T3 >::__
     T2 t2 = __zero<T2>();
     T3 t3 = __zero<T3>();
 
-    size_t n_exhausted = 0;
+    bool e1 = false, e2 = false, e3 = false; /* exhausted */
 
     try  {
         t1 = this->iter1->__next__();
     } catch (StopIteration *) {
-        n_exhausted += 1;
+        e1 = true;
     }
     try  {
         t2 = this->iter2->__next__();
     } catch (StopIteration *) {
-        n_exhausted += 1;
+        e2 = true;
     }
     try  {
         t3 = this->iter3->__next__();
     } catch (StopIteration *) {
-        n_exhausted += 1;
+        e3 = true;
     }
 
-    if (n_exhausted) {
+    if (e1 || e2 || e3) {
         this->exhausted = true;
-        if (this->strict and n_exhausted != 3)
-            throw new ValueError(new str("map() arguments of different lengths"));
-        else
+        if (this->strict && !(e1 && e2 && e3)) {
+            if (!e1) /* a later argument is exhausted first */
+                throw __strict_length_error("map", e2 ? 1 : 2, true);
+            else /* the first argument is, and a later one is not */
+                throw __strict_length_error("map", e2 ? 2 : 1, false);
+        } else
             throw new StopIteration();
     }
 

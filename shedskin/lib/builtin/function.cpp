@@ -265,6 +265,16 @@ template<> __ss_float __float(str *s) {
     return d;
 }
 
+/* zip, map: CPython's message for strict=True, for example 'zip() argument 2
+   is shorter than argument 1' or 'map() argument 3 is longer than arguments 1-2' */
+
+ValueError *__strict_length_error(const char *name, size_t i, bool shorter) {
+    std::string msg = std::string(name) + "() argument " + std::to_string(i + 1) +
+        (shorter ? " is shorter than argument" : " is longer than argument") +
+        (i == 1 ? " 1" : "s 1-" + std::to_string(i));
+    return new ValueError(new str(msg.c_str()));
+}
+
 /* id */
 
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
