@@ -74,6 +74,7 @@ public:
     template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
 
     set<T> *symmetric_difference(set<T> *s);
+    template <class U> set<T> *symmetric_difference(U *other);
     void *symmetric_difference_update(set<T> *s);
     template <class U> void *symmetric_difference_update(U *other);
 
@@ -429,6 +430,25 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     return c;
 }
 
+template<class T> template <class U> set<T> *set<T>::symmetric_difference(U *iter) {
+    set<T> *c = new set<T>(this->frozen);
+    c->gcs = gcs;
+
+    /* membership is checked against 'this', so duplicates in 'iter' are harmless */
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN(e,iter,1,2,3)
+        if (__contains__(e))
+            c->gcs.erase(e);
+        else
+            c->gcs.insert(e);
+    END_FOR
+
+    return c;
+}
+
 template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) {
     set<T>* result = new set<T>(this->frozen);
 
@@ -551,7 +571,7 @@ template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
 }
 
 template<class T> template<class U> void *set<T>::symmetric_difference_update(U *other) {
-    symmetric_difference_update(new set<T>(other));
+    this->gcs = symmetric_difference(other)->gcs;
     return NULL;
 }
 
