@@ -315,6 +315,9 @@ class timedelta:
     def __neg__(self):
         return self
 
+    def __pos__(self):
+        return self
+
     def __truediv__(self, n):
         return n.__with_timedelta__(self, 1.0)  # timedelta for a number, float for a timedelta
 
