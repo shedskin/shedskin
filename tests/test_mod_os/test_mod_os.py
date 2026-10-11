@@ -344,25 +344,75 @@ def test_setgroups_overflow():
 
 def test_embedded_nul():
     # C apis stop at the first NUL, so these used to silently act on 'ss_nul'
-    # (not 'nul': on windows that is the null device, which always exists)
+    # (not 'nul': on windows that is the null device, which always exists).
+    # like CPython, os functions taking a path name themselves and the argument
     bad = 'ss_nul\x00x.txt'
-    for i in range(6):
+    for i in range(16):
+        expected = 'embedded null byte'
         try:
             if i == 0:
                 open(bad, 'w')
             elif i == 1:
+                expected = 'stat: embedded null character in path'
                 os.stat(bad)
             elif i == 2:
+                expected = 'mkdir: embedded null character in path'
                 os.mkdir(bad)
             elif i == 3:
+                expected = 'remove: embedded null character in path'
                 os.remove(bad)
             elif i == 4:
+                expected = 'listdir: embedded null character in path'
                 os.listdir('.\x00x')
+            elif i == 5:
+                expected = 'unlink: embedded null character in path'
+                os.unlink(bad)
+            elif i == 6:
+                expected = 'rmdir: embedded null character in path'
+                os.rmdir(bad)
+            elif i == 7:
+                expected = 'chdir: embedded null character in path'
+                os.chdir(bad)
+            elif i == 8:
+                expected = 'rename: embedded null character in src'
+                os.rename(bad, 'ss_nul2')
+            elif i == 9:
+                expected = 'rename: embedded null character in dst'
+                os.rename('ss_nul2', bad)
+            elif i == 10:
+                expected = 'replace: embedded null character in dst'
+                os.replace('ss_nul2', bad)
+            elif i == 11:
+                expected = 'chmod: embedded null character in path'
+                os.chmod(bad, 0o644)
+            elif i == 12:
+                expected = 'access: embedded null character in path'
+                os.access(bad, os.F_OK)
+            elif i == 13:
+                expected = 'open: embedded null character in path'
+                os.open(bad, os.O_RDONLY)
+            elif i == 14:
+                expected = 'scandir: embedded null character in path'
+                os.scandir('.\x00x')
             else:
-                os.path.realpath(bad)
+                os.system('echo\x00x')
             assert False
         except ValueError as e:
-            assert str(e) == 'embedded null byte'
+            assert str(e) == expected, str(e)
+    if os.name == 'posix':
+        for i in range(3):
+            expected = 'lstat: embedded null character in path'
+            try:
+                if i == 0:
+                    os.lstat(bad)
+                elif i == 1:
+                    os.path.realpath(bad)
+                else:
+                    expected = 'symlink: embedded null character in dst'
+                    os.symlink('ss_nul2', bad)
+                assert False
+            except ValueError as e:
+                assert str(e) == expected, str(e)
     # predicates return False instead
     assert not os.path.exists(bad)
     assert not os.path.lexists(bad)
