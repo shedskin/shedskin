@@ -267,7 +267,22 @@ namespace __shedskin__ {
 #endif
 
 #ifdef __SS_BOOST
-#define __GC_VECTOR(T) boost::container::small_vector<T, 4, __ss_allocator<T> >
+/* grow by 2x (boost defaults to 1.6x, for less memory overhead), to capacities of 2^k-1
+   elements (4, 7, 15, 31, ..; other capacities, as left by reserve, grow by 1.5-3x to get
+   back in line). with the byte that bdwgc adds at the end (for interior pointers), the buffer
+   then exactly fits a power of two, instead of just spilling over into the next size class,
+   or even the next heap block. plain 2x: up to 1.6x more memory, and slower */
+struct __ss_growth_factor {
+    template<class SizeType>
+    SizeType operator()(const SizeType cur_cap, const SizeType add_min_cap, const SizeType max_cap) const {
+        SizeType new_cap = max_cap;
+        if (cur_cap < max_cap / 4)
+            new_cap = (SizeType)(std::bit_ceil((std::size_t)(cur_cap + cur_cap / 2 + 2)) - 1);
+        return std::max<SizeType>(cur_cap + add_min_cap, std::min<SizeType>(max_cap, new_cap));
+    }
+};
+typedef boost::container::small_vector_options<boost::container::growth_factor<__ss_growth_factor> >::type __ss_small_vector_options;
+#define __GC_VECTOR(T) boost::container::small_vector<T, 4, __ss_allocator<T>, __ss_small_vector_options >
 #else
 #define __GC_VECTOR(T) std::vector< T, __ss_allocator< T > >
 #endif
