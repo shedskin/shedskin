@@ -111,6 +111,28 @@ def test_ptrfree_free_lists():
             pos += 1
     assert grown == bytearray([i % 256 for i in range(1000)])
 
+def test_recycled_list_buffers():
+    # growing lists leave their old buffers behind, which are recycled for
+    # new allocations (pointer and pointer-free element types)
+    total = 0
+    for rnd in range(200):
+        ints = []
+        floats = []
+        pairs = []
+        n = 0
+        while n < rnd % 70:
+            ints.append(n)
+            floats.append(n * 0.5)
+            pairs.append((n, rnd))
+            n += 1
+        if rnd % 50 == 0:
+            gc.collect()
+        assert ints == list(range(n))
+        assert floats == [i * 0.5 for i in range(n)]
+        assert pairs == [(i, rnd) for i in range(n)]
+        total += sum(ints) + int(sum(floats)) + sum(b for a, b in pairs)
+    assert total == 926351
+
 def test_all():
     test_gc()
     test_collect_generation()
@@ -121,6 +143,7 @@ def test_all():
     test_threshold()
     test_ptrfree_containers()
     test_ptrfree_free_lists()
+    test_recycled_list_buffers()
 
 if __name__ == '__main__':
     test_all()

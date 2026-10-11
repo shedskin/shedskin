@@ -238,6 +238,26 @@ public:
             throw std::bad_alloc();
         return static_cast<T *>(p);
     }
+    /* put small buffers (such as those left behind by a growing list) back on the free
+       lists, instead of handing them to GC_free (the buffer came from the same list) */
+    void deallocate(T *p, std::size_t n) noexcept {
+        std::size_t g = ((n * sizeof(T)) >> 4) + 1;
+        if (g < 17) {
+            if constexpr (std::is_same_v<decltype(GC_type_traits<T>().GC_is_ptr_free), GC_true_type>) {
+                unsigned c = __ss_atomic_counts[g];
+                if (c < __SS_ATOMIC_STACK) {
+                    __ss_atomic_stacks[g][c] = p;
+                    __ss_atomic_counts[g] = c+1;
+                } else
+                    GC_FREE(p);
+            } else {
+                std::memset((void *)p, 0, 16*g); /* objects come back cleared */
+                GC_NEXT(p) = __ss_free_lists[g];
+                __ss_free_lists[g] = p;
+            }
+        } else
+            GC_FREE(p);
+    }
 };
 template <class T, class U> inline bool operator==(const __ss_allocator<T> &, const __ss_allocator<U> &) { return true; }
 template <class T, class U> inline bool operator!=(const __ss_allocator<T> &, const __ss_allocator<U> &) { return false; }
