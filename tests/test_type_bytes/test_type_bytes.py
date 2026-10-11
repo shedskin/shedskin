@@ -719,7 +719,33 @@ def test_character_classes():
     assert not b'a\xe9'.isalnum()
 
 
+literal_order = [0]
+
+
+def literal_elem(n):
+    literal_order.append(n)
+    return n
+
+
+def test_bytes_list_literal():
+    # bytes() of a list literal is built without the intermediate list
+    x = 7
+    assert bytes([x, 2, 3]) == b'\x07\x02\x03'
+    assert bytes([x]) == b'\x07'
+    assert bytes([True, x]) == b'\x01\x07'
+    del literal_order[:]
+    assert bytes([literal_elem(1), literal_elem(2), literal_elem(3)]) == b'\x01\x02\x03'
+    assert literal_order == [1, 2, 3]
+    error = ''
+    try:
+        bytes([x, 256])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'bytes must be in range(0, 256)'
+
+
 def test_all():
+    test_bytes_list_literal()
     test_character_classes()
     test_count_start_end()
     test_bytes_cmp()

@@ -3400,6 +3400,25 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ):
                 self.visit(ast.Constant(ord(node.args[0].value)), func)
                 return
+            # bytes([a, b, ..]) -> __bytes_lit({a, b, ..}): no intermediate list
+            if (
+                ident == "bytes"
+                and direct_call.mv.module.builtin
+                and len(node.args) == 1
+                and not node.keywords
+                and isinstance(node.args[0], ast.List)
+                and node.args[0].elts
+                and typestr.nodetypestr(self.gx, node.args[0], func, mv=self.mv)
+                == "list<__ss_int> *"
+            ):
+                type_child = self.subtypes(self.mergeinh[node.args[0]], "unit")
+                self.append("__bytes_lit({")
+                for i, elt in enumerate(node.args[0].elts):
+                    if i:
+                        self.append(",")
+                    self.impl_visit_conv(elt, type_child, func)
+                self.append("})")
+                return
             if ident in [
                 "abs",
                 "int",
