@@ -3437,7 +3437,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if not node.keywords:
                     self.append("print(")
                     for i, arg in enumerate(node.args):
-                        self.visit(arg, func)
+                        # a bare NULL is typed as a plain integer by C++, and
+                        # would be printed as "0" (see castnull below)
+                        if ast_utils.is_none(arg):
+                            self.append("(void *)NULL")
+                        else:
+                            self.visit(arg, func)
                         if i != len(node.args) - 1:
                             self.append(", ")
                     self.append(")")
@@ -3648,6 +3653,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 swap_env = True
 
         castnull = False  # XXX
+        print_call = self.library_func(funcs, "builtin", None, "__print")
         if (
             self.library_func(funcs, "random", None, "seed")
             or self.library_func(funcs, "random", None, "triangular")
@@ -3672,6 +3678,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # bytearray.take_bytes(None) must pick the void* (take all)
             # overload, not the __ss_int one
             or self.library_func(funcs, "builtin", "bytes_", "take_bytes")
+            # print(None), but not a None sep/end/file (see below)
+            or print_call
         ):
             castnull = True
         for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
@@ -3764,7 +3772,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             }:
                 cast = True
                 self.append("(__ss_float(")
-            elif castnull and ast_utils.is_none(arg):
+            elif (
+                castnull
+                and ast_utils.is_none(arg)
+                and not (print_call and formal.name.startswith("__kw_"))
+            ):
                 cast = True
                 self.append("((void *)(")
 

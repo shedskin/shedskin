@@ -31,6 +31,8 @@ not implemented:
 
  """
 
+import io
+
 class Klass:
     def __init__(self, name):
         self.name = name
@@ -404,6 +406,30 @@ def test_print():  # TODO print to StringIO and check?
     assert True
 
 
+def test_print_stringio():
+    f = io.StringIO()
+    print('', file=f)
+    print('\n', file=f)
+    print({1}, file=f)
+    print([], file=f)
+    print(1, 2.2, end='hoep', sep='--', file=f)
+    print(file=f)
+    print(1, None, 'x', file=f, sep=None, end=None)
+    assert f.getvalue() == '\n\n\n{1}\n[]\n1--2.2hoep\n1 None x\n'
+
+    # literal None (a bare C++ NULL) printed as '0'
+    f = io.StringIO()
+    print(None, file=f)
+    print('a', None, file=f)
+    print(None, None, sep='-', file=f)
+    print(None, 1, flush=True, file=f)
+    assert f.getvalue() == 'None\na None\nNone-None\nNone 1\n'
+
+    f = io.StringIO()
+    print(None, sep=None, end='', file=f)
+    assert f.getvalue() == 'None'
+
+
 def test_range():
     a = 1
 
@@ -712,6 +738,7 @@ def test_all():
     test_pow()
     test_property()
     test_print()
+    test_print_stringio()
     test_range()
     test_range_beyond_32_bits()
     test_range_slicing()
