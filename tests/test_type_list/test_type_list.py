@@ -663,6 +663,31 @@ def test_list_literal_long():
     assert sum([a + b for a, b in l]) == 18
 
 
+def test_list_growth():
+    # appends past capacities 4, 7, 15, 31, .., also after a copy or
+    # literal leaves an exact capacity
+    a = []
+    n = 0
+    while n < 1000:
+        a.append(n * 3)
+        n += 1
+    assert len(a) == 1000 and a[999] == 2997 and sum(a) == 3 * 999 * 1000 // 2
+    for size in (1, 4, 5, 7, 8, 14, 15, 16, 31, 32, 100):
+        b = list(range(size))
+        c = b[:]
+        c.append(-1)
+        c.append(-2)
+        assert c[:size] == b and c[size:] == [-1, -2]
+    d = [1, 2, 3, 4, 5, 6]
+    d.append(7)
+    d.append(8)
+    assert d == [1, 2, 3, 4, 5, 6, 7, 8]
+    fl = []
+    while len(fl) < 300:
+        fl.append(len(fl) * 0.25)
+    assert fl[299] == 74.75
+
+
 def test_all():
     test_list_literal_long()
     test_list_copy_paths()
@@ -694,6 +719,7 @@ def test_all():
     test_list_append_reserve()
     test_listcomp_append_reserve()
     test_list_fresh_copy()
+    test_list_growth()
 
 
 if __name__ == "__main__":
