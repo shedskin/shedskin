@@ -194,6 +194,25 @@ def test_walrus5():
     assert total == 10
 
 
+def test_walrus6():
+    # target not otherwise used inside the comprehension (0925-C12)
+    r = [1, 2, 3]
+    assert [y for y in r if (z := y * 2) > 3] == [2, 3]
+    assert z == 6
+    assert [(w := y * 3) for y in r] == [3, 6, 9]
+    assert w == 9
+    assert [y for y in r for u in r if (v := y + u) > 5] == [3]
+    assert v == 6
+    assert {y for y in r if (a := y * 2) > 3} == {2, 3}
+    assert a == 6
+    assert {y: 1 for y in r if (b := y * 2) > 3} == {2: 1, 3: 1}
+    assert b == 6
+    assert sum(y for y in r if (c := y * 2) > 3) == 5
+    assert c == 6
+    assert list(y for y in r if (d := y * 2) > 3) == [2, 3]
+    assert d == 6
+
+
 
 def test_all():
     test_assign_int()
@@ -220,6 +239,7 @@ def test_all():
     test_walrus3()
     test_walrus4()
     test_walrus5()
+    test_walrus6()
 
 
 if __name__ == '__main__':
