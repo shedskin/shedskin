@@ -112,18 +112,24 @@ public:
 
 /* paths, commands and environment entries handed to the OS: the C apis stop
    at the first NUL, so (as in CPython) refuse these instead of silently
-   operating on a truncated name */
+   operating on a truncated name. like CPython, os functions taking a path
+   name themselves and the argument ("stat: embedded null character in path"),
+   while open(), os.system() and environment entries just say "embedded null
+   byte" */
 inline bool __ss_has_nul(str *s) { return s->unit.find((__ss_char)0) != std::string::npos; }
-inline void __ss_check_nul(str *s) {
-    if (__ss_has_nul(s))
+inline void __ss_check_nul(str *s, const char *func = 0, const char *arg = "path") {
+    if (__ss_has_nul(s)) {
+        if (func)
+            throw new ValueError(new str((std::string(func) + ": embedded null character in " + arg).c_str()));
         throw new ValueError(new str("embedded null byte"));
+    }
 }
-inline char *__ss_cpath(str *s) { __ss_check_nul(s); return s->c_str(); }
+inline char *__ss_cpath(str *s, const char *func = 0, const char *arg = "path") { __ss_check_nul(s, func, arg); return s->c_str(); }
 
 #ifdef WIN32
 /* file names on Windows: utf-16 for the wide apis (the narrow ones go
    through the lossy ansi code page), lone surrogates kept as in CPython */
-inline std::wstring __ss_wpath(str *s) { __ss_check_nul(s); return __to_utf16<wchar_t>(s->unit); }
+inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "path") { __ss_check_nul(s, func, arg); return __to_utf16<wchar_t>(s->unit); }
 #endif
 
 file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);

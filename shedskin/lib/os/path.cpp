@@ -565,7 +565,7 @@ str *realpath(str *filename, __ss_bool strict) {
     a broken symlink's *target* is not specially detected as missing, only
     path components that don't exist as a direct directory entry.
     */
-    __ss_check_nul(filename);
+    __ss_check_nul(filename, "lstat"); /* (as CPython, which lstat()s each component) */
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;

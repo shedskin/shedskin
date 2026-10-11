@@ -125,8 +125,8 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
 
 /* str (code points) <-> native wide strings. (not via std::filesystem::path,
    whose conversions throw on lone surrogates) */
-static std::wstring __to_wide(str *s) {
-    __ss_check_nul(s);
+static std::wstring __to_wide(str *s, const char *func = 0, const char *arg = "path") {
+    __ss_check_nul(s, func, arg);
     return __to_utf16<wchar_t>(s->unit);
 }
 
@@ -141,11 +141,11 @@ static str *__from_wide(const wchar_t *w) {
    path::string() converts to the (lossy) ansi code page. so use the native
    representation: utf-8 bytes (with surrogateescape) on posix, utf-16 on
    Windows. */
-static std::filesystem::path __fspath(str *s) {
+static std::filesystem::path __fspath(str *s, const char *func = 0, const char *arg = "path") {
 #ifdef WIN32
-    return std::filesystem::path(__to_wide(s));
+    return std::filesystem::path(__to_wide(s, func, arg));
 #else
-    __ss_check_nul(s);
+    __ss_check_nul(s, func, arg);
     __GC_BYTES b = __to_utf8(s->unit);
     return std::filesystem::path(std::string(b.data(), b.size()));
 #endif
@@ -191,7 +191,7 @@ list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
 
     try {
-        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path)))
+        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path, "listdir")))
             r->append(__fsstr(entry.path().filename()));
     } catch (std::filesystem::filesystem_error const& e) {
         __throw_fs_error(e, path);
@@ -261,9 +261,9 @@ str *fsdecode(str *filename) {
 
 void *chdir(str *dir) {
 #ifdef WIN32
-    if(::_wchdir(__to_wide(dir).c_str()) == -1)
+    if(::_wchdir(__to_wide(dir, "chdir").c_str()) == -1)
 #else
-    if(::chdir(__ss_cpath(dir)) == -1)
+    if(::chdir(__ss_cpath(dir, "chdir")) == -1)
 #endif
         __throw_oserror(dir);
     return NULL;
@@ -293,9 +293,9 @@ str *getenv(str *name_, str *default_) {
 
 void *rename(str *a, str *b) {
 #ifdef WIN32
-    if(::_wrename(__to_wide(a).c_str(), __to_wide(b).c_str()) == -1) {
+    if(::_wrename(__to_wide(a, "rename", "src").c_str(), __to_wide(b, "rename", "dst").c_str()) == -1) {
 #else
-    if(std::rename(__ss_cpath(a), __ss_cpath(b)) == -1) {
+    if(std::rename(__ss_cpath(a, "rename", "src"), __ss_cpath(b, "rename", "dst")) == -1) {
 #endif
         __throw_oserror(a);
     }
@@ -309,7 +309,7 @@ void *replace(str *a, str *b) {
      * semantics on every platform, so use that here instead to match what
      * os.replace() promises. */
     std::error_code ec;
-    std::filesystem::rename(__fspath(a), __fspath(b), ec);
+    std::filesystem::rename(__fspath(a, "replace", "src"), __fspath(b, "replace", "dst"), ec);
     if (ec) {
         /* the error_code overload doesn't throw and isn't guaranteed to
          * leave errno set, so set it explicitly from ec before constructing
@@ -344,27 +344,31 @@ __ss_int process_cpu_count() {
     return cpu_count();
 }
 
-void *remove(str *path) {
+static void __remove(str *path, const char *func) {
 #ifdef WIN32
-    if(::_wremove(__to_wide(path).c_str()) == -1) {
+    if(::_wremove(__to_wide(path, func).c_str()) == -1) {
 #else
-    if(::unlink(__ss_cpath(path)) == -1) { /* not std::remove: that also removes empty directories */
+    if(::unlink(__ss_cpath(path, func)) == -1) { /* not std::remove: that also removes empty directories */
 #endif
         __throw_oserror(path);
     }
+}
+
+void *remove(str *path) {
+    __remove(path, "remove");
     return NULL;
 }
 
 void *unlink(str *path) {
-    remove(path);
+    __remove(path, "unlink");
     return NULL;
 }
 
 void *rmdir(str *a) {
 #ifdef WIN32
-    if (::_wrmdir(__to_wide(a).c_str()) == -1)
+    if (::_wrmdir(__to_wide(a, "rmdir").c_str()) == -1)
 #else
-    if (::rmdir(__ss_cpath(a)) == -1)
+    if (::rmdir(__ss_cpath(a, "rmdir")) == -1)
 #endif
         __throw_oserror(a);
     return NULL;
@@ -400,9 +404,9 @@ void *removedirs(str *name_) {
 
 void *mkdir(str *path, __ss_int mode) {
 #ifdef WIN32
-    if (::_wmkdir(__to_wide(path).c_str()) == -1)
+    if (::_wmkdir(__to_wide(path, "mkdir").c_str()) == -1)
 #else
-    if (::mkdir(__ss_cpath(path), (unsigned)mode) == -1)
+    if (::mkdir(__ss_cpath(path, "mkdir"), (unsigned)mode) == -1)
 #endif
         __throw_oserror(path);
     return NULL;
@@ -503,13 +507,13 @@ __cstat::__cstat(str *path, __ss_int t) {
 #ifdef WIN32
         /* (struct stat is the 64-bit time, 32-bit size variant) */
         static_assert(sizeof(struct stat) == sizeof(struct _stat64i32));
-        r = ::_wstat64i32(__to_wide(path).c_str(), (struct _stat64i32 *)&sbuf);
+        r = ::_wstat64i32(__to_wide(path, "stat").c_str(), (struct _stat64i32 *)&sbuf);
 #else
-        r = ::stat(__ss_cpath(path), &sbuf);
+        r = ::stat(__ss_cpath(path, "stat"), &sbuf);
 #endif
     } else if (t==2) {
 #ifndef WIN32
-        r = ::lstat(__ss_cpath(path), &sbuf);
+        r = ::lstat(__ss_cpath(path, "lstat"), &sbuf);
 #endif
     }
 #ifdef WIN32
@@ -720,7 +724,7 @@ list<DirEntry *> *scandir(str *path) {
     list<DirEntry *> *r = new list<DirEntry *>();
 
     try {
-        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path)))
+        for (const auto & entry : std::filesystem::directory_iterator(__fspath(path, "scandir")))
             r->append(new DirEntry(entry));
     } catch (std::filesystem::filesystem_error const& e) {
         __throw_fs_error(e, path);
@@ -780,7 +784,7 @@ __walk_tuple *__walk_iter::__scan(str *top, __GC_VECTOR(str *) &subdirs) {
     list<str *> *files = new list<str *>();
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(__fspath(top), ec);
+    std::filesystem::directory_iterator it(__fspath(top, "scandir"), ec);
     if(ec) {
         __onerror(top, ec);
         return NULL;
@@ -890,9 +894,9 @@ __ss_int umask(__ss_int newmask)  {
 __ss_int chmod(str* path, __ss_int val) {
 #ifdef WIN32
     /* windows only honours the write permission bit (read-only attribute) */
-    if(::_wchmod(__to_wide(path).c_str(), (int)val) == -1)
+    if(::_wchmod(__to_wide(path, "chmod").c_str(), (int)val) == -1)
 #else
-    if(::chmod(__ss_cpath(path), (unsigned)val) == -1)
+    if(::chmod(__ss_cpath(path, "chmod"), (unsigned)val) == -1)
 #endif
         throw new OSError(path);
     return 0;
@@ -1058,9 +1062,9 @@ void *fdatasync(__ss_int f1) {
 
 __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 #ifdef WIN32
-    __ss_int fp = ::_wopen(__to_wide(name_).c_str(), (int)flags, (int)mode);
+    __ss_int fp = ::_wopen(__to_wide(name_, "open").c_str(), (int)flags, (int)mode);
 #else
-    __ss_int fp = ::open(__ss_cpath(name_), (int)flags, (int)mode);
+    __ss_int fp = ::open(__ss_cpath(name_, "open"), (int)flags, (int)mode);
 #endif
     if(fp == -1)
         __throw_oserror(name_);
@@ -1191,7 +1195,7 @@ time_t_to_FILE_TIME(long long time_in, long nsec_in, FILETIME *out_ptr)
 
 static void __utime_win32(str *path, FILETIME *atime, FILETIME *mtime) {
     HANDLE hFile;
-    hFile = CreateFileW(__to_wide(path).c_str(), FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    hFile = CreateFileW(__to_wide(path, "utime").c_str(), FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
        __throw_winerror(GetLastError(), path);
     if (!SetFileTime(hFile, NULL, atime, mtime)) {
@@ -1223,12 +1227,12 @@ static void __utime_set(str *path, long long asec, long ansec, long long msec, l
     ts[0].tv_nsec = ansec;
     ts[1].tv_sec = (time_t)msec;
     ts[1].tv_nsec = mnsec;
-    if(::utimensat(AT_FDCWD, __ss_cpath(path), ts, 0) == -1)
+    if(::utimensat(AT_FDCWD, __ss_cpath(path, "utime"), ts, 0) == -1)
         __throw_oserror(path);
 }
 
 void *__utime_now(str *path) {
-    if(::utimensat(AT_FDCWD, __ss_cpath(path), NULL, 0) == -1)
+    if(::utimensat(AT_FDCWD, __ss_cpath(path, "utime"), NULL, 0) == -1)
         __throw_oserror(path);
     return NULL;
 }
@@ -1386,7 +1390,7 @@ str *readlink(str *path) {
     while (1)
       {
         std::string buffer(size, '\0');
-        size_t nchars = (size_t)::readlink(__ss_cpath(path), &buffer[0], size);
+        size_t nchars = (size_t)::readlink(__ss_cpath(path, "readlink"), &buffer[0], size);
         if (nchars == std::string::npos) {
             __throw_oserror(path);
         }
@@ -1516,19 +1520,19 @@ str *getlogin() {
 }
 
 void *chown(str *path, __ss_int uid, __ss_int gid) {
-    if (::chown(__ss_cpath(path), (unsigned)uid, (unsigned)gid) == -1)
+    if (::chown(__ss_cpath(path, "chown"), (unsigned)uid, (unsigned)gid) == -1)
         __throw_oserror(path);
     return NULL;
 }
 
 void *lchown(str *path, __ss_int uid, __ss_int gid) {
-    if (::lchown(__ss_cpath(path), (unsigned)uid, (unsigned)gid) == -1)
+    if (::lchown(__ss_cpath(path, "lchown"), (unsigned)uid, (unsigned)gid) == -1)
         __throw_oserror(path);
     return NULL;
 }
 
 void *chroot(str *path) {
-    if (::chroot(__ss_cpath(path)) == -1)
+    if (::chroot(__ss_cpath(path, "chroot")) == -1)
         __throw_oserror(path);
     return NULL;
 }
@@ -1681,7 +1685,7 @@ void *setpgrp() {
 }
 
 void *link(str *src, str *dst) {
-    if(::link(__ss_cpath(src), __ss_cpath(dst)) == -1)
+    if(::link(__ss_cpath(src, "link", "src"), __ss_cpath(dst, "link", "dst")) == -1)
         __throw_oserror(new str("os.link"));
     return NULL;
 }
@@ -1693,7 +1697,7 @@ __ss_int pathconf(str *path, str *name_) {
     return pathconf(path, pathconf_names->__getitem__(name_)); /* XXX errors */
 }
 __ss_int pathconf(str *path, __ss_int name_) {
-    return (__ss_int)::pathconf(__ss_cpath(path), (int)name_); /* XXX errors */
+    return (__ss_int)::pathconf(__ss_cpath(path, "pathconf"), (int)name_); /* XXX errors */
 }
 
 __ss_int fpathconf(__ss_int fd, str *name_) {
@@ -1739,7 +1743,7 @@ tuple<__ss_float> *getloadavg() {
 }
 
 void *mkfifo(str *path, __ss_int mode) {
-    if(::mkfifo(__ss_cpath(path), (unsigned)mode) == -1)
+    if(::mkfifo(__ss_cpath(path, "mkfifo"), (unsigned)mode) == -1)
         __throw_oserror(new str("os.mkfifo"));
     return NULL;
 }
@@ -1750,7 +1754,7 @@ class_ *cl___vfsstat;
 
 __vfsstat::__vfsstat(str *path) {
     this->__class__ = cl___vfsstat;
-    if(statvfs(__ss_cpath(path), &vbuf) == -1)
+    if(statvfs(__ss_cpath(path, "statvfs"), &vbuf) == -1)
         __throw_oserror(path);
     fill_er_up();
 }
@@ -1847,14 +1851,14 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
 }
 
 void *link(str *src, str *dst) {
-    if (!CreateHardLinkW(__to_wide(dst).c_str(), __to_wide(src).c_str(), NULL))
+    if (!CreateHardLinkW(__to_wide(dst, "link", "dst").c_str(), __to_wide(src, "link", "src").c_str(), NULL))
         __throw_winerror(GetLastError(), src);
     return NULL;
 }
 
 str *readlink(str *path) {
     std::error_code ec;
-    std::filesystem::path target = std::filesystem::read_symlink(__fspath(path), ec);
+    std::filesystem::path target = std::filesystem::read_symlink(__fspath(path, "readlink"), ec);
     if (ec) {
         std::error_condition c = ec.default_error_condition();
         errno = (c.category() == std::generic_category()) ? c.value() : EINVAL;
@@ -1906,7 +1910,7 @@ void *execv(str *file, list<str *> *args) {
     __wide_vector argv(args);
     {
         __suppress_iph guard;
-        ::_wexecv(__to_wide(file).c_str(), argv.data());
+        ::_wexecv(__to_wide(file, "execv").c_str(), argv.data());
     }
     __throw_oserror(new str("os.execv"));
 }
@@ -1916,7 +1920,7 @@ void *execvp(str *file, list<str *> *args) {
     __wide_vector argv(args);
     {
         __suppress_iph guard;
-        ::_wexecvp(__to_wide(file).c_str(), argv.data());
+        ::_wexecvp(__to_wide(file, "execv").c_str(), argv.data());
     }
     __throw_oserror(new str("os.execvp"));
 }
@@ -1926,7 +1930,7 @@ void *execve(str *file, list<str *> *args, dict<str *, str *> *env) {
     __wide_vector argv(args), envp(env);
     {
         __suppress_iph guard;
-        ::_wexecve(__to_wide(file).c_str(), argv.data(), envp.data());
+        ::_wexecve(__to_wide(file, "execve").c_str(), argv.data(), envp.data());
     }
     __throw_oserror(new str("os.execve"));
 }
@@ -1936,7 +1940,7 @@ void *execvpe(str *file, list<str *> *args, dict<str *, str *> *env) {
     __wide_vector argv(args), envp(env);
     {
         __suppress_iph guard;
-        ::_wexecvpe(__to_wide(file).c_str(), argv.data(), envp.data());
+        ::_wexecvpe(__to_wide(file, "execve").c_str(), argv.data(), envp.data());
     }
     __throw_oserror(new str("os.execvpe"));
 }
@@ -1986,7 +1990,7 @@ __ss_int getpid() { return (__ss_int)::getpid(); }
 __ss_int getppid() { return (__ss_int)::getppid(); }
 
 __ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(__ss_cpath(path), (int)mode) == 0);
+    return __mbool(::access(__ss_cpath(path, "access"), (int)mode) == 0);
 }
 
 void *fsync(__ss_int fd) {
@@ -2041,7 +2045,7 @@ __ss_int getppid() {
    cpython, treat X_OK as 'exists'. */
 __ss_bool access(str *path, __ss_int mode) {
     int m = (int)mode & (__ss_R_OK | __ss_W_OK);
-    return __mbool(::_waccess(__to_wide(path).c_str(), m) == 0);
+    return __mbool(::_waccess(__to_wide(path, "access").c_str(), m) == 0);
 }
 
 void *fsync(__ss_int fd) {
@@ -2201,7 +2205,7 @@ str *times_result::__repr__() {
 #ifndef WIN32
 
 void *truncate(str *path, __ss_int length) {
-    if (::truncate(__ss_cpath(path), (off_t)length) == -1)
+    if (::truncate(__ss_cpath(path, "truncate"), (off_t)length) == -1)
         __throw_oserror(path);
     return NULL;
 }
@@ -2288,7 +2292,7 @@ void *truncate(str *path, __ss_int length) {
         __throw_oserror(path);
     }
     std::error_code ec;
-    std::filesystem::resize_file(__fspath(path), (std::uintmax_t)length, ec);
+    std::filesystem::resize_file(__fspath(path, "truncate"), (std::uintmax_t)length, ec);
     if (ec) {
         std::error_condition c = ec.default_error_condition();
         errno = (c.category() == std::generic_category()) ? c.value() : EIO;
@@ -2430,18 +2434,18 @@ void *symlink(str *src, str *dst, __ss_bool target_is_directory) {
     /* like cpython: pick the directory flag when asked to, or when the
        target exists and is a directory */
     std::error_code ec;
-    std::filesystem::path target = __fspath(dst).parent_path() / __fspath(src);
+    std::filesystem::path target = __fspath(dst, "symlink", "dst").parent_path() / __fspath(src, "symlink", "src");
     DWORD flags = (target_is_directory || std::filesystem::is_directory(target, ec)) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
 #ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
     flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 #endif
-    if(!CreateSymbolicLinkW(__to_wide(dst).c_str(), __to_wide(src).c_str(), flags))
+    if(!CreateSymbolicLinkW(__to_wide(dst, "symlink", "dst").c_str(), __to_wide(src, "symlink", "src").c_str(), flags))
         __throw_winerror(GetLastError(), dst);
     return NULL;
 }
 #else
 void *symlink(str *src, str *dst, __ss_bool) { /* target_is_directory: windows only */
-    if(::symlink(__ss_cpath(src), __ss_cpath(dst)) == -1)
+    if(::symlink(__ss_cpath(src, "symlink", "src"), __ss_cpath(dst, "symlink", "dst")) == -1)
         __throw_oserror(new str("os.symlink"));
     return NULL;
 }
@@ -2472,7 +2476,7 @@ __ss_int __ss_minor(__ss_int dev) {
 }
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
-    if(::mknod(__ss_cpath(filename), (unsigned)mode, (unsigned)device) == -1)
+    if(::mknod(__ss_cpath(filename, "mknod"), (unsigned)mode, (unsigned)device) == -1)
         __throw_oserror(new str("os.mknod"));
     return NULL;
 }
@@ -2501,11 +2505,12 @@ char **__exec_envplist(dict<str *, str *> *env) {
 }
 
 void *execv(str* file, list<str*>* args) {
-    ::execv(__ss_cpath(file), __exec_argvlist(args));
+    ::execv(__ss_cpath(file, "execv"), __exec_argvlist(args));
     __throw_oserror(new str("os.execv"));
 }
 
 void *execvp(str* file, list<str*>* args) {
+    __ss_check_nul(file, "execv"); /* (else no PATH entry exists, giving an OSError) */
     tuple<str *> *h_t = __path__::split(file);
 
     if( ___bool(h_t->__getfirst__())) {
@@ -2526,11 +2531,12 @@ void *execvp(str* file, list<str*>* args) {
 }
 
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
-    ::execve(__ss_cpath(file), __exec_argvlist(args), __exec_envplist(env));
+    ::execve(__ss_cpath(file, "execve"), __exec_argvlist(args), __exec_envplist(env));
     __throw_oserror(new str("os.execve"));
 }
 
 void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
+    __ss_check_nul(file, "execve");
     tuple<str *> *h_t = __path__::split(file);
 
     if( ___bool(h_t->__getfirst__())) {
