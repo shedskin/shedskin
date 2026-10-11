@@ -261,6 +261,15 @@ inline char __byte_value(__ss_int e, bool bytearray_) {
     return (char)e;
 }
 
+/* bytes([a, b, ..]) without the intermediate list (see cpp.py). a braced list, as unlike
+   function arguments, its elements are evaluated from left to right */
+template<size_t N> bytes *__bytes_lit(const __ss_int (&elems)[N]) {
+    char buf[N];
+    for(size_t i=0; i<N; i++)
+        buf[i] = __byte_value(elems[i], false);
+    return new bytes(buf, N, 1);
+}
+
 template<class T> bytes *__bytes(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
         bytes *b = new bytes();
