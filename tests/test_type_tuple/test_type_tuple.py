@@ -195,7 +195,24 @@ def test_tuple_literal_long():
     assert sum(t) == 36
 
 
+def test_literal_sizes():
+    # tuple/list literals of up to and more than the inline storage (4)
+    x = 3
+    assert (x,) == (3,) and [x] == [3]
+    assert (x, x + 1) == (3, 4) and [x, x + 1] == [3, 4]
+    assert (x, x, x, x) == (3, 3, 3, 3) and [x, x, x, x] == [3, 3, 3, 3]
+    t = (x, x + 1, x + 2, x + 3, x + 4)
+    l = [x, x + 1, x + 2, x + 3, x + 4, x + 5, x + 6, x + 7, x + 8]
+    assert t == tuple(range(3, 8)) and len(t) == 5
+    assert l == list(range(3, 12)) and len(l) == 9
+    l.append(x)
+    assert l[-1] == 3 and len(l) == 10
+    s = ('a', 'b' * x, 'c', 'd', 'e', 'f')
+    assert s[1] == 'bbb' and s[5] == 'f'
+
+
 def test_all():
+    test_literal_sizes()
     test_tuple_literal_long()
     test_tuple()
     test_equivalence()

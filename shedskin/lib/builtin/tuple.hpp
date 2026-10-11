@@ -129,7 +129,10 @@ template<class T> tuple2<T, T>::tuple2() {
 
 template <class T> template <class ... Args> tuple2<T, T>::tuple2(int, Args ... args) {
     this->__class__ = cl_tuple;
-    this->units.assign({(T)args...});
+    /* push_back avoids the initializer_list copy (memmove) of assign */
+    if constexpr (sizeof...(args) > 4)
+        this->units.reserve(sizeof...(args));
+    (this->units.push_back((T)args), ...);
 }
 
 template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {

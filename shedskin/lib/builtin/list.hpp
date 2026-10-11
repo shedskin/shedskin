@@ -95,7 +95,10 @@ template<class T> list<T>::list() {
 
 template<class T> template <class ... Args> list<T>::list(int, Args ... args) {
     this->__class__ = cl_list;
-    this->units.assign({(T)args...});
+    /* push_back avoids the initializer_list copy (memmove) of assign */
+    if constexpr (sizeof...(args) > 4)
+        this->units.reserve(sizeof...(args));
+    (this->units.push_back((T)args), ...);
 }
 
 // and now for a bit of c++ poetry
