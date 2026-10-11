@@ -172,6 +172,38 @@ def test_sorted_stable_large():
             assert l[i - 1] <= l[i]
 
 
+class Weighted:
+    def __init__(self, weight, ident):
+        self.weight = weight
+        self.ident = ident
+
+    def __lt__(self, other):
+        return self.weight < other.weight
+
+    def __gt__(self, other):
+        return self.weight > other.weight
+
+
+def test_sort_default_comparison():
+    # no key: compares elements directly (__lt__, or __gt__ for reverse)
+    n = 200
+    objs = [Weighted(float((i * 37) % 11), i) for i in range(n)]
+    objs.sort()
+    for i in range(1, n):
+        assert objs[i - 1].weight <= objs[i].weight
+        if objs[i - 1].weight == objs[i].weight:
+            assert objs[i - 1].ident < objs[i].ident
+    objs.sort(reverse=True)
+    for i in range(1, n):
+        assert objs[i - 1].weight >= objs[i].weight
+        if objs[i - 1].weight == objs[i].weight:
+            assert objs[i - 1].ident < objs[i].ident
+    assert sorted([3, 1, 2]) == [1, 2, 3]
+    assert sorted([3, 1, 2], reverse=True) == [3, 2, 1]
+    assert sorted([2.5, -1.0, 0.5]) == [-1.0, 0.5, 2.5]
+    assert sorted([(1, 'b'), (0, 'z'), (1, 'a')], reverse=True) == [(1, 'b'), (1, 'a'), (0, 'z')]
+
+
 def test_all():
     test_sorted1()
     test_sorted2()
@@ -183,6 +215,7 @@ def test_all():
     test_sorted_key_and_reverse_kwargs()
     test_sorted_positional_iterable_with_kwargs()
     test_sorted_stable_large()
+    test_sort_default_comparison()
 
 
 if __name__ == '__main__':

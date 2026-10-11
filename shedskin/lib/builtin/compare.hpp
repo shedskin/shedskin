@@ -162,12 +162,13 @@ template<> inline __ss_int __cmp(void *a, void *b) {
     return 0;
 }
 
-template<class T> __ss_int cpp_cmp(T a, T b) {
-    return __lt(a, b);
-}
-template<class T> __ss_int cpp_cmp_rev(T a, T b) {
-    return __gt(a, b);
-}
+/* function objects rather than functions, so the comparison can be inlined into the sort */
+template<class T> struct cpp_cmp {
+    bool operator()(T a, T b) const { return __lt(a, b); }
+};
+template<class T> struct cpp_cmp_rev {
+    bool operator()(T a, T b) const { return __gt(a, b); }
+};
 template<class T> class cpp_cmp_custom {
     typedef __ss_int (*hork)(T, T);
     hork cmp;

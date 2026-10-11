@@ -544,9 +544,9 @@ template<class T> template <class U> void *list<T>::sort(__ss_int (*cmp)(T, T), 
             __ss_stable_sort(units.begin(), units.end(), cpp_cmp_custom<T>(cmp));
     } else {
         if(reverse)
-            __ss_stable_sort(units.begin(), units.end(), cpp_cmp_rev<T>);
+            __ss_stable_sort(units.begin(), units.end(), cpp_cmp_rev<T>());
         else
-            __ss_stable_sort(units.begin(), units.end(), cpp_cmp<T>);
+            __ss_stable_sort(units.begin(), units.end(), cpp_cmp<T>());
     }
 
     return NULL;
