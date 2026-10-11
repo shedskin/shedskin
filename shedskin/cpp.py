@@ -4474,9 +4474,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("};\n")
         else:
-            self.output(lcfunc.ident + "::" + func1 + " {")
+            # reference members (walrus targets, see lc_args) can only be
+            # bound in the initializer list
+            refs = [b[1:] for a, b in args if b.startswith("&")]
+            inits = "".join(", {}({})".format(b, b) for b in refs)[1:]
+            self.output(lcfunc.ident + "::" + func1 + (" :" + inits if inits else "") + " {")
             for a, b in args:
-                self.output("    this->{} = {};".format(b, b))
+                if not b.startswith("&"):
+                    self.output("    this->{} = {};".format(b, b))
             self.output("    __last_yield = -1;")
             self.output("}\n")
             self.output(func2 + " " + lcfunc.ident + "::__get_next_awesome() {")

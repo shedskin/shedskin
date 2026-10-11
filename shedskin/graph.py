@@ -869,6 +869,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         parent: Optional[AllParent] = func
         while parent and isinstance(parent, python.Function) and parent.listcomp:
+            parent.misses.add(node.target.id)
             parent.misses_by_ref.add(node.target.id)
             parent = parent.parent
 
