@@ -293,6 +293,70 @@ def test_bytearray_out_of_range():
     assert error == 'negative count'
 
 
+def test_bytearray_mutate_out_of_range():
+    # setting/adding values outside range(0, 256) used to be silently
+    # truncated to a single byte (or -1 was accepted, except by __setitem__)
+    b = bytearray(b'ab\x00')
+    for v in [256, 300, -1]:
+        error = ''
+        try:
+            b[0] = v
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.append(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.insert(0, v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.extend([1, v])
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b[0:1] = [v]
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b[::2] = [v, 1]
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.remove(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+    # nothing was changed
+    assert b == bytearray(b'ab\x00')
+
+    b[0] = 255
+    b.append(0)
+    b.insert(0, 255)
+    b.extend([0, 255])
+    assert b == bytearray(b'\xff\xffb\x00\x00\x00\xff')
+
+
 def test_hex():
     b = bytearray.fromhex('aabb cc')
     assert b == bytearray(b'\xaa\xbb\xcc')
@@ -432,6 +496,7 @@ def test_all():
     test_bytearray_extended_slice_size_mismatch_message()
     test_bytearray_misc()
     test_bytearray_out_of_range()
+    test_bytearray_mutate_out_of_range()
     test_hex()
     test_bytearray_take_bytes()
 
