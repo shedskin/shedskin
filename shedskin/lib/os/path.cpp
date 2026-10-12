@@ -286,7 +286,7 @@ __ss_bool islink(str *path) {
     /**
     Test whether a path is a symbolic link
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -302,7 +302,7 @@ __ss_bool exists(str *path) {
     /**
     Test whether a path exists.  Returns False for broken symbolic links
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     try {
         __os__::stat(path);
@@ -316,7 +316,7 @@ __ss_bool lexists(str *path) {
     /**
     Test whether a path exists.  Returns True for broken symbolic links
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
 
     try {
@@ -331,7 +331,7 @@ __ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -347,7 +347,7 @@ __ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -413,7 +413,7 @@ __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *s1, *s2;
     str *parent;
@@ -1017,7 +1017,7 @@ __ss_bool exists(str *path) {
     /**
     Test whether a path exists
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -1037,7 +1037,7 @@ __ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -1053,7 +1053,7 @@ __ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     __os__::__cstat *st;
 
@@ -1073,7 +1073,7 @@ __ss_bool isjunction(str *path) {
     tag is reported in WIN32_FIND_DATA::dwReserved0, which is only
     meaningful when FILE_ATTRIBUTE_REPARSE_POINT is set.
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     DWORD attr;
     HANDLE handle;
@@ -1191,7 +1191,7 @@ __ss_bool isdevdrive(str *path) {
     Like CPython's os.path.isdevdrive(), any OS error (non-existent path,
     unsupported file system, pre-Dev-Drive Windows, ...) yields False.
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     HANDLE h;
     FILE_FS_PERSISTENT_VOLUME_INFORMATION volume_state;
@@ -1225,7 +1225,7 @@ __ss_bool ismount(str *path) {
     /**
     Test whether a path is a mount point (a drive root or a UNC share root)
     */
-    if (__ss_has_nul(path)) /* as in CPython: no ValueError here */
+    if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
     tuple2<str *, str *> *__sd;
     str *root, *rest, *x, *y;

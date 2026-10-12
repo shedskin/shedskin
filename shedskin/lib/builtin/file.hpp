@@ -124,7 +124,22 @@ inline void __ss_check_nul(str *s, const char *func = 0, const char *arg = "path
         throw new ValueError(new str("embedded null byte"));
     }
 }
-inline char *__ss_cpath(str *s, const char *func = 0, const char *arg = "path") { __ss_check_nul(s, func, arg); return s->c_str(); }
+/* a path the os cannot be handed: os.path predicates answer False for these
+   (as CPython, which swallows the ValueError/UnicodeEncodeError there) */
+inline bool __ss_bad_path(str *s) {
+#ifdef WIN32
+    return __ss_has_nul(s);
+#else
+    return __ss_has_nul(s) || __has_lone_surrogate(s);
+#endif
+}
+inline char *__ss_cpath(str *s, const char *func = 0, const char *arg = "path") {
+    __ss_check_nul(s, func, arg);
+#ifndef WIN32 /* (lone surrogates are kept on windows, as in CPython) */
+    __check_surrogateescape(s);
+#endif
+    return s->c_str();
+}
 
 #ifdef WIN32
 /* file names on Windows: utf-16 for the wide apis (the narrow ones go

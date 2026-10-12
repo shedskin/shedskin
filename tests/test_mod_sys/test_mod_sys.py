@@ -142,6 +142,53 @@ def test_surrogateescape_error_message():
     except OSError as e:
         assert '\udcff' in str(e)
 
+def test_lone_surrogates():
+    # only U+DC80..U+DCFF (surrogateescape) can be encoded on the way out:
+    # other lone surrogates are a UnicodeEncodeError, not written as wtf-8
+    f = open('test_mod_sys_se.txt', 'w', encoding='utf-8', errors='surrogateescape')
+    try:
+        f.write('a\ud800b')
+        assert False
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end, e.reason) == (1, 2, 'surrogates not allowed')
+    f.write('ok\udcff')
+    f.close()
+    fb = open('test_mod_sys_se.txt', 'rb')
+    assert fb.read() == b'ok\xff'
+    fb.close()
+    os.remove('test_mod_sys_se.txt')
+    try:
+        sys.stdout.write('a\ud800b\n')
+        assert False
+    except UnicodeEncodeError as e:
+        assert (e.start, e.end) == (1, 2)
+    try:
+        print('\ud800')
+        assert False
+    except UnicodeEncodeError as e:
+        assert e.reason == 'surrogates not allowed'
+    if os.name == 'posix':  # (windows file names keep lone surrogates)
+        for i in range(5):
+            try:
+                if i == 0:
+                    open('test_mod_sys_\ud800', 'w')
+                elif i == 1:
+                    os.mkdir('test_mod_sys_\ud800')
+                elif i == 2:
+                    os.listdir('test_mod_sys_\ud800')
+                elif i == 3:
+                    os.putenv('TEST_MOD_SYS', '\ud800')
+                else:
+                    os.system('echo \ud800')
+                assert False
+            except UnicodeEncodeError as e:
+                assert e.reason == 'surrogates not allowed'
+        # predicates answer False instead
+        bad = 'test_mod_sys_\ud800'
+        assert not os.path.exists(bad) and not os.path.lexists(bad)
+        assert not os.path.isfile(bad) and not os.path.isdir(bad)
+        assert not os.path.islink(bad)
+
 def test_float_repr_style():
     assert sys.float_repr_style == 'short'
 
@@ -268,6 +315,7 @@ def test_all():
     test_encode_errors()
     test_surrogateescape_roundtrip()
     test_surrogateescape_error_message()
+    test_lone_surrogates()
     test_float_repr_style()
     test_orig_argv()
     test_maxsize()

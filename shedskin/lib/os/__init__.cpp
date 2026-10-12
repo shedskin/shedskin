@@ -146,7 +146,7 @@ static std::filesystem::path __fspath(str *s, const char *func = 0, const char *
     return std::filesystem::path(__to_wide(s, func, arg));
 #else
     __ss_check_nul(s, func, arg);
-    __GC_BYTES b = __to_utf8(s->unit);
+    __GC_BYTES b = __to_utf8_se(s);
     return std::filesystem::path(std::string(b.data(), b.size()));
 #endif
 }

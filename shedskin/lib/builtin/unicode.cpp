@@ -640,6 +640,46 @@ __GC_BYTES __to_utf8(const __GC_STR &u) {
     return __to_utf8(u.data(), u.size());
 }
 
+/* like CPython, text leaving the program through the standard streams or as
+   a (posix) file name, command or environment entry is utf-8 with
+   surrogateescape: the U+DC80..U+DCFF escapes become their original bytes,
+   but any other lone surrogate cannot be encoded */
+static inline bool __lone_surrogate(__ss_char cp) {
+    return cp >= 0xd800 && cp <= 0xdfff && !(cp >= 0xdc80 && cp <= 0xdcff);
+}
+
+bool __has_lone_surrogate(str *s) {
+    for (__ss_char cp : s->unit)
+        if (__lone_surrogate(cp))
+            return true;
+    return false;
+}
+
+void __check_surrogateescape(str *s) {
+    const __GC_STR &u = s->unit;
+    for (size_t i = 0; i < u.size(); i++)
+        if (__lone_surrogate(u[i]))
+            __throw_encode_error(__SS_ENC_UTF8, s, i, ERR_SURROGATE);
+}
+
+__GC_BYTES __to_utf8_se(str *s) {
+    const __GC_STR &u = s->unit;
+    __GC_BYTES out;
+    out.reserve(u.size());
+    for (size_t pos = 0; pos < u.size(); pos++) {
+        __ss_char cp = u[pos];
+        if (cp < 0x80)
+            out += (char)(unsigned char)cp;
+        else if (cp >= 0xdc80 && cp <= 0xdcff)
+            out += (char)(unsigned char)(cp & 0xffu);
+        else if (__lone_surrogate(cp))
+            __throw_encode_error(__SS_ENC_UTF8, s, pos, ERR_SURROGATE);
+        else
+            __utf8_append(out, cp);
+    }
+    return out;
+}
+
 __GC_STR __gcs(const char *s) {
     __GC_STR out;
     while (*s)

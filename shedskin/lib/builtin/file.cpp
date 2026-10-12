@@ -143,7 +143,7 @@ __ss_int file::write(str *s) {
             b = "\xef\xbb\xbf";
         }
         if (__encoding == __SS_ENC_UTF8 && __errors == __SS_ERR_SURROGATEESCAPE && b.empty())
-            b = __to_utf8(s->unit); /* fast path (standard streams) */
+            b = __to_utf8_se(s); /* fast path (standard streams) */
         else
             __encode_into(b, s, __encoding, __errors, __errors_name);
         if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())

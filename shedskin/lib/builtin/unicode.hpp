@@ -117,6 +117,9 @@ __GC_STR __from_utf8(const char *s, size_t len);
 __GC_STR __from_utf8(const __GC_BYTES &b);
 __GC_BYTES __to_utf8(const __ss_char *s, size_t len);
 __GC_BYTES __to_utf8(const __GC_STR &u);
+__GC_BYTES __to_utf8_se(str *s); /* surrogateescape: other lone surrogates raise UnicodeEncodeError */
+void __check_surrogateescape(str *s);
+bool __has_lone_surrogate(str *s);
 
 /* code points <-> utf-16 (native wide strings on Windows). like CPython
    on Windows (surrogatepass), lone surrogates are kept as single units in

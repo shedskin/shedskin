@@ -294,6 +294,22 @@ void __add_missing_newline() {
 
 /* print traceback for uncaught exception, may only work for GCC */
 
+/* uncaught exception messages are written as CPython's stderr does it
+   (errors='backslashreplace'): any surrogate becomes e.g. '\\ud800' */
+static str *__backslashreplace_surrogates(str *s) {
+    str *r = new str();
+    char buf[8];
+    for (__ss_char cp : s->unit) {
+        if (cp >= 0xd800 && cp <= 0xdfff) {
+            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)cp);
+            for (char *p = buf; *p; p++)
+                r->unit += (__ss_char)*p;
+        } else
+            r->unit += cp;
+    }
+    return r;
+}
+
 void terminate_handler() {
     int code = 0;
 
@@ -314,7 +330,7 @@ void terminate_handler() {
         try {
             __add_missing_newline(); /* XXX s->message -> stderr? */
             if(s->show_message)
-                print_(0, False, __ss_stderr, NULL, NULL, s->message);
+                print_(0, False, __ss_stderr, NULL, NULL, __backslashreplace_surrogates(s->message));
         } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
 
     } catch (BaseException *e) {
@@ -330,12 +346,12 @@ void terminate_handler() {
 
             str *s = __str(e);
             if(___bool(s))
-                print_(0, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
+                print_(0, False, NULL, NULL, NULL, __backslashreplace_surrogates(__add_strs(3, e->__class__->__name__, new str(": "), s)));
             else
                 print_(0, False, NULL, NULL, NULL, e->__class__->__name__);
             if(e->__notes__)
                 for(__ss_int i=0; i<len(e->__notes__); i++)
-                    print_(0, False, NULL, NULL, NULL, e->__notes__->__getfast__(i));
+                    print_(0, False, NULL, NULL, NULL, __backslashreplace_surrogates(e->__notes__->__getfast__(i)));
         } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
     }
 
