@@ -192,6 +192,25 @@ def test_tuple_ordering():
     assert max(ht) == (2, 'a')
 
 
+def test_tuple_search():
+    t = (5, 3, 9, 3, 7, -1, 3)
+    assert 9 in t and -1 in t and 4 not in t
+    assert t.index(5) == 0 and t.index(3) == 1 and t.index(3, 2) == 3
+    assert t.index(3, -1) == 6 and t.index(9, -6, -4) == 2
+    assert t.count(3) == 3 and t.count(4) == 0
+    try:
+        t.index(3, 4, 6)
+        assert False
+    except ValueError:
+        pass
+    big = tuple(range(1000))
+    assert 999 in big and 1000 not in big and big.index(600, 500) == 600
+    assert big.count(999) == 1
+    ft = (1.5, -0.0, 2.5, 1.5)
+    assert 0.0 in ft and ft.index(2.5) == 2 and ft.count(1.5) == 2
+    assert 3.5 not in ft
+
+
 def test_int_pairs():
     # (a, b) of ints: cached for small values, allocated otherwise
     pairs = []
@@ -230,6 +249,7 @@ def test_all():
     test_count()
     test_tuple3()
     test_tuple_ordering()
+    test_tuple_search()
     test_int_pairs()
 
 

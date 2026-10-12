@@ -192,6 +192,16 @@ template<class U> inline __ss_int __units_cmp(const U &a, const U &b) {
     return __cmp((__ss_int)a.size(), (__ss_int)b.size());
 }
 
+/* linear search, for list/tuple 'in', index and count on arithmetic elements: __eq is plain ==
+   for these, so std::find (unrolled) and std::count (vectorized) can be used */
+
+template<class T> inline size_t __units_find(const T *p, size_t n, T a) {
+    return (size_t)(std::find(p, p+n, a) - p);
+}
+template<class T> inline __ss_int __units_count(const T *p, size_t n, T a) {
+    return (__ss_int)std::count(p, p+n, a);
+}
+
 /* function objects rather than functions, so the comparison can be inlined into the sort */
 template<class T> struct cpp_cmp {
     bool operator()(T a, T b) const { return __lt(a, b); }

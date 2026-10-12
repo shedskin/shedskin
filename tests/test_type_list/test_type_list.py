@@ -272,6 +272,44 @@ def test_list_ordering():
     assert lll == [[[1]], [[1, 1]], [[2]]]
 
 
+def test_list_search():
+    l = [5, 3, 9, 3, 7, -1, 3]
+    assert 9 in l and -1 in l and 4 not in l
+    assert l.index(5) == 0 and l.index(3) == 1 and l.index(-1) == 5
+    assert l.index(3, 2) == 3 and l.index(3, 4) == 6 and l.index(3, -1) == 6
+    assert l.index(3, 2, 4) == 3 and l.index(9, -6, -4) == 2
+    assert l.count(3) == 3 and l.count(9) == 1 and l.count(4) == 0
+    for args in [(4,), (5, 1), (7, 0, 4), (3, 4, 2), (3, 100)]:
+        try:
+            if len(args) == 1:
+                l.index(args[0])
+            elif len(args) == 2:
+                l.index(args[0], args[1])
+            else:
+                l.index(args[0], args[1], args[2])
+            assert False
+        except ValueError:
+            pass
+    e = []
+    e.append(1)
+    e.pop()
+    assert 1 not in e and e.count(1) == 0
+    big = list(range(1000))
+    assert 999 in big and 1000 not in big and big.index(999) == 999
+    assert big.index(500, 250, 750) == 500 and big.count(0) == 1
+    big.append(0)
+    assert big.count(0) == 2 and big.index(0, 1) == 1000
+    f = [1.5, -0.0, 2.5, 1.5]
+    assert 0.0 in f and f.index(0.0) == 1 and f.count(1.5) == 2
+    assert 3.5 not in f and f.count(3.5) == 0
+    nan = float('nan')
+    g = [1.0, float('nan')]
+    assert float('nan') not in g and g.count(float('nan')) == 0
+    assert nan != nan
+    b = [True, False, True]
+    assert False in b and b.index(False) == 1 and b.count(True) == 2
+
+
 def test_list_copy():
     l = [1,2,3]
     a = l.copy()
@@ -714,6 +752,7 @@ def test_all():
     test_list_assign()
     test_list_cmp()
     test_list_ordering()
+    test_list_search()
     test_list_clear()
     test_list_comp()
     test_list_del()

@@ -229,6 +229,8 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
 }
 
 template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
+    if constexpr (std::is_arithmetic_v<T>)
+        return __mbool(__units_find(this->units.data(), this->units.size(), a) != this->units.size());
     for(size_t i=0; i<this->units.size(); i++)
         if(__eq_id(this->units[i], a))
             return True;
@@ -261,13 +263,23 @@ template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s) {
 template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    for(__ss_int i = s; i<e; i++)
-        if(__eq(this->units[(size_t)i], a))
-            return i;
+    if constexpr (std::is_arithmetic_v<T>) {
+        if(s < e) {
+            size_t i = __units_find(this->units.data()+s, (size_t)(e-s), a);
+            if(i != (size_t)(e-s))
+                return s+(__ss_int)i;
+        }
+    } else {
+        for(__ss_int i = s; i<e; i++)
+            if(__eq(this->units[(size_t)i], a))
+                return i;
+    }
     throw new ValueError(new str("tuple.index(x): x not in tuple"));
 }
 
 template<class T> __ss_int tuple2<T, T>::count(T a) {
+    if constexpr (std::is_arithmetic_v<T>)
+        return __units_count(this->units.data(), this->units.size(), a);
     __ss_int c = 0;
     __ss_int len = this->__len__();
     for(__ss_int i = 0; i<len; i++)
