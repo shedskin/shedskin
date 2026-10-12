@@ -171,6 +171,27 @@ def test_tuple3():
     assert sum(h) == 6
 
 
+def test_tuple_ordering():
+    assert (1, 2) < (1, 3) and not (1, 3) < (1, 2)
+    assert (1, 2) < (1, 2, 3) and (1, 2, 3) > (1, 2)
+    assert (1, 2) <= (1, 2) and (1, 2) >= (1, 2)
+    assert not (1, 2) < (1, 2) and not (1, 2) > (1, 2)
+    assert (2,) > (1, 9) and not (2,) <= (1, 9)
+    assert ('a', 'b') < ('a', 'c')
+    assert ((1, 2), (3, 4)) < ((1, 2), (3, 5))
+    # heterogeneous
+    assert (1, 'b') > (1, 'a') and (0, 'z') < (1, 'a')
+    assert (1, 'a') <= (1, 'a') and (1, 'a') >= (1, 'a')
+    assert (1.5, 2) < (1.5, 3)
+    tt = [(3, 1), (1, 2, 3), (1, 2), (3,), (1, 2)]
+    assert sorted(tt) == [(1, 2), (1, 2), (1, 2, 3), (3,), (3, 1)]
+    assert min(tt) == (1, 2) and max(tt) == (3, 1)
+    ht = [(2, 'a'), (1, 'b'), (1, 'a')]
+    ht.sort()
+    assert ht == [(1, 'a'), (1, 'b'), (2, 'a')]
+    assert max(ht) == (2, 'a')
+
+
 def test_int_pairs():
     # (a, b) of ints: cached for small values, allocated otherwise
     pairs = []
@@ -208,6 +229,7 @@ def test_all():
     test_index()
     test_count()
     test_tuple3()
+    test_tuple_ordering()
     test_int_pairs()
 
 

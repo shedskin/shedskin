@@ -94,6 +94,7 @@ public:
 
     __ss_bool __contains__(T a);
     __ss_bool __eq__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
 
     __ss_int index(T a);
     __ss_int index(T a, __ss_int s);
@@ -246,6 +247,11 @@ template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
     return True;
 }
 
+template<class T> __ss_int tuple2<T, T>::__cmp__(pyobj *p) {
+    if(!p) return 1;
+    return __units_cmp(this->units, ((tuple2<T,T> *)p)->units);
+}
+
 template<class T> __ss_int tuple2<T, T>::index(T a) {
     return index(a, 0, this->__len__());
 }
@@ -368,6 +374,13 @@ template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     if(__ss_int c = __cmp(first, b->first)) return c;
     return __cmp(second, b->second);
 }
+
+/* not through the virtual pyobj::__lt__ etc. (tuple2 is final, so __cmp__ is called directly;
+   this also covers the homogeneous tuple2<T,T>) */
+template<class A, class B> inline __ss_bool __gt(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) > 0); }
+template<class A, class B> inline __ss_bool __ge(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) >= 0); }
+template<class A, class B> inline __ss_bool __lt(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) < 0); }
+template<class A, class B> inline __ss_bool __le(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) <= 0); }
 
 template<class A, class B> __ss_int tuple2<A, B>::__hash__() {
     __ss_int seed = 0;

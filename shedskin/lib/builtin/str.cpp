@@ -716,12 +716,7 @@ str *str::center(__ss_int w, str *fillchar) {
 }
 
 __ss_int str::__cmp__(pyobj *p) {
-    if (!p) return 1;
-    str *b = (str *)p;
-    int r = unit.compare(b->unit);
-    if( r < 0 ) return -1;
-    else if( r > 0 ) return 1;
-    return 0;
+    return __str_cmp(this, (str *)p);
 }
 
 __ss_bool str::__eq__(pyobj *p) {

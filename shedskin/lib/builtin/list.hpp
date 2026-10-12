@@ -48,6 +48,7 @@ public:
     __ss_int count(T a);
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
+    __ss_int __cmp__(pyobj *p);
 
     void resize(__ss_int i); /* XXX remove */
 
@@ -245,6 +246,17 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
            return False;
    return True;
 }
+
+template<class T> __ss_int list<T>::__cmp__(pyobj *p) {
+    if(!p) return 1;
+    return __units_cmp(this->units, ((list<T> *)p)->units);
+}
+
+/* not through the virtual pyobj::__lt__ etc. (list is final, so __cmp__ is called directly) */
+template<class T> inline __ss_bool __gt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) > 0); }
+template<class T> inline __ss_bool __ge(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) >= 0); }
+template<class T> inline __ss_bool __lt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) < 0); }
+template<class T> inline __ss_bool __le(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) <= 0); }
 
 template<class T> void *list<T>::append(T a) {
     this->units.push_back(a);

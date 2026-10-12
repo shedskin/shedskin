@@ -409,6 +409,21 @@ def test_bytes_cmp():
     assert list(b'aap') == [ord('a'), ord('a'), ord('p')]
     assert list(sorted([b'blup', b'aap'])) == [b'aap', b'blup']
 
+def test_bytes_ordering():
+    assert b'a' < b'b' and not b'b' < b'a' and not b'a' < b'a'
+    assert b'a' <= b'a' and b'b' >= b'a' and not b'a' >= b'b'
+    assert b'ab' > b'a' and b'a' < b'ab'
+    assert b'' < b'\x00' and b'' <= b'' and b'' >= b''
+    assert b'\x80' > b'\x7f'  # unsigned
+    assert b'\xff' > b'\x00\xff'
+    assert b'a\x00b' > b'a\x00a'  # embedded null byte
+    bl = [b'pear', b'\xff', b'apple', b'', b'apples']
+    assert sorted(bl) == [b'', b'apple', b'apples', b'pear', b'\xff']
+    assert min(bl) == b'' and max(bl) == b'\xff'
+    assert bytearray(b'a') < bytearray(b'b')
+    assert bytearray(b'\x80') > bytearray(b'\x01\x02')
+
+
 def test_bytes_concat():
     assert b"x" + b"x" + b"x" == b"xxx"
 
@@ -749,6 +764,7 @@ def test_all():
     test_character_classes()
     test_count_start_end()
     test_bytes_cmp()
+    test_bytes_ordering()
     test_bytes_concat()
     test_capitalize()
     test_center()

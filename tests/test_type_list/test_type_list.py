@@ -253,6 +253,25 @@ def test_list_cmp():
     assert [2, 3] > [1, 2, 3]
 
 
+def test_list_ordering():
+    assert [1, 2] < [1, 3] and not [1, 3] < [1, 2]
+    assert [1, 2] < [1, 2, 3] and [1, 2, 3] > [1, 2]
+    assert [] < [0] and not [] > [0] and [] <= [] and [] >= []
+    assert [1, 2] <= [1, 2] and [1, 2] >= [1, 2]
+    assert not [1, 2] < [1, 2] and not [1, 2] > [1, 2]
+    assert [2] > [1, 9, 9] and [2] >= [1, 9, 9] and not [2] <= [1, 9, 9]
+    assert [1.5, 2.0] < [1.5, 2.5]
+    assert ['a', 'b'] < ['a', 'c'] and ['b'] > ['a', 'z']
+    assert [[1, 2], [3]] < [[1, 2], [4]]
+    assert [[1, 2, 3]] > [[1, 2]]
+    ll = [[3, 1], [1, 2, 3], [1, 2], [], [3], [1, 2]]
+    assert sorted(ll) == [[], [1, 2], [1, 2], [1, 2, 3], [3], [3, 1]]
+    assert min(ll) == [] and max(ll) == [3, 1]
+    lll = [[[2]], [[1, 1]], [[1]]]
+    lll.sort()
+    assert lll == [[[1]], [[1, 1]], [[2]]]
+
+
 def test_list_copy():
     l = [1,2,3]
     a = l.copy()
@@ -694,6 +713,7 @@ def test_all():
     test_list_append()
     test_list_assign()
     test_list_cmp()
+    test_list_ordering()
     test_list_clear()
     test_list_comp()
     test_list_del()

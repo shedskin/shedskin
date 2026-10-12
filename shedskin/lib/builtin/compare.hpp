@@ -162,6 +162,36 @@ template<> inline __ss_int __cmp(void *a, void *b) {
     return 0;
 }
 
+/* str ordering: directly, instead of through the virtual pyobj::__lt__ etc. and str::__cmp__ */
+
+inline __ss_int __str_cmp(str *a, str *b) {
+    if(!b) return 1;
+    if(a->charcache && b->charcache) /* both single characters (see __init) */
+        return __cmp((__ss_int)a->unit[0], (__ss_int)b->unit[0]);
+    int r = a->unit.compare(b->unit);
+    return (r > 0) - (r < 0);
+}
+
+template<> inline __ss_int __cmp(str *a, str *b) {
+    if (!a) return -1;
+    return __str_cmp(a, b);
+}
+template<> inline __ss_bool __gt(str *a, str *b) { return __mbool(__str_cmp(a, b) > 0); }
+template<> inline __ss_bool __ge(str *a, str *b) { return __mbool(__str_cmp(a, b) >= 0); }
+template<> inline __ss_bool __lt(str *a, str *b) { return __mbool(__str_cmp(a, b) < 0); }
+template<> inline __ss_bool __le(str *a, str *b) { return __mbool(__str_cmp(a, b) <= 0); }
+
+/* sequence ordering, for list/tuple/bytes __cmp__: on the elements directly, instead of
+   through the virtual pyseq::__getitem__ and __len__ */
+
+template<class U> inline __ss_int __units_cmp(const U &a, const U &b) {
+    size_t n = std::min(a.size(), b.size());
+    for(size_t i = 0; i < n; i++)
+        if(__ss_int c = __cmp(a[i], b[i]))
+            return c;
+    return __cmp((__ss_int)a.size(), (__ss_int)b.size());
+}
+
 /* function objects rather than functions, so the comparison can be inlined into the sort */
 template<class T> struct cpp_cmp {
     bool operator()(T a, T b) const { return __lt(a, b); }
