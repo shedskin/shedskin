@@ -691,7 +691,17 @@ class ShedskinBuilder(Builder):
         if os.path.isdir("/opt/local/include"):
             self.add_include_dirs("/opt/local/include")
         if self.gx.pyextension_product:
-            self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
+            # hide all symbols except the module init function (PyMODINIT_FUNC exports it).
+            # with -fPIC, default-visibility functions and globals may be interposed, so the
+            # compiler cannot inline or LTO-optimize calls to them and must go through the
+            # GOT/PLT, which costs extension modules much of the -O3/-flto speedup.
+            self.add_cxxflags(
+                "-g",
+                "-fPIC",
+                "-fvisibility=hidden",
+                "-fvisibility-inlines-hidden",
+                "-D__SS_BIND",
+            )
 
         if PLATFORM == "Darwin":
             self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated")
@@ -1236,7 +1246,17 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_link_dirs(link_dir)
 
         if self.gx.pyextension_product:
-            self.add_cxxflags("-g", "-fPIC", "-D__SS_BIND")
+            # hide all symbols except the module init function (PyMODINIT_FUNC exports it).
+            # with -fPIC, default-visibility functions and globals may be interposed, so the
+            # compiler cannot inline or LTO-optimize calls to them and must go through the
+            # GOT/PLT, which costs extension modules much of the -O3/-flto speedup.
+            self.add_cxxflags(
+                "-g",
+                "-fPIC",
+                "-fvisibility=hidden",
+                "-fvisibility-inlines-hidden",
+                "-D__SS_BIND",
+            )
 
         if PLATFORM == "Darwin":
             # Only use Homebrew for static libs if not using local deps
