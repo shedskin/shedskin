@@ -1067,10 +1067,10 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
     else {
         /* utf-8 at the boundary. a failed write raises (e.g. BrokenPipeError
            when piped into 'head'), instead of silently carrying on */
-        __GC_BYTES b = __to_utf8(s->unit);
+        __GC_BYTES b = __to_utf8_se(s);
         if(fwrite(b.data(), 1, b.size(), stdout) != b.size())
             __throw_oserror();
-        b = __to_utf8(end->unit);
+        b = __to_utf8_se(end);
         if(fwrite(b.data(), 1, b.size(), stdout) != b.size())
             __throw_oserror();
         if(flush and fflush(stdout) != 0)
