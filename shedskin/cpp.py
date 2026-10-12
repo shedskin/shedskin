@@ -3400,6 +3400,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ):
                 self.visit(ast.Constant(ord(node.args[0].value)), func)
                 return
+            # float('inf') -> float literal (invalid strings raise at runtime)
+            if (
+                ident == "float"
+                and direct_call.mv.module.builtin
+                and len(node.args) == 1
+                and not node.keywords
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+            ):
+                try:
+                    value = float(node.args[0].value)
+                except ValueError:
+                    pass
+                else:
+                    self.visit(ast.Constant(value), func)
+                    return
             # bytes([a, b, ..]) -> __bytes_lit({a, b, ..}): no intermediate list
             if (
                 ident == "bytes"
@@ -5273,6 +5289,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("INFINITY")
             elif str(value) in ["-inf", "-1.#INF", "-Infinity"]:
                 self.append("-INFINITY")
+            elif value != value:
+                self.append("NAN")
             else:
                 self.append(str(value))
             self.append(")")
