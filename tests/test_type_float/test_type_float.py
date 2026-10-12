@@ -213,6 +213,28 @@ def test_pow_overflow():
     assert 1.5 ** 2 == 2.25
 
 
+def test_pow_half():
+    # x ** 0.5 uses sqrt for positive x
+    assert 4.0 ** 0.5 == 2.0
+    assert 2.0 ** 0.5 == 1.4142135623730951
+    assert 1e-300 ** 0.5 == 1e-150
+    half = 0.5
+    x = 6.25
+    assert x ** half == 2.5
+    n = 9
+    assert n ** 0.5 == 3.0
+    assert n ** half == 3.0
+    # special cases still follow pow
+    inf = float('inf')
+    assert inf ** 0.5 == inf
+    assert (-inf) ** 0.5 == inf
+    assert str(0.0 ** 0.5) == '0.0'
+    assert str((-0.0) ** 0.5) == '0.0'
+    assert str(float('nan') ** 0.5) == 'nan'
+    m = 0
+    assert m ** 0.5 == 0.0
+
+
 def test_all():
     test_float()
     test_inf()
@@ -226,6 +248,7 @@ def test_all():
     test_repr_formatting()
     test_float_from_unicode_str()
     test_pow_overflow()
+    test_pow_half()
 
 
 if __name__ == "__main__":
