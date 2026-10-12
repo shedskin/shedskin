@@ -2924,6 +2924,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
 
+        # '=='/'!=' on instances of user classes
+        if middle in ("__eq__", "__ne__"):
+            eq_ne = self.user_eq_ne(argtypes)
+            if eq_ne == (False, False):
+                # no __eq__/__ne__: compare pointers, as for 'is', instead of through
+                # the virtual pyobj::__eq__ (and __ne__)
+                middle = None
+            elif eq_ne == (True, False) and middle == "__ne__" and not prefix:
+                # only __eq__: as in python, '!=' is 'not __eq__'
+                middle, prefix = "__eq__", "!"
+
         # int in range(..)
         if (
             middle == "__contains__"
@@ -4012,6 +4023,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if self.only_classes(node, (clname,)):
                 return True
         return False
+
+    def user_eq_ne(self, types: Types) -> Optional[tuple[bool, bool]]:
+        """For '=='/'!=' on these types: if they are all user classes (or None), whether
+        any class in their hierarchy defines __eq__, and whether any defines __ne__ (a
+        subclass may, as the static type in the generated code is the common base)"""
+        found = has_eq = has_ne = False
+        for t in types:
+            cl = t[0]
+            if isinstance(cl, python.Class) and cl.module.builtin and cl.ident == "none":
+                continue  # None is a null pointer
+            if not isinstance(cl, python.Class) or cl.module.builtin:
+                return None
+            found = True
+            for c in cl.ancestors(True) | cl.descendants(True):
+                if c.module.builtin:
+                    if c.ident != "object":
+                        return None
+                else:
+                    has_eq = has_eq or "__eq__" in c.funcs
+                    has_ne = has_ne or "__ne__" in c.funcs
+        if not found:
+            return None
+        return has_eq, has_ne
 
     def get_selector(self, temp: str, item: ast.AST, i: int) -> str:
         """Get the selector for an item in a tuple or list"""

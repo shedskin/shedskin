@@ -181,6 +181,55 @@ def test_instance_repr():
     assert str(ReprableChild()) == 'Reprable()'
 
 
+class IdA:
+    def __init__(self, x):
+        self.x = x
+
+class IdB(IdA):  # only the subclass defines __eq__
+    def __eq__(self, other):
+        return self.x == other.x
+
+class IdC:  # no __eq__/__ne__ anywhere: compared by identity
+    def __init__(self, x):
+        self.x = x
+
+class IdC2(IdC):
+    pass
+
+class IdD:
+    def __init__(self, x):
+        self.x = x
+
+class IdN:  # only __ne__
+    def __init__(self, x):
+        self.x = x
+    def __ne__(self, other):
+        return self.x != other.x
+
+def test_identity_eq():
+    a1, a2 = IdA(1), IdB(1)
+    l = [a1, a2]
+    assert a1 == a1 and l[0] == l[0] and not a1 != a1
+    assert a2 == a1 and l[1] == IdB(1) and not l[1] != IdB(1)
+    b1, b2 = IdB(1), IdB(1)
+    assert b1 == b2 and not b1 != b2 and b1 != IdB(2)  # '!=' is 'not __eq__'
+    c1, c2, c3 = IdC(1), IdC(1), IdC2(1)
+    cc = [c1, c3]
+    assert not c1 == c2 and c1 != c2 and c1 == c1 and not c1 != c1
+    assert cc[1] == c3 and not cc[0] == c3 and cc[0] != c3
+    n = None
+    if c1.x == 2:
+        n = c1
+    assert not n == c1 and n != c1 and not c1 == n
+    n = c1
+    assert n == c1 and not n != c1
+    mixed = [c1, IdD(1)]
+    assert mixed[0] == c1 and not mixed[1] == c1 and mixed[1] != c1
+    assert c2 in [c1, c2] and c3 not in [c1, c2] and [c1, c2].index(c2) == 1
+    n1, n2 = IdN(1), IdN(1)
+    assert not n1 != n2 and n1 != IdN(2)
+
+
 def test_all():
     test_class_person()
     test_class_edge()
@@ -188,6 +237,7 @@ def test_all():
     test_class_instance_attrs()
     test_instance_str()
     test_instance_repr()
+    test_identity_eq()
 
 
 

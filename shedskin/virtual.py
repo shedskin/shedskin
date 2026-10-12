@@ -108,7 +108,13 @@ def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> 
             if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                 self.eol(")")
             else:
-                if merged:
+                if ident in ("__eq__", "__ne__") and retexpr and formals:
+                    # not redefined here, so compare by identity, as python does
+                    op = "==" if ident == "__eq__" else "!="
+                    self.eol(
+                        ") { return __mbool((void *)this %s (void *)%s); }" % (op, formals[0])
+                    )
+                elif merged:
                     self.eol(
                         ") { return %s; }" % self.nothing(merged[0])
                     )  # XXX msvc needs return statement
