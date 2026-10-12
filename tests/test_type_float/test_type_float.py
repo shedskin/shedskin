@@ -235,6 +235,28 @@ def test_pow_half():
     assert m ** 0.5 == 0.0
 
 
+def test_float_literal_folding():
+    # float() of a string literal is folded at compile time
+    assert float('inf') > 1e308
+    assert float('-Infinity') < -1e308
+    assert str(float(' INF ')) == 'inf'
+    assert str(float('-inf')) == '-inf'
+    assert str(float('nan')) == 'nan'
+    assert str(float('-nan')) == 'nan'
+    x = float('nan')
+    assert x != x
+    assert str(float('1e999')) == 'inf'
+    assert str(float('-0.0')) == '-0.0'
+    assert float(' 1_000.5\n') == 1000.5
+    assert float('0.1') == 0.1
+    assert float('\u0663.5') == 3.5
+    try:
+        float('1_')
+        assert False
+    except ValueError as e:
+        assert str(e) == "could not convert string to float: '1_'"
+
+
 def test_all():
     test_float()
     test_inf()
@@ -249,6 +271,7 @@ def test_all():
     test_float_from_unicode_str()
     test_pow_overflow()
     test_pow_half()
+    test_float_literal_folding()
 
 
 if __name__ == "__main__":
