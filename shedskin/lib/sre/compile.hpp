@@ -23,15 +23,20 @@ struct Node {
     int add, del;  /* SUBPATTERN flags */
     std::vector<Node> set; /* IN */
     std::vector<Seq> subs; /* subpatterns (BRANCH items, GROUPREF_EXISTS yes/no, ..) */
-    Node(SRE_CODE op = 0, SRE_CODE a = 0, SRE_CODE b = 0) : op(op), a(a), b(b), add(0), del(0) {}
-    bool operator==(const Node &o) const { /* subpatterns compare by identity in python */
-        return op == o.op && a == o.a && b == o.b && set == o.set && subs.empty() && o.subs.empty();
-    }
+    /* defined after Seq: libc++ needs Seq complete to instantiate ~vector<Seq> */
+    Node(SRE_CODE op = 0, SRE_CODE a = 0, SRE_CODE b = 0);
+    bool operator==(const Node &o) const;
 };
 
 struct Seq {
     std::vector<Node> data;
 };
+
+inline Node::Node(SRE_CODE op, SRE_CODE a, SRE_CODE b) : op(op), a(a), b(b), add(0), del(0) {}
+
+inline bool Node::operator==(const Node &o) const { /* subpatterns compare by identity in python */
+    return op == o.op && a == o.a && b == o.b && set == o.set && subs.empty() && o.subs.empty();
+}
 
 static inline uint64_t sat_add(uint64_t x, uint64_t y) { return x > MAXWIDTH - y ? MAXWIDTH : x + y; }
 static inline uint64_t sat_mul(uint64_t x, uint64_t y) { return (y && x > MAXWIDTH / y) ? MAXWIDTH : x * y; }

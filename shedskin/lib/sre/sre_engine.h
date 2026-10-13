@@ -52,8 +52,16 @@
 typedef uint32_t Py_UCS4;
 typedef ptrdiff_t Py_ssize_t;
 #define PY_SSIZE_T_MAX PTRDIFF_MAX
-#define SIZEOF_SIZE_T __SIZEOF_SIZE_T__
-#define SIZEOF_VOID_P __SIZEOF_POINTER__
+#if SIZE_MAX > 0xFFFFFFFFu  /* no __SIZEOF_SIZE_T__/__SIZEOF_POINTER__ under msvc */
+#define SIZEOF_SIZE_T 8
+#else
+#define SIZEOF_SIZE_T 4
+#endif
+#if UINTPTR_MAX > 0xFFFFFFFFu
+#define SIZEOF_VOID_P 8
+#else
+#define SIZEOF_VOID_P 4
+#endif
 #define Py_STRINGIFY(x) #x
 #define PyErr_CheckSignals() 0
 #if defined(__GNUC__)
