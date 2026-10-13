@@ -180,18 +180,7 @@ public:
 #endif
 };
 
-class KeyError : public LookupError {
-public:
-    KeyError(str *msg=0) : LookupError(msg) { this->__class__ = cl_keyerror; }
-    str *__str__(); /* a single argument (the key) is repr'd */
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_KeyError; }
-#endif
-};
-
-/* KeyError raised by a failed dict/set/Counter lookup: keeps the key itself,
-   so an extension module can pass it to CPython as-is (message is repr(key),
-   which KeyError.__str__ would otherwise repr a second time) */
+/* forward declarations for __key_error */
 template<class T> str *repr(T t);
 #ifdef __SS_BIND
 template<class T> PyObject *__to_py(T t);
@@ -204,20 +193,49 @@ template<class T, class = void> struct __ss_has_to_py : std::bool_constant<!std:
 template<class T> struct __ss_has_to_py<T, std::void_t<decltype(std::declval<T>()->__to_py__())>> : std::true_type {};
 #endif
 
-template<class T> class KeyErrorT : public KeyError {
+class KeyError : public LookupError {
 public:
-    T key;
-    KeyErrorT(T key) : KeyError(repr(key)), key(key) {}
-    str *__str__() { return BaseException::__str__(); } /* message is repr(key) already */
+    str *key_repr; /* repr of a non-str key (see __key_error), else 0 */
 #ifdef __SS_BIND
-    PyObject *__py_args__() {
-        if constexpr (__ss_has_to_py<T>::value)
-            return Py_BuildValue("(N)", __to_py(key)); /* N: steals the new reference */
-        else
-            return 0; /* fall back to the message (repr(key)) */
+    /* the non-str key itself, converted only if the exception reaches CPython */
+    alignas(16) char key[16];
+    PyObject *(*key_to_py)(void *);
+#endif
+
+    KeyError(str *msg=0) : LookupError(msg) {
+        this->__class__ = cl_keyerror;
+        this->key_repr = 0;
+#ifdef __SS_BIND
+        this->key_to_py = 0;
+#endif
     }
+
+    str *__str__();
+    str *__repr__();
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_KeyError; }
+    PyObject *__py_args__();
 #endif
 };
+
+/* KeyError(key) for a failed dict/set/.. lookup. as args are str, a non-str
+   key is kept as its repr (and, for an extension module, as itself) */
+template<class T> KeyError *__key_error(T key) {
+    if constexpr (std::is_same_v<T, str *>)
+        return new KeyError(key);
+    else {
+        KeyError *e = new KeyError(repr(key));
+        e->key_repr = e->message;
+#ifdef __SS_BIND
+        if constexpr (__ss_has_to_py<T>::value) {
+            static_assert(sizeof(T) <= sizeof(e->key));
+            new (e->key) T(key);
+            e->key_to_py = [](void *p) { return __to_py(*(T *)p); };
+        }
+#endif
+        return e;
+    }
+}
 
 class IndexError : public LookupError {
 public:

@@ -628,12 +628,44 @@ def test_keyerror_str():
         d['b']
     except KeyError as e:
         assert str(e) == "'b'"
+        assert repr(e) == "KeyError('b')"
+        assert e.args == ('b',)
+    try:
+        d["it's"]
+    except KeyError as e:
+        assert str(e) == '"it\'s"'
+        assert repr(e) == 'KeyError("it\'s")'
+    try:
+        d.pop('c')
+    except LookupError as le:
+        assert str(le) == "'c'"
+        assert repr(le) == "KeyError('c')"
+    di = {1: 2}
+    try:
+        di[3]
+    except KeyError as e:
+        assert str(e) == '3'
+        assert repr(e) == 'KeyError(3)'
+    dt = {(1, 'a'): 2}
+    try:
+        dt[(3, 'b')]
+    except KeyError as e:
+        assert str(e) == "(3, 'b')"
+        assert repr(e) == "KeyError((3, 'b'))"
+    ss = set(['q'])
+    try:
+        ss.remove('r')
+    except KeyError as e:
+        assert str(e) == "'r'"
+        assert repr(e) == "KeyError('r')"
     s = set([1])
     s.clear()
     try:
         s.pop()
     except KeyError as e:
         assert str(e) == "'pop from an empty set'"
+        assert repr(e) == "KeyError('pop from an empty set')"
+        assert e.args == ('pop from an empty set',)
 
 
 def test_all():
