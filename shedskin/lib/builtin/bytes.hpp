@@ -169,6 +169,15 @@ public:
 #endif
 };
 
+/* check an integer is a valid byte value, as bytes/bytearray do when
+   constructed from an iterable of ints (CPython uses a slightly different
+   message for each) */
+inline char __byte_value(__ss_int e, bool bytearray_) {
+    if(e < 0 or e > 255)
+        throw new ValueError(new str(bytearray_ ? "byte must be in range(0, 256)" : "bytes must be in range(0, 256)"));
+    return (char)e;
+}
+
 inline __ss_int bytes::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     return (unsigned char)(unit[(size_t)i]);
@@ -181,9 +190,7 @@ __SS_ALWAYS_INLINE __ss_int bytes::__getfast__(__ss_int i) {
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
     i = __wrap(this, i);
-    if(e < 0)
-        throw new ValueError(new str("byte must be in range(0, 256)"));
-    unit[(size_t)i] = (char)e;
+    unit[(size_t)i] = __byte_value(e, true);
     return NULL;
 }
 
@@ -264,15 +271,6 @@ template <class U> bytes *bytes::join(U *iter) {
 }
 
 /* bytes */
-
-/* check an integer is a valid byte value, as bytes/bytearray do when
-   constructed from an iterable of ints (CPython uses a slightly different
-   message for each) */
-inline char __byte_value(__ss_int e, bool bytearray_) {
-    if(e < 0 or e > 255)
-        throw new ValueError(new str(bytearray_ ? "byte must be in range(0, 256)" : "bytes must be in range(0, 256)"));
-    return (char)e;
-}
 
 /* bytes([a, b, ..]) without the intermediate list (see cpp.py). a braced list, as unlike
    function arguments, its elements are evaluated from left to right */

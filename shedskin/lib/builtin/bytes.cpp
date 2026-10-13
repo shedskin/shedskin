@@ -918,7 +918,7 @@ bytes *bytes::take_bytes(__ss_int n) {
 }
 
 void *bytes::append(__ss_int i) {
-    unit += (char)i;
+    unit += __byte_value(i, true);
     return NULL;
 }
 
@@ -964,9 +964,11 @@ void *bytes::extend(pyiter<__ss_int> *t) {
     typename pyiter<__ss_int>::for_in_loop __3;
     int __2;
     pyiter<__ss_int> *__1;
+    __GC_STRING r; /* validate all values first, so nothing is added on error */
     FOR_IN(e,t,1,2,3)
-        unit += (char)e;
+        r += __byte_value(e, true);
     END_FOR
+    unit += r;
     return NULL;
 }
 
@@ -977,7 +979,7 @@ void *bytes::reverse() {
 }
 
 void *bytes::remove(__ss_int i) {
-    size_t pos = this->unit.find((char)i);
+    size_t pos = this->unit.find(__byte_value(i, true));
     if(pos == std::string::npos)
         throw new ValueError(new str("value not found in bytearray"));
     __delitem__((__ss_int)pos);
@@ -989,7 +991,7 @@ void *bytes::insert(__ss_int index, __ss_int item) {
     if(index < 0) index += len;
     if(index < 0) index = 0;
     if(index > len) index = len;
-    unit.insert(unit.begin()+index, (char)item);
+    unit.insert(unit.begin()+index, __byte_value(item, true));
     return NULL;
 }
 
@@ -998,6 +1000,8 @@ void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter
      * list<T>::__setslice__(pyiter...) itself uses to do so, so we can
      * check its length before delegating */
     list<__ss_int> *la = new list<__ss_int>(b);
+    for(size_t i=0; i<la->units.size(); i++)
+        __byte_value(la->units[i], true);
 
     /* CPython's bytearray raises "attempt to assign bytes of size N to
      * extended slice of size M" for a length mismatch, not list's generic
