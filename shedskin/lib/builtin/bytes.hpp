@@ -125,6 +125,7 @@ public:
     __ss_bool __contains__(bytes *);
 
     __ss_bool __eq__(pyobj *s);
+    __ss_int __cmp__(pyobj *p);
     __ss_int __hash__();
 
 
@@ -189,6 +190,18 @@ inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
 inline __ss_int bytes::__len__() {
     return (__ss_int)this->unit.size();
 }
+
+/* bytes ordering: directly, instead of through the virtual pyobj::__lt__ etc. and pyseq::__cmp__ */
+inline __ss_int bytes::__cmp__(pyobj *p) {
+    if(!p) return 1;
+    int r = unit.compare(((bytes *)p)->unit); /* memcmp, so unsigned, as in CPython */
+    return (r > 0) - (r < 0);
+}
+
+template<> inline __ss_bool __gt(bytes *a, bytes *b) { return __mbool(a->__cmp__(b) > 0); }
+template<> inline __ss_bool __ge(bytes *a, bytes *b) { return __mbool(a->__cmp__(b) >= 0); }
+template<> inline __ss_bool __lt(bytes *a, bytes *b) { return __mbool(a->__cmp__(b) < 0); }
+template<> inline __ss_bool __le(bytes *a, bytes *b) { return __mbool(a->__cmp__(b) <= 0); }
 
 inline bool bytes::for_in_has_next(size_t i) {
     return i < this->unit.size(); /* XXX opt end cond */

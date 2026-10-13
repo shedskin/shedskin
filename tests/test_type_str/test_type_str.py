@@ -697,6 +697,39 @@ def test_str_cmp():
     assert list(sorted(['blup', 'aap'])) == ['aap', 'blup']
 
 
+def test_str_ordering():
+    # single (cached) characters
+    assert 'a' < 'b' and not 'b' < 'a' and not 'a' < 'a'
+    assert 'a' <= 'a' and 'a' <= 'b' and not 'b' <= 'a'
+    assert 'b' > 'a' and not 'a' > 'b' and not 'a' > 'a'
+    assert 'a' >= 'a' and 'b' >= 'a' and not 'a' >= 'b'
+    assert 'Z' < 'a'
+    assert '\xe9' > 'z'  # cached, but beyond ascii
+    # longer strings, prefixes, empty strings
+    assert 'a' < 'ab' and 'ab' > 'a'
+    assert 'abc' < 'abd' and 'abd' > 'abc'
+    assert 'abc' <= 'abc' and 'abc' >= 'abc'
+    assert not 'abc' < 'abc' and not 'abc' > 'abc'
+    assert '' < 'a' and not '' > 'a' and '' <= '' and '' >= ''
+    assert 'b' > 'abc'
+    # beyond the character cache: code point order
+    assert '\u0100' > '\xff' and '\u0100' > 'z'
+    assert '\U0001f600' > '\uffff'
+    assert 'a\u0100' > 'a\xff'
+    # variables, sorting, min/max
+    words = ['pear', 'apple', 'fig', 'apples', '', 'Fig', '\xe9t\xe9']
+    assert sorted(words) == ['', 'Fig', 'apple', 'apples', 'fig', 'pear', '\xe9t\xe9']
+    assert sorted(words, reverse=True)[0] == '\xe9t\xe9'
+    assert min(words) == '' and max(words) == '\xe9t\xe9'
+    assert min('b', 'a') == 'a' and max('b', 'a') == 'b'
+    c = 'm'
+    n = 0
+    for x in 'azmMz':
+        if x > c:
+            n += 1
+    assert n == 2
+
+
 def test_str_concat():
     assert "x" + "x" + "x" == "xxx"
 
@@ -1057,6 +1090,7 @@ def test_eq_identity():
 def test_all():
     test_unicode_case()
     test_str_cmp()
+    test_str_ordering()
     test_str_concat()
     test_str_overload()
     test_capitalize()

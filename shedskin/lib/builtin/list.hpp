@@ -48,6 +48,7 @@ public:
     __ss_int count(T a);
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
+    __ss_int __cmp__(pyobj *p);
 
     void resize(__ss_int i); /* XXX remove */
 
@@ -246,6 +247,17 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    return True;
 }
 
+template<class T> __ss_int list<T>::__cmp__(pyobj *p) {
+    if(!p) return 1;
+    return __units_cmp(this->units, ((list<T> *)p)->units);
+}
+
+/* not through the virtual pyobj::__lt__ etc. (list is final, so __cmp__ is called directly) */
+template<class T> inline __ss_bool __gt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) > 0); }
+template<class T> inline __ss_bool __ge(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) >= 0); }
+template<class T> inline __ss_bool __lt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) < 0); }
+template<class T> inline __ss_bool __le(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) <= 0); }
+
 template<class T> void *list<T>::append(T a) {
     this->units.push_back(a);
     return NULL;
@@ -416,6 +428,8 @@ template<class T> void *list<T>::__delslice__(__ss_int a, __ss_int b) {
 
 template<class T> __ss_bool list<T>::__contains__(T a) {
     size_t size = this->units.size();
+    if constexpr (std::is_arithmetic_v<T>)
+        return __mbool(__units_find(this->units.data(), size, a) != size);
     for(size_t i=0; i<size; i++)
         if(__eq_id(this->units[i], a))
             return True;
@@ -467,9 +481,15 @@ template<class T> list<T> *list<T>::__imul__(__ss_int n) {
 
 template<class T> __ss_int list<T>::index(T a) {
     __ss_int len = this->__len__();
-    for(__ss_int i = 0; i < len; i++)
-        if(__eq(a, units[i]))
-            return i;
+    if constexpr (std::is_arithmetic_v<T>) {
+        size_t i = __units_find(units.data(), (size_t)len, a);
+        if(i != (size_t)len)
+            return (__ss_int)i;
+    } else {
+        for(__ss_int i = 0; i < len; i++)
+            if(__eq(a, units[i]))
+                return i;
+    }
     throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
 }
 
@@ -477,13 +497,23 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, 
 template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
     __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    for(__ss_int i = s; i < e; i++)
-        if(__eq(a, units[i]))
-            return i;
+    if constexpr (std::is_arithmetic_v<T>) {
+        if(s < e) {
+            size_t i = __units_find(units.data()+s, (size_t)(e-s), a);
+            if(i != (size_t)(e-s))
+                return s+(__ss_int)i;
+        }
+    } else {
+        for(__ss_int i = s; i < e; i++)
+            if(__eq(a, units[i]))
+                return i;
+    }
     throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
 }
 
 template<class T> __ss_int list<T>::count(T a) {
+    if constexpr (std::is_arithmetic_v<T>)
+        return __units_count(units.data(), units.size(), a);
     __ss_int c = 0;
     __ss_int len = this->__len__();
     for(__ss_int i = 0; i<len;i++)

@@ -171,6 +171,46 @@ def test_tuple3():
     assert sum(h) == 6
 
 
+def test_tuple_ordering():
+    assert (1, 2) < (1, 3) and not (1, 3) < (1, 2)
+    assert (1, 2) < (1, 2, 3) and (1, 2, 3) > (1, 2)
+    assert (1, 2) <= (1, 2) and (1, 2) >= (1, 2)
+    assert not (1, 2) < (1, 2) and not (1, 2) > (1, 2)
+    assert (2,) > (1, 9) and not (2,) <= (1, 9)
+    assert ('a', 'b') < ('a', 'c')
+    assert ((1, 2), (3, 4)) < ((1, 2), (3, 5))
+    # heterogeneous
+    assert (1, 'b') > (1, 'a') and (0, 'z') < (1, 'a')
+    assert (1, 'a') <= (1, 'a') and (1, 'a') >= (1, 'a')
+    assert (1.5, 2) < (1.5, 3)
+    tt = [(3, 1), (1, 2, 3), (1, 2), (3,), (1, 2)]
+    assert sorted(tt) == [(1, 2), (1, 2), (1, 2, 3), (3,), (3, 1)]
+    assert min(tt) == (1, 2) and max(tt) == (3, 1)
+    ht = [(2, 'a'), (1, 'b'), (1, 'a')]
+    ht.sort()
+    assert ht == [(1, 'a'), (1, 'b'), (2, 'a')]
+    assert max(ht) == (2, 'a')
+
+
+def test_tuple_search():
+    t = (5, 3, 9, 3, 7, -1, 3)
+    assert 9 in t and -1 in t and 4 not in t
+    assert t.index(5) == 0 and t.index(3) == 1 and t.index(3, 2) == 3
+    assert t.index(3, -1) == 6 and t.index(9, -6, -4) == 2
+    assert t.count(3) == 3 and t.count(4) == 0
+    try:
+        t.index(3, 4, 6)
+        assert False
+    except ValueError:
+        pass
+    big = tuple(range(1000))
+    assert 999 in big and 1000 not in big and big.index(600, 500) == 600
+    assert big.count(999) == 1
+    ft = (1.5, -0.0, 2.5, 1.5)
+    assert 0.0 in ft and ft.index(2.5) == 2 and ft.count(1.5) == 2
+    assert 3.5 not in ft
+
+
 def test_int_pairs():
     # (a, b) of ints: cached for small values, allocated otherwise
     pairs = []
@@ -208,6 +248,8 @@ def test_all():
     test_index()
     test_count()
     test_tuple3()
+    test_tuple_ordering()
+    test_tuple_search()
     test_int_pairs()
 
 
