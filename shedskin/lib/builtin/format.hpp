@@ -209,10 +209,9 @@ template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_
     __mod_pad_signed(result, "", __GC_STR(1, arg->unit[0]), f_flag, f_width, false);
 }
 
-template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &, T arg) {
-    size_t namepos, startpos;
+template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &pos, T arg) {
+    size_t namepos;
     str *name = NULL;
-    static const __ss_char fmtchars[] = U"0123456789# -+.*";
 
     for(; j<fmtlen;) {
         __ss_char c = fmt->unit[j++];
@@ -245,75 +244,54 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
         else
             name = NULL;
 
-        /* extract format string e.g. '%.2f' */
-        startpos = j;
-        size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
-        if(pos == std::string::npos)
-            throw new ValueError(new str("incomplete format"));
-        j += (size_t)(pos-startpos);
-
-        c = fmt->unit[j++];
-
-        std::string fstr = "%";
-        fstr += __narrow_std(fmt->unit.substr(startpos, j-startpos-1));
-        if(fstr.find('*') != std::string::npos)
-            throw new ValueError(new str("unsupported format character"));
-
-        /* extract flags, width, precision */
+        /* extract flags, width, precision e.g. '%-8.2f' */
         char f_flag = 0;
-        char d;
         __ss_int f_width = -1;
         __ss_int f_precision = -1;
         bool f_zero = false;
         bool dot = false;
+        bool star = false;
 
-        for(size_t k=1; k<fstr.size(); k++) {
-            d = fstr[k];
+        for(;; j++) {
+            if(j >= fmtlen)
+                throw new ValueError(new str("incomplete format"));
+            c = fmt->unit[j];
 
-            switch(d) {
-                case '-':
-                    f_flag |= __SS_FMT_LEFT;
-                    break;
-                case '+':
-                    f_flag |= __SS_FMT_PLUS;
-                    break;
-                case ' ':
-                    f_flag |= __SS_FMT_SPACE;
-                    break;
-                case '#':
-                    f_flag |= __SS_FMT_ALT;
-                    break;
-
-                case '.':
-                    dot = true;
-                    break;
-
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if (dot) {
-                        if (f_precision == -1)
-                            f_precision = (__ss_int)(d - '0');
-                        else
-                            f_precision = 10*f_precision + (__ss_int)(d - '0');
-                    } else {
-                        if (f_width == -1) {
-                            if (d == '0')
-                                f_zero = true;
-                            f_width = (__ss_int)(d - '0');
-                        } else
-                            f_width = 10*f_width + (__ss_int)(d - '0');
-                    }
-                    break;
+            if(c >= '0' && c <= '9') {
+                __ss_int d = (__ss_int)(c - '0');
+                if (dot) {
+                    if (f_precision == -1)
+                        f_precision = d;
+                    else
+                        f_precision = 10*f_precision + d;
+                } else {
+                    if (f_width == -1) {
+                        if (d == 0)
+                            f_zero = true;
+                        f_width = d;
+                    } else
+                        f_width = 10*f_width + d;
+                }
             }
+            else if(c == '-')
+                f_flag |= __SS_FMT_LEFT;
+            else if(c == '+')
+                f_flag |= __SS_FMT_PLUS;
+            else if(c == ' ')
+                f_flag |= __SS_FMT_SPACE;
+            else if(c == '#')
+                f_flag |= __SS_FMT_ALT;
+            else if(c == '.')
+                dot = true;
+            else if(c == '*')
+                star = true;
+            else
+                break;
         }
+        j++;
+
+        if(star)
+            throw new ValueError(new str("unsupported format character"));
 
         /* check format flag */
         switch(c) {
@@ -462,21 +440,21 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
 /* TODO optimize bytes variants */
 
 template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
-    str *result = new str();
-    bytes *r = new bytes();
+    /* the widened format and the result are only used during formatting */
+    str sfmt, result;
     size_t pos = 0;
     size_t fmtlen = fmt->unit.size();
     size_t j = 0;
-    str *sfmt = new str();
-    sfmt->unit = __widen(fmt->unit);
+    sfmt.unit = __widen(fmt->unit);
 
     bool unused = false;
-    ((unused |= !__mod_one(1, sfmt, fmtlen, j, result, pos, args)), ...);
+    ((unused |= !__mod_one(1, &sfmt, fmtlen, j, &result, pos, args)), ...);
     if(unused and not (sizeof...(args) == 1 and (__mod_mapping(1, args) and ...)))
         __mod_not_all_converted(1);
 
-    __mod_rest(sfmt, fmtlen, j, result);
-    r->unit = __narrow(result->unit);
+    __mod_rest(&sfmt, fmtlen, j, &result);
+    bytes *r = new bytes();
+    r->unit = __narrow(result.unit);
     return r;
 }
 

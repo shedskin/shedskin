@@ -314,6 +314,23 @@ def test_argument_count():
         assert error == 'incomplete format'
 
 
+def test_format_spec_parsing():
+    # flags, width and precision are parsed in place (chaos example hot spot)
+    assert b'%c%c%c' % (0, 128, 255) == b'\x00\x80\xff'
+    assert b'[%-4c] [%3c] [%5d]' % (65, 66, 7) == b'[A   ] [  B] [    7]'
+    assert '[%12.10f] [%-12.3e]' % (1.5, 2.0) == '[1.5000000000] [2.000e+00   ]'
+    assert '[%(a)-5d] [%(b)+.2f]' % {'a': 3, 'b': 1.0} == '[3    ] [+1.00]'
+
+    # the format runs out while parsing the spec
+    for fmt in ['%-5', '%5.', '%#0']:
+        error = ''
+        try:
+            s = fmt % (1,)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'incomplete format'
+
+
 def test_bool_argument():
     b = True
     assert '[%d]' % b == '[1]'
@@ -328,6 +345,7 @@ def test_all():
     test_char_width()
     test_bytes_repr_is_ascii()
     test_bool_argument()
+    test_format_spec_parsing()
     test_classic1()
     test_classic2()
     test_classic3()
