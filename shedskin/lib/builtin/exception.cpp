@@ -258,10 +258,26 @@ str *BaseException::__repr__() {
 
 str *KeyError::__str__() {
     /* as in CPython, a single argument (the key) is repr'd */
+    if(key_repr)
+        return key_repr;
     if(len(this->args) == 1)
         return repr(args->__getitem__(0));
     return BaseException::__str__();
 }
+
+str *KeyError::__repr__() {
+    if(key_repr)
+        return __add_strs(4, this->__class__->__name__, new str("("), key_repr, new str(")"));
+    return BaseException::__repr__();
+}
+
+#ifdef __SS_BIND
+PyObject *KeyError::__py_args__() {
+    if(key_to_py)
+        return Py_BuildValue("(N)", key_to_py(key)); /* N: steals the new reference */
+    return 0; /* use message */
+}
+#endif
 
 /* SystemExit */
 
