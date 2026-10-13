@@ -1,0 +1,157 @@
+# Implementations and programs for pybench.py.
+#
+# Most implementations are built from a git ref (tag, branch or commit) of
+# the repository named by their kind, and cached under the work directory by
+# name and commit. An implementation with 'uses' runs another's build (e.g.
+# the same CPython with its JIT switched on); one with 'exe' runs an
+# installed interpreter instead of building one.
+
+programs = ["adatron", "ant", "collatz", "mandelbrot", "oliva2", "path_tracing", "sieve", "voronoi"]
+
+baseline = "CPython 3.15"   # speedups in the report are relative to this
+timeout = 7200              # seconds per run
+
+[runs]                      # reported time is the best of these
+interpreter = 1             # several programs take minutes under CPython
+compiled = 3
+
+[repos]
+cpython = "https://github.com/python/cpython"
+pypy = "https://github.com/pypy/pypy"
+shedskin = "https://github.com/shedskin/shedskin"
+tpy = "https://github.com/trozen/tpy-lang"
+tpy-examples = "https://github.com/trozen/tpy-examples"
+
+# Extra Shed Skin flags for some programs, as their READMEs ask.
+[shedskin_flags]
+collatz = ["--int64"]       # its numbers don't fit in 32 bits
+
+# Program sources. Interpreters and Shed Skin run the original programs;
+# TurboPython runs its own ports of them.
+[sources.python]
+repo = "shedskin"
+ref = "main"
+path = "examples/{program}"
+
+[sources.tpy]
+repo = "tpy-examples"
+ref = "main"
+path = "shedskin/{program}"
+
+# CPython. 'jit' names the LLVM major version that the JIT build needs;
+# its bin directory must be on PATH, or listed in 'path'.
+
+[[impl]]
+name = "CPython 2.7"
+kind = "cpython"
+ref = "v2.7.18"
+configure = ["CFLAGS=-std=gnu11"]   # GCC 15 defaults to C23, where bool is a keyword
+# 2.7 trains PGO on nearly the whole test suite, which can hang (test_ftplib
+# with OpenSSL 3); use the tests that Python 3's --pgo runs instead.
+make = ["PROFILE_TASK=-m test.regrtest --pgo test_array test_base64 test_binascii test_binop test_bisect test_bytes test_bz2 test_cmath test_codecs test_collections test_complex test_datetime test_decimal test_dict test_difflib test_float test_functools test_generators test_hashlib test_heapq test_int test_itertools test_json test_list test_long test_math test_memoryview test_operator test_ordered_dict test_pickle test_pprint test_random test_re test_set test_sqlite test_string test_struct test_time test_tuple test_unicode test_xml_etree test_xml_etree_c"]
+
+[[impl]]
+name = "CPython 3.9"
+kind = "cpython"
+ref = "v3.9.25"
+
+[[impl]]
+name = "CPython 3.10"
+kind = "cpython"
+ref = "v3.10.22"
+
+[[impl]]
+name = "CPython 3.11"
+kind = "cpython"
+ref = "v3.11.17"
+
+[[impl]]
+name = "CPython 3.12"
+kind = "cpython"
+ref = "v3.12.15"
+
+[[impl]]
+name = "CPython 3.13"
+kind = "cpython"
+ref = "v3.13.16"
+jit = 18
+env = { PYTHON_JIT = "0" }
+path = ["{work}/tools/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04/bin"]
+
+[[impl]]
+name = "CPython 3.13 JIT"
+uses = "CPython 3.13"
+env = { PYTHON_JIT = "1" }
+path = ["{work}/tools/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04/bin"]
+
+[[impl]]
+name = "CPython 3.14"
+kind = "cpython"
+ref = "v3.14.8"
+jit = 19
+env = { PYTHON_JIT = "0" }
+path = ["{work}/tools/LLVM-19.1.7-Linux-X64/bin"]
+
+[[impl]]
+name = "CPython 3.14 JIT"
+uses = "CPython 3.14"
+env = { PYTHON_JIT = "1" }
+path = ["{work}/tools/LLVM-19.1.7-Linux-X64/bin"]
+
+[[impl]]
+name = "CPython 3.15"
+kind = "cpython"
+ref = "v3.15.0"
+jit = 21
+path = ["{work}/tools/LLVM-21.1.8-Linux-X64/bin"]
+env = { PYTHON_JIT = "0" }
+
+[[impl]]
+name = "CPython 3.15 JIT"
+uses = "CPython 3.15"
+env = { PYTHON_JIT = "1" }
+path = ["{work}/tools/LLVM-21.1.8-Linux-X64/bin"]
+
+# PyPy is translated by RPython, which runs on Python 2.7. That takes hours;
+# 'pybench.py --pypy pypy3' uses an installed PyPy instead.
+
+[[impl]]
+name = "PyPy 7.3.23"
+kind = "pypy"
+ref = "release-pypy3.11-v7.3.23"
+host = "CPython 2.7"
+
+[[impl]]
+name = "PyPy 8.0.0"
+kind = "pypy"
+ref = "release-pypy3.11-v8.0.0"
+host = "CPython 2.7"
+
+# Compilers: each program is translated and built once, untimed.
+
+[[impl]]
+name = "Shed Skin 0.9.12"
+kind = "shedskin"
+ref = "v0.9.12"
+
+[[impl]]
+name = "Shed Skin 0.9.13"
+kind = "shedskin"
+ref = "v0.9.13"
+flags = ["--boost"]
+
+[[impl]]
+name = "Shed Skin 0.9.14"
+kind = "shedskin"
+ref = "v0.9.14"
+flags = ["--boost"]
+
+[[impl]]
+name = "Shed Skin main"
+kind = "shedskin"
+ref = "main"
+
+[[impl]]
+name = "TurboPython 0.6.2"
+kind = "tpy"
+ref = "v0.6.2"
