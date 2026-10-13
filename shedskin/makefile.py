@@ -676,7 +676,7 @@ class ShedskinBuilder(Builder):
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
         )
-        self.add_ldlibs("-lgc", "-lpcre2-32")
+        self.add_ldlibs("-lgc")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -709,17 +709,11 @@ class ShedskinBuilder(Builder):
                 self.add_include_dirs(f"{prefix}/include")
                 self.add_link_dirs(f"{prefix}/lib")
                 if self.gx.options.static_libs:
-                    self.add_ldlibs(
-                        f"{prefix}/lib/libgc.a",
-                        f"{prefix}/lib/libpcre2-32.a",
-                    )
+                    self.add_ldlibs(f"{prefix}/lib/libgc.a")
                 else:
-                    self.add_ldlibs(
-                        "-lgc",
-                        "-lpcre2-32",
-                    )
+                    self.add_ldlibs("-lgc")
             else:
-                self.add_ldlibs("-lgc", "-lpcre2-32")
+                self.add_ldlibs("-lgc")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -782,8 +776,6 @@ class ShedskinBuilder(Builder):
     def _add_module_linker_flags(self) -> None:
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
-        if "re" in module_ids:
-            self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32", "-liphlpapi")
@@ -1203,7 +1195,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-Wl,--enable-auto-import",
                 "$(CPPFLAGS)",
             )
-            self.add_ldlibs("-lgc", "-lpcre2-32")
+            self.add_ldlibs("-lgc")
         if self.gx.pyextension_product:
             self.add_include_dirs(f"{self.py.prefix}\\include")
             self.add_cxxflags("-D__SS_BIND")
@@ -1227,10 +1219,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_include_dirs(LOCAL_DEPS_INCLUDE="$(LOCAL_DEPS_DIR)/include")
                 self.add_link_dirs(LOCAL_DEPS_LIB="$(LOCAL_DEPS_DIR)/lib")
                 self.add_variable("STATIC_GC", "$(LOCAL_DEPS_LIB)/libgc.a")
-                self.add_variable("STATIC_PCRE2", "$(LOCAL_DEPS_LIB)/libpcre2-32.a")
-                self.add_variable(
-                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_PCRE2)"
-                )
+                self.add_variable("STATIC_LIBS", "$(STATIC_GC)")
 
         prefixes = [
             "/usr",
@@ -1265,14 +1254,11 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_include_dirs(HOMEBREW_INCLUDE="$(HOMEBREW_PREFIX)/include")
                 self.add_link_dirs(HOMEBREW_LIB="$(HOMEBREW_PREFIX)/lib")
                 self.add_variable("STATIC_GC", "$(HOMEBREW_LIB)/libgc.a")
-                self.add_variable("STATIC_PCRE2", "$(HOMEBREW_LIB)/libpcre2-32.a")
-                self.add_variable(
-                    "STATIC_LIBS", "$(STATIC_GC) $(STATIC_PCRE2)"
-                )
+                self.add_variable("STATIC_LIBS", "$(STATIC_GC)")
 
             if self.no_flag_file:
                 self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated", "$(CPPFLAGS)")
-                self.add_ldlibs("-lgc", "-lpcre2-32")
+                self.add_ldlibs("-lgc")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
             if self.gx.pyextension_product:
@@ -1339,8 +1325,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
     def _add_module_linker_flags(self) -> None:
         """Add module-specific linker flags"""
         module_ids = [m.ident for m in self.modules]
-        if "re" in module_ids:
-            self.add_ldlibs("-lpcre2-32")
         if "socket" in module_ids:
             if PLATFORM == "Windows":
                 self.add_ldlibs("-lws2_32", "-liphlpapi")

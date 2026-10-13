@@ -1,7 +1,14 @@
 /* Copyright 2005-2025 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+/* the re module, on top of CPython's own sre engine (see sre/): patterns are
+   parsed and compiled by a port of CPython's re._parser/re._compiler
+   (sre/compile.hpp), and the scanning loops below follow those of sre.c */
+
 #include <stdint.h>
+#include <algorithm>
 #include "re.hpp"
+#include "sre/sre_engine.h"
+#include "sre/compile.hpp"
 
 namespace __re__ {
 
@@ -17,29 +24,116 @@ const __ss_int
     DEBUG = 0x80,
     A = 0x100, ASCII         = 0x100;
 
-//PCRE structures
-pcre2_general_context *general_context;
-pcre2_compile_context *locale_context, *non_locale_context;
-const uint8_t *locale_tables;
-
 class_ *cl_error;
 
+PatternError::PatternError(str *msg, str *pattern, __ss_int pos) : Exception(msg) {
+    this->msg = msg;
+    this->pattern = pattern;
+    this->pos = this->lineno = this->colno = 0;
+
+    //CPython: msg + " at position N" (+ " (line L, column C)" if multi-line)
+    if(pattern && pos >= 0) {
+        const __GC_STR &p = pattern->unit;
+        size_t n = std::min((size_t)pos, p.size());
+        __ss_int lineno = 1, lastnl = -1;
+        for(size_t i = 0; i < n; i++)
+            if(p[i] == '\n') { lineno++; lastnl = (__ss_int)i; }
+
+        this->pos = pos;
+        this->lineno = lineno;
+        this->colno = pos - lastnl;
+
+        __GC_STR full = msg->unit;
+        full += __gcs(" at position ") + __gcs(std::to_string(pos));
+        if(p.find('\n') != __GC_STR::npos)
+            full += __gcs(" (line ") + __gcs(std::to_string(lineno)) + __gcs(", column ") + __gcs(std::to_string(this->colno)) + __gcs(")");
+        __init__(new str(full));
+    }
+}
+
+//engine state for a subject string (sre.c: state_init/state_fini)
+struct __state {
+    SRE_STATE s;
+    Pattern *p;
+    __state(Pattern *p, str *subj, __ss_int pos, __ss_int endpos) : p(p) {
+        state_init(&s, p->groups, (const Py_UCS4 *)subj->unit.data(), (Py_ssize_t)subj->unit.size(), pos, endpos);
+    }
+    ~__state() { state_fini(&s); }
+    __ss_int offset(const void *ptr) { return (__ss_int)STATE_OFFSET(&s, ptr); }
+    Py_ssize_t search() {
+        state_reset(&s);
+        s.ptr = s.start;
+        return check(sre_ucs4_search(&s, p->code.data()));
+    }
+    Py_ssize_t match() {
+        state_reset(&s);
+        s.ptr = s.start;
+        return check(sre_ucs4_match(&s, p->code.data(), 1));
+    }
+    Py_ssize_t check(Py_ssize_t status) {
+        if(status == SRE_ERROR_MEMORY) throw new MemoryError();
+        if(status < 0) throw new RuntimeError(new str("internal error in regular expression engine"));
+        return status;
+    }
+    //a group's slice of the subject, or 0 if it did not participate (sre.c: state_getslice)
+    str *getslice(str *subj, __ss_int index, bool empty) {
+        index = (index - 1) * 2;
+        if(index >= s.lastmark || !s.mark[index] || !s.mark[index + 1])
+            return empty ? new str() : 0;
+        __ss_int i = offset(s.mark[index]), j = offset(s.mark[index + 1]);
+        return new str(subj->unit.substr(i, j - i));
+    }
+    //make the next search start where the last match ended
+    void advance() {
+        s.must_advance = (s.ptr == s.start);
+        s.start = s.ptr;
+    }
+};
+
+//sre.c: pattern_new_match
+static Match *__new_match(Pattern *p, __state &st, str *subj) {
+    Match *m = new Match();
+    m->re = p;
+    m->string = subj;
+    m->pos = st.s.pos;
+    m->endpos = st.s.endpos;
+    m->regs.resize(2 * (p->groups + 1));
+    m->regs[0] = st.offset(st.s.start);
+    m->regs[1] = st.offset(st.s.ptr);
+    for(__ss_int i = 0, j = 0; i < p->groups; i++, j += 2) {
+        if(j + 1 <= st.s.lastmark && st.s.mark[j] && st.s.mark[j + 1]) {
+            m->regs[j + 2] = st.offset(st.s.mark[j]);
+            m->regs[j + 3] = st.offset(st.s.mark[j + 1]);
+        } else
+            m->regs[j + 2] = m->regs[j + 3] = -1;
+    }
+    m->lastindex = st.s.lastindex >= 0 ? st.s.lastindex : 0;
+    if(st.s.lastindex >= 0 && st.s.lastindex < (int)p->indexgroup.size())
+        m->lastgroup = p->indexgroup[st.s.lastindex];
+    return m;
+}
+
 //Match functions
+static __ss_int __groupid(Match *m, __ss_int matchid) {
+    if(matchid > m->re->groups || matchid < 0) throw new IndexError(new str("no such group"));
+    return matchid;
+}
+
+static __ss_int __groupid(Match *m, str *mname) {
+    if(!m->re->groupindex->has_key(mname)) throw new IndexError(new str("no such group"));
+    return m->re->groupindex->__getitem__(mname);
+}
+
 str *Match::group(__ss_int /* n */, __ss_int matchid)
 {
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
-
-    if(matchid > re->capture_count || matchid < 0) throw new IndexError(new str("no such group"));
-    if(captured[matchid * 2] == PCRE2_UNSET) return 0; // group exists but did not participate in the match
-
-    return new str(re->__group(&string->unit, captured, matchid));
+    __groupid(this, matchid);
+    if(regs[2 * matchid] == -1) return 0; // group exists but did not participate in the match
+    return new str(string->unit.substr(regs[2 * matchid], regs[2 * matchid + 1] - regs[2 * matchid]));
 }
 
 str *Match::group(__ss_int /* n */, str *mname)
 {
-    if(!re->groupindex->has_key(mname)) throw new IndexError(new str("no such group"));
-
-    return group(0, re->groupindex->__getitem__(mname));
+    return group(0, __groupid(this, mname));
 }
 
 str *Match::__getitem__(__ss_int g) {
@@ -53,21 +147,12 @@ str *Match::__getitem__(str *mname) {
 //index functions
 __ss_int Match::__index(__ss_int matchid, char isend)
 {
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
-
-    //any existing group may be asked for; one that did not participate in the
-    //match gives -1 (CPython), even if it lies beyond the last matched group
-    if(matchid > re->capture_count || matchid < 0) throw new IndexError(new str("no such group"));
-    if(captured[matchid * 2] == PCRE2_UNSET || matchid > lastindex) return -1;
-
-    return (__ss_int) captured[matchid * 2 + isend];
+    return regs[2 * __groupid(this, matchid) + isend];
 }
 
 __ss_int Match::__index(str *mname, char isend)
 {
-    if(!re->groupindex->has_key(mname)) throw new IndexError(new str("no such group"));
-
-    return __index(re->groupindex->__getitem__(mname), isend);
+    return __index(__groupid(this, mname), isend);
 }
 
 __ss_int Match::end(__ss_int matchid)
@@ -99,28 +184,18 @@ tuple2<__ss_int, __ss_int> *Match::span(str *mname)
     return new tuple2<__ss_int, __ss_int>(2, start(mname), end(mname));
 }
 
-
-
 str *Match::expand(str *tpl)
 {
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
-    return new str(re->__expand(&string->unit, captured, tpl->unit));
+    return __expand(re->__compile_template(tpl));
 }
 
 tuple2<str *, str *> *Match::groups(str *defval)
 {
-    tuple<str *> *r;
-    int i;
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
+    tuple<str *> *r = new tuple<str *>();
 
-    r = new tuple<str *>();
-
-    for(i = 1; i <= re->capture_count; i++)
-    {
-        if(captured[i * 2] != PCRE2_UNSET)
-            r->units.push_back(new str(string->unit.substr((size_t)(captured[i * 2]), (size_t)(captured[i * 2 + 1] - captured[i * 2]))));
-
-        else r->units.push_back(defval ? new str(defval->unit) : 0);
+    for(__ss_int i = 1; i <= re->groups; i++) {
+        str *g = group(0, i);
+        r->units.push_back(g ? g : defval);
     }
 
     return r;
@@ -128,22 +203,13 @@ tuple2<str *, str *> *Match::groups(str *defval)
 
 dict<str *, str *> *Match::groupdict(str *defval)
 {
-    PCRE2_SIZE *captured = pcre2_get_ovector_pointer(match_data);
-    dict<str *, str *> *r;
-    int t;
-    r = new dict<str *, str *>();
-    str *k;
-    dict<str *, __ss_int>::for_in_loop __3;
-    int __2;
-    dict<str *, __ss_int> *__1;
-    FOR_IN(k,re->groupindex,1,2,3)
-        t = (int)re->groupindex->__getitem__(k);
+    dict<str *, str *> *r = new dict<str *, str *>();
 
-        if(captured[t * 2] != PCRE2_UNSET) r->__setitem__(new str(k->unit),
-            new str(string->unit.substr((size_t)(captured[t * 2]), (size_t)(captured[t * 2 + 1] - captured[t * 2]))));
-
-        else r->__setitem__(new str(k->unit), defval ? new str(defval->unit) : 0);
-    END_FOR
+    for(size_t i = 1; i < re->indexgroup.size(); i++) {
+        if(!re->indexgroup[i]) continue;
+        str *g = group(0, (__ss_int)i);
+        r->__setitem__(re->indexgroup[i], g ? g : defval);
+    }
 
     return r;
 }
@@ -156,102 +222,74 @@ str *Pattern::__repr__() {
     return new str("<Pattern object>");
 }
 
-PatternError::PatternError(str *msg, str *pattern, __ss_int pos) : Exception(msg) {
-    this->msg = msg;
-    this->pattern = pattern;
-    this->pos = this->lineno = this->colno = 0;
-
-    //CPython: msg + " at position N" (+ " (line L, column C)" if multi-line)
-    if(pattern && pos >= 0) {
-        const __GC_STR &p = pattern->unit;
-        size_t n = std::min((size_t)pos, p.size());
-        __ss_int lineno = 1, lastnl = -1;
-        for(size_t i = 0; i < n; i++)
-            if(p[i] == '\n') { lineno++; lastnl = (__ss_int)i; }
-
-        this->pos = pos;
-        this->lineno = lineno;
-        this->colno = pos - lastnl;
-
-        __GC_STR full = msg->unit;
-        full += __gcs(" at position ") + __gcs(std::to_string(pos));
-        if(p.find('\n') != __GC_STR::npos)
-            full += __gcs(" (line ") + __gcs(std::to_string(lineno)) + __gcs(", column ") + __gcs(std::to_string(this->colno)) + __gcs(")");
-        __init__(new str(full));
-    }
-}
-
 //template (sub/subn/expand) errors: like CPython, report the template as the
 //pattern, plus the position in it
-static inline PatternError *__tpl_error(__GC_STR msg, __GC_STR *tpl, size_t pos) {
-    return new PatternError(new str(msg), new str(*tpl), (__ss_int)pos);
-}
-
-
-//these are for internal use (used by expand()/sub() template backreference resolution)
-__GC_STR Pattern::__group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int matchid, __GC_STR *tpl, size_t tplpos)
-{
-    //an out-of-range numeric backreference is a template/pattern error
-    if(matchid > capture_count || matchid < 0) {
-        __GC_STR msg = __gcs("invalid group reference ") + __gcs(std::to_string(matchid));
-        if(tpl) throw __tpl_error(msg, tpl, tplpos);
-        throw new error(new str(msg));
-    }
-    //a group that exists but did not participate in the match expands to an empty string
-    if(captured[matchid * 2] == PCRE2_UNSET) return __GC_STR();
-
-    return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
-}
-
-__GC_STR Pattern::__group(__GC_STR *subj, PCRE2_SIZE *captured, str *mname)
-{
-    if(!groupindex->has_key(mname)) throw new IndexError(new str("unknown group name"));
-
-    return __group(subj, captured, groupindex->__getitem__(mname));
+static inline PatternError *__tpl_error(__GC_STR msg, __GC_STR &tpl, size_t pos) {
+    return new PatternError(new str(msg), new str(tpl), (__ss_int)pos);
 }
 
 static inline bool __is_octdigit(__ss_char c) { return c >= '0' && c <= '7'; }
 static inline bool __is_digit(__ss_char c) { return c >= '0' && c <= '9'; }
 
-//template expansion (sub/subn/expand), following CPython's parse_template
-__GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
+//compile a replacement template, following CPython's _parser.parse_template
+__template *Pattern::__compile_template(str *tpl_)
 {
-    __GC_STR out;
-    size_t i, j, len;
+    __template *t = new __template();
+    __GC_STR &tpl = tpl_->unit, lit;
+    size_t i, j, len = tpl.length();
     __ss_char c;
-    bool alldigits;
 
-    out = __GC_STR();
-    len = tpl.length();
+    auto addgroup = [&](__ss_int index, size_t pos) {
+        if(index > groups)
+            throw __tpl_error(__gcs("invalid group reference ") + __gcs(std::to_string(index)), tpl, pos);
+        t->literals.push_back(lit);
+        lit.clear();
+        t->groups.push_back(index);
+    };
 
     for(i = 0; i < len; i++)
     {
         //zip past anything that we don't need to worry about
         j = i;
         while(i < len && tpl[i] != '\\') i++;
-        if(i - j) out += tpl.substr(j, i - j);
+        if(i - j) lit += tpl.substr(j, i - j);
 
         if(i == len) break;
 
         //we've hit a backslash
         size_t bs = i;
-        if(++i == len) throw __tpl_error(__gcs("bad escape (end of pattern)"), &tpl, bs);
+        if(++i == len) throw __tpl_error(__gcs("bad escape (end of pattern)"), tpl, bs);
         c = tpl[i];
 
         if(c == 'g')
         {
             //named or numbered reference: \g<name>, \g<2>
-            if(++i == len || tpl[i] != '<') throw __tpl_error(__gcs("missing <"), &tpl, i);
+            if(++i == len || tpl[i] != '<') throw __tpl_error(__gcs("missing <"), tpl, i);
             j = ++i;
-            alldigits = true;
+            bool alldigits = true;
             while(i < len && tpl[i] != '>') alldigits = alldigits && __is_digit(tpl[i]), i++;
 
-            if(i == len) throw __tpl_error(__gcs("missing >, unterminated name"), &tpl, j);
-            if(i == j) throw __tpl_error(__gcs("missing group name"), &tpl, j);
+            if(i == len) {
+                if(i == j) throw __tpl_error(__gcs("missing group name"), tpl, j);
+                throw __tpl_error(__gcs("missing >, unterminated name"), tpl, j);
+            }
+            if(i == j) throw __tpl_error(__gcs("missing group name"), tpl, j);
 
-            if(alldigits) out += __group(subj, captured, (__ss_int)strtol(__narrow_std(tpl.substr(j, i - j)).c_str(), 0, 10), &tpl, j);
-            else if(__is_digit(tpl[j])) throw __tpl_error(__gcs("bad character in group name ") + repr(new str(tpl.substr(j, i - j)))->unit, &tpl, j);
-            else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
+            str *name = new str(tpl.substr(j, i - j));
+            if(alldigits) {
+                __ss_int index = 0;
+                for(size_t k = j; k < i; k++)
+                    index = std::min<__ss_int>(index * 10 + (tpl[k] - '0'), (__ss_int)SRE_MAXGROUPS);
+                if(index >= (__ss_int)SRE_MAXGROUPS) {
+                    size_t k = j;
+                    while(k + 1 < i && tpl[k] == '0') k++;
+                    throw __tpl_error(__gcs("invalid group reference ") + tpl.substr(k, i - k), tpl, j);
+                }
+                addgroup(index, j);
+            }
+            else if(!name->isidentifier()) throw __tpl_error(__gcs("bad character in group name ") + repr(name)->unit, tpl, j);
+            else if(!groupindex->has_key(name)) throw new IndexError(new str(__gcs("unknown group name ") + repr(name)->unit));
+            else addgroup(groupindex->__getitem__(name), j);
         }
         else if(c == '0')
         {
@@ -259,7 +297,7 @@ __GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
             __ss_char v = 0;
             for(j = 0; j < 2 && i + 1 < len && __is_octdigit(tpl[i + 1]); j++)
                 v = (__ss_char)(v * 8 + (tpl[++i] - '0'));
-            out += v;
+            lit += v;
         }
         else if(__is_digit(c))
         {
@@ -268,8 +306,8 @@ __GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
             if(i + 2 < len && __is_octdigit(c) && __is_octdigit(tpl[i + 1]) && __is_octdigit(tpl[i + 2]))
             {
                 __ss_char v = (__ss_char)((c - '0') * 64 + (tpl[i + 1] - '0') * 8 + (tpl[i + 2] - '0'));
-                if(v > 0377) throw __tpl_error(__gcs("octal escape value \\") + tpl.substr(i, 3) + __gcs(" outside of range 0-0o377"), &tpl, bs);
-                out += v;
+                if(v > 0377) throw __tpl_error(__gcs("octal escape value \\") + tpl.substr(i, 3) + __gcs(" outside of range 0-0o377"), tpl, bs);
+                lit += v;
                 i += 2;
             }
             else
@@ -278,21 +316,21 @@ __GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
                 size_t refpos = i;
                 if(i + 1 < len && __is_digit(tpl[i + 1]))
                     ref = ref * 10 + (__ss_int)(tpl[++i] - '0');
-                out += __group(subj, captured, ref, &tpl, refpos);
+                addgroup(ref, refpos);
             }
         }
         else
         {
             switch(c)
             {
-                case 'n' : out += '\n'; break;
-                case 'v' : out += '\v'; break;
-                case 'a' : out += '\a'; break;
-                case 'b' : out += '\b'; break;
-                case 'f' : out += '\f'; break;
-                case 't' : out += '\t'; break;
-                case 'r' : out += '\r'; break;
-                case '\\': out += '\\'; break;
+                case 'n' : lit += '\n'; break;
+                case 'v' : lit += '\v'; break;
+                case 'a' : lit += '\a'; break;
+                case 'b' : lit += '\b'; break;
+                case 'f' : lit += '\f'; break;
+                case 't' : lit += '\t'; break;
+                case 'r' : lit += '\r'; break;
+                case '\\': lit += '\\'; break;
                 default:
                     //unknown ascii letter escapes are errors (CPython 3.7+),
                     //anything else is kept as is, including the backslash
@@ -300,382 +338,185 @@ __GC_STR Pattern::__expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl)
                     {
                         __GC_STR msg = __gcs("bad escape \\");
                         msg += c;
-                        throw __tpl_error(msg, &tpl, bs);
+                        throw __tpl_error(msg, tpl, bs);
                     }
-                    out += '\\';
-                    out += c;
+                    lit += '\\';
+                    lit += c;
             }
         }
     }
+    t->literals.push_back(lit);
 
-    return out;
+    return t;
 }
 
-
-
-/* replace pcre2's allocation functions with ours, so that compiled patterns
- * and match data are reclaimed by the garbage collector together with the
- * Pattern/Match objects that reference them (with --nogc, plain malloc/free) */
-void *re_malloc(PCRE2_SIZE n, void *)
+//expand a compiled template (sre.c: expand_template)
+str *Match::__expand(__template *t)
 {
-#ifdef __SS_NOGC
-    return malloc(n);
-#else
-    return GC_MALLOC(n);
-#endif
+    __GC_STR out = t->literals[0];
+    for(size_t i = 0; i < t->groups.size(); i++) {
+        __ss_int g = t->groups[i];
+        if(regs[2 * g] != -1) //a group that did not participate expands to an empty string
+            out += string->unit.substr(regs[2 * g], regs[2 * g + 1] - regs[2 * g]);
+        out += t->literals[i + 1];
+    }
+    return new str(out);
 }
 
-void re_free(void *o, void *)
+//sub/subn, with either a template or a function (sre.c: pattern_subx)
+str *Pattern::__subx(__template *tpl, replfunc func, str *subj, __ss_int maxn, __ss_int *howmany)
 {
-#ifdef __SS_NOGC
-    free(o);
-#else
-    GC_FREE(o);
-#endif
-}
+    __state st(this, subj, 0, PY_SSIZE_T_MAX);
+    __GC_STR out;
+    __ss_int n = 0, i = 0;
 
-str *Pattern::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
-{
-    __GC_STR *s, out;
-    PCRE2_SIZE i, start, cur;
-    PCRE2_SPTR c_subj;
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
-    PCRE2_SIZE *captured;
-    uint32_t extra;
+    while(!maxn || n < maxn) {
+        if(!st.search()) break;
 
-    out = __GC_STR();
+        __ss_int b = st.offset(st.s.start), e = st.offset(st.s.ptr);
 
-    s = &subj->unit;
-    c_subj = (PCRE2_SPTR) s->data();
+        //get segment before this match
+        if(i < b) out += subj->unit.substr(i, b - i);
 
-    //'i' is the end of the previous match (start of text still to copy),
-    //'start' where the next match attempt begins. after a zero-length match
-    //we retry at the same offset forbidding an empty match there (CPython
-    //3.7+ semantics, so e.g. sub('|a', '-', 'a') == '---'), see __splitfind
-    extra = 0;
-    for(cur = i = start = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; )
-    {
-        if(start > s->size())
-            break;
-
-        //get a match
-        if(pcre2_match(
-            compiled_pattern,
-            c_subj,
-            (PCRE2_SIZE)s->size(),
-            start,
-            extra,
-            match_data,
-            NULL
-        ) <= 0)
-        {
-            if(extra == 0) break;
-            start++;
-            extra = 0;
-            continue;
+        if(tpl && tpl->groups.empty())
+            out += tpl->literals[0];
+        else {
+            Match *m = __new_match(this, st, subj);
+            str *item = tpl ? m->__expand(tpl) : func(m);
+            if(item) out += item->unit;
         }
 
-        captured = pcre2_get_ovector_pointer(match_data);
-
-        //append stuff we skipped, then the replacement
-        out += s->substr((size_t)i, (size_t)(captured[0] - i));
-        out += __expand(s, captured, repl->unit);
-        cur++;
-
-        i = start = captured[1];
-        if(captured[0] == captured[1]) extra = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
-        else extra = 0;
+        i = e;
+        n = n + 1;
+        st.advance();
     }
 
-    //extra
-    if(i < s->size())
-        out += s->substr((size_t)i);
-    if(howmany) *howmany = (int) cur;
+    //get segment following last match
+    if(i < st.s.endpos) out += subj->unit.substr(i, st.s.endpos - i);
 
-    pcre2_match_data_free(match_data);
-
+    if(howmany) *howmany = n;
     return new str(out);
 }
 
 str *Pattern::sub(str *repl, str *subj, __ss_int maxn)
 {
-    return __subn(repl, subj, maxn, 0);
+    return __subx(__compile_template(repl), 0, subj, maxn, 0);
 }
 
-str *Pattern::sub(replfunc func, str *string, __ss_int maxn) {
-    list<str *> *l;
-    __ss_int at;
-
-    at = 0;
-    l = (new list<str *>());
-
-    __re__::Match *match;
-    __iter<__re__::Match *>::for_in_loop __3;
-    int __2;
-    __iter<__re__::Match *> *__1;
-
-    FOR_IN(match,finditer(string),1,2,3)
-        l->append(string->__slice__(3, at, match->start(), 0));
-        l->append(func(match));
-        at = match->end();
-        if (maxn > 0) {
-            maxn = (maxn-1);
-            if (maxn == 0) {
-                break;
-            }
-        }
-    END_FOR
-
-    l->append(string->__slice__(1, at, 0, 0));
-    return (new str(""))->join(l);
+str *Pattern::sub(replfunc func, str *subj, __ss_int maxn)
+{
+    return __subx(0, func, subj, maxn, 0);
 }
-
 
 tuple2<str *, __ss_int> *Pattern::subn(str *repl, str *subj, __ss_int maxn)
 {
-    str *r;
-    int n;
-
-    r = __subn(repl, subj, maxn, &n);
-
+    __ss_int n;
+    str *r = __subx(__compile_template(repl), 0, subj, maxn, &n);
     return new tuple2<str *, __ss_int>(2, r, n);
 }
 
-list<str *> *Pattern::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos, __ss_int endpos)
+//sre.c: _sre_SRE_Pattern_split_impl
+list<str *> *Pattern::split(str *subj, __ss_int maxn)
 {
-    __GC_STR *subjs;
-    list<str *> *r;
-    PCRE2_SIZE i, j, cur, start, nendpos;
-    PCRE2_SPTR c_subj;
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
-    PCRE2_SIZE *captured;
-    uint32_t extra;
+    __state st(this, subj, 0, PY_SSIZE_T_MAX);
+    list<str *> *r = new list<str *>();
+    __ss_int n = 0, last = 0;
 
-    //'permanent' (in respect to the lifetime of this function)
-    r = new list<str *>();
+    while(!maxn || n < maxn) {
+        if(!st.search()) break;
 
-    subjs = &subj->unit;
-    c_subj = (PCRE2_SPTR) subjs->data();
+        //get segment before this match
+        __ss_int b = st.offset(st.s.start);
+        r->append(new str(subj->unit.substr(last, b - last)));
 
-    //'i' is the start of the segment still pending output (the end of the
-    //previous match); 'start' is where the next match attempt begins. These
-    //are usually the same, but diverge while stepping over a zero-length
-    //match -- which is exactly the case the old code got wrong: it bumped a
-    //single index past the empty match, silently swallowing the character
-    //that sat there, and could walk the index past the end of the subject
-    //(making the final substr() below throw).
-    //
-    //'extra' implements the standard PCRE2 global-matching idiom: after a
-    //zero-length match we retry at the same offset forbidding another empty
-    //match there, and only if that fails do we advance one position and
-    //resume searching normally.
+        //add groups (if any)
+        for(__ss_int i = 0; i < groups; i++)
+            r->append(st.getslice(subj, i + 1, false));
 
-    //search window subj[pos:endpos], mirroring __exec's handling of the
-    //same arguments (endpos == -1 means 'to the end of the string')
-    if(pos < 0) pos = 0;
-    if(endpos == -1) nendpos = subjs->size();
-    else if(endpos < pos) nendpos = (PCRE2_SIZE)pos; //empty window, like CPython (no error)
-    else nendpos = ((PCRE2_SIZE)endpos < subjs->size()) ? (PCRE2_SIZE)endpos : subjs->size();
-    if((PCRE2_SIZE)pos > nendpos) pos = (__ss_int)nendpos;
-
-    start = i = (PCRE2_SIZE)pos;
-    extra = 0;
-    for(cur = 0; maxn <= 0 || cur < (PCRE2_SIZE) maxn; )
-    {
-        if(start > nendpos) break;
-
-        //get a match
-        if(pcre2_match(
-            compiled_pattern,
-            c_subj,
-            nendpos,
-            start,
-            (uint32_t) flags_ | extra,
-            match_data,
-            NULL
-        ) <= 0)
-        {
-            //no match here; if we were only forbidding an empty match at
-            //this offset, step over it and keep searching, else we're done
-            if(extra == 0) break;
-            start++;
-            extra = 0;
-            continue;
-        }
-
-        captured = pcre2_get_ovector_pointer(match_data);
-
-        //this whole subroutine is very similar to findall, so we might as well save some code and merge them...
-        if(onlyfind)
-        {
-            r->append(new str(subjs->substr((size_t)captured[0], (size_t)(captured[1] - captured[0]))));
-        }
-        else
-        {
-            //append block of text preceding the match; zero-length matches
-            //split too (CPython 3.7+), they just yield empty segments
-            r->append(new str(subjs->substr((size_t)i, (size_t)(captured[0] - i))));
-
-            //append all the submatches to list
-            for(j = 1; j <= (PCRE2_SIZE) capture_count; j++)
-            {
-                if(captured[j * 2] != PCRE2_UNSET) r->append(new str(subjs->substr((size_t)captured[j * 2], (size_t)(captured[j * 2 + 1] - captured[j * 2]))));
-                else r->append(0); //should this be new str() ?
-            }
-        }
-
-        cur++;
-
-        //move our indices
-        i = captured[1];
-        start = captured[1];
-
-        //a zero-length match would otherwise be found again at the same
-        //offset forever, so make the next attempt reject one here
-        if(captured[1] == captured[0]) extra = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
-        else extra = 0;
+        n = n + 1;
+        st.advance();
+        last = st.offset(st.s.start);
     }
 
-    if(!onlyfind) r->append(new str(subjs->substr((size_t)i, (size_t)(nendpos - i))));
+    //get segment following last match (even if empty)
+    r->append(new str(subj->unit.substr(last, st.s.endpos - last)));
+    return r;
+}
 
-    pcre2_match_data_free(match_data);
+//sre.c: _sre_SRE_Pattern_findall_impl (with several groups, CPython returns
+//tuples, which shedskin does not support; the whole match is returned then)
+list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_int endpos)
+{
+    __state st(this, subj, pos, endpos == -1 ? PY_SSIZE_T_MAX : endpos);
+    list<str *> *r = new list<str *>();
+
+    while(st.s.start <= st.s.end) {
+        if(!st.search()) break;
+
+        if(groups == 1)
+            r->append(st.getslice(subj, 1, true));
+        else {
+            __ss_int b = st.offset(st.s.start), e = st.offset(st.s.ptr);
+            r->append(new str(subj->unit.substr(b, e - b)));
+        }
+
+        st.advance();
+    }
 
     return r;
 }
 
-list<str *> *Pattern::split(str *subj, __ss_int maxn)
+//finditer (sre.c: the scanner object, with its search method)
+match_iter::match_iter(Pattern *ro_, str *subj_, __ss_int pos_, __ss_int endpos_)
 {
-    return __splitfind(subj, maxn, 0, 0);
-}
-
-list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return __splitfind(subj, -1, 1, 0, pos, endpos);
-}
-
-match_iter::match_iter(Pattern *ro_, str *subj_, __ss_int pos_, __ss_int endpos_, __ss_int flags_)
-{
+    this->ro = ro_;
     this->subj = subj_;
     this->pos = pos_;
-    this->endpos = endpos_;
-    this->flags = flags_;
-    this->ro = ro_;
+    this->endpos = endpos_ == -1 ? PY_SSIZE_T_MAX : endpos_;
+    this->start = -2; //not started
+    this->must_advance = 0;
 }
 
 Match *match_iter::__next__(void)
 {
-    Match *mobj;
-    PCRE2_SIZE *captured;
+    if(start == -1) throw new StopIteration();
 
-    //'flags' holds pcre2_match() options (never python re.* flags); after a
-    //zero-length match it forbids another empty match at the same offset,
-    //like __splitfind. an empty match at the very end is valid (CPython).
-    for(;;)
-    {
-        if(pos > (__ss_int)subj->unit.size() || (endpos != -1 && pos > endpos)) throw new StopIteration();
-
-        mobj = ro->__exec(subj, pos, endpos, flags);
-        if(mobj) break;
-        if(flags == 0) throw new StopIteration();
-
-        pos++;
-        flags = 0;
+    __state st(ro, subj, pos, endpos);
+    if(start != -2) {
+        st.s.start = (const Py_UCS4 *)st.s.beginning + start;
+        st.s.must_advance = must_advance;
     }
 
-    captured = pcre2_get_ovector_pointer(mobj->match_data);
+    if(!st.search()) {
+        start = -1;
+        throw new StopIteration();
+    }
 
-    pos = (__ss_int) captured[1];
-    if(captured[0] == captured[1]) flags = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
-    else flags = 0;
-
-    return mobj;
+    Match *m = __new_match(ro, st, subj);
+    st.advance();
+    start = st.offset(st.s.start);
+    must_advance = st.s.must_advance;
+    return m;
 }
 
 __iter<Match *> *Pattern::finditer(str *subj, __ss_int pos, __ss_int endpos)
 {
-    //like CPython, out-of-range pos/endpos are clamped rather than rejected
-    //(see __exec). the last argument holds pcre2_match() options: passing
-    //the python re.* flags here made e.g. re.I collide with PCRE2_NOTEOL
-    if(pos < 0) pos = 0;
-
-    return new match_iter(this, subj, pos, endpos, 0);
+    return new match_iter(this, subj, pos, endpos);
 }
 
-Match *Pattern::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
+//match (mode 1), fullmatch (mode 2) or search (mode 0)
+Match *Pattern::__exec(str *subj, __ss_int pos, __ss_int endpos, int mode)
 {
-    Match *mobj;
-    int r, t, mx_i;
-    __ss_int nendpos;
-    str *mx_s = NULL;
-    PCRE2_SIZE *captured;
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(compiled_pattern, general_context);
-
-    //sanity checking
-    //nendpos is the exclusive end of the search window (i.e. the number of
-    //bytes of subj that pcre2_match is allowed to look at), matching the
-    //semantics of Python's endpos (like a slice upper bound: subj[pos:endpos])
-    //like CPython, clamp pos/endpos to the subject instead of raising: pos
-    //== len(subj) is a valid position (e.g. for an empty match at the end),
-    //and an endpos before pos simply means there is nothing to match
-    if(pos < 0) pos = 0;
-    else if(pos > (__ss_int)subj->unit.size()) pos = (__ss_int)subj->unit.size();
-
-    if(endpos == -1) nendpos = (__ss_int)subj->unit.size();
-    else if(endpos < 0) nendpos = 0;
-    else nendpos = (endpos < (__ss_int)subj->unit.size()) ? endpos : (__ss_int)subj->unit.size();
-
-    if(nendpos < pos) return (Match *)NULL;
-
-    r = pcre2_match(
-        compiled_pattern,
-        (PCRE2_SPTR) subj->unit.data(),
-        nendpos,
-        pos,
-        (uint32_t)flags_,
-        match_data,
-        NULL
-    );
-
-    //no match was found (dont have to worry about freeing thanks to the garbage collector)
-    if(r < 0) return (Match *)NULL;
-
-    //create object now that we know we're successful
-    mobj = new Match();
-    mobj->re = this;
-
-    //extra info
-    mobj->match_data = match_data;
-    mobj->pos = pos;
-    mobj->endpos = (endpos == -1? subj->unit.size(): endpos);
-    mobj->string = subj;
-    mobj->lastindex = r - 1;
-
-    captured = pcre2_get_ovector_pointer(match_data);
-
-    //find lastgroup
-    mx_i = -1;
-
-    str *k;
-    dict<str *, __ss_int>::for_in_loop __3;
-    int __2;
-    dict<str *, __ss_int> *__1;
-    FOR_IN(k,groupindex,1,2,3)
-        t = (int)groupindex->__getitem__(k);
-        if(captured[t * 2] != PCRE2_UNSET && t > mx_i)
-        {
-            mx_s = k;
-            mx_i = t;
-        }
-    END_FOR
-    if(mx_i != -1) mobj->lastgroup = mx_s;
-    else mobj->lastgroup = 0;
-
-    return mobj;
+    __state st(this, subj, pos, endpos == -1 ? PY_SSIZE_T_MAX : endpos);
+    st.s.match_all = (mode == 2);
+    if(!(mode ? st.match() : st.search()))
+        return 0;
+    return __new_match(this, st, subj);
 }
 
 Match *Pattern::match(str *subj, __ss_int pos, __ss_int endpos)
 {
-    return __exec(subj, pos, endpos, PCRE2_ANCHORED);
+    return __exec(subj, pos, endpos, 1);
 }
 
 Match *Pattern::prefixmatch(str *subj, __ss_int pos, __ss_int endpos)
@@ -685,10 +526,7 @@ Match *Pattern::prefixmatch(str *subj, __ss_int pos, __ss_int endpos)
 
 Match *Pattern::fullmatch(str *subj, __ss_int pos, __ss_int endpos)
 {
-    //PCRE2_ENDANCHORED makes pcre2 backtrack until the match ends at the end
-    //of the search window, so e.g. fullmatch('a|ab', 'ab') finds 'ab' (just
-    //checking the end of the first anchored match wrongly rejected it)
-    return __exec(subj, pos, endpos, PCRE2_ANCHORED | PCRE2_ENDANCHORED);
+    return __exec(subj, pos, endpos, 2);
 }
 
 Match *Pattern::search(str *subj, __ss_int pos, __ss_int endpos)
@@ -698,98 +536,44 @@ Match *Pattern::search(str *subj, __ss_int pos, __ss_int endpos)
 
 
 //re.* functions
-__ss_int __convert_flags(__ss_int flags)
-{
-    //U/UNICODE is the default in python 3 (a no-op here); unicode
-    //character properties are enabled below unless re.ASCII is given
-    int ta[] = {IGNORECASE, MULTILINE, DOTALL, VERBOSE},
-        tb[] = {PCRE2_CASELESS, PCRE2_MULTILINE, PCRE2_DOTALL, PCRE2_EXTENDED};
-    int i, r;
 
-    r = 0;
-    for(i = sizeof(ta) / sizeof(ta[0]) - 1; i >= 0; i--)
-        if(flags & ta[i]) r |= tb[i];
-
-    return r;
-}
+//like CPython, keep the most recently used compiled patterns around
+static const size_t __CACHE_SIZE = 256;
+static Pattern *__cache[__CACHE_SIZE];
 
 Pattern *compile(str *pat, __ss_int flags)
 {
-    Pattern *reobj;
-    __GC_STR fullerr;
-    pcre2_code *cpat;
-    int errorcode;
-    PCRE2_SIZE erroroffset;
-    PCRE2_SPTR nametable;
-    uint32_t options, ntlen, nteach, i;
+    size_t slot = ((size_t)pat->__hash__() ^ (size_t)flags * 0x9e3779b9u) % __CACHE_SIZE;
+    Pattern *c = __cache[slot];
+    if(c && c->flags_given == flags && c->pattern->unit == pat->unit)
+        return c;
 
-    //re.LOCALE only makes sense for bytes patterns in CPython; we only
-    //support str patterns, so mirror CPython's rejection of this combination
-    if(flags & LOCALE)
-        throw new ValueError(new str("cannot use LOCALE flag with a str pattern"));
+    __sre::Code code;
+    int outflags, groups;
+    std::vector<std::pair<__GC_STR, int> > names;
+    __sre::compile_pattern(pat, (int)flags, code, outflags, groups, names);
 
-    //convert flags; with 32-bit code units each unit is one code point, so
-    //no PCRE2_UTF needed (this also keeps lone surrogates matchable, like
-    //CPython); PCRE2_UCP makes \w/\d/\s/caseless follow unicode properties
-    options = (uint32_t)__convert_flags(flags);
-    if(!(flags & ASCII))
-        options |= PCRE2_UCP;
-
-    //attempt a compilation
-    cpat = pcre2_compile(
-        (PCRE2_SPTR) pat->unit.data(),
-        pat->unit.size(),
-        options,
-        &errorcode,
-        &erroroffset,
-        (flags & LOCALE ? locale_context : non_locale_context)
-    );
-
-    //...
-    if(!cpat)
-    {
-        PCRE2_UCHAR errormessage[128];
-        pcre2_get_error_message(errorcode, errormessage, 128); /* length in code units */
-
-        for(PCRE2_UCHAR *ep = errormessage; *ep; ep++)
-            fullerr += (__ss_char)*ep;
-
-        throw new error(new str(fullerr), new str(pat->unit), (__ss_int)erroroffset);
+    Pattern *p = new Pattern();
+    p->pattern = pat;
+    p->flags = outflags;
+    p->flags_given = flags;
+    p->groups = p->capture_count = groups;
+    p->code.assign(code.begin(), code.end());
+    p->groupindex = new dict<str *, __ss_int>();
+    p->indexgroup.assign(groups + 1, 0);
+    for(auto &name : names) {
+        str *s = new str(name.first);
+        p->groupindex->__setitem__(s, name.second);
+        p->indexgroup[name.second] = s;
     }
 
-    //everythings ok, create object
-    reobj = new Pattern();
-    reobj->compiled_pattern = cpat;
+    __cache[slot] = p;
+    return p;
+}
 
-    //any named indices?
-    reobj->groupindex = new dict<str *, __ss_int>();
-
-    pcre2_pattern_info(cpat, PCRE2_INFO_NAMECOUNT, (void *)&ntlen);
-    pcre2_pattern_info(cpat, PCRE2_INFO_NAMEENTRYSIZE, (void *)&nteach);
-    pcre2_pattern_info(cpat, PCRE2_INFO_NAMETABLE, (void *)&nametable);
-
-    for(i = 0; i < ntlen; i++)
-    {
-        //in the 32-bit library: first code unit = group number,
-        //then the name as a zero-terminated 32-bit string
-        const PCRE2_UCHAR *entry = &nametable[i * nteach];
-        __GC_STR gname;
-        for(const PCRE2_UCHAR *np = entry + 1; *np; np++)
-            gname += (__ss_char)*np;
-        reobj->groupindex->__setitem__(new str(gname), (__ss_int)entry[0]);
-    }
-
-    //extra info
-    reobj->pattern = new str(pat->unit);
-    reobj->flags = flags;
-    if(!(flags & ASCII))
-        reobj->flags |= __ss_UNICODE; //like CPython, for str patterns
-    uint32_t capturecount;
-    pcre2_pattern_info(cpat, PCRE2_INFO_CAPTURECOUNT, &capturecount);
-    reobj->groups = (__ss_int) capturecount;
-    reobj->capture_count = (__ss_int) capturecount;
-
-    return reobj;
+void *purge() {
+    std::fill(__cache, __cache + __CACHE_SIZE, (Pattern *)0);
+    return NULL;
 }
 
 str *escape(str *s)
@@ -816,25 +600,14 @@ str *escape(str *s)
     return new str(out);
 }
 
-Match *__exec_once(str *pat, str *subj, __ss_int flags)
-{
-    Pattern *r;
-    Match *mo;
-
-    r = compile(pat, flags & ~(__ss_int)(PCRE2_ANCHORED | PCRE2_ENDANCHORED));
-    mo = r->__exec(subj, 0, -1, flags & (PCRE2_ANCHORED | PCRE2_ENDANCHORED));
-
-    return mo;
-}
-
 Match *search(str *pat, str *subj, __ss_int flags)
 {
-    return __exec_once(pat, subj, flags);
+    return compile(pat, flags)->search(subj);
 }
 
 Match *match(str *pat, str *subj, __ss_int flags)
 {
-    return __exec_once(pat, subj, flags | PCRE2_ANCHORED);
+    return compile(pat, flags)->match(subj);
 }
 
 Match *prefixmatch(str *pat, str *subj, __ss_int flags)
@@ -844,96 +617,42 @@ Match *prefixmatch(str *pat, str *subj, __ss_int flags)
 
 Match *fullmatch(str *pat, str *subj, __ss_int flags)
 {
-    return __exec_once(pat, subj, flags | PCRE2_ANCHORED | PCRE2_ENDANCHORED);
+    return compile(pat, flags)->fullmatch(subj);
 }
 
 __iter<Match *> *finditer(str *pat, str *subj, __ss_int flags)
 {
-    Pattern *ro;
-    __iter<Match *> *r;
-
-    ro = compile(pat, flags);
-    r = ro->finditer(subj);
-
-    return r;
+    return compile(pat, flags)->finditer(subj);
 }
 
-str *sub(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags_)
+str *sub(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags)
 {
-    Pattern *ro;
-    str *r;
-
-    ro = compile(pat, flags_);
-    r = ro->sub(repl, subj, maxn);
-
-    return r;
+    return compile(pat, flags)->sub(repl, subj, maxn);
 }
 
-str *sub(str *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags_) {
-    Pattern *ro;
-    str *r;
-
-    ro = compile(pat, flags_);
-    r = ro->sub(func, subj, maxn);
-
-    return r;
-}
-
-tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags_)
+str *sub(str *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags)
 {
-    Pattern *ro;
-    tuple2<str *, __ss_int> *r;
-
-    ro = compile(pat, flags_);
-    r = ro->subn(repl, subj, maxn);
-
-    return r;
+    return compile(pat, flags)->sub(func, subj, maxn);
 }
 
-list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags)
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags)
 {
-    Pattern *ro;
-    list<str *> *r;
-
-    //'flags' here is a bitmask of Python-level re.* flags (IGNORECASE=0x02,
-    //MULTILINE=0x08, DOTALL=0x10, ...), already applied at compile time
-    //above. __splitfind's flags_ parameter, in contrast, is passed straight
-    //through to pcre2_match() as its *match-time* options bitmask, which
-    //uses an entirely different encoding (PCRE2_NOTBOL=0x01,
-    //PCRE2_NOTEOL=0x02, PCRE2_NOTEMPTY_ATSTART=0x08, ...). Forwarding the
-    //Python flags here made e.g. re.IGNORECASE (0x02) collide with
-    //PCRE2_NOTEOL, which forbids '$' from matching at the end of the
-    //subject, so IGNORECASE searches anchored on '$' spuriously failed;
-    //similarly re.MULTILINE (0x08) collided with PCRE2_NOTEMPTY_ATSTART.
-    //There are no match-time options to set here, so pass 0.
-    ro = compile(pat, flags);
-    r = ro->__splitfind(subj, maxn, onlyfind, 0);
-
-    //return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
-    return r;
+    return compile(pat, flags)->subn(repl, subj, maxn);
 }
 
 list<str *> *split(str *pat, str *subj, __ss_int maxn, __ss_int flags)
 {
-    return __splitfind_once(pat, subj, maxn, 0, flags);
+    return compile(pat, flags)->split(subj, maxn);
 }
 
 list<str *> *findall(str *pat, str *subj, __ss_int flags)
 {
-    return __splitfind_once(pat, subj, -1, 1, flags);
+    return compile(pat, flags)->findall(subj);
 }
 
 void __init(void)
 {
     cl_error = new class_("error");
-
-    general_context = pcre2_general_context_create(re_malloc, re_free, NULL);
-    non_locale_context = pcre2_compile_context_create(general_context);
-    locale_context = pcre2_compile_context_create(general_context);
-
-    setlocale(LC_CTYPE, "");
-    locale_tables = pcre2_maketables(general_context);
-    pcre2_set_character_tables(locale_context, locale_tables);
 }
 
 }

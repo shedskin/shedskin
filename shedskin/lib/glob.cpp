@@ -616,8 +616,8 @@ namespace {
 
 /* Mirrors re.escape()'s rule for one character, matching the convention the
    fnmatch translation core uses (see escape_char there): alphanumerics pass
-   through, everything else is backslash-escaped (safe in PCRE2: a backslash
-   before a non-alphanumeric always means the literal character). */
+   through, everything else is backslash-escaped (a backslash before a
+   non-alphanumeric always means the literal character). */
 inline void escape_char(__GC_STR &out, __ss_char c) {
     if (c > 127 || ::isalnum((int)c)) {
         out += c;
@@ -647,11 +647,9 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
     accepts a tuple of single-character strings here; we support the string
     form.)
 
-    Note: like fnmatch.translate, the produced regex is anchored with \z
-    (PCRE2's strict end-of-string) rather than CPython's \Z, and literal
-    characters are escaped slightly more eagerly than re.escape() -- the
-    resulting regex text can differ from CPython's character for character,
-    but matches the same strings when compiled with shedskin's re module.
+    Note: literal characters are escaped slightly more eagerly than
+    re.escape() -- the resulting regex text can differ from CPython's
+    character for character, but matches the same strings.
     */
     __GC_STR seps_s;
     if (seps && seps->unit.size()) {
@@ -738,7 +736,7 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
         }
     }
 
-    return new str(__gcs("(?s:") + res + __gcs(")\\z"));
+    return new str(__gcs("(?s:") + res + __gcs(")\\Z"));
 }
 
 } // module namespace

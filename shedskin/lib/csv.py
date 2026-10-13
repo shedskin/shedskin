@@ -1,9 +1,9 @@
 # Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE)
 
 import re  # noqa: F401 (Sniffer's real implementation is hand-written C++
-           # in csv.cpp/csv.hpp, which uses Pattern/PCRE2 directly; this
+           # in csv.cpp/csv.hpp, which uses re's Pattern directly; this
            # import is only here so shedskin's dependency analysis links in
-           # re.cpp/re.hpp and pcre2, matching the pattern used by fnmatch.py)
+           # re.cpp/re.hpp, matching the pattern used by fnmatch.py)
 
 START_RECORD = START_FIELD = ESCAPED_CHAR = IN_FIELD = IN_QUOTED_FIELD = ESCAPE_IN_QUOTED_FIELD = QUOTE_IN_QUOTED_FIELD = EAT_CRNL = 0
 

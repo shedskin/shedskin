@@ -3,19 +3,7 @@
 #ifndef __RE_HPP
 #define __RE_HPP
 
-//depending on what you want...
-//#define PCRE_STATIC
-
 #include "builtin.hpp"
-
-#define PCRE2_CODE_UNIT_WIDTH 32
-
-#ifndef __sun
-#include <pcre2.h>
-#else
-#include <pcre2/pcre2.h>
-#endif
-
 
 using namespace __shedskin__;
 
@@ -52,6 +40,12 @@ using error = PatternError;
 //we have a circular declaration, so we need to forward declare Pattern
 class Pattern;
 
+//a compiled replacement template: literal chunks and group references
+struct __template {
+    std::vector<__GC_STR, __ss_allocator<__GC_STR> > literals; //one more than groups
+    std::vector<__ss_int, __ss_allocator<__ss_int> > groups;
+};
+
 //MatchObject
 class Match : public pyobj
 {
@@ -63,20 +57,19 @@ public:
     //our regular expression
     Pattern *re = 0;
 
-    //internal: captured subpatterns
-    pcre2_match_data *match_data = 0;
+    //start and end of the match and of each group (-1 if it did not participate)
+    std::vector<__ss_int, __ss_allocator<__ss_int> > regs;
 
     //self-explanatory
     __ss_int pos = 0, endpos = 0;
 
-    //last match and last named match
+    //the last group that was closed (0 if none, CPython: None)
     __ss_int lastindex = 0;
 
     //subject string
     str *string = 0;
 
-    //computed in Pattern::__exec by scanning groupindex for the
-    //highest-numbered named group that participated in the match
+    //the name of the lastindex group, if it has one
     str *lastgroup = 0;
 
     //functions
@@ -111,6 +104,7 @@ public:
     tuple2<__ss_int, __ss_int> *span(__ss_int matchid = 0);
     tuple2<__ss_int, __ss_int> *span(str *mname);
 
+    str *__expand(__template *t);
     str *__repr__();
 };
 
@@ -132,33 +126,32 @@ public:
     //the original pattern
     str *pattern = 0;
 
-    //the flags used
-    __ss_int flags = 0;
+    //the flags used (as given to compile, and after parsing)
+    __ss_int flags = 0, flags_given = 0;
 
     //number of captured groups
     __ss_int groups = 0;
 
+    //the compiled pattern (code for the sre engine)
+    std::vector<unsigned int, __ss_allocator<unsigned int> > code;
+
+    //group names by index (0 if unnamed), for Match.lastgroup
+    std::vector<str *, __ss_allocator<str *> > indexgroup;
+
     //internal functions
-    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, __ss_int m, __GC_STR *tpl = 0, size_t tplpos = 0);
-    __GC_STR __group(__GC_STR *subj, PCRE2_SIZE *captured, str *m);
-    __GC_STR __expand(__GC_STR *subj, PCRE2_SIZE *captured, __GC_STR tpl);
-
-    //the compiled pattern
-    pcre2_code *compiled_pattern = 0;
-
-    Match *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags_ = 0);
-    str *__subn(str *repl, str *subj, __ss_int maxn = -1, int *howmany = 0);
-    list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_, __ss_int pos = 0, __ss_int endpos = -1);
+    __template *__compile_template(str *tpl);
+    Match *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, int mode = 0);
+    str *__subx(__template *tpl, replfunc func, str *subj, __ss_int maxn, __ss_int *howmany);
 
     Match *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     Match *prefixmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     Match *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     Match *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
     __iter<Match *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    list<str *> *split(str *subj, __ss_int maxn = -1);
-    str *sub(str *repl, str *subj, __ss_int maxn = -1);
-    str *sub(replfunc repl, str *subj, __ss_int maxn = -1);
-    tuple2<str *, __ss_int> *subn(str *repl, str *subj, __ss_int maxn = -1);
+    list<str *> *split(str *subj, __ss_int maxn = 0);
+    str *sub(str *repl, str *subj, __ss_int maxn = 0);
+    str *sub(replfunc repl, str *subj, __ss_int maxn = 0);
+    tuple2<str *, __ss_int> *subn(str *repl, str *subj, __ss_int maxn = 0);
     list<str *> *findall(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
 
     str *__repr__();
@@ -169,9 +162,10 @@ class match_iter : public __iter<Match *>
 public:
     Pattern *ro;
     str *subj;
-    __ss_int pos, endpos, flags;
+    __ss_int pos, endpos, start; //start: where the next search begins (-1: exhausted)
+    int must_advance;
 
-    match_iter(Pattern *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags);
+    match_iter(Pattern *ro, str *subj, __ss_int pos, __ss_int endpos);
     Match *__next__();
 };
 
@@ -189,16 +183,10 @@ tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn = 0,
 list<str *> *findall(str *pat, str *subj, __ss_int flags = 0);
 str *escape(str *s);
 
-list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
-Match *__exec_once(str *subj, __ss_int flags);
-
-inline void *purge() { return NULL; };
+void *purge();
 
 //internal functions
 void __init(void);
-
-void *re_malloc(size_t n, void *);
-void re_free(void *o, void *);
 
 }
 #endif

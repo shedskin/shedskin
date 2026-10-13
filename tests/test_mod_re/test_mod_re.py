@@ -249,17 +249,13 @@ def test_re_locale_rejected():
 
 def test_re_compile_error_message():
     # a real syntax error positioned well past the start; the message has
-    # CPython's "<msg> at position <N>" form (the exact PCRE2 wording and
-    # offset differ from CPython's)
+    # CPython's "<msg> at position <N>" form
     error = ''
     try:
         re.compile('aaaaaaaaaa(')
     except re.error as e:
         error = str(e)
-    assert ' at position ' in error
-    offset = error.split(' at position ')[1]
-    assert offset.isdigit()
-    assert int(offset) >= 10
+    assert error == 'missing ), unterminated subpattern at position 10'
 
 
 def test_re_groups_count():
@@ -605,18 +601,18 @@ def test_re_module_funcs_flags():
 
 
 def test_re_error_attributes():
-    # compile errors: pattern/pos (PCRE2 offsets can differ from CPython's)
+    # compile errors: pattern/pos
     pos = -1
     try:
         re.compile('ab\n(c')
     except re.error as e:
         assert e.pattern == 'ab\n(c'
-        assert e.msg != ''
+        assert e.msg == 'missing ), unterminated subpattern'
         pos = e.pos
         assert e.lineno == 2
         assert e.colno == pos - 2
         assert str(e) == '%s at position %d (line 2, column %d)' % (e.msg, pos, pos - 2)
-    assert pos >= 3
+    assert pos == 3
 
     # template errors match CPython exactly
     msg = ''
@@ -723,7 +719,70 @@ def test_re_findall_empty_window():
     assert list(p.finditer('aaa', 2, 1)) == []
 
 
+def test_re_sre_semantics():
+    # re now runs on CPython's own sre engine; these used to differ (PCRE)
+    assert re.findall(r'a\Z', 'a\n') == []  # \Z: end of string only
+    assert re.findall(r'a\Z', 'a') == ['a']
+    assert re.split(r'\s+', 'a\x1cb\x1fc') == ['a', 'b', 'c']  # \s is str.isspace()
+    assert re.findall(r'\v', 'a\nb\x0bc') == ['\x0b']  # \v is just a vertical tab
+    assert re.findall(r'[[:alpha:]]', 'a:[]') == ['[]']  # no POSIX classes
+    assert re.findall(r'\w+', 'éx') == ['e', 'x']  # combining marks are not \w
+    assert re.findall('(?m)^', 'a\nb\n') == ['', '', '']
+    assert re.sub('(?m)^', '>', 'a\nb\n') == '>a\n>b\n>'
+    assert re.findall(r'\101\0', 'A\x00') == ['A\x00']
+    # sre's extra case-insensitive pairs
+    assert re.findall('i', 'Iİıi', re.I) == ['I', 'İ', 'ı', 'i']
+    assert re.findall('[a-z]+', 'İı', re.I) == ['İı']
+    assert re.match('ΐ', 'ΐ', re.I)
+    assert re.match('ﬅ', 'ﬆ', re.I)
+    assert not re.match('k', 'K', re.I | re.A)
+    # non-ascii group names
+    m = re.match('(?P<näme>x)(y)?', 'x')
+    assert m.group('näme') == 'x'
+    assert m.span(2) == (-1, -1)
+    assert m.lastindex == 1 and m.lastgroup == 'näme'
+    # a negative endpos (other than the default) is clamped to 0
+    p = re.compile('a')
+    assert p.search('aaa', 0, -5) is None
+    assert p.findall('aaa', 0, -5) == []
+    assert list(p.finditer('aaa', 0, -5)) == []
+    # inline flags end up in .flags
+    assert re.compile('(?i)a').flags == re.I | re.U
+    assert re.compile('(?a)a').flags == re.A
+
+
+def test_re_sre_errors():
+    # compile errors, with CPython's messages and positions
+    for pat, msg in [
+        (r'(a)\10', 'invalid group reference 10 at position 4'),
+        (r'\400', 'octal escape value \\400 outside of range 0-0o377 at position 0'),
+        (r'(?<=a|bc)x', 'look-behind requires fixed-width pattern'),
+        (r'\h', 'bad escape \\h at position 0'),
+        (r'a**', 'multiple repeat at position 2'),
+        ('a(?i)b', 'global flags not at the start of the expression at position 1'),
+        ('(?<n>x)', 'unknown extension ?<n at position 1'),
+        ('[a', 'unterminated character set at position 0'),
+    ]:
+        try:
+            re.compile(pat)
+            assert False
+        except re.error as e:
+            assert str(e) == msg
+    try:
+        re.compile('a{4294967296}')
+        assert False
+    except OverflowError:
+        pass
+    try:
+        re.sub('x', r'\1', 'abc')  # templates are checked even without a match
+        assert False
+    except re.error as e:
+        assert str(e) == 'invalid group reference 1 at position 1'
+
+
 def test_all():
+    test_re_sre_semantics()
+    test_re_sre_errors()
     test_re_search()
     test_re_match()
     test_re_sub()
