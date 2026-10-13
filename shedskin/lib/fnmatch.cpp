@@ -192,9 +192,9 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
 
                 if (raw.find('-') == __GC_STR::npos) {
                     /* no ranges in this class: double up backslashes, and
-                       escape '[' (see below). */
+                       escape the set operation chars &, ~ and | */
                     for (size_t k = 0; k < raw.size(); k++) {
-                        if (raw[k] == '\\' || raw[k] == '[') stuff += '\\';
+                        if (raw[k] == '\\' || raw[k] == '&' || raw[k] == '~' || raw[k] == '|') stuff += '\\';
                         stuff += raw[k];
                     }
                 }
@@ -202,9 +202,8 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                     /* Split the class body on '-' into "chunks" the way
                        CPython's fnmatch.translate() does since Python 3.6
                        (bpo-29249), so a lexicographically out-of-order
-                       range like "[a-!]" or "[[-*]" -- which PCRE2 (and
-                       modern CPython's own re) rejects as invalid at
-                       compile time -- gets neutralized into a construct
+                       range like "[a-!]" or "[[-*]" -- which re rejects as
+                       invalid at compile time -- gets neutralized into a construct
                        that simply never matches, instead of blowing up
                        the whole program with an uncaught regex-compile
                        exception the moment somebody feeds fnmatch/glob an
@@ -247,14 +246,13 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                     /* Escape backslashes and hyphens (the hyphens that
                        still form real ranges live *between* chunks, not
                        inside one, so they're untouched by this) then
-                       rejoin with '-'; also escape the PCRE2/newer-regex
-                       set-operation chars &, ~, | for safety, and '['
-                       (see below). */
+                       rejoin with '-'; also escape the set operation
+                       chars &, ~ and |, like CPython. */
                     for (size_t m = 0; m < chunks.size(); m++) {
                         if (m) stuff += '-';
                         for (size_t k2 = 0; k2 < chunks[m].size(); k2++) {
                             __ss_char ch = chunks[m][k2];
-                            if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|' || ch == '[') {
+                            if (ch == '\\' || ch == '-' || ch == '&' || ch == '~' || ch == '|') {
                                 stuff += '\\';
                             }
                             stuff += ch;
@@ -262,17 +260,6 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                     }
                 }
 
-                /* A '[' inside a shell character class is a plain
-                   literal, and Python's re treats it that way too. PCRE2
-                   however parses "[:name:]", "[.x.]" and "[=x=]" inside a
-                   class as POSIX bracket expressions (there is no option
-                   to turn this off), so "[x[:alpha:]" either fails to
-                   compile or, if a later "]" happens to close it, silently
-                   swallows the following pattern text. Both engines agree
-                   that an escaped "\[" is a literal bracket that can never
-                   start a POSIX expression, so that is what we emit. Only
-                   difference with CPython is the extra backslash in the
-                   text returned by translate(). */
                 i = j + 1;
 
                 if (stuff.empty()) {
@@ -309,14 +296,7 @@ str *translate(str *pat) {
     __GC_STR res;
     __translate_core(pat->unit, __gcs(".*"), __gcs("."), res);
 
-    /* PCRE2 note: Python's re.translate()-style fix wraps the pattern in a
-       DOTALL scope and anchors with \Z. shedskin's re module hands patterns
-       straight to pcre2_compile() with no escape translation, and PCRE2's
-       \Z means "end of subject, or just before a trailing newline" -- the
-       same loose semantics as a bare $. Python's re \Z (strict end of
-       string, no trailing-newline exception) is PCRE2's \z, so that's what
-       we anchor with here. */
-    return new str(__gcs("(?s:") + res + __gcs(")\\z"));
+    return new str(__gcs("(?s:") + res + __gcs(")\\Z"));
 }
 
 } // module namespace

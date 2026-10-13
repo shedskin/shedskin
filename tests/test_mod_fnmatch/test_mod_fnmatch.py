@@ -46,8 +46,8 @@ def test_fnmatch_bad_range():
 
 def test_fnmatch_posix_bracket():
     # a '[' inside a character class is just a literal in shell patterns
-    # (and in Python's re), but PCRE2 treats "[:", "[." and "[=" inside a
-    # class as POSIX bracket syntax ([:alpha:], [.a.], [=a=]).
+    # (and in Python's re): "[:", "[." and "[=" are not POSIX bracket syntax
+    # ([:alpha:], [.a.], [=a=]) as in some other regex engines.
     assert fnmatch.fnmatchcase("x", "[x[:alpha:]")
     assert fnmatch.fnmatchcase(":", "[x[:alpha:]")
     assert fnmatch.fnmatchcase("x", "[x[.a.]")
@@ -76,7 +76,10 @@ def test_filterfalse():
 
 
 def test_translate():
-    fnmatch.translate("run.[py]y")  # TODO difference in output?
+    assert fnmatch.translate("run.[py]y") == '(?s:run\\.[py]y)\\Z'
+    assert fnmatch.translate('*.txt') == '(?s:.*\\.txt)\\Z'
+    assert fnmatch.translate('[!a-c]?') == '(?s:[^a-c].)\\Z'
+    assert fnmatch.translate('[x[:a&]') == '(?s:[x[:a\\&])\\Z'
 
 
 def test_all():
