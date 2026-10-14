@@ -246,6 +246,88 @@ def test_bytearray_extended_slice_size_mismatch_message():
     assert ba4 == bytearray(b'abcdef')
 
 
+def test_bytearray_slice_assign():
+    # slice assignment writes the bytearray's storage directly; pin its
+    # semantics for each slice shape against CPython's
+
+    # step 1: same size, grow, shrink, and out-of-range/negative bounds
+    ba = bytearray(b'abcdef')
+    ba[1:3] = b'XY'
+    assert ba == bytearray(b'aXYdef')
+    ba[1:3] = b'1234'
+    assert ba == bytearray(b'a1234def')
+    ba[1:5] = b'-'
+    assert ba == bytearray(b'a-def')
+    ba[4:2] = b'++'  # start > stop inserts at start
+    assert ba == bytearray(b'a-de++f')
+    ba[-3:] = b''
+    assert ba == bytearray(b'a-de')
+    ba[-100:2] = b'AB'
+    assert ba == bytearray(b'ABde')
+    ba[100:] = b'!'
+    assert ba == bytearray(b'ABde!')
+    ba[::1] = b'xy'  # an explicit step of 1 still resizes
+    assert ba == bytearray(b'xy')
+    ba[:] = bytearray(b'whole')
+    assert ba == bytearray(b'whole')
+
+    # extended slices: step 2, negative steps
+    ba = bytearray(b'abcdef')
+    ba[::2] = b'XYZ'
+    assert ba == bytearray(b'XbYdZf')
+    ba[::-2] = b'123'
+    assert ba == bytearray(b'X3Y2Z1')
+    ba[4:0:-3] = bytearray(b'pq')
+    assert ba == bytearray(b'XqY2p1')
+    ba[-1:-7:-1] = b'uvwxyz'
+    assert ba == bytearray(b'zyxwvu')
+
+    # an empty value deletes an extended slice's selection
+    ba = bytearray(b'abcdef')
+    ba[::2] = b''
+    assert ba == bytearray(b'bdf')
+    ba[::-2] = bytearray()
+    assert ba == bytearray(b'd')
+    ba[5:1:2] = b''
+    assert ba == bytearray(b'd')
+
+    # the value aliasing the target
+    t = bytearray(b'abcdefgh')
+    t[0:4] = t[4:8]
+    assert t == bytearray(b'efghefgh')
+    t = bytearray(b'abcdef')
+    t[::2] = t[:3]
+    assert t == bytearray(b'abbdcf')
+    t[:] = t
+    assert t == bytearray(b'abbdcf')
+    t[2:4] = t
+    assert t == bytearray(b'ababbdcfcf')
+    t = bytearray(b'abc')
+    t[::-1] = t
+    assert t == bytearray(b'cba')
+
+    # iterable values: lists and generators
+    t = bytearray(b'abc')
+    t[1:2] = [65, 66, 67]
+    assert t == bytearray(b'aABCc')
+    _gen_consumed.clear()
+    t[:1] = _gen_five()
+    assert t == bytearray(b'\x01\x02\x03\x04\x05ABCc')
+    assert _gen_consumed == [1, 2, 3, 4, 5]
+    t[::3] = (i * 2 for i in range(3))
+    assert t == bytearray(b'\x00\x02\x03\x02\x05A\x04Cc')
+
+    # a length mismatch leaves the target untouched
+    t = bytearray(b'abcdefg')
+    error = ''
+    try:
+        t[1::2] = b'xy'
+    except ValueError as e:
+        error = str(e)
+    assert error == 'attempt to assign bytes of size 2 to extended slice of size 3'
+    assert t == bytearray(b'abcdefg')
+
+
 def test_bytearray_misc():
     assert bytearray() == bytearray(b'')
     assert bytearray([1, 2, 3]) == bytearray(b'\x01\x02\x03')
@@ -494,6 +576,7 @@ def test_all():
     test_bytearray_hash()
     test_bytearray_slice()
     test_bytearray_extended_slice_size_mismatch_message()
+    test_bytearray_slice_assign()
     test_bytearray_misc()
     test_bytearray_out_of_range()
     test_bytearray_mutate_out_of_range()
