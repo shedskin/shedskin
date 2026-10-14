@@ -134,6 +134,7 @@ The following people have contributed to Shed Skin development:
 - Retsyo
 - Pierre-Marie de Rodat
 - Jeremie Roquet
+- Tomek Rozen
 - Mike Schrick
 - SirNotAppearingInThisTutorial
 - Paul Sokolevsky
