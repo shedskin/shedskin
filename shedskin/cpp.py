@@ -3553,8 +3553,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         warning=True,
                         mv=self.mv,
                     )
-                if isinstance(cl, python.Class) and (
-                    ident in cl.staticmethods or ident in cl.classmethods
+                if (
+                    isinstance(cl, python.Class)
+                    and (ident in cl.staticmethods or ident in cl.classmethods)
+                    and not infer.is_builtin_staticmethod(cl.funcs[ident])
                 ):
                     error.error(
                         "staticmethod/classmethod '%s' called without using class name"
@@ -4966,7 +4968,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a reference to an attribute variable"""
         if isinstance(node.ctx, ast.Load):
             cl, module = python.lookup_class_module(
-                node.value, infer.inode(self.gx, node).mv, func
+                node.value, infer.inode(self.gx, node).mv, func, node.attr
             )
 
             # module.attr
@@ -5000,6 +5002,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     )
                     assert submodule
                     self.append(submodule.full_path() + "::" + ident + "::")
+                elif cl.ident == "str_":
+                    self.append("str::")
                 else:
                     self.append(ident + "::")
 

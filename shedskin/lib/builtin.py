@@ -403,7 +403,8 @@ class tuple3(pyseq):
         return 1
 
 class str_(pyseq):
-    def maketrans(self, x, y=None, z=None):
+    @staticmethod
+    def maketrans(x, y=None, z=None):
         return {1: ''}
 
     def strip(self, chars=''):

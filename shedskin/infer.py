@@ -559,7 +559,9 @@ def analyze_callfunc(
     # method call
     if isinstance(node.func, ast.Attribute):
         objexpr, ident = node.func.value, node.func.attr
-        cl, module = python.lookup_class_module(objexpr, mv, cnode.parent)
+        cl, module = python.lookup_class_module(
+            objexpr, mv, cnode.parent, ident
+        )
 
         if cl:
             # staticmethod call
@@ -774,6 +776,24 @@ def callfunc_targets(
     return funcs
 
 
+def is_builtin_staticmethod(func: "python.Function") -> bool:
+    """Is func a staticmethod of a builtin class (such as str.maketrans)?
+
+    These may also be called via an instance (''.maketrans(..)), which we
+    support by not passing the instance as an argument (C++ allows calling
+    a static member function via an object pointer). Classes whose
+    static/classmethods live in a separate C++ namespace (because of
+    template vars, see cpp.py) are excluded."""
+    return (
+        isinstance(func.parent, python.Class)
+        and func.parent.mv.module.builtin
+        and func.ident in func.parent.staticmethods
+        and func.parent.ident not in (
+            "dict", "frozendict", "defaultdict", "int_", "float_", "bytes_", "complex"
+        )
+    )
+
+
 def nrargs(gx: "config.GlobalInfo", node: ast.Call) -> Optional[int]:
     """Get the number of arguments of a call node"""
     cnode = inode(gx, node)
@@ -818,7 +838,11 @@ def analyze_args(
     if ident in ["__getattr__", "__setattr__"]:  # property?
         args = args[1:]
 
-    if (method_call or constructor) and not (parent_constr or anon_func):  # XXX
+    if (
+        (method_call or constructor)
+        and not (parent_constr or anon_func)
+        and not is_builtin_staticmethod(func)
+    ):  # XXX
         args.insert(0, None)
 
     kwextra = []
@@ -1385,6 +1409,7 @@ def possible_functions(
             and not (
                 isinstance(t[0], python.Class)
                 and (ident in t[0].staticmethods or ident in t[0].classmethods)
+                and not is_builtin_staticmethod(t[0].funcs[ident])
             )
         ]
 

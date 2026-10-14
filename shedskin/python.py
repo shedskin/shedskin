@@ -437,13 +437,19 @@ def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
 def lookup_class_module(
     objexpr: ast.AST,
     mv: "graph.ModuleVisitor",
-    parent: Optional[AllParent]
+    parent: Optional[AllParent],
+    attr: Optional[str] = None,
 ) -> tuple[Optional["Class"], Optional["Module"]]:
-    """Find the class and module of an expression"""
+    """Find the class and module of an expression (attr: attribute name,
+    used to resolve builtin staticmethods such as str.maketrans)"""
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?
             return None, None
+        if objexpr.id == "str" and "str_" in mv.ext_classes:
+            cl = mv.ext_classes["str_"]
+            if attr in cl.staticmethods:
+                return cl, None
     return lookup_class(objexpr, mv), lookup_module(objexpr, mv)
 
 

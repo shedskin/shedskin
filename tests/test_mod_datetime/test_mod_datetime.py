@@ -1141,6 +1141,19 @@ def test_timedelta_modulo():
             assert error == 'integer division or modulo by zero'
 
 
+def test_staticmethod_via_instance():
+    # alternate constructors may also be called via an instance; such calls
+    # used to be silently dropped ('called without using class name')
+    d = datetime.date(2024, 2, 29)
+    assert d.fromordinal(1) == datetime.date(1, 1, 1)
+    assert d.fromisoformat('2020-01-02') == datetime.date(2020, 1, 2)
+    dt = datetime.datetime(2024, 2, 29, 13, 5)
+    assert dt.fromordinal(738945) == datetime.datetime(2024, 2, 29)
+    assert dt.combine(d, datetime.time(1, 2)) == datetime.datetime(2024, 2, 29, 1, 2)
+    t = datetime.time(1, 2)
+    assert t.fromisoformat('03:04:05') == datetime.time(3, 4, 5)
+
+
 def test_all():
         test_augmented_assignment()
         test_timedelta_division()
@@ -1201,6 +1214,7 @@ def test_all():
         test_arithmetic_overflow()
         test_date_dict_key()
         test_tzinfo_shared_offsets()
+        test_staticmethod_via_instance()
 
 if __name__ == "__main__":
     test_all()
