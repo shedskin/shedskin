@@ -359,6 +359,27 @@ def test_deque_maxlen():
     assert list(f) == [5,6,7,8,9]
 
 
+def test_deque_extend_self():
+    d = deque([1, 2, 3])
+    d.extend(d)
+    assert list(d) == [1, 2, 3, 1, 2, 3]
+    d = deque([1, 2, 3])
+    d.extendleft(d)
+    assert list(d) == [3, 2, 1, 1, 2, 3]
+    d = deque([1, 2, 3], 3)
+    d.extend(d)
+    assert list(d) == [1, 2, 3]
+    d = deque([1, 2, 3], 3)
+    d.extendleft(d)
+    assert list(d) == [3, 2, 1]
+    d = deque([1, 2, 3], 4)
+    d.extend(d)
+    assert list(d) == [3, 1, 2, 3]
+    d = deque([1, 2, 3], 4)
+    d.extendleft(d)
+    assert list(d) == [3, 2, 1, 1]
+
+
 def test_deque_maxlen_on_init():
     # regression test: maxlen used to be applied *after* the initial
     # extend(), so an iterable longer than maxlen wasn't truncated
@@ -855,6 +876,7 @@ def test_all():
     test_deque4()
     test_deque_maxlen()
     test_deque_maxlen_on_init()
+    test_deque_extend_self()
     test_deque_maxlen_negative()
     test_deque_eq()
     test_deque_insert_out_of_range()

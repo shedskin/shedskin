@@ -154,6 +154,9 @@ public:
     }
 
     template<class U> void *extend(U *iter_) {
+        if constexpr (std::is_base_of_v<U, deque<A>>)
+            if(iter_ == this) /* d.extend(d): don't iterate over the deque we append to */
+                iter_ = copy();
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
         int __2;
@@ -165,6 +168,9 @@ public:
     }
 
     template<class U> void *extendleft(U *iter_) {
+        if constexpr (std::is_base_of_v<U, deque<A>>)
+            if(iter_ == this) /* d.extendleft(d): don't iterate over the deque we appendleft to */
+                iter_ = copy();
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
         int __2;

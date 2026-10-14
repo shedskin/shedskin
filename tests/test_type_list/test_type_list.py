@@ -432,6 +432,24 @@ def _mul_count():
     return 3
 
 
+def test_list_slice_assign_self_extended():
+    a = [1, 2, 3, 4]
+    a[::-1] = a
+    assert a == [4, 3, 2, 1]
+    a = [1, 2, 3, 4]
+    a[3::-1] = a
+    assert a == [4, 3, 2, 1]
+    a = [1, 2, 3, 4, 5]
+    a[::-1] = a
+    assert a == [5, 4, 3, 2, 1]
+    a = [1, 2, 3]
+    a[::1] = a
+    assert a == [1, 2, 3]
+    b = ['a', 'b', 'c']
+    b[::-1] = b
+    assert b == ['c', 'b', 'a']
+
+
 def test_list_mul_elt():
     total = 5
     counts = [0] * total
@@ -773,6 +791,7 @@ def test_all():
     test_list_iadd()
     test_list_index_error_message()
     test_list_slice_assign_same_size()
+    test_list_slice_assign_self_extended()
     test_list_mul_elt()
     test_list_concat_parts()
     test_list_append_reserve()
