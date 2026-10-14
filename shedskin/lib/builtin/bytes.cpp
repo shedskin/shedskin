@@ -996,39 +996,52 @@ void *bytes::insert(__ss_int index, __ss_int item) {
 }
 
 void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b) {
-    /* materialize the iterable once, using the same generic constructor
-     * list<T>::__setslice__(pyiter...) itself uses to do so, so we can
-     * check its length before delegating */
-    list<__ss_int> *la = new list<__ss_int>(b);
-    for(size_t i=0; i<la->units.size(); i++)
-        __byte_value(la->units[i], true);
-
-    /* CPython's bytearray raises "attempt to assign bytes of size N to
-     * extended slice of size M" for a length mismatch, not list's generic
-     * "...sequence of size...", so check with the same __extslice_size()
-     * helper list<T>::__setslice__() uses, but with bytearray's wording. */
-    if(x&4 && s != 1) {
-        __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
-        __ss_int blen = (__ss_int)la->units.size();
-        if(slicesize != blen)
-            throw new ValueError(__add_strs(0, new str("attempt to assign bytes of size "), __str(blen), new str(" to extended slice of size "), __str(slicesize)));
-    }
-
-    list<__ss_int> *ll = new list<__ss_int>(this);
-    ll->__setslice__(x, l, u, s, la);
-    __GC_STRING r;
-    size_t len = ll->units.size();
-    for(size_t i=0; i<len; i++)
-        r += (char)ll->units[i];
-    unit = r;
-    return NULL;
+    /* materialize and validate all values first (extend() does both), so
+     * nothing is changed on error and the iterable is fully consumed before
+     * the length check, as in CPython; then share the bytes overload */
+    bytes *v = new bytes(0);
+    v->extend(b);
+    return __setslice__(x, l, u, s, v);
 }
 
 void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b) {
-    if(x == 0)
-        unit = b->unit;
-    else
-        __setslice__(x, l, u, s, (pyiter<__ss_int> *)b);
+    /* work on the storage directly: going through a list<__ss_int> costs
+     * the whole bytearray on every slice assignment */
+    __ss_int len = this->__len__();
+
+    if(x&4 && s != 1) {
+        /* CPython's bytearray raises "attempt to assign bytes of size N to
+         * extended slice of size M" for a length mismatch, not list's
+         * generic "...sequence of size...", so check with the same
+         * __extslice_size() helper list<T>::__setslice__() uses, but with
+         * bytearray's wording. */
+        __ss_int slicesize = __extslice_size(x, l, u, s, len);
+        __ss_int blen = b->__len__();
+        if(blen == 0) { /* CPython's bytearray deletes the selection instead */
+            if(slicesize != 0)
+                __delete__(x, l, u, s);
+            return NULL;
+        }
+        if(slicesize != blen)
+            throw new ValueError(__add_strs(0, new str("attempt to assign bytes of size "), __str(blen), new str(" to extended slice of size "), __str(slicesize)));
+
+        slicenr(x, l, u, s, len);
+        if(b == this) /* t[::-1] = t: read from a copy, not from the bytes being overwritten */
+            b = new bytes(unit, 0);
+        for(__ss_int i=0; i<blen; i++)
+            unit[(size_t)(l+i*s)] = b->unit[(size_t)i];
+        return NULL;
+    }
+
+    slicenr(x, l, u, s, len);
+    if(u < l) /* t[5:2] = ... inserts before 5, as in CPython */
+        u = l;
+    if(b == this) { /* t[0:4] = t: don't replace from the bytes being replaced */
+        if(l == 0 && u == len)
+            return NULL;
+        b = new bytes(unit, 0);
+    }
+    unit.replace((size_t)l, (size_t)(u-l), b->unit);
     return NULL;
 }
 
