@@ -1,6 +1,3 @@
-# TODO maketrans, translate
-
-
 def test_capitalize():
     assert 'bla bla'.capitalize() == 'Bla bla'
     assert 'BLA BLA'.capitalize() == 'Bla bla'
@@ -338,7 +335,17 @@ def test_lstrip():
 
 
 def test_maketrans():
-    pass
+    # maketrans is a staticmethod: calling it via the class used to drop
+    # all arguments (str->maketrans()), while ''.maketrans must keep working
+    t2 = str.maketrans('ab', 'xy')
+    assert 'abcdef'.translate(t2) == 'xycdef'
+    t3 = str.maketrans('ab', 'xy', 'cd')
+    assert 'abcdef'.translate(t3) == 'xyef'
+    assert 'abc'.translate(str.maketrans({'a': 'Q', 'c': None})) == 'Qb'
+    assert 'abc'.translate(str.maketrans({98: 'Q'})) == 'aQc'
+    s = 'hoi'
+    assert 'abc'.translate(s.maketrans('a', 'z')) == 'zbc'
+    assert str.maketrans('ab', 'xy') == ''.maketrans('ab', 'xy')
 
 
 def test_partition():
