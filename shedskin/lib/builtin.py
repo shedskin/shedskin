@@ -1259,6 +1259,10 @@ def len(w):
     return w.__len__()
 
 def pow(base, exp, mod=1):
+    # a user class with a three-argument __pow__ (with two arguments, 'mod'
+    # stays untyped, so this call is not made)
+    if mod:
+        return base.__pow__(exp, mod)
     return base.__pow__(exp)
 
 def abs(x):

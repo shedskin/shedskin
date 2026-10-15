@@ -2731,8 +2731,31 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
         if mod:
             self.visitm("__power(", left, ", ", right, ", ", mod, ")", func)
+        elif default := self.pow_mod_default(left):
+            # a ** b or pow(a, b) for a user class with __pow__(self, b, mod=..)
+            self.visitm("__power(", left, ", ", right, ", ", default, ")", func)
         else:
             self.visitm("__power(", left, ", ", right, ")", func)
+
+    def pow_mod_default(self, left: ast.AST) -> Union[str, ast.AST, None]:
+        """Default modulo of a user class __pow__(self, b, mod=..), to be
+        passed explicitly (generated methods have no C++ default arguments)"""
+        for cl, _ in self.mergeinh[left]:
+            if not isinstance(cl, python.Class) or cl.mv.module.builtin:
+                continue
+            target = cl.funcs.get("__pow__")
+            if not target or len(target.formals) != 3 or not target.defaults:
+                continue
+            default = target.defaults[-1]
+            if default not in target.mv.defaults:  # simple constant
+                return default
+            if self.mergeinh[default] == {(python.def_class(self.gx, "none"), 0)}:
+                return "NULL"
+            nr = target.mv.defaults[default][0]
+            if target.mv.module == self.mv.module:
+                return "default_%d" % nr
+            return "%s::default_%d" % (target.mv.module.full_path(), nr)
+        return None
 
     # XXX cleanup please
     def mul_list_elt(

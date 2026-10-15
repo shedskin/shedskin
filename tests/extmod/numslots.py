@@ -31,8 +31,8 @@ class ModDefault:
 
 if __name__ == '__main__':
     # make sure everything is called with the types used from numslots_main.py
-    # (calling __pow__ directly: 'a ** n' does not compile here yet, 1002-C1)
-    Mod(3).__pow__(4, 5).x
-    Pow(3).__pow__(4).x
-    ModDefault(3).__pow__(4).x
-    ModDefault(3).__pow__(4, 5).x
+    pow(Mod(3), 4, 5).x
+    (Pow(3) ** 4).x
+    pow(Pow(3), 4).x
+    (ModDefault(3) ** 4).x
+    pow(ModDefault(3), 4, 5).x
