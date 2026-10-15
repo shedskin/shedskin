@@ -363,12 +363,13 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
 
     slicenr(x, l, u, s, this->__len__());
 
+    if(la == this) { /* a[i:j] = a, a[::-1] = a: don't read from the list we write to */
+        if(s == 1 && l == 0 && u == this->__len__())
+            return NULL;
+        la = this->__copy__();
+    }
+
     if(s == 1) {
-        if(la == this) { /* a[i:j] = a: don't erase from the list we insert from */
-            if(l == 0 && u == this->__len__())
-                return NULL;
-            la = this->__copy__();
-        }
         if(l <= u && (size_t)(u-l) == la->units.size()) {
             /* same size: overwrite in place, instead of moving the rest of the list twice */
             std::copy(la->units.begin(), la->units.end(), this->units.begin()+l);
