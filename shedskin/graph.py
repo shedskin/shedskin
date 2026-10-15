@@ -1020,11 +1020,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def remove_poskw_only_args(self, node: ast.FunctionDef) -> None:
         """Ignore /, * (pos-only, keyword-only) arguments"""
         if node.args.posonlyargs or node.args.kwonlyargs:
+            # keyword-only arguments are never bound positionally, so we can
+            # move those without a default forward, keeping defaults trailing
+            args = node.args.posonlyargs + node.args.args
+            ndefaults = len(node.args.defaults)
+            kwonly = list(zip(node.args.kwonlyargs, node.args.kw_defaults))
+            required = [arg for arg, default in kwonly if default is None]
+            optional = [(arg, default) for arg, default in kwonly if default is not None]
             node.args.args = (
-                node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+                args[: len(args) - ndefaults]
+                + required
+                + args[len(args) - ndefaults :]
+                + [arg for arg, _ in optional]
             )
+            node.args.defaults = node.args.defaults + [default for _, default in optional]
             node.args.posonlyargs = []
             node.args.kwonlyargs = []
+            node.args.kw_defaults = []
 
     def get_globals(self, node: ast.AST) -> list[str]:
         """Get global variables"""

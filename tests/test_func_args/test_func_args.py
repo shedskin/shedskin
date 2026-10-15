@@ -89,6 +89,25 @@ class Bert:
     def hap(self, a=1, b=2, /, c=3):
         return a+b+c
 
+    def kwonly(self, a, *, c=10):
+        return a+c
+
+
+def kwonly(a, *, c=10):
+    return a+c
+
+
+def kwonly2(a, b=2, *, c=10):
+    return (a, b, c)
+
+
+def kwonly3(a, b=2, *, c):  # required keyword-only after a default
+    return (a, b, c)
+
+
+def kwonly4(a, *, c=1, d):
+    return (a, c, d)
+
 
 def test_poskw_only():
     assert hap(5,4,3,d=2,e=1) == 15
@@ -97,6 +116,18 @@ def test_poskw_only():
     bert = Bert()
     assert bert.hap(5,4,3) == 12
     assert bert.hap(5,4,c=4) == 13
+
+    # keyword-only defaults (0921-C1)
+    assert kwonly(1) == 11
+    assert kwonly(1, c=2) == 3
+    assert bert.kwonly(1) == 11
+    assert bert.kwonly(1, c=2) == 3
+    assert kwonly2(1, c=5) == (1, 2, 5)
+    assert kwonly2(1, 3) == (1, 3, 10)
+    assert kwonly3(1, c=5) == (1, 2, 5)
+    assert kwonly3(1, 3, c=5) == (1, 3, 5)
+    assert kwonly4(1, d=4) == (1, 1, 4)
+    assert kwonly4(1, d=4, c=7) == (1, 7, 4)
 
 
 TRUE = True
