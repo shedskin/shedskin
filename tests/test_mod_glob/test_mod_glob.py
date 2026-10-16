@@ -461,8 +461,11 @@ def test_translate():
     assert not matches(t, 'a;b')
 
     # exact text: literals and separators are escaped like re.escape()
-    assert glob.translate('a_b/*.t!t') == '(?s:a_b/(?!\\.)[^/]*\\.t!t)\\Z'
-    assert glob.translate('**/a*b?.[!c]', recursive=True, include_hidden=True) == '(?s:(?:.+/)?a[^/]*b[^/]\\.[^c])\\Z'
+    # (seps given explicitly: the default is os.sep + os.altsep, so on
+    # Windows the separator classes include a backslash, as below)
+    assert glob.translate('a_b/*.t!t', seps='/') == '(?s:a_b/(?!\\.)[^/]*\\.t!t)\\Z'
+    assert glob.translate('**/a*b?.[!c]', recursive=True, include_hidden=True, seps='/') == '(?s:(?:.+/)?a[^/]*b[^/]\\.[^c])\\Z'
+    assert glob.translate('a/*b', seps='\\/') == '(?s:a[\\\\/](?!\\.)[^\\\\/]*b)\\Z'
     assert glob.translate('x|y*z', seps='|\\') == '(?s:x[\\|\\\\]y[^\\|\\\\]*z)\\Z'
 
 
