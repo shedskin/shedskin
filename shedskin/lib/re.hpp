@@ -140,19 +140,29 @@ public:
 
     //internal functions
     __template *__compile_template(str *tpl);
-    Match *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, int mode = 0);
+    Match *__exec(str *subj, __ss_int pos, ptrdiff_t endpos, int mode);
+    list<str *> *__findall(str *subj, __ss_int pos, ptrdiff_t endpos);
     str *__subx(__template *tpl, replfunc func, str *subj, __ss_int maxn, __ss_int *howmany);
 
-    Match *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    Match *prefixmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    Match *fullmatch(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    Match *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
-    __iter<Match *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    //endpos is __ss_void when not given (no limit); any given endpos is
+    //clamped, like in CPython
+    Match *match(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    Match *match(str *subj, __ss_int pos, __ss_int endpos);
+    Match *prefixmatch(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    Match *prefixmatch(str *subj, __ss_int pos, __ss_int endpos);
+    Match *fullmatch(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    Match *fullmatch(str *subj, __ss_int pos, __ss_int endpos);
+    Match *search(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    Match *search(str *subj, __ss_int pos, __ss_int endpos);
+    __iter<Match *> *finditer(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    __iter<Match *> *finditer(str *subj, __ss_int pos, __ss_int endpos);
     list<str *> *split(str *subj, __ss_int maxn = 0);
     str *sub(str *repl, str *subj, __ss_int maxn = 0);
     str *sub(replfunc repl, str *subj, __ss_int maxn = 0);
     tuple2<str *, __ss_int> *subn(str *repl, str *subj, __ss_int maxn = 0);
-    list<str *> *findall(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    tuple2<str *, __ss_int> *subn(replfunc repl, str *subj, __ss_int maxn = 0);
+    list<str *> *findall(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
+    list<str *> *findall(str *subj, __ss_int pos, __ss_int endpos);
 
     str *__repr__();
 };
@@ -162,10 +172,11 @@ class match_iter : public __iter<Match *>
 public:
     Pattern *ro;
     str *subj;
-    __ss_int pos, endpos, start; //start: where the next search begins (-1: exhausted)
+    ptrdiff_t pos, endpos; //Py_ssize_t (sre)
+    __ss_int start; //start: where the next search begins (-1: exhausted)
     int must_advance;
 
-    match_iter(Pattern *ro, str *subj, __ss_int pos, __ss_int endpos);
+    match_iter(Pattern *ro, str *subj, ptrdiff_t pos, ptrdiff_t endpos);
     Match *__next__();
 };
 
@@ -180,6 +191,7 @@ list<str *> *split(str *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);
 str *sub(str *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 str *sub(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
+tuple2<str *, __ss_int> *subn(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 list<str *> *findall(str *pat, str *subj, __ss_int flags = 0);
 str *escape(str *s);
 

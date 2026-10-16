@@ -55,7 +55,7 @@ PatternError::PatternError(str *msg, str *pattern, __ss_int pos) : Exception(msg
 struct __state {
     SRE_STATE s;
     Pattern *p;
-    __state(Pattern *p, str *subj, __ss_int pos, __ss_int endpos) : p(p) {
+    __state(Pattern *p, str *subj, Py_ssize_t pos, Py_ssize_t endpos) : p(p) {
         state_init(&s, p->groups, (const Py_UCS4 *)subj->unit.data(), (Py_ssize_t)subj->unit.size(), pos, endpos);
     }
     ~__state() { state_fini(&s); }
@@ -214,12 +214,49 @@ dict<str *, str *> *Match::groupdict(str *defval)
     return r;
 }
 
-str *Match::__repr__() {
-    return new str("<Match object>");
+//like CPython's %.<n>R: a repr, cut off after n characters
+static __GC_STR __repr_cut(str *s, size_t n) {
+    return repr(s)->unit.substr(0, n);
 }
 
+//sre.c: match_repr
+str *Match::__repr__() {
+    if(!re) return new str("<Match object>"); //directly constructed
+    return new str(__gcs("<re.Match object; span=(") + __gcs(std::to_string(regs[0])) + __gcs(", ") + __gcs(std::to_string(regs[1])) + __gcs("), match=") + __repr_cut(group((__ss_int)0, (__ss_int)0), 50) + __gcs(">"));
+}
+
+//sre.c: pattern_repr
 str *Pattern::__repr__() {
-    return new str("<Pattern object>");
+    static const struct { const char *name; __ss_int value; } flag_names[] = {
+        {"re.IGNORECASE", I}, {"re.LOCALE", L}, {"re.MULTILINE", M}, {"re.DOTALL", S},
+        {"re.UNICODE", U}, {"re.VERBOSE", X}, {"re.DEBUG", DEBUG}, {"re.ASCII", A}
+    };
+    if(!pattern) return new str("<Pattern object>"); //directly constructed
+
+    __GC_STR r = __gcs("re.compile(") + __repr_cut(pattern, 200);
+
+    //omit the (default) UNICODE flag for str patterns
+    __ss_int f = flags;
+    if((f & (L | U | A)) == U)
+        f &= ~U;
+    if(f) {
+        __GC_STR names;
+        for(auto &fn : flag_names) {
+            if(f & fn.value) {
+                if(!names.empty()) names += '|';
+                names += __gcs(fn.name);
+                f &= ~fn.value;
+            }
+        }
+        if(f) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "0x%x", (unsigned int)f);
+            if(!names.empty()) names += '|';
+            names += __gcs(buf);
+        }
+        r += __gcs(", ") + names;
+    }
+    return new str(r + __gcs(")"));
 }
 
 //template (sub/subn/expand) errors: like CPython, report the template as the
@@ -415,6 +452,13 @@ tuple2<str *, __ss_int> *Pattern::subn(str *repl, str *subj, __ss_int maxn)
     return new tuple2<str *, __ss_int>(2, r, n);
 }
 
+tuple2<str *, __ss_int> *Pattern::subn(replfunc func, str *subj, __ss_int maxn)
+{
+    __ss_int n;
+    str *r = __subx(0, func, subj, maxn, &n);
+    return new tuple2<str *, __ss_int>(2, r, n);
+}
+
 //sre.c: _sre_SRE_Pattern_split_impl
 list<str *> *Pattern::split(str *subj, __ss_int maxn)
 {
@@ -445,9 +489,9 @@ list<str *> *Pattern::split(str *subj, __ss_int maxn)
 
 //sre.c: _sre_SRE_Pattern_findall_impl (with several groups, CPython returns
 //tuples, which shedskin does not support; the whole match is returned then)
-list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_int endpos)
+list<str *> *Pattern::__findall(str *subj, __ss_int pos, Py_ssize_t endpos)
 {
-    __state st(this, subj, pos, endpos == -1 ? PY_SSIZE_T_MAX : endpos);
+    __state st(this, subj, pos, endpos);
     list<str *> *r = new list<str *>();
 
     while(st.s.start <= st.s.end) {
@@ -467,12 +511,12 @@ list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_int endpos)
 }
 
 //finditer (sre.c: the scanner object, with its search method)
-match_iter::match_iter(Pattern *ro_, str *subj_, __ss_int pos_, __ss_int endpos_)
+match_iter::match_iter(Pattern *ro_, str *subj_, Py_ssize_t pos_, Py_ssize_t endpos_)
 {
     this->ro = ro_;
     this->subj = subj_;
     this->pos = pos_;
-    this->endpos = endpos_ == -1 ? PY_SSIZE_T_MAX : endpos_;
+    this->endpos = endpos_;
     this->start = -2; //not started
     this->must_advance = 0;
 }
@@ -499,40 +543,30 @@ Match *match_iter::__next__(void)
     return m;
 }
 
-__iter<Match *> *Pattern::finditer(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return new match_iter(this, subj, pos, endpos);
-}
 
 //match (mode 1), fullmatch (mode 2) or search (mode 0)
-Match *Pattern::__exec(str *subj, __ss_int pos, __ss_int endpos, int mode)
+Match *Pattern::__exec(str *subj, __ss_int pos, Py_ssize_t endpos, int mode)
 {
-    __state st(this, subj, pos, endpos == -1 ? PY_SSIZE_T_MAX : endpos);
+    __state st(this, subj, pos, endpos);
     st.s.match_all = (mode == 2);
     if(!(mode ? st.match() : st.search()))
         return 0;
     return __new_match(this, st, subj);
 }
 
-Match *Pattern::match(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return __exec(subj, pos, endpos, 1);
-}
-
-Match *Pattern::prefixmatch(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return match(subj, pos, endpos);
-}
-
-Match *Pattern::fullmatch(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return __exec(subj, pos, endpos, 2);
-}
-
-Match *Pattern::search(str *subj, __ss_int pos, __ss_int endpos)
-{
-    return __exec(subj, pos, endpos, 0);
-}
+//endpos not given (__ss_void) means no limit
+Match *Pattern::match(str *subj, __ss_int pos, __ss_void_struct) { return __exec(subj, pos, PY_SSIZE_T_MAX, 1); }
+Match *Pattern::match(str *subj, __ss_int pos, __ss_int endpos) { return __exec(subj, pos, endpos, 1); }
+Match *Pattern::prefixmatch(str *subj, __ss_int pos, __ss_void_struct) { return __exec(subj, pos, PY_SSIZE_T_MAX, 1); }
+Match *Pattern::prefixmatch(str *subj, __ss_int pos, __ss_int endpos) { return __exec(subj, pos, endpos, 1); }
+Match *Pattern::fullmatch(str *subj, __ss_int pos, __ss_void_struct) { return __exec(subj, pos, PY_SSIZE_T_MAX, 2); }
+Match *Pattern::fullmatch(str *subj, __ss_int pos, __ss_int endpos) { return __exec(subj, pos, endpos, 2); }
+Match *Pattern::search(str *subj, __ss_int pos, __ss_void_struct) { return __exec(subj, pos, PY_SSIZE_T_MAX, 0); }
+Match *Pattern::search(str *subj, __ss_int pos, __ss_int endpos) { return __exec(subj, pos, endpos, 0); }
+list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_void_struct) { return __findall(subj, pos, PY_SSIZE_T_MAX); }
+list<str *> *Pattern::findall(str *subj, __ss_int pos, __ss_int endpos) { return __findall(subj, pos, endpos); }
+__iter<Match *> *Pattern::finditer(str *subj, __ss_int pos, __ss_void_struct) { return new match_iter(this, subj, pos, PY_SSIZE_T_MAX); }
+__iter<Match *> *Pattern::finditer(str *subj, __ss_int pos, __ss_int endpos) { return new match_iter(this, subj, pos, endpos); }
 
 
 //re.* functions
@@ -638,6 +672,11 @@ str *sub(str *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags)
 tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags)
 {
     return compile(pat, flags)->subn(repl, subj, maxn);
+}
+
+tuple2<str *, __ss_int> *subn(str *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->subn(func, subj, maxn);
 }
 
 list<str *> *split(str *pat, str *subj, __ss_int maxn, __ss_int flags)

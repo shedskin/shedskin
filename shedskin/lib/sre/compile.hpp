@@ -281,8 +281,15 @@ static Node escape_(Tokenizer &source, __ss_char c, State &state) {
 
 static Seq parse(Tokenizer &source, State &state, bool verbose, int nested, bool first = false);
 
+/* shedskin: limit the nesting depth (of groups, lookarounds, ..), as parsing
+   and compiling recurse once per level; CPython hits its recursion limit
+   at about 500 levels */
+static const int MAXNESTING = 1000;
+
 static Seq parse_sub(Tokenizer &source, State &state, bool verbose, int nested) {
     /* parse an alternation: a|b|c */
+    if (nested > 2 * MAXNESTING) /* parse() and parse_sub() each add one */
+        throw new RecursionError(new str("maximum recursion depth exceeded"));
     std::vector<Seq> items;
     for (;;) {
         items.push_back(parse(source, state, verbose, nested + 1, !nested && items.empty()));

@@ -14,6 +14,8 @@ X = VERBOSE = 64
 DEBUG = 128
 A = ASCII = 256
 
+__void = 0  # 'endpos not given' sentinel (no limit)
+
 class PatternError(Exception):
     def __init__(self, msg, pattern=None, pos=-1):
         self.msg = msg
@@ -72,16 +74,16 @@ class Pattern:
         self.groupindex = {'' : ''}
         self.pattern = ''
 
-    def prefixmatch(self, string, pos=0, endpos=-1):
+    def prefixmatch(self, string, pos=0, endpos=__void):
         return Match()
 
-    def match(self, string, pos=0, endpos=-1):
+    def match(self, string, pos=0, endpos=__void):
         return Match()
 
-    def fullmatch(self, string, pos=0, endpos=-1):
+    def fullmatch(self, string, pos=0, endpos=__void):
         return Match()
 
-    def search(self, string, pos=0, endpos=-1):
+    def search(self, string, pos=0, endpos=__void):
         return Match()
 
     def split(self, string, maxsplit=0):
@@ -95,10 +97,10 @@ class Pattern:
         repl(Match())
         return ('', 0)
 
-    def finditer(self, string, pos=0, endpos=-1):
+    def finditer(self, string, pos=0, endpos=__void):
         return __iter(Match())
 
-    def findall(self, string, pos=0, endpos=-1):
+    def findall(self, string, pos=0, endpos=__void):
         return ['']
 
     def __repr__(self):

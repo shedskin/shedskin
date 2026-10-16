@@ -780,7 +780,70 @@ def test_re_sre_errors():
         assert str(e) == 'invalid group reference 1 at position 1'
 
 
+def _upper(m):
+    return m.group().upper()
+
+
+def test_re_endpos_default():
+    # the default endpos used to be -1, so an explicit -1 meant 'no limit'
+    # (CPython clamps it to 0), and with --int32 the internal 'no limit'
+    # value wrapped to -1, so that nothing matched without an endpos
+    assert re.search('b', 'abc').span() == (1, 2)
+    assert re.findall('b', 'abc') == ['b']
+    assert re.sub('b', 'x', 'abc') == 'axc'
+    assert re.split('b', 'abc') == ['a', 'c']
+    assert [m.span() for m in re.finditer('b', 'abcb')] == [(1, 2), (3, 4)]
+    p = re.compile('a')
+    assert p.search('abc', 0, -1) is None
+    assert p.match('a', 0, -1) is None
+    assert p.fullmatch('a', 0, -1) is None
+    assert p.findall('aaa', 0, -1) == []
+    assert list(p.finditer('aaa', 0, -1)) == []
+    assert p.search('abca', 1, 2147483647).span() == (3, 4)
+    assert p.search('abca', 1).span() == (3, 4)
+    assert p.search('aba', endpos=2).span() == (0, 1)
+    assert p.findall('aaa', endpos=2) == ['a', 'a']
+    assert [m.span() for m in p.finditer('aaa', pos=1, endpos=2)] == [(1, 2)]
+
+
+def test_re_subn_func():
+    assert re.subn('a', _upper, 'aba') == ('AbA', 2)
+    assert re.compile('a').subn(_upper, 'aba', 1) == ('Aba', 1)
+    assert re.subn('A', _upper, 'aba', flags=re.I) == ('AbA', 2)
+
+
+def test_re_deep_nesting():
+    # deep nesting used to overflow the stack (CPython: RecursionError)
+    assert re.compile('(' * 300 + 'a' + ')' * 300).match('a').group(300) == 'a'
+    try:
+        re.compile('(' * 20000 + 'a' + ')' * 20000)
+        assert False
+    except RecursionError:
+        pass
+    try:
+        re.compile('(?:' * 20000 + 'a' + ')' * 20000)
+        assert False
+    except RecursionError:
+        pass
+
+
+def test_re_repr():
+    assert repr(re.match('a', 'ab')) == "<re.Match object; span=(0, 1), match='a'>"
+    assert str(re.search("'", "it's")) == '<re.Match object; span=(2, 3), match="\'">'
+    m = re.search('b+', 'a' + 'b' * 100)
+    assert repr(m) == "<re.Match object; span=(1, 101), match='" + 'b' * 49 + ">"
+    assert repr(re.compile('a')) == "re.compile('a')"
+    assert repr(re.compile('a', re.I | re.M)) == "re.compile('a', re.IGNORECASE|re.MULTILINE)"
+    assert repr(re.compile('(?s)a')) == "re.compile('(?s)a', re.DOTALL)"
+    assert repr(re.compile('a', re.A | re.X)) == "re.compile('a', re.VERBOSE|re.ASCII)"
+    assert repr(re.compile('x' * 300)) == "re.compile('" + 'x' * 199 + ")"
+
+
 def test_all():
+    test_re_endpos_default()
+    test_re_subn_func()
+    test_re_deep_nesting()
+    test_re_repr()
     test_re_sre_semantics()
     test_re_sre_errors()
     test_re_search()
