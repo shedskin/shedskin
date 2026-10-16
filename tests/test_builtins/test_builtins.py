@@ -357,6 +357,33 @@ def test_min():
         assert False
 
 
+class MinMaxTie:
+    def __init__(self, k, n):
+        self.k = k
+        self.n = n
+    def __lt__(self, o):
+        return self.k < o.k
+
+def test_min_max_ties():
+    # on ties, min/max return the first argument
+    p, q = MinMaxTie(1, 'a'), MinMaxTie(1, 'b')
+    assert min(p, q).n == 'a'
+    assert max(p, q).n == 'a'
+    assert min(p, q, MinMaxTie(1, 'c')).n == 'a'
+    assert max(p, q, MinMaxTie(1, 'c')).n == 'a'
+    assert min([p, q]).n == 'a'
+    assert max([p, q]).n == 'a'
+    assert min(x for x in [p, q]).n == 'a'
+    assert max(x for x in [p, q]).n == 'a'
+    assert min('aa', 'bb', key=len) == 'aa'
+    assert max('aa', 'bb', key=len) == 'aa'
+    assert min('aa', 'bb', 'cc', key=len) == 'aa'
+    assert max('aa', 'bb', 'cc', key=len) == 'aa'
+    assert str(min(-0.0, 0.0)) == '-0.0'
+    assert str(max(0.0, -0.0)) == '0.0'
+    assert str(min(0.0, -0.0)) == '0.0'
+    assert str(max(-0.0, 0.0)) == '-0.0'
+
 def test_oct():
     assert oct(10) == '0o12'
 
@@ -733,6 +760,7 @@ def test_all():
     test_len()
     test_max()
     test_min()
+    test_min_max_ties()
     test_oct()
     test_ord()
     test_pow()
