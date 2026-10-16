@@ -978,6 +978,26 @@ def test_sniffer_preferred():
     assert csv.Sniffer().sniff(sample).delimiter == ';'
 
 
+def test_sniffer_non_ascii_delimiter():
+    s = csv.Sniffer()
+    d = s.sniff('"a"§"b"\n"c"§"d"\n')
+    assert d.delimiter == '§'
+    assert d.quotechar == '"'
+    assert not d.doublequote
+
+    d = s.sniff("'a'€ 'b'\n'c'€ 'd'\n")
+    assert d.delimiter == '€'
+    assert d.quotechar == "'"
+    assert d.skipinitialspace
+
+    assert s.sniff('"a"§"b"\n"c"§"d"\n', delimiters='§;').delimiter == '§'
+
+    d = s.sniff('"a"→"b ""x"" c"→"d"\n"e"→"f"\n')
+    assert d.delimiter == '→'
+    assert d.doublequote
+    assert list(csv.reader(['"a"→"b ""x"" c"'], d)) == [['a', 'b "x" c']]
+
+
 def test_dictwriter_kwargs():
     # doublequote=False with an escapechar: embedded quotes are escaped
     f = io.StringIO()
@@ -1057,6 +1077,7 @@ def test_all():
     test_dictreader_kwargs()
     test_dictreader_restkey()
     test_sniffer_preferred()
+    test_sniffer_non_ascii_delimiter()
     test_dictwriter_kwargs()
 
 

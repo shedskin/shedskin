@@ -869,8 +869,8 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
 
     bool has_delim_group = regexp->groupindex->has_key(new str("delim"));
 
-    std::vector<char> quote_order, delim_order;
-    std::map<char, int> quote_counts, delim_counts;
+    std::vector<__ss_char> quote_order, delim_order; /* code points: delimiter may be non-ascii */
+    std::map<__ss_char, int> quote_counts, delim_counts;
     int spaces = 0;
 
     for (size_t i = 0; i < matches.size(); i++) {
@@ -878,7 +878,7 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
 
         str *qstr = m->group(0, new str("quote"));
         if (qstr != NULL && qstr->unit.size() > 0) {
-            char key = qstr->unit[0];
+            __ss_char key = qstr->unit[0];
             if (quote_counts.find(key) == quote_counts.end()) {
                 quote_order.push_back(key);
                 quote_counts[key] = 1;
@@ -890,8 +890,8 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
 
         str *dstr = m->group(0, new str("delim"));
         if (dstr != NULL && dstr->unit.size() > 0) {
-            char key = dstr->unit[0];
-            if (delimiters == NULL || delimiters->unit.find(key) != __GC_STRING::npos) {
+            __ss_char key = dstr->unit[0];
+            if (delimiters == NULL || delimiters->unit.find(key) != __GC_STR::npos) {
                 if (delim_counts.find(key) == delim_counts.end()) {
                     delim_order.push_back(key);
                     delim_counts[key] = 1;
@@ -905,37 +905,37 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
     }
 
     // quotechar = max(quotes, key=quotes.get)  (first-seen wins ties)
-    char quotechar = 0;
+    __ss_char quotechar = 0;
     int best = -1;
     for (size_t i = 0; i < quote_order.size(); i++) {
-        char c = quote_order[i];
+        __ss_char c = quote_order[i];
         if (quote_counts[c] > best) {
             best = quote_counts[c];
             quotechar = c;
         }
     }
-    if (best >= 0) result.quotechar = std::string(1, quotechar);
+    if (best >= 0) result.quotechar = std::string(1, (char)quotechar); /* always ' or " */
 
-    std::string delim;
+    __GC_STR delim;
     if (!delim_order.empty()) {
-        char delimchar = 0;
+        __ss_char delimchar = 0;
         int dbest = -1;
         for (size_t i = 0; i < delim_order.size(); i++) {
-            char c = delim_order[i];
+            __ss_char c = delim_order[i];
             if (delim_counts[c] > dbest) {
                 dbest = delim_counts[c];
                 delimchar = c;
             }
         }
         result.skipinitialspace = (dbest == spaces) ? 1 : 0;
-        if (delimchar == '\n') delim = ""; // most likely a single-column file
-        else delim = std::string(1, delimchar);
+        if (delimchar != '\n') // else most likely a single-column file
+            delim = __GC_STR(1, delimchar);
     }
     else {
-        delim = "";
         result.skipinitialspace = 0;
     }
-    result.delimiter = delim;
+    __GC_BYTES delim_utf8 = __to_utf8(delim);
+    result.delimiter = std::string(delim_utf8.data(), delim_utf8.size());
 
     if (best < 0) {
         // no quotechar found at all -> we're done, no doublequote check possible
@@ -943,15 +943,15 @@ static __qd_result __guess_quote_and_delimiter(str *data, str *delimiters) {
     }
 
     // check for an extra quote between delimiters -> doubled-quote format
-    std::string escaped_delim(delim.empty() ? "" :
-        __narrow_std(__re__::escape(new str(delim.c_str(), delim.size()))->unit));
-    std::string qc(1, quotechar);
-    std::string dq_pattern =
-        "((" + escaped_delim + ")|^)\\W*" + qc + "[^" + escaped_delim + "\\n]*" +
-        qc + "[^" + escaped_delim + "\\n]*" + qc + "\\W*((" + escaped_delim + ")|$)";
+    __GC_STR escaped_delim;
+    if (!delim.empty())
+        escaped_delim = __re__::escape(new str(delim))->unit;
+    __GC_STR qc(1, quotechar);
+    __GC_STR dq_pattern =
+        __gcs("((") + escaped_delim + __gcs(")|^)\\W*") + qc + __gcs("[^") + escaped_delim + __gcs("\\n]*") +
+        qc + __gcs("[^") + escaped_delim + __gcs("\\n]*") + qc + __gcs("\\W*((") + escaped_delim + __gcs(")|$)");
 
-    __re__::Pattern *dq_regexp = __re__::compile(
-        new str(dq_pattern.c_str(), dq_pattern.size()), __re__::MULTILINE);
+    __re__::Pattern *dq_regexp = __re__::compile(new str(dq_pattern), __re__::MULTILINE);
     __re__::Match *dqm = dq_regexp->search(data);
     result.doublequote = (dqm != NULL);
 
