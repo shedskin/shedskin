@@ -1,4 +1,5 @@
 import fnmatch
+import re
 
 fs = ['a.txt', 'b.txt', 'c.txt', 'd.mod']
 
@@ -81,6 +82,37 @@ def test_translate():
     assert fnmatch.translate('[!a-c]?') == '(?s:[^a-c].)\\Z'
     assert fnmatch.translate('[x[:a&]') == '(?s:[x[:a\\&])\\Z'
 
+    # literals are escaped like re.escape() (3.7+): only regex specials
+    assert fnmatch.translate('x_y!z@w:v') == '(?s:x_y!z@w:v)\\Z'
+    assert fnmatch.translate('a b-c#') == '(?s:a\\ b\\-c\\#)\\Z'
+    assert fnmatch.translate('é*ü') == '(?s:é.*ü)\\Z'
+
+    # interior '*' becomes an atomic minimal match (3.13)
+    assert fnmatch.translate('') == '(?s:)\\Z'
+    assert fnmatch.translate('*') == '(?s:.*)\\Z'
+    assert fnmatch.translate('foo*') == '(?s:foo.*)\\Z'
+    assert fnmatch.translate('a*b*c') == '(?s:a(?>.*?b).*c)\\Z'
+    assert fnmatch.translate('*a*') == '(?s:(?>.*?a).*)\\Z'
+    assert fnmatch.translate('**x**y**') == '(?s:(?>.*?x)(?>.*?y).*)\\Z'
+    assert fnmatch.translate('[a-c]*?*[!x]') == '(?s:[a-c](?>.*?.).*[^x])\\Z'
+    assert fnmatch.translate('ab*cd*') == '(?s:ab(?>.*?cd).*)\\Z'
+
+
+def test_translate_matching():
+    names = ['abcbc', 'aXbYc', 'ac', 'abc', 'a.b-c', 'a\nb', '_x!', 'a b', 'ab', 'cab']
+    assert fnmatch.filter(names, 'a*b*c') == ['abcbc', 'aXbYc', 'abc', 'a.b-c']
+    assert fnmatch.filter(names, '*a*b*') == ['abcbc', 'aXbYc', 'abc', 'a.b-c', 'a\nb', 'a b', 'ab', 'cab']
+    assert fnmatch.filter(names, '_*!') == ['_x!']
+    assert fnmatch.filter(names, 'a*-*c') == ['a.b-c']
+    assert fnmatch.filter(names, 'a*\n*') == ['a\nb']
+    assert fnmatch.filter(names, '[a-c]*[!b]') == ['abcbc', 'aXbYc', 'ac', 'abc', 'a.b-c']
+    assert not fnmatch.fnmatchcase('a' * 30, '*a*a*a*a*a*b')
+    # translate() results can be joined with '|'
+    pat = fnmatch.translate('a*b') + '|' + fnmatch.translate('*z')
+    assert re.match(pat, 'xyz')
+    assert re.match(pat, 'aXb')
+    assert not re.match(pat, 'aXbc')
+
 
 def test_all():
     test_fnmatch()
@@ -91,6 +123,7 @@ def test_all():
     test_filter()
     test_filterfalse()
     test_translate()
+    test_translate_matching()
 
 
 if __name__ == "__main__":

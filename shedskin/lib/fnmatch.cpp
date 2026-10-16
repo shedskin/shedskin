@@ -26,23 +26,6 @@ void __init() {
     _cache = (new dict<str *, __re__::Pattern *>());
 }
 
-namespace {
-
-/* Mirrors re.escape()'s "pass alnum through, backslash-escape everything
-   else" rule for a single character, without the overhead of building a
-   str object and round-tripping through __re__::escape(). */
-inline void escape_char(__GC_STR &out, __ss_char c) {
-    if (c > 127 || ::isalnum((int)c)) {
-        out += c;
-    }
-    else {
-        out += '\\';
-        out += c;
-    }
-}
-
-} // anonymous namespace
-
 __ss_bool fnmatch(str *name, str *pat) {
     /**
     Test whether FILENAME matches PATTERN.
@@ -144,7 +127,8 @@ __ss_bool fnmatchcase(str *name, str *pat) {
 }
 
 void __translate_core(const __GC_STR &p, const __GC_STR &star,
-                      const __GC_STR &qmark, __GC_STR &res) {
+                      const __GC_STR &qmark, __GC_STR &res,
+                      std::vector<size_t> *stars) {
     /**
     Shared core of fnmatch.translate() and glob.translate(): translate one
     shell pattern (for glob: one path segment) to regex text, appending to
@@ -167,6 +151,7 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
                "a****************b" from building up redundant, slower
                regexes. */
             if (!last_was_star) {
+                if (stars) stars->push_back(res.size());
                 res += star;
                 last_was_star = true;
             }
@@ -282,7 +267,7 @@ void __translate_core(const __GC_STR &p, const __GC_STR &star,
             }
         }
         else {
-            escape_char(res, c);
+            __escape_char(res, c);
         }
     }
 }
@@ -293,8 +278,24 @@ str *translate(str *pat) {
 
     There is no way to quote meta-characters.
     */
-    __GC_STR res;
-    __translate_core(pat->unit, __gcs(".*"), __gcs("."), res);
+    __GC_STR parts;
+    std::vector<size_t> stars;
+    __translate_core(pat->unit, __GC_STR(), __gcs("."), parts, &stars);
+
+    /* CPython's _join_translated_parts(): fixed text before the first `*`
+       is kept as is; each interior `*` plus the fixed text after it becomes
+       a minimal match that cannot backtrack, "(?>.*?fixed)"; the last `*`
+       becomes ".*" followed by any trailing fixed text. */
+    size_t n = stars.size();
+    __GC_STR res = parts.substr(0, n ? stars[0] : parts.size());
+    for (size_t k = 0; k < n; k++) {
+        size_t end = (k + 1 < n) ? stars[k+1] : parts.size();
+        __GC_STR fixed = parts.substr(stars[k], end - stars[k]);
+        if (k + 1 == n)
+            res += __gcs(".*") + fixed;
+        else
+            res += __gcs("(?>.*?") + fixed + __gcs(")");
+    }
 
     return new str(__gcs("(?s:") + res + __gcs(")\\Z"));
 }

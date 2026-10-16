@@ -612,24 +612,6 @@ str *escape(str *pathname) {
 }
 
 
-namespace {
-
-/* Mirrors re.escape()'s rule for one character, matching the convention the
-   fnmatch translation core uses (see escape_char there): alphanumerics pass
-   through, everything else is backslash-escaped (a backslash before a
-   non-alphanumeric always means the literal character). */
-inline void escape_char(__GC_STR &out, __ss_char c) {
-    if (c > 127 || ::isalnum((int)c)) {
-        out += c;
-    }
-    else {
-        out += '\\';
-        out += c;
-    }
-}
-
-} // anonymous namespace
-
 str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *seps) {
     /**
     Translate a pathname with shell wildcards to a regular expression.
@@ -646,10 +628,6 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
     not given, os.sep (and os.altsep on Windows) is used. (CPython also
     accepts a tuple of single-character strings here; we support the string
     form.)
-
-    Note: literal characters are escaped slightly more eagerly than
-    re.escape() -- the resulting regex text can differ from CPython's
-    character for character, but matches the same strings.
     */
     __GC_STR seps_s;
     if (seps && seps->unit.size()) {
@@ -665,7 +643,7 @@ str *translate(str *pat, __ss_bool recursive, __ss_bool include_hidden, str *sep
 
     __GC_STR escaped_seps;
     for (size_t k = 0; k < seps_s.size(); k++)
-        escape_char(escaped_seps, seps_s[k]);
+        __fnmatch__::__escape_char(escaped_seps, seps_s[k]);
 
     __GC_STR any_sep;
     if (seps_s.size() > 1)

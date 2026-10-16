@@ -460,6 +460,11 @@ def test_translate():
     assert not matches(t, 'a/b')
     assert not matches(t, 'a;b')
 
+    # exact text: literals and separators are escaped like re.escape()
+    assert glob.translate('a_b/*.t!t') == '(?s:a_b/(?!\\.)[^/]*\\.t!t)\\Z'
+    assert glob.translate('**/a*b?.[!c]', recursive=True, include_hidden=True) == '(?s:(?:.+/)?a[^/]*b[^/]\\.[^c])\\Z'
+    assert glob.translate('x|y*z', seps='|\\') == '(?s:x[\\|\\\\]y[^\\|\\\\]*z)\\Z'
+
 
 def test_all():
     test_glob()
