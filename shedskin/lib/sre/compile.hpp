@@ -283,8 +283,9 @@ static Seq parse(Tokenizer &source, State &state, bool verbose, int nested, bool
 
 /* shedskin: limit the nesting depth (of groups, lookarounds, ..), as parsing
    and compiling recurse once per level; CPython hits its recursion limit
-   at about 500 levels */
-static const int MAXNESTING = 1000;
+   at about 500 levels. each level takes 1-2KB of stack, so this must also
+   fit in the 1MB default stack of a Windows thread */
+static const int MAXNESTING = 500;
 
 static Seq parse_sub(Tokenizer &source, State &state, bool verbose, int nested) {
     /* parse an alternation: a|b|c */

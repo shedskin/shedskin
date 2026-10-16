@@ -456,6 +456,8 @@ function(add_shedskin_product)
         target_link_options(${EXE} PRIVATE
             ${SHEDSKIN_LINK_OPTIONS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
+            # same main thread stack size as on linux (default: 1MB)
+            "$<$<CXX_COMPILER_ID:MSVC>:/STACK:8388608>"
         )
 
         target_link_directories(${EXE} PRIVATE

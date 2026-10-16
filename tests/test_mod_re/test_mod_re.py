@@ -815,6 +815,7 @@ def test_re_subn_func():
 def test_re_deep_nesting():
     # deep nesting used to overflow the stack (CPython: RecursionError)
     assert re.compile('(' * 300 + 'a' + ')' * 300).match('a').group(300) == 'a'
+    assert re.compile('(?:' * 450 + 'a' + ')' * 450).match('a').group() == 'a'
     try:
         re.compile('(' * 20000 + 'a' + ')' * 20000)
         assert False
