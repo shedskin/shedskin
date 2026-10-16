@@ -43,6 +43,7 @@ template<class A> A __power(A a, A b) requires (!std::is_pointer_v<A>);
 /* a user class with __pow__ (the pointer constraint above keeps two
    instances of the same class from being ambiguous with this) */
 template<class A, class B> inline auto __power(A *a, B b) -> decltype(a->__pow__(b)) { return a->__pow__(b); }
+template<class A, class B, class C> inline auto __power(A *a, B b, C c) -> decltype(a->__pow__(b, c)) { return a->__pow__(b, c); }
 template<> inline __ss_float __power(__ss_float a, __ss_float b) {
     /* x ** 0.5: sqrt is much faster, and correctly rounded (pow may be off by an ulp). only
        for a > 0, as pow(-0.0, 0.5) is 0.0 and pow(-inf, 0.5) is inf */

@@ -175,6 +175,50 @@ def test_pow():
     assert 2.0 ** 3 == 8.0
 
 
+class PowMod:  # a modulo is required
+    def __init__(self, x):
+        self.x = x
+
+    def __pow__(self, n, m):
+        return PowMod(pow(self.x, n, m))
+
+
+class PowModDefault:  # optional modulo
+    def __init__(self, x):
+        self.x = x
+
+    def __pow__(self, n, m=1000):
+        return PowModDefault(pow(self.x, n, m))
+
+
+POW_LIMIT = 10 ** 6
+
+
+class PowModGlobal:  # optional modulo, non-constant default
+    def __init__(self, x):
+        self.x = x
+
+    def __pow__(self, n, m=POW_LIMIT):
+        return PowModGlobal(pow(self.x, n, m))
+
+
+def test_pow_modulo():
+    # a three-argument __pow__ used to fail to compile
+    assert pow(PowMod(3), 4, 5).x == 1
+    assert pow(PowMod(3), 4, mod=100).x == 81
+    assert (PowModDefault(7) ** 4).x == 401
+    assert pow(PowModDefault(7), 4).x == 401
+    assert pow(PowModDefault(7), 4, 10).x == 1
+    b = PowModDefault(7)
+    b **= 4
+    assert b.x == 401
+    assert (PowModGlobal(3) ** 20).x == 784401
+    assert pow(PowModGlobal(3), 4, 5).x == 1
+    # builtin types are unaffected
+    assert pow(3, 4, 5) == 1
+    assert pow(base=3, exp=4, mod=5) == 1
+
+
 class InPlace:
     def __init__(self, x):
         self.x = x
@@ -355,6 +399,7 @@ def test_all():
     test_vector2d()
     test_num()
     test_pow()
+    test_pow_modulo()
     test_bitwise_inplace()
     test_imod_ipow()
 
