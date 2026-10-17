@@ -236,7 +236,7 @@ __codec_result __latin1_encode(const __ss_char *src, size_t len, char *dst) {
 }
 
 /* non-printable code points >= 0x80: general category Cc, Cf, Cs, Co,
-   Zl, Zp or Zs, as sorted non-overlapping ranges (unicode 15.0.0). see
+   Zl, Zp or Zs, as sorted non-overlapping ranges (unicode 15.1.0). see
    __ss_char_printable in unicode.hpp for what is deliberately not here. */
 static const struct { __ss_char lo, hi; } __nonprintable[] = {
     {0x00000, 0x0001F},  /* Cc */
