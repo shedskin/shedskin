@@ -94,6 +94,15 @@ def test_zip_exhaustion():
     assert error
     assert list(zip([5, 6], [7, 8], [9, 10], strict=True)) == [(5, 7, 9), (6, 8, 10)]
 
+    # the same iterator passed twice
+    it4 = iter([0, 1, 2, 3, 4])
+    assert list(zip(it4, it4)) == [(0, 1), (2, 3)]
+    assert list(it4) == []
+    gen = (x * 10 for x in range(4))
+    assert list(zip(gen, gen)) == [(0, 10), (20, 30)]
+    it5 = iter('abcdef')
+    assert [a + b for a, b in zip(it5, it5)] == ['ab', 'cd', 'ef']
+
 
 def zip_strict_error(z):
     try:
