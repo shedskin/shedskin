@@ -239,6 +239,13 @@ class list(pyseq):
     def append(self, u):
         self.unit = u
 
+    def __contains__(self, u):
+        return self.unit == u
+    def __eq__(self, b):
+        return self.unit == b.unit
+    def __ne__(self, b):
+        return self.unit == b.unit
+
     def index(self, u, start=0, stop=0):
         u == self.unit
         return 1
@@ -303,6 +310,13 @@ class list(pyseq):
 class tuple(pyseq):
     def __len__(self):
         return 1
+
+    def __contains__(self, u):
+        return self.unit == u
+    def __eq__(self, b):
+        return self.unit == b.unit
+    def __ne__(self, b):
+        return self.unit == b.unit
     def __repr__(self):
         self.unit.__repr__()
         return ''
@@ -335,6 +349,13 @@ class tuple(pyseq):
 class tuple2(pyseq):
     def __len__(self):
         return 1
+
+    def __eq__(self, b):
+        self.first == b.first
+        return self.second == b.second
+    def __ne__(self, b):
+        self.first == b.first
+        return self.second == b.second
     def __repr__(self):
         self.first.__repr__()
         self.second.__repr__()
@@ -364,6 +385,15 @@ class tuple2(pyseq):
 class tuple3(pyseq):
     def __len__(self):
         return 1
+
+    def __eq__(self, b):
+        self.first == b.first
+        self.second == b.second
+        return self.third == b.third
+    def __ne__(self, b):
+        self.first == b.first
+        self.second == b.second
+        return self.third == b.third
     def __repr__(self):
         self.first.__repr__()
         self.second.__repr__()
@@ -721,6 +751,11 @@ class dict(pyiter):
     def __key__(self, k):
         k.__hash__()
         k.__eq__(k)
+
+    def __eq__(self, b):
+        return self.value == b.value
+    def __ne__(self, b):
+        return self.value == b.value
 
     def __setunit__(self, k, v):
         self.__key__(k)

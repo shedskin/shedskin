@@ -229,6 +229,43 @@ def test_identity_eq():
     n1, n2 = IdN(1), IdN(1)
     assert not n1 != n2 and n1 != IdN(2)
 
+# each __eq__ below is only reached in one way, so it must be modelled there
+class EqNe:
+    def __init__(self, x):
+        self.x = x
+    def __eq__(self, other):
+        return self.x == other.x
+
+class EqIn(EqNe):
+    pass
+
+class EqList:
+    def __init__(self, x):
+        self.x = x
+    def __eq__(self, other):
+        return self.x == other.x
+
+class EqTuple:
+    def __init__(self, x):
+        self.x = x
+    def __eq__(self, other):
+        return self.x == other.x
+
+class EqDict:
+    def __init__(self, x):
+        self.x = x
+    def __eq__(self, other):
+        return self.x == other.x
+    def __hash__(self):
+        return self.x
+
+def test_modelled_eq():
+    assert not EqNe(1) != EqNe(1) and EqNe(1) != EqNe(2)  # '!=' is 'not __eq__'
+    assert EqIn(1) in [EqIn(2), EqIn(1)] and EqIn(3) not in (EqIn(1), EqIn(2))
+    assert not [EqList(1)] != [EqList(1)] and [EqList(1)] != [EqList(2)]
+    assert (EqTuple(1), 2) == (EqTuple(1), 2) and not (EqTuple(1), 2) != (EqTuple(1), 2)
+    assert {1: EqDict(1)} == {1: EqDict(1)} and {1: EqDict(1)} != {1: EqDict(2)}
+
 
 def test_all():
     test_class_person()
@@ -238,6 +275,7 @@ def test_all():
     test_instance_str()
     test_instance_repr()
     test_identity_eq()
+    test_modelled_eq()
 
 
 

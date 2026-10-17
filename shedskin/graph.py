@@ -1633,6 +1633,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(fakefunc, func)
             elif msg:
                 self.fake_func(node, left, "__" + msg + "__", [right], func)
+
+                if msg == "ne":  # without __ne__, '!=' is 'not __eq__'
+                    eqfunc = ast.Call(
+                        ast.Attribute(_as_expr(left), "__eq__", ast.Load()),
+                        [_as_expr(right)],
+                        [],
+                    )
+                    eqfunc.lineno = left.lineno
+                    self.visit(eqfunc, func)
             left = right
 
         # tempvars, e.g. (t1=fun())
