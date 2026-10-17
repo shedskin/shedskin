@@ -346,6 +346,19 @@ def test_maketrans():
     s = 'hoi'
     assert 'abc'.translate(s.maketrans('a', 'z')) == 'zbc'
     assert str.maketrans('ab', 'xy') == ''.maketrans('ab', 'xy')
+    # dict values may also be ordinals, keys/values may be None-only
+    t1 = str.maketrans({97: 98, 0x20ac: 0x1f600})
+    assert sorted(t1) == [97, 0x20ac]
+    assert 'abc\u20ac'.translate(t1) == 'bbc\U0001f600'
+    assert 'abc'.translate(str.maketrans({'a': 66, 'c': 67})) == 'BbC'
+    assert 'aaa'.translate(''.maketrans({97: 100})) == 'ddd'
+    assert 'abca'.translate(str.maketrans({97: None})) == 'bc'
+    assert 'abca'.translate(str.maketrans({'b': None})) == 'aca'
+    try:
+        str.maketrans({'ab': 66})
+        assert False
+    except ValueError as e:
+        assert str(e) == 'string keys in translate table must be of length 1'
 
 
 def test_partition():

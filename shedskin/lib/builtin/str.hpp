@@ -84,6 +84,10 @@ public:
     static dict<__ss_int, str *> *maketrans(str *x, str *y, str *z=0);
     static dict<__ss_int, str *> *maketrans(dict<__ss_int, str *> *table);
     static dict<__ss_int, str *> *maketrans(dict<str *, str *> *table);
+    static dict<__ss_int, str *> *maketrans(dict<__ss_int, __ss_int> *table);
+    static dict<__ss_int, str *> *maketrans(dict<str *, __ss_int> *table);
+    static dict<__ss_int, str *> *maketrans(dict<__ss_int, void *> *table);
+    static dict<__ss_int, str *> *maketrans(dict<str *, void *> *table);
     str *swapcase();
     str *center(__ss_int width, str *fillchar=0);
 

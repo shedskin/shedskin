@@ -348,4 +348,11 @@ namespace __bytes___ {
     }
 }
 
+namespace __bytearray__ {
+    /* like CPython, this also returns bytes */
+    inline bytes *maketrans(void *, bytes *frm, bytes *to) {
+        return __bytes___::maketrans(NULL, frm, to);
+    }
+}
+
 #endif

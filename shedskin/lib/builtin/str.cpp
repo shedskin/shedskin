@@ -636,26 +636,53 @@ dict<__ss_int, str *> *str::maketrans(str *x, str *y, str *z) {
     return table;
 }
 
-/* str.maketrans(table): table already in the dict[int, str|None] shape
-   translate() expects; return a shallow copy (CPython's maketrans always
-   returns a fresh dict). */
-dict<__ss_int, str *> *str::maketrans(dict<__ss_int, str *> *table) {
-    return table->copy();
+/* str.maketrans(table): keys may be ordinals or single-character strings,
+   values ordinals, strings or None. like str.maketrans(x, y[, z]) above, the
+   result always maps ordinals to strings (or None), so ordinal values are
+   converted to single-character strings. */
+static inline __ss_int __maketrans_key(__ss_int k) {
+    return k;
+}
+static inline __ss_int __maketrans_key(str *k) {
+    if(k->unit.size() != 1)
+        throw new ValueError(new str("string keys in translate table must be of length 1"));
+    return (__ss_int)k->unit[0];
+}
+static inline str *__maketrans_value(str *v) {
+    return v;
+}
+static inline str *__maketrans_value(void *) { /* only None */
+    return NULL;
+}
+static inline str *__maketrans_value(__ss_int v) {
+    if(v < 0 || v > 0x10ffff)
+        throw new ValueError(new str("character mapping must be in range(0x110000)"));
+    return chr(v);
+}
+template<class K, class V> static dict<__ss_int, str *> *__maketrans(dict<K, V> *table) {
+    dict<__ss_int, str *> *result = new dict<__ss_int, str *>();
+    for(auto& kv : table->gcd)
+        result->__setitem__(__maketrans_key(kv.first), __maketrans_value(kv.second));
+    return result;
 }
 
-/* str.maketrans(table): table has single-character string keys instead of
-   ordinals (the other form CPython's single-argument maketrans() accepts);
-   normalize keys to ordinals. */
+dict<__ss_int, str *> *str::maketrans(dict<__ss_int, str *> *table) {
+    return __maketrans(table);
+}
 dict<__ss_int, str *> *str::maketrans(dict<str *, str *> *table) {
-    dict<__ss_int, str *> *result = new dict<__ss_int, str *>();
-    for(auto& kv : table->gcd) {
-        str *k = kv.first;
-        if(k->unit.size() != 1)
-            throw new ValueError(new str("string keys in translate table must be of length 1"));
-        __ss_int ord = (__ss_int)k->unit[0];
-        result->__setitem__(ord, kv.second);
-    }
-    return result;
+    return __maketrans(table);
+}
+dict<__ss_int, str *> *str::maketrans(dict<__ss_int, __ss_int> *table) {
+    return __maketrans(table);
+}
+dict<__ss_int, str *> *str::maketrans(dict<str *, __ss_int> *table) {
+    return __maketrans(table);
+}
+dict<__ss_int, str *> *str::maketrans(dict<__ss_int, void *> *table) {
+    return __maketrans(table);
+}
+dict<__ss_int, str *> *str::maketrans(dict<str *, void *> *table) {
+    return __maketrans(table);
 }
 
 str *str::swapcase() {
