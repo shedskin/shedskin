@@ -402,7 +402,19 @@ class VisitContext:
             return namespace
         return None
 
-    def contained_write(self, node: ast.Name, cnode: "infer.CNode") -> None:
+    def get_target_cnode(self, node: ast.Name, value_cnode: infer.CNode) -> infer.CNode:
+        if value_cnode.thing == node:
+            cnode = value_cnode
+        else:
+            mv = getmv()
+            cnode = mv.gx.cnode.get((node, 0, 0))
+            if not cnode:
+                cnode = infer.CNode(mv.gx, mv, node, parent=self.parent_object())
+                mv.gx.types[cnode] = set()
+            mv.add_constraint((value_cnode, cnode), self.parent_object())
+        return cnode
+
+    def contained_write(self, node: ast.Name, value_cnode: "infer.CNode") -> None:
         assert node.id not in self.all_local_writes
         assert node.id not in self.live_local_writes
         if self.contained_local_writes is None:
@@ -411,9 +423,11 @@ class VisitContext:
             # assert node.id not in self.contained_local_writes
             # this is apparently ok for comprehensions [i for i in range(2) for i in range(5,7)] => [5, 6, 5, 6]
             pass
+        cnode = self.get_target_cnode(node, value_cnode)
         self.contained_local_writes[node.id] = cnode
 
-    def write(self, node: ast.Name, cnode: "infer.CNode") -> None:
+    def write(self, node: ast.Name, value_cnode: "infer.CNode") -> None:
+        cnode = self.get_target_cnode(node, value_cnode)
         all_writes = self.all_local_writes.setdefault(node.id, set())
         all_writes.add(cnode)
         defs = self.live_local_writes.setdefault(node.id, set())

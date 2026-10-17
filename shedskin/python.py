@@ -43,7 +43,7 @@ import sys
 
 # type-checking
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, NamedTuple, Optional, TypeAlias, Union
+from typing import TYPE_CHECKING, NamedTuple, Optional, TypeAlias, Union, Any
 
 if TYPE_CHECKING:
     from . import config, graph, infer
@@ -58,6 +58,8 @@ class Namespace:
     def __init__(self) -> None:
         self.globals: set[str] = set()
         self.variable_reads: dict[str, set["infer.CNode"]] = {}
+        self.split_assign_targets: dict[str, dict[Any, set["Variable"]]] = {}
+        self.read_variables: dict[Any, "Variable"] = {}
 
 
 class PyObject(Namespace):
@@ -334,6 +336,7 @@ class Function(Namespace):
 
         self.registered: list[ast.AST] = []
         self.registered_temp_vars: list[Variable] = []
+        self.formal_split_in: dict[str, str] = {}
 
     def __repr__(self) -> str:
         if self.parent:
@@ -354,6 +357,7 @@ class Variable:
         self.looper: Optional[ast.AST] = None
         self.wopper: Optional[ast.AST] = None
         self.const_assign: list[ast.Constant] = []
+        self.typestr: Optional[str] = None
 
     def masks_global(self) -> bool:
         """Check if a variable masks a global variable"""
