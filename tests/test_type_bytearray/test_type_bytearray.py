@@ -581,8 +581,65 @@ def test_split_translate_types():
     assert repr(b'ab'.translate(None, b'a')) == "b'b'"
 
 
+def test_index_error_messages():
+    # all of these used to say just 'index out of range'
+    b = bytearray(b'a')
+    error = ''
+    try:
+        b[7]
+    except IndexError as e:
+        error = str(e)
+    assert error == 'bytearray index out of range'
+
+    error = ''
+    try:
+        b[-2] = 1
+    except IndexError as e:
+        error = str(e)
+    assert error == 'bytearray index out of range'
+
+    error = ''
+    try:
+        del b[7]
+    except IndexError as e:
+        error = str(e)
+    assert error == 'bytearray index out of range'
+
+    error = ''
+    try:
+        b.pop(5)
+    except IndexError as e:
+        error = str(e)
+    assert error == 'pop index out of range'
+
+    error = ''
+    try:
+        bytearray().pop()
+    except IndexError as e:
+        error = str(e)
+    assert error == 'pop from empty bytearray'
+
+    error = ''
+    try:
+        bytearray().pop(3)
+    except IndexError as e:
+        error = str(e)
+    assert error == 'pop from empty bytearray'
+
+    # bytes keeps the plain message
+    error = ''
+    try:
+        b'a'[7]
+    except IndexError as e:
+        error = str(e)
+    assert error == 'index out of range'
+
+    assert b.pop(-1) == 97 and b == bytearray()
+
+
 def test_all():
     test_unchanged_results_are_copies()
+    test_index_error_messages()
     test_split_translate_types()
     test_bytearray()
     test_bytearray_clear()

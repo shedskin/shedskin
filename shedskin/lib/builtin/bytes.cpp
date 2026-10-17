@@ -950,13 +950,15 @@ bytes *bytes::translate(bytes *table, bytes *delete_chars) {
 }
 
 void *bytes::__delitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "bytearray index out of range");
     unit.erase((size_t)i, 1);
     return NULL;
 }
 
 __ss_int bytes::pop(__ss_int i) {
-    i = __wrap(this, i);
+    if(unit.empty())
+        throw new IndexError(new str("pop from empty bytearray"));
+    i = __wrap(this, i, "pop index out of range");
     __ss_int result = (unsigned char)unit[(size_t)i];
     unit.erase((size_t)i, 1);
     return result;
