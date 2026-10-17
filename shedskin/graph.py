@@ -853,7 +853,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit an expression"""
         self.bool_test_add(node.value)
-        self.visit(node.value, func)
+        if isinstance(node.value, ast.Yield):
+            assert func
+            self.yield_statement(node.value, func)
+        else:
+            self.visit(node.value, func)
 
     def visit_NamedExpr(
         self, node: ast.NamedExpr, func: Optional["python.Function"] = None
@@ -1957,6 +1961,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var_int((node, "orelse"), func)
 
     def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
+        """Visit a yield expression (a yield statement is handled by visit_Expr)"""
+        # its value is whatever is passed to gen.send(), which is not supported
+        error.error(
+            "'yield' as an expression is not supported", self.gx, node, mv=getmv()
+        )
+
+    def yield_statement(self, node: ast.Yield, func: "python.Function") -> None:
         """Visit a yield statement"""
         func.isGenerator = True
         func.yieldNodes.append(node)
