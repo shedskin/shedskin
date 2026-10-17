@@ -345,7 +345,7 @@ template<class T> __ss_int array<T>::count(T t) {
     __ss_int result = 0;
     __ss_int len = this->__len__();
     for(__ss_int i=0; i<len; i++)
-        if(__eq(t, this->__getitem__(i)))
+        if(__eq(this->__getitem__(i), t))
             result += 1;
     return result;
 }
@@ -355,7 +355,7 @@ template<class T> __ss_int array<T>::index(T t, __ss_int start) {
     __ss_int stop = this->__len__();
     slicenr(3, start, stop, step, this->__len__());
     for(__ss_int i=start; i<stop; i++)
-        if(__eq(t, this->__getitem__(i)))
+        if(__eq(this->__getitem__(i), t))
             return i;
     throw new ValueError(new str("array.index(x): x not in array"));
 }
@@ -364,14 +364,14 @@ template<class T> __ss_int array<T>::index(T t, __ss_int start, __ss_int stop) {
     __ss_int step = 1;
     slicenr(3, start, stop, step, this->__len__());
     for(__ss_int i=start; i<stop; i++)
-        if(__eq(t, this->__getitem__(i)))
+        if(__eq(this->__getitem__(i), t))
             return i;
     throw new ValueError(new str("array.index(x): x not in array"));
 }
 template<class T> void *array<T>::remove(T t) {
     __ss_int len = this->__len__();
     for(__ss_int i=0; i<len; i++)
-        if(__eq(t, this->__getitem__(i))) {
+        if(__eq(this->__getitem__(i), t)) {
             this->pop(i);
             return NULL;
         }
