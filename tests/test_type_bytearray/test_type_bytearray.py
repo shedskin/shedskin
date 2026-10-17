@@ -446,6 +446,22 @@ def test_hex():
     assert b.hex(sep='?') == 'aa?bb?cc'
 
 
+def test_bytearray_maketrans():
+    # like CPython, bytearray.maketrans returns bytes
+    tb = bytearray.maketrans(b'abc', b'xyz')
+    assert repr(tb[97:100]) == "b'xyz'"
+    assert len(tb) == 256
+    assert bytearray.maketrans(b'a', b'b')[97] == 98
+    assert repr(bytearray(b'cab').translate(tb)) == "bytearray(b'zxy')"
+    tb2 = bytearray.maketrans(bytearray(b'a'), bytearray(b'b'))
+    assert tb2[97:99] == b'bb'
+    try:
+        bytearray.maketrans(b'ab', b'x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'maketrans arguments must have same length'
+
+
 def test_bytearray_take_bytes():
     # take all (n omitted)
     ba = bytearray(b'hello')
@@ -581,6 +597,7 @@ def test_all():
     test_bytearray_out_of_range()
     test_bytearray_mutate_out_of_range()
     test_hex()
+    test_bytearray_maketrans()
     test_bytearray_take_bytes()
 
 

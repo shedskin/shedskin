@@ -205,7 +205,16 @@ def test_lower():
 def test_lstrip():
     assert b' bla'.lstrip() == b'bla'
 
-def test_maketrans(): pass
+def test_maketrans():
+    tb = bytes.maketrans(b'abc', b'xyz')
+    assert len(tb) == 256
+    assert tb[97:100] == b'xyz'
+    assert b'aabbcc'.translate(tb) == b'xxyyzz'
+    try:
+        bytes.maketrans(b'ab', b'x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'maketrans arguments must have same length'
 
 def test_partition():
     assert b"a and b and c".partition(b"and") == (b'a ', b'and', b' b and c')
