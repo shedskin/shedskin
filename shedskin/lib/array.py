@@ -79,6 +79,10 @@ class array:
         return self
     def __mul__(self, b):
         return self
+    def __iadd__(self, b):
+        return self
+    def __imul__(self, b):
+        return self
     def __with_int__(self): # int.__mul__ etc.
         return self
 
