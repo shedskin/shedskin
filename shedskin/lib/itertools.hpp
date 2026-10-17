@@ -443,7 +443,7 @@ template<class T, class K> T groupiter<T, K>::__next__() {
     this->iter->current_value = this->iter->iter->__next__();;
     const K& new_key = this->iter->key(this->iter->current_value);
 
-    if (__ne(new_key, this->iter->current_key)) {
+    if (!__eq_id(this->iter->current_key, new_key)) {
         this->iter->current_key = new_key;
         this->iter->skip = false;
         throw new StopIteration();
@@ -475,7 +475,7 @@ template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__()
     for (; ; ) {
         this->current_value = this->iter->__next__();
         const K& new_key = this->key(this->current_value);
-        if (__ne(new_key, this->current_key)) {
+        if (!__eq_id(this->current_key, new_key)) {
             this->current_key = new_key;
             return new tuple2<K, __iter<T> *>(2, this->current_key, new groupiter<T, K>(this));
         }
