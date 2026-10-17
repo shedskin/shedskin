@@ -290,6 +290,10 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
         }
         j++;
 
+        /* a bare '.' means precision 0, e.g. '%.f' */
+        if(dot && f_precision == -1)
+            f_precision = 0;
+
         if(star)
             throw new ValueError(new str("unsupported format character"));
 
@@ -453,9 +457,7 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
         __mod_not_all_converted(1);
 
     __mod_rest(&sfmt, fmtlen, j, &result);
-    bytes *r = new bytes();
-    r->unit = __narrow(result.unit);
-    return r;
+    return new bytes(__narrow(result.unit), fmt->frozen); /* bytearray % ... gives a bytearray */
 }
 
 template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
@@ -464,9 +466,7 @@ template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
 
     str *result = __modtuple(1, fmt, t);
 
-    bytes *r = new bytes();
-    r->unit = __narrow(result->unit);
-    return r;
+    return new bytes(__narrow(result->unit), bfmt->frozen);
 }
 
 template<class A, class B> bytes *__modtuple(bytes *fmt, tuple2<A,B> *t) {

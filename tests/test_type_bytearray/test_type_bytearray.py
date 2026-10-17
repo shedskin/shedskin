@@ -338,6 +338,16 @@ def test_bytearray_misc():
     assert bytearray(bytearray(7)) == bytearray(b'\x00\x00\x00\x00\x00\x00\x00')
     assert bytearray(bytes(7)) == bytearray(b'\x00\x00\x00\x00\x00\x00\x00')
     assert b"hop %s" % bytearray(b"hup") == b'hop hup'
+    # bytearray % ... gives a bytearray
+    assert repr(bytearray(b'a%db') % 5) == "bytearray(b'a5b')"
+    assert repr(bytearray(b'%d-%d') % (1, 2)) == "bytearray(b'1-2')"
+    t = (3, 4)
+    assert repr(bytearray(b'%d-%d') % t) == "bytearray(b'3-4')"
+    assert repr(bytearray(b'%s|%d') % (b'q', 7)) == "bytearray(b'q|7')"
+    ba = bytearray(b'%s') % b'x'
+    ba.append(65)
+    assert ba == b'xA'
+    assert repr(b'%s' % bytearray(b'x')) == "b'x'"
     assert list(bytearray(4)) == [0,0,0,0]
 
 

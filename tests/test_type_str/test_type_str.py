@@ -1062,6 +1062,10 @@ def test_mod_format():
     assert '%s|%5s|%-5s|' % ('a', 'b', 'c') == 'a|    b|c    |'
     assert b'%c%c%c' % (1, 2, 255) == bytes([1, 2, 255])
     assert b'%i %i\n%i\n' % (20, 30, 255) == b'20 30\n255\n'
+    # a bare '.' means precision 0
+    assert '%.f|%5.f|' % (2.5, 3.7) == '2|    4|'
+    assert '%.e|%.g|%.s|%5.s|' % (1234.5, 0.000123, 'abc', 'xyz') == '1e+03|0.0001||     |'
+    assert '%(a).f %(b).3f' % {'a': 1.5, 'b': 2.0} == '2 2.000'
 
 
 def _eq_kind(x):
