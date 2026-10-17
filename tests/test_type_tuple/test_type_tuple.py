@@ -211,6 +211,19 @@ def test_tuple_search():
     assert 3.5 not in ft
 
 
+def test_tuple2_search():
+    # 2-tuples have their own type model
+    t = (1, 2)
+    assert t.index(2) == 1 and t.count(1) == 1 and t.count(3) == 0
+    s = ('a', 'b')
+    assert s.index('b', 1) == 1 and s.index('a', 0, 2) == 0
+    try:
+        t.index(3)
+        assert False
+    except ValueError:
+        pass
+
+
 def test_int_pairs():
     # (a, b) of ints: cached for small values, allocated otherwise
     pairs = []
@@ -250,6 +263,7 @@ def test_all():
     test_tuple3()
     test_tuple_ordering()
     test_tuple_search()
+    test_tuple2_search()
     test_int_pairs()
 
 
