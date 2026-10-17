@@ -595,17 +595,21 @@ public:
                 this->exhausted = true;
                 if (this->strict && second->for_in_has_next(loop2))
                     throw __strict_length_error("zip", 1, false);
-            } else if (!second->for_in_has_next(loop2)) {
-                this->exhausted = true;
-                if (this->strict)
-                    throw __strict_length_error("zip", 1, true);
             } else {
+                /* fetch 'a' before advancing 'second': both may share one
+                   iterator, e.g. zip(it, it) */
                 TA a = first->for_in_next(loop1);
-                TB b = second->for_in_next(loop2);
-                if constexpr (std::is_same_v<TA, __ss_int> && std::is_same_v<TB, __ss_int>)
-                    return __ss_tuple_int(2, a, b);
-                else
-                    return new tuple2<TA, TB>(2, a, b);
+                if (!second->for_in_has_next(loop2)) {
+                    this->exhausted = true;
+                    if (this->strict)
+                        throw __strict_length_error("zip", 1, true);
+                } else {
+                    TB b = second->for_in_next(loop2);
+                    if constexpr (std::is_same_v<TA, __ss_int> && std::is_same_v<TB, __ss_int>)
+                        return __ss_tuple_int(2, a, b);
+                    else
+                        return new tuple2<TA, TB>(2, a, b);
+                }
             }
         }
         this->__stop_iteration = true;
