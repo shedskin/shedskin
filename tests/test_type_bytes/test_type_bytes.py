@@ -554,6 +554,10 @@ def test_format():
     d2 = {b'aap': b'acht', b'bert': b'negen'}
     assert (b'hoho %(aap)s, %(bert)s' % d2) == b'hoho acht, negen'
 
+    # a bare '.' means precision 0
+    assert (b'%.f|%5.f|' % (2.5, 3.7)) == b'2|    4|'
+    assert (b'%.d|%.s|%.x' % (5, b'abc', 255)) == b'5||ff'
+
 
 def test_contains():
     bs = b'blaa'
