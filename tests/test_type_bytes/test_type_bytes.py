@@ -772,6 +772,75 @@ def test_bytes_list_literal():
     assert error == 'bytes must be in range(0, 256)'
 
 
+def test_search_int_range():
+    # int arguments to search methods used to skip the 0-255 range check
+    # (256 wrapped to 0 in count, and the others just reported 'not found')
+    b = b'\x00abc'
+    ba = bytearray(b'\x00abc')
+    for v in [256, -1, 1000]:
+        error = ''
+        try:
+            b.count(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            ba.count(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.find(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            ba.rfind(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            b.index(v)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            ba.rindex(v, 1)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            assert v not in b
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+        error = ''
+        try:
+            assert v not in ba
+        except ValueError as e:
+            error = str(e)
+        assert error == 'byte must be in range(0, 256)'
+
+    # in-range values still work
+    assert b.count(0) == 1 and ba.count(97, 1, 3) == 1
+    assert b.find(99) == 3 and ba.rfind(0) == 0
+    assert 255 not in b and 0 in ba
+
+
+
 def test_all():
     test_bytes_list_literal()
     test_character_classes()
@@ -840,6 +909,7 @@ def test_all():
     test_startswith_range()
     test_bin()
     test_copy_independent()
+    test_search_int_range()
 
 
 if __name__ == "__main__":
