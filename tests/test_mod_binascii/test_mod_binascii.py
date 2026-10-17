@@ -870,6 +870,24 @@ def test_hexlify_bytes_sep():
     assert binascii.b2a_hex(b'\x01\x02', sep=b' ') == b'01 02'
 
 
+def test_str_argument():
+    # the a2b_* functions also accept an ASCII str (they used to fail to compile)
+    assert binascii.a2b_base64('aGk=') == b'hi'
+    assert binascii.a2b_base64('aGk=', strict_mode=True) == b'hi'
+    assert binascii.a2b_hex('6869') == b'hi'
+    assert binascii.unhexlify('6869') == b'hi'
+    assert binascii.a2b_uu(binascii.b2a_uu(b'hi').decode()) == b'hi'
+    assert binascii.a2b_qp('h=69') == b'hi'
+    assert binascii.a2b_qp('a_b', header=True) == b'a b'
+
+    error = ''
+    try:
+        binascii.unhexlify('\u20ac')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'string argument should contain only ASCII characters'
+
+
 def test_all():
     test_hexlify_bytes_sep()
     test_qp()
@@ -900,6 +918,7 @@ def test_all():
     test_base85()
     test_ascii85()
     test_ignorechars_default_is_empty()
+    test_str_argument()
 
 
 if __name__ == '__main__':

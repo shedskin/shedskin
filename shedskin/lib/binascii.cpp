@@ -896,6 +896,18 @@ bytes *b2a_hex(bytes *data, str*sep, __ss_int bytes_per_sep) {
     return hexlify(data, sep, bytes_per_sep);
 }
 
+bytes *__ascii_data(str *s) {
+    size_t len = s->unit.size();
+    bytes *b = new bytes();
+    b->unit.resize(len);
+    for(size_t i=0; i<len; i++) {
+        if(s->unit[i] > 127)
+            throw new ValueError(new str("string argument should contain only ASCII characters"));
+        b->unit[i] = (char)s->unit[i];
+    }
+    return b;
+}
+
 bytes *a2b_hex(bytes *data, bytes *ignorechars) {
 
     return unhexlify(data, ignorechars);

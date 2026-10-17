@@ -680,6 +680,30 @@ def test_ignorechars_defaults():
         pass
 
 
+def test_str_argument():
+    # the decoders also accept an ASCII str (they used to fail to compile)
+    assert base64.b64decode('aGk=') == b'hi'
+    assert base64.b64decode('aGk-', b'-_') == b'hi>'
+    assert base64.b64decode('aGk=', validate=True) == b'hi'
+    assert base64.standard_b64decode('aGk=') == b'hi'
+    assert base64.urlsafe_b64decode('aGk-') == b'hi>'
+    assert base64.b32decode('NBUQ====') == b'hi'
+    assert base64.b32decode('nbuq====', True) == b'hi'
+    assert base64.b32hexdecode('D1KG====') == b'hi'
+    assert base64.b16decode('6869') == b'hi'
+    assert base64.b16decode('6a6B', True) == b'jk'
+    assert base64.a85decode(base64.a85encode(b'hello').decode()) == b'hello'
+    assert base64.b85decode(base64.b85encode(b'hello').decode()) == b'hello'
+    assert base64.z85decode(base64.z85encode(b'hell').decode()) == b'hell'
+
+    error = ''
+    try:
+        base64.b64decode('h\xe9')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'string argument should contain only ASCII characters'
+
+
 def test_all():
     test_basic()
     test_altchars()
@@ -705,6 +729,7 @@ def test_all():
     test_b85_wrapcol_ignorechars_canonical()
     test_a85_canonical()
     test_ignorechars_defaults()
+    test_str_argument()
 
 
 if __name__ == '__main__':

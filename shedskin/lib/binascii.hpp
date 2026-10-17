@@ -40,7 +40,13 @@ public:
     }
 };
 
+/* the a2b_* functions (and the base64 decoders) also accept an ASCII str
+   (templates on the data argument, so bytes still picks the plain versions) */
+bytes *__ascii_data(str *s);
+inline bytes *__ascii_data(bytes *b) { return b; }
+
 bytes *a2b_uu(bytes *string);
+template<class T> bytes *a2b_uu(T *string) { return a2b_uu(__ascii_data(string)); }
 bytes *b2a_uu(bytes *data, __ss_bool backtick);
 /* a2b_base64 workhorse. strict_mode is tri-state: -1 means "not given",
  * which (as in CPython 3.15) resolves to True iff ignorechars is given.
@@ -63,15 +69,23 @@ bytes *a2b_base64(bytes *string, S strict_mode, __ss_bool padded=True, bytes *al
         sm = (bool)strict_mode ? 1 : 0;
     return __a2b_base64(string, sm, padded, alphabet, ignorechars, canonical);
 }
+template<class T, class S>
+bytes *a2b_base64(T *string, S strict_mode, __ss_bool padded=True, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False) {
+    return a2b_base64(__ascii_data(string), strict_mode, padded, alphabet, ignorechars, canonical);
+}
 bytes *b2a_base64(bytes *data, __ss_bool newline, __ss_int wrapcol=0, __ss_bool padded=True, bytes *alphabet=0);
 bytes *a2b_ascii85(bytes *data, __ss_bool foldspaces=False, __ss_bool adobe=False, bytes *ignorechars=0, __ss_bool canonical=False);
+template<class T> bytes *a2b_ascii85(T *data, __ss_bool foldspaces=False, __ss_bool adobe=False, bytes *ignorechars=0, __ss_bool canonical=False) { return a2b_ascii85(__ascii_data(data), foldspaces, adobe, ignorechars, canonical); }
 bytes *b2a_ascii85(bytes *data, __ss_bool foldspaces=False, __ss_int wrapcol=0, __ss_bool pad=False, __ss_bool adobe=False);
 bytes *a2b_base85(bytes *data, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False);
+template<class T> bytes *a2b_base85(T *data, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False) { return a2b_base85(__ascii_data(data), alphabet, ignorechars, canonical); }
 bytes *b2a_base85(bytes *data, bytes *alphabet=0, __ss_int wrapcol=0, __ss_bool pad=False);
 bytes *a2b_base32(bytes *data, __ss_bool padded=True, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False);
+template<class T> bytes *a2b_base32(T *data, __ss_bool padded=True, bytes *alphabet=0, bytes *ignorechars=0, __ss_bool canonical=False) { return a2b_base32(__ascii_data(data), padded, alphabet, ignorechars, canonical); }
 bytes *b2a_base32(bytes *data, __ss_bool padded=True, bytes *alphabet=0, __ss_int wrapcol=0);
 void wraplines(bytes *data, size_t width);
 bytes *a2b_qp(bytes *string, __ss_bool header);
+template<class T> bytes *a2b_qp(T *string, __ss_bool header) { return a2b_qp(__ascii_data(string), header); }
 bytes *b2a_qp(bytes *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
 __ss_int crc_hqx(bytes *data, __ss_int crc);
 __ss_int crc32(bytes *data, __ss_int crc=0);
@@ -82,6 +96,8 @@ template<class S> bytes *b2a_hex(bytes *data, S *sep, __ss_int bytes_per_sep=1) 
 template<class S> bytes *hexlify(bytes *data, S *sep, __ss_int bytes_per_sep=1) { return hexlify(data, __hex_sep(sep), bytes_per_sep); }
 bytes *a2b_hex(bytes *data, bytes *ignorechars=0);
 bytes *unhexlify(bytes *data, bytes *ignorechars=0);
+template<class T> bytes *a2b_hex(T *data, bytes *ignorechars=0) { return a2b_hex(__ascii_data(data), ignorechars); }
+template<class T> bytes *unhexlify(T *data, bytes *ignorechars=0) { return unhexlify(__ascii_data(data), ignorechars); }
 
 void __init();
 
