@@ -389,23 +389,24 @@ def test_repeat():
 
 def test_range_errors():
     # CPython's _struct range-checks every integer field; out-of-range values
-    # used to be silently truncated to the format's width
+    # used to be silently truncated to the format's width (messages as of 3.12)
     cases = [
-        ('<b', 200, 'byte format requires -128 <= number <= 127'),
-        ('@b', 200, 'byte format requires -128 <= number <= 127'),
-        ('<b', -129, 'byte format requires -128 <= number <= 127'),
-        ('<B', 300, 'ubyte format requires 0 <= number <= 255'),
-        ('<B', -1, 'ubyte format requires 0 <= number <= 255'),
-        ('<h', 70000, 'short format requires -32768 <= number <= 32767'),
-        ('<H', -1, 'ushort format requires 0 <= number <= 65535'),
-        ('<H', 65536, 'ushort format requires 0 <= number <= 65535'),
+        ('<b', 200, "'b' format requires -128 <= number <= 127"),
+        ('@b', 200, "'b' format requires -128 <= number <= 127"),
+        ('<b', -129, "'b' format requires -128 <= number <= 127"),
+        ('<B', 300, "'B' format requires 0 <= number <= 255"),
+        ('<B', -1, "'B' format requires 0 <= number <= 255"),
+        ('<h', 70000, "'h' format requires -32768 <= number <= 32767"),
+        ('<H', -1, "'H' format requires 0 <= number <= 65535"),
+        ('<H', 65536, "'H' format requires 0 <= number <= 65535"),
         ('<i', 2**40, "'i' format requires -2147483648 <= number <= 2147483647"),
-        ('<I', -1, 'argument out of range'),
+        ('<i', -2**40, "'i' format requires -2147483648 <= number <= 2147483647"),
+        ('<I', -1, "'I' format requires 0 <= number <= 4294967295"),
         ('<I', 2**40, "'I' format requires 0 <= number <= 4294967295"),
         ('@I', 2**40, "'I' format requires 0 <= number <= 4294967295"),
         ('<L', 2**40, "'L' format requires 0 <= number <= 4294967295"),
         ('<l', 2**40, "'l' format requires -2147483648 <= number <= 2147483647"),
-        ('<L', -1, 'argument out of range'),
+        ('<L', -1, "'L' format requires 0 <= number <= 4294967295"),
     ]
     for fmt, value, message in cases:
         error = ''

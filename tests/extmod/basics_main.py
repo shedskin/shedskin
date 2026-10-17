@@ -5,6 +5,7 @@
 # the checks themselves.
 
 import os
+import pickle
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -103,6 +104,19 @@ def test_call():
 
 def test_iter():
     assert list(basics.Countdown(3)) == [2, 1, 0]
+
+
+def test_pickle():
+    v = pickle.loads(pickle.dumps(basics.Vector(3, 4)))
+    assert repr(v) == 'Vector(3, 4)'
+    if not PURE:
+        # a wrong-typed attribute or missing state used to abort the process
+        assert raises(TypeError, v.__setstate__, {'x': 'str'})
+        assert raises(TypeError, v.__setstate__)
+        assert raises(TypeError, v.__setstate__, {}, {})
+        assert repr(v) == 'Vector(3, 4)'
+        v.__setstate__({'y': 7})
+        assert repr(v) == 'Vector(3, 7)'
 
 
 if __name__ == '__main__':
