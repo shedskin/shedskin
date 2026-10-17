@@ -179,17 +179,17 @@ inline char __byte_value(__ss_int e, bool bytearray_) {
 }
 
 inline __ss_int bytes::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, frozen ? "index out of range" : "bytearray index out of range");
     return (unsigned char)(unit[(size_t)i]);
 }
 
 __SS_ALWAYS_INLINE __ss_int bytes::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, frozen ? "index out of range" : "bytearray index out of range");
     return (unsigned char)(unit[(size_t)i]);
 }
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "bytearray index out of range");
     unit[(size_t)i] = __byte_value(e, true);
     return NULL;
 }
