@@ -307,17 +307,31 @@ class ExtensionModule:
             % clname(cl)
         )
         write("    (void)kwargs;")
+        write("    if (PyTuple_Size(args) != 1) {")
+        write(
+            '        PyErr_Format(PyExc_TypeError, "%s.__setstate__() takes exactly one argument (%%zd given)", PyTuple_Size(args));'
+            % cl.ident
+        )
+        write("        return 0;")
+        write("    }")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
         write("    PyObject *value;")
+        # a wrong-typed value makes __to_ss throw: convert it into a Python
+        # exception, as an uncaught C++ exception aborts the interpreter
+        write("    try {")
         for var in vars:
             vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             # a missing key leaves the attribute at its default rather than
             # handing NULL to __to_ss, which would dereference it
-            write('    value = __ss_dict_lookup(state, "%s");' % var.name)
+            write('        value = __ss_dict_lookup(state, "%s");' % var.name)
             write(
-                "    if (value) ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(value);"
+                "        if (value) ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(value);"
                 % (clname(cl), self.gv.cpp_name(var), vartype)
             )
+        write("    } catch (Exception *e) {")
+        write("        __ss_raise_py(e);")
+        write("        return 0;")
+        write("    }")
         write("    Py_INCREF(Py_None);")
         write("    return Py_None;")
         write("}\n")
