@@ -238,10 +238,13 @@ public:
     __ss_int operator()(T a, T b) const { return __gt(key(a), key(b)); }
 };
 
+/* boost (and libstdc++) call this as (lookup key, stored key), while python
+   compares the stored key first (stored == lookup) */
+
 template<class T> class ss_eq {
     public:
         bool operator()(const T a, const T b) const {
-            return __eq_id<T>(a, b);
+            return __eq_id<T>(b, a);
         }
 
 };

@@ -283,7 +283,7 @@ template<class T> __ss_int tuple2<T, T>::count(T a) {
     __ss_int c = 0;
     __ss_int len = this->__len__();
     for(__ss_int i = 0; i<len; i++)
-        if(__eq(a, units[i]))
+        if(__eq(units[i], a))
             c++;
     return c;
 }
