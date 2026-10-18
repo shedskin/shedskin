@@ -451,6 +451,49 @@ def test_direntry_follow_symlinks():
     os.system('rm -rf ' + base)
 
 
+def test_inheritable():
+    # like cpython (PEP 446): new file descriptors are non-inheritable
+    path = 'tmp_inheritable.txt'
+    f = open(path, 'w')
+    assert not os.get_inheritable(f.fileno())
+    f.write('x')
+    f.close()
+    g = open(path, 'rb')
+    assert not os.get_inheritable(g.fileno())
+    g.close()
+
+    r, w = os.pipe()
+    assert not os.get_inheritable(r)
+    assert not os.get_inheritable(w)
+    fd = os.open(path, os.O_RDONLY)
+    assert not os.get_inheritable(fd)
+    fd2 = os.dup(fd)
+    assert not os.get_inheritable(fd2)
+    m, sl = os.openpty()
+    assert not os.get_inheritable(m)
+    assert not os.get_inheritable(sl)
+
+    # dup2 is the exception: inheritable unless asked otherwise
+    assert os.dup2(fd, fd2) == fd2
+    assert os.get_inheritable(fd2)
+    os.dup2(fd, fd2, inheritable=False)
+    assert not os.get_inheritable(fd2)
+
+    # a child process only sees inheritable descriptors
+    if fd < 10:  # sh redirections take a single digit
+        cmd = 'true 2>/dev/null <&%d' % fd
+        assert os.system(cmd) != 0
+        os.set_inheritable(fd, True)
+        assert os.get_inheritable(fd)
+        assert os.system(cmd) == 0
+        os.set_inheritable(fd, False)
+        assert os.system(cmd) != 0
+
+    for x in [r, w, fd, fd2, m, sl]:
+        os.close(x)
+    os.remove(path)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -470,6 +513,7 @@ def test_all():
     test_waitstatus_signals()
     test_broken_pipe()
     test_pty_terminal()
+    test_inheritable()
 
 
 if __name__ == '__main__':
