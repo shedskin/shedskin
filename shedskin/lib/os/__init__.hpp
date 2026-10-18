@@ -22,7 +22,12 @@ typedef OSError error;
 
 class __cstat;
 
-list<str *> *listdir(str *path=0);
+/* bytes paths: like CPython, these give bytes where a str path gives str.
+   the bytes overloads go through fsdecode()/fsencode(), which round-trip
+   exactly (surrogateescape), and then share the str implementation */
+list<str *> *listdir(str *path);
+list<bytes *> *listdir(bytes *path);
+list<str *> *listdir(void *path=0); /* listdir(None), see cpp.py */
 str *getcwd();
 bytes *getcwdb();
 void *chdir(str *dir);
@@ -88,8 +93,11 @@ public:
 };
 
 __cstat *stat(str *path);
+__cstat *stat(bytes *path);
 __cstat *stat(__ss_bool follow_symlinks, str *path); /* follow_symlinks is keyword-only */
+__cstat *stat(__ss_bool follow_symlinks, bytes *path);
 __cstat *lstat(str *path);
+__cstat *lstat(bytes *path);
 __cstat *fstat(__ss_int fd);
 
 extern class_ *cl_DirEntry;

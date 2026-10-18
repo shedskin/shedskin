@@ -200,6 +200,21 @@ list<str *> *listdir(str *path) {
     return r;
 }
 
+list<str *> *listdir(void *) {
+    return listdir(new str("."));
+}
+
+list<bytes *> *listdir(bytes *path) {
+    list<str *> *names = listdir(fsdecode(path));
+
+    list<bytes *> *r = new list<bytes *>();
+    r->units.reserve(names->units.size());
+    for (str *name : names->units)
+        r->units.push_back(fsencode(name));
+
+    return r;
+}
+
 str *getcwd() {
     str *r;
 #ifdef WIN32
@@ -652,10 +667,16 @@ tuple<__ss_int> *namedtuple::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_
 __cstat *stat(str *path) {
     return new __cstat(path, 1);
 }
+__cstat *stat(bytes *path) {
+    return stat(fsdecode(path));
+}
 __cstat *stat(__ss_bool follow_symlinks, str *path) {
     if(follow_symlinks)
         return stat(path);
     return lstat(path);
+}
+__cstat *stat(__ss_bool follow_symlinks, bytes *path) {
+    return stat(follow_symlinks, fsdecode(path));
 }
 __cstat *lstat(str *path) {
 #ifndef WIN32
@@ -663,6 +684,9 @@ __cstat *lstat(str *path) {
 #else
     return new __cstat(path, 1);
 #endif
+}
+__cstat *lstat(bytes *path) {
+    return lstat(fsdecode(path));
 }
 __cstat *fstat(__ss_int fd) {
     return new __cstat(fd);

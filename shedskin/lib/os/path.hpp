@@ -42,6 +42,7 @@ double getatime(str *filename);
 double getctime(str *filename);
 __ss_bool islink(str *path);
 __ss_bool exists(str *path);
+__ss_bool exists(bytes *path);
 __ss_bool lexists(str *path);
 __ss_bool isdir(str *s);
 __ss_bool isfile(str *path);

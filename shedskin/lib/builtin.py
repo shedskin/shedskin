@@ -212,6 +212,8 @@ class float_:
 class none:
     def __hash__(self):
         return 1
+    def __or_x__(self, x):  # 'x if v is None else v', e.g. os.listdir(None) -> str names
+        return x
 
 class pyiter:
     def __init__(self, i=None):
@@ -563,6 +565,8 @@ class str_(pyseq):
         return self
     def __hash__(self):
         return 1
+    def __or_x__(self, x):
+        return self
 
 class bytes_(pyseq):
     @classmethod
@@ -688,6 +692,8 @@ class bytes_(pyseq):
 
     def __hash__(self):
         return 1
+    def __or_x__(self, x):
+        return self
 
     # bytearray
 

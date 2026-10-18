@@ -22,6 +22,11 @@ def test_exceptions():
 
 def test_listdir():
     assert len(os.listdir()) > 0
+    assert sorted(os.listdir(None)) == sorted(os.listdir('.'))
+    p = None
+    if len(os.listdir()) == 0:
+        p = '.'
+    assert sorted(os.listdir(p)) == sorted(os.listdir())
 
 
 def test_scandir():
@@ -1449,14 +1454,55 @@ def test_undecodable_names():
     assert walked == [(d, []), (sub, ['f\udcff'])]
     for e in os.scandir(sub):
         assert e.is_file() and e.stat().st_size == 3
+    # ..and as bytes paths, where they are just the raw bytes
+    assert os.listdir(os.fsencode(d)) == [b'd\xfe']
+    assert os.stat(os.fsencode(sub) + b'/f\xff').st_size == 3
+    assert os.path.exists(b'tmp_bad/d\xfe')
     os.remove(os.path.join(sub, 'f\udcff'))
     os.rmdir(sub)
+    os.rmdir(d)
+
+
+def test_bytes_paths():
+    # a bytes path gives bytes results (where a str path gives str)
+    d = 'tmp_bytes_\xe9'
+    bd = os.fsencode(d)
+    os.mkdir(d)
+    with open(os.path.join(d, 'f\xfc'), 'w') as f:
+        f.write('abc')
+    assert os.listdir(bd) == [b'f\xc3\xbc']
+    assert os.listdir(d) == ['f\xfc']
+    bfn = bd + b'/f\xc3\xbc'
+    assert os.stat(bfn).st_size == 3
+    assert os.stat(bfn, follow_symlinks=False).st_size == 3
+    assert os.lstat(bfn).st_size == 3
+    assert os.path.exists(bfn)
+    assert os.path.exists(bd)
+    assert not os.path.exists(bd + b'/nope')
+    assert not os.path.exists(b'a\x00b')
+    try:
+        os.listdir(bd + b'/nope')
+        assert False
+    except FileNotFoundError:
+        pass
+    try:
+        os.stat(bd + b'/nope')
+        assert False
+    except FileNotFoundError:
+        pass
+    try:
+        os.listdir(b'a\x00b')
+        assert False
+    except ValueError as ve:
+        assert str(ve) == 'listdir: embedded null character in path'
+    os.remove(os.path.join(d, 'f\xfc'))
     os.rmdir(d)
 
 
 def test_all():
     test_unicode_names()
     test_undecodable_names()
+    test_bytes_paths()
     test_getcwd()
     test_chdir()
     test_exceptions()

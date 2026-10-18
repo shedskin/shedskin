@@ -3746,6 +3746,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # bytearray.take_bytes(None) must pick the void* (take all)
             # overload, not the __ss_int one
             or self.library_func(funcs, "builtin", "bytes_", "take_bytes")
+            # os.listdir()/listdir(None) must pick the void* (list '.', str
+            # names) overload; a bare NULL is ambiguous with the str/bytes ones
+            or self.library_func(funcs, "os", None, "listdir")
             # print(None), but not a None sep/end/file (see below)
             or print_call
         ):
