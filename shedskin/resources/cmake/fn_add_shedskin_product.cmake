@@ -417,6 +417,7 @@ function(add_shedskin_product)
         target_compile_options(${EXE} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
             $<$<BOOL:${UNIX}>:-O2>
+            $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
@@ -576,6 +577,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
             $<$<BOOL:${UNIX}>:-O2>
+            $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
             # hide all symbols by default so shedskin's Boehm-GC-backed
             # operator new/delete (and other runtime internals) don't leak
             # into the process-global symbol table and interpose over the
