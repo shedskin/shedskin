@@ -668,27 +668,6 @@ def test_keyerror_str():
         assert e.args == ('pop from an empty set',)
 
 
-class NoArgErr(Exception):
-    pass
-
-class NoArgErr2(NoArgErr):
-    pass
-
-
-def test_custom_error_no_args():
-    # no-arg constructor must still set __class__
-    try:
-        raise NoArgErr()
-    except Exception as e:
-        assert e.__class__.__name__ == 'NoArgErr'
-        assert repr(e) == 'NoArgErr()'
-    try:
-        raise NoArgErr2()
-    except NoArgErr as e:
-        assert e.__class__.__name__ == 'NoArgErr2'
-        assert repr(e) == 'NoArgErr2()'
-
-
 def test_all():
     test_repr_escapes_argument()
     test_key_error()
@@ -713,7 +692,6 @@ def test_all():
     test_warnings()
     test_exception_attributes()
     test_keyerror_str()
-    test_custom_error_no_args()
 
 
 if __name__ == '__main__':

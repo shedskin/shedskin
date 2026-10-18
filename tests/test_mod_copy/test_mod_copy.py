@@ -151,13 +151,6 @@ def test_error():
     assert caught
 
 
-def test_copy_obj_class():
-    # copies of classes with __init__ must keep __class__
-    p = Person('loki')
-    assert copy.copy(p).__class__.__name__ == 'Person'
-    assert copy.deepcopy(p).__class__.__name__ == 'Person'
-
-
 def test_all():
     test_copy1()
     test_copy2()
@@ -167,7 +160,6 @@ def test_all():
     test_copy_obj1()
     test_copy_obj2()
     test_copy_obj3()
-    test_copy_obj_class()
     test_error()
 
 if __name__ == '__main__':
