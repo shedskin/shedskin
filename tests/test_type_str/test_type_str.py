@@ -899,6 +899,10 @@ def test_unicode_classes():
     assert 'a\xb7'.isidentifier() and not '\xb7'.isidentifier()  # middle dot: continue only
     assert 'x\u0663'.isidentifier() and not '\u0663x'.isidentifier()
     assert not '\u2603'.isidentifier() and not '\xbd'.isidentifier()
+    # new in unicode 15.1: cjk ext-i; zwnj/zwj and katakana middle dots as XID_Continue
+    assert '\U0002ebf0\U0002ee5d'.isalpha() and '\U0002ebf0'.isidentifier()
+    assert 'a\u200cb'.isidentifier() and 'a\u200db'.isidentifier() and not '\u200c'.isidentifier()
+    assert 'a\u30fb'.isidentifier() and 'a\uff65'.isidentifier()
 
 
 def test_unicode_split_strip():
