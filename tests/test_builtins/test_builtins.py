@@ -253,6 +253,8 @@ def test_hash():
     assert hash(-2) == -2
     assert hash(0) == 0
     assert hash(7) == 7
+    assert hash(True) == 1
+    assert hash(False) == 0
     minus_one = -1
     assert hash(minus_one) == -2
     assert hash(HashMinusOne(-1)) == -2
