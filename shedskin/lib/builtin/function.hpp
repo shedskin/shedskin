@@ -1241,7 +1241,8 @@ inline __ss_bool __ss_in_range(__ss_int i, __ss_int a, __ss_int b, __ss_int s=1)
         return False;
     else if(s < 0 and (i > a or i <= b))
         return False;
-    else if((i-a)%s != 0)
+    /* i-a can exceed the signed range (e.g. range(-2**63, 2**63-1)) */
+    else if(__ss_magnitude_diff(i, a) % __ss_magnitude(s) != 0)
         return False;
 
     return True;
@@ -1253,7 +1254,18 @@ inline __ss_bool __ss_in_range(__ss_int i, __ss_int a) {
 
 /* range_len */
 
+__ss_uint range_ulen(__ss_int lo, __ss_int hi, __ss_int step);
 __ss_int range_len(__ss_int lo, __ss_int hi, __ss_int step);
+
+/* next value of a range loop counter i, which is still in range(.., u, s).
+ * stepping past the last value could overflow (and then never reach u, as
+ * in range(2**63-3, 2**63-1, 2)), so stop at u instead. a step of 1 or -1
+ * cannot overflow here, so a constant step keeps the plain increment */
+inline __ss_int __ss_range_next(__ss_int i, __ss_int u, __ss_int s) {
+    if(s == 1 || s == -1 || __ss_magnitude_diff(u, i) > __ss_magnitude(s))
+        return i + s;
+    return u;
+}
 
 #endif
 #endif

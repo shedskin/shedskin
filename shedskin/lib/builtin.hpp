@@ -127,6 +127,11 @@ static inline __ss_uint __ss_magnitude(__ss_int i) {
     return (i < 0) ? ((__ss_uint)0 - (__ss_uint)i) : (__ss_uint)i;
 }
 
+/* |a-b| as __ss_uint, which always fits (unlike a-b itself) */
+static inline __ss_uint __ss_magnitude_diff(__ss_int a, __ss_int b) {
+    return (a < b) ? ((__ss_uint)b - (__ss_uint)a) : ((__ss_uint)a - (__ss_uint)b);
+}
+
 /* float type */
 
 #if defined(__SS_FLOAT32)
@@ -803,7 +808,7 @@ inline list<__ss_int> *__ss_list_range(__ss_int a, __ss_int b, __ss_int c) {
     __ss_int i = a;
     for(__ss_int pos = 0; pos < len; pos++) {
         l->units[pos] = i;
-        i += c;
+        i = (__ss_int)((__ss_uint)i + (__ss_uint)c); /* may wrap after the last value */
     }
     return l;
 }

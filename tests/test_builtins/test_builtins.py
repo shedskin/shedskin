@@ -570,6 +570,42 @@ def test_range_beyond_32_bits():
     assert list(range(0, big)[3000000000:3000000003]) == [3000000000, 3000000001, 3000000002]
 
 
+def test_range_near_int_limits():
+    # stepping past the last value used to overflow: iteration then never
+    # ended, and lengths, indices and slices near the limits came out wrong
+    M = 9223372036854775807
+    m = -M - 1
+
+    r = range(M - 3, M, 2)
+    assert len(r) == 2
+    assert list(r) == [M - 3, M - 1]
+    assert [i for i in r] == [M - 3, M - 1]
+    assert list(reversed(r)) == [M - 1, M - 3]
+    assert r[-1] == M - 1
+    assert list(range(m + 3, m, -2)) == [m + 3, m + 1]
+    assert list(reversed(range(m, m + 7, 3))) == [m + 6, m + 3, m]
+    assert list(range(0, M, M - 1)) == [0, M - 1]
+
+    # the length does not fit (as in CPython), but the rest works
+    big = range(m, M)
+    assert big[0] == m and big[-1] == M - 1 and big[5] == m + 5
+    assert M - 1 in big and big.count(M - 1) == 1
+    assert range(m, M, 2).index(M - 1) == M
+    it = iter(reversed(big))
+    assert next(it) == M - 1 and next(it) == M - 2
+    try:
+        len(big)
+        assert False
+    except OverflowError:
+        pass
+
+    # slices whose CPython stop does not fit stop just past the last value
+    assert list(range(0, M, 2)[-2:]) == [M - 3, M - 1]
+    assert list(range(M - 5, M, 2)[::-1]) == [M - 1, M - 3, M - 5]
+    assert list(range(M - 9, M)[1::3]) == [M - 8, M - 5, M - 2]
+    assert list(range(m + 9, m, -1)[1::3]) == [m + 8, m + 5, m + 2]
+
+
 def test_range_slicing():
     r = range(2,20,2)
     assert list(r[2:4:3]) == [6]
@@ -769,6 +805,7 @@ def test_all():
     test_print_stringio()
     test_range()
     test_range_beyond_32_bits()
+    test_range_near_int_limits()
     test_range_slicing()
     test_repr()
     test_ascii()
