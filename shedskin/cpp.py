@@ -1011,13 +1011,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if self.inhcpa(initfunc):
                 need_init = True
 
-        # --- default constructor
-        if need_init:
-            self.output(self.cpp_name(cl) + "() {}")
-        else:
-            self.output(
-                self.cpp_name(cl) + "() { this->__class__ = cl_" + cl.ident + "; }"
-            )
+        # --- default constructor (also used by e.g. 'raise MyErr()' and __copy__)
+        self.output(
+            self.cpp_name(cl) + "() { this->__class__ = cl_" + cl.ident + "; }"
+        )
 
         # --- init constructor
         if need_init:
