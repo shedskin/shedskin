@@ -22,8 +22,9 @@ template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a ==
 template<> inline __ss_bool __eq(__ss_float a, __ss_float b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
 
-/* containment/lookup equality: like CPython's PyObject_RichCompareBool, an
-   object is always considered equal to itself (skips a virtual __eq__ call) */
+/* container equality (in, index, count, remove, ==, dict lookup): like CPython's
+   PyObject_RichCompareBool, an object is always considered equal to itself (this
+   also skips a virtual __eq__ call) */
 
 template<class T> inline bool __eq_id(T a, T b) {
     if constexpr (std::is_pointer<T>::value)
@@ -162,6 +163,15 @@ template<> inline __ss_int __cmp(void *a, void *b) {
     return 0;
 }
 
+/* sequence element ordering: as for __eq_id, an object is equal to itself */
+
+template<class T> inline __ss_int __cmp_id(T a, T b) {
+    if constexpr (std::is_pointer<T>::value)
+        if(a == b)
+            return 0;
+    return __cmp(a, b);
+}
+
 /* str ordering: directly, instead of through the virtual pyobj::__lt__ etc. and str::__cmp__ */
 
 inline __ss_int __str_cmp(str *a, str *b) {
@@ -187,7 +197,7 @@ template<> inline __ss_bool __le(str *a, str *b) { return __mbool(__str_cmp(a, b
 template<class U> inline __ss_int __units_cmp(const U &a, const U &b) {
     size_t n = std::min(a.size(), b.size());
     for(size_t i = 0; i < n; i++)
-        if(__ss_int c = __cmp(a[i], b[i]))
+        if(__ss_int c = __cmp_id(a[i], b[i]))
             return c;
     return __cmp((__ss_int)a.size(), (__ss_int)b.size());
 }

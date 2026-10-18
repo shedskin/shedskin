@@ -242,7 +242,7 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    size_t len = this->units.size();
    if(b->units.size() != len) return False;
    for(size_t i = 0; i < len; i++)
-       if(!__eq(this->units[i], b->units[i]))
+       if(!__eq_id(this->units[i], b->units[i]))
            return False;
    return True;
 }
@@ -488,7 +488,7 @@ template<class T> __ss_int list<T>::index(T a) {
             return (__ss_int)i;
     } else {
         for(__ss_int i = 0; i < len; i++)
-            if(__eq(units[i], a))
+            if(__eq_id(units[i], a))
                 return i;
     }
     throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
@@ -506,7 +506,7 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
         }
     } else {
         for(__ss_int i = s; i < e; i++)
-            if(__eq(units[i], a))
+            if(__eq_id(units[i], a))
                 return i;
     }
     throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
@@ -518,7 +518,7 @@ template<class T> __ss_int list<T>::count(T a) {
     __ss_int c = 0;
     __ss_int len = this->__len__();
     for(__ss_int i = 0; i<len;i++)
-        if(__eq(units[i], a))
+        if(__eq_id(units[i], a))
             c++;
     return c;
 }
@@ -606,7 +606,7 @@ template<class T> void *list<T>::remove(T e) {
     __ss_int len = this->__len__();
 
     for(__ss_int i = 0; i < len; i++) {
-        if(__eq(units[(size_t)i], e)) {
+        if(__eq_id(units[(size_t)i], e)) {
             units.erase(units.begin() + i);
             return NULL;
         }

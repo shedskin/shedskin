@@ -112,7 +112,7 @@ public:
         if(b->units.size() != len)
             return False;
         for(size_t i = 0; i < len; i++)
-            if(!__eq(units[i], b->units[i]))
+            if(!__eq_id(units[i], b->units[i]))
                 return False;
         return True;
     }
@@ -124,7 +124,7 @@ public:
     __ss_bool __contains__(A value) {
         iter = units.begin();
         while(iter != units.end()) {
-            if(__eq(*iter, value))
+            if(__eq_id(*iter, value))
                 return True;
             iter++;
         }
@@ -184,7 +184,7 @@ public:
    void *remove(A value) {
        iter = units.begin();
        while(iter != units.end()) {
-           if(__eq(*iter, value)) {
+           if(__eq_id(*iter, value)) {
                units.erase(iter);
                return NULL;
            }
@@ -221,7 +221,7 @@ public:
        __ss_int result = 0;
        iter = units.begin();
        while(iter != units.end()) {
-            if(__eq(*iter, value))
+            if(__eq_id(*iter, value))
                 result++;
             iter++;
        }
@@ -232,7 +232,7 @@ public:
        __ss_int one = 1;
        slicenr(7, start, stop, one, this->__len__());
        for(__ss_int i=start; i < stop; i++) {
-           if(__eq(units[i], value))
+           if(__eq_id(units[i], value))
                return i;
        }
        throw new ValueError(new str("value is not in deque"));

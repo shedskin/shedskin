@@ -225,6 +225,29 @@ def test_list_contains_identity():
     assert t in [(3, 4), t]
 
 
+def gen_never_equal(a, b):
+    yield b
+    yield a
+
+
+def test_list_eq_identity():
+    # also for index, count, remove and container equality (1016-B5)
+    a, b = NeverEqual(), NeverEqual()
+    l = [b, a, b]
+    assert l.count(a) == 1 and l.index(a) == 1 and l.index(a, 1, 2) == 1
+    assert [a] == [a] and not [a] != [a] and [a] != [b]
+    t = (b, a, b)
+    assert t.count(a) == 1 and t.index(a) == 1
+    assert (a, b) == (a, b) and (a, 1) == (a, 1) and (a, b, 1) == (a, b, 1)
+    assert not (a, 1) != (a, 1) and (a, 1) != (b, 1)
+    assert {1: a} == {1: a} and not {1: a} != {1: a} and {1: a} != {1: b}
+    l.remove(a)
+    assert len(l) == 2 and a not in l
+    assert [a, b] <= [a, b] and (a, 1) < (a, 2) and (a, b, 1) < (a, b, 2)
+    assert [(a, 2), (a, 1)][1] < (a, 2) and sorted([(a, 3), (a, 1)])[0][1] == 1
+    assert a in gen_never_equal(a, b) and a in {1: a}.values()
+
+
 def test_list_assign():
     list5 = [(1,2),(3,4)]
     list5[0] = (2,2)
@@ -787,6 +810,7 @@ def test_all():
     test_list_copy()
     test_tuple_in_list()
     test_list_contains_identity()
+    test_list_eq_identity()
     test_list_imul()
     test_list_iadd()
     test_list_index_error_message()
