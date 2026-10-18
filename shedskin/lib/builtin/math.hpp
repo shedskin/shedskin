@@ -81,8 +81,10 @@ template<> inline __ss_int __power(__ss_int a, __ss_int b) {
         if ((b%2)) {
             res = (res*tmp);
         }
-        tmp = (tmp*tmp);
         b = (b/2);
+        /* don't square after the last bit: it is unused, and may overflow */
+        if (b)
+            tmp = (tmp*tmp);
     }
     return res;
 }

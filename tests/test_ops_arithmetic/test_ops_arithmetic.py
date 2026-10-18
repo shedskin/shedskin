@@ -137,12 +137,24 @@ def test_float_power_zero():
         pass
 
 
+def test_int_power():
+    # exponents above 10 take the square-and-multiply loop; results close to
+    # the 64-bit limit used to overflow in the (unused) final squaring
+    cases = [(2, 62, 4611686018427387904), (3, 39, 4052555153018976267),
+             (-2, 63, -9223372036854775807 - 1), (7, 22, 3909821048582988049),
+             (-1, 1001, -1), (1, 1000, 1), (0, 11, 0), (10, 18, 10**18)]
+    for a, b, r in cases:
+        assert a ** b == r
+        assert pow(a, b) == r
+
+
 def test_all():
     test_addition()
     test_subtraction()
     test_misc()
     test_true_division()
     test_float_power_zero()
+    test_int_power()
 
 
 if __name__ == '__main__':
