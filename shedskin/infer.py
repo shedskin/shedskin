@@ -1496,17 +1496,8 @@ def func_copy(
     """Copy a function"""
     # print 'funccopy', func, cart, dcpa, cpa
 
-    # --- copy other nodes
-    cnode_redirect = {}
-    for node in func.nodes:
-        cnode_copy = node.copy(dcpa, cpa, worklist)
-        if not isinstance(node.thing, python.Variable):
-            cnode_redirect[node] = cnode_copy
-
     # --- copy local end points of each constraint
     for a, b in func.constraints:
-        a = cnode_redirect.get(a, a)
-        b = cnode_redirect.get(b, b)
         if (
             not (
                 isinstance(a.thing, python.Variable)
@@ -1525,6 +1516,10 @@ def func_copy(
             b = b.copy(dcpa, cpa, worklist)
 
         add_constraint(gx, a, b, worklist)
+
+    # --- copy other nodes
+    for node in func.nodes:
+        node.copy(dcpa, cpa, worklist)
 
     # --- iterative flow analysis: seed allocation sites in new template
     seed_template(gx, func, cart, dcpa, cpa, worklist)

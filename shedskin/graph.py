@@ -1148,24 +1148,28 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         ident += ancestor.ident + "__"
 
                     # deep-copy AST function nodes
-                    func_copy = copy.deepcopy(func.node)
-                    inherit_rec(self.gx, func.node, func_copy, func.mv)
+                    func_node_copy = copy.deepcopy(func.node)
+                    inherit_rec(self.gx, func.node, func_node_copy, func.mv)
                     tempmv, mv = getmv(), func.mv
                     setmv(mv)
                     self.visit_FunctionDef(
-                        func_copy, class_context, inherited_from=func
+                        func_node_copy, class_context, inherited_from=func
                     )
                     mv = tempmv
                     setmv(mv)
 
                     # maintain relation with original
+                    func_copy = cl.funcs[ident]
                     self.gx.inheritance_relations.setdefault(func, []).append(
-                        cl.funcs[ident]
+                        func_copy
                     )
-                    cl.funcs[ident].inherited = func.node
-                    cl.funcs[ident].inherited_from = func
-                    cl.funcs[ident].invisible = func.invisible
-                    func_copy.name = ident
+                    func_copy.inherited = func.node
+                    func_copy.inherited_from = func
+                    func_copy.invisible = func.invisible
+                    for f in func.formals:
+                        inherit_rec(self.gx, func.formal_nodes[f], func_copy.formal_nodes[f], func.mv)
+
+                    func_node_copy.name = ident
 
                     if ident == func.ident:
                         cl.funcs[ident + ancestor.ident + "__"] = cl.funcs[ident]
