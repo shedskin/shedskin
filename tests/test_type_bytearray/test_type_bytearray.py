@@ -637,6 +637,36 @@ def test_index_error_messages():
     assert b.pop(-1) == 97 and b == bytearray()
 
 
+def test_bytearray_from_non_int_iterable():
+    # bytearray(), extend() and slice assignment with an iterable of bool did
+    # not compile (1016-C11)
+    assert bytearray([True]) == bytearray(b'\x01')
+    assert bytearray((False, True)) == bytearray(b'\x00\x01')
+    assert bytearray(range(2)) == bytearray(b'\x00\x01')
+    b = bytearray(b'ab')
+    b.extend([True, False])
+    assert b == bytearray(b'ab\x01\x00')
+    b[0:1] = [True, True]
+    assert b == bytearray(b'\x01\x01b\x01\x00')
+    b[::2] = [False, False, False]
+    assert b == bytearray(b'\x00\x01\x00\x01\x00')
+    b.extend(b)
+    assert b == bytearray(b'\x00\x01\x00\x01\x00\x00\x01\x00\x01\x00')
+    error = ''
+    try:
+        bytearray([2.5])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'float' object cannot be interpreted as an integer"
+    b = bytearray(b'abc')
+    error = ''
+    try:
+        b.extend([1, 300])
+    except ValueError as e:
+        error = str(e)
+    assert error == 'byte must be in range(0, 256)' and b == bytearray(b'abc')
+
+
 def test_all():
     test_unchanged_results_are_copies()
     test_index_error_messages()
@@ -666,6 +696,7 @@ def test_all():
     test_hex()
     test_bytearray_maketrans()
     test_bytearray_take_bytes()
+    test_bytearray_from_non_int_iterable()
 
 
 if __name__ == "__main__":

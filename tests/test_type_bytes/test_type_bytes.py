@@ -841,6 +841,22 @@ def test_search_int_range():
 
 
 
+def test_bytes_from_non_int_iterable():
+    # bytes() of an iterable of bool did not compile (1016-C11)
+    assert bytes([True, False]) == b'\x01\x00'
+    assert bytes((True, True, False)) == b'\x01\x01\x00'
+    assert bytes({True}) == b'\x01'
+    assert bytes(x > 1 for x in [1, 2]) == b'\x00\x01'
+    assert bytes({1: 2}) == b'\x01'
+    assert bytes(range(3)) == b'\x00\x01\x02'
+    error = ''
+    try:
+        bytes([1.0])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'float' object cannot be interpreted as an integer"
+
+
 def test_all():
     test_bytes_list_literal()
     test_character_classes()
@@ -910,6 +926,7 @@ def test_all():
     test_bin()
     test_copy_independent()
     test_search_int_range()
+    test_bytes_from_non_int_iterable()
 
 
 if __name__ == "__main__":
