@@ -672,6 +672,7 @@ class ShedskinBuilder(Builder):
             "-O2",
             "-DWIN32",
             "-std=c++20",
+            "-ffp-contract=off",
             "-march=native",
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
@@ -704,7 +705,7 @@ class ShedskinBuilder(Builder):
             )
 
         if PLATFORM == "Darwin":
-            self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated")
+            self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-Wno-deprecated")
             if prefix := self.homebrew_prefix():
                 self.add_include_dirs(f"{prefix}/include")
                 self.add_link_dirs(f"{prefix}/lib")
@@ -728,7 +729,7 @@ class ShedskinBuilder(Builder):
                 )
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
-            self.add_cxxflags("-O2", "-std=c++20", "-march=native")
+            self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-march=native")
             self.add_ldlibs("-lgc", "-lutil")
 
     def _add_feature_flags(self) -> None:
@@ -1190,6 +1191,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-O2",
                 "-DWIN32",
                 "-std=c++20",
+                "-ffp-contract=off",
                 "-march=native",
                 "-Wno-deprecated",
                 "-Wl,--enable-auto-import",
@@ -1257,7 +1259,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 self.add_variable("STATIC_LIBS", "$(STATIC_GC)")
 
             if self.no_flag_file:
-                self.add_cxxflags("-O2", "-std=c++20", "-Wno-deprecated", "$(CPPFLAGS)")
+                self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-Wno-deprecated", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc")
             self.add_ldflags(self.py.base_cflags, "-undefined dynamic_lookup")
         else:
@@ -1274,7 +1276,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
             if self.no_flag_file:
-                self.add_cxxflags("-O2", "-std=c++20", "-march=native", "$(CPPFLAGS)")
+                self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-march=native", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lutil")
 
         self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")

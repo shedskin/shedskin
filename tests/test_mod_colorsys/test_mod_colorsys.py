@@ -72,10 +72,27 @@ def test_hsv_hue_sextants():
         assert abs(g - g2) < tol
         assert abs(b - b2) < tol
 
+def test_fp_contraction():
+    # Regression test: CPython rounds after every float operation, so results
+    # must match it bit for bit. With FMA contraction (g++ -march=native and
+    # its default -ffp-contract=fast) a*b+c is rounded once, and all of the
+    # values below came out differently (e.g. 0.38999999999999996 instead of
+    # 0.39). The inputs are scaled by a 1.0 parsed at runtime, so g++ cannot
+    # constant-fold the calls, which would hide the difference.
+    one = float('1.0')
+    assert colorsys.hls_to_rgb(0.5 * one, 0.3, 0.3) == (0.20999999999999996, 0.39, 0.39)
+    assert colorsys.hls_to_rgb(0.005 * one, 0.15, 0.3) == (0.195, 0.10769999999999999, 0.10499999999999998)
+    assert colorsys.hls_to_rgb(0.02 * one, 0.65, 0.3) == (0.7549999999999999, 0.5702000000000002, 0.5450000000000002)
+    assert colorsys.hsv_to_rgb(0.005 * one, 0.85, 0.7) == (0.7, 0.12284999999999999, 0.10500000000000001)
+    assert colorsys.hsv_to_rgb(0.015 * one, 0.4, 0.7) == (0.7, 0.4451999999999999, 0.42)
+    assert colorsys.rgb_to_yiq(0.005 * one, 0.5, 0.7) == (0.3735, -0.36084499999999997, -0.043015)
+    assert colorsys.rgb_to_yiq(0.005 * one, 0.85, 0.7) == (0.5799999999999998, -0.4578999999999999, -0.22679999999999986)
+
 def test_all():
     test_colorsys()
     test_yiq_roundtrip()
     test_hsv_hue_sextants()
+    test_fp_contraction()
 
 
 if __name__ == "__main__":
