@@ -685,7 +685,7 @@ template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
     int __2;
     pyiter<T> *__1;
     FOR_IN(e,this,1,2,3)
-        if(__eq(e,t))
+        if(__eq_id(e,t))
             return __mbool(true);
     END_FOR
     return __mbool(false);

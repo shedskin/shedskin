@@ -407,6 +407,21 @@ def test_deque_eq():
     assert deque([]) == deque([])
 
 
+class NeverEqual:
+    def __eq__(self, other):
+        return False
+
+
+def test_deque_eq_identity():
+    # like CPython, an object is always equal to itself (1016-B5)
+    a, b = NeverEqual(), NeverEqual()
+    d = deque([b, a, b])
+    assert a in d and d.count(a) == 1 and d.index(a) == 1
+    assert deque([a]) == deque([a]) and deque([a]) != deque([b])
+    d.remove(a)
+    assert len(d) == 2 and a not in d
+
+
 def test_deque_insert_out_of_range():
     # regression test: insert used to compute an invalid iterator for
     # out-of-range indices instead of clamping like list.insert, which
@@ -879,6 +894,7 @@ def test_all():
     test_deque_extend_self()
     test_deque_maxlen_negative()
     test_deque_eq()
+    test_deque_eq_identity()
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
     test_deque_unhashable()

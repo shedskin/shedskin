@@ -219,7 +219,7 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
         it = b->gcd.find(key);
         if(it == b->gcd.end())
             return False;
-        else if(!__eq(value, (*it).second)) /* not __ne: python compares values with == */
+        else if(!__eq_id(value, (*it).second)) /* not __ne: python compares values with == */
             return False;
     }
 

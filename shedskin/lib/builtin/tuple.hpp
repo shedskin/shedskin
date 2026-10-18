@@ -244,7 +244,7 @@ template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
     if(b->units.size() != sz)
         return False;
     for(size_t i=0; i<sz; i++)
-        if(!__eq(this->units[i], b->units[i]))
+        if(!__eq_id(this->units[i], b->units[i]))
             return False;
     return True;
 }
@@ -271,7 +271,7 @@ template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s, __ss_int e) {
         }
     } else {
         for(__ss_int i = s; i<e; i++)
-            if(__eq(this->units[(size_t)i], a))
+            if(__eq_id(this->units[(size_t)i], a))
                 return i;
     }
     throw new ValueError(new str("tuple.index(x): x not in tuple"));
@@ -283,7 +283,7 @@ template<class T> __ss_int tuple2<T, T>::count(T a) {
     __ss_int c = 0;
     __ss_int len = this->__len__();
     for(__ss_int i = 0; i<len; i++)
-        if(__eq(units[i], a))
+        if(__eq_id(units[i], a))
             c++;
     return c;
 }
@@ -377,14 +377,14 @@ template<class A, class B> __ss_int tuple2<A, B>::__len__() {
 
 template<class A, class B> __ss_bool tuple2<A, B>::__eq__(pyobj *p) {
     tuple2<A,B> *b = (tuple2<A,B> *)p;
-    return __mbool(__eq(first, b->__getfirst__()) & __eq(second, b->__getsecond__()));
+    return __mbool(__eq_id(first, b->__getfirst__()) && __eq_id(second, b->__getsecond__()));
 }
 
 template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     if (!p) return 1;
     tuple2<A,B> *b = (tuple2<A,B> *)p;
-    if(__ss_int c = __cmp(first, b->first)) return c;
-    return __cmp(second, b->second);
+    if(__ss_int c = __cmp_id(first, b->first)) return c;
+    return __cmp_id(second, b->second);
 }
 
 /* not through the virtual pyobj::__lt__ etc. (tuple2 is final, so __cmp__ is called directly;
@@ -468,15 +468,15 @@ template<class A, class B, class C> __ss_int tuple3<A, B, C>::__len__() {
 
 template<class A, class B, class C> __ss_bool tuple3<A, B, C>::__eq__(pyobj *p) {
     tuple3<A,B,C> *b = (tuple3<A,B,C> *)p;
-    return __mbool(__eq(first, b->first) & __eq(second, b->second) & __eq(third, b->third));
+    return __mbool(__eq_id(first, b->first) && __eq_id(second, b->second) && __eq_id(third, b->third));
 }
 
 template<class A, class B, class C> __ss_int tuple3<A, B, C>::__cmp__(pyobj *p) {
     if (!p) return 1;
     tuple3<A,B,C> *b = (tuple3<A,B,C> *)p;
-    if(__ss_int c = __cmp(first, b->first)) return c;
-    if(__ss_int c = __cmp(second, b->second)) return c;
-    return __cmp(third, b->third);
+    if(__ss_int c = __cmp_id(first, b->first)) return c;
+    if(__ss_int c = __cmp_id(second, b->second)) return c;
+    return __cmp_id(third, b->third);
 }
 
 template<class A, class B, class C> __ss_int tuple3<A, B, C>::__hash__() {
