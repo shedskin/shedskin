@@ -30,7 +30,8 @@ public:
        utf-8 mode is the default); the standard streams use surrogateescape */
     __ss_encoding __encoding = __SS_ENC_UTF8;
     __ss_errors __errors = __SS_ERR_SURROGATEESCAPE;
-    str *__errors_name = 0; /* (for an unknown handler) */
+    str *encoding = 0; /* the names as given (None for StringIO, as CPython) */
+    str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
 
     file(FILE *g=0) : f(g), closed(False) {}

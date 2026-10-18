@@ -1167,6 +1167,8 @@ class file(pyiter):
         self.closed = False
         self.name = ''
         self.mode = ''
+        self.encoding = ''
+        self.errors = ''
         self.buffer = file_binary('')
 
     def read(self, size=0):

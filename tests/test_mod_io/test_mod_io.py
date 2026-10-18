@@ -387,6 +387,12 @@ def test_closed_is_bool():
     b.close()
     assert str(b.closed) == 'True'
 
+def test_stringio_encoding():
+    # no encoding involved, so None (as CPython)
+    s = io.StringIO('abc')
+    assert s.encoding is None
+    assert s.errors is None
+
 
 
 def _encoding_or_default(encoding):
@@ -658,6 +664,7 @@ def test_all():
     test_unicode_positions()
     test_close()
     test_closed_is_bool()
+    test_stringio_encoding()
     test_text_encoding()
     test_module_constants()
     test_capabilities()

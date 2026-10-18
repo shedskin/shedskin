@@ -200,6 +200,11 @@ void __init() {
     __ss_stdout->name = new str("<stdout>");
     __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
+    str *utf8 = new str("utf-8"), *se = new str("surrogateescape");
+    for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {
+        fp->encoding = utf8;
+        fp->errors = se;
+    }
 
     cl_baseexception = new class_("BaseException");
     cl_exception = new class_("Exception");
