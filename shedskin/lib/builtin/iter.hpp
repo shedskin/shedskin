@@ -7,7 +7,7 @@
 #define FAST_FOR(i, l, u, s, t1, t2) \
     if(s==0) \
         __throw_range_step_zero(); \
-    for(__ ## t1 = l, __ ## t2 = u; ; __ ## t1 += s) { \
+    for(__ ## t1 = l, __ ## t2 = u; ; __ ## t1 = __ss_range_next(__ ## t1, __ ## t2, s)) { \
         if (s >= 0) { if (__ ## t1 >= __ ## t2) break; } \
         else { if (__ ## t1 <= __ ## t2) break; } \
         i=__ ## t1; \

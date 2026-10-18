@@ -19,6 +19,29 @@ def test_for_range():
         result.append(i)
     assert result == [0,1,2,3,4,5,6,7,8,9]
 
+def test_for_range_near_int_limits():
+    # the loop counter used to overflow when stepping past the last value,
+    # after which the loop never ended
+    M = 9223372036854775807
+    result = []
+    for i in range(M - 3, M, 2):
+        result.append(i)
+    assert result == [M - 3, M - 1]
+    result = []
+    for i in range(-M + 2, -M - 1, -2):
+        result.append(i)
+    assert result == [-M + 2, -M]
+    step = 3
+    result = []
+    for i in range(M - 5, M, step):
+        if i == M - 5:
+            continue
+        result.append(i)
+    assert result == [M - 2]
+    assert [i for i in range(M - 3, M, 2)] == [M - 3, M - 1]
+    assert list(range(M - 3, M, 2)) == [M - 3, M - 1]
+
+
 def test_for_chain():
     assert [x + y for x in range(2) for y in range(3)] == [0, 1, 2, 1, 2, 3]
     assert list(x + y for x in range(3) for y in range(4)) == [0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5] 
@@ -194,6 +217,7 @@ def test_for_choice_none():
 
 def test_all():
     test_for_range()
+    test_for_range_near_int_limits()
     test_for_chain()
     test_for_tuple()
     test_for_fn()

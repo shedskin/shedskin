@@ -283,54 +283,71 @@ template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called wit
 
 /* range */
 
+__ss_uint range_ulen(__ss_int lo, __ss_int hi, __ss_int step) {
+    /* modified from CPython. this is computed in __ss_uint because hi-lo,
+     * and the length itself, can exceed the signed range */
+    if ((lo < hi) && (step>0))
+        return ((__ss_uint)hi - (__ss_uint)lo - 1) / (__ss_uint)step + 1;
+    if ((lo > hi) && (step<0))
+        return ((__ss_uint)lo - (__ss_uint)hi - 1) / __ss_magnitude(step) + 1;
+    return 0;
+}
+
+static void __throw_range_overflow() {
+    throw new OverflowError(new str("Python int too large to convert to C ssize_t"));
+}
+
 __ss_int range_len(__ss_int lo, __ss_int hi, __ss_int step) {
-    /* modified from CPython. The intermediate difference is computed in
-     * __ss_uint because hi-lo can exceed the signed range even when the
-     * resulting length does not. */
-    __ss_int n = 0;
-    if ((lo < hi) && (step>0)) {
-        __ss_uint uhi = (__ss_uint)hi;
-        __ss_uint ulo = (__ss_uint)lo;
-        __ss_uint diff = uhi - ulo - 1;
-        n = (__ss_int)(diff / (__ss_uint)step + 1);
+    __ss_uint n = range_ulen(lo, hi, step);
+    if(n > (__ss_uint)std::numeric_limits<__ss_int>::max()) /* as in CPython */
+        __throw_range_overflow();
+    return (__ss_int)n;
+}
+
+/* the i-th value of range(a, .., s), for 0 <= i < length. this is computed
+   in __ss_uint, where wrapping is defined and gives the right value */
+static inline __ss_int __range_value(__ss_int a, __ss_uint i, __ss_int s) {
+    return (__ss_int)((__ss_uint)a + i * (__ss_uint)s);
+}
+
+/* out = a + k*s, unless that does not fit in __ss_int */
+static bool __range_point(__ss_int a, __ss_int k, __ss_int s, __ss_int &out) {
+    __ss_uint mk = __ss_magnitude(k), ms = __ss_magnitude(s);
+    if(mk != 0 && ms > std::numeric_limits<__ss_uint>::max() / mk)
+        return false;
+    __ss_uint p = mk * ms;
+    if((k < 0) != (s < 0)) {
+        if(p > (__ss_uint)a - (__ss_uint)std::numeric_limits<__ss_int>::min())
+            return false;
+        out = (__ss_int)((__ss_uint)a - p);
+    } else {
+        if(p > (__ss_uint)std::numeric_limits<__ss_int>::max() - (__ss_uint)a)
+            return false;
+        out = (__ss_int)((__ss_uint)a + p);
     }
-    else {
-        if ((lo > hi) && (step<0)) {
-            __ss_uint uhi = (__ss_uint)lo;
-            __ss_uint ulo = (__ss_uint)hi;
-            __ss_uint diff = uhi - ulo - 1;
-            n = (__ss_int)(diff / __ss_magnitude(step) + 1);
-        }
-    }
-    return n;
+    return true;
 }
 
 class __rangeiter : public __iter<__ss_int> {
 public:
-    __ss_int i, a, b, s;
+    __ss_int i, s;
+    __ss_uint n; /* values left: can exceed the signed range */
 
-    __rangeiter(__ss_int a_, __ss_int b_, __ss_int s_) {
+    __rangeiter(__ss_int start, __ss_int step, __ss_uint count) {
         this->__class__ = cl_rangeiter;
 
-        a = a_;
-        b = b_;
-        s = s_;
-        i = a;
+        i = start;
+        s = step;
+        n = count;
     }
 
     __ss_int __next__() {
-        if(s>0) {
-            if(i<b) {
-                i += s;
-                return i-s;
-            }
-        }
-        else if(i>b) {
-                i += s;
-                return i-s;
-        }
-
-        throw new StopIteration();
+        if(n == 0)
+            throw new StopIteration();
+        n--;
+        __ss_int r = i;
+        i = __range_value(i, 1, s); /* may wrap after the last value */
+        return r;
     }
 
 };
@@ -345,23 +362,20 @@ __xrange::__xrange(__ss_int a_, __ss_int b_, __ss_int s_) {
 }
 
 __ss_int __xrange::count(__ss_int value) {
-    if(s > 0 ? (value < a || value >= b) : (value > a || value <= b))
-        return 0;
-    if((value - a) % s == 0)
-        return 1;
-    return 0;
+    return __ss_in_range(value, a, b, s) ? 1 : 0;
 }
 
 __ss_int __xrange::index(__ss_int value) {
-    if(s > 0 ? (value < a || value >= b) : (value > a || value <= b))
+    if(!__ss_in_range(value, a, b, s))
         throw new ValueError(new str("value not in range"));
-    if((value - a) % s != 0)
-        throw new ValueError(new str("value not in range"));
-    return (value - a) / s;
+    __ss_uint n = __ss_magnitude_diff(value, a) / __ss_magnitude(s);
+    if(n > (__ss_uint)std::numeric_limits<__ss_int>::max())
+        __throw_range_overflow();
+    return (__ss_int)n;
 }
 
 __iter<__ss_int> *__xrange::__iter__() {
-    return new __rangeiter(a, b, s);
+    return new __rangeiter(a, s, range_ulen(a, b, s));
 }
 
 __ss_int __xrange::__len__() {
@@ -369,7 +383,12 @@ __ss_int __xrange::__len__() {
 }
 
 __ss_int __xrange::__getitem__(__ss_int i) {
-    return a + (__wrap(this, i)) * s;
+    /* not __wrap: the length may not fit in __ss_int */
+    __ss_uint n = range_ulen(a, b, s);
+    __ss_uint j = (i < 0) ? n - __ss_magnitude(i) : (__ss_uint)i;
+    if(i < 0 ? __ss_magnitude(i) > n : j >= n)
+        __throw_index_out_of_range("range object index out of range");
+    return __range_value(a, j, s);
 }
 
 __ss_bool __xrange::__contains__(__ss_int i) {
@@ -427,19 +446,34 @@ __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_in
         stop = upper;
     }
 
-    /* return sliced range object */
-    start = a+start*s;
-    stop = a+stop*s;
-    step = step*s;
-
-    return new __xrange(start, stop, step);
+    /* return sliced range object. as in CPython if it can be represented,
+       else stop just past the last value (e.g. range(0, 2**63-1, 2)[-2:]) */
+    __ss_int first, last, nstop, nstep;
+    __ss_uint n = range_ulen(start, stop, step);
+    if(__range_point(a, start, s, first) && __range_point(a, stop, s, nstop) && __range_point(0, step, s, nstep))
+        return new __xrange(first, nstop, nstep);
+    if(n == 0)
+        return new __xrange(a, a, s);
+    first = __range_value(a, (__ss_uint)start, s);
+    last = __range_value(a, (__ss_uint)(start + (__ss_int)(n-1) * step), s);
+    if(n == 1)
+        nstep = (step > 0) == (s > 0) ? 1 : -1;
+    else if(!__range_point(0, step, s, nstep))
+        __throw_range_overflow();
+    if(!__range_point(last, 1, nstep > 0 ? 1 : -1, nstop))
+        __throw_range_overflow();
+    return new __xrange(first, nstop, nstep);
 }
 
 __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
 __xrange *range(__ss_int n) { return new __xrange(0, n, 1); }
 
 __iter<__ss_int> *reversed(__xrange *x) {
-   return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
+   __ss_uint n = range_ulen(x->a, x->b, x->s);
+   if(n == 0)
+       return new __rangeiter(x->a, x->s, 0);
+   /* -s wraps for s == -2**63, but adding it in __range_value is still right */
+   return new __rangeiter(__range_value(x->a, n-1, x->s), (__ss_int)((__ss_uint)0 - (__ss_uint)x->s), n);
 }
 
 /* ascii */
