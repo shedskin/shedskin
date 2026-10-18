@@ -20,6 +20,7 @@
 #include <malloc.h> // for _aligned_malloc
 #else
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <signal.h>
 #endif

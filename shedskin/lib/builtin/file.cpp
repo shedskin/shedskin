@@ -47,10 +47,18 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
         flags->unit[excl] = 'w';
         flags->unit += 'x';
     }
+    /* like cpython (PEP 446): the file descriptor is non-inheritable */
 #ifdef WIN32
-    return _wfopen(__ss_wpath(file_name).c_str(), __ss_wpath(flags).c_str());
+    return _wfopen(__ss_wpath(file_name).c_str(), (__ss_wpath(flags) + L"N").c_str());
 #else
-    return fopen(__ss_cpath(file_name), flags->c_str());
+    FILE *f = fopen(__ss_cpath(file_name), flags->c_str());
+    if (f) {
+        int fd = fileno(f);
+        int fd_flags = fcntl(fd, F_GETFD);
+        if (fd_flags != -1)
+            fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC);
+    }
+    return f;
 #endif
 }
 

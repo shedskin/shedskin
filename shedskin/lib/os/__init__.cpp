@@ -1023,14 +1023,22 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     return new popen_pipe(fp);
 }
 
+/* like cpython (PEP 446): new file descriptors are non-inheritable */
 __ss_int dup(__ss_int f1) {
     __ss_int f2;
     {
         __suppress_iph guard;
+#ifdef WIN32
         f2 = ::dup((int)f1);
+#else
+        f2 = ::fcntl((int)f1, F_DUPFD_CLOEXEC, 0);
+#endif
     }
     if (f2 == -1)
         __throw_oserror(new str("os.dup failed"));
+#ifdef WIN32
+    set_inheritable(f2, False);
+#endif
     return f2;
 }
 
@@ -1062,9 +1070,9 @@ void *fdatasync(__ss_int f1) {
 
 __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 #ifdef WIN32
-    __ss_int fp = ::_wopen(__to_wide(name_, "open").c_str(), (int)flags, (int)mode);
+    __ss_int fp = ::_wopen(__to_wide(name_, "open").c_str(), (int)flags | _O_NOINHERIT, (int)mode);
 #else
-    __ss_int fp = ::open(__ss_cpath(name_, "open"), (int)flags, (int)mode);
+    __ss_int fp = ::open(__ss_cpath(name_, "open"), (int)flags | O_CLOEXEC, (int)mode);
 #endif
     if(fp == -1)
         __throw_oserror(name_);
@@ -1476,6 +1484,8 @@ tuple<__ss_int> *openpty() {
     int amaster, aslave;
     if (::openpty(&amaster, &aslave, NULL, NULL, NULL) == -1)
         __throw_oserror(new str("os.openpty"));
+    set_inheritable(amaster, False);
+    set_inheritable(aslave, False);
     return new tuple<__ss_int>(2, (__ss_int)amaster, (__ss_int)aslave);
 }
 #endif
@@ -2608,9 +2618,11 @@ tuple<__ss_int>* pipe() {
     __ss_int ret;
 
 #ifdef WIN32
-    ret = ::_pipe(fds, 4096, _O_BINARY);
-#else
+    ret = ::_pipe(fds, 4096, _O_BINARY | _O_NOINHERIT);
+#elif defined(__APPLE__)
     ret = ::pipe(fds);
+#else
+    ret = ::pipe2(fds, O_CLOEXEC);
 #endif
 
     if(ret != 0) {
@@ -2618,6 +2630,11 @@ tuple<__ss_int>* pipe() {
 
         __throw_oserror(s);
     }
+
+#ifdef __APPLE__
+    set_inheritable(fds[0], False);
+    set_inheritable(fds[1], False);
+#endif
 
     return new tuple<__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);
 }
