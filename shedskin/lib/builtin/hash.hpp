@@ -33,6 +33,14 @@ template<> inline __ss_int hasher(__ss_float a) { return (__ss_int)std::hash<__s
 template<> inline __ss_int hasher(__ss_bool a) { return (__ss_int)std::hash<uint8_t>{}(a.value); }
 template<> inline __ss_int hasher(void *v) { return (__ss_int)std::hash<void *>{}(v); }
 
+/* hash() builtin: like CPython, never return -1 (in CPython, -1 signals an
+   error in the C API), so for example hash(-1) == -2 */
+
+template<class T> inline __ss_int ___hash(T t) {
+    __ss_int h = hasher<T>(t);
+    return h == -1 ? -2 : h;
+}
+
 template<class T> class ss_hash {
     public:
         __ss_int operator()(const T t) const {

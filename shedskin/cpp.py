@@ -3501,7 +3501,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.power(pow_args[0], pow_args[1], third, func)
                 return
             elif ident == "hash":
-                self.append("hasher(")  # XXX cleanup
+                self.append("___hash(")
             elif ident == "__print":  # XXX
                 if not node.keywords:
                     self.append("print(")

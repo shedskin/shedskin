@@ -782,13 +782,16 @@ str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
-__ss_int str::__hash__() { // TODO check cpython, check for -1 result?
-    if (hash != -1)
+__ss_int str::__hash__() {
+    if (hash != -1) /* -1: not computed yet */
         return hash;
 
-    hash = (__ss_int)std::hash<std::u32string_view>{}(std::u32string_view(unit.data(), unit.size()));
+    __ss_int h = (__ss_int)std::hash<std::u32string_view>{}(std::u32string_view(unit.data(), unit.size()));
+    if (h == -1)
+        h = -2;
+    hash = h;
 
-    return hash; 
+    return hash;
 }
 
 str *str::__add__(str *b) {
