@@ -552,6 +552,8 @@ public:
     T __result;
     bool __stop_iteration;
 
+    __iter() : __stop_iteration(false) {}
+
     __iter<T> *__iter__();
     virtual T __next__(); /* __get_next can be overloaded to avoid (slow) exception handling */
     virtual T __get_next();
