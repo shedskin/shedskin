@@ -134,7 +134,7 @@ class popen_pipe(file):
     pass
 
 def listdir(path=None):
-    return ['']
+    return [path.__or_x__('')]
 
 class DirEntry:
     def __init__(self):

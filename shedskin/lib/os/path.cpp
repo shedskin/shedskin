@@ -1620,6 +1620,12 @@ str *commonpath(list<str *> *paths) {
     return new str("");
 }
 
+/* bytes paths (see os/__init__.hpp) */
+
+__ss_bool exists(bytes *path) {
+    return exists(__os__::fsdecode(path));
+}
+
 } // module namespace
 } // module namespace
 
