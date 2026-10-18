@@ -488,9 +488,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print()
 
         # --- class definitions
-        for child in node.body:
-            if isinstance(child, ast.ClassDef):
-                self.class_hpp(child)
+        for child in self.class_def_order(node):
+            self.class_hpp(child)
 
         # --- defaults
         for type, number in self.gen_defaults():
@@ -966,6 +965,47 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.copy_method(cl, "__copy__", declare)
         if cl.has_deepcopy:
             self.copy_method(cl, "__deepcopy__", declare)
+
+    def class_def_order(self, node: ast.Module) -> list[ast.ClassDef]:
+        """Order class definitions so that base classes, and classes returned
+        by __iter__ (a covariant return type must be complete), come first
+
+        XXX a user __copy__/__deepcopy__ (overriding pyobj's) returning another
+        class would need the same, but user __copy__ currently clashes with the
+        generated one anyway"""
+        classdefs = [child for child in node.body if isinstance(child, ast.ClassDef)]
+        bynode = {self.mv.classes[c.name]: c for c in classdefs}
+
+        def deps(cl: "python.Class") -> list["python.Class"]:
+            result = list(cl.bases)
+            if "__iter__" in cl.funcs:
+                retnode = cl.funcs["__iter__"].retnode
+                if retnode is not None:
+                    retcls = {
+                        cl2
+                        for cl2, _ in self.mergeinh[retnode.thing]
+                        if isinstance(cl2, python.Class)
+                    }
+                    result.extend(sorted(retcls, key=lambda c: c.ident))
+            return [d for d in result if d is not cl and d in bynode]
+
+        order: list[ast.ClassDef] = []
+        done: set["python.Class"] = set()
+        busy: set["python.Class"] = set()
+
+        def visit(cl: "python.Class") -> None:
+            if cl in done or cl in busy:  # cycle: fall back to source order
+                return
+            busy.add(cl)
+            for dep in deps(cl):
+                visit(dep)
+            busy.discard(cl)
+            done.add(cl)
+            order.append(bynode[cl])
+
+        for c in classdefs:
+            visit(self.mv.classes[c.name])
+        return order
 
     def class_hpp(self, node: ast.ClassDef) -> None:
         """Generate a class declaration for a header file"""
