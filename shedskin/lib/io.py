@@ -56,6 +56,8 @@ class StringIO(file):
         self.unit = ''
         self.closed = False
         self.line_buffering = False
+        self.encoding = ''  # (None in C++, as CPython)
+        self.errors = ''
 
     def getvalue(self):
         return ''

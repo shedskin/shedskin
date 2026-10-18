@@ -230,6 +230,15 @@ def test_std_streams():
     assert sys.stdin is not sys.stdout
     assert sys.stdout is not sys.stderr
 
+def test_std_streams_encoding():
+    # utf-8 mode (as CPython 3.15), with surrogateescape for stdin/stdout
+    assert sys.stdin.encoding == 'utf-8'
+    assert sys.stdout.encoding == 'utf-8'
+    assert sys.stderr.encoding == 'utf-8'
+    assert sys.stdin.errors == 'surrogateescape'
+    assert sys.stdout.errors == 'surrogateescape'
+    assert sys.__stdout__.encoding == 'utf-8'
+
 def test_std_streams_originals():
     # __stdin__ and friends hold the streams the program started with
     assert sys.__stdin__ is sys.stdin
@@ -320,6 +329,7 @@ def test_all():
     test_orig_argv()
     test_maxsize()
     test_std_streams()
+    test_std_streams_encoding()
     test_std_streams_originals()
     test_flags()
     test_int_info()

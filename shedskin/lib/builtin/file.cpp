@@ -58,7 +58,8 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
     options.universal_mode = true;
     __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
     __errors = __lookup_errors(errors);
-    __errors_name = errors;
+    this->encoding = encoding ? encoding : new str("utf-8");
+    this->errors = errors ? errors : new str("strict");
 
     /* newline='' or '\n': no translation in either direction, so also
        none by the C runtime (Windows text mode) */
@@ -129,7 +130,7 @@ file *open(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
 str *file::__decode_cache() {
     str *s = new str();
     if (!__read_cache.empty())
-        __decode_into(s->unit, &__read_cache[0], __read_cache.size(), __encoding, __errors, __errors_name);
+        __decode_into(s->unit, &__read_cache[0], __read_cache.size(), __encoding, __errors, errors);
     return s;
 }
 
@@ -145,7 +146,7 @@ __ss_int file::write(str *s) {
         if (__encoding == __SS_ENC_UTF8 && __errors == __SS_ERR_SURROGATEESCAPE && b.empty())
             b = __to_utf8_se(s); /* fast path (standard streams) */
         else
-            __encode_into(b, s, __encoding, __errors, __errors_name);
+            __encode_into(b, s, __encoding, __errors, errors);
         if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             __throw_oserror();
         size = (__ss_int)s->unit.size(); /* characters written, as CPython */

@@ -312,6 +312,23 @@ def test_open_mode_keyword():
     os.remove('umode.txt')
 
 
+def test_open_encoding_attributes():
+    # the names are kept as given (CPython doesn't normalize them)
+    with open('uattr.txt', 'w') as f:
+        assert f.encoding == 'utf-8'
+        assert f.errors == 'strict'
+    with open('uattr.txt', encoding='Latin-1', errors='replace') as f:
+        assert f.encoding == 'Latin-1'
+        assert f.errors == 'replace'
+    with open('uattr.txt', 'a', encoding='utf-8-sig', errors='surrogateescape') as f:
+        assert f.encoding == 'utf-8-sig'
+        assert f.errors == 'surrogateescape'
+    f = open('uattr.txt', errors='bogus')  # (unknown handlers only fail when used)
+    assert f.errors == 'bogus'
+    f.close()
+    os.remove('uattr.txt')
+
+
 def test_open_newline():
     with open('unl.txt', 'w', newline='') as f:
         f.write('a\r\nb\n')
@@ -473,6 +490,7 @@ def test_all():
     test_open_bad_args()
     test_open_unknown_errors()
     test_open_mode_keyword()
+    test_open_encoding_attributes()
     test_open_newline()
     test_read_chars_unicode()
     test_open_for()
