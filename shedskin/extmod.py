@@ -29,27 +29,73 @@ if TYPE_CHECKING:
     from . import config, cpp
 
 logger = logging.getLogger("extmod")
-OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__bool__"]
+# methods called through a unary number slot: unaryfunc, or inquiry (nb_bool)
+OVERLOAD_SINGLE = [
+    "__neg__",
+    "__pos__",
+    "__abs__",
+    "__bool__",
+    "__invert__",
+    "__int__",
+    "__float__",
+    "__index__",
+]
+# methods called through a ternary number slot: ternaryfunc (self, other, modulo)
+OVERLOAD_TERNARY = ["__pow__", "__ipow__"]
 # Order matters: these are written positionally into a PyNumberMethods
 # initializer in do_extmod_methoddef, so this list must match the real
-# CPython 3 struct layout exactly (nb_add, nb_subtract, nb_multiply,
-# nb_remainder, nb_divmod, nb_power, nb_negative, nb_positive, nb_absolute,
-# nb_bool, ...). There is no CPython 3 slot for '__div__' (that was Python
-# 2's nb_divide); including it here shifts every entry after it by one slot,
-# wiring __mod__/__divmod__/__pow__/__neg__/__pos__/__abs__/__bool__ to the
-# wrong C-API function pointer (confirmed: this either fails to compile due
-# to incompatible function-pointer types, or silently binds operators to the
-# wrong dunder).
-OVERLOAD = [
-    "__add__",
-    "__sub__",
-    "__mul__",
-    "__mod__",
-    "__divmod__",
-    "__pow__",
-] + OVERLOAD_SINGLE
+# CPython 3 struct layout exactly, with None for slots that have no method
+# (nb_reserved, which was Python 2's nb_long). There is no CPython 3 slot for
+# '__div__' (that was Python 2's nb_divide); including it here shifts every
+# entry after it by one slot, wiring operators to the wrong C-API function
+# pointer (confirmed: this either fails to compile due to incompatible
+# function-pointer types, or silently binds operators to the wrong dunder).
+# The struct used to stop at nb_bool, so that e.g. int(obj), float(obj),
+# operator.index(obj), obj // 2 and obj & 1 all raised TypeError from CPython.
+NUMBER_SLOTS = [
+    "__add__",  # nb_add
+    "__sub__",  # nb_subtract
+    "__mul__",  # nb_multiply
+    "__mod__",  # nb_remainder
+    "__divmod__",  # nb_divmod
+    "__pow__",  # nb_power
+    "__neg__",  # nb_negative
+    "__pos__",  # nb_positive
+    "__abs__",  # nb_absolute
+    "__bool__",  # nb_bool
+    "__invert__",  # nb_invert
+    "__lshift__",  # nb_lshift
+    "__rshift__",  # nb_rshift
+    "__and__",  # nb_and
+    "__xor__",  # nb_xor
+    "__or__",  # nb_or
+    "__int__",  # nb_int
+    None,  # nb_reserved
+    "__float__",  # nb_float
+    "__iadd__",  # nb_inplace_add
+    "__isub__",  # nb_inplace_subtract
+    "__imul__",  # nb_inplace_multiply
+    "__imod__",  # nb_inplace_remainder
+    "__ipow__",  # nb_inplace_power
+    "__ilshift__",  # nb_inplace_lshift
+    "__irshift__",  # nb_inplace_rshift
+    "__iand__",  # nb_inplace_and
+    "__ixor__",  # nb_inplace_xor
+    "__ior__",  # nb_inplace_or
+    "__floordiv__",  # nb_floor_divide
+    "__truediv__",  # nb_true_divide
+    "__ifloordiv__",  # nb_inplace_floor_divide
+    "__itruediv__",  # nb_inplace_true_divide
+    "__index__",  # nb_index
+    "__matmul__",  # nb_matrix_multiply
+    "__imatmul__",  # nb_inplace_matrix_multiply
+]
+# methods called through a number slot
+OVERLOAD = [slot for slot in NUMBER_SLOTS if slot]
 # methods called through a unary slot: PyObject *(*)(PyObject *)
-UNARY_SLOTS = ["__repr__", "__str__", "__iter__", "__next__", "__neg__", "__pos__", "__abs__"]
+UNARY_SLOTS = ["__repr__", "__str__", "__iter__", "__next__"] + [
+    slot for slot in OVERLOAD_SINGLE if slot != "__bool__"
+]
 # rich comparison methods, dispatched through a single tp_richcompare slot
 RICHCMP = {
     "__lt__": "Py_LT",
@@ -423,7 +469,8 @@ class ExtensionModule:
             write("}\n")
 
         # the unary slots (tp_repr, tp_str, tp_iter, tp_iternext, and
-        # nb_negative/nb_positive/nb_absolute) are PyObject *(*)(PyObject *).
+        # nb_negative/nb_positive/nb_absolute/nb_invert/nb_int/nb_float/
+        # nb_index) are PyObject *(*)(PyObject *).
         # casting the generated (self, args, kwargs) methods into them left
         # args/kwargs as garbage, which the argument check then read.
         for f in funcs:
@@ -449,8 +496,8 @@ class ExtensionModule:
         for f in binary_funcs:
             assert isinstance(f.parent, python.Class)
             target = "%s_%s" % (clname(f.parent), f.ident)
-            if f.ident == "__pow__":
-                # nb_power is `ternaryfunc` (self, other, modulo)
+            if f.ident in OVERLOAD_TERNARY:
+                # nb_power/nb_inplace_power are `ternaryfunc` (self, other, modulo)
                 write(
                     "static PyObject *%s_nb(PyObject *self, PyObject *other, PyObject *mod) {"
                     % target
@@ -465,14 +512,14 @@ class ExtensionModule:
                 % clname(f.parent)
             )
             write("        Py_RETURN_NOTIMPLEMENTED;")
-            if f.ident == "__pow__":
+            if f.ident in OVERLOAD_TERNARY:
                 write("    return %s(self, other, mod);" % target)
             else:
                 write("    return %s(self, other, NULL);" % target)
             write("}\n")
 
         write("static PyNumberMethods %s_as_number = {" % ident)
-        for overload in OVERLOAD:
+        for overload in NUMBER_SLOTS:
             fs = [f for f in funcs if f.ident == overload]
             if fs:
                 f = fs[0]
@@ -480,11 +527,13 @@ class ExtensionModule:
                 if overload == "__bool__":
                     write("    %s_nb_bool," % (clname(f.parent) + "___bool__"))
                 elif overload in OVERLOAD_SINGLE:
-                    # nb_negative/nb_positive/nb_absolute are `unaryfunc`
+                    # nb_negative/nb_positive/nb_absolute/nb_invert/nb_int/
+                    # nb_float/nb_index are `unaryfunc`
                     write("    %s_%s_slot," % (clname(f.parent), overload))
                 else:
-                    # binary slots (and ternary nb_power) go through the
-                    # type-checking *_nb wrappers generated above
+                    # binary slots (and ternary nb_power/nb_inplace_power)
+                    # go through the type-checking *_nb wrappers generated
+                    # above
                     write("    %s_%s_nb," % (clname(f.parent), overload))
             else:
                 write("    0,")
@@ -543,10 +592,9 @@ class ExtensionModule:
 
         # reject extra positional arguments and unknown/duplicate keywords,
         # and name missing arguments, as CPython does (see __ss_check_args).
-        # the number slots (and so __pow__) and comparison methods are left
-        # out: their wrappers do not get a regular args tuple, or check it
-        # themselves
-        if func.ident not in OVERLOAD and func.ident != "__pow__" and not (
+        # the number slots and comparison methods are left out: their
+        # wrappers do not get a regular args tuple, or check it themselves
+        if func.ident not in OVERLOAD and not (
             is_method and func.ident in RICHCMP and len(formals) == 1
         ):
             if is_method:
@@ -595,10 +643,11 @@ class ExtensionModule:
         for i, formal in enumerate(unconverted):
             self.gv.start("")
             typ = typestr.nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
-            if func.ident == "__pow__" and i == 1:
+            if func.ident in OVERLOAD_TERNARY and i == 1:
                 assert isinstance(func.parent, python.Class)
-                # nb_power is ternary: the *_nb wrapper passes the modulo in
-                # through 'kwargs', as Py_None when not given (pow(a, b), a**b)
+                # nb_power/nb_inplace_power are ternary: the *_nb wrapper
+                # passes the modulo in through 'kwargs', as Py_None when not
+                # given (pow(a, b), a**b, a **= b)
                 if i >= len(formals) - len(func.defaults):
                     self.gv.append(
                         "        %(type)sarg_1 = (kwargs && kwargs != Py_None) ? __to_ss<%(type)s>(kwargs) : "
@@ -609,8 +658,8 @@ class ExtensionModule:
                 else:
                     write("        if (!kwargs || kwargs == Py_None)")
                     write(
-                        "            throw new TypeError(new str(\"%s.__pow__() missing 1 required positional argument: '%s'\"));"
-                        % (func.parent.ident, formal)
+                        "            throw new TypeError(new str(\"%s.%s() missing 1 required positional argument: '%s'\"));"
+                        % (func.parent.ident, func.ident, formal)
                     )
                     write(
                         "        %(type)sarg_1 = __to_ss<%(type)s>(kwargs);"
@@ -638,12 +687,12 @@ class ExtensionModule:
                 self.gv.append("0, 0")
             self.gv.append(", args, kwargs)")
             self.gv.eol()
-        if func.ident == "__pow__" and len(formals) == 1:
+        if func.ident in OVERLOAD_TERNARY and len(formals) == 1:
             assert isinstance(func.parent, python.Class)
             write("        if (kwargs && kwargs != Py_None)")
             write(
-                '            throw new TypeError(new str("%s.__pow__() takes 2 positional arguments but 3 were given"));'
-                % func.parent.ident
+                '            throw new TypeError(new str("%s.%s() takes 2 positional arguments but 3 were given"));'
+                % (func.parent.ident, func.ident)
             )
         write("")
 
