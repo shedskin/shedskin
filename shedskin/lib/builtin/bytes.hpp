@@ -146,7 +146,7 @@ public:
     void *append(__ss_int i);
     __ss_int pop(__ss_int i=-1);
     bytes *copy();
-    void *extend(pyiter<__ss_int> *p);
+    template<class T> void *extend(T *t);
     void *reverse();
     void *insert(__ss_int index, __ss_int item);
 
@@ -158,7 +158,7 @@ public:
     bytes *__iadd__(bytes *b);
     bytes *__imul__(__ss_int n);
 
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b);
+    template<class T> void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, T *b);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b);
 
     void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
@@ -176,6 +176,49 @@ inline char __byte_value(__ss_int e, bool bytearray_) {
     if(e < 0 or e > 255)
         throw new ValueError(new str(bytearray_ ? "byte must be in range(0, 256)" : "bytes must be in range(0, 256)"));
     return (char)e;
+}
+
+/* an element of an iterable passed to bytes(), bytearray() etc. as an int:
+   directly for int, else via __int() (for bool for example) */
+template<class U> inline __ss_int __byte_int(U e) {
+    if constexpr (std::is_same_v<U, __ss_int>)
+        return e;
+    else if constexpr (std::is_floating_point_v<U>)
+        throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
+    else
+        return __int(e);
+}
+
+/* whether T is an iterable (with T::for_in_unit), such as list<__ss_bool> */
+template<class T, class = void> struct __ss_is_iterable : std::false_type {};
+template<class T> struct __ss_is_iterable<T, std::void_t<typename T::for_in_unit>> : std::is_base_of<pyiter<typename T::for_in_unit>, T> {};
+
+/* append the values of an iterable to s, validating each. FOR_IN with the
+   iterable's own type, so for lists for example without going through __iter__ */
+template<class T> inline void __bytes_fill(__GC_STRING &s, T *t, bool bytearray_) {
+    typename T::for_in_unit e;
+    typename T::for_in_loop __3;
+    int __2;
+    T *__1;
+    FOR_IN(e,t,1,2,3)
+        s += __byte_value(__byte_int(e), bytearray_);
+    END_FOR
+}
+
+template<class T> void *bytes::extend(T *t) {
+    __GC_STRING r; /* validate all values first, so nothing is added on error */
+    __bytes_fill(r, t, true);
+    unit += r;
+    return NULL;
+}
+
+template<class T> void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, T *b) {
+    /* materialize and validate all values first (extend() does both), so
+     * nothing is changed on error and the iterable is fully consumed before
+     * the length check, as in CPython; then share the bytes overload */
+    bytes *v = new bytes(0);
+    v->extend(b);
+    return __setslice__(x, l, u, s, v);
 }
 
 inline __ss_int bytes::__getitem__(__ss_int i) {
@@ -282,15 +325,9 @@ template<size_t N> bytes *__bytes_lit(const __ss_int (&elems)[N]) {
 }
 
 template<class T> bytes *__bytes(T *t) {
-    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
+    if constexpr (__ss_is_iterable<T>::value) {
         bytes *b = new bytes();
-        __ss_int e;
-        typename T::for_in_loop __3;
-        __ss_int __2;
-        T *__1;
-        FOR_IN(e,t,1,2,3)
-            b->unit += __byte_value(e, false);
-        END_FOR
+        __bytes_fill(b->unit, t, false);
         return b;
     } else {
         if (!t)
@@ -306,17 +343,9 @@ bytes *__bytes();
 bytes *__bytes(str *s, str *encoding=0, str *errors=0);
 
 template<class T> bytes *__bytearray(T *t) {
-    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
-        bytes *b = new bytes();
-        b->frozen = 0;
-        b->__class__ = cl_bytearray;
-        __ss_int e;
-        typename pyiter<__ss_int>::for_in_loop __3;
-        int __2;
-        pyiter<__ss_int> *__1;
-        FOR_IN(e,t,1,2,3)
-            b->unit += __byte_value(e, true);
-        END_FOR
+    if constexpr (__ss_is_iterable<T>::value) {
+        bytes *b = new bytes(0);
+        __bytes_fill(b->unit, t, true);
         return b;
     } else {
         if (!t)

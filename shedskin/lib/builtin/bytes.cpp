@@ -964,19 +964,6 @@ __ss_int bytes::pop(__ss_int i) {
     return result;
 }
 
-void *bytes::extend(pyiter<__ss_int> *t) {
-    __ss_int e;
-    typename pyiter<__ss_int>::for_in_loop __3;
-    int __2;
-    pyiter<__ss_int> *__1;
-    __GC_STRING r; /* validate all values first, so nothing is added on error */
-    FOR_IN(e,t,1,2,3)
-        r += __byte_value(e, true);
-    END_FOR
-    unit += r;
-    return NULL;
-}
-
 void *bytes::reverse() {
     __GC_STRING s(unit.rbegin(), unit.rend());
     unit = s;
@@ -998,15 +985,6 @@ void *bytes::insert(__ss_int index, __ss_int item) {
     if(index > len) index = len;
     unit.insert(unit.begin()+index, __byte_value(item, true));
     return NULL;
-}
-
-void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b) {
-    /* materialize and validate all values first (extend() does both), so
-     * nothing is changed on error and the iterable is fully consumed before
-     * the length check, as in CPython; then share the bytes overload */
-    bytes *v = new bytes(0);
-    v->extend(b);
-    return __setslice__(x, l, u, s, v);
 }
 
 void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, bytes *b) {
