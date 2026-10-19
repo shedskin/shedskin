@@ -569,7 +569,18 @@ def test_exception_attributes():
     # OSError errno/strerror/filename/filename2
     oe = OSError('plain')
     assert oe.errno is None or oe.errno == 0  # shedskin: 0
+    assert oe.strerror is None
+    assert oe.filename is None
     assert oe.filename2 is None
+    assert oe.args == ('plain',)
+    assert str(oe) == 'plain'
+    assert repr(oe) == "OSError('plain')"
+    assert OSError().args == ()
+    try:
+        raise FileExistsError('hoppa')
+    except OSError as fee:
+        assert fee.filename is None
+        assert fee.args == ('hoppa',)
     ok = False
     try:
         open('shedskin_no_such_file')
