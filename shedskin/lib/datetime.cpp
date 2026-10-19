@@ -1217,6 +1217,14 @@ static inline void timedelta_accum(double arg, __ss_int factor, double factor_us
     }
 }
 
+static void timedelta_check_days(__ss_int days) {
+    if(days>999999999 || days<(-999999999)) {
+        char buf[64];
+        snprintf(buf, sizeof(buf), "days=%lld; must have magnitude <= 999999999", (long long)days);
+        throw new OverflowError(new str(buf));
+    }
+}
+
 timedelta::timedelta(double days_, double seconds_, double microseconds_, double milliseconds, double minutes, double hours, double weeks) {
     __class__ = cl_timedelta;
 
@@ -1262,11 +1270,7 @@ timedelta::timedelta(double days_, double seconds_, double microseconds_, double
     this->seconds = s;
     this->microseconds = us;
 
-    if(this->days>999999999 || this->days<(-999999999)) {
-        char buf[64];
-        snprintf(buf, sizeof(buf), "days=%lld; must have magnitude <= 999999999", (long long)this->days);
-        throw new OverflowError(new str(buf));
-    }
+    timedelta_check_days(this->days);
 }
 
 __ss_bool timedelta::__bool__() {
@@ -1295,10 +1299,6 @@ timedelta *timedelta::__add__(timedelta *other) {
 
 timedelta *timedelta::__sub__(timedelta *other) {
     return new timedelta((double)(days-other->days), (double)(seconds-other->seconds), (double)(microseconds-other->microseconds),0,0,0,0);
-}
-
-timedelta *timedelta::__mul__(__ss_int n) {
-    return new timedelta((double)(days*n), (double)(seconds*n), (double)(microseconds*n),0,0,0,0);
 }
 
 /* cpython converts the float to an exact integer ratio first */
@@ -1409,27 +1409,14 @@ timedelta *timedelta::__truediv__(__ss_int n) {
     return result;
 }
 
-/* t / u and t // u, on the total number of microseconds: exact for t // u
-   when that fits an __ss_int (|days| < 106751 with 64-bit ints), and in
-   double precision otherwise */
-static __ss_float timedelta_us(timedelta *t) {
-    return ((__ss_float)t->days * 86400.0 + (__ss_float)t->seconds) * 1e6 + (__ss_float)t->microseconds;
-}
-
 static bool timedelta_is_zero(timedelta *t) {
     return !t->days && !t->seconds && !t->microseconds;
 }
 
-__ss_float timedelta::__truediv__(timedelta *other) {
-    if(timedelta_is_zero(other))
-        throw new ZeroDivisionError(new str("division by zero"));
-    return timedelta_us(this) / timedelta_us(other);
-}
-
-/* exact divmod of two timedeltas, without forming their microsecond counts
+/* exact arithmetic on timedeltas, without forming their microsecond counts
  * as single integers (these exceed 64 bits for large day counts). the
  * magnitudes are kept as (seconds, microseconds) pairs, which add, subtract
- * and double exactly, and are divided by binary long division. */
+ * and double exactly, and are multiplied and divided in binary. */
 struct timedelta_mag {
     long long s, us; /* 0 <= us < 1000000 */
 };
@@ -1460,6 +1447,27 @@ static timedelta_mag timedelta_mag_sub(timedelta_mag a, timedelta_mag b) {
     return m;
 }
 
+static timedelta_mag timedelta_mag_add(timedelta_mag a, timedelta_mag b) {
+    timedelta_mag m = {a.s + b.s, a.us + b.us};
+    if(m.us >= 1000000) {
+        m.us -= 1000000;
+        m.s += 1;
+    }
+    return m;
+}
+
+/* mult[i] = b * 2**i, up to the first mult[k] > a; returns k. |a| < 2**67
+   microseconds and |b| >= 1, so at most 68 doublings */
+static int timedelta_mag_multiples(timedelta_mag a, timedelta_mag b, timedelta_mag *mult) {
+    int k = 0;
+    mult[0] = b;
+    while(!timedelta_mag_lt(a, mult[k])) {
+        mult[k + 1] = timedelta_mag_add(mult[k], mult[k]);
+        k++;
+    }
+    return k;
+}
+
 static timedelta *timedelta_from_magnitude(timedelta_mag m, bool neg) {
     if(neg) {
         if(m.us) {
@@ -1487,19 +1495,8 @@ static timedelta *timedelta_divmod(timedelta *a, timedelta *b, __ss_int *q) {
     bool aneg, bneg;
     timedelta_mag A = timedelta_magnitude(a, &aneg);
     timedelta_mag B = timedelta_magnitude(b, &bneg);
-
-    /* |a| < 2**67 microseconds and |b| >= 1, so at most 68 doublings */
     timedelta_mag mult[70];
-    int k = 0;
-    mult[0] = B;
-    while(!timedelta_mag_lt(A, mult[k])) {
-        timedelta_mag m = {2 * mult[k].s, 2 * mult[k].us};
-        if(m.us >= 1000000) {
-            m.us -= 1000000;
-            m.s += 1;
-        }
-        mult[++k] = m;
-    }
+    int k = timedelta_mag_multiples(A, B, mult);
     unsigned long long q0 = 0;
     bool overflow = false;
     timedelta_mag R = A;
@@ -1525,6 +1522,68 @@ static timedelta *timedelta_divmod(timedelta *a, timedelta *b, __ss_int *q) {
         *q = (aneg != bneg) ? -(__ss_int)q0 : (__ss_int)q0;
     }
     return timedelta_from_magnitude(R, bneg);
+}
+
+/* correctly rounded t / u, like cpython's int / int on the microsecond
+   counts: long division as above gives the first 62 significant bits of the
+   quotient, and a sticky bit for any rest, so the conversion to double
+   rounds only once */
+__ss_float timedelta::__truediv__(timedelta *other) {
+    if(timedelta_is_zero(other))
+        throw new ZeroDivisionError(new str("division by zero"));
+    bool aneg, bneg;
+    timedelta_mag A = timedelta_magnitude(this, &aneg);
+    timedelta_mag B = timedelta_magnitude(other, &bneg);
+    long long q = 0;
+    int bits = 0, i = -1;
+    if(!timedelta_is_zero(this)) {
+        timedelta_mag mult[70];
+        i = timedelta_mag_multiples(A, B, mult) - 1;
+        timedelta_mag R = A;
+        for(; bits < 62; i--) {
+            timedelta_mag D = mult[0];
+            if(i >= 0)
+                D = mult[i];
+            else
+                R = timedelta_mag_add(R, R); /* fractional bits: R < B */
+            bool bit = !timedelta_mag_lt(R, D);
+            if(bit)
+                R = timedelta_mag_sub(R, D);
+            if(bits || bit) {
+                q = (q << 1) | bit;
+                bits++;
+            }
+        }
+        if(R.s || R.us)
+            q |= 1;
+    }
+    __ss_float f = std::ldexp((__ss_float)q, i + 1);
+    return (aneg != bneg) ? -f : f;
+}
+
+timedelta *timedelta::__mul__(__ss_int n) {
+    /* exact, by double-and-add on the magnitude. as cpython: days must fit a
+       C int (checked along the way, which also keeps the sums in range), and
+       then the timedelta range */
+    bool neg;
+    timedelta_mag D = timedelta_magnitude(this, &neg);
+    timedelta_mag R = {0, 0};
+    unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
+    if(n < 0)
+        neg = !neg;
+    const long long limit = 2147483648LL * 86400;
+    for(; m; m >>= 1) {
+        if(D.s >= limit)
+            throw new OverflowError(new str("Python int too large to convert to C int"));
+        if(m & 1)
+            R = timedelta_mag_add(R, D);
+        D = timedelta_mag_add(D, D);
+    }
+    if(R.s >= limit)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
+    timedelta *result = timedelta_from_magnitude(R, neg);
+    timedelta_check_days(result->days);
+    return result;
 }
 
 __ss_int timedelta::__floordiv__(timedelta *other) {

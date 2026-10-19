@@ -1046,6 +1046,12 @@ def test_timedelta_division():
     assert datetime.timedelta(hours=3) / datetime.timedelta(hours=2) == 1.5
     assert datetime.timedelta(days=-1) / datetime.timedelta(hours=6) == -4.0
     assert datetime.timedelta(days=50000) / datetime.timedelta(days=1) == 50000.0
+    # correctly rounded, also beyond 2**53 microseconds
+    assert datetime.timedelta(days=999999999, microseconds=1) / datetime.timedelta(microseconds=3) == 2.87999999712e+19
+    assert datetime.timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999) / datetime.timedelta(days=7, microseconds=1) == 142857142.85690665
+    assert datetime.timedelta(days=-123456789, microseconds=7) / datetime.timedelta(days=3, seconds=5, microseconds=999) == -41151469.02447747
+    assert datetime.timedelta(microseconds=1) / datetime.timedelta(days=999999999) == 1.1574074085648148e-20
+    assert str(datetime.timedelta(0) / datetime.timedelta(microseconds=-1)) == '-0.0'
 
     # t // u -> int (floor)
     i = t // u
@@ -1089,6 +1095,40 @@ def test_timedelta_division():
             assert error == 'division by zero'
         else:
             assert error == 'integer division or modulo by zero'
+
+
+def test_timedelta_multiplication():
+    # t * n is exact, also when the microsecond count exceeds 64 bits
+    big = 9223372036854775807
+    assert datetime.timedelta(microseconds=999999) * 10000000000000 == datetime.timedelta(days=115740625)
+    assert 10000000000000 * datetime.timedelta(microseconds=999999) == datetime.timedelta(days=115740625)
+    assert datetime.timedelta(microseconds=-1) * big == datetime.timedelta(days=-106751992, seconds=71945, microseconds=224193)
+    assert datetime.timedelta(microseconds=1) * (-big - 1) == datetime.timedelta(days=-106751992, seconds=71945, microseconds=224192)
+    assert datetime.timedelta(days=-1, microseconds=1) * -999999999 == datetime.timedelta(days=999999998, seconds=85400, microseconds=1)
+    assert datetime.timedelta(days=1) * -999999999 == datetime.timedelta.min
+
+    # overflow, with cpython's messages
+    for k in range(4):
+        error = ''
+        try:
+            if k == 0:
+                datetime.timedelta(days=1) * 1000000000000
+            elif k == 1:
+                datetime.timedelta(days=999999999) * 2
+            elif k == 2:
+                datetime.timedelta(days=1) * -1000000000
+            else:
+                datetime.timedelta(microseconds=1) * big
+        except OverflowError as e:
+            error = str(e)
+        if k == 0:
+            assert error == 'Python int too large to convert to C int'
+        elif k == 1:
+            assert error == 'days=1999999998; must have magnitude <= 999999999'
+        elif k == 2:
+            assert error == 'days=-1000000000; must have magnitude <= 999999999'
+        else:
+            assert error == ''
 
 
 def test_timedelta_modulo():
@@ -1157,6 +1197,7 @@ def test_staticmethod_via_instance():
 def test_all():
         test_augmented_assignment()
         test_timedelta_division()
+        test_timedelta_multiplication()
         test_timedelta_modulo()
         test_timedelta_float_range()
         test_date()
