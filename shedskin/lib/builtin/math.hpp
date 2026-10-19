@@ -437,11 +437,7 @@ inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __s
     return b;
 }
 
-inline str *__ss_hex(__ss_float f) {
-    char buf[64];
-    std::sprintf(buf, "%a", f);
-    return new str(buf);
-}
+str *__ss_hex(__ss_float f);
 
 namespace __int___ {
     inline __ss_int from_bytes(bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
@@ -585,15 +581,7 @@ namespace __float___ {
         return __float(t);
     }
 
-    inline __ss_float fromhex(void *, str *s) {
-        __GC_BYTES b = __to_utf8(s->unit);
-        const char *start = b.c_str();
-        char *end;
-        double f = std::strtod(start, &end);
-        if(start == end)
-            throw new ValueError(new str("invalid hexadecimal floating-point string"));
-        return f;
-    }
+    __ss_float fromhex(void *, str *s);
 }
 
 #endif
