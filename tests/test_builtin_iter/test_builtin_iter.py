@@ -100,8 +100,8 @@ class BertIter:
     def __init__(self):
         self.x = 4
 
-#    def __iter__(self):
-#        return self
+    def __iter__(self):
+        return self
 
     def __next__(self):
         self.x -= 1
@@ -133,6 +133,84 @@ class BertBoth:
 def test_iter_correct():
     assert list(Bert()) == [3, 2, 1]  # separate iterator
     assert list(BertBoth()) == [4, 3, 2, 1]  # iterable is iterator
+
+
+# __iter__ returning an iterator class that is defined later in the file
+class Later:
+    def __init__(self, n):
+        self.n = n
+
+    def __iter__(self):
+        return LaterIter(self.n)
+
+
+class LaterSub(Later):
+    pass
+
+
+class LaterIter:
+    def __init__(self, n):
+        self.n = n
+        self.i = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.i >= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i
+
+
+def iter_two(x):
+    it = iter(x)
+    a = next(it)
+    return a + next(it)
+
+
+def test_iter_later_class():
+    assert list(Later(3)) == [1, 2, 3]
+    assert list(LaterSub(2)) == [1, 2]
+    assert [x * 2 for x in Later(2)] == [2, 4]
+    assert sum(Later(4)) == 10
+    it = iter(Later(3))
+    assert next(it) == 1
+    assert list(it) == [2, 3]
+    assert iter_two(Later(5)) == 3
+
+
+# iter() on an object whose __iter__ returns self
+class SelfIter:
+    def __init__(self, n):
+        self.n = n
+        self.i = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.i >= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i * 10
+
+
+def iter_sum(x):
+    it = iter(x)
+    a = next(it)
+    return a + next(it)
+
+
+def test_iter_self():
+    it = iter(SelfIter(3))
+    assert next(it) == 10
+    assert next(it) == 20
+    assert list(it) == [30]
+    assert iter_sum(SelfIter(3)) == 30
+    b = BertIter()
+    assert iter(b) is b
+    assert list(iter(b)) == [3, 2, 1]
 
 
 # regression test: a user-defined class whose name coincides with a
@@ -171,6 +249,8 @@ def test_all():
     test_file_iter()
     test_stop_iter()
     test_iter_correct()
+    test_iter_later_class()
+    test_iter_self()
     test_class_name_shadows_builtin()
 
 

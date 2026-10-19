@@ -576,7 +576,9 @@ public:
     T __get_next();
 };
 
-template <class T> __iter<T> *___iter(pyiter<T> *p) {
+/* return whatever (static) type __iter__ returns, so iter(obj) on a user
+   class whose __iter__ returns itself (or another user class) keeps its type */
+template <class P> inline auto ___iter(P *p) -> decltype(p->__iter__()) {
     return p->__iter__();
 }
 
