@@ -922,7 +922,7 @@ __ss_int chmod(str* path, __ss_int val) {
 #else
     if(::chmod(__ss_cpath(path, "chmod"), (unsigned)val) == -1)
 #endif
-        throw new OSError(path);
+        __throw_oserror(path);
     return 0;
 }
 

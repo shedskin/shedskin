@@ -2,11 +2,14 @@
 
 /* Exceptions */
 
-/* a plain OSError('msg') has no errno (as in CPython); for a failed call
-   that did set errno, use __throw_oserror() instead */
-OSError::OSError(str *fname) {
+/* a plain OSError('msg') has no errno, strerror or filename (as in CPython):
+   msg is just the message, as for other exceptions. for a failed call that
+   did set errno, use __throw_oserror() instead */
+OSError::OSError(str *msg) : Exception(msg) {
     this->__class__ = cl_oserror;
-    __init_errno(0, fname);
+    __ss_errno = 0;
+    strerror = 0;
+    filename = filename2 = 0;
 }
 void OSError::__init_errno(int e, str *fname) {
     this->filename = fname;
@@ -17,20 +20,20 @@ void OSError::__init_errno(int e, str *fname) {
 }
 str *OSError::__str__() {
     if(!__ss_errno) /* e.g. user-raised OSError('msg') */
-        return filename ? filename : __ss_empty_str;
+        return BaseException::__str__();
     if(!filename)
         return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
     return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
 }
 str *OSError::__repr__() {
     if(!__ss_errno)
-        return __add_strs(4, this->__class__->__name__, new str("("), filename ? repr(filename) : __ss_empty_str, new str(")"));
+        return BaseException::__repr__();
     return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
 /* errno is snapshotted by the caller, as allocation may clobber it */
 template<class T> [[noreturn]] static void __throw_errno(int e, str *fname) {
-    T *exc = new T(fname);
+    T *exc = new T();
     exc->__init_errno(e, fname);
     throw exc;
 }

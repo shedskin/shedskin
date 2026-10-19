@@ -1056,6 +1056,7 @@ class ZeroDivisionError(ArithmeticError): pass
 
 class OSError(Exception):
     def __init__(self, arg=None):
+        self.args = ('',)
         self.errno = 0
         self.strerror = ''
         self.filename = ''

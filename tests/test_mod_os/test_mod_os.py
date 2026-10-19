@@ -905,7 +905,9 @@ def test_kwarg_names():
     error = False
     try:
         os.chmod(base + '/no_such_file', 0o600)
-    except OSError:
+    except FileNotFoundError as e:
+        assert e.errno == 2
+        assert e.filename == base + '/no_such_file'
         error = True
     assert error
     os.rename(src=base + '/f', dst=base + '/g')
