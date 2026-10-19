@@ -2,6 +2,7 @@
 
 #include "builtin.hpp"
 #include "re.hpp"
+#include <cfloat>
 #include <climits>
 #include <cmath>
 #include <numeric>

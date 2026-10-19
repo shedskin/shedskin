@@ -105,6 +105,49 @@ def test_hex_fromhex():
     s = (17.123).hex()
     assert float.fromhex(s) == 17.123
 
+    # always 13 fraction digits, like CPython (and unlike C's %a)
+    assert (1.0).hex() == '0x1.0000000000000p+0'
+    assert (3.0).hex() == '0x1.8000000000000p+1'
+    assert (-2.5).hex() == '-0x1.4000000000000p+1'
+    assert (0.0).hex() == '0x0.0p+0'
+    assert (-0.0).hex() == '-0x0.0p+0'
+    assert (5e-324).hex() == '0x0.0000000000001p-1022'
+    assert (1.7976931348623157e308).hex() == '0x1.fffffffffffffp+1023'
+    assert float('inf').hex() == 'inf'
+    assert float('-inf').hex() == '-inf'
+    assert float('nan').hex() == 'nan'
+
+    # digits are hexadecimal even without '0x' prefix
+    assert float.fromhex('1.5') == 1.3125
+    assert float.fromhex('ff') == 255.0
+    assert float.fromhex('1e5') == 485.0
+    assert float.fromhex('1.8p1') == 3.0
+    assert float.fromhex('  -0X1P+3\n') == -8.0
+    assert float.fromhex('0x.8') == 0.5
+    assert float.fromhex('-Infinity') == float('-inf')
+    assert float.fromhex('0x1p-1074') == 5e-324
+    assert float.fromhex('0x1p-1080') == 0.0
+    assert float.fromhex('0x1.fffffffffffff7p1023') == 1.7976931348623157e308
+    assert float.fromhex('0x1.00000000000008p0') == 1.0  # round-half-even
+    assert float.fromhex('0x1.00000000000018p0') == 1.0000000000000004
+
+    for x in [0.1, 1 / 3, -1e-310, 1e300, 2 ** 0.5]:
+        assert float.fromhex(x.hex()) == x
+
+    for s in ['0x1.8p1xyz', '', 'zz', '0x', '0x1p', '1.8 p1']:
+        try:
+            float.fromhex(s)
+            assert False
+        except ValueError as e:
+            assert str(e) == 'invalid hexadecimal floating-point string'
+
+    for s in ['0x1p99999', '0x1.ffffffffffffffp1023']:
+        try:
+            float.fromhex(s)
+            assert False
+        except OverflowError as e:
+            assert str(e) == 'hexadecimal value too large to represent as a float'
+
 
 def test_repr_roundtrip():
     # repr must print the shortest decimal string that reads back as the very
