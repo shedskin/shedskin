@@ -697,6 +697,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if child.name in self.mv.classes:
                     cl = self.mv.classes[child.name]
                     self.output("cl_" + cl.ident + ' = new class_("%s");' % cl.ident)
+                    self.output(
+                        "%s::__name__ = cl_%s->__name__;" % (self.cpp_name(cl), cl.ident)
+                    )
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
