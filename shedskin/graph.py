@@ -271,9 +271,9 @@ class StrFormatRewriter(ast.NodeTransformer):
         return newnode
 
 
-def register_node(node: ast.AST, func: Optional["python.Function"]) -> None:
-    """Register a node with a function"""
-    if func:
+def register_node(node: ast.AST, func: Optional[AllParent]) -> None:
+    """Register a node with a function (class-body nodes have none)"""
+    if isinstance(func, python.Function):
         func.registered.append(node)
 
 
