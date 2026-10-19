@@ -231,7 +231,7 @@ public:
     typedef T value_type;
     template <class U> struct rebind { typedef __ss_allocator<U> other; };
     __ss_allocator() noexcept {}
-    __ss_allocator(const __ss_allocator &) noexcept {}
+    __ss_allocator(const __ss_allocator &other) noexcept : gc_allocator<T>(other) {}
     template <class U> __ss_allocator(const __ss_allocator<U> &) noexcept {}
     T *allocate(std::size_t n, const void * = 0) {
         void *p;
@@ -261,7 +261,7 @@ using __ss_allocator = gc_allocator< T >;
 GC_DECLARE_PTRFREE(char32_t);
 GC_DECLARE_PTRFREE(signed long long);
 GC_DECLARE_PTRFREE(unsigned long long);
-#ifdef __SIZEOF_INT128__
+#ifdef __SS_INT128
 GC_DECLARE_PTRFREE(__int128);
 GC_DECLARE_PTRFREE(unsigned __int128);
 #endif

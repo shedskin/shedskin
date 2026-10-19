@@ -97,9 +97,10 @@ template<> inline __ss_int __power(__ss_int a, __ss_int b) {
 static inline __ss_uint __ss_mulmod(__ss_uint a, __ss_uint b, __ss_uint m) {
 #if defined(__SS_INT32)
     return (__ss_uint)(((uint64_t)a * b) % m);
-#elif defined(__SS_INT64) && defined(__SIZEOF_INT128__)
-    return (__ss_uint)(((unsigned __int128)a * b) % m);
 #else
+    /* a, b < m, so when m fits in half the bits the product cannot wrap */
+    if((m >> (sizeof(__ss_uint) * 4)) == 0)
+        return (a * b) % m;
     /* double-and-add; a, b < m, so no step can wrap */
     __ss_uint r = 0;
     while(b) {
