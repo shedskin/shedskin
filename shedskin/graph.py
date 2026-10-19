@@ -2852,6 +2852,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             }
             python.def_class(self.gx, "class_").dcpa += 1
 
+        # --- static __name__ attribute (initialized in cpp.py)
+        if not getmv().module.builtin:
+            var = infer.default_var(self.gx, "__name__", newstaticclass)
+            self.gx.types[infer.inode(self.gx, var)] = {
+                (python.def_class(self.gx, "str_"), 0)
+            }
+
         # --- staticmethod, property
         skip = []
         for child in node.body:

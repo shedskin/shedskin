@@ -114,6 +114,11 @@ def test_class_attrs():
     assert sorted(Foo.z) == []
     assert Foo.wa == [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
 
+    assert Foo.__name__ == 'Foo'
+    assert Baz.__name__ == 'Baz'
+    assert ReprableChild.__name__ == 'ReprableChild'
+    assert foo.__class__.__name__ == Foo.__name__
+
 class Baz:
     def __init__(self):
         a = None
