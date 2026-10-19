@@ -170,14 +170,17 @@ str *bytes::__repr__() {
     return new str(ss.str().c_str());
 }
 
-__ss_int bytes::__hash__() { // TODO check cpython, change -1 to const?
+__ss_int bytes::__hash__() {
     if(!frozen)
         throw new TypeError(new str("unhashable type: 'bytearray'"));
 
-    if (hash != -1)
+    if (hash != -1) /* -1: not computed yet */
         return hash;
 
-    hash = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    __ss_int h = (__ss_int)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    if (h == -1)
+        h = -2;
+    hash = h;
 
     return hash;
 }
