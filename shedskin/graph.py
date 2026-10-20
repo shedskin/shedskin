@@ -1827,7 +1827,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "xor"), func)
         elif isinstance(node.op, ast.BitAnd):
             self.visit_impl_bitpair(node, ast_utils.aug_msg(self.gx, node, "and"), func)
-        # PY3: elif isinstance(node.op, MatMult):
+        elif isinstance(node.op, ast.MatMult):
+            error.error(
+                "matrix multiplication ('@') is not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
         else:
             error.error(
                 "Unknown op type for ast.BinOp: %s" % type(node.op),
@@ -1851,6 +1857,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.AugAssign, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an augmented assignment"""
+        if isinstance(node.op, ast.MatMult):  # report with original line number
+            error.error(
+                "matrix multiplication ('@=') is not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
+
         # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
