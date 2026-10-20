@@ -808,6 +808,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.fake_func(infer.inode(self.gx, value), value, method, [], func)
         self.instance(node, python.def_class(self.gx, "str_"), func)
 
+    def visit_TemplateStr(
+        self, node: ast.AST, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit a template string (t-string, 3.14+)"""
+        error.error("template strings are not supported", self.gx, node, mv=getmv())
+
     def visit_StrFormat(
         self, node: ast_utils.StrFormat, func: Optional["python.Function"] = None
     ) -> None:
@@ -1407,6 +1413,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
+
+    def visit_AsyncFunctionDef(
+        self, node: ast.AsyncFunctionDef, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit an async function definition"""
+        error.error("'async def' is not supported", self.gx, node, mv=getmv())
 
     def visit_Lambda(
         self, node: ast.Lambda, func: Optional["python.Function"] = None
@@ -2030,6 +2042,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child, func)
             self.temp_var_int((node, "orelse"), func)
 
+    def visit_TryStar(
+        self, node: ast.AST, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit a try statement with 'except*' clauses (3.11+)"""
+        error.error("'except*' is not supported", self.gx, node, mv=getmv())
+
     def visit_Yield(self, node: ast.Yield, func: "python.Function") -> None:
         """Visit a yield expression (a yield statement is handled by visit_Expr)"""
         # its value is whatever is passed to gen.send(), which is not supported
@@ -2299,6 +2317,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.DictComp, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a dictionary comprehension"""
+        if node.value is None:  # {**d for d in ..} (3.15+)
+            error.error(
+                "dict unpacking ('**') in a dict comprehension is not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
         newnode = infer.CNode(self.gx, getmv(), node, parent=func)
         self.gx.types[newnode] = set()
         lc = ast.ListComp(
