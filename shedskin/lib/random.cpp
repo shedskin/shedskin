@@ -312,7 +312,7 @@ __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
 }
 
 void Random::_init_instance() {
-    memcpy(this->_s, default_state, sizeof(this->_s));
+    std::copy(std::begin(default_state), std::end(default_state), this->_s);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
 }
@@ -624,8 +624,7 @@ bytes *Random::getstate() {
             state->unit += (unsigned char)((this->_s[i] >> j) & 0xff);
     }
 
-    uint64_t g;
-    memcpy(&g, &this->gauss_next, sizeof(g));
+    uint64_t g = std::bit_cast<uint64_t>((double)this->gauss_next);
     for(size_t j=0; j<64; j += 8)
         state->unit += (unsigned char)((g >> j) & 0xff);
 
@@ -651,7 +650,7 @@ void *Random::setstate(bytes *state) {
     uint64_t g = 0;
     for(size_t j=0; j<64; j += 8)
         g |= ((uint64_t)((unsigned char)(state->unit[x++]))) << j;
-    memcpy(&this->gauss_next, &g, sizeof(g));
+    this->gauss_next = (__ss_float)std::bit_cast<double>(g);
 
     this->gauss_switch = ((unsigned char)(state->unit[x]) ? 1 : 0);
 

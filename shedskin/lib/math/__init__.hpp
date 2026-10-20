@@ -590,10 +590,9 @@ inline __ss_float nextafter(__ss_float x, __ss_float y, __ss_int steps) {
     if(std::isnan(y))
         return y;
 
-    /* type-punned via memcpy, assuming __ss_float and __bits share endianness */
-    __bits ix, iy;
-    memcpy(&ix, &x, sizeof(__bits));
-    memcpy(&iy, &y, sizeof(__bits));
+    /* type-punned, assuming __ss_float and __bits share endianness */
+    __bits ix = std::bit_cast<__bits>(x);
+    __bits iy = std::bit_cast<__bits>(y);
 
     if(ix == iy)
         return x;
@@ -618,9 +617,7 @@ inline __ss_float nextafter(__ss_float x, __ss_float y, __ss_int steps) {
         result = ((__bits)(ay - ax) >= usteps) ? (__bits)(ix + usteps) : iy;
     }
 
-    __ss_float r;
-    memcpy(&r, &result, sizeof(__bits));
-    return r;
+    return std::bit_cast<__ss_float>(result);
 }
 
 inline __ss_float ulp(__ss_float x) {

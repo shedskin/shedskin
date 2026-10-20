@@ -157,6 +157,14 @@ def test_find():
     assert 'abc'.find('', 3) == 3
     assert 'abc'.find('') == 0
 
+    # longer needles: first and last characters match, the middle is compared
+    assert 'abcabcabd'.find('abd') == 6
+    assert 'aXbaXcaXc'.find('aXc') == 3
+    assert 'abcabd'.find('abd', 1) == 3
+    assert 'ab\u20acdab\u20acd'.find('b\u20acd', 2) == 5
+    assert 'abab'.find('aab') == -1
+    assert 'aaaa'.find('aaaaa') == -1
+
 
 def test_format():
     pass

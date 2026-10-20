@@ -1742,7 +1742,7 @@ str *inet_ntop(__ss_int address_family, bytes *packed_ip)
     if (packed_ip->unit.size() != len)
         throw new ValueError(new str("invalid length of packed IP address string"));
     unsigned char packed[sizeof(in6_addr)];
-    memcpy(packed, packed_ip->unit.data(), len);
+    std::copy_n(packed_ip->unit.data(), len, packed);
     char ip[INET6_ADDRSTRLEN];
     if (!::inet_ntop((int)address_family, (void *)packed, ip, sizeof(ip)))
         throw make_error("inet_ntop");

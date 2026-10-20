@@ -207,7 +207,6 @@ class mmap: public pyiter<bytes *>
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
     inline size_t __tell() const { return (size_t)(m_position - m_begin); }
-    iterator __next_line(const char eol);
     __ss_int __find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse=false);
 
     template<class S, class E> __ss_int __find_args(bytes *needle, S start, E end, bool reverse) {

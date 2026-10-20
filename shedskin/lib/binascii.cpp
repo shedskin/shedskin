@@ -558,7 +558,7 @@ void to_hex (char ch, unsigned char *s)
 bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header) {
     size_t datalen = pdata->unit.size();
     char * data = &pdata->unit[0];
-    char * p = (char *) memchr(data, '\n', datalen);
+    size_t nl = pdata->unit.find('\n');
     int crlf = 0;
 
     size_t in, out, odatalen=0;
@@ -570,7 +570,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
     /* XXX: this function has the side effect of converting all of
      * the end of lines to be the same depending on this detection
      * here */
-    if ((p != NULL) && (p > data) && (*(p-1) == '\r'))
+    if (nl != std::string::npos && nl > 0 && data[nl-1] == '\r')
         crlf = 1;
 
     /* First, scan to see how many characters need to be encoded */

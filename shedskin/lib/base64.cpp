@@ -46,7 +46,7 @@ bytes *__b64decode(bytes *s, bytes *altchars, int validate, __ss_bool padded, by
             ** the altchars. Emulate that with a reverse table that has
             ** both mappings, rather than translating a copy of s. */
             unsigned char table[256];
-            memcpy(table, __binascii__::__a2b_base64_table(), 256);
+            std::copy_n(__binascii__::__a2b_base64_table(), 256, table);
             table[(unsigned char)altchars->unit[0]] = 62;
             table[(unsigned char)altchars->unit[1]] = 63;
             return __binascii__::__a2b_base64(s, validate, padded, (const unsigned char *)table, (bytes *)NULL, canonical);
