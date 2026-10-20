@@ -838,12 +838,8 @@ bytes *mmap::readline(__ss_int size, const char eol)
 {
     __raise_if_closed_or_not_readable();
     const iterator at = m_position;
-    m_position = __next_line(eol);
-    if (m_position == 0)
-    {
-        m_position = m_end;
-    }
-    else // Line found.
+    m_position = std::find(m_position, m_end, eol);
+    if (m_position != m_end) // Line found.
     {
         ++m_position; // Include the newline
     }
@@ -1030,7 +1026,7 @@ void *mmap::write(bytes *string)
     {
         throw new ValueError(const_14);
     }
-    memcpy(m_position, string->unit.data(), length);
+    std::copy_n(string->unit.data(), length, m_position);
     m_position += length;
 
     return NULL;
@@ -1124,7 +1120,7 @@ void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int
     const char *data = sequence->unit.data();
     if (step == 1)
     {
-        memcpy(m_begin + lower, data, (size_t)slicesize);
+        std::copy_n(data, slicesize, m_begin + lower);
     }
     else
     {
@@ -1191,12 +1187,6 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
         }
     }
     return (size_t)index;
-}
-
-mmap::iterator mmap::__next_line(const char eol)
-{
-    return static_cast<iterator>(
-               memchr(m_position, eol, (size_t)(m_end - m_position)));
 }
 
 __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse)

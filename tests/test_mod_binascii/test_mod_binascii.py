@@ -888,7 +888,16 @@ def test_str_argument():
     assert error == 'string argument should contain only ASCII characters'
 
 
+def test_qp_crlf_detection():
+    # line ends are normalized to whatever the first line end is
+    assert binascii.b2a_qp(b'a\r\nb=c\nd') == b'a\r\nb=3Dc\r\nd'
+    assert binascii.b2a_qp(b'a\nb=c\r\nd') == b'a\nb=3Dc\nd'
+    assert binascii.b2a_qp(b'\na=b\r\nc') == b'\na=3Db\nc'
+    assert binascii.b2a_qp(b'x' * 80 + b'\r\n') == b'x' * 75 + b'=\r\n' + b'x' * 5 + b'\r\n'
+
+
 def test_all():
+    test_qp_crlf_detection()
     test_hexlify_bytes_sep()
     test_qp()
     test_incomplete()

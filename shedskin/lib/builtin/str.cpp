@@ -6,7 +6,8 @@
    std::u32string(_view) version goes through char_traits<char32_t>, whose
    find and compare are plain scalar loops (unlike those for char, which use
    memchr/memcmp), which made for example the lz2 example around 5 times
-   slower. so check the first and last characters, and memcmp the rest */
+   slower. so check the first and last characters, and compare the rest with
+   std::equal (which, unlike char_traits, does lower to memcmp) */
 static size_t __ss_find(const __ss_char *hd, size_t n, const __ss_char *pd, size_t m, size_t start=0) {
     if(start > n || m > n - start)
         return std::string::npos;
@@ -15,7 +16,7 @@ static size_t __ss_find(const __ss_char *hd, size_t n, const __ss_char *pd, size
     const __ss_char first = pd[0], last = pd[m-1];
     const __ss_char *end = hd + (n - m);
     for(const __ss_char *q = hd + start; q <= end; q++)
-        if(*q == first && q[m-1] == last && (m <= 2 || memcmp(q+1, pd+1, (m-2)*sizeof(__ss_char)) == 0))
+        if(*q == first && q[m-1] == last && (m <= 2 || std::equal(pd+1, pd+m-1, q+1)))
             return (size_t)(q - hd);
     return std::string::npos;
 }
@@ -90,8 +91,7 @@ char *str::c_str() const {
     __GC_BYTES b = __to_utf8(unit);
     __ss_allocator<char> alloc;
     char *p = alloc.allocate(b.size() + 1);
-    memcpy(p, b.data(), b.size());
-    p[b.size()] = '\0';
+    *std::copy(b.begin(), b.end(), p) = '\0';
     return p;
 }
 

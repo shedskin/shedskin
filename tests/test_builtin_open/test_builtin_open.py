@@ -477,7 +477,28 @@ def test_text_seek_restrictions():
     os.remove('useek2.txt')
 
 
+def test_utf8_sig():
+    # a bom is written once, and skipped on reading
+    with open('usig.txt', 'w', encoding='utf-8-sig') as f:
+        f.write('h\u00e9')
+    with open('usig.txt', 'rb') as g:
+        assert g.read() == b'\xef\xbb\xbfh\xc3\xa9'
+    with open('usig.txt', encoding='utf-8-sig') as f:
+        assert f.read() == 'h\u00e9'
+    # no bom: nothing is skipped
+    with open('usig.txt', 'wb') as g:
+        g.write(b'\xef\xbbx')
+    with open('usig.txt', encoding='utf-8-sig', errors='replace') as f:
+        assert f.read() == '\ufffdx'
+    with open('usig.txt', 'wb') as g:
+        g.write(b'ab')
+    with open('usig.txt', encoding='utf-8-sig') as f:
+        assert f.read() == 'ab'
+    os.remove('usig.txt')
+
+
 def test_all():
+    test_utf8_sig()
     test_seek_returns_position()
     test_open_exclusive()
     test_newline_empty_splits_on_cr()

@@ -111,7 +111,7 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
         bool bom = false;
         if (readable) { /* skip a leading bom */
             char head[3];
-            bom = fread(head, 1, 3, f) == 3 && memcmp(head, "\xef\xbb\xbf", 3) == 0;
+            bom = fread(head, 1, 3, f) == 3 && std::string_view(head, 3) == "\xef\xbb\xbf";
             if (!bom)
                 fseek(f, 0, SEEK_SET);
         }

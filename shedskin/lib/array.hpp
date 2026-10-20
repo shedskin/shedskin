@@ -182,15 +182,15 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
          * has the same typecode/itemsize as 'this' (e.g. an array('i', ...)
          * and an array('h', ...) both instantiate array<__ss_int> and reach
          * this branch). CPython rejects extending with a differently-typed
-         * array; without this check the raw memcpy below silently
+         * array; without this check the raw byte copy below silently
          * reinterprets the source bytes under the wrong itemsize and
          * corrupts the buffer. */
         if(this->typechar != arr->typechar)
             throw new TypeError(new str("can only extend with array of same kind"));
         size_t s1 = this->units.size();
         size_t s2 = arr->units.size();
-        this->units.resize(s1+s2);
-        if(s2) memcpy(&(this->units[s1]), &(arr->units[0]), s2);
+        this->units.resize(s1+s2); /* not insert(), as arr may be this */
+        std::copy_n(arr->units.begin(), s2, this->units.begin() + s1);
     } else {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
@@ -211,9 +211,7 @@ template<class T> template<class U> void *array<T>::fromlist(U *iter) {
 
 template<class T> bytes *array<T>::tobytes() {
     bytes *s = new bytes();
-    size_t s1 = this->units.size();
-    s->unit.resize(s1);
-    if(s1) memcpy(&(s->unit[0]), &(this->units[0]), s1);
+    s->unit.assign(this->units.begin(), this->units.end());
     return s;
 }
 
@@ -252,13 +250,7 @@ template<class T> void *array<T>::frombytes(bytes *s) {
     size_t len = s->unit.size();
     if(len % itemsize != 0)
         throw new ValueError(new str("bytes length not a multiple of item size"));
-    if(len == 1)
-        this->units.push_back(s->unit[0]);
-    else if(len) {
-        size_t s1 = this->units.size();
-        this->units.resize(s1+len);
-        memcpy(&(this->units[s1]), &(s->unit[0]), len);
-    }
+    this->units.insert(this->units.end(), s->unit.begin(), s->unit.end());
     return NULL;
 }
 
@@ -283,7 +275,7 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    if(b->__len__() != len)
        return False;
    if(this->typechar == b->typechar && this->typechar != 'f' && this->typechar != 'd')
-       return __mbool(this->units.empty() || memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
+       return __mbool(this->units == b->units);
    for(__ss_int i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
@@ -295,9 +287,8 @@ template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     if(n<=0) return a;
     size_t len = this->units.size();
     a->units.resize(len*(size_t)n);
-    if(len)
-        for(size_t i=0; i<(size_t)n; i++)
-            memcpy(&(a->units[i*len]), &(this->units[0]), len);
+    for(size_t i=0; i<(size_t)n; i++)
+        std::copy_n(this->units.begin(), len, a->units.begin() + i*len);
     return a;
 }
 
@@ -308,9 +299,8 @@ template<class T> array<T> *array<T>::__imul__(__ss_int n) {
     }
     size_t len = this->units.size();
     this->units.resize(len*(size_t)n);
-    if(len)
-        for(size_t i=1; i<(size_t)n; i++)
-            memcpy(&(this->units[i*len]), &(this->units[0]), len);
+    for(size_t i=1; i<(size_t)n; i++)
+        std::copy_n(this->units.begin(), len, this->units.begin() + i*len);
     return this;
 }
 
@@ -318,11 +308,9 @@ template<class T> array<T> *array<T>::__add__(array<T> *b) {
     if(this->typecode != b->typecode)
         throw new TypeError(new str("bad argument type for built-in operation")); 
     array<T> *a = new array<T>(typecode);
-    size_t s1 = this->units.size();
-    size_t s2 = b->units.size();
-    a->units.resize(s1+s2);
-    if(s1) memcpy(&(a->units[0]), &(this->units[0]), s1);
-    if(s2) memcpy(&(a->units[s1]), &(b->units[0]), s2);
+    a->units.reserve(this->units.size() + b->units.size());
+    a->units.insert(a->units.end(), this->units.begin(), this->units.end());
+    a->units.insert(a->units.end(), b->units.begin(), b->units.end());
     return a;
 }
 
@@ -336,8 +324,8 @@ template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
         throw new TypeError(new str("can only extend with array of same kind"));
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
-    this->units.resize(s1+s2);
-    if(s2) memcpy(&(this->units[s1]), &(b->units[0]), s2);
+    this->units.resize(s1+s2); /* not insert(), as b may be this */
+    std::copy_n(b->units.begin(), s2, this->units.begin() + s1);
     return this;
 }
 
@@ -548,12 +536,8 @@ template<> inline str *array<str *>::tounicode() {
 }
 
 template<> inline void *array<str *>::fromunicode(str *s) {
-    size_t len = s->unit.size();
-    if(len) {
-        size_t s1 = this->units.size();
-        this->units.resize(s1+len*sizeof(__ss_char));
-        memcpy(&(this->units[s1]), s->unit.data(), len*sizeof(__ss_char));
-    }
+    const char *p = (const char *)s->unit.data();
+    this->units.insert(this->units.end(), p, p + s->unit.size()*sizeof(__ss_char));
     return NULL;
 }
 
@@ -563,10 +547,8 @@ template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or sta
         char *first = &units[0];
         char *second = &units[(len-1)*itemsize];
         for(size_t i=0; i<len/2; i++) {
-            memcpy(buffy, first, itemsize);
-            memcpy(first, second, itemsize);
-            memcpy(second, buffy, itemsize);
-            first += itemsize; 
+            std::swap_ranges(first, first + itemsize, second);
+            first += itemsize;
             second -= itemsize;
         }
     }
@@ -620,9 +602,8 @@ template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int
     array<T> *c = new array<T>(typecode);
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        size_t slen = (u>l) ? (size_t)(u-l)*itemsize : 0;
-        c->units.resize(slen);
-        if(slen) memcpy(&(c->units[0]), &(this->units[l*itemsize]), slen);
+        if(u > l)
+            c->units.assign(this->units.begin() + l*itemsize, this->units.begin() + u*itemsize);
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
             for(size_t j=0; j<(size_t)itemsize; j++)

@@ -621,6 +621,60 @@ def test_unicode_typecode_u():
         pass
 
 
+def test_bulk_copies():
+    # self-referential extend/+=, where source and destination share a buffer
+    a = array.array('h', [1, -2, 3])
+    a.extend(a)
+    assert a.tolist() == [1, -2, 3, 1, -2, 3]
+    ad = array.array('d', [1.5, -2.5])
+    ad += ad
+    assert ad.tolist() == [1.5, -2.5, 1.5, -2.5]
+    assert (ad + ad).tolist() == [1.5, -2.5, 1.5, -2.5, 1.5, -2.5, 1.5, -2.5]
+    e = array.array('d')
+    assert (e + ad) == ad and (ad + e) == ad and (e + e) == e
+
+    # repetition with multi-byte items
+    b = array.array('i', [7, -8])
+    assert (b * 3).tolist() == [7, -8, 7, -8, 7, -8]
+    b *= 2
+    assert b.tolist() == [7, -8, 7, -8]
+
+    # reverse swaps whole items, also for odd lengths and wide items
+    c = array.array('q', [1, 2**40, -3])
+    c.reverse()
+    assert c.tolist() == [-3, 2**40, 1]
+    cd = array.array('d', [0.5, 1.5, 2.5, 3.5])
+    cd.reverse()
+    assert cd.tolist() == [3.5, 2.5, 1.5, 0.5]
+
+    # contiguous slices
+    d = array.array('H', range(10))
+    assert d[2:5].tolist() == [2, 3, 4]
+    assert d[5:2].tolist() == []
+    assert d[-3:].tolist() == [7, 8, 9]
+
+    # bytewise equality
+    assert array.array('i', [1, 2]) == array.array('i', [1, 2])
+    assert array.array('i', [1, 2]) != array.array('i', [1, 3])
+    assert array.array('i') == array.array('i')
+
+    # bytes round trip
+    f = array.array('i', [1, -1, 2**30])
+    g = array.array('i')
+    g.frombytes(f.tobytes())
+    g.frombytes(f.tobytes())
+    assert g.tolist() == [1, -1, 2**30, 1, -1, 2**30]
+    g.frombytes(b'')
+    assert len(g) == 6
+    assert array.array('i').tobytes() == b''
+
+    # fromunicode appends
+    u = array.array('w', 'ab')
+    u.fromunicode('c\u20acd')
+    u.fromunicode('')
+    assert u.tounicode() == 'abc\u20acd'
+
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -655,6 +709,7 @@ def test_all():
     test_unicode_non_ascii()
     test_unicode_errors()
     test_unicode_typecode_u()
+    test_bulk_copies()
 
 
 if __name__ == '__main__':
