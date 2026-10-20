@@ -19,6 +19,10 @@ def test_version_consistency():
     minor = (sys.hexversion >> 16) & 0xff
     assert (major, minor) == (sys.version_info[0], sys.version_info[1])
 
+    # we are at python 3.15 compatibility level
+    assert sys.version_info[:2] == (3, 15)
+    assert sys.hexversion == 0x030f00f0
+
 def test_recursionlimit():
     old = sys.getrecursionlimit()
     assert old > 0

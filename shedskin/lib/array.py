@@ -1,6 +1,6 @@
 # Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE)
 
-typecodes = ''
+typecodes = ('',)
 
 class array:
     def __init__(self, flag, it=None):

@@ -3,7 +3,10 @@ import os.path
 
 
 def test_typecodes():
-    assert array.typecodes == 'bBuwhHiIlLqQfd'
+    assert array.typecodes == ('b', 'B', 'u', 'w', 'h', 'H', 'i', 'I', 'l', 'L',
+                               'q', 'Q', 'e', 'f', 'd', 'Zf', 'Zd')
+    assert 'Zd' in array.typecodes
+    assert len(array.typecodes) == 17
 
     arr = array.array('i')
     assert arr.typecode == 'i'

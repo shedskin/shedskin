@@ -11,7 +11,7 @@ namespace __array__ {
 extern str *const_0;
 extern str *__name__;
 extern void *buffy;
-extern str *typecodes;
+extern tuple2<str *, str *> *typecodes;
 
 __ss_int get_itemsize(char typechar);
 void __throw_no_char();
