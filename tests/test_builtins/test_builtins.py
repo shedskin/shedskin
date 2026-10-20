@@ -775,6 +775,32 @@ def test_sum():
     f = sum(xs, start=100)
     assert f == 106
 
+    # bool elements sum to int
+    g = sum([True, False, True])
+    assert g == 2
+    assert g + 1 == 3
+    h = sum([True, True], 0)
+    assert h + 1 == 3
+    assert sum(x == 1 for x in [1, 2, 1]) == 2
+    assert True + True == 2
+
+    # start type takes part in result type
+    assert sum([1, 2], 0.5) == 3.5
+    assert sum([1.5, 2.5], 1) == 5.0
+    assert sum([(1,), (2,)], ()) == (1, 2)
+
+    # user-defined __add__
+    v = sum([SumVec(1), SumVec(2)], SumVec(10))
+    assert v.x == 13
+
+
+class SumVec:
+    def __init__(self, x):
+        self.x = x
+
+    def __add__(self, other):
+        return SumVec(self.x + other.x)
+
 
 def test_tuple():
     assert tuple([1,2]) == (1,2)
