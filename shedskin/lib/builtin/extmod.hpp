@@ -46,15 +46,25 @@ template<class T> PyObject *__to_py(T t) {
    non-utf-8 file name in an OSError message) would turn into a
    UnicodeDecodeError */
 inline void __ss_raise_py(Exception *e) {
+    PyObject *type = e->__to_py__();
     PyObject *args = e->__py_args__();
-    if(args) {
-        PyErr_SetObject(e->__to_py__(), args); /* type(*args) */
-        Py_DECREF(args);
-    } else {
+    if(!args) {
         PyObject *msg = e->message ? e->message->__to_py__() : PyUnicode_FromStringAndSize("", 0);
-        PyErr_SetObject(e->__to_py__(), msg); /* does not steal msg */
-        Py_XDECREF(msg);
+        if(!msg)
+            return;
+        args = PyTuple_Pack(1, msg); /* does not steal msg */
+        Py_DECREF(msg);
+        if(!args)
+            return;
     }
+    /* create the instance here, so attributes can be added to it */
+    PyObject *value = PyObject_Call(type, args, NULL); /* type(*args) */
+    Py_DECREF(args);
+    if(!value)
+        return;
+    if(e->__py_setattrs__(value) == 0)
+        PyErr_SetObject(type, value);
+    Py_DECREF(value);
 }
 
 template<> PyObject *__to_py(int32_t i);

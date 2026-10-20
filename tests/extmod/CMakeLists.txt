@@ -151,6 +151,11 @@ add_shedskin_product(
 )
 add_shedskin_product(
     BUILD_EXTENSION
+    NAME exceptions
+    MAIN_MODULE exceptions.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
     NAME typeslots
     MAIN_MODULE typeslots.py
     NAME numslots
