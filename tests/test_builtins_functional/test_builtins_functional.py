@@ -225,6 +225,57 @@ def test_map_strict_messages():
     assert map_strict_error(map(f3, [1], [3], [5], strict=True)) == ''
 
 
+def test_map_exhaustion():
+    f2 = lambda a, b: a
+    f3 = lambda a, b, c: a
+
+    # arguments after the first exhausted one are not advanced
+    it1 = iter([1])
+    it2 = iter(['a', 'b'])
+    assert list(map(f2, it1, it2)) == [1]
+    assert list(it2) == ['b']
+
+    a = iter([1])
+    b = iter(['a', 'b'])
+    c = iter([1.0, 2.0])
+    assert list(map(f3, a, b, c)) == [1]
+    assert list(b) == ['b']
+    assert list(c) == [2.0]
+
+    a = iter([1, 2, 3])
+    b = iter(['a'])
+    c = iter([1.0, 2.0, 3.0])
+    assert list(map(f3, a, b, c)) == [1]
+    assert list(a) == [3]
+    assert list(c) == [2.0, 3.0]
+
+    a = iter([1, 2, 3])
+    b = iter(['a', 'b', 'c'])
+    c = iter([1.0])
+    assert list(map(f3, a, b, c)) == [1]
+    assert list(a) == [3]
+    assert list(b) == ['c']
+
+    # .. but strict=True checks the later ones if the first is exhausted
+    a = iter([1])
+    b = iter(['a'])
+    c = iter([1.0, 2.0])
+    assert map_strict_error(map(f3, a, b, c, strict=True)) == 'map() argument 3 is longer than arguments 1-2'
+    assert list(c) == []
+
+    # .. and not if a later one is
+    a = iter([1, 2])
+    b = iter(['a'])
+    c = iter([1.0, 2.0])
+    assert map_strict_error(map(f3, a, b, c, strict=True)) == 'map() argument 2 is shorter than argument 1'
+    assert list(c) == [2.0]
+
+    # an exhausted map object stays exhausted
+    m = map(f2, iter([1]), iter(['a']))
+    assert list(m) == [1]
+    assert list(m) == []
+
+
 def test_map_nested():
     foo3 = lambda a, b, c: "%d %.2f %s" % (a, b, c)
     flats = (chr(ord("A") + x) for x in range(3))
@@ -243,6 +294,7 @@ def test_all():
     test_zip_sequences()
     test_map()
     test_map_strict_messages()
+    test_map_exhaustion()
     test_map_nested()
 
 if __name__ == '__main__':

@@ -739,31 +739,24 @@ template<class R, class T1, class T2> inline imapiter2<R, T1, T2 >::imapiter2(R 
 
 template<class R, class T1, class T2> R imapiter2<R, T1, T2 >::__next__ ()
 {
-    T1 t1;
-    T2 t2;
+    /* as for zip, arguments after the first exhausted one are not advanced */
+    if (!this->exhausted) {
+        T1 t1;
+        T2 t2;
 
-    bool e1 = false, e2 = false; /* exhausted */
-
-    try  {
-        t1 = this->iter1->__next__();
-    } catch (StopIteration *) {
-        e1 = true;
+        if (__zip_advance(this->iter1, t1)) {
+            if (__zip_advance(this->iter2, t2))
+                return this->function(t1, t2);
+            this->exhausted = true;
+            if (this->strict)
+                throw __strict_length_error("map", 1, true);
+        } else {
+            this->exhausted = true;
+            if (this->strict && __zip_advance(this->iter2, t2))
+                throw __strict_length_error("map", 1, false);
+        }
     }
-    try  {
-        t2 = this->iter2->__next__();
-    } catch (StopIteration *) {
-        e2 = true;
-    }
-
-    if (e1 || e2) {
-        this->exhausted = true;
-        if (this->strict && e1 != e2)
-            throw __strict_length_error("map", 1, e2);
-        else
-            throw new StopIteration();
-    }
-
-    return this->function(t1, t2);
+    throw new StopIteration();
 }
 
 template<class R, class T1, class T2> inline imapiter2<R, T1, T2> *map(int, __ss_bool strict_, R (*function_) (T1, T2), pyiter<T1> *iterable1, pyiter<T2> *iterable2)
@@ -813,40 +806,35 @@ template <class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3>
 
 template<class R, class T1, class T2, class T3> R imapiter3< R, T1, T2, T3 >::__next__()
 {
-    T1 t1 = __zero<T1>(); // avoid uninitialized error
-    T2 t2 = __zero<T2>();
-    T3 t3 = __zero<T3>();
+    /* as for zip, arguments after the first exhausted one are not advanced */
+    if (!this->exhausted) {
+        T1 t1 = __zero<T1>(); // avoid uninitialized error
+        T2 t2 = __zero<T2>();
+        T3 t3 = __zero<T3>();
 
-    bool e1 = false, e2 = false, e3 = false; /* exhausted */
-
-    try  {
-        t1 = this->iter1->__next__();
-    } catch (StopIteration *) {
-        e1 = true;
+        if (__zip_advance(this->iter1, t1)) {
+            if (__zip_advance(this->iter2, t2)) {
+                if (__zip_advance(this->iter3, t3))
+                    return this->function(t1, t2, t3);
+                this->exhausted = true;
+                if (this->strict)
+                    throw __strict_length_error("map", 2, true);
+            } else {
+                this->exhausted = true;
+                if (this->strict)
+                    throw __strict_length_error("map", 1, true);
+            }
+        } else {
+            this->exhausted = true;
+            if (this->strict) {
+                if (__zip_advance(this->iter2, t2))
+                    throw __strict_length_error("map", 1, false);
+                if (__zip_advance(this->iter3, t3))
+                    throw __strict_length_error("map", 2, false);
+            }
+        }
     }
-    try  {
-        t2 = this->iter2->__next__();
-    } catch (StopIteration *) {
-        e2 = true;
-    }
-    try  {
-        t3 = this->iter3->__next__();
-    } catch (StopIteration *) {
-        e3 = true;
-    }
-
-    if (e1 || e2 || e3) {
-        this->exhausted = true;
-        if (this->strict && !(e1 && e2 && e3)) {
-            if (!e1) /* a later argument is exhausted first */
-                throw __strict_length_error("map", e2 ? 1 : 2, true);
-            else /* the first argument is, and a later one is not */
-                throw __strict_length_error("map", e2 ? 2 : 1, false);
-        } else
-            throw new StopIteration();
-    }
-
-    return this->function(t1, t2, t3);
+    throw new StopIteration();
 }
 
 template<class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3> *map(int, __ss_bool strict_, R (*function_) (T1, T2, T3), pyiter<T1> *iterable1, pyiter<T2> *iterable2, pyiter<T3> *iterable3)
