@@ -128,6 +128,9 @@ public:
       reference, for exceptions that cannot be created from just their
       message (see __ss_raise_py in extmod.hpp); 0 means use message */
    virtual PyObject *__py_args__() { return 0; }
+   /* copy attributes to the CPython exception (for exported exception
+      subclasses, see extmod.convert_exception); -1 on error */
+   virtual int __py_setattrs__(PyObject *) { return 0; }
 #endif
 };
 

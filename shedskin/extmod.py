@@ -382,10 +382,85 @@ class ExtensionModule:
         write("    return Py_None;")
         write("}\n")
 
+    def is_exception(self, cl: "python.Class") -> bool:
+        """Check if a class inherits from Exception"""
+        return python.def_class(self.gx, "Exception") in cl.ancestors()
+
+    def exception_classes(self) -> list["python.Class"]:
+        """Get exception classes, which are exported as Python exception types"""
+        classes = [
+            cl for cl in self.gv.module.mv.classes.values() if self.is_exception(cl)
+        ]
+        return sorted(classes, key=lambda x: x.def_order)
+
+    def builtin_exception(self, cl: "python.Class") -> str:
+        """Get the CPython exception type of the nearest builtin ancestor"""
+        while cl.mv.module.ident != "builtin":
+            cl = cl.bases[0]
+        return "PyExc_" + cl.ident
+
+    def exception_base(self, cl: "python.Class") -> str:
+        """Get the CPython base type of an exception class"""
+        base = cl.bases[0]
+        if not base.mv.module.builtin:
+            return "%s::%s::__ss_pytype" % (
+                base.module.full_path(),
+                self.gv.cpp_name(base),
+            )
+        return self.builtin_exception(base)
+
+    def convert_exception(self, cl: "python.Class", declare: bool) -> None:
+        """Generate the CPython type of an exception class
+
+        This is created with PyErr_NewException during module init (see
+        do_extmod), so it is a real exception type that Python code can catch
+        and raise. Methods are not exported, but attributes are copied to the
+        CPython exception when it is raised (see __ss_raise_py).
+        """
+        write = self.write
+        if declare:
+            write("    static PyObject *__ss_pytype;")
+            # still unset if raised during module init (fall back to the base)
+            write(
+                "    PyObject *__to_py__() { return __ss_pytype ? __ss_pytype : %s; }"
+                % self.builtin_exception(cl)
+            )
+            write("    int __py_setattrs__(PyObject *p);")
+        else:
+            for n in cl.module.name_list:
+                write("namespace __%s__ {" % n)
+            write("PyObject *%s::__ss_pytype;\n" % self.gv.cpp_name(cl))
+            write("int %s::__py_setattrs__(PyObject *p) {" % self.gv.cpp_name(cl))
+            write("    PyObject *v;")
+            for var in self.supported_vars(cl.vars.values()):
+                write("    v = __to_py(this->%s);" % self.gv.cpp_name(var))
+                write(
+                    '    if (!v || PyObject_SetAttrString(p, "%s", v) < 0) {'
+                    % var.name
+                )
+                write("        Py_XDECREF(v);")
+                write("        return -1;")
+                write("    }")
+                write("    Py_DECREF(v);")
+            # attributes of an exported base class
+            base = cl.bases[0]
+            if base.mv.module.builtin:
+                write("    return 0;")
+            else:
+                write(
+                    "    return %s::%s::__py_setattrs__(p);"
+                    % (base.module.full_path(), self.gv.cpp_name(base))
+                )
+            write("}\n")
+            for n in cl.module.name_list:
+                write("} // module namespace")
+            write("")
+
     def convert_methods(self, cl: "python.Class", declare: bool) -> None:
         """Generate converted methods"""
         write = self.write
-        if python.def_class(self.gx, "Exception") in cl.ancestors():
+        if self.is_exception(cl):
+            self.convert_exception(cl, declare)
             return
         if declare:
             write("    virtual PyObject *__to_py__();")
@@ -750,7 +825,7 @@ class ExtensionModule:
         write("PyObject *__ss_mod_%s;\n" % "_".join(self.gv.module.name_list))
 
         # classes
-        classes = self.exported_classes(warns=True)
+        classes = self.exported_classes()
         for cl in classes:
             self.do_extmod_class(cl)
 
@@ -815,6 +890,26 @@ class ExtensionModule:
             write("        Py_DECREF(m);")
             write("        return NULL;")
             write("    }\n")
+
+        write("    // add exception types")
+        for cl in self.exception_classes():
+            pytype = "%s::%s::__ss_pytype" % (
+                cl.module.full_path(),
+                self.gv.cpp_name(cl),
+            )
+            write(
+                '    %s = PyErr_NewException("%s.%s", %s, NULL);'
+                % (pytype, cl.module.ident, cl.ident, self.exception_base(cl))
+            )
+            write("    Py_XINCREF(%s);" % pytype)  # keep one, as AddObject steals
+            write(
+                '    if (!%s || PyModule_AddObject(m, "%s", %s) < 0) {'
+                % (pytype, cl.ident, pytype)
+            )
+            write("        Py_XDECREF(%s);" % pytype)
+            write("        Py_DECREF(m);")
+            write("        return NULL;")
+            write("    }\n")
         write("    return m;")
         write("}\n")
 
@@ -823,7 +918,7 @@ class ExtensionModule:
         write('\n} // extern "C"')
 
         # conversion methods to/from CPython/Shedskin
-        for cl in classes:
+        for cl in classes + self.exception_classes():
             self.convert_methods(cl, False)
 
     def do_extmod_class(self, cl: "python.Class") -> None:
@@ -1128,17 +1223,13 @@ class ExtensionModule:
             "PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list)
         )
 
-    def exported_classes(self, warns: bool = False) -> list["python.Class"]:
+    def exported_classes(self) -> list["python.Class"]:
         """Get exported classes"""
-        classes = []
-        for cl in self.gv.module.mv.classes.values():
-            if python.def_class(self.gx, "Exception") in cl.ancestors():
-                if warns:
-                    logger.warning(
-                        "'%s' class not exported (inherits from Exception)", cl.ident
-                    )
-            else:
-                classes.append(cl)
+        classes = [
+            cl
+            for cl in self.gv.module.mv.classes.values()
+            if not self.is_exception(cl)  # see convert_exception
+        ]
         return sorted(classes, key=lambda x: x.def_order)
 
     def convert_methods2(self) -> None:
