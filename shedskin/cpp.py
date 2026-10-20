@@ -3701,6 +3701,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
+                ident == "__format__"
+                and isinstance(node.func, ast.Attribute)
+                and any(
+                    (python.def_class(self.gx, cl), 0)
+                    in self.mergeinh[node.func.value]
+                    for cl in ("int_", "bool_", "float_", "str_")
+                )
+            ):
+                # int.__format__ etc. are format() (see lib/builtin/format.hpp)
+                self.visitm("format(", node.func.value, ", ", func)
+                self.visit_callfunc_args(funcs, node, func)
+                self.visitm(")", func)
+                return
+            elif (
                 ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes", "hex")
                 and isinstance(node.func, ast.Attribute)
                 and (
@@ -3825,6 +3839,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "builtin", None, "str")
             or self.library_func(funcs, "builtin", None, "repr")
             or self.library_func(funcs, "builtin", None, "ascii")
+            or self.library_func(funcs, "builtin", None, "format")
             # bytearray.take_bytes(None) must pick the void* (take all)
             # overload, not the __ss_int one
             or self.library_func(funcs, "builtin", "bytes_", "take_bytes")
