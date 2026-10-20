@@ -29,6 +29,7 @@ Note that ast.unparse can be very useful during debugging.
 """
 
 import ast
+import re
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from . import config, python
@@ -60,6 +61,24 @@ def is_constant(node: ast.AST) -> bool:
 def is_str(node: ast.AST) -> bool:
     """Check if a node is a str constant"""
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+# format specs currently supported by __format (see lib/builtin/format.hpp):
+# only 'f' and 'F', with an optional sign, '#', '0', width and precision
+FORMAT_SPEC = re.compile(r"[-+ ]?#?0?[0-9]*(\.[0-9]+)?[fF]")
+
+
+def supported_format_spec(spec: Optional[ast.expr]) -> Optional[ast.Constant]:
+    """The constant format spec of an f-string value, if it is supported"""
+    if (
+        isinstance(spec, ast.JoinedStr)
+        and len(spec.values) == 1
+        and isinstance(spec.values[0], ast.Constant)
+        and isinstance(spec.values[0].value, str)
+        and FORMAT_SPEC.fullmatch(spec.values[0].value)
+    ):
+        return spec.values[0]
+    return None
 
 
 def mode_arg(node: ast.Call, pos: int) -> Optional[ast.expr]:

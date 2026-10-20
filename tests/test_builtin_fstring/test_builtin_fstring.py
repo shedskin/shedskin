@@ -69,6 +69,45 @@ class Repred:
         return 'Repred()'
 
 
+def test_fstring_format_spec():
+    x = 3.14159
+    assert f'{x:f}' == '3.141590'
+    assert f'{x:.2f}' == '3.14'
+    assert f'{x:8.3f}' == '   3.142'
+    assert f'{x:08.3f}' == '0003.142'
+    assert f'{-x:08.3f}' == '-003.142'
+    assert f'{x:+.1f}' == '+3.1'
+    assert f'{x: .1f}' == ' 3.1'
+    assert f'{-x:-.1f}' == '-3.1'
+    assert f'{x:#.0f}' == '3.'
+    assert f'{x:.0f}' == '3'
+    assert f'{-0.0:.1f}' == '-0.0'
+    assert f'{float("inf"):F}' == 'INF'
+    assert f'{float("nan"):+08.2f}' == '+0000nan'
+    assert f'[{x:.1f}|{x:.3f}]' == '[3.1|3.142]'
+    # int and bool accept 'f'
+    n = 7
+    assert f'{n:.2f}' == '7.00'
+    assert f'{-n:06.1f}' == '-007.0'
+    assert f'{True:.1f}' == '1.0'
+    # the spec applies after a conversion
+    try:
+        f'{x!r:.2f}'
+        assert False
+    except ValueError as e:
+        assert str(e) == "Unknown format code 'f' for object of type 'str'"
+    try:
+        f'{[x]:.2f}'
+        assert False
+    except TypeError as e:
+        assert str(e) == 'unsupported format string passed to list.__format__'
+    try:
+        f'{None:.2f}'
+        assert False
+    except TypeError as e:
+        assert str(e) == 'unsupported format string passed to NoneType.__format__'
+
+
 def test_all():
     test_basic_fstring()
     test_empty_fstring()
@@ -77,6 +116,7 @@ def test_all():
     test_fstring_repr_conversion()
     test_fstring_self_documenting()
     test_fstring_ascii_conversion()
+    test_fstring_format_spec()
 
 
 if __name__ == '__main__':

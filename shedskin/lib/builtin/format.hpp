@@ -118,8 +118,8 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg
     __mod_hex(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+/* e, E, f, F, g and G: shared by %-formatting and format specs */
+static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::stringstream t;
     std::string sign;
     __ss_float aarg = arg;
@@ -134,6 +134,16 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
     if (c == 'E' || c == 'F' || c == 'G') {
         t.setf(std::ios::uppercase);
         lc = (char)(c + ('a' - 'A'));
+    }
+
+    /* the stream ignores 'uppercase' for a fixed-point inf/nan, so do these
+       by hand ('#' and the precision do not apply to them) */
+    if (std::isinf(aarg) || std::isnan(aarg)) {
+        std::string s = std::isinf(aarg) ? "inf" : "nan";
+        if (lc != c)
+            s = std::isinf(aarg) ? "INF" : "NAN";
+        __mod_pad_signed(result, sign, s, f_flag, f_width, f_zero);
+        return;
     }
 
     /* all three conversions default to a precision of 6, as in CPython */
@@ -156,6 +166,11 @@ template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg
     t << aarg;
 
     __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
+}
+
+template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
+template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __fmt_float(result, c, arg, f_flag, f_width, f_precision, f_zero);
 }
 template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_float(result, pos, (char)c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
@@ -475,6 +490,42 @@ template<class A, class B> bytes *__modtuple(bytes *fmt, tuple2<A,B> *t) {
 
 template<class A, class B, class C> bytes *__modtuple(bytes *fmt, tuple3<A,B,C> *t) {
     return __mod6(fmt, 3, t->__getfirst__(), t->__getsecond__(), t->__getthird__());
+}
+
+/* format specs (f-strings and str.format) */
+
+/* for now only 'f' and 'F', with an optional sign, '#', '0', width and
+   precision (see also ast_utils.supported_format_spec) */
+void __fmt_parse_float(str *spec, char &c, char &f_flag, __ss_int &f_width, __ss_int &f_precision, bool &f_zero);
+
+inline str *__format(__ss_float arg, str *spec) {
+    char c, f_flag;
+    __ss_int f_width, f_precision;
+    bool f_zero;
+    __fmt_parse_float(spec, c, f_flag, f_width, f_precision, f_zero);
+    str *result = new str();
+    __fmt_float(result, c, arg, f_flag, f_width, f_precision, f_zero);
+    return result;
+}
+/* int (and bool) accept the float presentation types */
+inline str *__format(__ss_int arg, str *spec) { return __format((__ss_float)arg, spec); }
+inline str *__format(__ss_bool arg, str *spec) { return __format((__ss_float)arg.value, spec); }
+
+inline str *__format(str *arg, str *spec) {
+    if (spec->unit.empty())
+        return arg;
+    throw new ValueError(__add_strs(3, new str("Unknown format code '"), new str(__GC_STR(1, spec->unit.back())), new str("' for object of type 'str'")));
+}
+
+inline str *__fmt_typename(pyobj *p) { return p ? p->__class__->__name__ : new str("NoneType"); }
+inline str *__fmt_typename(void *) { return new str("NoneType"); }
+inline str *__fmt_typename(const complex &) { return new str("complex"); } /* TODO complex.__format__ */
+
+/* like object.__format__ */
+template<class T> str *__format(T arg, str *spec) {
+    if (spec->unit.empty())
+        return __str(arg);
+    throw new TypeError(__add_strs(3, new str("unsupported format string passed to "), __fmt_typename(arg), new str(".__format__")));
 }
 
 #endif

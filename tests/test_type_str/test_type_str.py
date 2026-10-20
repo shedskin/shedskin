@@ -1083,6 +1083,10 @@ def test_mod_format():
     assert '%.f|%5.f|' % (2.5, 3.7) == '2|    4|'
     assert '%.e|%.g|%.s|%5.s|' % (1234.5, 0.000123, 'abc', 'xyz') == '1e+03|0.0001||     |'
     assert '%(a).f %(b).3f' % {'a': 1.5, 'b': 2.0} == '2 2.000'
+    # uppercase conversions also uppercase inf and nan
+    inf = float('inf')
+    assert '%F|%F|%F|%07F|%f' % (inf, -inf, float('nan'), -inf, inf) == 'INF|-INF|NAN|-000INF|inf'
+    assert '%E|%G' % (inf, float('nan')) == 'INF|NAN'
 
 
 def _eq_kind(x):
