@@ -802,9 +802,10 @@ class dict(pyiter):
         self.__key__(u)
         return self.value
         return v
-    def pop(self, key, default=None):
+    def pop(self, key, v=None):
         self.__key__(key)
         return self.value
+        return v
     def popitem(self):
         return (self.unit, self.value)
 

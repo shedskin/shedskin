@@ -68,7 +68,7 @@ def test_containers():
 
     g = d.copy()
     assert g == d
-    assert g.pop(0) == True
+    assert g.pop(0, False) == True
     assert sorted(g.items()) == [(1, False)]
 
     # bool as dict key
