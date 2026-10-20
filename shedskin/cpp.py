@@ -2313,6 +2313,35 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif root_if in self.mv.tempcount:
             self.output("}")
 
+    def visit_Match(
+        self, node: ast.Match, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit a match statement (if-else if-else chain on subject temp var)"""
+        self.start()
+        self.visitm(self.mv.tempcount[node], " = ", node.subject, func)
+        self.eol()
+
+        first = True
+        for case in node.cases:
+            test = self.mv.match_tests[case]
+            if test is None:
+                if first:
+                    self.output("{")
+                else:
+                    self.output("else {")
+            else:
+                self.start()
+                self.append("if (" if first else "else if (")
+                self.bool_test(test, func)
+                self.print(self.line + ") {")
+            first = False
+
+            self.indent()
+            for child in case.body:
+                self.visit(child, func)
+            self.deindent()
+            self.output("}")
+
     def visit_IfExp(
         self, node: ast.IfExp, func: Optional["python.Function"] = None
     ) -> None:

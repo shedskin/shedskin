@@ -374,6 +374,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.ext_funcs: dict[str, "python.Function"] = {}
         self.lambdaname: dict[ast.AST, str] = {}
         self.lwrapper: dict[ast.AST, str] = {}
+        self.match_tests: dict[ast.match_case, Optional[ast.expr]] = {}
         self.tempcount = self.gx.tempcount
         self.str_format_node: Optional[ast_utils.StrFormat] = None
         self.listcomps: list[
@@ -1478,7 +1479,73 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Match, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a match statement"""
-        error.error("match case statement not supported", self.gx, node, mv=getmv())
+        # the subject is evaluated once into a temp var, and each case becomes
+        # a (generated) test against it, so we get an if-else if-else chain
+        self.visit(node.subject, func)
+        tvar = self.temp_var2(node, infer.inode(self.gx, node.subject), func)
+
+        for i, case in enumerate(node.cases):
+            test = self.match_pattern(case.pattern, tvar.name)
+            if case.guard:
+                if test is None:
+                    test = case.guard
+                else:
+                    test = ast.BoolOp(ast.And(), [test, case.guard])
+                ast.copy_location(test, case.guard)
+            elif test is None and i < len(node.cases) - 1:
+                error.error(
+                    "wildcard makes remaining patterns unreachable",
+                    self.gx,
+                    case.pattern,
+                    mv=getmv(),
+                )
+            getmv().match_tests[case] = test
+
+            if test is not None:
+                self.bool_test_add(test)
+                faker = ast.Call(ast.Name("bool", ast.Load()), [test], [])
+                self.visit(faker, func)
+            for child in case.body:
+                self.visit(child, func)
+
+    def match_pattern(self, pattern: ast.pattern, subject: str) -> Optional[ast.expr]:
+        """Generate test expression for a match pattern (None if irrefutable)"""
+        test: ast.expr
+        if isinstance(pattern, ast.MatchValue):
+            test = ast.Compare(
+                ast.Name(subject, ast.Load()), [ast.Eq()], [pattern.value]
+            )
+        elif isinstance(pattern, ast.MatchSingleton):
+            test = ast.Compare(
+                ast.Name(subject, ast.Load()), [ast.Is()], [ast.Constant(pattern.value)]
+            )
+        elif isinstance(pattern, ast.MatchOr):
+            tests = []
+            for p in pattern.patterns:
+                subtest = self.match_pattern(p, subject)
+                if subtest is None:
+                    return None
+                tests.append(subtest)
+            test = ast.BoolOp(ast.Or(), tests)
+        elif isinstance(pattern, ast.MatchAs) and not (pattern.pattern or pattern.name):
+            return None  # wildcard
+        else:
+            kinds = {
+                ast.MatchAs: "capture",
+                ast.MatchSequence: "sequence",
+                ast.MatchMapping: "mapping",
+                ast.MatchClass: "class",
+            }
+            kind = kinds.get(type(pattern), "this kind of")
+            error.error(
+                "%s patterns are not supported" % kind, self.gx, pattern, mv=getmv()
+            )
+            return None
+        ast.copy_location(test, pattern)
+        for child in ast.walk(test):
+            if not hasattr(child, "lineno") and isinstance(child, ast.expr):
+                ast.copy_location(child, pattern)
+        return test
 
     def visit_Global(self, node: ast.Global, func: "python.Function") -> None:
         """Visit a global statement"""
