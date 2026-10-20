@@ -6,7 +6,7 @@ namespace __array__ {
 
 str *__name__;
 class_ *cl_array;
-str *typecodes;
+tuple2<str *, str *> *typecodes;
 
 void *buffy;
 
@@ -89,7 +89,11 @@ void __init() {
     cl_array = new class_("array");
 
     buffy = malloc(8);
-    typecodes = new str("bBuwhHiIlLqQfd");
+    /* like cpython 3.15 (a tuple, including the not-yet-supported e/Zf/Zd) */
+    typecodes = new tuple2<str *, str *>(17,
+        new str("b"), new str("B"), new str("u"), new str("w"), new str("h"), new str("H"),
+        new str("i"), new str("I"), new str("l"), new str("L"), new str("q"), new str("Q"),
+        new str("e"), new str("f"), new str("d"), new str("Zf"), new str("Zd"));
 }
 
 } // module namespace
