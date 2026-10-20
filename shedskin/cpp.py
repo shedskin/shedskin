@@ -3224,12 +3224,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append("__add_strs(%d, " % len(node.values))
         for i, value in enumerate(node.values):
             convert = "__str"
+            spec = None
             if isinstance(value, ast.FormattedValue):
+                # a (supported) format spec is applied to the value after
+                # any conversion, as in CPython
+                spec = ast_utils.supported_format_spec(value.format_spec)
                 if value.conversion == ord("r"):
                     convert = "repr"
                 elif value.conversion == ord("a"):
                     convert = "ascii"
+                elif spec:
+                    convert = ""
                 value = value.value
+            if spec:
+                self.append("__format(")
             # __add_strs is variadic, so a bare NULL argument would be deduced
             # as whatever integer type NULL happens to be spelled as, and bind
             # to the int __str()/repr() overload (formatting it as "0") instead
@@ -3238,6 +3246,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("%s(((void *)0))" % convert)
             else:
                 self.visitm("%s(" % convert, value, ")", func)
+            if spec:
+                self.visitm(", ", spec, ")", func)
             if i != len(node.values) - 1:
                 self.append(", ")
         self.append(")")

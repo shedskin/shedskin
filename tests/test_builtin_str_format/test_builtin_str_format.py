@@ -123,6 +123,17 @@ def test_global():
     assert GLOBAL == '1+2'
 
 
+def test_format_spec():
+    assert '{:.2f}'.format(2.5) == '2.50'
+    assert '{0:+08.3f} {0:.1f}'.format(-1.25) == '-001.250 -1.2'
+    assert '{x:6.1f}|{y:F}'.format(x=3, y=float('-inf')) == '   3.0|-INF'
+    assert '{0.x:.1f}'.format(Point(1, 2)) == '1.0'
+    # same renderer as %-formatting
+    for v in [0.5, -2.0, 1e10, 123.456]:
+        assert '{:+012.3f}'.format(v) == '%+012.3f' % v
+        assert '{:#.0f}'.format(v) == '%#.0f' % v
+
+
 def test_all():
     test_basic()
     test_braces()
@@ -133,6 +144,7 @@ def test_all():
     test_expressions()
     test_contexts()
     test_global()
+    test_format_spec()
 
 
 if __name__ == '__main__':

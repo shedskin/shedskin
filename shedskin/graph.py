@@ -777,7 +777,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for value in node.values:
             method = "__str__"
             if isinstance(value, ast.FormattedValue):
-                if value.format_spec:
+                spec = ast_utils.supported_format_spec(value.format_spec)
+                if spec:
+                    self.visit(spec, func)
+                elif value.format_spec:
                     error.error(
                         "f-string format spec is not supported",
                         self.gx,
