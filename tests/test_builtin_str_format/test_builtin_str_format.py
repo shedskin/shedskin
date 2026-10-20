@@ -132,6 +132,15 @@ def test_format_spec():
     for v in [0.5, -2.0, 1e10, 123.456]:
         assert '{:+012.3f}'.format(v) == '%+012.3f' % v
         assert '{:#.0f}'.format(v) == '%#.0f' % v
+    # ints, bools and strs
+    assert '{:5}|{:05d}|{:+}'.format(42, -42, 0) == '   42|-0042|+0'
+    assert '{0:b} {0:#o} {0:#x} {0:X} {1:c}'.format(255, 97) == '11111111 0o377 0xff FF a'
+    assert '{x:.1%} {y:4}|{y:d}'.format(x=1, y=True) == '100.0%    1|1'
+    assert '{:6}|{:.2}|{:04s}'.format('ab', 'xyz', 'q') == 'ab    |xy|q000'
+    assert '{0.y:#06x}'.format(Point(1, 26)) == '0x001a'
+    assert '{:}|{:.3}|{:08}'.format(1.5, 100.0, -0.25) == '1.5|1e+02|-0000.25'
+    for n in [0, 1, -1, 4096, -123456]:
+        assert '{:+#012x}'.format(n) == '%+#012x' % n
 
 
 def test_all():

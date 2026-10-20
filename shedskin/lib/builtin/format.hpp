@@ -118,15 +118,79 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg
     __mod_hex(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-/* e, E, f, F, g and G: shared by %-formatting and format specs */
+/* the decimal exponent of (non-negative, finite) aarg when rounded to p
+   significant digits, i.e. as it would show in scientific notation */
+static inline int __fmt_exp10(__ss_float aarg, __ss_int p) {
+    std::stringstream t;
+    t.setf(std::ios::scientific, std::ios::floatfield);
+    t.precision(p-1);
+    t << aarg;
+    std::string s = t.str();
+    return atoi(s.c_str() + s.find('e') + 1);
+}
+
+/* fixed (x is ignored) or scientific notation of aarg, with p significant
+   digits, with trailing zeros (and decimal point) stripped unless '#' */
+static inline std::string __fmt_digits(__ss_float aarg, __ss_int p, int x, bool scientific, char f_flag, bool upper) {
+    std::stringstream t;
+    if (upper)
+        t.setf(std::ios::uppercase);
+    if (f_flag & __SS_FMT_ALT)
+        t.setf(std::ios::showpoint);
+    t.setf(scientific ? std::ios::scientific : std::ios::fixed, std::ios::floatfield);
+    t.precision(scientific ? p-1 : p-1-x);
+    t << aarg;
+    std::string s = t.str();
+    size_t e = scientific ? s.find('e') : s.size();
+    if (!(f_flag & __SS_FMT_ALT) && s.find('.') < e) {
+        size_t end = e;
+        while (s[end-1] == '0')
+            end--;
+        if (s[end-1] == '.')
+            end--;
+        s.erase(end, e-end);
+    }
+    return s;
+}
+
+/* a format spec without presentation type: like repr() without a precision,
+   else like 'g', except that exponent notation is used from an exponent of
+   precision-1 on (instead of precision), and that fixed-point notation always
+   has a digit after the decimal point (CPython's Py_DTSF_ADD_DOT_0) */
+static inline void __fmt_float_none(str *result, const std::string &sign, __ss_float aarg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    if (f_precision == -1) {
+        __GC_STR r = __str(aarg)->unit;
+        size_t e = r.find('e');
+        if ((f_flag & __SS_FMT_ALT) && e != __GC_STR::npos && r.find('.') == __GC_STR::npos)
+            r.insert(e, 1, '.'); /* '#': always a decimal point, e.g. 1.e+16 */
+        __mod_pad_signed(result, sign, r, f_flag, f_width, f_zero);
+        return;
+    }
+    __ss_int p = f_precision ? f_precision : 1;
+    int x = __fmt_exp10(aarg, p);
+    bool scientific = x < -4 || x >= p-1;
+    std::string s = __fmt_digits(aarg, p, x, scientific, f_flag, false);
+    if (!scientific && s.find('.') == std::string::npos)
+        s += ".0";
+    __mod_pad_signed(result, sign, s, f_flag, f_width, f_zero);
+}
+
+/* e, E, f, F, g and G: shared by %-formatting and format specs, which add
+   '%' and an omitted presentation type (c == 0) */
 static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     std::stringstream t;
-    std::string sign;
+    std::string sign, suffix;
     __ss_float aarg = arg;
     bool negative = arg < 0 || (arg == 0 && std::signbit(arg)); /* also catch -0.0 */
     if (negative)
         aarg = -arg;
     sign = __mod_sign(negative, f_flag);
+    /* '%': 'f' of 100 times the value, followed by a percent sign */
+    if (c == '%') {
+        aarg *= 100;
+        c = 'f';
+        suffix = "%";
+    }
     /* the uppercase conversions ('E', 'F', 'G') format exactly like their
        lowercase counterparts, apart from using an uppercase exponent marker
        and uppercase 'INF'/'NAN' */
@@ -142,7 +206,12 @@ static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag,
         std::string s = std::isinf(aarg) ? "inf" : "nan";
         if (lc != c)
             s = std::isinf(aarg) ? "INF" : "NAN";
-        __mod_pad_signed(result, sign, s, f_flag, f_width, f_zero);
+        __mod_pad_signed(result, sign, s + suffix, f_flag, f_width, f_zero);
+        return;
+    }
+
+    if (c == 0) {
+        __fmt_float_none(result, sign, aarg, f_flag, f_width, f_precision, f_zero);
         return;
     }
 
@@ -158,14 +227,22 @@ static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag,
         t.precision(f_precision);
     } else { /* 'g': significant digits, exponent form as needed, no
                 trailing zeroes; a precision of 0 is taken to mean 1 */
+        __ss_int p = f_precision ? f_precision : 1;
+        if (f_flag & __SS_FMT_ALT) {
+            /* by hand: glibc keeps one digit too few when rounding bumps the
+               exponent, e.g. '%#.2g' % 99.99 gives 1.e+02 instead of 1.0e+02 */
+            int x = __fmt_exp10(aarg, p);
+            __mod_pad_signed(result, sign, __fmt_digits(aarg, p, x, x < -4 || x >= p, f_flag, lc != c) + suffix, f_flag, f_width, f_zero);
+            return;
+        }
         t.unsetf(std::ios::floatfield);
-        t.precision(f_precision ? f_precision : 1);
+        t.precision(p);
     }
     if (f_flag & __SS_FMT_ALT) /* '#': always a decimal point, and 'g' keeps trailing zeros */
         t.setf(std::ios::showpoint);
     t << aarg;
 
-    __mod_pad_signed(result, sign, t.str(), f_flag, f_width, f_zero);
+    __mod_pad_signed(result, sign, t.str() + suffix, f_flag, f_width, f_zero);
 }
 
 template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
@@ -209,14 +286,19 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
     __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 
-template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
-template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
+/* c: shared by %-formatting and format specs (where '0' zero-fills) */
+static inline void __fmt_char(str *result, __ss_int arg, char f_flag, __ss_int f_width, bool f_zero) {
     if(arg < 0 || arg > 0x10ffff)
         throw new OverflowError(new str("%c arg not in range(0x110000)"));
     if(f_width == -1)
         result->unit += (__ss_char)arg;
     else
-        __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
+        __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, f_zero);
+}
+
+template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
+template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
+    __fmt_char(result, arg, f_flag, f_width, false);
 }
 template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
     if(arg->unit.size() != 1)
@@ -494,28 +576,12 @@ template<class A, class B, class C> bytes *__modtuple(bytes *fmt, tuple3<A,B,C> 
 
 /* format specs (f-strings and str.format) */
 
-/* for now only 'f' and 'F', with an optional sign, '#', '0', width and
-   precision (see also ast_utils.supported_format_spec) */
-void __fmt_parse_float(str *spec, char &c, char &f_flag, __ss_int &f_width, __ss_int &f_precision, bool &f_zero);
-
-inline str *__format(__ss_float arg, str *spec) {
-    char c, f_flag;
-    __ss_int f_width, f_precision;
-    bool f_zero;
-    __fmt_parse_float(spec, c, f_flag, f_width, f_precision, f_zero);
-    str *result = new str();
-    __fmt_float(result, c, arg, f_flag, f_width, f_precision, f_zero);
-    return result;
-}
-/* int (and bool) accept the float presentation types */
-inline str *__format(__ss_int arg, str *spec) { return __format((__ss_float)arg, spec); }
-inline str *__format(__ss_bool arg, str *spec) { return __format((__ss_float)arg.value, spec); }
-
-inline str *__format(str *arg, str *spec) {
-    if (spec->unit.empty())
-        return arg;
-    throw new ValueError(__add_strs(3, new str("Unknown format code '"), new str(__GC_STR(1, spec->unit.back())), new str("' for object of type 'str'")));
-}
+/* for now [sign][#][0][width][.precision][type], with the types of int,
+   float and str (see also ast_utils.FORMAT_SPEC) */
+str *__format(__ss_int arg, str *spec);
+str *__format(__ss_bool arg, str *spec);
+str *__format(__ss_float arg, str *spec);
+str *__format(str *arg, str *spec);
 
 inline str *__fmt_typename(pyobj *p) { return p ? p->__class__->__name__ : new str("NoneType"); }
 inline str *__fmt_typename(void *) { return new str("NoneType"); }
@@ -526,6 +592,14 @@ template<class T> str *__format(T arg, str *spec) {
     if (spec->unit.empty())
         return __str(arg);
     throw new TypeError(__add_strs(3, new str("unsupported format string passed to "), __fmt_typename(arg), new str(".__format__")));
+}
+
+/* format(), and int.__format__ etc. (see cpp.py) */
+template<class T> inline str *format(T value, str *format_spec) {
+    return __format(value, format_spec);
+}
+template<class T> inline str *format(T value) {
+    return __format(value, new str());
 }
 
 #endif

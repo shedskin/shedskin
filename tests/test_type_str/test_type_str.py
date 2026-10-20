@@ -1095,6 +1095,9 @@ def test_mod_format():
     inf = float('inf')
     assert '%F|%F|%F|%07F|%f' % (inf, -inf, float('nan'), -inf, inf) == 'INF|-INF|NAN|-000INF|inf'
     assert '%E|%G' % (inf, float('nan')) == 'INF|NAN'
+    # '#g' keeps all digits when rounding bumps the exponent
+    assert '%#.2g|%#.2G|%#.2g|%#.1g|%#.3g' % (99.99, 99.99, 9.99, 0.0, 99999.0) == '1.0e+02|1.0E+02|10.|0.|1.00e+05'
+    assert '%#.2g|%#.2g|%#g' % (0.000099999, 0.00099999, 123.0) == '0.00010|0.0010|123.000'
 
 
 def _eq_kind(x):

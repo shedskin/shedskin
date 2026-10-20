@@ -82,6 +82,9 @@ class int_:
     def __with_bool__(self):
         return 1
 
+    def __format__(self, format_spec):
+        return ''
+
     def __repr__(self):
         return ''
 
@@ -141,6 +144,9 @@ class bool_:
         return 1.0
     def __with_bool__(self):
         return self
+
+    def __format__(self, format_spec):
+        return ''
 
     def __repr__(self):
         return ''
@@ -205,6 +211,9 @@ class float_:
         return 1.0
     def __with_float__(self):
         return 1.0
+
+    def __format__(self, format_spec):
+        return ''
 
     def __repr__(self):
         return ''
@@ -472,6 +481,8 @@ class str_(pyseq):
     def __getitem__(self, i):
         return ''
     def __mul__(self, n):
+        return ''
+    def __format__(self, format_spec):
         return ''
     def __repr__(self):
         return ''
@@ -1302,6 +1313,10 @@ def repr(x):
 
 def ascii(x):
     x.__repr__()
+    return ''
+
+def format(value, format_spec=''):
+    value.__str__()
     return ''
 
 def hash(x):
