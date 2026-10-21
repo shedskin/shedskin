@@ -359,6 +359,11 @@ def test_strip():
 
 def test_swapcase():
     assert b'bLa'.swapcase() == b'BlA'
+    # ascii letters only: digits, punctuation and high bytes are kept
+    assert b'aZ09 @[`{\x80\xc0\xe9\xff'.swapcase() == b'Az09 @[`{\x80\xc0\xe9\xff'
+    assert b''.swapcase() == b''
+    assert bytearray(b'xY\xe0').swapcase() == bytearray(b'Xy\xe0')
+    assert bytes(range(256)).swapcase().swapcase() == bytes(range(256))
 
 def test_title():
     assert b'bla bla'.title() == b'Bla Bla'
@@ -619,6 +624,13 @@ def test_hex():
     error = ''
     try:
         b'AB'.hex('\xe9')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'sep must be ASCII.'
+    # low byte is ascii ('-'), but the character itself is not
+    error = ''
+    try:
+        b'AB'.hex('\u012d')
     except ValueError as e:
         error = str(e)
     assert error == 'sep must be ASCII.'

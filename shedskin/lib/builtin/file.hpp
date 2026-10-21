@@ -4,7 +4,7 @@
 #define SS_FILE_HPP
 
 struct __file_options {
-    char lastchar;
+    char32_t lastchar; /* only compared against '\n' */
     int space;
     bool universal_mode;
     bool cr;
