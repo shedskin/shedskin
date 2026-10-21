@@ -1392,10 +1392,12 @@ def __min1(arg, __kw_key=0, __kw_default=__void):
     __kw_key(elem)
     return elem
 
-def sum(iterable, start=__void):  # TODO return start
+def sum(iterable, start=__void):
     elem = iter(iterable).__next__()
-    elem.__add__(elem)
-    return elem
+    result = elem.__add__(elem)  # e.g. bool + bool -> int
+    if start:
+        return start.__add__(result)  # e.g. int + float -> float
+    return result
 
 def __cmp(a, b):
     a.__eq__(b)
