@@ -19,6 +19,16 @@ class Container:
     def __init__(self):
         self.items = []
 
+class Clash:
+    def __init__(self, c, memo):
+        self.c = c
+        self.memo = memo
+
+class Node:
+    def __init__(self, name, c=None):
+        self.name = name
+        self.c = c
+
 
 def test_deepcopy_nested():
     a = [[1], [2, 3]]
@@ -158,6 +168,23 @@ def test_copy_obj_class():
     assert copy.deepcopy(p).__class__.__name__ == 'Person'
 
 
+def test_copy_attr_names():
+    # attributes named like locals in the generated __copy__/__deepcopy__
+    x = Clash(1, 'm')
+    y = copy.copy(x)
+    assert y.c == 1 and y.memo == 'm'
+    z = copy.deepcopy(x)
+    assert z.c == 1 and z.memo == 'm'
+
+    n = Node('outer', Node('inner'))
+    m = copy.copy(n)
+    assert m.c is n.c
+    assert m.c.name == 'inner'
+    d = copy.deepcopy(n)
+    assert d.c is not n.c
+    assert d.c.name == 'inner'
+
+
 def test_all():
     test_copy1()
     test_copy2()
@@ -168,6 +195,7 @@ def test_all():
     test_copy_obj2()
     test_copy_obj3()
     test_copy_obj_class()
+    test_copy_attr_names()
     test_error()
 
 if __name__ == '__main__':
