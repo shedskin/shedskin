@@ -520,9 +520,12 @@ class SystemExit : public BaseException {
 public:
     __ss_int code;
     int show_message;
+    int int_code; /* constructed from an int (args holds its str) */
     SystemExit();
     SystemExit(__ss_int c);
     SystemExit(str *msg);
+
+    str *__repr__();
 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
