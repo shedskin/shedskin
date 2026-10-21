@@ -284,11 +284,11 @@ PyObject *KeyError::__py_args__() {
 
 /* SystemExit */
 
-SystemExit::SystemExit(__ss_int c) {
+SystemExit::SystemExit(__ss_int c) : BaseException(__str(c)) {
         this->__class__ = cl_systemexit;
         this->code = c;
-        this->message = __str(this->code);
         this->show_message = 0;
+        this->int_code = 1;
 }
 
 SystemExit::SystemExit() {
@@ -296,10 +296,18 @@ SystemExit::SystemExit() {
         this->code = 0;
         this->message = __str(this->code);
         this->show_message = 0;
+        this->int_code = 0;
 }
 
 SystemExit::SystemExit(str *msg) : BaseException(msg) {
         this->__class__ = cl_systemexit;
         this->code = 1;
         this->show_message = 1;
+        this->int_code = 0;
+}
+
+str *SystemExit::__repr__() {
+    if(int_code) /* SystemExit(7), not SystemExit('7') */
+        return __add_strs(4, this->__class__->__name__, new str("("), this->message, new str(")"));
+    return BaseException::__repr__();
 }

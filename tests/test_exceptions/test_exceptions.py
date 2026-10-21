@@ -566,6 +566,19 @@ def test_exception_attributes():
         ok = se.code == 3
     assert ok
 
+    # SystemExit str/repr
+    assert str(SystemExit(7)) == '7'
+    assert repr(SystemExit(7)) == 'SystemExit(7)'
+    assert str(SystemExit(0)) == '0'
+    assert str(SystemExit('bye')) == 'bye'
+    assert repr(SystemExit('bye')) == "SystemExit('bye')"
+    assert str(SystemExit()) == ''
+    assert repr(SystemExit()) == 'SystemExit()'
+    try:
+        sys.exit(5)
+    except SystemExit as se:
+        assert str(se) == '5'
+
     # OSError errno/strerror/filename/filename2
     oe = OSError('plain')
     assert oe.errno is None or oe.errno == 0  # shedskin: 0
