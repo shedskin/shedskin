@@ -780,6 +780,7 @@ void mmap::__exit__()
 
 void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 {
+    __raise_if_closed_or_not_writable();
     __raise_if_closed_or_not_readable();
     __ss_int length = size();
 
@@ -1255,7 +1256,7 @@ void __init()
         const_4  = new str("mmap can't specify both access and flags, prot");
         const_5  = new str("mmap invalid access parameter");
         const_8  = new str("mmap assignment must be single-character string");
-        const_9  = new str("mmap object is not open for writing");
+        const_9  = new str("mmap can't modify a readonly memory map.");
         const_10 = new str("mmap slice assignment is wrong size");
         const_11 = new str("mmap closed or invalid");
         const_12 = new str("unknown seek type");
