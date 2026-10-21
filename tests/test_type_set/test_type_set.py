@@ -134,6 +134,9 @@ def test_frozenset_hash():
     z, y = [(1, 2), (3,), (4, 5, 6)], [(3,), (4, 5, 6), (1, 2)]
     v, w = frozenset(z), frozenset(y)
     assert hash(v) == hash(w)
+    # sets of small ints should hardly collide
+    assert len(set([hash(frozenset([x, y])) for x in range(50) for y in range(x + 1, 50)])) == 1225
+    assert hash(frozenset()) != hash(frozenset([0]))
 
 def test_frozen_propagation():
     # frozen-ness should follow the receiver (self), not the argument,

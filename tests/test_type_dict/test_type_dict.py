@@ -205,6 +205,11 @@ def test_frozendict():
     t = set([f])
     assert t == s
     assert hash(f) != -1
+    # keys and values are hashed as pairs
+    assert hash(frozendict({1: 2, 3: 4})) != hash(frozendict({1: 4, 3: 2}))
+    assert hash(frozendict({1: 1})) != hash(frozendict({2: 2}))
+    assert hash(frozendict({1: 1})) != hash(frozendict({}))
+    assert hash(frozendict({1: 2, 3: 4})) == hash(frozendict({3: 4, 1: 2}))
 
     # copy
     j = g.copy()

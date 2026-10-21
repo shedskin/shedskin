@@ -248,7 +248,24 @@ def test_tuple_literal_long():
     assert sum(t) == 36
 
 
+def test_tuple_hash():
+    # equal tuples hash equal
+    assert hash((1, 2)) == hash((1, 2))
+    assert hash((1, 'a', 2.5)) == hash((1, 'a', 2.5))
+    assert hash((3, 'b')) == hash((3, 'b'))
+    # grid coordinates should hardly collide
+    assert len(set([hash((x, y)) for x in range(100) for y in range(100)])) == 10000
+    assert len(set([hash((x, y, z)) for x in range(20) for y in range(20) for z in range(20)])) == 8000
+    d = {}
+    for x in range(200):
+        for y in range(200):
+            d[x, y] = x * y
+    assert len(d) == 40000
+    assert d[199, 3] == 597 and d[3, 199] == 597
+
+
 def test_all():
+    test_tuple_hash()
     test_tuple_literal_long()
     test_tuple()
     test_equivalence()

@@ -190,7 +190,16 @@ inline complex __power(__ss_float a, complex b) { return __power(mcomplex(a), b)
 template<> inline __ss_int hasher(complex c) {
     return c.__hash__();
 }
-inline __ss_int complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
+/* as in CPython: hash(real) + 1000003*hash(imag), where integral parts hash
+   to their integer value (so hash(17+669j) == 669002024). other parts use the
+   float hash; truncating them to int collided heavily, and was undefined
+   for inf, nan and out-of-range values */
+static inline __ss_uint_hash_t __complex_part_hash(__ss_float d) {
+    if (d >= -9223372036854775808.0 and d < 9223372036854775808.0 and d == (__ss_float)(int64_t)d)
+        return (__ss_uint_hash_t)(int64_t)d;
+    return (__ss_uint_hash_t)hasher<__ss_float>(d);
+}
+inline __ss_int complex::__hash__() { return (__ss_int)(__complex_part_hash(real) + 1000003 * __complex_part_hash(imag)); }
 
 /* conjugate */
 

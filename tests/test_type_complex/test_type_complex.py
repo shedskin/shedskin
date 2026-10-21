@@ -42,6 +42,19 @@ def test_complex():
 
     assert hash(h) == 669002024
 
+    # non-integral parts should not be truncated
+    assert hash(complex(1.5, 2)) != hash(complex(1, 2))
+    assert hash(complex(1, 2.5)) != hash(complex(1, 2))
+    assert hash(complex(-0.0, 0.0)) == hash(complex(0.0, -0.0))
+    assert hash(complex(1e300, 0)) != hash(complex(float('inf'), 0))
+    assert len(set([hash(complex(x * 0.01, y * 0.01)) for x in range(100) for y in range(100)])) > 9000
+    dc = {}
+    for x in range(100):
+        for y in range(100):
+            dc[complex(x * 0.01, y * 0.01)] = x
+    assert len(dc) == 10000
+    assert dc[complex(0.5, 0.25)] == 50
+
     assert +complex(1, -2) == complex(1, -2)
     assert -complex(1, -2) == complex(-1, 2)
 

@@ -488,22 +488,24 @@ template<class K, class V> __ss_int frozendict<K, V>::__hash__() {
     if (hash != -1)
         return hash;
 
-    __ss_int hash_ = 1927868237L;
+    /* unsigned: no (undefined) signed overflow */
+    __ss_uint_hash_t hash_ = 1927868237UL;
 
-    hash_ *= this->__len__() + 1;
+    hash_ *= (__ss_uint_hash_t)this->__len__() + 1;
 
-    for (const auto& [key, value] : this->gcd) {
-        __ss_int h = hasher<K>(key);
-        hash_ ^= hash_shuffle_bits(h);
-        h = hasher<V>(value);
-        hash_ ^= hash_shuffle_bits(h);
-    }
-    hash_ = hash_ * 69069L + 907133923L;
-    if (hash_ == -1)
-        hash_ = 590923713L;
+    /* hash each (key, value) pair as a whole, as hash(frozenset(items())); hashing
+       keys and values separately made {1: 2, 3: 4} and {1: 4, 3: 2} collide, and
+       pairs with key == value cancel out */
+    for (const auto& [key, value] : this->gcd)
+        hash_ ^= (__ss_uint_hash_t)hash_shuffle_bits(hash_combine(hasher<K>(key), hasher<V>(value)));
 
-    hash = hash_;
-    return hash_;
+    hash_ ^= (hash_ >> 11) ^ (hash_ >> 25);
+    hash_ = hash_ * 69069UL + 907133923UL;
+    if ((__ss_int)hash_ == -1)
+        hash_ = 590923713UL;
+
+    hash = (__ss_int)hash_;
+    return hash;
 }
 
 template<class K, class V> str *frozendict<K,V>::__repr__() {
