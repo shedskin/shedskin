@@ -952,10 +952,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     varname = self.cpp_name(var)
                     if name == "__deepcopy__":
                         self.output(
-                            "c->{} = __deepcopy({}, memo);".format(varname, varname)
+                            "c->{} = __deepcopy(this->{}, memo);".format(
+                                varname, varname
+                            )
                         )
                     else:
-                        self.output("c->{} = {};".format(varname, varname))
+                        self.output("c->{} = this->{};".format(varname, varname))
             self.output("return c;")
             self.deindent()
             self.output("}\n")
