@@ -876,10 +876,6 @@ def analyze_args(
                     actuals.append(default)
                     formals.append(formal)
                 defaults.append(default)
-            elif func.mv.module.ident == "bisect":  # TODO generalize
-                if formal.startswith("__kw_"):
-                    actuals.insert(0, default)
-                    formals.insert(0, formal)
         else:
             missing = True
 
@@ -943,7 +939,6 @@ def connect_actual_formal(
                 "time",
                 "string",
                 "collections",
-                "bisect",
                 "array",
                 "math",
                 "integer",
@@ -975,6 +970,7 @@ def connect_actual_formal(
                 "decode",
                 "open",  # open(f, encoding=..) must not pass it as the mode
                 "open_binary",
+                "hex",  # b.hex(bytes_per_sep=..) must not pass it as the sep
             )
         )
     ):

@@ -695,7 +695,7 @@ class bytes_(pyseq):
     def swapcase(self):
         return b''
 
-    def hex(self, sep='', bytes_per_sep=1):
+    def hex(self, sep=None, bytes_per_sep=1):
         return ''
 
     def __slice__(self, x, l, u, s):
