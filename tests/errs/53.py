@@ -1,13 +1,15 @@
 s = 'abc'
 n = 3
+w = 5
 
-print(f'{n:5d}')
-
-# supported: default, explicit str conversion, repr/ascii conversion, '=' form
+# supported: default, explicit str conversion, repr/ascii conversion, '=' form,
+# and constant format specs
 print(f'{s}')
 print(f'{s!s}')
 print(f'{s!r}')
 print(f'{s!a}')
 print(f'{n=}')
+print(f'{n:5d}|{n:*^+8,}|{s!r:>8}')
+print(f'{n:{w}}')
 
-#*WARNING* 53.py:4: f-string format spec is not supported
+#*ERROR* 53.py:13: non-constant format spec

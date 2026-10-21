@@ -63,10 +63,13 @@ def is_str(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
-# format specs currently supported by __format (see lib/builtin/format.hpp):
-# an optional sign, '#', '0', width, precision and presentation type (of int,
-# float or str; whether it fits the value is checked at runtime, as in CPython)
-FORMAT_SPEC = re.compile(r"[-+ ]?#?0?[0-9]*(\.[0-9]+)?[bcdeEfFgGosxX%]?")
+# the format spec mini-language, as supported by __format (see
+# lib/builtin/format.hpp): [[fill]align][sign][z][#][0][width][grouping]
+# [.precision][type], with the presentation types of int, float and str
+# (whether the spec fits the value is checked at runtime, as in CPython)
+FORMAT_SPEC = re.compile(
+    r"(.?[<>=^])?[-+ ]?z?#?0?[0-9]*[,_]?(\.[0-9]+)?[bcdeEfFgGnosxX%]?", re.DOTALL
+)
 
 
 def supported_format_spec(spec: Optional[ast.expr]) -> Optional[ast.Constant]:
