@@ -43,6 +43,7 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <limits>
+#include <climits>
 #include <numeric>
 #include <cstddef>
 #include <type_traits>
