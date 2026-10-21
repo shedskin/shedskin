@@ -656,6 +656,46 @@ def test_access_copy():
         assert g.read() == b'original!'
     tearDown(m)
 
+def test_access_read():
+    setUp()
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'hello world')
+    f = open(TESTFILE_OUT, 'rb')
+    m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+    msg = "mmap can't modify a readonly memory map."
+
+    # every modifying method must refuse (move used to segfault)
+    errors = []
+    try:
+        m.move(0, 1, 3)
+    except TypeError as e:
+        errors.append(str(e))
+    try:
+        m.write(b'x')
+    except TypeError as e:
+        errors.append(str(e))
+    try:
+        m.write_byte(65)
+    except TypeError as e:
+        errors.append(str(e))
+    try:
+        m[0] = 65
+    except TypeError as e:
+        errors.append(str(e))
+    try:
+        m[0:2] = b'ab'
+    except TypeError as e:
+        errors.append(str(e))
+    assert errors == [msg] * 5
+
+    # ..and nothing was changed, while reading still works
+    assert m[:] == b'hello world'
+    assert m.tell() == 0
+    assert m.read(5) == b'hello'
+    f.close()
+    tearDown(m)
+
+
 def test_readline():
     m = mmap.mmap(-1, 16)
     m.write(b'ab\ncd\r\n\nef')
@@ -788,6 +828,7 @@ def test_all():
         test_default_flags_prot()
     test_module_constants()
     test_access_copy()
+    test_access_read()
     test_readline()
     test_offset()
 
