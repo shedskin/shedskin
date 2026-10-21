@@ -920,6 +920,8 @@ class pyset(pyiter):
     def __repr__(self):
         self.unit.__repr__()
         return ''
+    def __str__(self):
+        return self.__repr__()
 
 class frozenset(pyset):
     pass

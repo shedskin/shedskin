@@ -2,6 +2,7 @@ from collections import defaultdict
 from collections import deque
 from collections import Counter
 import copy
+import io
 
 
 def test_defaultdict1():
@@ -488,6 +489,20 @@ def test_deque_unhashable():
     assert raised
 
 
+class DequeReprElem:
+    def __init__(self, x):
+        self.x = x
+    def __repr__(self):
+        return 'DequeReprElem(%d)' % self.x
+
+def test_deque_print_user_repr():
+    # regression test (1021-B8): print of a deque ignored the
+    # user __repr__ of its elements
+    f = io.StringIO()
+    print(deque([DequeReprElem(1), DequeReprElem(2)]), file=f)
+    assert f.getvalue() == 'deque([DequeReprElem(1), DequeReprElem(2)])\n'
+
+
 def test_counter_construct_empty():
     c = Counter()
     c['a'] += 1
@@ -898,6 +913,7 @@ def test_all():
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
     test_deque_unhashable()
+    test_deque_print_user_repr()
     test_counter_construct_empty()
     test_counter_construct_iterable()
     test_counter_construct_mapping()

@@ -1,3 +1,4 @@
+import io
 
 
 def test_set1():
@@ -359,6 +360,21 @@ def test_set_churn():
     assert sorted(t) == ['a', 'c', 'd']
 
 
+class SetReprElem:
+    def __init__(self, x):
+        self.x = x
+    def __repr__(self):
+        return 'SetReprElem(%d)' % self.x
+
+def test_print_user_repr():
+    # regression test (1021-B8): print of a set or frozenset ignored
+    # the user __repr__ of its elements
+    f = io.StringIO()
+    print({SetReprElem(1)}, file=f)
+    print(frozenset([SetReprElem(2)]), file=f)
+    assert f.getvalue() == '{SetReprElem(1)}\nfrozenset({SetReprElem(2)})\n'
+
+
 def test_all():
     test_set_churn()
     test_set1()
@@ -379,6 +395,7 @@ def test_all():
     test_set_syntax()
     test_eq()
     test_set_literal_in_method()
+    test_print_user_repr()
 
 if __name__ == "__main__":
     test_all()
