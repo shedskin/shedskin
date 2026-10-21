@@ -395,6 +395,32 @@ __ss_bool __xrange::__contains__(__ss_int i) {
     return __ss_in_range(i, a, b, s);
 }
 
+/* as in CPython, ranges are equal when they produce the same sequence: so only
+   the length counts for empty ranges, and the step only past a single element */
+__ss_bool __xrange::__eq__(pyobj *p) {
+    __xrange *r = (__xrange *)p;
+    __ss_uint n = range_ulen(a, b, s);
+    if(n != range_ulen(r->a, r->b, r->s))
+        return False;
+    if(n == 0)
+        return True;
+    if(a != r->a)
+        return False;
+    if(n == 1)
+        return True;
+    return __mbool(s == r->s);
+}
+
+__ss_int __xrange::__hash__() {
+    __ss_uint n = range_ulen(a, b, s);
+    __ss_int seed = hash_combine(0, (__ss_int)n);
+    if(n > 0)
+        seed = hash_combine(seed, a);
+    if(n > 1)
+        seed = hash_combine(seed, s);
+    return seed;
+}
+
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)

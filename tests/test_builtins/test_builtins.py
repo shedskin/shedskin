@@ -641,6 +641,31 @@ def test_range_slicing():
     r = range(-5,-5,-5)
     assert list(r[-5:-4:1]) == []
 
+def test_range_equality():
+    # ranges compare (and hash) by the sequence they produce, not by identity
+    assert range(5) == range(5)
+    assert range(0, 10, 3) == range(0, 11, 3)
+    assert range(0) == range(5, 2, 3)
+    assert range(3, 4) == range(3, 9, 100)
+    assert range(0, 3) != range(0, 3, 2)
+    assert range(1, 3) != range(2, 4)
+    assert range(10, 0, -2) != range(0, 10, 2)
+    assert not (range(5) != range(0, 5, 1))
+    assert range(2, 20, 2)[::2] == range(2, 20, 4)
+
+    M = 9223372036854775807
+    m = -M - 1
+    assert range(m, M) == range(m, M, 1)
+    assert range(m, M) != range(m + 1, M)
+
+    assert hash(range(0, 10, 3)) == hash(range(0, 11, 3))
+    assert hash(range(0)) == hash(range(7, 2))
+    assert hash(range(3, 4)) == hash(range(3, 5, 9))
+    assert len({range(0), range(4, 1), range(1), range(0, 1, 5), range(2)}) == 3
+    d = {range(3): 'a'}
+    assert d[range(0, 3, 1)] == 'a'
+    assert range(0, 3) in [range(4), range(3)]
+
 def test_repr():
     assert repr(1) == '1'
     assert repr(1.1) == '1.1'
@@ -856,6 +881,7 @@ def test_all():
     test_range_beyond_32_bits()
     test_range_near_int_limits()
     test_range_slicing()
+    test_range_equality()
     test_repr()
     test_ascii()
     test_reversed()
