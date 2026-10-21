@@ -229,6 +229,105 @@ def test_names():
         pass
 
 
+def test_embedded_nul():
+    # the C apis would stop at the NUL, so these are refused (as in CPython)
+    try:
+        socket.inet_aton('1.2.3.4\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.inet_pton(socket.AF_INET, '1.2.3.4\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.getprotobyname('tcp\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.getservbyname('http\0x', 'tcp')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.getservbyname('http', 'tcp\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.getservbyport(80, 'tcp\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.getnameinfo(('127.0.0.1\0x', 80), 0)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+    try:
+        socket.if_nametoindex('lo\0x')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null byte'
+    try:
+        socket.gethostbyname('localhost\0x')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'gethostbyname() argument 1 must be encoded string without null bytes, not str'
+    try:
+        socket.gethostbyname_ex('localhost\0x')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'gethostbyname_ex() argument 1 must be encoded string without null bytes, not str'
+    try:
+        socket.gethostbyaddr('127.0.0.1\0x')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'gethostbyaddr() argument 1 must be encoded string without null bytes, not str'
+    try:
+        socket.getfqdn('127.0.0.1\0x')
+        assert False
+    except TypeError:
+        pass
+
+    s = socket.socket()
+    try:
+        s.bind(('127.0.0.1\0x', 0))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'host name must not contain null character'
+    try:
+        s.connect(('127.0.0.1\0x', 1))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'host name must not contain null character'
+    try:
+        s.connect_ex(('127.0.0.1\0x', 1))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'host name must not contain null character'
+    s.close()
+    u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        u.sendto(b'x', ('127.0.0.1\0x', 1))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'host name must not contain null character'
+    u.close()
+    try:  # (getaddrinfo() stops at the NUL, though, so this connects to 127.0.0.1)
+        socket.create_connection(('127.0.0.1\0x', 1))
+        assert False
+    except OSError:  # (not a TypeError)
+        pass
+    try:
+        socket.create_connection(('127.0.0.1', 1), source_address=('127.0.0.1\0x', 0))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'host name must not contain null character'
+
+
 def test_udp():
     a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -779,6 +878,7 @@ def test_all():
     test_byteorder()
     test_inet()
     test_names()
+    test_embedded_nul()
     test_udp()
     test_stream_methods()
     test_makefile()

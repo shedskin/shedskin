@@ -808,6 +808,27 @@ socket *socket::bind(const sockaddr *sa, socklen_t salen)
     return this;
 }
 
+/* the C apis stop at the first NUL, so (as in CPython) refuse these instead
+   of silently using a truncated name. CPython's messages depend on how the
+   argument is parsed: plain strings, encoded host names, address tuples */
+static void check_nul(str *s)
+{
+    if (s && __ss_has_nul(s))
+        throw new ValueError(new str("embedded null character"));
+}
+
+static void check_hostname_nul(str *s, const char *func)
+{
+    if (__ss_has_nul(s))
+        throw new TypeError(new str((std::string(func) + "() argument 1 must be encoded string without null bytes, not str").c_str()));
+}
+
+static void check_address_nul(socket::inet_address address)
+{
+    if (__ss_has_nul(address->first))
+        throw new TypeError(new str("host name must not contain null character"));
+}
+
 // python supports two special strings
 static unsigned long int string_to_addr(const char *s)
 {
@@ -838,6 +859,7 @@ static unsigned long int string_to_addr(const char *s)
 // conver the python version of a address to the bsd socket variety
 static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
 {
+    check_address_nul(src);
     memset(dst, 0, sizeof(sockaddr_in));
     dst->sin_family = AF_INET;
     const char *host = src->first->c_str();
@@ -869,6 +891,7 @@ socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
 socket *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
+    check_address_nul(address);
     const char *host = address->first->c_str();
     int port = (int)address->second;
 
@@ -1396,6 +1419,11 @@ socket *create_connection(socket::inet_address address, double timeout, socket::
         s->settimeout(timeout);
     if (source_address)
         s->bind(source_address);
+    /* CPython resolves the address via getaddrinfo(), which (unlike connect())
+       just stops at a NUL in the host name */
+    size_t nul = address->first->unit.find((__ss_char)0);
+    if (nul != std::string::npos)
+        address = new tuple2<str *, __ss_int>(2, new str(address->first->unit.substr(0, nul)), address->second);
     s->connect(address);
     return s;
 }
@@ -1556,6 +1584,7 @@ static __host_tuple *hostent_to_tuple(const hostent *he)
 
 str *gethostbyname(str *hostname)
 {
+    check_hostname_nul(hostname, "gethostbyname");
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
         throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
@@ -1564,6 +1593,7 @@ str *gethostbyname(str *hostname)
 
 __host_tuple *gethostbyname_ex(str *hostname)
 {
+    check_hostname_nul(hostname, "gethostbyname_ex");
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
         throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
@@ -1572,6 +1602,7 @@ __host_tuple *gethostbyname_ex(str *hostname)
 
 __host_tuple *gethostbyaddr(str *ip_address)
 {
+    check_hostname_nul(ip_address, "gethostbyaddr");
     /* like CPython, a hostname is resolved first */
     in_addr addr;
     addr.s_addr = (in_addr_t)string_to_addr(ip_address->c_str());
@@ -1604,6 +1635,7 @@ str *getfqdn(str *name)
 
 tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags)
 {
+    check_nul(sockaddr_->first); /* (a ValueError here, unlike for bind/connect) */
     sockaddr_in sin;
     tuple_to_sin_addr(&sin, sockaddr_);
     char host[NI_MAXHOST], serv[NI_MAXSERV];
@@ -1618,6 +1650,7 @@ tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags
 
 __ss_int getprotobyname(str *protocolname)
 {
+    check_nul(protocolname);
     protoent *pe = ::getprotobyname(protocolname->c_str());
     if (!pe)
         throw new error(new str("protocol not found"));
@@ -1626,6 +1659,8 @@ __ss_int getprotobyname(str *protocolname)
 
 __ss_int getservbyname(str *servicename, str *protocolname)
 {
+    check_nul(servicename);
+    check_nul(protocolname);
     servent *se = ::getservbyname(servicename->c_str(), protocolname ? protocolname->c_str() : NULL);
     if (!se)
         throw new error(new str("service/proto not found"));
@@ -1636,6 +1671,7 @@ str *getservbyport(__ss_int port, str *protocolname)
 {
     if (port < 0 || port > 0xffff)
         throw new OverflowError(new str("getservbyport: port must be 0-65535."));
+    check_nul(protocolname);
     servent *se = ::getservbyport(htons((uint16_t)port), protocolname ? protocolname->c_str() : NULL);
     if (!se)
         throw new error(new str("port/proto not found"));
@@ -1676,6 +1712,8 @@ list<tuple2<__ss_int, str *> *> *if_nameindex()
 
 __ss_int if_nametoindex(str *name)
 {
+    if (__ss_has_nul(name)) /* (an fs-encoded name in CPython) */
+        throw new ValueError(new str("embedded null byte"));
     unsigned int index = ::if_nametoindex(name->c_str());
     if (index == 0)
         throw new error(new str("no interface with this name"));
@@ -1694,6 +1732,7 @@ str *if_indextoname(__ss_int index)
 
 bytes *inet_aton(str *ip_string)
 {
+    check_nul(ip_string);
     in_addr addr;
 #ifdef WIN32
     /* winsock has no inet_aton(); inet_addr() returns INADDR_NONE both for
@@ -1720,6 +1759,7 @@ str *inet_ntoa(bytes *packed_ip)
 
 bytes *inet_pton(__ss_int address_family, str *ip_string)
 {
+    check_nul(ip_string);
     unsigned char packed[sizeof(in6_addr)];
     /* like CPython, an unsupported family is left to inet_pton() (OSError) */
     int r = ::inet_pton((int)address_family, ip_string->c_str(), packed);
