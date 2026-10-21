@@ -274,20 +274,21 @@ template<class T> __ss_int set<T>::__hash__() {
     if (hash != -1)
         return hash;
 
-    __ss_int hash_ = 1927868237L;
+    /* unsigned: no (undefined) signed overflow */
+    __ss_uint_hash_t hash_ = 1927868237UL;
 
-    hash_ *= __len__() + 1;
+    hash_ *= (__ss_uint_hash_t)__len__() + 1;
 
-    for (const auto& key : gcs) {
-        __ss_int h = hasher<T>(key);
-        hash_ ^= hash_shuffle_bits(h);
-    }
-    hash_ = hash_ * 69069L + 907133923L;
-    if (hash_ == -1)
-        hash_ = 590923713L;
+    for (const auto& key : gcs)
+        hash_ ^= (__ss_uint_hash_t)hash_shuffle_bits(hasher<T>(key));
 
-    hash = hash_;
-    return hash_;
+    hash_ ^= (hash_ >> 11) ^ (hash_ >> 25); /* as in CPython: disperse clustered (e.g. small int) hashes */
+    hash_ = hash_ * 69069UL + 907133923UL;
+    if ((__ss_int)hash_ == -1)
+        hash_ = 590923713UL;
+
+    hash = (__ss_int)hash_;
+    return hash;
 }
 
 template <class T> void *set<T>::add(T key)

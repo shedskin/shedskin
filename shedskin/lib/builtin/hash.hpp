@@ -1,12 +1,25 @@
 /* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* hash combiner (TODO only used for tuples? move there/check cpython?) */
-
 typedef std::make_unsigned<__ss_int>::type __ss_uint_hash_t;
 
+/* hash combiner (tuples, datetime): an xxHash round, as in CPython's tuple
+   hash. the old boost-style combiner gave only ~65K distinct hashes for the
+   1M tuples (x, y) with x, y in range(1000) */
+
 static inline __ss_int hash_combine(__ss_int seed, __ss_int other) {
-    __ss_uint_hash_t s = (__ss_uint_hash_t)seed, o = (__ss_uint_hash_t)other;
-    return (__ss_int)(s ^ (o + 0x9e3779b9 + (s << 6) + (s >> 2)));
+#if defined(__SS_INT32)
+    uint32_t s = (uint32_t)seed, o = (uint32_t)other;
+    s += o * 2246822519U;
+    s = (s << 13) | (s >> 19);
+    s *= 2654435761U;
+    return (__ss_int)s;
+#else
+    uint64_t s = (uint64_t)seed, o = (uint64_t)other;
+    s += o * 14029467366897019727ULL;
+    s = (s << 31) | (s >> 33);
+    s *= 11400714785074694791ULL;
+    return (__ss_int)(int64_t)s;
+#endif
 }
 
 /* bit shuffler */
