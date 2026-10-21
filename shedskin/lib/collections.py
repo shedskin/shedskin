@@ -59,6 +59,12 @@ class deque(pyiter):
     def __iter__(self):
         return __iter(self.unit)
 
+    def __repr__(self):
+        self.unit.__repr__()
+        return ''
+    def __str__(self):
+        return self.__repr__()
+
     def __copy__(self):
         return self
     def __deepcopy__(self):
