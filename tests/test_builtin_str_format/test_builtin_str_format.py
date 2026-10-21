@@ -55,6 +55,8 @@ def test_conversions():
     assert '{0!r} {0}'.format(Point(1, 2)) == 'Point(1, 2) Point(1, 2)'
     assert '{!a}'.format('caf\u00e9') == "'caf\\xe9'"
     assert '{!r}'.format(None) == 'None'
+    assert '{!s:5}'.format(5) == '5    '
+    assert '{0!s:>12}'.format(Point(1, 2)) == ' Point(1, 2)'
 
 
 def test_fields():

@@ -28,6 +28,20 @@ def test_fstring_str_conversion():
     assert f'{name!s}' == 'bert'
     assert f'{name!s} {name}' == 'bert bert'
 
+    # with a format spec, applied to the str
+    n = 5
+    assert f'{n!s:5}' == '5    '
+    assert f'{1.5!s:.2}' == '1.'
+    assert f'{True!s:6}' == 'True  '
+    assert f'{None!s:6}' == 'None  '
+    assert f'{(1, 2)!s:>8}' == '  (1, 2)'
+    assert f'{name!s:^6}' == ' bert '
+    try:
+        f'{n!s:d}'
+        assert False
+    except ValueError as e:
+        assert str(e) == "Unknown format code 'd' for object of type 'str'"
+
 
 def test_fstring_repr_conversion():
     name = 'bert'

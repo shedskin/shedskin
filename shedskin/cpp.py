@@ -3258,13 +3258,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             spec = None
             if isinstance(value, ast.FormattedValue):
                 # a (supported) format spec is applied to the value after
-                # any conversion, as in CPython
+                # any conversion (including '!s'), as in CPython
                 spec = ast_utils.supported_format_spec(value.format_spec)
                 if value.conversion == ord("r"):
                     convert = "repr"
                 elif value.conversion == ord("a"):
                     convert = "ascii"
-                elif spec:
+                elif spec and value.conversion != ord("s"):
                     convert = ""
                 value = value.value
             if spec:
@@ -3706,9 +3706,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ident == "__format__"
                 and isinstance(node.func, ast.Attribute)
                 and any(
-                    (python.def_class(self.gx, cl), 0)
-                    in self.mergeinh[node.func.value]
-                    for cl in ("int_", "bool_", "float_", "str_")
+                    t[0] == python.def_class(self.gx, cl)
+                    for t in self.mergeinh[node.func.value]
+                    for cl in ("int_", "bool_", "float_", "complex", "str_")
                 )
             ):
                 # int.__format__ etc. are format() (see lib/builtin/format.hpp)
