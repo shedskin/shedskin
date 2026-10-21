@@ -49,8 +49,6 @@ __ss_bool False;
 
 __ss_void_struct __ss_void;
 
-str *__case_swap_cache;
-
 char __str_cache[4000];
 str *__ss_empty_str;
 
@@ -181,15 +179,6 @@ void __init() {
         __str_cache[4*i+2] = '0' + (char)((i/100) % 10);
     }
     __ss_empty_str = new str();
-
-    __case_swap_cache = new str();
-    for(int i=0; i<256; i++) {
-        char c = (char)i;
-        if(::islower(c))
-            __case_swap_cache->unit += (char)::toupper(c);
-        else
-            __case_swap_cache->unit += (char)::tolower(c);
-    }
 
     for(__ss_int i=0; i<40; i++)
         for(__ss_int j=0; j<40; j++)

@@ -775,7 +775,7 @@ str *bytes::hex(str *sep, __ss_int bytes_per_sep) { // TODO identical to binasci
                 : (remaining != len && !(remaining % abs_bps));
             if(at_boundary) {
                 for(size_t j=0; j<sep->unit.size(); j++)
-                    *(curhex++) = sep->unit[j];
+                    *(curhex++) = (char)sep->unit[j]; /* checked ASCII above */
             }
         }
         c = (*curdata>>4) & 0xf;
@@ -930,9 +930,12 @@ void *bytes::append(__ss_int i) {
 
 bytes *bytes::swapcase() {
     bytes *r = new bytes(unit, frozen);
-    size_t len = unit.size();
-    for(size_t i=0; i<len; i++)
-        r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
+    for(char &c : r->unit) {
+        if(__ss_blower((unsigned char)c))
+            c = (char)(c - 'a' + 'A');
+        else if(__ss_bupper((unsigned char)c))
+            c = (char)(c - 'A' + 'a');
+    }
     return r;
 }
 
