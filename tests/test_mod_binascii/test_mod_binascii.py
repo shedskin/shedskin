@@ -61,6 +61,10 @@ def test_uu():
     b2a = binascii.b2a_uu(t, backtick=True)
     assert b2a == b'%:&]E<&$`\n'
 
+    assert binascii.b2a_uu(b'') == b' \n'
+    assert binascii.b2a_uu(b'', backtick=True) == b'`\n'
+    assert binascii.a2b_uu(b'`\n') == b''
+
     output_bytes = b''
     for i in range(0, 256, 45):
         input_bytes = bytes(range(i, min(i+45, 256)))
