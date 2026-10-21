@@ -704,8 +704,29 @@ def test_str_argument():
     assert error == 'string argument should contain only ASCII characters'
 
 
+def test_error_is_valueerror():
+    # binascii.Error (raised by the decoders) derives from ValueError
+    for enc in [b'A', b'abcde']:
+        try:
+            base64.b64decode(enc)
+            assert False
+        except ValueError:
+            pass
+    try:
+        base64.b32decode(b'MZXW6===X')
+        assert False
+    except ValueError:
+        pass
+    try:
+        base64.b85decode(b'|')
+        assert False
+    except ValueError:
+        pass
+
+
 def test_all():
     test_basic()
+    test_error_is_valueerror()
     test_altchars()
     test_altchars_preserves_standard_chars()
     test_altchars_bad_length()

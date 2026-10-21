@@ -21,11 +21,11 @@ extern str *__name__;
 extern bytes *BASE64_ALPHABET, *URLSAFE_BASE64_ALPHABET, *UU_ALPHABET, *CRYPT_ALPHABET, *BINHEX_ALPHABET, *BASE85_ALPHABET, *ASCII85_ALPHABET, *Z85_ALPHABET, *BASE32_ALPHABET, *BASE32HEX_ALPHABET;
 
 extern class_ *cl_Error;
-class Error : public Exception {
+class Error : public ValueError {
 public:
 
     Error() {}
-    Error(str *msg): Exception(msg) {
+    Error(str *msg): ValueError(msg) {
         this->__class__ = cl_Error;
     }
 };
