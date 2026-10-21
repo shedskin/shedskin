@@ -248,6 +248,76 @@ def test_fstring_format_spec_str():
         assert str(e) == "Unknown format code 'd' for object of type 'str'"
 
 
+def test_fstring_format_spec_align():
+    n, x, s = 42, 1.5, 'ab'
+    # fill and alignment (numbers default to '>', strings to '<')
+    assert f'{n:<5}|{n:^5}|{n:>5}|{-n:=5}' == '42   | 42  |   42|-  42'
+    assert f'{s:>5}|{s:^5}|{s:*^6}|{s:<5}|' == '   ab| ab  |**ab**|ab   |'
+    assert f'{x:_^9.2f}|{-x:x=+8}|{65:^5c}' == '__1.50___|-xxxx1.5|  A  '
+    assert f'{-n:%>6}|{n:<<5}|{n:é>4}|{s:€^5}|{s::^4}' == '%%%-42|42<<<|éé42|€ab€€|:ab:'
+    assert f'{-255:x=#8x}|{-n:0=+6}|{n:^+7}' == '-0xxxxff|-00042|  +42  '
+    # '0' fills with zeros, without changing a given alignment
+    assert f'{n:<05}|{n:^06}|{-x:>08}|{s:>04}|{n:x<05}' == '42000|004200|0000-1.5|00ab|42xxx'
+    # grouping, also of zero-padding
+    assert f'{1234567:,}|{1234567:_d}|{-1234567.891:,.2f}|{1234567.5:,}' == '1,234,567|1_234_567|-1,234,567.89|1,234,567.5'
+    assert f'{n:,}|{0:_}|{1e20:,}|{12345.678:,.1%}|{1234.5:_e}' == '42|0|1e+20|1,234,567.8%|1.234500e+03'
+    assert f'{0xabcdef:_x}|{0xabcdef:#012_X}|{255:#_b}|{-4096:_o}' == 'ab_cdef|0X0_00AB_CDEF|0b1111_1111|-1_0000'
+    assert f'{1234:010,}|{1:04,}|{1:06,}|{-1234:011_}|{1234:0=+10,}' == '00,001,234|0,001|00,001|-00_001_234|+0,001,234'
+    assert f'{1234:x=10,}|{1234:0<10,}|{1234:0^10,}|{1234.5:012,.2f}' == 'xxxxx1,234|1,23400000|001,234000|0,001,234.50'
+    inf = float('inf')
+    assert f'{inf:010,}|{-inf:_}|{float("nan"):0=10,}' == '0000000inf|-inf|0000000nan'
+    # 'z': no negative zero (after rounding)
+    assert f'{-0.0:z}|{-0.0001:z.1f}|{-0.0:+z.0f}|{-0.0:z.0e}|{-0.0:z%}' == '0.0|0.0|+0|0e+00|0.000000%'
+    assert f'{-0.06:z.1f}|{-inf:z}|{-1.5:z}|{-0.0:zg}|{0:zf}' == '-0.1|-inf|-1.5|0|0.000000'
+    # 'n': 'd' or 'g' (in the C locale)
+    assert f'{1234:n}|{-n:5n}|{1234.5:n}|{1.0:n}|{1e20:n}|{1.0:.3n}' == '1234|  -42|1234.5|1|1e+20|1'
+    # errors
+    errors = [
+        (",x", "Cannot specify ',' with 'x'."),
+        (",n", "Cannot specify ',' with 'n'."),
+        ("_n", "Cannot specify '_' with 'n'."),
+        (",c", "Cannot specify ',' with 'c'."),
+        ("_,", "Cannot specify both ',' and '_'."),
+        (",_", "Cannot specify both ',' and '_'."),
+        ("z", "Negative zero coercion (z) not allowed in integer format specifier"),
+        ("zd", "Negative zero coercion (z) not allowed in integer format specifier"),
+    ]
+    for spec, msg in errors:
+        try:
+            format(n, spec)
+            assert False
+        except ValueError as e:
+            assert str(e) == msg
+    for spec, msg in [(",n", "Cannot specify ',' with 'n'."), (",x", "Cannot specify ',' with 'x'.")]:
+        try:
+            format(x, spec)
+            assert False
+        except ValueError as e:
+            assert str(e) == msg
+    errors = [
+        (",", "Cannot specify ',' with 's'."),
+        ("=,", "Cannot specify ',' with 's'."),
+        ("=5", "'=' alignment not allowed in string format specifier"),
+        ("z", "Negative zero coercion (z) not allowed in string format specifier"),
+    ]
+    for spec, msg in errors:
+        try:
+            format(s, spec)
+            assert False
+        except ValueError as e:
+            assert str(e) == msg
+    try:
+        format(True, 'z')
+        assert False
+    except ValueError as e:
+        assert str(e) == "Negative zero coercion (z) not allowed in integer format specifier"
+    try:
+        format(n, 'é')
+        assert False
+    except ValueError as e:
+        assert str(e) == "Unknown format code '\\xe9' for object of type 'int'"
+
+
 def test_all():
     test_basic_fstring()
     test_empty_fstring()
@@ -260,6 +330,7 @@ def test_all():
     test_fstring_format_spec_int()
     test_fstring_format_spec_float()
     test_fstring_format_spec_str()
+    test_fstring_format_spec_align()
 
 
 if __name__ == '__main__':

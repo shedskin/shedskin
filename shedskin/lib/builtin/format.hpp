@@ -286,19 +286,14 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
     __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 
-/* c: shared by %-formatting and format specs (where '0' zero-fills) */
-static inline void __fmt_char(str *result, __ss_int arg, char f_flag, __ss_int f_width, bool f_zero) {
+template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
+template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
     if(arg < 0 || arg > 0x10ffff)
         throw new OverflowError(new str("%c arg not in range(0x110000)"));
     if(f_width == -1)
         result->unit += (__ss_char)arg;
     else
-        __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, f_zero);
-}
-
-template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
-template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
-    __fmt_char(result, arg, f_flag, f_width, false);
+        __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
 }
 template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
     if(arg->unit.size() != 1)
@@ -576,8 +571,8 @@ template<class A, class B, class C> bytes *__modtuple(bytes *fmt, tuple3<A,B,C> 
 
 /* format specs (f-strings and str.format) */
 
-/* for now [sign][#][0][width][.precision][type], with the types of int,
-   float and str (see also ast_utils.FORMAT_SPEC) */
+/* [[fill]align][sign][z][#][0][width][grouping][.precision][type], for int,
+   bool, float and str (see also ast_utils.FORMAT_SPEC) */
 str *__format(__ss_int arg, str *spec);
 str *__format(__ss_bool arg, str *spec);
 str *__format(__ss_float arg, str *spec);

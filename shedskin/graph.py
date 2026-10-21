@@ -781,17 +781,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 spec = ast_utils.supported_format_spec(value.format_spec)
                 if spec:
                     self.visit(spec, func)
-                elif value.format_spec and not (
-                    isinstance(value.format_spec, ast.JoinedStr)
-                    and not value.format_spec.values
-                ):  # f'{x:}' is just f'{x}'
-                    error.error(
-                        "f-string format spec is not supported",
-                        self.gx,
-                        node,
-                        warning=True,
-                        mv=getmv(),
-                    )
+                elif isinstance(value.format_spec, ast.JoinedStr) and (
+                    value.format_spec.values  # f'{x:}' is just f'{x}'
+                ):
+                    spec_values = value.format_spec.values
+                    if len(spec_values) == 1 and ast_utils.is_str(spec_values[0]):
+                        msg = "invalid or unsupported format spec '%s'" % _const_str(
+                            spec_values[0]
+                        )
+                    else:  # e.g. f'{x:{width}}'
+                        msg = "non-constant format spec"
+                    error.error(msg, self.gx, node, mv=getmv())
                 # '!s' is just the default str conversion; '!r' and '!a' map
                 # onto __repr__ (note '{x=}' desugars to a '!r' conversion as
                 # well; '!a' is ascii(), i.e. an escaped repr).
