@@ -793,6 +793,22 @@ def test_sum():
     v = sum([SumVec(1), SumVec(2)], SumVec(10))
     assert v.x == 13
 
+    try:
+        sum(['a', 'b'], '')
+        assert False
+    except TypeError:
+        pass
+    try:
+        sum([b'a', b'b'], b'')
+        assert False
+    except TypeError:
+        pass
+    try:
+        sum([s for s in ['a', 'b']])  # fused listcomp
+        assert False
+    except TypeError:
+        pass
+
 
 class SumVec:
     def __init__(self, x):

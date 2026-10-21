@@ -125,7 +125,15 @@ template<> struct __sumtype2<__ss_bool, __ss_int> { typedef __ss_int type; };
 template<> struct __sumtype2<__ss_bool, __ss_float> { typedef __ss_float type; };
 template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
+template<class T> void __sum_check() {
+    if constexpr (std::is_same_v<T, str *>)
+        throw new TypeError(new str("sum() can't sum strings [use ''.join(seq) instead]"));
+    if constexpr (std::is_same_v<T, bytes *>)
+        throw new TypeError(new str("sum() can't sum bytes [use b''.join(seq) instead]"));
+}
+
 template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
+    __sum_check<typename U::for_in_unit>();
     typename __sumtype1<typename U::for_in_unit>::type result;
     if constexpr (std::is_same_v<U, list<__ss_int> > || std::is_same_v<U, list<__ss_float> >) {
 //        result = std::reduce(std::execution::unseq, iter->units.begin(), iter->units.end()); // TODO faster with -O3, slower with -O2 :S
