@@ -295,6 +295,35 @@ def test_list_ordering():
     assert lll == [[[1]], [[1, 1]], [[2]]]
 
 
+
+class OnlyLt:
+    def __init__(self, v):
+        self.v = v
+    def __lt__(self, o):
+        return self.v < o.v
+
+
+class OnlyGt:
+    def __init__(self, v):
+        self.v = v
+    def __gt__(self, o):
+        return self.v > o.v
+
+
+def test_list_ordering_user():
+    # element __lt__/__gt__ are only reached through list ordering
+    hi, lo, lo2, hi2 = OnlyLt(2), OnlyLt(1), OnlyLt(1), OnlyLt(2)
+    assert [lo] < [hi] and [lo2] < [hi2] and [hi] > [lo] and [hi2] > [lo2]
+    ll = [[OnlyLt(3)], [OnlyLt(1)], [OnlyLt(2)]]
+    assert [l[0].v for l in sorted(ll)] == [1, 2, 3]
+    assert min(ll)[0].v == 1 and max(ll)[0].v == 3
+    gh, gl, gl2, gh2 = OnlyGt(2), OnlyGt(1), OnlyGt(1), OnlyGt(2)
+    assert [gl] < [gh] and [gl2] < [gh2] and [gh] > [gl] and [gh2] > [gl2]
+    lg = [[OnlyGt(3)], [OnlyGt(1)], [OnlyGt(2)]]
+    assert [l[0].v for l in sorted(lg)] == [1, 2, 3]
+    assert min(lg)[0].v == 1 and max(lg)[0].v == 3
+
+
 def test_list_search():
     l = [5, 3, 9, 3, 7, -1, 3]
     assert 9 in l and -1 in l and 4 not in l
@@ -793,6 +822,7 @@ def test_all():
     test_list_assign()
     test_list_cmp()
     test_list_ordering()
+    test_list_ordering_user()
     test_list_search()
     test_list_clear()
     test_list_comp()

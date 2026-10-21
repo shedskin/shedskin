@@ -256,6 +256,14 @@ class list(pyseq):
         return self.unit == b.unit
     def __ne__(self, b):
         return self.unit == b.unit
+    def __lt__(self, b):  # for the element comparisons
+        return self.unit < b.unit
+    def __le__(self, b):
+        return self.unit <= b.unit
+    def __gt__(self, b):
+        return self.unit > b.unit
+    def __ge__(self, b):
+        return self.unit >= b.unit
 
     def index(self, u, start=0, stop=0):
         u == self.unit
@@ -328,6 +336,14 @@ class tuple(pyseq):
         return self.unit == b.unit
     def __ne__(self, b):
         return self.unit == b.unit
+    def __lt__(self, b):  # for the element comparisons
+        return self.unit < b.unit
+    def __le__(self, b):
+        return self.unit <= b.unit
+    def __gt__(self, b):
+        return self.unit > b.unit
+    def __ge__(self, b):
+        return self.unit >= b.unit
     def __repr__(self):
         self.unit.__repr__()
         return ''
@@ -367,6 +383,18 @@ class tuple2(pyseq):
     def __ne__(self, b):
         self.first == b.first
         return self.second == b.second
+    def __lt__(self, b):  # for the element comparisons
+        self.first < b.first
+        return self.second < b.second
+    def __le__(self, b):
+        self.first <= b.first
+        return self.second <= b.second
+    def __gt__(self, b):
+        self.first > b.first
+        return self.second > b.second
+    def __ge__(self, b):
+        self.first >= b.first
+        return self.second >= b.second
     def __repr__(self):
         self.first.__repr__()
         self.second.__repr__()
@@ -412,6 +440,22 @@ class tuple3(pyseq):
         self.first == b.first
         self.second == b.second
         return self.third == b.third
+    def __lt__(self, b):  # for the element comparisons
+        self.first < b.first
+        self.second < b.second
+        return self.third < b.third
+    def __le__(self, b):
+        self.first <= b.first
+        self.second <= b.second
+        return self.third <= b.third
+    def __gt__(self, b):
+        self.first > b.first
+        self.second > b.second
+        return self.third > b.third
+    def __ge__(self, b):
+        self.first >= b.first
+        self.second >= b.second
+        return self.third >= b.third
     def __repr__(self):
         self.first.__repr__()
         self.second.__repr__()
