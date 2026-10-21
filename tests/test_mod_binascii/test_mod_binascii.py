@@ -900,6 +900,26 @@ def test_qp_crlf_detection():
     assert binascii.b2a_qp(b'x' * 80 + b'\r\n') == b'x' * 75 + b'=\r\n' + b'x' * 5 + b'\r\n'
 
 
+def test_error_is_valueerror():
+    # binascii.Error derives from ValueError
+    try:
+        binascii.unhexlify(b'0')
+        assert False
+    except ValueError:
+        pass
+    try:
+        binascii.a2b_base64(b'abc')
+        assert False
+    except ValueError:
+        pass
+    # binascii.Error is still caught by its own name
+    try:
+        binascii.unhexlify(b'zz')
+        assert False
+    except binascii.Error:
+        pass
+
+
 def test_all():
     test_qp_crlf_detection()
     test_hexlify_bytes_sep()
@@ -932,6 +952,7 @@ def test_all():
     test_ascii85()
     test_ignorechars_default_is_empty()
     test_str_argument()
+    test_error_is_valueerror()
 
 
 if __name__ == '__main__':

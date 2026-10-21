@@ -4,7 +4,7 @@ BASE64_ALPHABET = URLSAFE_BASE64_ALPHABET = UU_ALPHABET = CRYPT_ALPHABET = BINHE
 
 __void = 0  # 'strict_mode not given' sentinel (defaults to True iff ignorechars is given)
 
-class Error(Exception):
+class Error(ValueError):
     pass
 
 class Incomplete(Exception):
