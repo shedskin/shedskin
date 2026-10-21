@@ -354,6 +354,21 @@ def test_zip_longest():
 def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
 
+    # data item is taken before its selector
+    it = iter([1, 2, 3, 4, 5])
+    assert list(itertools.compress(it, it)) == [1, 3]
+    it2 = iter([1, 0, 3, 0, 5, 1])
+    assert list(itertools.compress(it2, it2)) == [5]
+    data = iter([1, 2])
+    sel = iter([1, 1, 1, 0])
+    assert list(itertools.compress(data, sel)) == [1, 2]
+    assert list(sel) == [1, 0]
+
+    # selector truthiness
+    assert list(itertools.compress('abc', [[], [1], [2]])) == ['b', 'c']
+    assert list(itertools.compress('abc', ['', 'x', 'y'])) == ['b', 'c']
+    assert list(itertools.compress([1.0, 2.0], [0.0, 0.5])) == [2.0]
+
 
 def test_pairwise():
     assert list(itertools.pairwise([])) == []
