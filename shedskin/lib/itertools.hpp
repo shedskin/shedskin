@@ -349,10 +349,14 @@ template<class T, class B> inline compressiter<T, B>::compressiter(pyiter<T> *da
 }
 
 template<class T, class B> T compressiter<T, B>::__next__() {
-    while (!this->selectors_iter->__next__()) {
-        this->data_iter->__next__();
+    for (; ; ) {
+        T value = this->data_iter->__next__();
+        if (___bool(this->selectors_iter->__next__())) {
+            return value;
+        }
     }
-    return this->data_iter->__next__();
+
+    assert(false && "unreachable");
 }
 
 template<class T, class B> inline compressiter<T, B> *compress(pyiter<T> *data, pyiter<B> *selectors) {
