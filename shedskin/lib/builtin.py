@@ -992,6 +992,9 @@ class complex:
     def __with_float__(self):
         return self
 
+    def __format__(self, format_spec):
+        return ''
+
     def __repr__(self):
         return ''
 

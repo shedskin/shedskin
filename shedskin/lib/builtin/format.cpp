@@ -47,7 +47,7 @@ struct __fmt_spec {
     char flag;      /* __SS_FMT_PLUS, __SS_FMT_SPACE and __SS_FMT_ALT, as for %-formatting */
     bool no_neg_0;  /* 'z' */
     char grouping;  /* ',' or '_', 0 if omitted */
-    __ss_int width, precision; /* -1 if omitted */
+    int64_t width, precision; /* -1 if omitted (Py_ssize_t in CPython) */
     __ss_char type; /* presentation type */
 };
 
@@ -62,6 +62,18 @@ static str *__fmt_type_str(__ss_char type) {
 
 static inline bool __fmt_is_align(__ss_char c) {
     return c == '<' || c == '>' || c == '=' || c == '^';
+}
+
+/* a width or precision, as in CPython up to PY_SSIZE_T_MAX */
+static int64_t __fmt_number(const __GC_STR &s, size_t &i) {
+    int64_t value = 0;
+    for (; i < s.size() && s[i] >= '0' && s[i] <= '9'; i++) {
+        int d = (int)(s[i] - '0');
+        if (value > (INT64_MAX - d) / 10)
+            throw new ValueError(new str("Too many decimal digits in format string"));
+        value = 10*value + d;
+    }
+    return value;
 }
 
 /* the presentation type is checked by the caller (tname is for errors), apart
@@ -112,8 +124,8 @@ static void __fmt_parse(str *spec, __fmt_spec &fs, char default_type, char defau
             fs.align = '=';
         i++;
     }
-    for (; i < n && s[i] >= '0' && s[i] <= '9'; i++)
-        fs.width = (fs.width == -1 ? 0 : 10*fs.width) + (__ss_int)(s[i] - '0');
+    if (i < n && s[i] >= '0' && s[i] <= '9')
+        fs.width = __fmt_number(s, i);
     if (i < n && (s[i] == ',' || s[i] == '_')) {
         fs.grouping = (char)s[i++];
         if (i < n && (s[i] == ',' || s[i] == '_') && s[i] != (__ss_char)fs.grouping)
@@ -123,8 +135,7 @@ static void __fmt_parse(str *spec, __fmt_spec &fs, char default_type, char defau
         i++;
         if (i == n || s[i] < '0' || s[i] > '9')
             throw new ValueError(new str("Format specifier missing precision"));
-        for (fs.precision = 0; i < n && s[i] >= '0' && s[i] <= '9'; i++)
-            fs.precision = 10*fs.precision + (__ss_int)(s[i] - '0');
+        fs.precision = __fmt_number(s, i);
     }
     if (n - i > 1)
         throw new ValueError(__add_strs(5, new str("Invalid format specifier '"), spec, new str("' for object of type '"), new str(tname), new str("'")));
@@ -193,6 +204,8 @@ static str *__fmt_align(const __fmt_spec &fs, const __GC_STR &pre, const __GC_ST
 
 /* like float.__format__ (for a checked presentation type) */
 static str *__format_float(__ss_float arg, const __fmt_spec &fs) {
+    if (fs.precision > __SS_FMT_MAX_PRECISION)
+        throw new ValueError(new str("precision too big"));
     char type = fs.type == 'n' ? 'g' : (char)fs.type; /* 'n' is 'g' in the C locale */
     str tmp;
     __fmt_float(&tmp, type, arg, fs.flag, -1, fs.precision, false);
@@ -293,4 +306,64 @@ str *__format(str *arg, str *spec) {
     if (len == arg->unit.size() && (fs.width == -1 || (size_t)fs.width <= len))
         return arg;
     return __fmt_align(fs, __GC_STR(), arg->unit.substr(0, len), 0, 3);
+}
+
+/* a part of a complex number, as for float.__format__ except that 'repr'
+   omits the '.0' of an integral value (no Py_DTSF_ADD_DOT_0 in CPython) */
+static __GC_STR __fmt_complex_part(__ss_float arg, const __fmt_spec &fs, bool repr) {
+    __GC_STR s = __format_float(arg, fs)->unit;
+    size_t n = s.size();
+    if (repr && n >= 2 && s[n-2] == '.' && s[n-1] == '0')
+        s.erase(n - ((fs.flag & __SS_FMT_ALT) ? 1 : 2));
+    return s;
+}
+
+/* like complex.__format__, which is also repr() for an empty spec */
+str *__format(complex arg, str *spec) {
+    __fmt_spec fs;
+    __fmt_parse(spec, fs, 0, '>', "complex");
+    switch (fs.type) {
+        case 0: case 'e': case 'E': case 'f': case 'F': case 'g': case 'G': case 'n': break;
+        default:
+            __fmt_unknown(fs.type, "complex");
+    }
+    if (fs.precision > __SS_FMT_MAX_PRECISION)
+        throw new ValueError(new str("precision too big"));
+    if (fs.fill == '0')
+        throw new ValueError(new str("Zero padding is not allowed in complex format specifier"));
+    if (fs.align == '=')
+        throw new ValueError(new str("'=' alignment flag is not allowed in complex format specifier"));
+
+    /* no presentation type: like str(), so a positive zero real part is
+       omitted, and else there are parentheses */
+    bool repr = false, skip_re = false, parens = false;
+    if (fs.type == 0) {
+        skip_re = arg.real == 0 && !std::signbit(arg.real);
+        parens = !skip_re;
+        if (fs.precision == -1)
+            repr = true;
+        else
+            fs.type = 'g';
+    }
+
+    /* the parts without padding, the imaginary part always with a sign
+       (unless it is on its own) */
+    __fmt_spec part = fs;
+    part.fill = ' ';
+    part.align = '<';
+    part.width = -1;
+    __GC_STR num;
+    if (!skip_re) {
+        num += __fmt_complex_part(arg.real, part, repr);
+        part.sign = '+';
+        part.flag |= __SS_FMT_PLUS;
+    }
+    num += __fmt_complex_part(arg.imag, part, repr);
+    num += 'j';
+    if (parens) {
+        num.insert(num.begin(), '(');
+        num += ')';
+    }
+    fs.grouping = 0; /* done for each part */
+    return __fmt_align(fs, __GC_STR(), num, 0, 3);
 }

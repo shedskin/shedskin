@@ -118,29 +118,40 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg
     __mod_hex(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
+/* larger precisions give "precision too big", as in CPython */
+#define __SS_FMT_MAX_PRECISION (INT_MAX - 1024)
+
+/* printf("%.*e") etc. (conv is e, E, f, F, g or G; '#' if alt), with a long
+   result on the heap (a stream would put it on the stack) */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+static inline std::string __fmt_printf(char conv, bool alt, __ss_int precision, __ss_float arg) {
+    char fmt[6] = {'%', '%', '.', '*', conv, 0};
+    if (alt)
+        fmt[1] = '#';
+    const char *f = alt ? fmt : fmt+1;
+    char buf[64];
+    int n = snprintf(buf, sizeof(buf), f, (int)precision, arg);
+    if (n < (int)sizeof(buf))
+        return std::string(buf, (size_t)n);
+    std::string s((size_t)n, '\0');
+    snprintf(&s[0], (size_t)n+1, f, (int)precision, arg);
+    return s;
+}
+#pragma GCC diagnostic pop
+
 /* the decimal exponent of (non-negative, finite) aarg when rounded to p
    significant digits, i.e. as it would show in scientific notation */
 static inline int __fmt_exp10(__ss_float aarg, __ss_int p) {
-    std::stringstream t;
-    t.setf(std::ios::scientific, std::ios::floatfield);
-    t.precision(p-1);
-    t << aarg;
-    std::string s = t.str();
+    std::string s = __fmt_printf('e', false, p-1, aarg);
     return atoi(s.c_str() + s.find('e') + 1);
 }
 
 /* fixed (x is ignored) or scientific notation of aarg, with p significant
    digits, with trailing zeros (and decimal point) stripped unless '#' */
 static inline std::string __fmt_digits(__ss_float aarg, __ss_int p, int x, bool scientific, char f_flag, bool upper) {
-    std::stringstream t;
-    if (upper)
-        t.setf(std::ios::uppercase);
-    if (f_flag & __SS_FMT_ALT)
-        t.setf(std::ios::showpoint);
-    t.setf(scientific ? std::ios::scientific : std::ios::fixed, std::ios::floatfield);
-    t.precision(scientific ? p-1 : p-1-x);
-    t << aarg;
-    std::string s = t.str();
+    char conv = scientific ? (upper ? 'E' : 'e') : 'f';
+    std::string s = __fmt_printf(conv, f_flag & __SS_FMT_ALT, scientific ? p-1 : p-1-x, aarg);
     size_t e = scientific ? s.find('e') : s.size();
     if (!(f_flag & __SS_FMT_ALT) && s.find('.') < e) {
         size_t end = e;
@@ -178,7 +189,8 @@ static inline void __fmt_float_none(str *result, const std::string &sign, __ss_f
 /* e, E, f, F, g and G: shared by %-formatting and format specs, which add
    '%' and an omitted presentation type (c == 0) */
 static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    std::stringstream t;
+    if (f_precision > __SS_FMT_MAX_PRECISION)
+        throw new ValueError(new str("precision too big"));
     std::string sign, suffix;
     __ss_float aarg = arg;
     bool negative = arg < 0 || (arg == 0 && std::signbit(arg)); /* also catch -0.0 */
@@ -195,13 +207,10 @@ static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag,
        lowercase counterparts, apart from using an uppercase exponent marker
        and uppercase 'INF'/'NAN' */
     char lc = c;
-    if (c == 'E' || c == 'F' || c == 'G') {
-        t.setf(std::ios::uppercase);
+    if (c == 'E' || c == 'F' || c == 'G')
         lc = (char)(c + ('a' - 'A'));
-    }
 
-    /* the stream ignores 'uppercase' for a fixed-point inf/nan, so do these
-       by hand ('#' and the precision do not apply to them) */
+    /* inf/nan by hand ('#' and the precision do not apply to them) */
     if (std::isinf(aarg) || std::isnan(aarg)) {
         std::string s = std::isinf(aarg) ? "inf" : "nan";
         if (lc != c)
@@ -219,30 +228,20 @@ static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag,
     if (f_precision == -1)
         f_precision = 6;
 
-    if (lc == 'f') {
-        t.setf(std::ios::fixed, std::ios::floatfield);
-        t.precision(f_precision);
-    } else if (lc == 'e') {
-        t.setf(std::ios::scientific, std::ios::floatfield);
-        t.precision(f_precision);
-    } else { /* 'g': significant digits, exponent form as needed, no
-                trailing zeroes; a precision of 0 is taken to mean 1 */
-        __ss_int p = f_precision ? f_precision : 1;
+    /* '#': always a decimal point, and 'g' keeps trailing zeros */
+    if (lc == 'g') { /* significant digits, exponent form as needed, no
+                        trailing zeroes; a precision of 0 is taken to mean 1 */
+        if (f_precision == 0)
+            f_precision = 1;
         if (f_flag & __SS_FMT_ALT) {
             /* by hand: glibc keeps one digit too few when rounding bumps the
                exponent, e.g. '%#.2g' % 99.99 gives 1.e+02 instead of 1.0e+02 */
-            int x = __fmt_exp10(aarg, p);
-            __mod_pad_signed(result, sign, __fmt_digits(aarg, p, x, x < -4 || x >= p, f_flag, lc != c) + suffix, f_flag, f_width, f_zero);
+            int x = __fmt_exp10(aarg, f_precision);
+            __mod_pad_signed(result, sign, __fmt_digits(aarg, f_precision, x, x < -4 || x >= f_precision, f_flag, lc != c) + suffix, f_flag, f_width, f_zero);
             return;
         }
-        t.unsetf(std::ios::floatfield);
-        t.precision(p);
     }
-    if (f_flag & __SS_FMT_ALT) /* '#': always a decimal point, and 'g' keeps trailing zeros */
-        t.setf(std::ios::showpoint);
-    t << aarg;
-
-    __mod_pad_signed(result, sign, t.str() + suffix, f_flag, f_width, f_zero);
+    __mod_pad_signed(result, sign, __fmt_printf(c, f_flag & __SS_FMT_ALT, f_precision, aarg) + suffix, f_flag, f_width, f_zero);
 }
 
 template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
@@ -354,6 +353,8 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                 if (dot) {
                     if (f_precision == -1)
                         f_precision = d;
+                    else if (f_precision > (INT_MAX - d) / 10)
+                        throw new ValueError(new str("precision too big"));
                     else
                         f_precision = 10*f_precision + d;
                 } else {
@@ -361,7 +362,9 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                         if (d == 0)
                             f_zero = true;
                         f_width = d;
-                    } else
+                    } else if (f_width > (std::numeric_limits<__ss_int>::max() - d) / 10)
+                        throw new ValueError(new str("width too big"));
+                    else
                         f_width = 10*f_width + d;
                 }
             }
@@ -572,15 +575,15 @@ template<class A, class B, class C> bytes *__modtuple(bytes *fmt, tuple3<A,B,C> 
 /* format specs (f-strings and str.format) */
 
 /* [[fill]align][sign][z][#][0][width][grouping][.precision][type], for int,
-   bool, float and str (see also ast_utils.FORMAT_SPEC) */
+   bool, float, complex and str (see also ast_utils.FORMAT_SPEC) */
 str *__format(__ss_int arg, str *spec);
 str *__format(__ss_bool arg, str *spec);
 str *__format(__ss_float arg, str *spec);
 str *__format(str *arg, str *spec);
+str *__format(complex arg, str *spec);
 
 inline str *__fmt_typename(pyobj *p) { return p ? p->__class__->__name__ : new str("NoneType"); }
 inline str *__fmt_typename(void *) { return new str("NoneType"); }
-inline str *__fmt_typename(const complex &) { return new str("complex"); } /* TODO complex.__format__ */
 
 /* like object.__format__ */
 template<class T> str *__format(T arg, str *spec) {

@@ -86,6 +86,11 @@ def test_from_string():
     assert complex("1.e3j") == complex(0, 1000)
     assert str(complex("-inf+infj")) == "(-inf+infj)"
     assert str(complex("nanj")) == "nanj"
+    assert repr(complex(1, -0.0)) == '(1-0j)'
+    assert repr(complex(-0.0, 2)) == '(-0+2j)'
+    assert repr(complex(0.0, -0.0)) == '-0j'
+    assert repr(1.23456789+9.87654321j) == '(1.23456789+9.87654321j)'
+    assert str(complex(1e16, 0.1)) == '(1e+16+0.1j)'
     for s in ["1 +2j", "1+ 2j", "0x10", "1+2j\x00", "\x1c1j", "1+2j)",
               "(1+2j", "()", "1+-2j", "1..j", "1j+2", "1 j", "1_+2j",
               "1__0j", "_1j", "+", "", " ", "1+2jj", "infinit"]:

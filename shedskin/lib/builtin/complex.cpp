@@ -86,16 +86,7 @@ complex complex::parsevalue(str *s) {
 }
 
 str *complex::__repr__() {
-    str *left, *middle, *right;
-    if(real==0)
-        return __mod6(new str("%gj"), 1, imag);
-    left = __mod6(new str("(%g"), 1, real);
-    if(imag<0)
-        middle = new str("");
-    else
-        middle = new str("+");
-    right = __mod6(new str("%gj)"), 1, imag);
-    return __add_strs(3, left, middle, right);
+    return __format(*this, new str()); /* see format.cpp */
 }
 
 /* power */
