@@ -4616,6 +4616,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if op == "sum" and ts == '__ss_bool ':
                 ts = '__ss_int '
             if op == "sum":
+                if ts in ("str *", "bytes *"):
+                    self.output("__sum_check<" + ts + ">();")
                 self.output(
                     ts + "__ss_result = __zero<" + ts + ">();\n"
                 )
