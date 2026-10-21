@@ -179,7 +179,10 @@ bytes *b2a_uu(bytes *binary, __ss_bool backtick) {
     __ss_int leftchar=0, leftbits=0;
 
     /* Store the length */
-    *ascii_data++ = ' ' + (bin_len & 077);
+    if(backtick && !bin_len)
+        *ascii_data++ = '`';
+    else
+        *ascii_data++ = ' ' + (bin_len & 077);
 
     for( ; bin_len > 0 || leftbits != 0 ; bin_len--, bin_data++ ) {
         /* Shift the data (or padding) into our buffer */
