@@ -215,6 +215,27 @@ def test_insort_left_key():
     assert ks == [5, 4, 3, 2, 1, 0]
 
 
+def test_hi_keyword():
+    # hi by keyword, without lo, must not be passed as lo
+    a = [1, 2, 3, 4, 5, 6]
+    assert bisect.bisect(a, 4, hi=2) == 2
+    assert bisect.bisect_left(a, 4, hi=2) == 2
+    assert bisect.bisect_right(a, 4, hi=2) == 2
+    assert bisect.bisect_left(a, 4, hi=5, lo=1) == 3
+    d = [6, 5, 4, 3, 2, 1]
+    assert bisect.bisect(d, -2, key=negate) == 5
+    assert bisect.bisect(d, -2, hi=3, key=negate) == 3
+    l = [1, 2, 3, 4]
+    bisect.insort(l, 4, hi=2)
+    assert l == [1, 2, 4, 3, 4]
+    l = [1, 2, 3, 4]
+    bisect.insort_left(l, 4, hi=2)
+    assert l == [1, 2, 4, 3, 4]
+    l = [1, 2, 3, 4]
+    bisect.insort_right(l, 4, hi=2, key=lambda x: x)
+    assert l == [1, 2, 4, 3, 4]
+
+
 def test_all():
     test_bisect()
     test_bisect_insort()
@@ -222,6 +243,7 @@ def test_all():
     test_bounds()
     test_hi_out_of_range()
     test_insort_left_key()
+    test_hi_keyword()
 
 
 if __name__ == '__main__':

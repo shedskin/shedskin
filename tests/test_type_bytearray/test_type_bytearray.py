@@ -454,6 +454,7 @@ def test_hex():
     assert b == bytearray(b'\xaa\xbb\xcc')
     assert b.hex() == 'aabbcc'
     assert b.hex(sep='?') == 'aa?bb?cc'
+    assert b.hex(bytes_per_sep=2) == 'aabbcc'
 
 
 def test_bytearray_maketrans():

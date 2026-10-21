@@ -613,6 +613,9 @@ def test_hex():
     assert b'ABCD'.hex(b'-') == '41-42-43-44'
     assert b'ABCD'.hex(b':', 2) == '4142:4344'
     assert bytearray(b'AB').hex(b':') == '41:42'
+    # bytes_per_sep by keyword, without sep, must not be passed as the sep
+    assert b'ABCD'.hex(bytes_per_sep=2) == '41424344'
+    assert b'ABCD'.hex(bytes_per_sep=2, sep='.') == '4142.4344'
     error = ''
     try:
         b'AB'.hex('\xe9')
