@@ -324,6 +324,33 @@ def test_list_ordering_user():
     assert min(lg)[0].v == 1 and max(lg)[0].v == 3
 
 
+class Subset:  # subset order: __eq__, plus partial __lt__/__gt__
+    def __init__(self, s):
+        self.s = s
+    def __eq__(self, o):
+        return self.s == o.s
+    def __lt__(self, o):
+        return self.s < o.s
+    def __gt__(self, o):
+        return self.s > o.s
+
+
+def test_list_ordering_partial():
+    # as in CPython 3: the first pair that differs decides, by the operator itself
+    a, b, c = OnlyLt(1), OnlyLt(1), OnlyLt(2)  # a, b: neither a < b nor b < a
+    assert not [a] < [b] and not [a] > [b] and not [b] < [a] and not [b] > [a]
+    assert not [a, c] < [b, a] and not [a, c] > [b, a]  # first pair decides
+    assert [a, a] < [a, c] and [a, c] > [a, a] and [a] < [a, a] and [a, a] > [a]
+    d, e, f = OnlyGt(1), OnlyGt(1), OnlyGt(2)
+    assert not [d] < [e] and not [d] > [e] and not [e] < [d] and not [e] > [d]
+    assert not [d, f] < [e, d] and not [d, f] > [e, d]
+    assert [d, d] < [d, f] and [d, f] > [d, d]
+    x, y, z = Subset({1}), Subset({2}), Subset({1, 2})
+    assert not [x] < [y] and not [x] > [y] and not [y] < [x] and not [y] > [x]
+    assert [x] < [z] and [z] > [x] and [x, y] < [x, z] and not [x, y] > [x, z]
+    assert [[a]] < [[c]] and not [[a]] < [[b]] and not [[a]] > [[b]]  # nested
+
+
 def test_list_search():
     l = [5, 3, 9, 3, 7, -1, 3]
     assert 9 in l and -1 in l and 4 not in l
@@ -823,6 +850,7 @@ def test_all():
     test_list_cmp()
     test_list_ordering()
     test_list_ordering_user()
+    test_list_ordering_partial()
     test_list_search()
     test_list_clear()
     test_list_comp()

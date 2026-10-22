@@ -252,11 +252,23 @@ template<class T> __ss_int list<T>::__cmp__(pyobj *p) {
     return __units_cmp(this->units, ((list<T> *)p)->units);
 }
 
-/* not through the virtual pyobj::__lt__ etc. (list is final, so __cmp__ is called directly) */
-template<class T> inline __ss_bool __gt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) > 0); }
-template<class T> inline __ss_bool __ge(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) >= 0); }
-template<class T> inline __ss_bool __lt(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) < 0); }
-template<class T> inline __ss_bool __le(list<T> *a, list<T> *b) { return __mbool(a->__cmp__(b) <= 0); }
+/* ordering, as in CPython 3: the first pair of elements that differ (by __eq_id) decides, by
+   applying the operator itself, else the lengths do. unlike __cmp__, this also works for partial
+   orders, such as user classes that only define __lt__. (not through the virtual pyobj::__lt__ etc.) */
+template<class T, class Op> inline __ss_bool __list_order(list<T> *a, list<T> *b, Op op) {
+    if constexpr (!std::is_same<T, void *>::value) { /* void *: empty, or only None */
+        size_t n = std::min(a->units.size(), b->units.size());
+        for(size_t i = 0; i < n; i++)
+            if(!__eq_id(a->units[i], b->units[i]))
+                return op(a->units[i], b->units[i]);
+    }
+    return op((__ss_int)a->units.size(), (__ss_int)b->units.size());
+}
+
+template<class T> inline __ss_bool __gt(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __gt(x, y); }); }
+template<class T> inline __ss_bool __ge(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __ge(x, y); }); }
+template<class T> inline __ss_bool __lt(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __lt(x, y); }); }
+template<class T> inline __ss_bool __le(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __le(x, y); }); }
 
 template<class T> void *list<T>::append(T a) {
     this->units.push_back(a);
