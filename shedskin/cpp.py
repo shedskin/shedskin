@@ -2476,7 +2476,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         left = node.left
         for op, right in zip(node.ops, node.comparators):
             msg, short, pre = mapping[type(op)]
-            if msg == "__contains__":
+            if isinstance(op, (ast.Is, ast.IsNot)):
+                self.visit_is(left, right, op, func)
+            elif msg == "__contains__":
                 self.do_compare(right, left, msg, short, func, pre)
             else:
                 self.do_compare(left, right, msg, short, func, pre)
@@ -2485,6 +2487,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             left = right
         if node not in self.bool_wrapper:
             self.append(")")
+
+    def visit_is(
+        self,
+        left: ast.AST,
+        right: ast.AST,
+        op: ast.cmpop,
+        func: Optional["python.Function"] = None,
+    ) -> None:
+        """Generate 'is': different types are never identical (e.g. 'True is 1'), so
+        let C++ decide on the actual (uncasted) types"""
+        if isinstance(op, ast.IsNot):
+            self.append("!")
+        self.append("__ss_is(")
+        for i, node in enumerate((left, right)):
+            if i:
+                self.append(", ")
+            if ast_utils.is_none(node):
+                self.append("nullptr")  # NULL may be an integer
+            else:
+                self.visit2(node, self.mergeinh[node], None, func)
+        self.append(")")
 
     def visit_AugAssign(
         self, node: ast.AugAssign, func: Optional["python.Function"] = None

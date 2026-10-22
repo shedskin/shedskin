@@ -22,6 +22,39 @@ template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a ==
 template<> inline __ss_bool __eq(__ss_float a, __ss_float b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
 
+/* is: pointers are compared directly, but unrelated pointer types (as there is no
+   multiple inheritance) or different kinds of unboxed types (e.g. 'True is 1',
+   '1 is 1.0', '0 is None') are never identical. compare kinds rather than C++
+   types, as a python int may be an 'int' or an '__ss_int' */
+
+template<class T> constexpr int __ss_is_kind() {
+    if constexpr (std::is_same_v<T, __ss_bool> || std::is_same_v<T, bool>)
+        return 1;
+    else if constexpr (std::is_integral_v<T>)
+        return 2;
+    else if constexpr (std::is_floating_point_v<T>)
+        return 3;
+    else if constexpr (std::is_pointer_v<T> || std::is_null_pointer_v<T>)
+        return 4;
+    else
+        return 0;
+}
+
+template<class T, class U> inline __ss_bool __ss_is(T a, U b) {
+    if constexpr (std::is_same_v<T, U>)
+        return __mbool(a == b);
+    else if constexpr (__ss_is_kind<T>() == 4 && __ss_is_kind<U>() == 4) {
+        if constexpr (std::is_convertible_v<T, U> || std::is_convertible_v<U, T>)
+            return __mbool(a == b);
+        else
+            return False;
+    }
+    else if constexpr (__ss_is_kind<T>() != 0 && __ss_is_kind<T>() == __ss_is_kind<U>())
+        return __mbool(a == b);
+    else
+        return False;
+}
+
 /* container equality (in, index, count, remove, ==, dict lookup): like CPython's
    PyObject_RichCompareBool, an object is always considered equal to itself (this
    also skips a virtual __eq__ call) */
