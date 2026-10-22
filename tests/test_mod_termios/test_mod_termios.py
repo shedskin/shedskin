@@ -47,6 +47,19 @@ def test_backup_restore():
     termios.tcsetattr(slave, termios.TCSADRAIN, old)
     assert termios.tcgetattr(slave) == old
     assert termios.tcgetattr(slave)[LFLAG] & termios.ECHO != 0
+
+    # toggling ICANON: on BSD/macOS, switching back to canonical mode (other
+    # than with TCSAFLUSH) sets PENDIN
+    new = termios.tcgetattr(slave)
+    new[LFLAG] &= ~termios.ICANON
+    termios.tcsetattr(slave, termios.TCSANOW, new)
+    termios.tcsetattr(slave, termios.TCSADRAIN, old)
+    cur = termios.tcgetattr(slave)
+    cur[LFLAG] &= ~termios.PENDIN
+    assert cur == old
+    termios.tcsetattr(slave, termios.TCSANOW, new)
+    termios.tcsetattr(slave, termios.TCSAFLUSH, old)
+    assert termios.tcgetattr(slave) == old
     os.close(slave)
     os.close(master)
 

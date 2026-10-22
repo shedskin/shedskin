@@ -56,8 +56,12 @@ def test_setraw():
     os.write(master, b'a\r')
     assert os.read(slave, 10) == b'a\r'
 
+    # on BSD/macOS, switching back to canonical mode (other than with
+    # TCSAFLUSH) sets PENDIN, so pending input is reprocessed
     termios.tcsetattr(slave, termios.TCSADRAIN, old)
-    assert termios.tcgetattr(slave) == orig
+    restored = termios.tcgetattr(slave)
+    restored[tty.LFLAG] &= ~termios.PENDIN
+    assert restored == orig
     os.close(slave)
     os.close(master)
 
