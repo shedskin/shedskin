@@ -123,6 +123,45 @@ def test_match_singleton():
     assert boolname(False) == "no"
 
 
+def int_true(x):
+    match x:
+        case True:  # 'is', so 1 does not match
+            return "True"
+        case 1:
+            return "one"
+        case False:
+            return "False"
+        case 0:
+            return "zero"
+    return "?"
+
+
+def bool_one(b):
+    match b:
+        case 1:  # '==', so True does match
+            return "one"
+        case 0:
+            return "zero"
+    return "?"
+
+
+def test_match_bool_int():
+    assert int_true(1) == "one"
+    assert int_true(0) == "zero"
+    assert int_true(2) == "?"
+    assert bool_one(True) == "one"
+    assert bool_one(False) == "zero"
+    f = 1.0
+    match f:
+        case True:
+            r = 1
+        case 1:
+            r = 2
+        case _:
+            r = 3
+    assert r == 2
+
+
 def classify(n, strict):
     match n:
         case 0 | 1 if strict:
@@ -241,6 +280,7 @@ def test_all():
     test_match_float()
     test_match_dotted()
     test_match_singleton()
+    test_match_bool_int()
     test_match_guard()
     test_match_subject_once()
     test_match_user_eq()
