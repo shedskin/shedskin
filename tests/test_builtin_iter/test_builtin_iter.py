@@ -213,6 +213,43 @@ def test_iter_self():
     assert list(iter(b)) == [3, 2, 1]
 
 
+# an iterator class (__iter__ returning self) with subclasses: the base
+# class must still be defined first
+class CountIter:
+    def __init__(self, n):
+        self.n = n
+        self.i = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.i >= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i
+
+
+class CountIterSub(CountIter):
+    pass
+
+
+class CountIterDouble(CountIter):
+    def __next__(self):
+        if self.i >= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i * 2
+
+
+def test_iter_self_subclass():
+    assert list(CountIter(2)) == [1, 2]
+    assert list(CountIterSub(3)) == [1, 2, 3]
+    assert list(CountIterDouble(2)) == [2, 4]
+    assert sum(CountIterDouble(3)) == 12
+    assert [x + 1 for x in CountIterSub(2)] == [2, 3]
+
+
 # regression test: a user-defined class whose name coincides with a
 # builtin (Counter, defaultdict, ...) must not be mistaken for the
 # actual builtin when its constructor is called, even though the
@@ -251,6 +288,7 @@ def test_all():
     test_iter_correct()
     test_iter_later_class()
     test_iter_self()
+    test_iter_self_subclass()
     test_class_name_shadows_builtin()
 
 
