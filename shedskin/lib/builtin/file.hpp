@@ -34,7 +34,7 @@ public:
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
 
-    file(FILE *g=0) : f(g), closed(False) {}
+    file(FILE *g=0) : name(0), mode(0), f(g), buffer(0), closed(False) {}
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0);
 
     virtual void * close();
@@ -80,7 +80,7 @@ public:
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
-    file_binary(FILE *g=0) : f(g), closed(False) {}
+    file_binary(FILE *g=0) : name(0), mode(0), f(g), closed(False) {}
     file_binary(str *name, str *mode=0);
 
     virtual void * close();
