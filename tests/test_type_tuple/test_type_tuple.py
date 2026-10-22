@@ -192,6 +192,38 @@ def test_tuple_ordering():
     assert max(ht) == (2, 'a')
 
 
+
+class OnlyLt:
+    def __init__(self, v):
+        self.v = v
+    def __lt__(self, o):
+        return self.v < o.v
+
+
+class OnlyGt:
+    def __init__(self, v):
+        self.v = v
+    def __gt__(self, o):
+        return self.v > o.v
+
+
+def test_tuple_ordering_user():
+    # element __lt__/__gt__ are only reached through tuple ordering
+    hi, lo, lo2, hi2 = OnlyLt(2), OnlyLt(1), OnlyLt(1), OnlyLt(2)
+    assert (lo,) < (hi,) and (lo2,) < (hi2,) and (hi,) > (lo,) and (hi2,) > (lo2,)
+    assert (lo, 9) < (hi, 0) and (lo2, 9) < (hi2, 0) and (hi, 0) > (lo, 9)
+    assert (lo, 9, 'z') < (hi, 0, 'a') and (lo2, 9, 'z') < (hi2, 0, 'a')
+    tt = [(OnlyLt(3), 0), (OnlyLt(1), 0), (OnlyLt(2), 0)]
+    assert [t[0].v for t in sorted(tt)] == [1, 2, 3]
+    assert min(tt)[0].v == 1 and max(tt)[0].v == 3
+    gh, gl, gl2, gh2 = OnlyGt(2), OnlyGt(1), OnlyGt(1), OnlyGt(2)
+    assert (gl,) < (gh,) and (gl2,) < (gh2,) and (gh,) > (gl,) and (gh2,) > (gl2,)
+    assert (gl, 9) < (gh, 0) and (gl2, 9) < (gh2, 0) and (gh, 0) > (gl, 9)
+    tg = [(OnlyGt(3), 'x'), (OnlyGt(1), 'x'), (OnlyGt(2), 'x')]
+    assert [t[0].v for t in sorted(tg)] == [1, 2, 3]
+    assert min(tg)[0].v == 1 and max(tg)[0].v == 3
+
+
 def test_tuple_search():
     t = (5, 3, 9, 3, 7, -1, 3)
     assert 9 in t and -1 in t and 4 not in t
@@ -279,6 +311,7 @@ def test_all():
     test_count()
     test_tuple3()
     test_tuple_ordering()
+    test_tuple_ordering_user()
     test_tuple_search()
     test_tuple2_search()
     test_int_pairs()
