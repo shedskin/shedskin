@@ -713,6 +713,29 @@ def test_custom_error_no_args():
         assert repr(e) == 'NoArgErr2()'
 
 
+class InitErr(Exception):
+    def __init__(self):
+        Exception.__init__(self, 'custom')
+        self.code = 42
+
+
+def test_raise_class():
+    # regression test (1021-B7): 'raise Cls' must call Cls.__init__
+    try:
+        raise InitErr
+    except InitErr as e:
+        assert repr(e) == "InitErr('custom')"
+        assert e.code == 42
+    try:
+        raise NoArgErr2
+    except NoArgErr as e:
+        assert repr(e) == 'NoArgErr2()'
+    try:
+        raise KeyError
+    except LookupError as e:
+        assert repr(e) == 'KeyError()'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_key_error()
@@ -738,6 +761,7 @@ def test_all():
     test_exception_attributes()
     test_keyerror_str()
     test_custom_error_no_args()
+    test_raise_class()
 
 
 if __name__ == '__main__':
