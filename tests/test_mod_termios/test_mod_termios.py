@@ -123,15 +123,111 @@ def test_fileno_object():
     os.close(master)
 
 
+class FilenoWrapper:
+    def __init__(self, fd):
+        self.fd = fd
+
+    def fileno(self):
+        return self.fd
+
+
+def test_fileno_method():
+    master, slave = os.openpty()
+    assert termios.tcgetattr(FilenoWrapper(slave)) == termios.tcgetattr(slave)
+    termios.tcdrain(FilenoWrapper(slave))
+    os.close(slave)
+    os.close(master)
+
+
 def test_error():
     r, w = os.pipe()
     try:
         termios.tcgetattr(r)
         assert False
+    except termios.error as e:
+        assert str(e) == '(25, \'Inappropriate ioctl for device\')'
+    try:
+        termios.tcdrain(r)
+        assert False
     except termios.error:
         pass
     os.close(r)
     os.close(w)
+
+    try:
+        termios.tcgetattr(-1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'file descriptor cannot be a negative integer (-1)'
+    try:
+        termios.tcgetattr(FilenoWrapper(-2))
+        assert False
+    except ValueError:
+        pass
+
+    master, slave = os.openpty()
+    try:
+        termios.tcsetattr(slave, 99, termios.tcgetattr(slave))
+        assert False
+    except termios.error as e:
+        assert str(e) == '(22, \'Invalid argument\')'
+    os.close(slave)
+    os.close(master)
+
+
+def test_flush_drain_flow():
+    master, slave = os.openpty()
+    os.write(master, b'abc')
+    termios.tcflush(slave, termios.TCIFLUSH)
+    termios.tcflush(slave, termios.TCIOFLUSH)
+    termios.tcdrain(slave)
+    termios.tcflow(slave, termios.TCOOFF)
+    termios.tcflow(slave, termios.TCOON)
+    termios.tcsendbreak(slave, 0)
+    os.close(slave)
+    os.close(master)
+
+
+def test_winsize():
+    master, slave = os.openpty()
+    termios.tcsetwinsize(slave, (24, 80))
+    assert termios.tcgetwinsize(slave) == (24, 80)
+    termios.tcsetwinsize(master, [50, 132])
+    rows, cols = termios.tcgetwinsize(slave)
+    assert rows == 50 and cols == 132
+    try:
+        termios.tcsetwinsize(slave, (1, 2, 3))
+        assert False
+    except TypeError as e:
+        assert str(e) == 'tcsetwinsize, arg 2: must be a two-item sequence'
+    try:
+        termios.tcsetwinsize(slave, (70000, 80))
+        assert False
+    except OverflowError:
+        pass
+    os.close(slave)
+    os.close(master)
+
+
+def test_speed():
+    master, slave = os.openpty()
+    attrs = termios.tcgetattr(slave)
+    attrs[4] = attrs[5] = termios.B115200
+    termios.tcsetattr(slave, termios.TCSANOW, attrs)
+    attrs = termios.tcgetattr(slave)
+    assert attrs[4] == termios.B115200
+    assert attrs[5] == termios.B115200
+    os.close(slave)
+    os.close(master)
+
+
+def test_constants():
+    assert termios.TCSANOW != termios.TCSADRAIN != termios.TCSAFLUSH
+    assert termios.VMIN != termios.VTIME
+    assert 0 <= termios.VMIN < termios.NCCS
+    assert termios.ECHO & termios.ECHO == termios.ECHO
+    assert termios.B9600 != termios.B38400
+    assert termios.CS8 & termios.CSIZE == termios.CS8
 
 
 def test_all():
@@ -141,7 +237,12 @@ def test_all():
     test_cc_set()
     test_copy()
     test_fileno_object()
+    test_fileno_method()
     test_error()
+    test_flush_drain_flow()
+    test_winsize()
+    test_speed()
+    test_constants()
 
 
 if __name__ == '__main__':

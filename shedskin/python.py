@@ -469,6 +469,12 @@ def lookup_func(
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.funcs:
             return module.mv.funcs[node.attr]
+        # 'from x import *' in a library module, such as tty (whose header
+        # makes these names available)
+        if module and module.builtin and node.attr in module.mv.ext_funcs:
+            func = module.mv.ext_funcs[node.attr]
+            if func.mv.module.ident != "builtin":
+                return func
     return None
 
 
@@ -506,6 +512,12 @@ def lookup_class(
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.classes:
             return module.mv.classes[node.attr]
+        # 'from x import *' in a library module, such as tty (whose header
+        # makes these names available)
+        if module and module.builtin and node.attr in module.mv.ext_classes:
+            cl = module.mv.ext_classes[node.attr]
+            if cl.mv.module.ident != "builtin":
+                return cl
 
     return None
 
