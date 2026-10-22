@@ -1988,6 +1988,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Visit a raise statement"""
         if node.exc is None or node.cause is not None:
             error.error("unsupported raise syntax", self.gx, node, mv=getmv())
+        # 'raise Cls' is short for 'raise Cls()', so __init__ is called
+        if node.exc and python.lookup_class_module(node.exc, self, func)[0]:
+            node.exc = ast.copy_location(
+                ast.Call(func=node.exc, args=[], keywords=[]), node.exc
+            )
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 

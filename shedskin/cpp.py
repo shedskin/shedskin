@@ -1381,11 +1381,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         exc = node.exc
         assert exc
         self.start("throw (")
-        cl, module = python.lookup_class_module(exc, self.mv, func)
-        if cl:
-            self.visitm("new ", self.namer.namespace_class(cl), "()", func)
-        else:
-            self.visit(exc, func)
+        self.visit(exc, func)
         self.eol(")")
 
     def visit_Try(
