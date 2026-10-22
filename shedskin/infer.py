@@ -1204,6 +1204,16 @@ def redirect(
         ]
         func = func.parent.funcs[getter]
 
+    # termios attributes: attrs[6]/attrs[CC]/attrs[tty.CC] -> __getcc__
+    if (
+        isinstance(callfunc.func, ast.Attribute)
+        and callfunc.func.attr == "__getitem__"
+        and is_termios_tcattrs(func.parent)
+        and is_termios_cc_index(callfunc.args[0])
+    ):
+        assert isinstance(func.parent, python.Class)
+        func = func.parent.funcs["__getcc__"]
+
     # property
     if isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in [
         "__setattr__",
@@ -1234,6 +1244,34 @@ def redirect(
         func = func.parent.funcs["__win32" + func.ident]
 
     return c, dcpa, func
+
+
+def is_termios_tcattrs(cl: object) -> bool:
+    """Whether a class is termios.tcattrs (a termios attribute list)"""
+    return (
+        isinstance(cl, python.Class)
+        and cl.ident == "tcattrs"
+        and cl.mv.module.builtin
+        and cl.mv.module.ident == "termios"
+    )
+
+
+def is_termios_cc_index(node: ast.AST) -> bool:
+    """Whether a subscript selects the control characters of a termios
+    attribute list: a literal 6, CC or tty.CC (assumed to mean what they say)"""
+    return (
+        (
+            isinstance(node, ast.Constant)
+            and type(node.value) is int
+            and node.value == 6
+        )
+        or (isinstance(node, ast.Name) and node.id == "CC")
+        or (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.attr == "CC"
+        )
+    )
 
 
 def _const_str(node: ast.AST) -> str:
