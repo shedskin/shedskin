@@ -1538,6 +1538,7 @@ __ss_int nice(__ss_int n) {
 void *kill(__ss_int pid, __ss_int sig) {
     if(::kill((pid_t)pid, (int)sig) == -1)
         __throw_oserror(new str("os.kill"));
+    __ss_check_signals(); /* like cpython, a handler runs right after a signal to self */
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {

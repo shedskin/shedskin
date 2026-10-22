@@ -13,6 +13,7 @@ add_shedskin_product(
     	pak/sub/__init__
     	pak/sub/daar
     	pak/sub/subsub/__init__
+    	pak/sub/subsub/deep
     	pak/sub/subsub/insubsub
         foo
         spam

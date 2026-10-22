@@ -1,0 +1,10 @@
+add_shedskin_product(
+    SYS_MODULES
+        base64
+        binascii
+        gzip
+        io
+        os
+        os.path
+        stat
+)

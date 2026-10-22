@@ -1,4 +1,5 @@
 import signal
+import sys
 
 
 def test_signal_constants():
@@ -18,8 +19,62 @@ def test_signal_constants():
     assert len(set(vals)) == len(vals)
 
 
+received = []
+
+
+def handler(signum, frame):
+    received.append(signum)
+
+
+class Stop(Exception):
+    pass
+
+
+def stopper(signum, frame):
+    raise Stop('stop %d' % signum)
+
+
+def exiter(signum, frame):
+    sys.exit(128 + signum)
+
+
+def test_signal_handler():
+    signal.signal(signal.SIGTERM, handler)
+    signal.raise_signal(signal.SIGTERM)  # the handler runs right after
+    assert received == [signal.SIGTERM]
+
+    # an exception raised by the handler comes out where it runs
+    signal.signal(signal.SIGTERM, stopper)
+    try:
+        signal.raise_signal(signal.SIGTERM)
+        assert False
+    except Stop as e:
+        assert str(e) == 'stop %d' % signal.SIGTERM
+
+    # sys.exit in a handler leaves through the finally blocks
+    cleaned = []
+    signal.signal(signal.SIGTERM, exiter)
+    try:
+        try:
+            signal.raise_signal(signal.SIGTERM)
+        finally:
+            cleaned.append(True)
+    except SystemExit as e:
+        assert e.code == 128 + signal.SIGTERM
+    assert cleaned == [True]
+
+    signal.signal(signal.SIGTERM, handler)
+
+    try:
+        signal.signal(0, handler)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'signal number out of range'
+
+
 def test_all():
     test_signal_constants()
+    test_signal_handler()
 
 
 if __name__ == '__main__':

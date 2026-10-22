@@ -736,6 +736,18 @@ def test_raise_class():
         assert repr(e) == 'KeyError()'
 
 
+def test_handler_classes():
+    # the handlers share 'e', but each has its own class
+    try:
+        open('/nonexistent/file')
+    except OSError as e:
+        assert e.strerror == 'No such file or directory'
+    try:
+        int('x')
+    except (OSError, ValueError) as e:
+        assert str(e) == "invalid literal for int() with base 10: 'x'"
+
+
 def test_all():
     test_repr_escapes_argument()
     test_key_error()
@@ -762,6 +774,7 @@ def test_all():
     test_keyerror_str()
     test_custom_error_no_args()
     test_raise_class()
+    test_handler_classes()
 
 
 if __name__ == '__main__':

@@ -362,6 +362,9 @@ void __start(void (*initfunc)()) {
     std::exit(0);
 }
 
+volatile int __ss_signal_pending;
+void (*__ss_signal_hook)();
+
 void __ss_exit(int code) {
     throw new SystemExit(code);
 }

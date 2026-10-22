@@ -513,6 +513,7 @@ static void __ss_check_sleep(__ss_float s) {
 #ifndef WIN32
 void *sleep(__ss_float s) {
     __ss_check_sleep(s);
+    __ss_check_signals();
     time_t seconds = time_t(s);
     __ss_float nanosecs = (s - (__ss_float)seconds) * 1000000000l;
 
@@ -522,8 +523,10 @@ void *sleep(__ss_float s) {
 
     int ret = -1;
 
-    while((ret = nanosleep(&time1, &time2)) && errno == EINTR)
+    while((ret = nanosleep(&time1, &time2)) && errno == EINTR) {
+        __ss_check_signals(); /* a handler may raise, ending the sleep */
 	    std::swap(time1, time2);
+    }
 
     if (ret == -1)
 	    throw new Exception(new str("nanosleep"));
@@ -533,6 +536,7 @@ void *sleep(__ss_float s) {
 #else
 void *sleep(__ss_float s) {
     __ss_check_sleep(s);
+    __ss_check_signals();
     Sleep(s*1000); // TODO ms resolution..
     return NULL;
     }

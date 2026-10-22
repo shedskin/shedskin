@@ -4,7 +4,8 @@ This package is comprised of several parts:
     - the Shed Skin compiler (shedskin/*.py); License GNU GPL version 3
     - a C++ implementation of the Python builtins and libraries
       (everything under shedskin/lib/); License Expat (with the exception of
-      shedskin/lib/random.?pp, license BSD-3, see below, as well as
+      shedskin/lib/random.?pp, license BSD-3, see below, the inflate in
+      shedskin/lib/gzip.cpp, license zlib, see below, as well as
       shedskin/lib/boost, license BSL-1.0, see below)
     - a set of example programs; Licensed as indicated for each example
 
@@ -769,6 +770,31 @@ POSSIBILITY OF SUCH DAMAGE.
 Any feedback is very welcome.
 http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
+
+
+Concerning the inflate in shedskin/lib/gzip.cpp, an altered version of
+puff.c (zlib/contrib/puff) by Mark Adler:
+
+  Copyright (C) 2002-2013 Mark Adler, all rights reserved
+  version 2.3, 21 Jan 2013
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the author be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Mark Adler    madler@alumni.caltech.edu
 
 
 Concerning the set of example programs (everything under examples/):

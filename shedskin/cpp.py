@@ -195,6 +195,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.mv = module.mv
         self.name = module.ident
         self.with_count = 0
+        # try..finally statements being generated: (number, function, loop depth)
+        self.finally_count = 0
+        self.finally_stack: list[tuple[int, Optional["python.Function"], int]] = []
+        self.finally_exits: dict[int, set[int]] = {}  # number -> exits jumping out
         self.bool_wrapper: dict["ast.AST", bool] = {}
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
@@ -857,7 +861,34 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Continue, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a continue node"""
-        self.output("continue;")
+        self.impl_visit_continue(func)
+
+    def impl_visit_continue(self, func: Optional["python.Function"]) -> None:
+        """Generate a continue, through the finally blocks it leaves"""
+        n = self.finally_target(func, loop=True)
+        if n is not None:
+            self.output(self.finally_goto(n, 3))
+        else:
+            self.output("continue;")
+
+    def finally_goto(self, n: int, exit: int) -> str:
+        """Jump to the finally body of try..finally 'n', noting the exit
+        (1 return, 2 break, 3 continue) to take after it"""
+        self.finally_exits[n].add(exit)
+        return "__fin%d = %d; goto __fin%d_exit;" % (n, exit, n)
+
+    def finally_target(
+        self, func: Optional["python.Function"], loop: bool
+    ) -> Optional[int]:
+        """The innermost try..finally a return, or for 'loop' a break or
+        continue, leaves on its way out, if any"""
+        if self.finally_stack:
+            n, fin_func, loop_depth = self.finally_stack[-1]
+            if fin_func is func and (
+                not loop or loop_depth == len(self.gx.loopstack)
+            ):
+                return n
+        return None
 
     def visit_With(
         self, node: ast.With, func: Optional["python.Function"] = None
@@ -1390,6 +1421,80 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Try, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a try node"""
+        if node.finalbody:
+            self.impl_visit_try_finally(node, func)
+        else:
+            self.impl_visit_try(node, func)
+
+    def impl_visit_try_finally(
+        self, node: ast.Try, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a try..finally: the finally body is generated once, after
+        the try block. A return, break or continue that leaves the try block
+        jumps there first, noting in __finN what it does after the finally
+        body; an exception is caught, kept and raised again after it"""
+        n = self.finally_count
+        self.finally_count += 1
+        self.finally_exits[n] = set()
+
+        # the try block, to know which ways out of it are taken
+        self.output("{")
+        self.indent()
+        out = self.out
+        self.out = io.StringIO()
+        self.indent()
+        self.finally_stack.append((n, func, len(self.gx.loopstack)))
+        if node.handlers:
+            self.impl_visit_try(node, func)
+        else:
+            for child in node.body:
+                self.visit(child, func)
+        self.finally_stack.pop()
+        self.deindent()
+        body = self.out.getvalue()
+        self.out = out
+        exits = self.finally_exits[n]
+
+        if exits:
+            self.output("int __fin%d = 0;" % n)
+        self.output("std::exception_ptr __fin%d_exc;" % n)
+        if 1 in exits and func and not func.isGenerator:
+            assert func.retnode
+            rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
+            self.output("%s__fin%d_ret{};" % (rettype, n))
+        self.output("try {")
+        self.out.write(body)
+        self.output("} catch (...) {")
+        self.output("    __fin%d_exc = std::current_exception();" % n)
+        self.output("}")
+        if exits:
+            self.output("__fin%d_exit: ;" % n)
+
+        for child in node.finalbody:
+            self.visit(child, func)
+
+        self.output("if (__fin%d_exc)" % n)
+        self.output("    std::rethrow_exception(__fin%d_exc);" % n)
+        for exit in sorted(exits):
+            self.output("if (__fin%d == %d) {" % (n, exit))
+            self.indent()
+            if exit == 1:
+                assert func
+                value = None if func.isGenerator else "__fin%d_ret" % n
+                self.impl_visit_return(value, func)
+            elif exit == 2:
+                self.impl_visit_break(func)
+            else:
+                self.impl_visit_continue(func)
+            self.deindent()
+            self.output("}")
+        self.deindent()
+        self.output("}")
+
+    def impl_visit_try(
+        self, node: ast.Try, func: Optional["python.Function"] = None
+    ) -> None:
+        """Generate a try..except"""
         self.start("try {")
         self.print(self.line)
         self.indent()
@@ -1424,7 +1529,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.mv.module.builtin and cl.ident in [
                         "KeyboardInterrupt",
                         "FloatingPointError",
-                        "SystemExit",
                     ]:
                         error.error(
                             "system '%s' is not caught" % cl.ident,
@@ -2412,6 +2516,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Break, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a break statement"""
+        self.impl_visit_break(func)
+
+    def impl_visit_break(self, func: Optional["python.Function"]) -> None:
+        """Generate a break, through the finally blocks it leaves"""
+        n = self.finally_target(func, loop=True)
+        if n is not None:
+            self.output(self.finally_goto(n, 2))
+            return
         if self.gx.loopstack[-1].orelse:
             orelse_tempcount_id = (self.gx.loopstack[-1], "orelse")
             if orelse_tempcount_id in self.mv.tempcount:
@@ -4076,13 +4188,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Return, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a return statement"""
+        n = self.finally_target(func, loop=False)
+        if n is not None:
+            # through the finally body, keeping the value it returns
+            assert func
+            if not func.isGenerator:
+                assert node.value  # added in graph.py
+                assert func.retnode
+                self.start("__fin%d_ret = " % n)
+                self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
+                self.eol()
+            self.output(self.finally_goto(n, 1))
+            return
         if func and func.isGenerator:
-            self.output("__stop_iteration = true;")
-            assert func.retnode
-            func2 = typestr.nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[
-                7:-3
-            ]  # XXX meugh
-            self.output("return __zero<%s>();" % func2)
+            self.impl_visit_return(None, func)
             return
         self.start("return ")
         assert node.value  # added in graph.py
@@ -4090,6 +4209,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         assert func.retnode
         self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
+
+    def impl_visit_return(
+        self, value: Optional[str], func: Optional["python.Function"]
+    ) -> None:
+        """Return 'value', already converted to the return type, from the
+        end of a finally body (through the next finally body out, if any)"""
+        assert func
+        n = self.finally_target(func, loop=False)
+        if n is not None:
+            if value is not None:
+                self.output("__fin%d_ret = %s;" % (n, value))
+            self.output(self.finally_goto(n, 1))
+        elif func.isGenerator:
+            self.output("__stop_iteration = true;")
+            assert func.retnode
+            func2 = typestr.nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[
+                7:-3
+            ]  # XXX meugh
+            self.output("return __zero<%s>();" % func2)
+        else:
+            assert value is not None
+            self.output("return %s;" % value)
 
     def tuple_assign(
         self,

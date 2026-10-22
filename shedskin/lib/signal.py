@@ -38,3 +38,12 @@ SIGXFSZ = 1
 #SIG_DFL = 1
 #SIG_IGN = 1
 SIGBREAK = 1
+
+def signal(signalnum, handler):
+    handler(1, None)
+
+def raise_signal(signalnum):
+    pass
+
+def strsignal(signalnum):
+    return ''

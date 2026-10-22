@@ -832,5 +832,18 @@ void __init();
 void __start(void (*initfunc)());
 void __ss_exit(int code=0);
 
+/* python-level signal handlers (signal.signal) cannot run inside the signal,
+   as an exception cannot be thrown from there. so the signal is only noted,
+   and the handler runs at the next check: in time.sleep (which a signal
+   interrupts), and right after os.kill and signal.raise_signal */
+
+extern volatile int __ss_signal_pending;
+extern void (*__ss_signal_hook)();
+
+static inline void __ss_check_signals() {
+    if(__ss_signal_pending)
+        __ss_signal_hook();
+}
+
 } // namespace __shedskin__
 #endif

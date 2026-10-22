@@ -2,6 +2,8 @@
 
 #include "signal.hpp"
 #include <signal.h>
+#include <string.h>
+#include <errno.h>
 
 namespace __signal__ {
 
@@ -83,6 +85,79 @@ void __init() {
 //    __ss_SIG_IGN = SIG_IGN;
 #endif
 
+}
+
+static __handler *handlers[NSIG];
+static volatile sig_atomic_t pending[NSIG];
+
+static void note_signal(int signalnum) {
+    pending[signalnum] = 1;
+    __ss_signal_pending = 1;
+}
+
+/* the handlers of the signals that came, in signal number order like cpython */
+static void run_handlers() {
+    __ss_signal_pending = 0;
+    for(int s = 1; s < NSIG; s++) {
+        if(!pending[s])
+            continue;
+        pending[s] = 0;
+        try {
+            (*handlers[s])(s);
+        } catch(...) {
+            __ss_signal_pending = 1; /* the others, if any, at the next check */
+            throw;
+        }
+    }
+}
+
+static void check_signalnum(__ss_int signalnum) {
+    if(signalnum < 1 || signalnum >= NSIG)
+        throw new ValueError(new str("signal number out of range"));
+}
+
+void __set_handler(__ss_int signalnum, __handler *handler) {
+    check_signalnum(signalnum);
+    __handler *old = handlers[signalnum];
+    handlers[signalnum] = handler; /* before the signal can come */
+    __ss_signal_hook = run_handlers;
+#ifdef WIN32
+    if(::signal((int)signalnum, note_signal) == SIG_ERR) {
+        handlers[signalnum] = old;
+        errno = EINVAL;
+        __throw_oserror();
+    }
+#else
+    struct sigaction action;
+    memset(&action, 0, sizeof(action));
+    action.sa_handler = note_signal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART; /* only sleeping is interrupted */
+    if(sigaction((int)signalnum, &action, NULL) == -1) {
+        handlers[signalnum] = old;
+        __throw_oserror();
+    }
+#endif
+}
+
+void *raise_signal(__ss_int signalnum) {
+    check_signalnum(signalnum);
+    if(::raise((int)signalnum) != 0)
+        __throw_oserror();
+    __ss_check_signals();
+    return NULL;
+}
+
+str *strsignal(__ss_int signalnum) {
+    check_signalnum(signalnum);
+#ifdef WIN32
+    return NULL;
+#else
+    char *name = ::strsignal((int)signalnum);
+    if(!name)
+        return NULL;
+    return new str(name);
+#endif
 }
 
 } // module namespace

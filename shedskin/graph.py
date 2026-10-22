@@ -1124,7 +1124,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # in case of relative import, make name absolute
         level = getattr(node, "level", None) or 0
         if level > 0:
-            newname = ".".join(getmv().module.name.split(".")[: -level + 1])
+            # level 1 is the package the module is in: the module itself
+            # for a package (__init__.py), else its parent
+            package = getmv().module.name.split(".")
+            if getmv().module.filename.name != "__init__.py":
+                package = package[:-1]
+            newname = ".".join(package[: max(0, len(package) - level + 1)])
             if name:
                 if newname:
                     name = newname + "." + name
@@ -1174,7 +1179,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.module == "__future__":
             for node_name in node.names:
                 name = node_name.name
-                if name not in ["with_statement", "print_function"]:
+                if name not in ["with_statement", "print_function", "annotations"]:
                     error.error(
                         "future '%s' is not yet supported" % name,
                         self.gx,
@@ -2052,8 +2057,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 infer.inode(self.gx, var).copymetoo = True
                 self.gx.types[infer.inode(self.gx, var)] = {(cl, 1)}
 
-        if node.finalbody:
-            error.error("'try..finally' is not supported", self.gx, node, mv=getmv())
+        if node.finalbody and func and func.isGenerator:
+            # the generated C++ resumes after a yield with a goto, which
+            # cannot jump into the try block (or past its declarations)
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Yield):
+                    error.error(
+                        "'yield' inside 'try..finally' is not supported",
+                        self.gx,
+                        sub,
+                        mv=getmv(),
+                    )
 
         for handler in node.handlers:
             for child in handler.body:
@@ -2064,6 +2078,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for child in node.orelse:
                 self.visit(child, func)
             self.temp_var_int((node, "orelse"), func)
+
+        # finally
+        for child in node.finalbody:
+            self.visit(child, func)
 
     def visit_TryStar(
         self, node: ast.AST, func: Optional["python.Function"] = None
