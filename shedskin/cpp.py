@@ -986,11 +986,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if "__iter__" in cl.funcs:
                 retnode = cl.funcs["__iter__"].retnode
                 if retnode is not None:
-                    retcls = {
+                    # only the class actually named in the C++ return type
+                    # (e.g. 'return self' also flows subclass instances)
+                    retcls = typestr.lowest_common_parents(
                         cl2
                         for cl2, _ in self.mergeinh[retnode.thing]
                         if isinstance(cl2, python.Class)
-                    }
+                    )
                     result.extend(sorted(retcls, key=lambda c: c.ident))
             return [d for d in result if d is not cl and d in bynode]
 
