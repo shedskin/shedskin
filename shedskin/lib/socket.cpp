@@ -1092,14 +1092,14 @@ __ss_int socket::send(bytes *string, __ss_int flags) {
     return (__ss_int)send( string->unit.data(), string->unit.size(), (int)flags );
 }
 
-__ss_int socket::sendall(bytes *string, __ss_int flags) {
+void *socket::sendall(bytes *string, __ss_int flags) {
     const char *s = string->c_str();
     size_t offset = 0;
     size_t len = string->unit.size(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
     while (offset < len)
         offset += send(s + offset, len - offset, (int)flags);
-    return (__ss_int)len;
+    return NULL;
 }
 
 __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)

@@ -167,7 +167,7 @@ public:
     __ss_bool getblocking() { return __mbool(_blocking); }
     socket *shutdown(__ss_int how);
     __ss_int send(bytes *string, __ss_int flags=0);
-    __ss_int sendall(bytes *string, __ss_int flags=0);
+    void *sendall(bytes *string, __ss_int flags=0);
     __ss_int sendto(bytes *string, __ss_int flags, inet_address addr);
     __ss_int sendto(bytes *string, inet_address addr);
     /* sendto(data, address): the compiler appends the stub's address=0 default */

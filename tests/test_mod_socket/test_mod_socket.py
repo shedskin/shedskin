@@ -596,9 +596,11 @@ def test_socketpair():
     assert a.family == b.family
     assert a.type == socket.SOCK_STREAM and b.type == socket.SOCK_STREAM
     assert a.fileno() != b.fileno()
-    a.sendall(b'ping')
+    assert a.sendall(b'ping') is None  # not the byte count
     assert b.recv(4) == b'ping'
-    b.sendall(b'pong')
+    n = b.sendall(b'pong')
+    n2 = None
+    assert n is n2
     assert a.recv(4) == b'pong'
     a.close()
     b.close()
