@@ -1,6 +1,9 @@
-try:
-    pass
-finally:
-    pass
+def gen():
+    try:
+        yield 1
+    finally:
+        pass
 
-#*ERROR* 9.py:1: 'try..finally' is not supported
+print(list(gen()))
+
+#*ERROR* 9.py:3: 'yield' inside 'try..finally' is not supported
