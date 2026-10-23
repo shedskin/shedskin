@@ -409,7 +409,10 @@ def test_files():
         f.write(data[:1000])
         f.write(data[1000:])
     assert f.closed
-    raw = open(name, 'rb').read()
+    # (close explicitly: without refcounting, an open handle would make
+    # os.remove() fail under windows)
+    with open(name, 'rb') as f:
+        raw = f.read()
     assert raw[3] == gzip.FNAME
     assert raw[10:30] == b'test_mod_gzip_a.txt\x00'
 
@@ -449,7 +452,8 @@ def test_files():
     # bytes file name
     with gzip.open(name.encode(), 'wb', 1) as f:
         f.write(b'level one')
-    assert gzip.open(name).read() == b'level one'
+    with gzip.open(name) as g:
+        assert g.read() == b'level one'
 
     # wrapping an open file: not closed by us
     f = open(name, 'wb')
@@ -614,8 +618,10 @@ def test_text_files():
     assert lines[999] == 'line 999\n'
     assert lines[1000] == 'the end\n'
     count = 0
-    for line in gzip.open(name, mode='rt'):
+    f = gzip.open(name, mode='rt')
+    for line in f:
         count += 1
+    f.close()
     assert count == 1001
     os.remove(name)
 
