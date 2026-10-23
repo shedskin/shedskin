@@ -584,14 +584,20 @@ public:
         return NULL;
     }
 
-    /* n<0 (default) means "all", matching e.g. deque's maxlen=-1 convention */
-    list<tuple2<K, V> *> *most_common(__ss_int n=-1) {
+    /* n=None (default): all elements; n<=0: empty list (as heapq.nlargest) */
+    list<tuple2<K, V> *> *most_common(void *n=NULL) {
         list<tuple2<K, V> *> *result = new list<tuple2<K, V> *>();
         for(auto &kv : this->gcd)
             result->units.push_back(new tuple2<K, V>(2, kv.first, kv.second));
         __ss_stable_sort(result->units.begin(), result->units.end(),
-            [](tuple2<K, V> *a, tuple2<K, V> *b) { return a->second > b->second; });
-        if(n >= 0 && (size_t)n < result->units.size())
+            [](tuple2<K, V> *a, tuple2<K, V> *b) { return a->__getsecond__() > b->__getsecond__(); });
+        return result;
+    }
+    list<tuple2<K, V> *> *most_common(__ss_int n) {
+        list<tuple2<K, V> *> *result = most_common();
+        if(n <= 0)
+            result->units.clear();
+        else if((size_t)n < result->units.size())
             result->units.resize((size_t)n);
         return result;
     }

@@ -548,6 +548,16 @@ def test_counter_most_common_distinct_counts():
     assert c.most_common() == [('a', 5), ('b', 3), ('c', 1)]
     assert c.most_common(2) == [('a', 5), ('b', 3)]
     assert c.most_common(0) == []
+    assert c.most_common(-1) == []
+    assert c.most_common(None) == [('a', 5), ('b', 3), ('c', 1)]
+    assert c.most_common(10) == [('a', 5), ('b', 3), ('c', 1)]
+
+
+def test_counter_most_common_int_keys():
+    c = Counter([1, 2, 2, 3, 3, 3])
+    assert c.most_common() == [(3, 3), (2, 2), (1, 1)]
+    assert c.most_common(1) == [(3, 3)]
+    assert c.most_common(-2) == []
 
 
 def test_counter_elements():
@@ -920,6 +930,7 @@ def test_all():
     test_counter_missing_key()
     test_counter_most_common_all()
     test_counter_most_common_distinct_counts()
+    test_counter_most_common_int_keys()
     test_counter_elements()
     test_counter_elements_skips_nonpositive()
     test_counter_update_iterable()

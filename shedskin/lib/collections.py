@@ -170,7 +170,7 @@ class Counter(dict):
     def total(self):
         return self.value
 
-    def most_common(self, n=-1):
+    def most_common(self, n=None):
         return [(self.unit, self.value)]
 
     def elements(self):
