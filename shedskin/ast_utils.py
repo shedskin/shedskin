@@ -100,6 +100,12 @@ def is_binary_mode(node: ast.Call, pos: int) -> bool:
     return arg is not None and is_str(arg) and "b" in arg.value
 
 
+def is_text_mode(node: ast.Call, pos: int) -> bool:
+    """Whether a call to open() and friends passes a constant text mode"""
+    arg = mode_arg(node, pos)
+    return isinstance(arg, ast.Constant) and isinstance(arg.value, str) and "t" in arg.value
+
+
 def is_num(node: ast.AST) -> bool:
     """Check if a node is a numeric constant"""
     return isinstance(node, ast.Constant) and isinstance(node.value, (int, float))

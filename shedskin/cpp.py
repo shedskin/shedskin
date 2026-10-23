@@ -635,10 +635,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             func = module.mv.funcs[name]
                             if func.cp or module.builtin:
                                 self.print(using + self.cpp_name(func) + ";")
-                            # fdopen(fd, 'rb') becomes fdopen_binary (see graph.py)
-                            binary = module.mv.funcs.get(name + "_binary")
-                            if binary and module.builtin:
-                                self.print(using + self.cpp_name(binary) + ";")
+                            # fdopen(fd, 'rb') becomes fdopen_binary, gzip's
+                            # open(f, 'rt') becomes open_text (see graph.py)
+                            for suffix in ("_binary", "_text"):
+                                variant = module.mv.funcs.get(name + suffix)
+                                if variant and module.builtin:
+                                    self.print(using + self.cpp_name(variant) + ";")
                         else:
                             self.print(using + self.namer.nokeywords(name) + ";")
         self.print()

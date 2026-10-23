@@ -2699,6 +2699,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 if module and module.ident == "os":
                     node.func.attr = "fdopen_binary"
 
+            # gzip.open(f, 'rt') returns a text file, unlike gzip.open(f, 'rb')
+            if node.func.attr == "open" and ast_utils.is_text_mode(node, 1):
+                module = python.lookup_module(node.func.value, getmv())
+                if module and module.ident == "gzip":
+                    node.func.attr = "open_text"
+
             # classmethod: insert 'cls' arg (None for now)
             if not fake_attr and isinstance(node.func.value, ast.Name):
                 if node.func.value.id in (
@@ -2766,7 +2772,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if ident == "print" and not shadowed:
                 ident = node.func.id = "__print"  # XXX
 
-            if ident == "open" and not shadowed:
+            # from gzip import open; open(f, 'rt'): as gzip.open above
+            ext_func = getmv().ext_funcs.get(ident)
+            gzip_open = (
+                not shadowed
+                and ext_func is not None
+                and ext_func.ident == "open"
+                and ext_func.mv.module.ident == "gzip"
+            )
+            if gzip_open and ast_utils.is_text_mode(node, 1):
+                assert ext_func
+                ident = node.func.id = "open_text"
+                getmv().ext_funcs[ident] = ext_func.mv.funcs[ident]
+
+            if ident == "open" and not shadowed and not gzip_open:
                 mode_arg = ast_utils.mode_arg(node, 1)
             else:
                 mode_arg = None
