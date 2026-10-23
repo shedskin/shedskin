@@ -122,6 +122,34 @@ def test_groupby():
     assert [k for k, g in itertools.groupby([1, 2, 3, 4, 5], lambda x: x // 3)] == [0, 1]
 
 
+def test_groupby_stale_groups():
+    # a group is dead once the outer iterator moves on
+    it = itertools.groupby('aaabbbccc')
+    ka, ga = next(it)
+    kb, gb = next(it)
+    assert ''.join(ga) == ''
+    assert ''.join(gb) == 'bbb'
+
+    # an exhausted group stays exhausted, and does not eat the next group
+    it = itertools.groupby('aabbbc')
+    k, g = next(it)
+    assert len(list(g)) == 2
+    assert len(list(g)) == 0
+    assert ['%s%d' % (k2, len(list(g2))) for k2, g2 in it] == ['b3', 'c1']
+
+    # groups kept around until the outer iterator is exhausted
+    d = {k: g for k, g in itertools.groupby('aabbbc')}
+    assert sorted((k, len(list(g))) for k, g in d.items()) == [('a', 0), ('b', 0), ('c', 0)]
+
+    # last group read to the end of the input, then re-read
+    it = itertools.groupby('aabb')
+    k, g = next(it)
+    k, g = next(it)
+    assert ''.join(g) == 'bb'
+    assert ''.join(g) == ''
+    assert len([k2 for k2, g2 in it]) == 0
+
+
 def test_islice():
     assert list(itertools.islice('ABCDEFG', 2)) == ['A', 'B']
     assert list(itertools.islice('ABCDEFG', 2, None)) == ['C', 'D', 'E', 'F', 'G']
@@ -505,6 +533,7 @@ def test_all():
     test_dropwhile()
     test_takewhile()
     test_groupby()
+    test_groupby_stale_groups()
     test_islice()
     test_permutations()
     test_combinations()

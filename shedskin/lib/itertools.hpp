@@ -413,6 +413,7 @@ public:
     K current_key;
     K (*key)(T);
     __iter<T> *iter;
+    groupiter<T, K> *current_group; /* only this group may still yield values */
 
     groupbyiter();
     groupbyiter(pyiter<T> *iterable, K (*key)(T));
@@ -424,6 +425,7 @@ public:
 template<class T, class K> class groupiter : public __iter<T> {
 public:
     bool first;
+    bool exhausted;
     groupbyiter<T, K>* iter;
 
     groupiter();
@@ -435,21 +437,34 @@ public:
 template<class T, class K> inline groupiter<T, K>::groupiter() {}
 template<class T, class K> inline groupiter<T, K>::groupiter(groupbyiter<T, K>* iter_) {
     first = true;
+    exhausted = false;
     iter = iter_;
 }
 
 template<class T, class K> T groupiter<T, K>::__next__() {
+    /* a group stops for good once it is exhausted or the outer iterator has moved on */
+    if (this->exhausted || this->iter->current_group != this) {
+        this->exhausted = true;
+        throw new StopIteration();
+    }
+
     if (this->first) {
         this->first = false;
         return this->iter->current_value;
     }
 
-    this->iter->current_value = this->iter->iter->__next__();;
+    try {
+        this->iter->current_value = this->iter->iter->__next__();
+    } catch (StopIteration *) {
+        this->exhausted = true;
+        throw;
+    }
     const K& new_key = this->iter->key(this->iter->current_value);
 
     if (!__eq_id(this->iter->current_key, new_key)) {
         this->iter->current_key = new_key;
         this->iter->skip = false;
+        this->exhausted = true;
         throw new StopIteration();
     }
 
@@ -462,18 +477,22 @@ template<class T, class K> inline groupbyiter<T, K>::groupbyiter(pyiter<T> *iter
     skip = false;
     key = key_;
     iter = iterable->__iter__();
+    current_group = NULL;
 }
 
 template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__() {
+    this->current_group = NULL; /* invalidate the previous group, also when we run out */
+
     if (!this->skip) {
         if (this->first) {
-            this->current_value = this->iter->__next__();;
+            this->current_value = this->iter->__next__();
             this->current_key = this->key(this->current_value);
             this->first = false;
         }
 
         this->skip = true;
-        return new tuple2<K, __iter<T> *>(2, this->current_key, new groupiter<T, K>(this));
+        this->current_group = new groupiter<T, K>(this);
+        return new tuple2<K, __iter<T> *>(2, this->current_key, this->current_group);
     }
 
     for (; ; ) {
@@ -481,7 +500,8 @@ template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__()
         const K& new_key = this->key(this->current_value);
         if (!__eq_id(this->current_key, new_key)) {
             this->current_key = new_key;
-            return new tuple2<K, __iter<T> *>(2, this->current_key, new groupiter<T, K>(this));
+            this->current_group = new groupiter<T, K>(this);
+            return new tuple2<K, __iter<T> *>(2, this->current_key, this->current_group);
         }
     }
 }
