@@ -584,7 +584,7 @@ Pattern *compile(str *pat, __ss_int flags)
 
     __sre::Code code;
     int outflags, groups;
-    std::vector<std::pair<__GC_STR, int> > names;
+    __sre::GroupDict names;
     __sre::compile_pattern(pat, (int)flags, code, outflags, groups, names);
 
     Pattern *p = new Pattern();

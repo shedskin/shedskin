@@ -352,6 +352,35 @@ def test_strftime_range():
             caught = True
         assert caught
 
+def __rss_kb():
+    try:
+        for l in open('/proc/self/status'):
+            if l.startswith('VmRSS'):
+                return int(l.split()[1])
+    except OSError:
+        pass
+    return 0
+
+def test_struct_time_no_leak():
+    # regression test: mktime/asctime/strftime leaked (malloc) memory per call
+    r0 = __rss_kb()
+    for i in range(300000):
+        t = time.localtime(i)
+        time.strftime('%Y-%m-%d %H:%M:%S', t)
+        time.mktime(t)
+        time.asctime(t)
+    assert __rss_kb() - r0 < 32 * 1024
+
+def test_strftime_buffer():
+    # output much longer than the format: the buffer grows a few times
+    t = (2020, 3, 4, 5, 6, 7, 2, 64, 0)
+    assert time.strftime('%c', t) == 'Wed Mar  4 05:06:07 2020'
+    assert time.strftime('%c|' * 40, t) == 'Wed Mar  4 05:06:07 2020|' * 40
+    # %Z reads the timezone name, which is not taken from garbage
+    assert time.strftime('%Z', time.localtime()) in time.tzname
+    # an empty result (unknown dst) used to grow the buffer until bad_alloc
+    assert time.strftime('%Z', (2020, 1, 1, 0, 0, 0, 0, 1, -1)) == ''
+
 def test_sleep_invalid():
     # regression test: negative/nan sleep raises ValueError
     for v in [-1.0, float('nan')]:
@@ -427,6 +456,8 @@ def test_all():
     test_strftime_range()
     test_sleep_invalid()
     test_gmtime_out_of_range()
+    test_struct_time_no_leak()
+    test_strftime_buffer()
     print('ok')
 
 if __name__ == '__main__':

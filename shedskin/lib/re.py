@@ -71,7 +71,7 @@ class Pattern:
     def __init__(self):
         self.flags = 0
         self.groups = 0
-        self.groupindex = {'' : ''}
+        self.groupindex = {'' : 0}
         self.pattern = ''
 
     def prefixmatch(self, string, pos=0, endpos=__void):

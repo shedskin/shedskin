@@ -11,6 +11,10 @@ namespace __sre {
 
 typedef std::vector<SRE_CODE> Code;
 
+/* (name, group) pairs: the gc-allocated name buffers must be referenced from
+   memory the collector scans, so not from a plain std::vector */
+typedef std::vector<std::pair<__GC_STR, int>, __ss_allocator<std::pair<__GC_STR, int> > > GroupDict;
+
 enum { MIN_REPEAT = 43, MAX_REPEAT = 44 }; /* parser-only opcodes */
 static const uint64_t MAXWIDTH = UINT64_MAX;
 
@@ -43,7 +47,7 @@ static inline uint64_t sat_mul(uint64_t x, uint64_t y) { return (y && x > MAXWID
 
 struct State {
     int flags = 0;
-    std::vector<std::pair<__GC_STR, int> > groupdict;
+    GroupDict groupdict;
     std::vector<std::pair<uint64_t, uint64_t> > groupwidths = {{0, 0}};
     std::vector<bool> closed = {false};
     int lookbehindgroups = -1;
@@ -1172,7 +1176,7 @@ static void compile_info(Code &code, const Seq &pattern, int flags, State &state
 /* parse and compile a pattern; fills in the code, the final flags, the
    number of groups and the named groups (in order of definition) */
 static void compile_pattern(str *pattern, int flags, Code &code, int &outflags, int &groups,
-                            std::vector<std::pair<__GC_STR, int> > &groupindex) {
+                            GroupDict &groupindex) {
     Tokenizer source(pattern);
     State state;
     state.flags = flags;

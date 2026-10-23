@@ -840,6 +840,36 @@ def test_re_repr():
     assert repr(re.compile('x' * 300)) == "re.compile('" + 'x' * 199 + ")"
 
 
+def test_re_sub_template_gc():
+    # regression test: the compiled template was hidden from the collector,
+    # so its literals could be freed (and overwritten) during the sub
+    tpl = r'<<long-literal-prefix-0123456789abcdef>>\2\1[[long-literal-middle-0123456789]]'
+    r = re.sub('(a)(b)', tpl, 'ab' * 50000)
+    assert r == '<<long-literal-prefix-0123456789abcdef>>ba[[long-literal-middle-0123456789]]' * 50000
+    r, n = re.subn('(a)(b)', tpl, 'ab' * 50000)
+    assert n == 50000
+    assert r == '<<long-literal-prefix-0123456789abcdef>>ba[[long-literal-middle-0123456789]]' * 50000
+
+
+def test_re_compile_groupnames_gc():
+    # regression test: group names were hidden from the collector while
+    # compiling, corrupting the gc heap
+    for i in range(200):
+        names = ['group_name_number_%d_with_padding_%d' % (j, i) for j in range(20)]
+        p = re.compile(''.join('(?P<%s>[a-z]+x{1,3}(?:yy|zz|ww)*)' % n for n in names))
+        gi = p.groupindex
+        assert len(gi) == 20
+        for j, n in enumerate(names):
+            assert gi[n] == j + 1
+
+
+def test_re_groupindex_values():
+    # regression test: groupindex values are ints
+    p = re.compile(r'(?P<first>\w+) (?P<last>\w+)')
+    assert p.groupindex['last'] + 1 == 3
+    assert sorted(p.groupindex.values()) == [1, 2]
+
+
 def test_all():
     test_re_endpos_default()
     test_re_subn_func()
@@ -899,6 +929,9 @@ def test_all():
     test_pattern_flags_value()
     test_flag_aliases()
     test_pattern_error()
+    test_re_sub_template_gc()
+    test_re_compile_groupnames_gc()
+    test_re_groupindex_values()
 
 
 if __name__ == "__main__":
