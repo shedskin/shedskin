@@ -11,6 +11,8 @@ No game data is included. It reads the DOS release, the Amiga release (the
 two `.adf` floppy images) and the 20th Anniversary Edition from GOG (which
 also includes the Amiga version).
 
+Use Ghostty for example, to run at full resolution!
+
 ```bash
 shedskin build aw.py
 build/aw DIR                       # DIR holds the game data; no DIR shows the keys and options
