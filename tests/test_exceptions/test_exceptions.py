@@ -626,7 +626,8 @@ def test_repr_escapes_argument():
 
 
 def test_oserror_str_repr_filename():
-    # the filename is repr'd, as in CPython
+    # the filename is repr'd, as in CPython. the errno differs per platform
+    # (windows rejects a tab in a file name with EINVAL, not ENOENT)
     for name, expected in [("it's", '"it\'s"'),
                            ('tab\there', "'tab\\there'"),
                            ('back\\slash', "'back\\\\slash'")]:
@@ -634,7 +635,8 @@ def test_oserror_str_repr_filename():
             open(name)
             assert False
         except OSError as e:
-            assert str(e) == '[Errno 2] No such file or directory: ' + expected
+            assert str(e) == '[Errno %d] %s: %s' % (e.errno, e.strerror, expected)
+            assert e.filename == name
 
 
 def test_keyerror_str():
