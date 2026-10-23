@@ -27,7 +27,11 @@ def test_sigmask():
     old = signal.pthread_sigmask(signal.SIG_UNBLOCK, [usr2])
     assert usr2 in old and usr1 not in old
     assert usr2 not in signal.pthread_sigmask(signal.SIG_BLOCK, [usr1])
-    signal.pthread_sigmask(signal.SIG_UNBLOCK, [usr1])
+
+    # an empty list: SIG_SETMASK unblocks everything, SIG_BLOCK just queries
+    old = signal.pthread_sigmask(signal.SIG_SETMASK, [])
+    assert usr1 in old
+    assert usr1 not in signal.pthread_sigmask(signal.SIG_BLOCK, [])
 
     for bad in [0, -1, 100000]:
         try:

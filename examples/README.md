@@ -11,6 +11,7 @@ lines  name                 description
    174 ac_encode            Arithmetic coding compressor
    130 adatron              Adatron SVM with polynomial kernel
    330 amaze                maze generator/solver
+  3912 another_world        Another World game engine       (terminal, sound)
     85 ant                  TSP approximation
    121 astar                a-star algorithm                (extmod, GUI)
    404 bh                   barnes-hut force calculation
