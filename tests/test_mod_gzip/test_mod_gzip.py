@@ -496,9 +496,10 @@ def test_text_mode():
     with gzip.open(buf, 'wt') as f:
         assert f.write('héllo\n') == 6
         f.writelines(['wörld\n', '€uro\n'])
-        assert f.tell() == 21
+        # (newline=None: '\n' is written as os.linesep)
+        assert f.tell() == 18 + 3 * len(os.linesep)
     data = gzip.decompress(buf.getvalue())
-    assert data == 'héllo\nwörld\n€uro\n'.encode()
+    assert data == 'héllo\nwörld\n€uro\n'.replace('\n', os.linesep).encode()
 
     f = gzip.open(io.BytesIO(buf.getvalue()), 'rt')
     assert f.encoding == 'utf-8'
