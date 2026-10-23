@@ -38,3 +38,18 @@ SIGXFSZ = 1
 #SIG_DFL = 1
 #SIG_IGN = 1
 SIGBREAK = 1
+
+# posix-only: blocking signals and taking them when the program is ready,
+# instead of running a handler at an arbitrary point
+SIG_BLOCK = 1
+SIG_UNBLOCK = 1
+SIG_SETMASK = 1
+
+def pthread_sigmask(how, mask):
+    return {1}
+
+def sigpending():
+    return {1}
+
+def sigwait(sigset):
+    return 1
