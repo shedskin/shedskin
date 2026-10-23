@@ -23,12 +23,12 @@ str *OSError::__str__() {
         return BaseException::__str__();
     if(!filename)
         return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
-    return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
+    return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename));
 }
 str *OSError::__repr__() {
     if(!__ss_errno)
         return BaseException::__repr__();
-    return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
+    return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", "), repr(strerror), new str(")"));
 }
 
 /* errno is snapshotted by the caller, as allocation may clobber it */

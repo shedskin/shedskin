@@ -136,15 +136,18 @@ def test_surrogateescape_roundtrip():
     os.rmdir(d)
 
 def test_surrogateescape_error_message():
-    # a surrogate-escaped byte in a file name must survive into the OSError
-    # message (and, for an extension module, across the interpreter
-    # boundary) rather than being mangled or raising a decode error
+    # a surrogate-escaped byte in a file name must survive into
+    # OSError.filename (and, for an extension module, across the interpreter
+    # boundary) rather than being mangled or raising a decode error; the
+    # message holds repr(filename), so there it shows up escaped, as in CPython
+    name = 'test_mod_sys_missing_\udcff'
     try:
-        f = open('test_mod_sys_missing_\udcff')
+        f = open(name)
         f.close()
         assert False, 'open() should have raised'
     except OSError as e:
-        assert '\udcff' in str(e)
+        assert e.filename == name
+        assert str(e) == "[Errno 2] No such file or directory: 'test_mod_sys_missing_\\udcff'"
 
 def test_lone_surrogates():
     # only U+DC80..U+DCFF (surrogateescape) can be encoded on the way out:
