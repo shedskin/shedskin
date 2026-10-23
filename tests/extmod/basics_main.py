@@ -54,6 +54,15 @@ def test_strings():
         assert basics.length(s) == len(s)
 
 
+def test_short_tuple():
+    # a 2-tuple parameter given a shorter tuple used to read out of bounds
+    assert basics.join2(('a', 'b')) == 'ab'
+    assert basics.add2((1, 2)) == 3
+    assert raises(IndexError, basics.join2, ('a',))
+    assert raises(IndexError, basics.add2, (1,))
+    assert raises(IndexError, basics.join2, ())
+
+
 def test_exceptions():
     assert basics.fail(1) == 1
     assert raises(ValueError, basics.fail, -1)

@@ -327,6 +327,19 @@ def test_tee():
     assert list(it5) == [1, 2, 3, 4, 5]
 
 
+def test_tee_short():
+    # the result is typed as a 2-tuple, but has only n items: indexing
+    # past them used to read out of bounds
+    t = itertools.tee(gen(), 1)
+    assert len(t) == 1
+    assert list(t[0]) == [1, 2, 3, 4, 5]
+    try:
+        t[1]
+        assert False
+    except IndexError as e:
+        assert str(e) == 'tuple index out of range'
+
+
 def test_tee_interleaved():
     # draining both iterators in lockstep (rather than one fully before
     # the other) forces the "leader" role to switch back and forth
@@ -542,6 +555,7 @@ def test_all():
     test_product_repeat()
     test_compress()
     test_tee()
+    test_tee_short()
     test_tee_interleaved()
     test_tee_gc()
     test_filterfalse()

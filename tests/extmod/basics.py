@@ -38,6 +38,14 @@ def nothing():
     return None
 
 
+def join2(t):
+    return t[0] + t[1]
+
+
+def add2(t):
+    return t[0] + t[1]
+
+
 def fail(n):
     if n < 0:
         raise ValueError('negative')
@@ -108,6 +116,8 @@ if __name__ == '__main__':
     echo('abc')
     length('abc')
     nothing()
+    join2(('a', 'b'))
+    add2((1, 2))
     fail(1)
     v = Vector(1, 2)
     v.length2()
