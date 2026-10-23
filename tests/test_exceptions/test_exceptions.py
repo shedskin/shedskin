@@ -625,6 +625,18 @@ def test_repr_escapes_argument():
     assert repr(ValueError()) == 'ValueError()'
 
 
+def test_oserror_str_repr_filename():
+    # the filename is repr'd, as in CPython
+    for name, expected in [("it's", '"it\'s"'),
+                           ('tab\there', "'tab\\there'"),
+                           ('back\\slash', "'back\\\\slash'")]:
+        try:
+            open(name)
+            assert False
+        except OSError as e:
+            assert str(e) == '[Errno 2] No such file or directory: ' + expected
+
+
 def test_keyerror_str():
     # a single argument (the key) is repr'd
     try:
@@ -738,6 +750,7 @@ def test_raise_class():
 
 def test_all():
     test_repr_escapes_argument()
+    test_oserror_str_repr_filename()
     test_key_error()
     test_assert_error()
     test_index_error()
