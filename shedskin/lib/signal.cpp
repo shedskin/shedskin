@@ -2,11 +2,15 @@
 
 #include "signal.hpp"
 #include <signal.h>
+#include <errno.h>
 
 namespace __signal__ {
 
 str *__name__;
 __ss_int __ss_SIGABRT, __ss_SIGALRM, __ss_SIGBUS, __ss_SIGCHLD, __ss_SIGCLD, __ss_SIGCONT, __ss_SIGFPE, __ss_SIGHUP, __ss_SIGILL, __ss_SIGINT, __ss_SIGIO, __ss_SIGIOT, __ss_SIGKILL, __ss_SIGPIPE, __ss_SIGPOLL, __ss_SIGPROF, __ss_SIGPWR, __ss_SIGQUIT, __ss_SIGRTMAX, __ss_SIGRTMIN, __ss_SIGSEGV, __ss_SIGSTOP, __ss_SIGSYS, __ss_SIGTERM, __ss_SIGTRAP, __ss_SIGTSTP, __ss_SIGTTIN, __ss_SIGTTOU, __ss_SIGURG, __ss_SIGUSR1, __ss_SIGUSR2, __ss_SIGVTALRM, __ss_SIGWINCH, __ss_SIGXCPU, __ss_SIGXFSZ, __ss_SIGBREAK; //, __ss_SIG_DFL, __ss_SIG_IGN;
+#ifndef WIN32
+__ss_int __ss_SIG_BLOCK, __ss_SIG_UNBLOCK, __ss_SIG_SETMASK;
+#endif
 
 void __init() {
     __name__ = new str("signal");
@@ -81,9 +85,55 @@ void __init() {
     __ss_SIGXFSZ = SIGXFSZ;
 //    __ss_SIG_DFL = SIG_DFL;
 //    __ss_SIG_IGN = SIG_IGN;
+    __ss_SIG_BLOCK = SIG_BLOCK;
+    __ss_SIG_UNBLOCK = SIG_UNBLOCK;
+    __ss_SIG_SETMASK = SIG_SETMASK;
 #endif
 
 }
+
+#ifndef WIN32
+void __sigset_add(sigset_t *sigs, __ss_int signalnum) {
+    if(signalnum < 1 || signalnum >= NSIG)
+        throw new ValueError(__add_strs(5, new str("signal number "), __str(signalnum), new str(" out of range [1; "), __str(NSIG-1), new str("]")));
+    sigaddset(sigs, (int)signalnum);
+}
+
+set<__ss_int> *__sigset_to_set(sigset_t *sigs) {
+    set<__ss_int> *result = new set<__ss_int>();
+    for(int s = 1; s < NSIG; s++)
+        if(sigismember(sigs, s) == 1)
+            result->add(s);
+    return result;
+}
+
+set<__ss_int> *__pthread_sigmask(__ss_int how, sigset_t *mask) {
+    sigset_t previous;
+    int err = ::pthread_sigmask((int)how, mask, &previous);
+    if(err) {
+        errno = err;
+        __throw_oserror();
+    }
+    return __sigset_to_set(&previous);
+}
+
+set<__ss_int> *sigpending() {
+    sigset_t pending;
+    if(::sigpending(&pending) == -1)
+        __throw_oserror();
+    return __sigset_to_set(&pending);
+}
+
+__ss_int __sigwait(sigset_t *sigs) {
+    int signalnum;
+    int err = ::sigwait(sigs, &signalnum);
+    if(err) {
+        errno = err;
+        __throw_oserror();
+    }
+    return signalnum;
+}
+#endif
 
 } // module namespace
 
