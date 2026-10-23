@@ -373,13 +373,17 @@ def test_struct_time_no_leak():
 
 def test_strftime_buffer():
     # output much longer than the format: the buffer grows a few times
+    # (not %c: its expansion differs per platform, e.g. '03/04/20 05:06:07' on windows)
     t = (2020, 3, 4, 5, 6, 7, 2, 64, 0)
-    assert time.strftime('%c', t) == 'Wed Mar  4 05:06:07 2020'
-    assert time.strftime('%c|' * 40, t) == 'Wed Mar  4 05:06:07 2020|' * 40
+    assert time.strftime('%A %B %d %H:%M:%S %Y', t) == 'Wednesday March 04 05:06:07 2020'
+    assert time.strftime('%A%B|' * 40, t) == 'WednesdayMarch|' * 40
+    assert time.strftime('%c|' * 40, t) == (time.strftime('%c', t) + '|') * 40
     # %Z reads the timezone name, which is not taken from garbage
     assert time.strftime('%Z', time.localtime()) in time.tzname
     # an empty result (unknown dst) used to grow the buffer until bad_alloc
-    assert time.strftime('%Z', (2020, 1, 1, 0, 0, 0, 0, 1, -1)) == ''
+    # (windows picks a dst name for tm_isdst -1 instead)
+    if sys.platform != 'win32':
+        assert time.strftime('%Z', (2020, 1, 1, 0, 0, 0, 0, 1, -1)) == ''
 
 def test_sleep_invalid():
     # regression test: negative/nan sleep raises ValueError
