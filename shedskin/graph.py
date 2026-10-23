@@ -1179,7 +1179,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.module == "__future__":
             for node_name in node.names:
                 name = node_name.name
-                if name not in ["with_statement", "print_function"]:
+                if name not in ["with_statement", "print_function", "annotations"]:
                     error.error(
                         "future '%s' is not yet supported" % name,
                         self.gx,
