@@ -162,11 +162,13 @@ template<class T> tuple2<T, T>::tuple2(str *s) {
         this->units[i] = __char_str(s->unit[i]);
 }
 
+/* type inference uses these for a 2-tuple, but the tuple may be shorter
+   (e.g. itertools.tee(x, 1), or passed in from Python), so check the index */
 template<class T> T tuple2<T, T>::__getfirst__() {
-    return this->units[0];
+    return __getfast__(0);
 }
 template<class T> T tuple2<T, T>::__getsecond__() {
-    return this->units[1];
+    return __getfast__(1);
 }
 template<class T> __SS_ALWAYS_INLINE T tuple2<T, T>::__getfast__(__ss_int i) {
     i = __wrap(this, i, "tuple index out of range");
