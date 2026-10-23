@@ -352,6 +352,17 @@ Random::Random() {
     this->seed((void *)NULL);
 }
 
+/* copies continue from the same generator state, independently */
+Random *Random::__copy__() {
+    return new Random(*this);
+}
+
+Random *Random::__deepcopy__(dict<void *, pyobj *> *memo) {
+    Random *c = __copy__();
+    memo->__setitem__(this, c);
+    return c;
+}
+
 __ss_int Random::randint(__ss_int a, __ss_int b) {
     /**
     Return random integer in range [a, b], including both end points.
@@ -733,6 +744,15 @@ SystemRandom::SystemRandom() {
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     this->seed((void *)NULL); /* no-op, see SystemRandom::seed() */
+}
+
+/* like cpython, which copies via getstate() */
+SystemRandom *SystemRandom::__copy__() {
+    throw (new NotImplementedError(new str("System entropy source does not have state.")));
+}
+
+SystemRandom *SystemRandom::__deepcopy__(dict<void *, pyobj *> *) {
+    return __copy__();
 }
 
 uint64_t SystemRandom::_next_word() {

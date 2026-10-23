@@ -65,6 +65,8 @@ public:
         this->seed(x);
     }
     virtual __ss_float random();
+    virtual Random *__copy__();
+    virtual Random *__deepcopy__(dict<void *, pyobj *> *memo);
     __ss_float paretovariate(__ss_float alpha);
     __ss_int randrange(__ss_int stop);
     __ss_int randrange(__ss_int start, __ss_int stop);
@@ -117,6 +119,8 @@ public:
     virtual uint64_t _next_word();
     virtual bytes *getstate();
     virtual void *setstate(bytes *state);
+    virtual SystemRandom *__copy__();
+    virtual SystemRandom *__deepcopy__(dict<void *, pyobj *> *memo);
     template <class A> void *seed(A, __ss_int version=2) {
         /**
         Stub method.  Not used for a system random number generator.
