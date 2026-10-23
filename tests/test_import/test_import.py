@@ -10,6 +10,7 @@ from boo.quotes import get_quote
 from itertools import product
 
 from pak.sub import subsub # contains relative imports
+from pak.sub.subsub import deep # plain module with relative imports
 
 from boo import quotes as bq # aliased submodule ('from x import y as z')
 from pak import hier as ph
@@ -33,6 +34,7 @@ def test_imports():
 
 def test_relative_imports():
     assert subsub.diepst() == [40, 30, 19, 25, 40, 30, 19, 25]
+    assert deep.deepest() == [40, 40, 30, 30, 25, 25, 19]
 
 
 def test_product():
