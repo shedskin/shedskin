@@ -1,4 +1,4 @@
-# linux and macOS only for now: os.fork (subprocess.py), termios and tty
+# linux and macOS only for now: os.fork (another_world/popen.py), termios and tty
 if(WIN32)
     return()
 endif()
@@ -29,6 +29,7 @@ add_shedskin_product(
         another_world/keyboard
         another_world/main
         another_world/music
+        another_world/popen
         another_world/releases/__init__
         another_world/releases/adf
         another_world/releases/amiga
@@ -46,5 +47,4 @@ add_shedskin_product(
         another_world/video
         another_world/vm
         another_world/wav
-        subprocess
 )

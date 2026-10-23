@@ -22,8 +22,8 @@ Or `shedskin translate aw.py && make`, giving `./aw`. Sound goes through
 
 ## Changes for Shedskin
 
-The upstream engine is written for TurboPython. `prep.py` copies it here
-(`python3 prep.py TPY_ANOTHER_WORLD_CHECKOUT`), with these changes:
+The upstream engine is written for TurboPython. The copy here has these
+changes:
 
 - TurboPython's fixed-width ints (`int32(x)` and so on) are plain `int`, and
   its `tpy` imports are gone.
@@ -33,10 +33,11 @@ The upstream engine is written for TurboPython. `prep.py` copies it here
 - The argparse parser in `main.py` is replaced by `another_world/cmdline.py`,
   generated from that parser: a class with a typed field per option, parsed
   with `getopt.gnu_getopt`, with argparse's help, usage and error messages.
-- `subprocess.py` (written by hand) has the part of `subprocess.Popen` the
-  game uses, over `os.fork` and `os.execvpe`; as Shedskin cannot mix `None`
-  and `int`, `poll()` returns `NO_STATUS` while the process runs, and the
-  game's two `is None` tests of it are rewritten.
+- `another_world/popen.py` (written by hand) has the part of
+  `subprocess.Popen` the game uses, over `os.fork` and `os.execvpe`, and
+  `audio.py` imports it instead of `subprocess`; as Shedskin cannot mix
+  `None` and `int`, `poll()` returns `NO_STATUS` while the process runs,
+  and the game's two `is None` tests of it are rewritten.
 - As Shedskin has no `signal.signal`, SIGTERM and SIGHUP are blocked
   (`signal.pthread_sigmask`) and polled for at each frame
   (`signal.sigpending`) instead of handled.

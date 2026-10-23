@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import time
-from subprocess import DEVNULL, NO_STATUS, PIPE, Popen
+from .popen import DEVNULL, NO_STATUS, PIPE, Popen
 
 from .sound import RATE
 

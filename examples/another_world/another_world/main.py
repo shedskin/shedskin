@@ -121,7 +121,7 @@ def main() -> int:
     failure = ""
     # Blocked right before the try and taken at each frame, so a kill or a
     # closed terminal always ends through the cleanup below. Players
-    # started later unblock them again (see subprocess.py).
+    # started later unblock them again (see popen.py).
     signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGTERM, signal.SIGHUP])
     try:
         vm.screen.begin()

@@ -2,8 +2,8 @@
 # stdout and stderr DEVNULL, .stdin.write/flush, poll, kill, wait), over
 # os.fork and os.execvpe, for the Shedskin build. One difference: poll()
 # returns NO_STATUS instead of None while the process runs, as Shedskin
-# cannot mix None and int; prep.py rewrites the game's two `is None`
-# tests of poll() results.
+# cannot mix None and int; audio.py's two `is None` tests of poll()
+# results are rewritten to match.
 import os
 import signal
 
