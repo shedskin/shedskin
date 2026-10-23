@@ -38,6 +38,38 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #define FEOF   feof_unlocked
 #endif // HAVE_STDIO_UNLOCKED
 
+/* validate a mode as cpython's io.open does, before anything is opened:
+   fopen() would otherwise pick the first of 'rwa' and ignore much of the
+   rest, so that e.g. open(f, 'wa') silently truncates f */
+void __check_open_mode(str *mode) {
+    if (!mode)
+        return;
+    bool seen[7] = {}; /* x r w a + t b */
+    for (char32_t c : mode->unit) {
+        int i;
+        switch (c) {
+            case 'x': i = 0; break;
+            case 'r': i = 1; break;
+            case 'w': i = 2; break;
+            case 'a': i = 3; break;
+            case '+': i = 4; break;
+            case 't': i = 5; break;
+            case 'b': i = 6; break;
+            default: i = -1;
+        }
+        if (i == -1 || seen[i])
+            throw new ValueError(__add_strs(3, new str("invalid mode: '"), mode, new str("'")));
+        seen[i] = true;
+    }
+    if (seen[5] && seen[6])
+        throw new ValueError(new str("can't have text and binary mode at once"));
+    int kinds = seen[0] + seen[1] + seen[2] + seen[3];
+    if (kinds > 1)
+        throw new ValueError(new str("must have exactly one of create/read/write/append mode"));
+    if (kinds == 0)
+        throw new ValueError(new str("Must have exactly one of create/read/write/append mode and at most one plus"));
+}
+
 static FILE *__ss_fopen(str *file_name, str *flags) {
     /* exclusive creation: C11 only accepts 'x' as a trailing modifier
        of a 'w' mode, e.g. 'x+' becomes 'w+x' */
@@ -63,6 +95,7 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
 }
 
 file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline) : closed(False) {
+    __check_open_mode(flags);
     options.universal_mode = true;
     __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
     __errors = __lookup_errors(errors);
@@ -83,19 +116,9 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
             throw new ValueError(__add_strs(2, new str("illegal newline value: "), newline));
     }
 
-    str *cflags;
-    if (flags) {
-        cflags = flags;
-        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
-        if(universal != std::string::npos) {
-            options.universal_mode = true;
-            cflags = new str(flags->unit);
-            cflags->unit[universal] = 'b'; // force binary mode as expected by readline
-            flags = cflags;
-        }
-    }
-    else
-        flags = cflags = __char_cache['r'];
+    if (!flags)
+        flags = __char_cache['r'];
+    str *cflags = flags;
     if (untranslated && cflags->unit.find('b') == std::string::npos)
         cflags = new str(cflags->unit + __gcs("b"));
     f = __ss_fopen(file_name, cflags);
@@ -451,15 +474,8 @@ str *file::__next__() {
 /* file_binary TODO merge with file */
 
 file_binary::file_binary(str *file_name, str *flags) : closed(False) {
-    if (flags) {
-        size_t universal = flags->unit.find_first_of(__gcs("Uu"));
-        if(universal != std::string::npos) {
-            options.universal_mode = true;
-            flags = new str(flags->unit);
-            flags->unit[universal] = 'b'; // force binary mode as expected by readline
-        }
-    }
-    else
+    __check_open_mode(flags);
+    if (!flags)
         flags = __char_cache['r'];
     f = __ss_fopen(file_name, flags);
     if(f == 0)
@@ -479,11 +495,13 @@ static void __check_binary_args(str *encoding, str *errors, str *newline) {
 }
 
 file_binary *open_binary(str *name, str *flags, str *encoding, str *errors, str *newline) {
+    __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
     return new file_binary(name, flags);
 }
 
 file_binary *open_binary(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
+    __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
     return new file_binary(new str(name->unit), flags);
 }
@@ -536,36 +554,13 @@ __ss_int file_binary::tell() {
 bytes *file_binary::readline(__ss_int n) {
     __check_closed();
     __read_cache.clear();
-    if (options.universal_mode) {
-        for(size_t i = 0; i < size_t(n); ++i) {
-            int c = GETC(f);
-            if(c == EOF)
-                break;
-            if(options.cr) {
-                options.cr = false;
-                if(c == '\n') {
-                    c = GETC(f);
-                    if(c == EOF)
-                        break;
-                }
-            }
-            if(c == '\r') {
-                options.cr = true;
-                c = '\n';
-            }
-            __read_cache.push_back((char)c);
-            if(c == '\n')
-                break;
-        }
-    } else {  /* If not universal mode, use the normal loop */
-        for(size_t i = 0; i < size_t(n); ++i) {
-            const int c = GETC(f);
-            if(c == EOF)
-                break;
-            __read_cache.push_back((char)c);
-            if(c == '\n')
-                break;
-        }
+    for(size_t i = 0; i < size_t(n); ++i) {
+        const int c = GETC(f);
+        if(c == EOF)
+            break;
+        __read_cache.push_back((char)c);
+        if(c == '\n')
+            break;
     }
     if(__error())
         __throw_oserror();

@@ -1038,9 +1038,14 @@ popen_pipe* popen(str* cmd, str* mode) {
     return popen(cmd, mode, -1);
 }
 
-popen_pipe* popen(str* cmd, str* mode, __ss_int) {
+popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize) {
     if(!mode)
         mode = new str("r");
+    /* as cpython: text pipes only, either way */
+    if(!(mode->unit == U"r" || mode->unit == U"w"))
+        throw new ValueError(__add_strs(2, new str("invalid mode "), repr(mode)));
+    if(bufsize == 0)
+        throw new ValueError(new str("popen() does not support unbuffered streams"));
     FILE* fp = __ss_popen(__ss_cpath(cmd), mode->c_str());
 
     if(!fp) __throw_oserror(cmd);
@@ -1104,7 +1109,13 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 }
 
 static FILE *__fdopen(__ss_int fd, str *mode) {
-/* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
+    __check_open_mode(mode);
+    /* C fdopen() does not know 'x' (and never creates or truncates) */
+    size_t excl = mode->unit.find('x');
+    if (excl != std::string::npos) {
+        mode = new str(mode->unit);
+        mode->unit[excl] = 'w';
+    }
     FILE* fp = ::fdopen((int)fd, mode->c_str());
     if(fp == NULL)
         __throw_oserror(new str("os.fdopen failed"));
@@ -1121,6 +1132,8 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
 }
 
 file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int) {
+    if(!mode)
+        mode = new str("rb");
     file_binary* ret = new file_binary(__fdopen(fd, mode));
     ret->name = new str("<fdopen>");
     ret->mode = mode;

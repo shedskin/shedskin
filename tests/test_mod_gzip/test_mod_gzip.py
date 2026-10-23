@@ -361,6 +361,17 @@ def test_invalid_modes():
                 assert str(e) == "Invalid mode: 'qb'"
             else:
                 assert str(e) == "Invalid mode: %r" % mode
+    # by filename, the mode is checked (with a 'b' added) as by open()
+    for mode in ['wa', 'rr']:
+        try:
+            gzip.open('shedskin_never_created.gz', mode)
+            assert False
+        except ValueError as e:
+            if mode == 'wa':
+                assert str(e) == 'must have exactly one of create/read/write/append mode'
+            else:
+                assert str(e) == "invalid mode: 'rrb'"
+    assert not os.path.exists('shedskin_never_created.gz')
     try:
         gzip.open(io.BytesIO(), 'rtb')
         assert False

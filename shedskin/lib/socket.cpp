@@ -784,17 +784,37 @@ static FILE *__makefile(socket_type _fd, str *mode) {
     return fp;
 }
 
+/* as cpython: only 'r', 'w' and 'b' (in any order and number), read-only
+   unless 'w' is given; translate that into a mode fdopen() understands */
+static str *__makefile_mode(str *mode) {
+    bool reading = false, writing = false, binary = false;
+    for (char32_t c : mode->unit) {
+        if (c == 'r')
+            reading = true;
+        else if (c == 'w')
+            writing = true;
+        else if (c == 'b')
+            binary = true;
+        else
+            throw new ValueError(__add_strs(3, new str("invalid mode "), repr(mode), new str(" (only r, w, b allowed)")));
+    }
+    std::string m = writing ? (reading ? "r+" : "w") : "r";
+    if (binary)
+        m += 'b';
+    return new str(m.c_str());
+}
+
 file *socket::makefile(str *mode) {
     if(!mode)
         mode = new str("r");
-    file *f = new file(__makefile(_fd, mode));
+    file *f = new file(__makefile(_fd, __makefile_mode(mode)));
     f->name = new str("<socket>");
     f->mode = mode;
     return f;
 }
 
 file_binary *socket::makefile_binary(str *mode) {
-    file_binary *f = new file_binary(__makefile(_fd, mode));
+    file_binary *f = new file_binary(__makefile(_fd, __makefile_mode(mode)));
     f->name = new str("<socket>");
     f->mode = mode;
     return f;
