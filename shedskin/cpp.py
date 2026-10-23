@@ -3721,6 +3721,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
                 return
 
+            # termios attributes: attrs[6]/attrs[CC]/attrs[tty.CC] -> __getcc__
+            if (
+                ident == "__getitem__"
+                and isinstance(node.func, ast.Attribute)
+                and infer.is_termios_cc_index(node.args[0])
+                and node.func.value in self.mergeinh
+                and self.mergeinh[node.func.value]
+                and all(
+                    infer.is_termios_tcattrs(t[0])
+                    for t in self.mergeinh[node.func.value]
+                )
+            ):
+                self.visit(node.func.value, func)
+                self.append("->__getcc__()")
+                return
+
             if ident == "__call__":
                 self.visitm(node.func, "->__call__(", func)
             elif (
