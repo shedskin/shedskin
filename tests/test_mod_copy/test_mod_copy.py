@@ -140,6 +140,28 @@ def test_copy_deque():
     assert copy.deepcopy(list(deque(range(10)))) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
+def test_copy_bytearray():
+    # bytearray is mutable, so copies must not alias the original
+    ba = bytearray(b'ab')
+    c = copy.copy(ba)
+    d = copy.deepcopy(ba)
+    c.append(67)
+    d.append(68)
+    assert ba == bytearray(b'ab')
+    assert c == bytearray(b'abC')
+    assert d == bytearray(b'abD')
+
+    l = [ba, ba]
+    m = copy.deepcopy(l)
+    assert m[0] is m[1]
+    assert m[0] is not ba
+    m[0].append(69)
+    assert ba == bytearray(b'ab')
+
+    b = b'xy'
+    assert copy.copy(b) == b
+    assert copy.deepcopy(b) == b
+
 
 def test_error():
     # copy.Error is effectively unreachable in CPython 3 (object always
@@ -191,6 +213,7 @@ def test_all():
     test_deepcopy_nested()
     test_deepcopy_obj_in_container()
     test_copy_deque()
+    test_copy_bytearray()
     test_copy_obj1()
     test_copy_obj2()
     test_copy_obj3()

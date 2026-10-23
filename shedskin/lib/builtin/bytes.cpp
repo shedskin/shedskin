@@ -34,6 +34,18 @@ bytes::bytes(const char *s, size_t size, int frozen_) : unit(s, size), hash(-1),
         __class__ = cl_bytearray;
 }
 
+bytes *bytes::__copy__() {
+    if(frozen)
+        return this;
+    return new bytes(this, 0);
+}
+
+bytes *bytes::__deepcopy__(dict<void *, pyobj *> *memo) {
+    bytes *c = __copy__();
+    memo->__setitem__(this, c);
+    return c;
+}
+
 char *bytes::c_str() const {
     return (char *)this->unit.c_str();
 }

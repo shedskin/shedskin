@@ -1,3 +1,4 @@
+import copy
 import random
 
 random.seed(42)
@@ -665,6 +666,33 @@ def test_version():
     assert random.SystemRandom().VERSION == 3
 
 
+def test_copy():
+    # copies continue from the same state, but independently
+    r = random.Random(5)
+    r.random()
+    c = copy.copy(r)
+    d = copy.deepcopy(r)
+    assert c is not r and d is not r
+    x = r.random()
+    assert c.random() == x
+    assert d.random() == x
+    assert r.random() == c.random()
+
+    l = copy.deepcopy([r, r])
+    assert l[0] is l[1]
+
+    sr = random.SystemRandom()
+    for i in range(2):
+        try:
+            if i == 0:
+                copy.copy(sr)
+            else:
+                copy.deepcopy(sr)
+            assert False
+        except NotImplementedError as e:
+            assert str(e) == 'System entropy source does not have state.'
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -690,6 +718,7 @@ def test_all():
     test_instance_choices_cum_weights()
     test_seed_version()
     test_version()
+    test_copy()
 
 
 if __name__ == '__main__':

@@ -44,6 +44,9 @@ public:
     /* functions pointing to the underlying C++ implementation */
     char *c_str() const;
 
+    bytes *__copy__();
+    bytes *__deepcopy__(dict<void *, pyobj *> *memo);
+
     __ss_int __checkneg(__ss_int i);
 
     bytes *upper();
