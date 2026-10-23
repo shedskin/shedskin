@@ -2057,8 +2057,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 infer.inode(self.gx, var).copymetoo = True
                 self.gx.types[infer.inode(self.gx, var)] = {(cl, 1)}
 
-        if node.finalbody:
-            error.error("'try..finally' is not supported", self.gx, node, mv=getmv())
+        if node.finalbody and func and func.isGenerator:
+            # the generated C++ resumes after a yield with a goto, which
+            # cannot jump into the try block (or past its declarations)
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Yield):
+                    error.error(
+                        "'yield' inside 'try..finally' is not supported",
+                        self.gx,
+                        sub,
+                        mv=getmv(),
+                    )
 
         for handler in node.handlers:
             for child in handler.body:
@@ -2069,6 +2078,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for child in node.orelse:
                 self.visit(child, func)
             self.temp_var_int((node, "orelse"), func)
+
+        # finally
+        for child in node.finalbody:
+            self.visit(child, func)
 
     def visit_TryStar(
         self, node: ast.AST, func: Optional["python.Function"] = None
