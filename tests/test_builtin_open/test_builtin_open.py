@@ -596,7 +596,7 @@ def test_open_invalid_mode():
     with open('umode.txt', 'a+t') as f:
         assert f.mode == 'a+t'
     with open('umode.txt', 'r+b') as g:
-        assert g.read() == b'precious\n'
+        assert g.read() == nl(b'precious\n')
     os.remove('umode.txt')
 
 
