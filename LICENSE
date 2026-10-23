@@ -5,8 +5,9 @@ This package is comprised of several parts:
     - a C++ implementation of the Python builtins and libraries
       (everything under shedskin/lib/); License Expat (with the exception of
       shedskin/lib/random.?pp, license BSD-3, see below, as well as
-      shedskin/lib/boost, license BSL-1.0, see below, and shedskin/lib/miniz,
-      which is MIT, see below)
+      shedskin/lib/boost, license BSL-1.0, see below, shedskin/lib/miniz,
+      which is MIT, see below, and shedskin/lib/sre, which is derived from
+      CPython and under the Python Software Foundation License, see below)
     - a set of example programs; Licensed as indicated for each example
 
 Concerning the Shed Skin compiler (shedskin/*.py):
@@ -828,3 +829,19 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+
+Concerning the regular expression engine (everything under shedskin/lib/sre):
+
+Derived from CPython 3.13: the matching engine from Modules/_sre, and, for
+compile.hpp, Lib/re/_parser.py and Lib/re/_compiler.py. Changes:
+sre_constants.h and sre_targets.h are unchanged; sre_lib.h has small changes
+so that it compiles as C++; sre.h and sre_engine.h (the engine part of sre.c)
+leave out the Python object glue, as described at their top; compile.hpp is
+a hand-port of the two Python modules to C++, as described at its top.
+
+Copyright (c) 1997-2001 by Secret Labs AB. All rights reserved.
+Copyright (c) 2001 Python Software Foundation; All Rights Reserved.
+
+Licensed under the Python Software Foundation License Version 2. See
+shedskin/lib/sre/LICENSE for the full license text and its history.
