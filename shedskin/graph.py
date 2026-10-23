@@ -1124,7 +1124,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # in case of relative import, make name absolute
         level = getattr(node, "level", None) or 0
         if level > 0:
-            newname = ".".join(getmv().module.name.split(".")[: -level + 1])
+            # level 1 is the package the module is in: the module itself
+            # for a package (__init__.py), else its parent
+            package = getmv().module.name.split(".")
+            if getmv().module.filename.name != "__init__.py":
+                package = package[:-1]
+            newname = ".".join(package[: max(0, len(package) - level + 1)])
             if name:
                 if newname:
                     name = newname + "." + name
