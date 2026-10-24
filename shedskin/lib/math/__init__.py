@@ -69,7 +69,11 @@ def dist(p, q):
     return 1.0
 
 def sumprod(p, q):
-    return iter(p).__next__()
+    elem = iter(p).__next__()
+    elem = iter(q).__next__()
+    elem.__mul__(elem)
+    elem.__add__(elem)
+    return elem
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return True

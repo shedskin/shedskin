@@ -580,9 +580,34 @@ def test_dist():
     assert math.isnan(math.dist([float('inf')], [float('inf')]))
 
 
+class SumprodNum:
+    def __init__(self, v):
+        self.v = v
+
+    def __mul__(self, other):
+        return SumprodNum(self.v * other.v)
+
+    def __add__(self, other):
+        return SumprodNum(self.v + other.v)
+
+
 def test_sumprod():
     assert math.sumprod([1,2],[3,4]) == 11
     assert math.sumprod([1,2.1],[3.3,4]) == 11.7
+    assert math.sumprod((1,2), iter([3,4])) == 11
+
+    # user class (shedskin starts from the first product, not from 0)
+    ns = [SumprodNum(1), SumprodNum(2)]
+    ms = [SumprodNum(3), SumprodNum(4)]
+    assert math.sumprod(ns, ms).v == 11
+    assert math.sumprod(tuple(ns), iter(ms)).v == 11
+    assert math.sumprod(ns[:1], ms[:1]).v == 3
+
+    try:
+        math.sumprod(ns, ms[:1])
+        assert False
+    except ValueError as e:
+        assert str(e) == 'Inputs are not the same length'
 
 
 def test_math_integer():
