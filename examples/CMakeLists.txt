@@ -105,6 +105,7 @@ endif()
 add_subdirectory(ac_encode)
 add_subdirectory(adatron)
 add_subdirectory(amaze)
+add_subdirectory(another_world)
 add_subdirectory(ant)
 add_subdirectory(astar) # ext
 add_subdirectory(bh)

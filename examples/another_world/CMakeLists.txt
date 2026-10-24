@@ -1,0 +1,50 @@
+# linux and macOS only for now: os.fork (another_world/popen.py), termios and tty
+if(WIN32)
+    return()
+endif()
+
+add_shedskin_product(
+    MAIN_MODULE aw.py
+    SYS_MODULES
+        getopt
+        gzip
+        io
+        os
+        os.path
+        signal
+        stat
+        sys
+        termios
+        time
+        tty
+    APP_MODULES
+        another_world/__init__
+        another_world/audio
+        another_world/binary
+        another_world/clock
+        another_world/cmdline
+        another_world/codes
+        another_world/controls
+        another_world/glyphs
+        another_world/keyboard
+        another_world/main
+        another_world/music
+        another_world/popen
+        another_world/releases/__init__
+        another_world/releases/adf
+        another_world/releases/amiga
+        another_world/releases/amiga_memlist
+        another_world/releases/anniversary
+        another_world/releases/anniversary_strings
+        another_world/releases/bytekiller
+        another_world/releases/dos
+        another_world/releases/files
+        another_world/releases/memlist
+        another_world/resource
+        another_world/screen
+        another_world/sound
+        another_world/text
+        another_world/video
+        another_world/vm
+        another_world/wav
+)

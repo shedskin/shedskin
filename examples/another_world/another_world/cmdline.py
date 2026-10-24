@@ -1,0 +1,100 @@
+# Generated from the game's argparse parser: the same options,
+# parsed with getopt, with argparse's help, usage and error messages.
+import getopt
+import sys
+
+USAGE = 'usage: aw.py [-h] [--part PART] [--code CODE] [--frames N] [--digests] [-2]\n             [-4] [-6] [-8] [-r MODE] [--compare FRAME] [--remastered-audio]\n             [--mute] [--wav FILE] [--seed SEED]\n             DIR\n'
+
+HELP = "usage: aw.py [-h] [--part PART] [--code CODE] [--frames N] [--digests] [-2]\n             [-4] [-6] [-8] [-r MODE] [--compare FRAME] [--remastered-audio]\n             [--mute] [--wav FILE] [--seed SEED]\n             DIR\n\nPlays Another World in the terminal.\n\ngame data:\n  You can get the game on GOG: Another World 20th Anniversary\n  Edition, which also includes the Amiga version.\n\n  Point DIR at one of these releases:\n  20th Anniversary   the install directory, or its game/ directory\n  DOS                the directory with MEMLIST.BIN and BANK01 to BANK0D\n  Amiga              the directory with the two .adf floppy images from\n                     the unzipped archive, or with the bankNN files on\n                     them\n\nkeys:\n  left, right   walk; run with space held\n  up            jump\n  down          crouch\n  space, enter  action: kick, shoot, or run with an arrow; skips the intro\n  c             the password screen: type a checkpoint code, then enter\n                (--code list shows them)\n  p             pause\n  Ctrl-C        quit\n\nterminal:\n  For the best experience, run the game in Ghostty.\n\n  Use a terminal with the kitty keyboard protocol: Ghostty, kitty,\n  WezTerm, foot or Alacritty. Only such terminals report key releases,\n  and the game needs to know how long a key is held; in others, such as\n  GNOME Terminal, a key counts as held while it repeats, so a tap lasts\n  about half a second. The terminal also needs 24-bit color; the picture\n  is scaled to fit the window.\n\n  Use -8 where the terminal can show it: it draws 2x4 pixels a cell, the\n  sharpest picture, with octant characters (Unicode 16) that most fonts\n  lack; -6 needs sextants (Unicode 13). Ghostty draws these characters\n  itself, whatever the font, and gets -8 by default; elsewhere the\n  default is -2, which works with any font. On macOS, play in Ghostty\n  (brew install --cask ghostty): other terminals there draw -8 with\n  stripes, or not at all.\n\npositional arguments:\n  DIR                 the game data (see game data above)\n\noptions:\n  -h, --help          show this help message and exit\n  --part PART         the game part to start in, from 16000 (the copy\n                      protection, DOS and Amiga only) to 16009 (the password\n                      screen); 16001 is the intro\n  --code CODE         start at the checkpoint of this password code,\n                      overriding --part; list prints the codes of the release\n  --frames N          stop after N frames; a run that is not in a terminal\n                      otherwise stops when its first part ends\n  --digests           print a digest of every frame instead of drawing\n  -2                  half blocks, 1x2 pixels a cell (the default outside\n                      Ghostty)\n  -4                  quadrants, 2x2 pixels a cell\n  -6                  sextants, 2x3 pixels a cell\n  -8                  octants, 2x4 pixels a cell: the sharpest (the default in\n                      Ghostty)\n  -r, --render MODE   the cell glyphs by name: half, quad, sextant, octant (as\n                      -2 to -8) or braille (2x4 dots)\n  --compare FRAME     print frame FRAME once with every --render option, then\n                      quit\n  --remastered-audio  the 20th Anniversary Edition's remastered sound and\n                      ambient music instead of the original's\n  --mute              play no sound (sound needs pw-play, paplay, aplay or\n                      SoX's play)\n  --wav FILE          write the game's sound and music to FILE as WAV\n  --seed SEED         the game's random seed\n"
+
+
+class Args:
+    def __init__(self):
+        self.data = ''
+        self.part = 16001
+        self.code = ''
+        self.frames = 0
+        self.digests = False
+        self.half = False
+        self.quad = False
+        self.sextant = False
+        self.octant = False
+        self.render = ''
+        self.compare = -1
+        self.remastered_audio = False
+        self.mute = False
+        self.wav = ''
+        self.seed = 0
+
+
+def _fail(message):
+    sys.stderr.write(USAGE)
+    sys.stderr.write('aw.py: error: ' + message + '\n')
+    sys.exit(2)
+
+
+def _int(name, value):
+    try:
+        return int(value)
+    except ValueError:
+        _fail('argument ' + name + ': invalid int value: ' + repr(value))
+    return 0
+
+
+def _name(opt):
+    for names in ['-h/--help', '--part', '--code', '--frames', '--digests', '-2', '-4', '-6', '-8', '-r/--render', '--compare', '--remastered-audio', '--mute', '--wav', '--seed']:
+        if opt in names.split('/'):
+            return names
+    return opt
+
+
+def parse_args(argv):
+    args = Args()
+    try:
+        opts, rest = getopt.gnu_getopt(argv, 'h2468r:', ['help', 'part=', 'code=', 'frames=', 'digests', 'render=', 'compare=', 'remastered-audio', 'mute', 'wav=', 'seed='])
+    except getopt.GetoptError as e:
+        opt = e.msg.split(' ')[1]  # 'option --x not recognized', 'option -x requires argument'
+        if e.msg.endswith('requires argument'):
+            _fail('argument ' + _name(opt) + ': expected one argument')
+        _fail('unrecognized arguments: ' + opt)
+        return args
+    for opt, value in opts:
+        if opt == '-h' or opt == '--help':
+            sys.stdout.write(HELP)
+            sys.exit(0)
+        if opt == '--part':
+            args.part = _int('--part', value)
+        elif opt == '--code':
+            args.code = value
+        elif opt == '--frames':
+            args.frames = _int('--frames', value)
+        elif opt == '--digests':
+            args.digests = True
+        elif opt == '-2':
+            args.half = True
+        elif opt == '-4':
+            args.quad = True
+        elif opt == '-6':
+            args.sextant = True
+        elif opt == '-8':
+            args.octant = True
+        elif opt == '-r' or opt == '--render':
+            args.render = value
+            if args.render not in ['half', 'quad', 'sextant', 'octant', 'braille']:
+                _fail('argument -r/--render: invalid choice: ' + repr(args.render) + " (choose from 'half', 'quad', 'sextant', 'octant', 'braille')")
+        elif opt == '--compare':
+            args.compare = _int('--compare', value)
+        elif opt == '--remastered-audio':
+            args.remastered_audio = True
+        elif opt == '--mute':
+            args.mute = True
+        elif opt == '--wav':
+            args.wav = value
+        elif opt == '--seed':
+            args.seed = _int('--seed', value)
+    if len(rest) < 1:
+        _fail('the following arguments are required: DIR')
+    if len(rest) > 1:
+        _fail('unrecognized arguments: ' + ' '.join(rest[1:]))
+    args.data = rest[0]
+    return args
