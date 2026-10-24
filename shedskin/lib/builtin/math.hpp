@@ -320,7 +320,7 @@ inline __ss_int __add(__ss_int a, __ss_bool b) { return a + b.value; }
 template<class U> U __add2(__ss_float a, U b) { return b->__add__(a); }
 template<class U> U __sub2(__ss_float a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(__ss_int n, T a) { return a->__mul__(n); }
-template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
+template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__((__ss_int)n.value); }
 template<class T> T __mul2(__ss_float n, T a) { return a->__mul__(n); }
 template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(__ss_float n, T a) { return a->__rdiv__(n); }

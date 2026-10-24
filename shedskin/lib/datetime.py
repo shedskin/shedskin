@@ -333,6 +333,12 @@ class timedelta:
     def __with_timedelta__(self, td, other):
         return other
 
+    def __with_int__(self):  # int.__mul__ (2 * timedelta)
+        return self
+
+    def __with_float__(self):  # float.__mul__ (2.5 * timedelta)
+        return self
+
     def __abs__(self):
         return self
 
