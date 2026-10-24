@@ -1,9 +1,9 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#include <algorithm>
-
 #include "builtin.hpp"
 #include "colorsys.hpp"
+
+#include <algorithm>
 
 /**
 Conversion functions between RGB and other color systems.

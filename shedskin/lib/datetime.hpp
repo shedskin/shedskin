@@ -83,6 +83,10 @@ public:
     __ss_int __cmp__(pyobj *other) { return __cmp__((date *)other); }
     __ss_bool __eq__(pyobj *other) { return __eq__((date *)other); }
     __ss_bool __ne__(pyobj *other) { return __ne__((date *)other); }
+    __ss_bool __gt__(pyobj *other) { return __gt__((date *)other); }
+    __ss_bool __lt__(pyobj *other) { return __lt__((date *)other); }
+    __ss_bool __ge__(pyobj *other) { return __ge__((date *)other); }
+    __ss_bool __le__(pyobj *other) { return __le__((date *)other); }
 };
 
 
@@ -165,6 +169,10 @@ public:
     __ss_int __cmp__(pyobj *other) { return __cmp__((datetime *)other); }
     __ss_bool __eq__(pyobj *other) { return __eq__((datetime *)other); }
     __ss_bool __ne__(pyobj *other) { return __ne__((datetime *)other); }
+    __ss_bool __gt__(pyobj *other) { return __gt__((datetime *)other); }
+    __ss_bool __lt__(pyobj *other) { return __lt__((datetime *)other); }
+    __ss_bool __ge__(pyobj *other) { return __ge__((datetime *)other); }
+    __ss_bool __le__(pyobj *other) { return __le__((datetime *)other); }
 };
 
 
@@ -207,6 +215,10 @@ public:
     __ss_int __cmp__(pyobj *other) { return __cmp__((time *)other); }
     __ss_bool __eq__(pyobj *other) { return __eq__((time *)other); }
     __ss_bool __ne__(pyobj *other) { return __ne__((time *)other); }
+    __ss_bool __gt__(pyobj *other) { return __gt__((time *)other); }
+    __ss_bool __lt__(pyobj *other) { return __lt__((time *)other); }
+    __ss_bool __ge__(pyobj *other) { return __ge__((time *)other); }
+    __ss_bool __le__(pyobj *other) { return __le__((time *)other); }
 };
 
 //class timedelta
@@ -262,6 +274,10 @@ public:
     __ss_int __cmp__(pyobj *other) { return __cmp__((timedelta *)other); }
     __ss_bool __eq__(pyobj *other) { return __eq__((timedelta *)other); }
     __ss_bool __ne__(pyobj *other) { return __ne__((timedelta *)other); }
+    __ss_bool __gt__(pyobj *other) { return __gt__((timedelta *)other); }
+    __ss_bool __lt__(pyobj *other) { return __lt__((timedelta *)other); }
+    __ss_bool __ge__(pyobj *other) { return __ge__((timedelta *)other); }
+    __ss_bool __le__(pyobj *other) { return __le__((timedelta *)other); }
 };
 
 /* divmod(t, u) -> (int, timedelta); found by ADL, so the generic divmod (which

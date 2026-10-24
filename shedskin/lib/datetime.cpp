@@ -1002,11 +1002,10 @@ str *datetime::isoformat(str *sep, str *timespec) {
     }
     if(timespec==NULL)
         timespec = auto_string;
-	str *r;
-	r=__add_strs(3,date::__str__(),sep,iso_time_string(hour, minute, second, microsecond, timespec));
+    str *r = __add_strs(3,date::__str__(),sep,iso_time_string(hour, minute, second, microsecond, timespec));
     if(this->_tzinfo!=NULL)
-		return r->__add__(this->_tzinfo->minutes_to_str(this));
-	return r;
+        return r->__add__(this->_tzinfo->minutes_to_str(this));
+    return r;
 }
 
 str *datetime::__str__() {

@@ -1,9 +1,9 @@
 /* Copyright 2005-2026 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #define _USE_MATH_DEFINES
-#include <cmath>
-
 #include "__init__.hpp"
+
+#include <cmath>
 
 namespace __math__ {
 

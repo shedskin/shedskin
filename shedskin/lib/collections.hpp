@@ -49,20 +49,20 @@ public:
 
     void *append(A a) {
         units.push_back(a);
-        if(maxlen != -1 && units.size() > maxlen)
+        if(maxlen != -1 && (__ss_int)units.size() > maxlen)
             units.pop_front();
         return NULL;
     }
 
     void *appendleft(A a) {
         units.push_front(a);
-        if(maxlen != -1 && units.size() > maxlen)
+        if(maxlen != -1 && (__ss_int)units.size() > maxlen)
             units.pop_back();
         return NULL;
     }
 
     void *insert(__ss_int index, A a) {
-        if(maxlen != -1 && units.size() == maxlen)
+        if(maxlen != -1 && (__ss_int)units.size() == maxlen)
             throw new IndexError(new str("deque already at its maximum size"));
         __ss_int len = this->__len__();
         if(index < 0)

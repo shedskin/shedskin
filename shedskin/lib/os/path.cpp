@@ -4,6 +4,7 @@
 
 #ifndef WIN32
 #include <pwd.h>
+#include <unistd.h>
 #else
 #ifdef _MSC_VER
 #ifndef NOMINMAX
@@ -667,7 +668,7 @@ str *expanduser(str *path) {
         userhome = __os__::getenv(const_21);
         if (!userhome) {
             /* no $HOME: fall back to the password database, like CPython */
-            struct passwd *pw = getpwuid(getuid());
+            struct passwd *pw = getpwuid(::getuid());
             if (!pw)
                 return path;
             userhome = new str(pw->pw_dir);
