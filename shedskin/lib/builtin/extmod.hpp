@@ -67,6 +67,55 @@ inline void __ss_raise_py(Exception *e) {
     Py_DECREF(value);
 }
 
+/* __str__/__repr__ of an exported exception type whose class defines them:
+   __py_setattrs__ stores the result of the C++ method on the instance (as
+   __ss_str__/__ss_repr__) when it is raised. an instance created from
+   Python has no such attribute, so fall back to the builtin base type. */
+inline PyObject *__ss_exc_strrepr(PyObject *self, const char *name, int repr) {
+    PyObject *s = PyObject_GetAttrString(self, name);
+    if(s || !PyErr_ExceptionMatches(PyExc_AttributeError))
+        return s;
+    PyErr_Clear();
+    PyTypeObject *t = Py_TYPE(self);
+    while(t->tp_flags & Py_TPFLAGS_HEAPTYPE)
+        t = t->tp_base;
+    return repr ? t->tp_repr(self) : t->tp_str(self);
+}
+
+inline PyObject *__ss_exc_str(PyObject *, PyObject *self) {
+    return __ss_exc_strrepr(self, "__ss_str__", 0);
+}
+
+inline PyObject *__ss_exc_repr(PyObject *, PyObject *self) {
+    return __ss_exc_strrepr(self, "__ss_repr__", 1);
+}
+
+/* class dict for PyErr_NewException, as a new reference. PyInstanceMethod
+   makes the functions bind to the instance, as a method */
+inline PyObject *__ss_exc_dict(int str, int repr) {
+    static PyMethodDef defs[] = {
+        {"__str__", __ss_exc_str, METH_O, NULL},
+        {"__repr__", __ss_exc_repr, METH_O, NULL},
+    };
+    PyObject *d = PyDict_New();
+    if(!d)
+        return 0;
+    for(int i = 0; i < 2; i++) {
+        if(!(i ? repr : str))
+            continue;
+        PyObject *f = PyCFunction_New(&defs[i], NULL);
+        PyObject *m = f ? PyInstanceMethod_New(f) : 0;
+        Py_XDECREF(f);
+        if(!m || PyDict_SetItemString(d, defs[i].ml_name, m) < 0) {
+            Py_XDECREF(m);
+            Py_DECREF(d);
+            return 0;
+        }
+        Py_DECREF(m);
+    }
+    return d;
+}
+
 template<> PyObject *__to_py(int32_t i);
 template<> PyObject *__to_py(int64_t i);
 #ifdef __SS_INT128

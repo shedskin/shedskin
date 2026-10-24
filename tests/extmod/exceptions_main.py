@@ -85,6 +85,33 @@ def test_attributes():
     assert str(e) == 'subcode'
 
 
+def test_str_repr():
+    # __str__ and __repr__ defined in the module are used from Python
+    e = caught(9)
+    assert type(e) is exceptions.StrError and e.args == ('base msg',)
+    assert str(e) == 'StrError code=7' and repr(e) == "StrError('base msg')"
+    e = caught(10)  # inherited
+    assert type(e) is exceptions.SubStrError and str(e) == 'StrError code=8'
+    e = caught(11)  # overridden
+    assert type(e) is exceptions.OtherStrError and str(e) == 'other 9'
+    e = caught(12)
+    assert str(e) == 'repr' and repr(e) == 'ReprError!'
+    # a __str__ that raises (in python only when str is called)
+    e = caught(13)
+    assert type(e) is exceptions.BadStrError and e.args == ('bad',)
+    try:
+        str(e)
+    except ValueError:
+        assert PURE
+    else:
+        assert not PURE and str(e) == "'bad'"  # falls back to KeyError
+    # pickled along with the other attributes
+    e = pickle.loads(pickle.dumps(caught(9)))
+    assert type(e) is exceptions.StrError and str(e) == 'StrError code=7'
+    # unaffected exceptions
+    assert str(caught(7)) == 'code' and repr(caught(7)) == "CodeError('code')"
+
+
 def test_inside():
     # catching inside the module is unaffected
     assert exceptions.catch_inside(0) == 'none'

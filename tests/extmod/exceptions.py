@@ -28,6 +28,30 @@ class SubCodeError(CodeError):
         super().__init__(msg, code)
         self.extra = extra
 
+class StrError(MyError):
+    def __init__(self, code):
+        MyError.__init__(self, 'base msg')
+        self.code = code
+    def __str__(self):
+        return 'StrError code=%d' % self.code
+
+class SubStrError(StrError):
+    pass
+
+class OtherStrError(StrError):
+    def __str__(self):
+        return 'other %d' % self.code
+
+class ReprError(Exception):
+    def __repr__(self):
+        return 'ReprError!'
+
+class BadStrError(KeyError):
+    def __str__(self):
+        if self.args[0] == 'bad':
+            raise ValueError('no str')
+        return 'fine'
+
 
 def boom(n):
     if n == 1:
@@ -46,6 +70,16 @@ def boom(n):
         raise CodeError('code', 42)
     if n == 8:
         raise SubCodeError('subcode', 43, 1.5)
+    if n == 9:
+        raise StrError(7)
+    if n == 10:
+        raise SubStrError(8)
+    if n == 11:
+        raise OtherStrError(9)
+    if n == 12:
+        raise ReprError('repr')
+    if n == 13:
+        raise BadStrError('bad')
     return n
 
 def catch_inside(n):
@@ -64,9 +98,18 @@ def catch_inside(n):
 
 if __name__ == '__main__':
     # make sure everything is called with the types used from exceptions_main.py
-    for i in range(9):
+    for i in range(14):
         try:
             boom(i)
         except Exception:
             pass
+    for i in range(9):
         catch_inside(i)
+    # __str__/__repr__ are only exported when called
+    for e in [StrError(1), SubStrError(2), OtherStrError(3), ReprError('r')]:
+        str(e), repr(e)
+    for msg in ['bad', 'good']:
+        try:
+            str(BadStrError(msg))
+        except ValueError:
+            pass
