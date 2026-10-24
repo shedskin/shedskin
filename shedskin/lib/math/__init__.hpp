@@ -496,7 +496,8 @@ template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
     __iter<A> *q_iter = q->__iter__();
 
     A a, b;
-    A sum = 0;
+    A sum = A();
+    bool first = true;
     size_t n_exhausted;
 
     for(;;) {
@@ -517,7 +518,11 @@ template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
         else if (n_exhausted > 0)
             throw new ValueError(new str("Inputs are not the same length"));
 
-        sum += a*b;
+        if(first) {
+            sum = __mul(a, b);
+            first = false;
+        } else
+            sum = __add(sum, __mul(a, b));
     }
 
     return sum;
