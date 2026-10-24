@@ -409,13 +409,36 @@ class ExtensionModule:
             )
         return self.builtin_exception(base)
 
+    def exception_strrepr(self, cl: "python.Class") -> list[str]:
+        """Get __str__/__repr__ if the class is the first to define them
+
+        The CPython exception type gets these (see __ss_exc_dict), so
+        subclasses inherit them there, and the C++ method is virtual.
+        """
+
+        def defines(c: "python.Class", name: str) -> bool:
+            func = c.funcs.get(name)
+            return bool(func and not func.inherited and self.gv.inhcpa(func))
+
+        return [
+            name
+            for name in ("__str__", "__repr__")
+            if defines(cl, name)
+            and not any(
+                defines(c, name)
+                for c in cl.ancestors()
+                if not c.mv.module.builtin
+            )
+        ]
+
     def convert_exception(self, cl: "python.Class", declare: bool) -> None:
         """Generate the CPython type of an exception class
 
         This is created with PyErr_NewException during module init (see
         do_extmod), so it is a real exception type that Python code can catch
         and raise. Methods are not exported, but attributes are copied to the
-        CPython exception when it is raised (see __ss_raise_py).
+        CPython exception when it is raised (see __ss_raise_py), as are the
+        results of __str__ and __repr__ (see exception_strrepr).
         """
         write = self.write
         if declare:
@@ -432,6 +455,20 @@ class ExtensionModule:
             write("PyObject *%s::__ss_pytype;\n" % self.gv.cpp_name(cl))
             write("int %s::__py_setattrs__(PyObject *p) {" % self.gv.cpp_name(cl))
             write("    PyObject *v;")
+            # an exception raised by the method falls back to the base type
+            for name in self.exception_strrepr(cl):
+                write("    try {")
+                write("        v = __to_py(this->%s());" % name)
+                write(
+                    '        if (!v || PyObject_SetAttrString(p, "__ss%s", v) < 0) {'
+                    % name[1:]
+                )
+                write("            Py_XDECREF(v);")
+                write("            return -1;")
+                write("        }")
+                write("        Py_DECREF(v);")
+                write("    } catch (Exception *) {")
+                write("    }")
             for var in self.supported_vars(cl.vars.values()):
                 write("    v = __to_py(this->%s);" % self.gv.cpp_name(var))
                 write(
@@ -897,10 +934,24 @@ class ExtensionModule:
                 cl.module.full_path(),
                 self.gv.cpp_name(cl),
             )
-            write(
-                '    %s = PyErr_NewException("%s.%s", %s, NULL);'
-                % (pytype, cl.module.ident, cl.ident, self.exception_base(cl))
-            )
+            strrepr = self.exception_strrepr(cl)
+            if strrepr:
+                write("    {")
+                write(
+                    "        PyObject *d = __ss_exc_dict(%d, %d);"
+                    % ("__str__" in strrepr, "__repr__" in strrepr)
+                )
+                write(
+                    '        %s = d ? PyErr_NewException("%s.%s", %s, d) : NULL;'
+                    % (pytype, cl.module.ident, cl.ident, self.exception_base(cl))
+                )
+                write("        Py_XDECREF(d);")
+                write("    }")
+            else:
+                write(
+                    '    %s = PyErr_NewException("%s.%s", %s, NULL);'
+                    % (pytype, cl.module.ident, cl.ident, self.exception_base(cl))
+                )
             write("    Py_XINCREF(%s);" % pytype)  # keep one, as AddObject steals
             write(
                 '    if (!%s || PyModule_AddObject(m, "%s", %s) < 0) {'
