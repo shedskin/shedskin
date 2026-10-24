@@ -4,6 +4,7 @@
 
 #ifndef WIN32
 #include <pwd.h>
+#include <unistd.h>
 #else
 #ifdef _MSC_VER
 #ifndef NOMINMAX
