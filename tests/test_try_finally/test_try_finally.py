@@ -217,6 +217,45 @@ def with_inside():
         log.append('with fin')
 
 
+class MsgError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+        self.parts = msg.split()
+
+
+def raise_then_allocate(k):
+    try:
+        if k % 2:
+            raise ValueError('message %d' % k)
+        raise MsgError('user message %d' % k)
+    finally:
+        junk = []  # collects the pending exception, if the GC can't see it
+        for i in range(100000):
+            junk.append(str(i))
+
+
+def pending_exception_gc():
+    bad = 0
+    for k in range(10):
+        try:
+            raise_then_allocate(k)
+        except ValueError as e:
+            if str(e) != 'message %d' % k:
+                bad += 1
+        except MsgError as e:
+            if e.msg != 'user message %d' % k or e.parts[2] != str(k):
+                bad += 1
+    return bad
+
+
+# class body
+class InClassBody:
+    try:
+        x = 1
+    finally:
+        y = 2
+
+
 # module level
 for i in range(3):
     try:
@@ -234,6 +273,8 @@ del log[:]
 
 def test_all():
     assert module_log == ['module 0', 'module 1', 'module body', 'module fin']
+    assert (InClassBody.x, InClassBody.y) == (1, 2)
+    assert pending_exception_gc() == 0
     assert list(gen(2)) == [0, 1]
     assert with_inside() == 'with'
     assert log == ['gen fin', 'with fin'], str(log)
