@@ -1462,9 +1462,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # the exception_ptr is rethrown, as it keeps the dynamic type, but
         # it lives in malloc'd memory: also keep the pointer itself on the
         # stack, so the GC doesn't collect it while the finally body runs
-        # (it is read again below, so the store can't be optimized away)
+        # (volatile, as otherwise clang reduces it to a bool flag, since
+        # it is only tested against NULL below)
         self.output("std::exception_ptr __fin%d_exc;" % n)
-        self.output("BaseException *__fin%d_obj = NULL;" % n)
+        self.output("BaseException * volatile __fin%d_obj = NULL;" % n)
         if 1 in exits and func and not func.isGenerator:
             assert func.retnode
             rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
