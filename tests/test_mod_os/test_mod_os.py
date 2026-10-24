@@ -1288,6 +1288,51 @@ def test_stat_follow_symlinks():
     os.remove(path)
 
 
+def test_two_path_errors():
+    # errors from two-path calls carry both names, as filename/filename2
+    src = 'shedskin_test_nope_src'
+    dst = 'shedskin_test_nope_dst'
+    try:
+        os.rename(src, dst)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == src
+        assert e.filename2 == dst
+        assert str(e) == "[Errno 2] No such file or directory: 'shedskin_test_nope_src' -> 'shedskin_test_nope_dst'"
+    try:
+        os.replace(src, dst)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == src and e.filename2 == dst
+        assert str(e).endswith(": 'shedskin_test_nope_src' -> 'shedskin_test_nope_dst'")
+    try:
+        os.link(src, dst)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == src and e.filename2 == dst
+
+    existing = 'shedskin_test_two_path.txt'
+    with open(existing, 'w') as f:
+        f.write('x')
+    try:
+        os.symlink('target', existing)
+        assert False
+    except FileExistsError as e:
+        assert e.filename == 'target' and e.filename2 == existing
+        assert str(e) == "[Errno 17] File exists: 'target' -> 'shedskin_test_two_path.txt'"
+    except OSError:  # symlinks may need extra privileges on windows
+        pass
+    os.remove(existing)
+
+    # single-path errors still have no filename2
+    try:
+        os.remove(src)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == src and e.filename2 is None
+        assert str(e) == "[Errno 2] No such file or directory: 'shedskin_test_nope_src'"
+
+
 def test_links():
     base = 'shedskin_test_links'
     os.mkdir(base)
@@ -1599,6 +1644,7 @@ def test_all():
     test_utime_extended()
     test_stat_follow_symlinks()
     test_links()
+    test_two_path_errors()
     test_dup2_inheritable()
     test_readinto()
     test_reload_environ()
