@@ -381,7 +381,7 @@ template<class T> template<class U, class V, class W> void *set<T>::update(int, 
 
 template<class T> template<class U> set<T> *set<T>::__ss_union(int, U *other) {
     set<T> *c = new set<T>(this->frozen);
-    *c = *this;
+    c->gcs = gcs;
     c->update(1, other);
     return c;
 }
@@ -402,14 +402,14 @@ template<class T> set<T> *set<T>::__ss_union(int, set<T> *s) {
 
 template<class T> template<class U, class V> set<T> *set<T>::__ss_union(int, U *other, V *other2) {
     set<T> *c = new set<T>(this->frozen);
-    *c = *this;
+    c->gcs = gcs;
     c->update(1, other, other2);
     return c;
 }
 
 template<class T> template<class U, class V, class W> set<T> *set<T>::__ss_union(int, U *other, V *other2, W *other3) {
     set<T> *c = new set<T>(this->frozen);
-    *c = *this;
+    c->gcs = gcs;
     c->update(1, other, other2, other3);
     return c;
 }
@@ -524,18 +524,26 @@ template<class T> set<T> *set<T>::__sub__(set<T> *s) {
     return difference(1, s);
 }
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
+    if(this->frozen) /* frozenset: rebind to a new object */
+        return intersection(1, s);
     this->gcs = intersection(1, s)->gcs;
     return this;
 }
 template<class T> set<T> *set<T>::__ior__(set<T> *s) {
+    if(this->frozen) /* frozenset: rebind to a new object */
+        return __ss_union(1, s);
     this->gcs = __ss_union(1, s)->gcs;
     return this;
 }
 template<class T> set<T> *set<T>::__ixor__(set<T> *s) {
+    if(this->frozen) /* frozenset: rebind to a new object */
+        return symmetric_difference(s);
     this->gcs = symmetric_difference(s)->gcs;
     return this;
 }
 template<class T> set<T> *set<T>::__isub__(set<T> *s) {
+    if(this->frozen) /* frozenset: rebind to a new object */
+        return difference(1, s);
     this->gcs = difference(1, s)->gcs;
     return this;
 }
