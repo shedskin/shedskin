@@ -11,9 +11,9 @@ OSError::OSError(str *msg) : Exception(msg) {
     strerror = 0;
     filename = filename2 = 0;
 }
-void OSError::__init_errno(int e, str *fname) {
+void OSError::__init_errno(int e, str *fname, str *fname2) {
     this->filename = fname;
-    this->filename2 = 0;
+    this->filename2 = fname2;
     __ss_errno = e;
     strerror = e ? new str(::strerror(e)) : 0;
     message = this->__str__();
@@ -23,7 +23,9 @@ str *OSError::__str__() {
         return BaseException::__str__();
     if(!filename)
         return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
-    return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename));
+    if(!filename2)
+        return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename));
+    return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename), new str(" -> "), repr(filename2));
 }
 str *OSError::__repr__() {
     if(!__ss_errno)
@@ -32,72 +34,72 @@ str *OSError::__repr__() {
 }
 
 /* errno is snapshotted by the caller, as allocation may clobber it */
-template<class T> [[noreturn]] static void __throw_errno(int e, str *fname) {
+template<class T> [[noreturn]] static void __throw_errno(int e, str *fname, str *fname2) {
     T *exc = new T();
-    exc->__init_errno(e, fname);
+    exc->__init_errno(e, fname, fname2);
     throw exc;
 }
 
 /* errno to OSError subclass mapping, following CPython (PEP 3151) */
-void __throw_oserror(str *fname) {
+void __throw_oserror(str *fname, str *fname2) {
     int e = errno;
     if(e == EAGAIN)
-        __throw_errno<BlockingIOError>(e, fname);
+        __throw_errno<BlockingIOError>(e, fname, fname2);
 #ifdef EALREADY
     if(e == EALREADY)
-        __throw_errno<BlockingIOError>(e, fname);
+        __throw_errno<BlockingIOError>(e, fname, fname2);
 #endif
 #ifdef EINPROGRESS
     if(e == EINPROGRESS)
-        __throw_errno<BlockingIOError>(e, fname);
+        __throw_errno<BlockingIOError>(e, fname, fname2);
 #endif
 #ifdef EWOULDBLOCK
     if(e == EWOULDBLOCK)
-        __throw_errno<BlockingIOError>(e, fname);
+        __throw_errno<BlockingIOError>(e, fname, fname2);
 #endif
     if(e == EPIPE)
-        __throw_errno<BrokenPipeError>(e, fname);
+        __throw_errno<BrokenPipeError>(e, fname, fname2);
 #ifdef ESHUTDOWN
     if(e == ESHUTDOWN)
-        __throw_errno<BrokenPipeError>(e, fname);
+        __throw_errno<BrokenPipeError>(e, fname, fname2);
 #endif
     if(e == ECHILD)
-        __throw_errno<ChildProcessError>(e, fname);
+        __throw_errno<ChildProcessError>(e, fname, fname2);
 #ifdef ECONNABORTED
     if(e == ECONNABORTED)
-        __throw_errno<ConnectionAbortedError>(e, fname);
+        __throw_errno<ConnectionAbortedError>(e, fname, fname2);
 #endif
 #ifdef ECONNREFUSED
     if(e == ECONNREFUSED)
-        __throw_errno<ConnectionRefusedError>(e, fname);
+        __throw_errno<ConnectionRefusedError>(e, fname, fname2);
 #endif
 #ifdef ECONNRESET
     if(e == ECONNRESET)
-        __throw_errno<ConnectionResetError>(e, fname);
+        __throw_errno<ConnectionResetError>(e, fname, fname2);
 #endif
     if(e == EEXIST)
-        __throw_errno<FileExistsError>(e, fname);
+        __throw_errno<FileExistsError>(e, fname, fname2);
     if(e == ENOENT)
-        __throw_errno<FileNotFoundError>(e, fname);
+        __throw_errno<FileNotFoundError>(e, fname, fname2);
     if(e == EISDIR)
-        __throw_errno<IsADirectoryError>(e, fname);
+        __throw_errno<IsADirectoryError>(e, fname, fname2);
     if(e == ENOTDIR)
-        __throw_errno<NotADirectoryError>(e, fname);
+        __throw_errno<NotADirectoryError>(e, fname, fname2);
     if(e == EINTR)
-        __throw_errno<InterruptedError>(e, fname);
+        __throw_errno<InterruptedError>(e, fname, fname2);
     if(e == EACCES || e == EPERM)
-        __throw_errno<PermissionError>(e, fname);
+        __throw_errno<PermissionError>(e, fname, fname2);
 #ifdef ENOTCAPABLE
     if(e == ENOTCAPABLE)
-        __throw_errno<PermissionError>(e, fname);
+        __throw_errno<PermissionError>(e, fname, fname2);
 #endif
     if(e == ESRCH)
-        __throw_errno<ProcessLookupError>(e, fname);
+        __throw_errno<ProcessLookupError>(e, fname, fname2);
 #ifdef ETIMEDOUT
     if(e == ETIMEDOUT)
-        __throw_errno<TimeoutError>(e, fname);
+        __throw_errno<TimeoutError>(e, fname, fname2);
 #endif
-    __throw_errno<OSError>(e, fname);
+    __throw_errno<OSError>(e, fname, fname2);
 }
 
 /* Unicode errors: str() follows CPython's formatting exactly, singling

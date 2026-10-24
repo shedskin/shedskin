@@ -357,7 +357,7 @@ public:
     str *strerror;
 
     OSError(str *msg=0);
-    void __init_errno(int e, str *fname);
+    void __init_errno(int e, str *fname, str *fname2=0);
     str *__str__();
     str *__repr__();
 
@@ -489,8 +489,8 @@ public:
 };
 
 /* throw the OSError subclass matching errno (as CPython does), with the
-   given file name (or none); use this for failed calls that set errno */
-[[noreturn]] void __throw_oserror(str *fname=0);
+   given file name(s) (or none); use this for failed calls that set errno */
+[[noreturn]] void __throw_oserror(str *fname=0, str *fname2=0);
 
 class OverflowError : public ArithmeticError {
 public:

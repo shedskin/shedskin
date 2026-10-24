@@ -101,7 +101,7 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
 #ifdef WIN32
 /* map a win32 error code (GetLastError()) to errno, so __throw_oserror()
    picks the same OSError subclass as cpython does for the common cases */
-[[noreturn]] static void __throw_winerror(DWORD err, str *fname=0) {
+[[noreturn]] static void __throw_winerror(DWORD err, str *fname=0, str *fname2=0) {
     switch(err) {
         case ERROR_FILE_NOT_FOUND:
         case ERROR_PATH_NOT_FOUND:
@@ -120,7 +120,7 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
         case ERROR_OUTOFMEMORY: errno = ENOMEM; break;
         default: errno = EINVAL; break;
     }
-    __throw_oserror(fname);
+    __throw_oserror(fname, fname2);
 }
 
 /* str (code points) <-> native wide strings. (not via std::filesystem::path,
@@ -312,7 +312,7 @@ void *rename(str *a, str *b) {
 #else
     if(std::rename(__ss_cpath(a, "rename", "src"), __ss_cpath(b, "rename", "dst")) == -1) {
 #endif
-        __throw_oserror(a);
+        __throw_oserror(a, b);
     }
     return NULL;
 }
@@ -330,7 +330,7 @@ void *replace(str *a, str *b) {
          * leave errno set, so set it explicitly from ec before constructing
          * the exception, which reads the global errno */
         errno = ec.value();
-        __throw_oserror(a);
+        __throw_oserror(a, b);
     }
     return NULL;
 }
@@ -1733,7 +1733,7 @@ void *setpgrp() {
 
 void *link(str *src, str *dst) {
     if(::link(__ss_cpath(src, "link", "src"), __ss_cpath(dst, "link", "dst")) == -1)
-        __throw_oserror(new str("os.link"));
+        __throw_oserror(src, dst);
     return NULL;
 }
 
@@ -1899,7 +1899,7 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
 
 void *link(str *src, str *dst) {
     if (!CreateHardLinkW(__to_wide(dst, "link", "dst").c_str(), __to_wide(src, "link", "src").c_str(), NULL))
-        __throw_winerror(GetLastError(), src);
+        __throw_winerror(GetLastError(), src, dst);
     return NULL;
 }
 
@@ -2487,13 +2487,13 @@ void *symlink(str *src, str *dst, __ss_bool target_is_directory) {
     flags |= SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 #endif
     if(!CreateSymbolicLinkW(__to_wide(dst, "symlink", "dst").c_str(), __to_wide(src, "symlink", "src").c_str(), flags))
-        __throw_winerror(GetLastError(), dst);
+        __throw_winerror(GetLastError(), src, dst);
     return NULL;
 }
 #else
 void *symlink(str *src, str *dst, __ss_bool) { /* target_is_directory: windows only */
     if(::symlink(__ss_cpath(src, "symlink", "src"), __ss_cpath(dst, "symlink", "dst")) == -1)
-        __throw_oserror(new str("os.symlink"));
+        __throw_oserror(src, dst);
     return NULL;
 }
 #endif
