@@ -112,18 +112,20 @@ __ss_int struct_time::__cmp__(pyobj *p) {
     return __cmp(tm_isdst, b->tm_isdst);
 }
 
-tm* tuple2tm(struct_time* tuple) {
-    tm *time_tuple = new tm;
+/* by value: a plain 'new tm' is malloc memory that was never freed. value-
+   initialized, so platform-specific fields (tm_zone, tm_gmtoff) are not garbage */
+tm tuple2tm(struct_time* tuple) {
+    tm time_tuple = tm();
 
-    time_tuple->tm_sec = (int)tuple->tm_sec;
-    time_tuple->tm_min = (int)tuple->tm_min;
-    time_tuple->tm_hour = (int)tuple->tm_hour;
-    time_tuple->tm_mday = (int)tuple->tm_mday;
-    time_tuple->tm_mon = (int)tuple->tm_mon - 1;
-    time_tuple->tm_year = (int)tuple->tm_year - 1900;
-    time_tuple->tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
-    time_tuple->tm_yday = (int)tuple->tm_yday - 1 ;
-    time_tuple->tm_isdst = (int)tuple->tm_isdst;
+    time_tuple.tm_sec = (int)tuple->tm_sec;
+    time_tuple.tm_min = (int)tuple->tm_min;
+    time_tuple.tm_hour = (int)tuple->tm_hour;
+    time_tuple.tm_mday = (int)tuple->tm_mday;
+    time_tuple.tm_mon = (int)tuple->tm_mon - 1;
+    time_tuple.tm_year = (int)tuple->tm_year - 1900;
+    time_tuple.tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
+    time_tuple.tm_yday = (int)tuple->tm_yday - 1 ;
+    time_tuple.tm_isdst = (int)tuple->tm_isdst;
 
     return time_tuple;
 }
@@ -133,34 +135,34 @@ tm* tuple2tm(struct_time* tuple) {
    tm_wday is taken modulo 7, and anything else out of range raises
    ValueError instead of making libc index its name tables out of bounds
    (printing '?') or return NULL. */
-tm* tuple2tm_checked(struct_time* tuple) {
-    tm *time_tuple = tuple2tm(tuple);
+tm tuple2tm_checked(struct_time* tuple) {
+    tm time_tuple = tuple2tm(tuple);
 
-    if (time_tuple->tm_mon == -1)
-        time_tuple->tm_mon = 0;
-    else if (time_tuple->tm_mon < 0 || time_tuple->tm_mon > 11)
+    if (time_tuple.tm_mon == -1)
+        time_tuple.tm_mon = 0;
+    else if (time_tuple.tm_mon < 0 || time_tuple.tm_mon > 11)
         throw new ValueError(new str("month out of range"));
-    if (time_tuple->tm_mday == 0)
-        time_tuple->tm_mday = 1;
-    else if (time_tuple->tm_mday < 0 || time_tuple->tm_mday > 31)
+    if (time_tuple.tm_mday == 0)
+        time_tuple.tm_mday = 1;
+    else if (time_tuple.tm_mday < 0 || time_tuple.tm_mday > 31)
         throw new ValueError(new str("day of month out of range"));
-    if (time_tuple->tm_hour < 0 || time_tuple->tm_hour > 23)
+    if (time_tuple.tm_hour < 0 || time_tuple.tm_hour > 23)
         throw new ValueError(new str("hour out of range"));
-    if (time_tuple->tm_min < 0 || time_tuple->tm_min > 59)
+    if (time_tuple.tm_min < 0 || time_tuple.tm_min > 59)
         throw new ValueError(new str("minute out of range"));
-    if (time_tuple->tm_sec < 0 || time_tuple->tm_sec > 61)
+    if (time_tuple.tm_sec < 0 || time_tuple.tm_sec > 61)
         throw new ValueError(new str("seconds out of range"));
-    time_tuple->tm_wday = (int)((tuple->tm_wday + 1) % 7);
-    if (time_tuple->tm_wday < 0)
+    time_tuple.tm_wday = (int)((tuple->tm_wday + 1) % 7);
+    if (time_tuple.tm_wday < 0)
         throw new ValueError(new str("day of week out of range"));
-    if (time_tuple->tm_yday == -1)
-        time_tuple->tm_yday = 0;
-    else if (time_tuple->tm_yday < 0 || time_tuple->tm_yday > 365)
+    if (time_tuple.tm_yday == -1)
+        time_tuple.tm_yday = 0;
+    else if (time_tuple.tm_yday < 0 || time_tuple.tm_yday > 365)
         throw new ValueError(new str("day of year out of range"));
-    if (time_tuple->tm_isdst < -1)
-        time_tuple->tm_isdst = -1;
-    else if (time_tuple->tm_isdst > 1)
-        time_tuple->tm_isdst = 1;
+    if (time_tuple.tm_isdst < -1)
+        time_tuple.tm_isdst = -1;
+    else if (time_tuple.tm_isdst > 1)
+        time_tuple.tm_isdst = 1;
 
     return time_tuple;
 }
@@ -539,13 +541,15 @@ void *sleep(__ss_float s) {
 #endif
 
 __ss_float mktime(struct_time *tuple) {
-    return (__ss_float)::mktime(tuple2tm(tuple));
+    tm time_tuple = tuple2tm(tuple);
+    return (__ss_float)::mktime(&time_tuple);
 }
 
 __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
     struct_time *st = new struct_time(tuple);
 
-    return (__ss_float)::mktime(tuple2tm(st));
+    tm time_tuple = tuple2tm(st);
+    return (__ss_float)::mktime(&time_tuple);
 }
 
 /* CPython floors the seconds-since-epoch value before converting to an
@@ -611,7 +615,8 @@ str *asctime() {
 }
 
 str *asctime(struct_time *tuple) {
-    return (new str(::asctime(tuple2tm_checked(tuple))))->__slice__(2, 0, -1, 0);
+    tm time_tuple = tuple2tm_checked(tuple);
+    return (new str(::asctime(&time_tuple)))->__slice__(2, 0, -1, 0);
 }
 
 str *ctime() {
@@ -626,21 +631,23 @@ str *strftime(str *format, struct_time* tuple) {
     /* (an embedded NUL would also end the format early, or make it empty) */
     if (__ss_has_nul(format))
         throw new ValueError(new str("embedded null character"));
-    tm *time_tuple = tuple2tm_checked(tuple);
-    size_t size = format->unit.size();
+    tm time_tuple = tuple2tm_checked(tuple);
+    size_t fmtlen = format->unit.size();
+    size_t size = fmtlen;
     size_t n;
-    char *buf;
+    std::vector<char> buf; /* (not 'new char[]': malloc memory, never freed) */
     if(size==0)
         return new str();
+    /* as CPython: 0 may also mean an empty result, so give up at some point */
     do {
         size *= 2;
-        buf = new char[size];
+        buf.resize(size);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-        n = ::strftime(buf, size, format->c_str(), time_tuple);
+        n = ::strftime(buf.data(), size, format->c_str(), &time_tuple);
 #pragma GCC diagnostic pop
-    } while(n == 0);
-    return new str(buf);
+    } while(n == 0 && size < 256 * fmtlen);
+    return new str(buf.data(), n);
 }
 
 str *strftime(str *format) {

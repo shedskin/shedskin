@@ -41,7 +41,12 @@ using error = PatternError;
 class Pattern;
 
 //a compiled replacement template: literal chunks and group references
+//(on the gc heap: a plain new would hide the literals from the collector)
+#ifdef __SS_NOGC
 struct __template {
+#else
+struct __template : public gc {
+#endif
     std::vector<__GC_STR, __ss_allocator<__GC_STR> > literals; //one more than groups
     std::vector<__ss_int, __ss_allocator<__ss_int> > groups;
 };
