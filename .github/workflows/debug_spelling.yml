@@ -1,0 +1,47 @@
+# DEBUG (do not merge): run only test_prog_spelling, many times, on ubuntu, to find out
+# why its -ext variant sometimes aborts with 'Duplicate large block deallocation'.
+# see .github/debug_spelling.sh. ci.yml is disabled meanwhile.
+name: debug test_prog_spelling
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'runs per variant'
+        default: '100'
+
+concurrency:
+  group: debug-spelling-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spelling:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: astral-sh/setup-uv@v5
+
+    - name: Install shedskin
+      run: uv sync --python 3.13
+
+    - name: Install gdb, enable core dumps
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq gdb >/dev/null
+        mkdir -p /tmp/cores
+        sudo sysctl -w kernel.core_pattern=/tmp/cores/core.%e.%p
+
+    - name: Build test_prog_spelling (exe and ext)
+      run: |
+        cd tests
+        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -x
+        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -e
+
+    - name: Run test_prog_spelling repeatedly
+      run: bash .github/debug_spelling.sh ${{ github.event.inputs.runs || '100' }}
