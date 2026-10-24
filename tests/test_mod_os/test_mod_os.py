@@ -141,6 +141,36 @@ def test_direntry_inode_junction():
     os.rmdir(base)
 
 
+def __rss_kb():
+    try:
+        for l in open('/proc/self/status'):
+            if l.startswith('VmRSS'):
+                return int(l.split()[1])
+    except OSError:
+        pass
+    return 0
+
+def test_scandir_no_leak():
+    # regression test: each DirEntry leaked (malloc) memory, about 200 bytes
+    base = 'shedskin_test_scandir_leak_dir'
+    os.mkdir(base)
+    for k in range(50):
+        with open(os.path.join(base, 'some_longer_file_name_%03d.txt' % k), 'w') as f:
+            f.write('x')
+
+    n = 0
+    r0 = __rss_kb()
+    for i in range(10000):
+        for entry in os.scandir(base):
+            n += len(entry.name)
+    assert n == 10000 * 50 * 29
+    assert __rss_kb() - r0 < 32 * 1024
+
+    for k in range(50):
+        os.remove(os.path.join(base, 'some_longer_file_name_%03d.txt' % k))
+    os.rmdir(base)
+
+
 # following currently only tested under posix
 # (see test_mod_os_posix for functionality that is #ifndef WIN32 in lib/os:
 # shedskin translates every called function unconditionally, so a runtime
@@ -1625,6 +1655,7 @@ def test_all():
     test_scandir_name_path()
     test_stat_times()
     test_direntry_inode_junction()
+    test_scandir_no_leak()
     test_walk()
     test_walk_onerror()
     test_oserror_subclasses()

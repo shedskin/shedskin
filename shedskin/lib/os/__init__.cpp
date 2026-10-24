@@ -696,29 +696,41 @@ __cstat *fstat(__ss_int fd) {
 
 class_ *cl_DirEntry;
 
-DirEntry::DirEntry(const std::filesystem::directory_entry &entry) : __entry(entry) {
+DirEntry::DirEntry(const std::filesystem::directory_entry &entry) {
     this->__class__ = cl_DirEntry;
     this->name = __fsstr(entry.path().filename());
     this->path = __fsstr(entry.path());
+
+    /* these use the type cached by the directory iterator, if any */
+    std::error_code ec;
+    if(entry.is_symlink(ec))
+        __type = std::filesystem::file_type::symlink;
+    else if(entry.is_directory(ec))
+        __type = std::filesystem::file_type::directory;
+    else if(entry.is_regular_file(ec))
+        __type = std::filesystem::file_type::regular;
+    else
+        __type = std::filesystem::file_type::unknown;
 }
 
 __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
-    std::error_code ec;
-    if(follow_symlinks)
-        return __mbool(__entry.is_directory(ec));
-    return __mbool(std::filesystem::is_directory(__entry.symlink_status(ec)));
+    if(__type == std::filesystem::file_type::symlink) {
+        std::error_code ec;
+        return __mbool(follow_symlinks && std::filesystem::is_directory(__fspath(this->path), ec));
+    }
+    return __mbool(__type == std::filesystem::file_type::directory);
 }
 
 __ss_bool DirEntry::is_file(__ss_bool follow_symlinks) {
-    std::error_code ec;
-    if(follow_symlinks)
-        return __mbool(__entry.is_regular_file(ec));
-    return __mbool(std::filesystem::is_regular_file(__entry.symlink_status(ec)));
+    if(__type == std::filesystem::file_type::symlink) {
+        std::error_code ec;
+        return __mbool(follow_symlinks && std::filesystem::is_regular_file(__fspath(this->path), ec));
+    }
+    return __mbool(__type == std::filesystem::file_type::regular);
 }
 
 __ss_bool DirEntry::is_symlink() {
-    std::error_code ec;
-    return __mbool(__entry.is_symlink(ec));
+    return __mbool(__type == std::filesystem::file_type::symlink);
 }
 
 __ss_bool DirEntry::is_junction() {

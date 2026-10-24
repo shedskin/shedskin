@@ -104,9 +104,12 @@ extern class_ *cl_DirEntry;
 class DirEntry : public pyobj {
 public:
     str *name, *path;
-    std::filesystem::directory_entry __entry; /* not exposed to Python side */
+    /* cached type (from d_type, without following symlinks). not the
+       std::filesystem::directory_entry itself: its path lives in malloc'd
+       memory, which leaks as the GC never runs destructors */
+    std::filesystem::file_type __type; /* not exposed to Python side */
 
-    DirEntry() { __class__ = cl_DirEntry; }
+    DirEntry() : __type(std::filesystem::file_type::unknown) { __class__ = cl_DirEntry; }
     DirEntry(const std::filesystem::directory_entry &entry);
 
     __ss_bool is_dir(__ss_bool follow_symlinks=True);
