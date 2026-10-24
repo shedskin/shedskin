@@ -64,6 +64,7 @@ dict<void *, void *> *__ss_proxy;
 
 #ifndef __SS_NOGC
 void gc_warning_handler(char *, GC_word) {}
+static void __ss_gc_debug_init(); /* DEBUG */
 #endif
 
 void __init() {
@@ -103,6 +104,8 @@ void __init() {
     // GC_set_full_freq(19);
     /* with incremental collection: target pause time in ms (default: GC_TIME_UNLIMITED with parallel marking, else 15) */
     // GC_set_time_limit(15);
+
+    __ss_gc_debug_init(); /* DEBUG */
 #endif
 
 #ifdef __SS_BIND
@@ -686,6 +689,129 @@ void *__ss_gc_malloc_atomic_slow(std::size_t n) {
         return p;
     }
     return GC_MALLOC_ATOMIC(n);
+}
+
+/* DEBUG (test_prog_spelling-ext): log the last container allocations and frees (pointers
+   are stored hidden, so the logs keep nothing alive), and check every GC_FREE */
+bool __ss_gc_debug;
+
+struct __ss_gc_event {
+    GC_word hidden;
+    std::size_t bytes;
+    const char *type;
+    GC_word gc_no;
+    unsigned long seq;
+};
+#define __SS_GC_EVENTS 65536
+static __ss_gc_event __ss_gc_allocs[__SS_GC_EVENTS], __ss_gc_frees[__SS_GC_EVENTS];
+static unsigned long __ss_gc_nallocs, __ss_gc_nfrees, __ss_gc_seq;
+
+static void __ss_gc_debug_log(__ss_gc_event *events, unsigned long &count, void *p, std::size_t bytes, const char *type) {
+    __ss_gc_event &e = events[count++ % __SS_GC_EVENTS];
+    e.hidden = GC_HIDE_POINTER(p);
+    e.bytes = bytes;
+    e.type = type;
+    e.gc_no = GC_get_gc_no();
+    e.seq = ++__ss_gc_seq;
+}
+
+/* print the last logged events (allocations or frees) that cover p, return the latest */
+static __ss_gc_event *__ss_gc_debug_find(const char *what, __ss_gc_event *events, unsigned long count, void *p) {
+    unsigned long n = count < __SS_GC_EVENTS ? count : __SS_GC_EVENTS;
+    __ss_gc_event *latest = nullptr;
+    int found = 0;
+    for (unsigned long i = 0; i < n; i++) {
+        __ss_gc_event &e = events[(count - 1 - i) % __SS_GC_EVENTS];
+        char *q = (char *)GC_REVEAL_POINTER(e.hidden);
+        if (q <= (char *)p && (char *)p < q + (e.bytes ? e.bytes : 1)) {
+            fprintf(stderr, "  %s %lu events ago: %p, %zu bytes (%s), at gc #%lu\n", what, __ss_gc_seq - e.seq, (void *)q, e.bytes, e.type, (unsigned long)e.gc_no);
+            if (!latest)
+                latest = &e;
+            if (++found == 8)
+                break;
+        }
+    }
+    if (!found)
+        fprintf(stderr, "  no %s of %p among the last %lu logged\n", what, p, n);
+    return latest;
+}
+
+static void __ss_gc_debug_backtrace();
+
+void __ss_gc_debug_alloc(void *p, std::size_t bytes, const char *type) {
+    __ss_gc_debug_log(__ss_gc_allocs, __ss_gc_nallocs, p, bytes, type);
+}
+
+void __ss_gc_debug_free(void *p, std::size_t bytes, const char *type) {
+    void *base = GC_base(p);
+    if (base != p) {
+        fprintf(stderr, "\nshedskin: bad GC_FREE(%p), %zu bytes (%s), at gc #%lu, heap size %zu\n", p, bytes, type, (unsigned long)GC_get_gc_no(), (size_t)GC_get_heap_size());
+        fprintf(stderr, "  GC_base: %p (%s)\n", base, base ? "interior pointer" : "not an allocated object: block already free, or not in the GC heap");
+        __ss_gc_event *a = __ss_gc_debug_find("allocation", __ss_gc_allocs, __ss_gc_nallocs, p);
+        __ss_gc_event *f = __ss_gc_debug_find("free", __ss_gc_frees, __ss_gc_nfrees, p);
+        if (a && (!f || f->seq < a->seq))
+            fprintf(stderr, "  => not freed since its allocation: the collector reclaimed it while still in use\n");
+        else if (a && f)
+            fprintf(stderr, "  => already freed since its allocation: double free\n");
+        __ss_gc_debug_backtrace();
+        fflush(stderr);
+        abort();
+    }
+    __ss_gc_debug_log(__ss_gc_frees, __ss_gc_nfrees, p, bytes, type);
+}
+} // namespace __shedskin__
+#endif
+
+#ifndef __SS_NOGC
+#if defined(__GLIBC__) || defined(__APPLE__)
+#include <execinfo.h>
+#endif
+namespace __shedskin__ {
+static void __ss_gc_debug_backtrace() {
+#if defined(__GLIBC__) || defined(__APPLE__)
+    void *frames[64];
+    int n = backtrace(frames, 64);
+    fprintf(stderr, "  backtrace (resolve hidden symbols with: addr2line -f -C -e <module.so> <offset>):\n");
+    fflush(stderr);
+    backtrace_symbols_fd(frames, n, 2);
+#endif
+}
+
+static void __ss_gc_debug_warn(char *msg, GC_word arg) {
+    fprintf(stderr, "shedskin: GC warning (gc #%lu): ", (unsigned long)GC_get_gc_no());
+    fprintf(stderr, msg, (unsigned long)arg);
+    fflush(stderr);
+}
+
+#if GC_VERSION_MAJOR >= 8
+static void __ss_gc_debug_abort(const char *msg) {
+    fprintf(stderr, "\nshedskin: GC abort at gc #%lu, heap size %zu: %s\n", (unsigned long)GC_get_gc_no(), (size_t)GC_get_heap_size(), msg ? msg : "(null)");
+    __ss_gc_debug_backtrace();
+    fflush(stderr);
+}
+#endif
+
+static void __ss_gc_debug_init() {
+    if (!getenv("SHEDSKIN_GC_DEBUG"))
+        return;
+#ifdef __SS_FREE_LISTS
+    __ss_gc_debug = true;
+    /* the logs hold no (visible) pointers: do not scan them, which would also make collections less frequent */
+    GC_exclude_static_roots(__ss_gc_allocs, __ss_gc_allocs + __SS_GC_EVENTS);
+    GC_exclude_static_roots(__ss_gc_frees, __ss_gc_frees + __SS_GC_EVENTS);
+#endif
+    GC_set_warn_proc(__ss_gc_debug_warn);
+#if GC_VERSION_MAJOR >= 8
+    GC_set_abort_func(__ss_gc_debug_abort);
+#endif
+#if GC_VERSION_MAJOR > 8 || (GC_VERSION_MAJOR == 8 && GC_VERSION_MINOR >= 2)
+    /* collect more often, to make bugs that depend on when the collector runs more likely */
+    if (const char *s = getenv("SHEDSKIN_GC_MIN_BYTES"))
+        GC_set_min_bytes_allocd((size_t)atol(s));
+#endif
+    fprintf(stderr, "shedskin: GC debugging on (bdwgc %u.%u.%u, interior pointers: %d)\n",
+        (GC_get_version() >> 16), (GC_get_version() >> 8) & 0xff, GC_get_version() & 0xff,
+        GC_get_all_interior_pointers());
 }
 } // namespace __shedskin__
 #endif

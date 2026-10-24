@@ -17,6 +17,7 @@
 #include <gc/gc_allocator.h>
 #include <gc/gc_cpp.h>
 #include <new>
+#include <typeinfo>
 
 #endif
 
@@ -226,6 +227,13 @@ inline void *__ss_gc_malloc_atomic(std::size_t n) {
 template <class T>
 using __ss_allocator = std::allocator< T >;
 #elif defined(__SS_FREE_LISTS)
+/* DEBUG (test_prog_spelling-ext): with SHEDSKIN_GC_DEBUG set, container allocations and
+   frees are logged (see builtin.cpp), and a GC_FREE of memory that is not (or no longer)
+   an allocated object is reported, instead of only aborting inside bdwgc */
+extern bool __ss_gc_debug;
+void __ss_gc_debug_alloc(void *p, std::size_t bytes, const char *type);
+void __ss_gc_debug_free(void *p, std::size_t bytes, const char *type);
+
 /* gc_allocator, but with small objects from the free lists */
 template <class T> class __ss_allocator : public gc_allocator<T> {
 public:
@@ -242,7 +250,14 @@ public:
             p = __ss_gc_malloc(n * sizeof(T));
         if (!p)
             throw std::bad_alloc();
+        if (__builtin_expect(__ss_gc_debug, 0))
+            __ss_gc_debug_alloc(p, n * sizeof(T), typeid(T).name());
         return static_cast<T *>(p);
+    }
+    void deallocate(T *p, std::size_t n) noexcept {
+        if (__builtin_expect(__ss_gc_debug, 0))
+            __ss_gc_debug_free(p, n * sizeof(T), typeid(T).name());
+        GC_FREE(p);
     }
 };
 template <class T, class U> inline bool operator==(const __ss_allocator<T> &, const __ss_allocator<U> &) { return true; }

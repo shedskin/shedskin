@@ -1,10 +1,8 @@
 name: tests
 
+# DEBUG (do not merge): disabled while debugging test_prog_spelling, see debug_spelling.yml
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 concurrency:
   group: environment-${{ github.ref }}
