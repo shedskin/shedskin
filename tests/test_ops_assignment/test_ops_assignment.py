@@ -166,6 +166,7 @@ def test_walrus2():
 
 
 import re
+from collections import Counter, defaultdict
 
 def test_walrus3():
     data = 'There is a book on the table.'
@@ -213,6 +214,70 @@ def test_walrus6():
     assert d == 6
 
 
+class Acc:
+    def __init__(self, n):
+        self.n = n
+
+    def __iadd__(self, other):
+        self.n += other.n
+        return self
+
+
+def test_augassign_dict_inplace():
+    # 'd[k] += v' updates a mutable value in place, like 'l[i] += v' (1023-B3)
+    d = {'k': [1]}
+    alias = d['k']
+    d['k'] += [2]
+    d['k'] += (3,)
+    assert alias == [1, 2, 3]
+    assert alias is d['k']
+
+    dd = defaultdict(list)
+    for i in range(4):
+        dd[i % 2] += [i]
+    first = dd[0]
+    dd[0] += [4]
+    assert first == [0, 2, 4]
+    assert first is dd[0]
+    assert dd[1] == [1, 3]
+
+    ba = {'b': bytearray(b'a')}
+    bal = ba['b']
+    ba['b'] += b'b'
+    assert bal == bytearray(b'ab')
+    assert bal is ba['b']
+
+    # class with only __iadd__ (1023-C5)
+    da = {'a': Acc(1)}
+    a0 = da['a']
+    da['a'] += Acc(5)
+    assert da['a'].n == 6
+    assert a0 is da['a']
+
+    # immutable values
+    di = {'i': 1}
+    di['i'] += 2
+    assert di == {'i': 3}
+    ds = {'s': 'a'}
+    ds['s'] += 'b'
+    assert ds == {'s': 'ab'}
+    dt = {'t': (1,)}
+    dt['t'] += (2,)
+    assert dt == {'t': (1, 2)}
+    dc = {'c': 1j}
+    dc['c'] += 2
+    assert dc == {'c': 2+1j}
+    c = Counter('aab')
+    c['a'] += 3
+    c['z'] += 1
+    assert sorted(c.items()) == [('a', 5), ('b', 1), ('z', 1)]
+    try:
+        dk = {'x': 1}
+        dk['y'] += 1
+        assert False
+    except KeyError:
+        pass
+
 
 def test_all():
     test_assign_int()
@@ -240,6 +305,7 @@ def test_all():
     test_walrus4()
     test_walrus5()
     test_walrus6()
+    test_augassign_dict_inplace()
 
 
 if __name__ == '__main__':

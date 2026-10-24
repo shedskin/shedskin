@@ -2640,11 +2640,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if isinstance(node.target, ast.Subscript):
             self.start()
+            # 'd[k] += v' with a single lookup, using '+' instead of '__iadd__':
+            # only for immutable values, so mutable ones are updated in place
+            assignhop = infer.inode(self.gx, node).assignhop
+            assert isinstance(assignhop.value, ast.BinOp)
             if {
                     t[0].ident
                     for t in self.mergeinh[node.target.value]
                     if isinstance(t[0], python.Class)
-            } in [{"dict"}, {"frozendict"}, {"defaultdict"}, {"Counter"}] and isinstance(node.op, ast.Add):
+            } in [{"dict"}, {"frozendict"}, {"defaultdict"}, {"Counter"}] and isinstance(node.op, ast.Add) and {
+                    t[0].ident for t in self.mergeinh[assignhop.value.left]
+            } <= {"int_", "float_", "bool_", "str_"}:
                 self.visitm(
                     node.target.value,
                     "->__addtoitem__(",
