@@ -148,6 +148,8 @@ inline char *__ss_cpath(str *s, const char *func = 0, const char *arg = "path") 
 inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "path") { __ss_check_nul(s, func, arg); return __to_utf16<wchar_t>(s->unit); }
 #endif
 
+void __check_open_mode(str *mode);
+
 file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
 file *open(bytes *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
 file_binary *open_binary(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);

@@ -497,6 +497,109 @@ def test_utf8_sig():
     os.remove('usig.txt')
 
 
+def test_open_invalid_mode():
+    # as cpython, the mode is validated before anything is opened (fopen()
+    # would truncate the file for 'wa', and ignore most other mistakes)
+    with open('umode.txt', 'w') as f:
+        f.write('precious\n')
+    errors = []
+    try:
+        open('umode.txt', 'wa')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'rw')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'xa')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'rr')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'r ')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'r++')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'q')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'U')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'rU')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', '')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', '+')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'bt')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'wab')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'rbb')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'b')
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == [
+        'must have exactly one of create/read/write/append mode',
+        'must have exactly one of create/read/write/append mode',
+        'must have exactly one of create/read/write/append mode',
+        "invalid mode: 'rr'",
+        "invalid mode: 'r '",
+        "invalid mode: 'r++'",
+        "invalid mode: 'q'",
+        "invalid mode: 'U'",
+        "invalid mode: 'rU'",
+        'Must have exactly one of create/read/write/append mode and at most one plus',
+        'Must have exactly one of create/read/write/append mode and at most one plus',
+        "can't have text and binary mode at once",
+        'must have exactly one of create/read/write/append mode',
+        "invalid mode: 'rbb'",
+        'Must have exactly one of create/read/write/append mode and at most one plus',
+    ]
+    # before the other arguments, too
+    try:
+        open('umode.txt', 'rr', encoding='bogus')
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        open('umode.txt', 'rbt', encoding='latin-1')
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors[-2:] == ["invalid mode: 'rr'", "can't have text and binary mode at once"]
+    with open('umode.txt') as f:
+        assert f.read() == 'precious\n'
+    # valid combinations
+    with open('umode.txt', 'a+t') as f:
+        assert f.mode == 'a+t'
+    with open('umode.txt', 'r+b') as g:
+        assert g.read() == nl(b'precious\n')
+    os.remove('umode.txt')
+
+
 def test_all():
     test_utf8_sig()
     test_seek_returns_position()
@@ -509,6 +612,7 @@ def test_all():
     test_open_encoding()
     test_open_utf8_sig()
     test_open_bad_args()
+    test_open_invalid_mode()
     test_open_unknown_errors()
     test_open_mode_keyword()
     test_open_encoding_attributes()

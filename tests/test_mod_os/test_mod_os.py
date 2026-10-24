@@ -702,6 +702,53 @@ def test_fdopen_binary():
         assert g2.read() == b'abc'
 
 
+def test_fdopen_popen_invalid_mode():
+    # modes are validated as by open() (fdopen) and as cpython (popen)
+    path = 'shedskin_test_fdopen_mode.txt'
+    errors = []
+    for mode in ['wa', 'rr', 'q', 'U', '']:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
+            os.fdopen(fd, mode)
+        except ValueError as e:
+            errors.append(str(e))
+        os.close(fd)
+    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        os.fdopen(fd, 'rbt')
+    except ValueError as e:
+        errors.append(str(e))
+    os.close(fd)
+    assert errors == [
+        'must have exactly one of create/read/write/append mode',
+        "invalid mode: 'rr'",
+        "invalid mode: 'q'",
+        "invalid mode: 'U'",
+        'Must have exactly one of create/read/write/append mode and at most one plus',
+        "can't have text and binary mode at once",
+    ]
+    # 'x' is accepted (as 'w': fdopen never creates or truncates)
+    fd = os.open(path, os.O_WRONLY)
+    with os.fdopen(fd, 'x') as f:
+        f.write('x')
+    with open(path) as g:
+        assert g.read() == 'x'
+    os.remove(path)
+
+    errors = []
+    for mode in ['rb', 'r+', 'rw', '']:
+        try:
+            os.popen('echo hi', mode)
+        except ValueError as e:
+            errors.append(str(e))
+    try:
+        os.popen('echo hi', 'r', 0)
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == ["invalid mode 'rb'", "invalid mode 'r+'", "invalid mode 'rw'", "invalid mode ''",
+                      'popen() does not support unbuffered streams']
+
+
 def test_pids():
     pid = os.getpid()
     ppid = os.getppid()
@@ -1514,6 +1561,7 @@ def test_all():
     test_fd_ops()
     test_pipe_fdopen()
     test_fdopen_binary()
+    test_fdopen_popen_invalid_mode()
     test_pids()
     test_rename_renames()
     test_utime()

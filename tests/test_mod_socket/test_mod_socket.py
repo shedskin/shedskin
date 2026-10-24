@@ -473,6 +473,45 @@ def test_makefile_binary():
     b.close()
 
 
+def test_makefile_modes():
+    if sys.platform == 'win32':
+        return
+    a, b = socket.socketpair()
+    errors = []
+    for mode in ['r+', 'a', 'q', 'rt']:
+        try:
+            a.makefile(mode)
+        except ValueError as e:
+            errors.append(str(e))
+    try:
+        a.makefile('rb+')
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == ["invalid mode 'r+' (only r, w, b allowed)", "invalid mode 'a' (only r, w, b allowed)",
+                      "invalid mode 'q' (only r, w, b allowed)", "invalid mode 'rt' (only r, w, b allowed)",
+                      "invalid mode 'rb+' (only r, w, b allowed)"]
+    # 'rw' reads and writes; '' and 'rr' just read
+    f = a.makefile('rw')
+    assert f.mode == 'rw'
+    f.write('ping\n')
+    f.flush()
+    assert b.recv(5) == b'ping\n'
+    b.sendall(b'pong\n')
+    assert f.readline() == 'pong\n'
+    f.close()
+    b.sendall(b'abc\n')
+    g = a.makefile('')
+    assert g.readline() == 'abc\n'
+    g.close()
+    h = a.makefile('rwb')
+    h.write(b'x\n')
+    h.flush()
+    assert b.recv(2) == b'x\n'
+    h.close()
+    a.close()
+    b.close()
+
+
 def test_connect_ex():
     server = socket.create_server(('127.0.0.1', 0))
     port = server.getsockname()[1]
@@ -885,6 +924,7 @@ def test_all():
     test_stream_methods()
     test_makefile()
     test_makefile_binary()
+    test_makefile_modes()
     test_connect_ex()
     test_create_connection()
     test_fileno_close_dup()
