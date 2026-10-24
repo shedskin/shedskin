@@ -476,6 +476,100 @@ def test_deque_remove_missing():
     assert list(d) == [1,2,3]
 
 
+class LtOnly:
+    def __init__(self, k):
+        self.k = k
+    def __lt__(self, other):
+        return self.k < other.k
+
+
+def test_deque_ordering():
+    # regression test (1023-B4): deque had no ordering, so the pyobj
+    # defaults were used and gave wrong answers
+    a = deque([1, 2, 3])
+    b = deque([1, 2, 4])
+    assert a < b and a <= b and b > a and b >= a
+    assert not (a > b) and not (a >= b)
+    assert max([a, b]) == b and min([a, b]) == a
+    assert deque([1]) < deque([1, 2]) and deque([1, 2]) <= deque([1, 2])
+    assert sorted([deque([3]), deque([1, 2]), deque([1])]) == [deque([1]), deque([1, 2]), deque([3])]
+    assert deque(['b']) > deque(['a', 'z'])
+    assert deque([deque([1, 2]), deque([3])]) < deque([deque([1, 3])])
+
+    # partial orders, as for list
+    nan = float('nan')
+    f1 = deque([1.0, nan])
+    f2 = deque([1.0, 2.0])
+    assert not (f1 < f2) and not (f1 <= f2) and not (f1 > f2) and not (f1 >= f2)
+    assert not (deque([{3}]) < deque([{1, 2}])) and not (deque([{3}]) <= deque([{1, 2}]))
+    assert deque([LtOnly(1)]) < deque([LtOnly(2)])
+    assert not (deque([LtOnly(2)]) < deque([LtOnly(1)]))
+
+
+def test_deque_add_mul():
+    # regression test (1023-C2): deque had no +, *, += or *=
+    a = deque([1, 2])
+    assert a + deque([3]) == deque([1, 2, 3])
+    assert a * 2 == deque([1, 2, 1, 2]) and 2 * a == deque([1, 2, 1, 2])
+    assert len(a * 0) == 0 and len(a * -1) == 0
+    assert a == deque([1, 2])  # untouched
+
+    b = a
+    b += [3]
+    assert a is b and a == deque([1, 2, 3])
+    a += a
+    assert a == deque([1, 2, 3, 1, 2, 3])
+    a += (7, 8)
+    assert a == deque([1, 2, 3, 1, 2, 3, 7, 8])
+
+    c = deque('ab')
+    c *= 2
+    assert c == deque('abab')
+    c *= 0
+    assert len(c) == 0
+
+    # the result keeps the maxlen of the left operand
+    m = deque([1, 2, 3], maxlen=4)
+    r = m + deque([4, 5])
+    assert r == deque([2, 3, 4, 5]) and r.maxlen == 4
+    assert (deque([4, 5]) + m) == deque([4, 5, 1, 2, 3])
+    assert str(m * 2) == 'deque([3, 1, 2, 3], maxlen=4)'
+    assert str(m * 1000000000) == 'deque([3, 1, 2, 3], maxlen=4)'
+    m *= 3
+    assert str(m) == 'deque([3, 1, 2, 3], maxlen=4)'
+
+
+def test_deque_error_messages():
+    # 1023-D5: messages as in CPython 3.13
+    d = deque([1, 2])
+    msgs = []
+    try:
+        d.remove(5)
+    except ValueError as e:
+        msgs.append(str(e))
+    try:
+        d.index(5)
+    except ValueError as e:
+        msgs.append(str(e))
+    try:
+        d[7]
+    except IndexError as e:
+        msgs.append(str(e))
+    try:
+        d[7] = 1
+    except IndexError as e:
+        msgs.append(str(e))
+    try:
+        del d[-7]
+    except IndexError as e:
+        msgs.append(str(e))
+    assert msgs == ['5 is not in deque', '5 is not in deque'] + ['deque index out of range'] * 3
+    try:
+        deque(['a']).remove('b')
+    except ValueError as e:
+        assert str(e) == "'b' is not in deque"
+
+
 def test_deque_unhashable():
     # regression test: deque defines __eq__ but had no __hash__ override,
     # so it silently fell back to the default identity-based hash instead
@@ -922,6 +1016,9 @@ def test_all():
     test_deque_eq_identity()
     test_deque_insert_out_of_range()
     test_deque_remove_missing()
+    test_deque_ordering()
+    test_deque_add_mul()
+    test_deque_error_messages()
     test_deque_unhashable()
     test_deque_print_user_repr()
     test_counter_construct_empty()

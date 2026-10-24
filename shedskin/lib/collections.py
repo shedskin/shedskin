@@ -51,6 +51,30 @@ class deque(pyiter):
     def __delitem__(self, i):
         pass
 
+    def __eq__(self, b):
+        return self.unit == b.unit
+    def __ne__(self, b):
+        return self.unit == b.unit
+    def __lt__(self, b):  # for the element comparisons
+        return self.unit < b.unit
+    def __le__(self, b):
+        return self.unit <= b.unit
+    def __gt__(self, b):
+        return self.unit > b.unit
+    def __ge__(self, b):
+        return self.unit >= b.unit
+
+    def __add__(self, b):
+        return self
+        return b
+    def __mul__(self, n):
+        return self
+    def __iadd__(self, b):
+        self.unit = b.unit
+        return self
+    def __imul__(self, n):
+        return self
+
     def __contains__(self, e):
         return True
 

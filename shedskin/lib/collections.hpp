@@ -90,18 +90,18 @@ public:
     }
 
     A __getitem__(__ss_int i) {
-        i = __wrap(this, i);
+        i = __wrap(this, i, "deque index out of range");
         return units[i];
     }
 
     void *__setitem__(__ss_int i, A value) {
-        i = __wrap(this, i);
+        i = __wrap(this, i, "deque index out of range");
         units[i] = value;
         return NULL;
     }
 
     void *__delitem__(__ss_int i) {
-        i = __wrap(this, i);
+        i = __wrap(this, i, "deque index out of range");
         units.erase(units.begin()+i);
         return NULL;
     }
@@ -117,8 +117,44 @@ public:
         return True;
     }
 
+    __ss_int __cmp__(pyobj *p) {
+        if(!p) return 1;
+        return __units_cmp(units, ((deque<A> *)p)->units);
+    }
+
     __ss_int __hash__() {
         throw new TypeError(new str("unhashable type: 'deque'"));
+    }
+
+    deque<A> *__add__(deque<A> *b) {
+        deque<A> *c = copy(); /* keeps our maxlen, as in CPython */
+        c->extend(b);
+        return c;
+    }
+
+    deque<A> *__mul__(__ss_int n) {
+        return copy()->__imul__(n);
+    }
+
+    template<class U> deque<A> *__iadd__(U *iter_) {
+        extend(iter_);
+        return this;
+    }
+
+    deque<A> *__imul__(__ss_int n) {
+        size_t len = units.size();
+        if(n <= 0 || len == 0) {
+            units.clear();
+            return this;
+        }
+        /* only the last maxlen elements survive, so don't build the rest */
+        size_t total = len*(size_t)n;
+        size_t start = (maxlen != -1 && total > (size_t)maxlen) ? total-(size_t)maxlen : 0;
+        auto orig = units;
+        units.clear();
+        for(size_t k = start; k < total; k++)
+            units.push_back(orig[k % len]);
+        return this;
     }
 
     __ss_bool __contains__(A value) {
@@ -190,7 +226,7 @@ public:
            }
            iter++;
        }
-       throw new ValueError(new str("deque.remove(x): x not in deque"));
+       throw new ValueError(__add_strs(2, repr(value), new str(" is not in deque")));
        return NULL;
    }
 
@@ -235,7 +271,7 @@ public:
            if(__eq_id(units[i], value))
                return i;
        }
-       throw new ValueError(new str("value is not in deque"));
+       throw new ValueError(__add_strs(2, repr(value), new str(" is not in deque")));
    }
 
    __ss_int index(A value) {
@@ -303,6 +339,27 @@ public:
 template <class T> __iter<T> *reversed(deque<T> *d) {
     return new __dequereviter<T>(d);
 }
+
+/* ordering, as for list (see __list_order): the first pair of elements that differ decides, else the lengths do */
+using __shedskin__::__gt; /* don't hide the element comparisons */
+using __shedskin__::__ge;
+using __shedskin__::__lt;
+using __shedskin__::__le;
+
+template<class T, class Op> inline __ss_bool __deque_order(deque<T> *a, deque<T> *b, Op op) {
+    if constexpr (!std::is_same<T, void *>::value) { /* void *: empty, or only None */
+        size_t n = std::min(a->units.size(), b->units.size());
+        for(size_t i = 0; i < n; i++)
+            if(!__eq_id(a->units[i], b->units[i]))
+                return op(a->units[i], b->units[i]);
+    }
+    return op((__ss_int)a->units.size(), (__ss_int)b->units.size());
+}
+
+template<class T> inline __ss_bool __gt(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __gt(x, y); }); }
+template<class T> inline __ss_bool __ge(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __ge(x, y); }); }
+template<class T> inline __ss_bool __lt(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __lt(x, y); }); }
+template<class T> inline __ss_bool __le(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __le(x, y); }); }
 
 template <class K, class V> class defaultdict : public dict<K, V> {
     V (*func)();
