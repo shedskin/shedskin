@@ -14,6 +14,12 @@ extern void *buffy;
 extern tuple2<str *, str *> *typecodes;
 
 __ss_int get_itemsize(char typechar);
+/* first char of a typecode; non-ascii maps to an invalid typechar, so that
+   get_itemsize() rejects it instead of e.g. U+0169 silently truncating to 'i' */
+inline char __typechar(str *typecode) {
+    __ss_char c = typecode->unit[0];
+    return c < 128 ? (char)c : '\0';
+}
 void __throw_no_char();
 
 extern class_ *cl_array;
@@ -31,7 +37,7 @@ public:
     array(str *typecode_) {
         this->__class__ = cl_array;
         typecode = typecode_;
-        typechar = typecode_->unit[0];
+        typechar = __typechar(typecode_);
         itemsize = get_itemsize(typechar);
     }
 
@@ -115,7 +121,7 @@ template<> inline void *array<str *>::fromunicode(str *s);
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *iter) {
     typecode = typecode_;
-    typechar = typecode_->unit[0];
+    typechar = __typechar(typecode_);
     itemsize = get_itemsize(typechar);
     /* Generic-iterable path (lists, tuples, generators, list comprehensions,
      * ranges, ...). The array-from-array case, including CPython's
@@ -139,7 +145,7 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *
  * never needs to support __getitem__). */
 template<class T> template<class X> void *array<T>::__init__(str *typecode_, array<X> *arr) {
     typecode = typecode_;
-    typechar = typecode_->unit[0];
+    typechar = __typechar(typecode_);
     itemsize = get_itemsize(typechar);
     if(this->typechar != arr->typechar) {
         /* CPython rejects this combination too: a Python float has no
@@ -168,7 +174,7 @@ template<class T> template<class X> void *array<T>::__init__(str *typecode_, arr
  * rather than something extend() itself should do. */
 template<class T> void *array<T>::__init__(str *typecode_, bytes *b) {
     typecode = typecode_;
-    typechar = typecode_->unit[0];
+    typechar = __typechar(typecode_);
     itemsize = get_itemsize(typechar);
     frombytes(b);
     return NULL;
@@ -383,6 +389,17 @@ template<class T> void *array<T>::clear() {
     return NULL;
 }
 
+/* t > m, for an integer type limit m: comparing directly triggers -Wsign-compare
+   (signed t, unsigned m) or -Wfloat-conversion (m not exact as a double) */
+template<class T, class M> inline bool __gt_limit(T t, M m) {
+    if constexpr(std::is_floating_point<T>::value)
+        return t >= (T)(m/2+1) * 2; /* exact, as m+1 is a power of two */
+    else if constexpr(std::is_signed<M>::value || sizeof(T) > sizeof(M))
+        return t > m;
+    else
+        return false; /* t cannot exceed an unsigned limit at least as wide */
+}
+
 template<class T> void array<T>::fillbuf(T t) {
     switch(typechar) {
         case 'b':
@@ -410,20 +427,20 @@ template<class T> void array<T>::fillbuf(T t) {
             if(t > 4294967295LL) throw new OverflowError(new str("unsigned int is greater than maximum"));
             *((unsigned int *)buffy) = (unsigned int)t; break;
         case 'l':
-            if(t > std::numeric_limits<signed long>::max()) throw new OverflowError(new str("signed long is greater than maximum"));
+            if(__gt_limit(t, std::numeric_limits<signed long>::max())) throw new OverflowError(new str("signed long is greater than maximum"));
             if(t < std::numeric_limits<signed long>::min()) throw new OverflowError(new str("signed long is less than minimum"));
             *((signed long *)buffy) = (signed long)t; break;
         case 'L':
             if(t < 0) throw new OverflowError(new str("can't convert negative value to unsigned long"));
-            if(t > std::numeric_limits<unsigned long>::max()) throw new OverflowError(new str("unsigned long is greater than maximum"));
+            if(__gt_limit(t, std::numeric_limits<unsigned long>::max())) throw new OverflowError(new str("unsigned long is greater than maximum"));
             *((unsigned long *)buffy) = (unsigned long)t; break;
         case 'q':
-            if(t > std::numeric_limits<signed long long>::max()) throw new OverflowError(new str("signed long long is greater than maximum"));
+            if(__gt_limit(t, std::numeric_limits<signed long long>::max())) throw new OverflowError(new str("signed long long is greater than maximum"));
             if(t < std::numeric_limits<signed long long>::min()) throw new OverflowError(new str("signed long long is less than minimum"));
             *((signed long long *)buffy) = (signed long long)t; break;
         case 'Q':
             if(t < 0) throw new OverflowError(new str("can't convert negative int to unsigned"));
-            if(t > std::numeric_limits<unsigned long long>::max()) throw new OverflowError(new str("unsigned long long is greater than maximum"));
+            if(__gt_limit(t, std::numeric_limits<unsigned long long>::max())) throw new OverflowError(new str("unsigned long long is greater than maximum"));
             *((unsigned long long *)buffy) = (unsigned long long)t; break;
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = (double)t; break;

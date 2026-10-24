@@ -2,7 +2,11 @@
 
 /* deflate/inflate: the vendored miniz library (see miniz/README.md), compiled
    as part of this file. only its (mz_-prefixed) zlib-style stream api is used.
-   included first, so its C code sees no shedskin names */
+   included first, so its C code sees no shedskin names (except for Python.h,
+   which must precede any system header) */
+#ifdef __SS_BIND
+#include <Python.h>
+#endif
 #define MINIZ_NO_STDIO
 #define MINIZ_NO_TIME
 #define MINIZ_NO_ARCHIVE_APIS

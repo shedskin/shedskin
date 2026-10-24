@@ -4,9 +4,9 @@
    parsed and compiled by a port of CPython's re._parser/re._compiler
    (sre/compile.hpp), and the scanning loops below follow those of sre.c */
 
+#include "re.hpp"
 #include <stdint.h>
 #include <algorithm>
-#include "re.hpp"
 #include "sre/sre_engine.h"
 #include "sre/compile.hpp"
 

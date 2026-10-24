@@ -510,7 +510,7 @@ template<class K, class V> __ss_int frozendict<K, V>::__hash__() {
 
 template<class K, class V> str *frozendict<K,V>::__repr__() {
     str *r = new str("frozendict({");
-    int i = this->__len__();
+    __ss_int i = this->__len__();
 
     for (const auto& [key, value] : this->gcd) {
         r->unit += repr(key)->unit;

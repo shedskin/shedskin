@@ -250,6 +250,7 @@ void *reader::parse_process_char(str *s) {
             }
             /* normal character - handle as START_FIELD */
             this->state = START_FIELD;
+            [[fallthrough]];
 
         case START_FIELD:
             /* expecting field */
@@ -298,6 +299,7 @@ void *reader::parse_process_char(str *s) {
         case AFTER_ESCAPED_CRNL:
             if (c == EOL)
                 break;
+            [[fallthrough]];
 
         case IN_FIELD:
             /* in unquoted field */
