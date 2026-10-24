@@ -26,6 +26,11 @@
 #include <signal.h>
 #endif
 
+#ifndef __SS_NOGC
+#include <gc/gc_mark.h> /* GC_generic_malloc */
+#include <gc/gc_inline.h> /* GC_I_PTRFREE, GC_I_NORMAL */
+#endif
+
 namespace __shedskin__ {
 
 
@@ -70,6 +75,20 @@ void __init() {
 #ifndef __SS_NOGC
     GC_INIT();
     GC_set_warn_proc(gc_warning_handler);
+
+#ifdef __SS_FREE_LISTS
+    /* bdwgc only clears the free list of an object kind at the start of a collection if the
+       kind has a 'reclaim list', which it creates on the first small allocation of that kind
+       through GC_generic_malloc. objects of a kind that is only ever allocated through
+       GC_generic_malloc_many (see __ss_gc_malloc_slow and __ss_gc_malloc_atomic_slow) and
+       freed with GC_FREE (as STL containers do) could then stay on the free list during a
+       collection, unmarked, while the collector frees their otherwise empty block. a later
+       GC_generic_malloc_many would hand them out again: a buffer in a free block, which aborts
+       with 'Duplicate large block deallocation' when freed (seen with GCC 15, depending on
+       what happens to be allocated before). so make sure both reclaim lists exist. */
+    GC_FREE(GC_generic_malloc(1, GC_I_PTRFREE));
+    GC_FREE(GC_generic_malloc(1, GC_I_NORMAL));
+#endif
 
     /* GC tuning. bdwgc collects once it has allocated about (live pointer data + roots) /
        free_space_divisor bytes since the last collection, so a program that allocates many
