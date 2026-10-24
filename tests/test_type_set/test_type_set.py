@@ -244,6 +244,71 @@ def test_set_augmented_assign():
     assert sorted(set4) == []
 
 
+class FrozenHolder:
+    def __init__(self):
+        self.f = frozenset([1])
+
+def test_frozenset_augmented_assign():
+    # augmented assignment on a frozenset must rebind, not mutate a shared object
+    k = frozenset([1])
+    d = {k: 'v'}
+    k |= frozenset([2])
+    assert sorted(k) == [1, 2]
+    assert frozenset([1]) in d
+    assert sorted(list(d)[0]) == [1]
+
+    a = frozenset([1, 2])
+    b = a
+    s = {a}
+    a |= frozenset([3])
+    assert sorted(a) == [1, 2, 3] and sorted(b) == [1, 2] and a is not b
+    a = b
+    a &= frozenset([2])
+    assert sorted(a) == [2] and sorted(b) == [1, 2]
+    a = b
+    a -= frozenset([2])
+    assert sorted(a) == [1] and sorted(b) == [1, 2]
+    a = b
+    a ^= frozenset([2, 3])
+    assert sorted(a) == [1, 3] and sorted(b) == [1, 2]
+    assert frozenset([1, 2]) in s
+
+    l = [frozenset([1])]
+    m = l[0]
+    l[0] |= frozenset([2])
+    assert sorted(l[0]) == [1, 2] and sorted(m) == [1]
+
+    o = FrozenHolder()
+    m = o.f
+    o.f |= frozenset([2])
+    assert sorted(o.f) == [1, 2] and sorted(m) == [1]
+
+    dd = {'x': frozenset([1])}
+    m = dd['x']
+    dd['x'] |= frozenset([2])
+    assert sorted(dd['x']) == [1, 2] and sorted(m) == [1]
+
+    # frozenset op= set stays frozen
+    f = frozenset([1])
+    f |= {2}
+    assert sorted(f) == [1, 2]
+    assert repr(f).startswith("frozenset")
+
+    # mutable sets are still updated in place
+    t = {1}
+    u = t
+    t |= {2}
+    t -= {1}
+    assert t is u and sorted(u) == [2]
+
+    # union with a non-set iterable must not copy a stale cached hash
+    a = frozenset([1])
+    h = hash(a)
+    c = a.union([2])
+    assert c in {frozenset([1, 2])}
+    assert hash(c) == hash(frozenset([1, 2]))
+
+
 def test_symmetric_difference_update():
     s = {1, 2, 3, 4}
     assert s.symmetric_difference_update({3, 4, 5}) is None
@@ -392,6 +457,7 @@ def test_all():
     test_set_proper_subset_superset()
     test_set_binary_elem()
     test_set_augmented_assign()
+    test_frozenset_augmented_assign()
     test_symmetric_difference()
     test_symmetric_difference_update()
     test_pop_empty()
