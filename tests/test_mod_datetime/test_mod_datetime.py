@@ -325,6 +325,22 @@ def test_timedelta_float_mul_div():
     assert str(datetime.timedelta(seconds=1) / 3.0) == '0:00:00.333333'
 
 
+def test_timedelta_reflected_mul():
+    td = datetime.timedelta(days=1, hours=2, microseconds=7)
+    a = 2 * td  # int.__mul__(timedelta)
+    assert a == td * 2
+    assert a.days == 2
+    assert str(a) == '2 days, 4:00:00.000014'
+    b = 2.5 * td
+    assert b.seconds == 61200
+    assert str(b) == '2 days, 17:00:00.000018'
+    c = True * td
+    assert c == td
+    assert str(-3 * td) == '-4 days, 17:59:59.999979'
+    assert str(0 * td) == '0:00:00'
+    assert sum([2 * td, td], datetime.timedelta()) == 3 * td
+
+
 def test_date_arithmetic():
     # regression test: for __add__, both operands used to be converted to
     # the union of their types, so that element types get unified (e.g.
@@ -1220,6 +1236,7 @@ def test_all():
         test_timedelta_floordiv()
         test_timedelta_truediv()
         test_timedelta_float_mul_div()
+        test_timedelta_reflected_mul()
         test_date_replace_keeps_unchanged_day_out_of_range()
         test_datetime_replace_keywords()
         test_time_replace_keywords()
