@@ -1459,13 +1459,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if exits:
             self.output("int __fin%d = 0;" % n)
+        # the exception_ptr is rethrown, as it keeps the dynamic type, but
+        # it lives in malloc'd memory: also keep the pointer itself on the
+        # stack, so the GC doesn't collect it while the finally body runs
+        # (it is read again below, so the store can't be optimized away)
         self.output("std::exception_ptr __fin%d_exc;" % n)
+        self.output("BaseException *__fin%d_obj = NULL;" % n)
         if 1 in exits and func and not func.isGenerator:
             assert func.retnode
             rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
             self.output("%s__fin%d_ret{};" % (rettype, n))
         self.output("try {")
         self.out.write(body)
+        self.output("} catch (BaseException *__e) {")
+        self.output("    __fin%d_obj = __e;" % n)
+        self.output("    __fin%d_exc = std::current_exception();" % n)
         self.output("} catch (...) {")
         self.output("    __fin%d_exc = std::current_exception();" % n)
         self.output("}")
@@ -1475,7 +1483,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for child in node.finalbody:
             self.visit(child, func)
 
-        self.output("if (__fin%d_exc)" % n)
+        self.output("if (__fin%d_obj || __fin%d_exc)" % (n, n))
         self.output("    std::rethrow_exception(__fin%d_exc);" % n)
         for exit in sorted(exits):
             self.output("if (__fin%d == %d) {" % (n, exit))

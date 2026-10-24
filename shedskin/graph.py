@@ -2057,9 +2057,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 infer.inode(self.gx, var).copymetoo = True
                 self.gx.types[infer.inode(self.gx, var)] = {(cl, 1)}
 
-        if node.finalbody and func and func.isGenerator:
+        if node.finalbody and isinstance(func, python.Function):
             # the generated C++ resumes after a yield with a goto, which
-            # cannot jump into the try block (or past its declarations)
+            # cannot jump into the try block (or past its declarations).
+            # (func.isGenerator may not be set yet, when the first yield is
+            # in a handler, the else or the finally body)
             for sub in ast.walk(node):
                 if isinstance(sub, ast.Yield):
                     error.error(
