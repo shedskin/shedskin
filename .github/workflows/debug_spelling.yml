@@ -40,8 +40,10 @@ jobs:
     - name: Build test_prog_spelling (exe and ext)
       run: |
         cd tests
-        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -x
-        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -e
+        # runtests also runs the test once: ignore the result, the next step runs it repeatedly
+        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -x || true
+        uv run shedskin runtests --run test_prog_spelling --build-type Release --nocleanup -e || true
+        ls -l build/test_prog_spelling/test_prog_spelling build/test_prog_spelling/test_prog_spelling.so
 
     - name: Run test_prog_spelling repeatedly
       run: bash .github/debug_spelling.sh ${{ github.event.inputs.runs || '100' }}
