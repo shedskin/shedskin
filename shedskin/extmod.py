@@ -374,7 +374,7 @@ class ExtensionModule:
                 "        if (value) ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(value);"
                 % (clname(cl), self.gv.cpp_name(var), vartype)
             )
-        write("    } catch (Exception *e) {")
+        write("    } catch (BaseException *e) {")
         write("        __ss_raise_py(e);")
         write("        return 0;")
         write("    }")
@@ -535,7 +535,7 @@ class ExtensionModule:
             )
             write("    if(p == Py_None) return NULL;")
             write(
-                "    if(PyObject_IsInstance(p, (PyObject *)&%s::%sObjectType)!=1)"
+                "    if(!PyObject_TypeCheck(p, &%s::%sObjectType))"
                 % (cl.module.full_path(), clname(cl))
             )
             write(
@@ -824,7 +824,7 @@ class ExtensionModule:
         )
 
         # convert exceptions
-        write("    } catch (Exception *e) {")
+        write("    } catch (BaseException *e) {")
         write(
             '        __ss_raise_py(e);'
         )
@@ -1169,7 +1169,7 @@ class ExtensionModule:
                 "        self->__ss_object->%s = __to_ss<%s>(value);"
                 % (self.gv.cpp_name(var), typ)
             )
-            write("    } catch (Exception *e) {")
+            write("    } catch (BaseException *e) {")
             write(
                 '        __ss_raise_py(e);'
             )

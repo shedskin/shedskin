@@ -1,3 +1,5 @@
+import sys
+
 # exception subclasses defined in an extension module are exported as Python
 # exception types (with the same bases), so Python code can catch them by
 # type, and their attributes are copied when raised; see exceptions_main.py
@@ -95,6 +97,22 @@ def catch_inside(n):
         return 'OSError ' + str(e)
     return 'none'
 
+def stop(n):
+    # exceptions that do not derive from Exception (1025-A3)
+    if n == 0:
+        raise SystemExit(3)
+    if n == 1:
+        sys.exit('bye')
+    if n == 2:
+        raise SystemExit
+    if n == 3:
+        raise KeyboardInterrupt('ctrl-c')
+    if n == 4:
+        raise GeneratorExit('gen')
+    if n == 5:
+        sys.exit(0)
+    return n
+
 
 if __name__ == '__main__':
     # make sure everything is called with the types used from exceptions_main.py
@@ -105,6 +123,11 @@ if __name__ == '__main__':
             pass
     for i in range(9):
         catch_inside(i)
+    for i in range(7):
+        try:
+            stop(i)
+        except BaseException:
+            pass
     # __str__/__repr__ are only exported when called
     for e in [StrError(1), SubStrError(2), OtherStrError(3), ReprError('r')]:
         str(e), repr(e)

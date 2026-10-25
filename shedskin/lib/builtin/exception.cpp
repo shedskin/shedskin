@@ -313,3 +313,13 @@ str *SystemExit::__repr__() {
         return __add_strs(4, this->__class__->__name__, new str("("), this->message, new str(")"));
     return BaseException::__repr__();
 }
+
+#ifdef __SS_BIND
+PyObject *SystemExit::__py_args__() {
+    if(int_code) /* SystemExit(7), not SystemExit('7') */
+        return Py_BuildValue("(N)", __to_py(code)); /* N: steals the new reference */
+    if(!show_message) /* plain SystemExit: no args, so code is None */
+        return PyTuple_New(0);
+    return 0; /* use message */
+}
+#endif
