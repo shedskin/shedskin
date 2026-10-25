@@ -726,6 +726,133 @@ def test_buffer_size_errors():
     assert a == 0x0201
 
 
+def test_e():
+    # IEEE 754 half precision (binary16)
+    assert struct.calcsize('<e') == 2
+    assert struct.pack('<e', 1.5) == b'\x00>'
+    assert struct.pack('>e', 1.5) == b'>\x00'
+    assert struct.pack('<e', 3) == b'\x00B'
+    assert struct.pack('<e', -0.0) == b'\x00\x80'
+    assert struct.pack('<e', 65504.0) == b'\xff{'
+    assert struct.pack('<e', 65519.0) == b'\xff{'
+    assert struct.pack('<e', float('inf')) == b'\x00|'
+    assert struct.pack('<e', -float('inf')) == b'\x00\xfc'
+    assert struct.pack('<e', float('nan')) == b'\x00~'
+    assert struct.pack('<e', 0.1) == b'f.'
+    assert struct.pack('<e', 1e-8) == b'\x00\x00'  # underflow
+    assert struct.pack('<e', 6e-8) == b'\x01\x00'  # subnormal
+    assert struct.pack('<e', 3e-5) == b'\xf7\x01'
+
+    # round half to even
+    assert struct.pack('<e', 1.00048828125) == b'\x00<'
+    assert struct.pack('<e', 1.00146484375) == b'\x02<'
+    assert struct.pack('<e', 2.0**-24*2.5) == b'\x02\x00'
+
+    x, = struct.unpack('<e', b'\x00>')
+    assert x == 1.5
+    x, = struct.unpack('>e', b'>\x00')
+    assert x == 1.5
+    x, = struct.unpack('<e', b'f.')
+    assert x == 0.0999755859375
+    x, = struct.unpack('<e', b'\x01\x00')
+    assert x == 5.960464477539063e-08
+    x, = struct.unpack('<e', b'\x00|')
+    assert x == float('inf')
+    x, = struct.unpack('<e', b'\x00\xfc')
+    assert x == -float('inf')
+    x, = struct.unpack('<e', b'\x01|')
+    assert x != x  # nan
+    x, = struct.unpack('<e', struct.pack('<e', -2.75))
+    assert x == -2.75
+
+    a, b = struct.unpack('<2e', struct.pack('<2e', 0.5, -4.0))
+    assert (a, b) == (0.5, -4.0)
+
+    # overflow
+    error = ''
+    try:
+        struct.pack('<e', 65520.0)
+    except OverflowError as ex:
+        error = str(ex)
+    assert error == 'float too large to pack with e format'
+
+    error = ''
+    try:
+        struct.pack('e', 1e6)
+    except OverflowError as ex:
+        error = str(ex)
+    assert error == 'float too large to pack with e format'
+
+    error = ''
+    try:
+        struct.pack('e', b'x')
+    except struct.error as ex:
+        error = str(ex)
+    assert error == 'required argument is not a float'
+
+
+def test_complex():
+    # 'F': complex of two floats, 'D': complex of two doubles
+    assert struct.calcsize('<F') == 8
+    assert struct.calcsize('<D') == 16
+    assert struct.calcsize('<bD') == 17
+    assert struct.calcsize('2F') == 16
+    assert struct.calcsize('0D') == 0
+
+    assert struct.pack('<F', 1+2j) == b'\x00\x00\x80?\x00\x00\x00@'
+    assert struct.pack('>F', 1+2j) == b'?\x80\x00\x00@\x00\x00\x00'
+    assert struct.pack('>D', 1.5) == b'?\xf8' + 14*b'\x00'
+    assert struct.pack('<F', 3) == b'\x00\x00@@\x00\x00\x00\x00'
+    assert struct.pack('<D', 1j) == 14*b'\x00' + b'\xf0?'
+    assert struct.pack('<F', 1e300j) == b'\x00\x00\x00\x00\x00\x00\x80\x7f'
+
+    z, = struct.unpack('<F', struct.pack('<F', 1+2j))
+    assert z == 1+2j
+    z, = struct.unpack('>D', struct.pack('>D', 1.25-2j))
+    assert z == 1.25-2j
+    z, w = struct.unpack('<FD', struct.pack('<FD', -0.5j, 3.0))
+    assert z == -0.5j
+    assert w == 3+0j
+
+    data = struct.pack('<bDe', 7, 2+3j, 0.5)
+    a, z, x = struct.unpack('<bDe', data)
+    assert a == 7 and z == 2+3j and x == 0.5
+    z, x = struct.unpack_from('<De', data, 1)
+    assert z == 2+3j and x == 0.5
+
+    buf = bytearray(10)
+    struct.pack_into('<F', buf, 1, 1-1j)
+    assert buf == b'\x00\x00\x00\x80?\x00\x00\x80\xbf\x00'
+
+    error = ''
+    try:
+        struct.pack('F', b'x')
+    except struct.error as ex:
+        error = str(ex)
+    assert error == 'required argument is not a complex'
+
+    error = ''
+    try:
+        struct.pack('<d', 1j)
+    except struct.error as ex:
+        error = str(ex)
+    assert error == 'required argument is not a float'
+
+
+def test_e_complex_native_align():
+    # native alignment: 'e' like short, 'F' like float, 'D' like double
+    assert struct.calcsize('be') == struct.calcsize('bh')
+    assert struct.calcsize('bF') == struct.calcsize('bf') + struct.calcsize('f')
+    assert struct.calcsize('bD') == struct.calcsize('bd') + struct.calcsize('d')
+    assert struct.calcsize('b0Fb') == struct.calcsize('b0fb')
+
+    data = struct.pack('bFbDe', 1, 1j, 2, -3.5+1j, 2.5)
+    assert len(data) == struct.calcsize('bFbDe')
+    a, z, b, w, x = struct.unpack('bFbDe', data)
+    assert a == 1 and z == 1j and b == 2
+    assert w == -3.5+1j and x == 2.5
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -756,6 +883,9 @@ def test_all():
     test_zero_count()
     test_pack_into_pad_align()
     test_buffer_size_errors()
+    test_e()
+    test_complex()
+    test_e_complex_native_align()
 
 
 if __name__ == '__main__':

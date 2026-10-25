@@ -700,6 +700,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             "N": "i",
             "f": "f",
             "d": "f",
+            "e": "f",
+            "F": "c",
+            "D": "c",
             "s": "s",
             "p": "s",
         }
@@ -717,6 +720,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     "s": "bytes",
                     "b": "bool",
                     "f": "float",
+                    "c": "complex",
                     "x": "pad",
                 }[char_type[c]]
                 if rtype == "bytes" and c != "c":
@@ -749,6 +753,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     result.append(ast.Constant(b""))
                 elif t == "float":
                     result.append(ast.Constant(1.0))
+                elif t == "complex":
+                    result.append(ast.Constant(1j))
                 elif t == "bool":
                     result.append(ast.Constant(True))
         return ast.Tuple(result, ast.Load())
