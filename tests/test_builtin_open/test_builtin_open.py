@@ -386,6 +386,47 @@ def test_open_exclusive():
     os.remove('uexcl.txt')
 
 
+def test_open_mode_order():
+    # the mode characters may come in any order ('br' is 'rb')
+    with open('uorder.txt', 'bw') as g:
+        g.write(b'pre')
+    with open('uorder.txt', 'ba') as g:
+        g.write(b'cious\n')
+    with open('uorder.txt', 'br') as g:
+        assert g.read() == b'precious\n'
+    with open('uorder.txt', 'tr') as f:
+        assert f.read() == 'precious\n'
+    with open('uorder.txt', '+r') as f:
+        assert f.read(3) == 'pre'
+    with open('uorder.txt', 'b+r') as g:
+        assert g.read(3) == b'pre'
+        g.write(b'C')
+    assert rtext('uorder.txt') == 'preCious\n'
+    with open('uorder.txt', 'tw') as f:
+        f.write('x')
+    with open('uorder.txt', '+a') as f:
+        f.write('y')
+    assert rtext('uorder.txt') == 'xy'
+    os.remove('uorder.txt')
+    with open('uorder.txt', 'bx') as g:
+        g.write(b'hop')
+    try:
+        open('uorder.txt', 'tx')
+        assert False
+    except FileExistsError:
+        pass
+    os.remove('uorder.txt')
+    with open('uorder.txt', 'tx') as f:
+        f.write('hop')
+    fd = os.open('uorder.txt', os.O_RDONLY)
+    with os.fdopen(fd, 'br') as g:
+        assert g.read() == b'hop'
+    fd = os.open('uorder.txt', os.O_RDONLY)
+    with os.fdopen(fd, 'tr') as f:
+        assert f.read() == 'hop'
+    os.remove('uorder.txt')
+
+
 def test_newline_empty_splits_on_cr():
     # newline='': lines end at '\r', '\n' and '\r\n', untranslated
     with open('ucr.bin', 'wb') as g:
@@ -630,6 +671,7 @@ def test_all():
     test_lineendings()
     test_open_directory_raises_oserror()
     test_closed_is_bool()
+    test_open_mode_order()
 
 
 if __name__ == '__main__':

@@ -149,6 +149,7 @@ inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "
 #endif
 
 void __check_open_mode(str *mode);
+str *__c_open_mode(str *mode, bool excl);
 
 file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
 file *open(bytes *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);

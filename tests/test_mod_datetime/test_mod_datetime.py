@@ -61,6 +61,47 @@ def test_date_replace_keeps_unchanged_day_out_of_range():
     # sanity: still works fine when the resulting day is valid
     assert datetime.date(2024, 1, 15).replace(month=4) == datetime.date(2024, 4, 15)
 
+def test_date_replace_zero():
+    # 0 is an explicit (invalid) value, not "keep the old field"
+    d = datetime.date(2020, 5, 6)
+    errors = []
+    for y, m, dd in [(0, 5, 6), (2020, 0, 6), (2020, 5, 0)]:
+        try:
+            d.replace(y, m, dd)
+        except ValueError as e:
+            errors.append(str(e))
+    try:
+        d.replace(year=0)
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        d.replace(month=0)
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        d.replace(day=0)
+    except ValueError as e:
+        errors.append(str(e))
+    try:
+        d.replace(10000)
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == ['year 0 is out of range', 'month must be in 1..12', 'day is out of range for month',
+                      'year 0 is out of range', 'month must be in 1..12', 'day is out of range for month',
+                      'year 10000 is out of range']
+    try:
+        datetime.date(0, 1, 1)
+    except ValueError as e:
+        assert str(e) == 'year 0 is out of range'
+    try:
+        datetime.datetime(2020, 1, 1).replace(year=0)
+    except ValueError as e:
+        assert str(e) == 'year 0 is out of range'
+    assert d.replace() == d
+    assert d.replace(2021) == datetime.date(2021, 5, 6)
+    assert d.replace(2021, 6) == datetime.date(2021, 6, 6)
+    assert d.replace(day=7) == datetime.date(2020, 5, 7)
+
 
 def test_datetime_replace_keywords():
     # each single keyword argument must actually update that field, and
@@ -1237,6 +1278,7 @@ def test_all():
         test_timedelta_truediv()
         test_timedelta_float_mul_div()
         test_timedelta_reflected_mul()
+        test_date_replace_zero()
         test_date_replace_keeps_unchanged_day_out_of_range()
         test_datetime_replace_keywords()
         test_time_replace_keywords()

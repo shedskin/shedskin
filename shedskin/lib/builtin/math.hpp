@@ -268,7 +268,7 @@ template<> inline int __mods(int a, int b) {
     return m;
 }
 template<> inline __ss_float __mods(__ss_float a, __ss_float b) {
-    __SS_ZERO_CHECK(b, "float modulo");
+    __SS_ZERO_CHECK(b, "float modulo by zero");
     __ss_float m;
     __float_divmod(a, b, &m);
     return m;

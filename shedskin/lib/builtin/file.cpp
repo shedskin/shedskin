@@ -70,15 +70,25 @@ void __check_open_mode(str *mode) {
         throw new ValueError(new str("Must have exactly one of create/read/write/append mode and at most one plus"));
 }
 
+/* rewrite a (validated) mode for C fopen()/fdopen(): these need one of 'rwa'
+   first (so e.g. 'br' becomes 'rb'), and C11 only accepts 'x' as a trailing
+   modifier of a 'w' mode (e.g. 'x+' becomes 'w+x'; without excl, as for
+   fdopen(), it is dropped) */
+str *__c_open_mode(str *mode, bool excl) {
+    const auto &u = mode->unit;
+    bool x = u.find('x') != std::string::npos;
+    str *m = new str(x ? "w" : u.find('r') != std::string::npos ? "r" : u.find('w') != std::string::npos ? "w" : "a");
+    if (u.find('+') != std::string::npos)
+        m->unit += '+';
+    if (u.find('b') != std::string::npos)
+        m->unit += 'b';
+    if (x && excl)
+        m->unit += 'x';
+    return m;
+}
+
 static FILE *__ss_fopen(str *file_name, str *flags) {
-    /* exclusive creation: C11 only accepts 'x' as a trailing modifier
-       of a 'w' mode, e.g. 'x+' becomes 'w+x' */
-    size_t excl = flags->unit.find('x');
-    if (excl != std::string::npos) {
-        flags = new str(flags->unit);
-        flags->unit[excl] = 'w';
-        flags->unit += 'x';
-    }
+    flags = __c_open_mode(flags, true);
     /* like cpython (PEP 446): the file descriptor is non-inheritable */
 #ifdef WIN32
     return _wfopen(__ss_wpath(file_name).c_str(), (__ss_wpath(flags) + L"N").c_str());

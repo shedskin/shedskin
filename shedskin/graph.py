@@ -2453,7 +2453,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(node.value, func)
                 sinfo = self.struct_info(rvalue2.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
-                self.visit(ast.Assign(node.targets, faketuple), func)
+                self.visit(ast.copy_location(ast.Assign(node.targets, faketuple), node), func)
                 tvar = self.temp_var2(
                     rvalue2.args[1], infer.inode(self.gx, rvalue2.args[1]), func
                 )

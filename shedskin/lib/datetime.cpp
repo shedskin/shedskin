@@ -210,7 +210,7 @@ static bool iso_all_digits(const __GC_STR &s, size_t start, size_t len) {
 date::date(__ss_int year_, __ss_int month_, __ss_int day_){
     __class__ = cl_date;
 
-    if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+    if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
     if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
     if(day_<=0 || day_>days_in_month(year_,month_)) throw new ValueError(new str("day is out of range for month"));
 
@@ -332,16 +332,16 @@ __ss_int date::__hash__() {
     return hash_combine(hash_combine(year, month), day);
 }
 
-date *date::replace(__ss_int year_, __ss_int month_, __ss_int day_) {
+date *date::replace(__ss_int __args, __ss_int year_, __ss_int month_, __ss_int day_) {
     date* t = new date(this);
 
-    if(year_!=0) {
-        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+    if((__args & 1)==1) {
+        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
         t->year=year_;}
-    if(month_!=0) {
+    if((__args & 2)==2) {
         if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
         t->month=month_;}
-    if(day_!=0) {
+    if((__args & 4)==4) {
         if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
         t->day=day_;
     } else if(t->day>days_in_month(t->year,t->month)) {
@@ -843,7 +843,7 @@ datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __
     datetime *t = new datetime(this);
 
    if((__args & 1)==1) {
-        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
         t->year=year_;}
     if((__args & 2)==2) {
         if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
