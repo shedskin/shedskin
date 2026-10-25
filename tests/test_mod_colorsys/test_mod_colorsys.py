@@ -88,11 +88,30 @@ def test_fp_contraction():
     assert colorsys.rgb_to_yiq(0.005 * one, 0.5, 0.7) == (0.3735, -0.36084499999999997, -0.043015)
     assert colorsys.rgb_to_yiq(0.005 * one, 0.85, 0.7) == (0.5799999999999998, -0.4578999999999999, -0.22679999999999986)
 
+def test_zero_division():
+    # out-of-range input: CPython raises instead of returning inf
+    assert colorsys.rgb_to_hsv(-1.0, 1.0, 0.0) == (0.4166666666666667, 2.0, 1.0)
+    assert colorsys.rgb_to_hls(0.0, -1.0, 0.0) == (0.8333333333333334, -0.5, -1.0)
+    err = False
+    try:
+        colorsys.rgb_to_hls(-1.0, 1.0, 0.0)
+    except ZeroDivisionError as e:
+        err = True
+        assert str(e) == 'float division by zero'
+    assert err
+    err = False
+    try:
+        colorsys.rgb_to_hsv(0.0, -1.0, 0.0)
+    except ZeroDivisionError:
+        err = True
+    assert err
+
 def test_all():
     test_colorsys()
     test_yiq_roundtrip()
     test_hsv_hue_sextants()
     test_fp_contraction()
+    test_zero_division()
 
 
 if __name__ == "__main__":

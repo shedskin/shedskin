@@ -12,6 +12,7 @@
 #include <bit>
 
 using namespace __shedskin__;
+namespace __collections__ { template <class A> class deque; }
 namespace __random__ {
 
 void seed_xoshiro256(uint64_t initial_seed);
@@ -97,6 +98,7 @@ public:
     template <class A> void *shuffle(list<A> *x);
     template <class A, class C> list<A> *sample(pyiter<A> *population, __ss_int k, C counts);
     template <class A, class C> list<A> *sample(pyseq<A> *population, __ss_int k, C counts);
+    template <class A, class C> list<A> *sample(__collections__::deque<A> *population, __ss_int k, C counts);
     virtual bytes *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
@@ -186,7 +188,11 @@ template <class A> void *shuffle(list<A> *x) {
 }
 
 template <class A, class C> list<A> *sample(pyiter<A> *population, __ss_int k, C counts) {
-    return _inst->sample(new list<A>(population), k, counts);
+    return _inst->sample(population, k, counts);
+}
+
+template <class A, class C> list<A> *sample(__collections__::deque<A> *population, __ss_int k, C counts) {
+    return _inst->sample(population, k, counts);
 }
 
 template <class A, class C> list<A> *sample(pyseq<A> *population, __ss_int k, C counts) {
@@ -209,7 +215,7 @@ template <class W> inline std::vector<W> __random_elem_vector(pyiter<W> *) { ret
 inline std::vector<__ss_int> __random_elem_vector(void *) { return std::vector<__ss_int>(); }
 
 extern str *const_choices_both, *const_choices_len, *const_choices_zero, *const_choices_finite;
-extern str *const_sample_counts_len, *const_sample_counts_neg;
+extern str *const_sample_counts_len, *const_sample_counts_neg, *const_sample_sequence;
 
 template <class A> void *Random::shuffle(list<A> *x) {
     /**
@@ -231,6 +237,13 @@ template <class A> void *Random::shuffle(list<A> *x) {
 }
 
 template <class A, class C> list<A> *Random::sample(pyiter<A> *population, __ss_int k, C counts) {
+    pyseq<A> *seq = dynamic_cast<pyseq<A> *>(population);
+    if (!seq)
+        throw (new TypeError(const_sample_sequence)); /* sets, dicts, generators.. */
+    return sample(seq, k, counts);
+}
+
+template <class A, class C> list<A> *Random::sample(__collections__::deque<A> *population, __ss_int k, C counts) {
     return sample(new list<A>(population), k, counts);
 }
 
