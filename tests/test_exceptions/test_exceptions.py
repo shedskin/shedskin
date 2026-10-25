@@ -46,6 +46,118 @@ def test_assert_error():
     assert error
 
 
+class Truthy:
+    def __init__(self, value):
+        self.value = value
+
+    def __bool__(self):
+        return self.value
+
+
+class Sized:
+    def __init__(self, n):
+        self.n = n
+
+    def __len__(self):
+        return self.n
+
+
+def test_assert_truthiness():
+    l = [1]
+    l.remove(1)
+    d = {1: 2}
+    d.clear()
+    s = {1}
+    s.clear()
+    msgs = []
+    try:
+        assert l, 'empty list'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert '', 'empty str'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert b'', 'empty bytes'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert d, 'empty dict'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert s, 'empty set'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert 0.0, 'zero float'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert 0, 'zero int'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert Truthy(False), 'falsy'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert Sized(0), 'zero len'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert [1], 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert 'a', 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert {1: 2}, 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert 0.5, 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert Truthy(True), 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    try:
+        assert Sized(2), 'x'
+    except AssertionError as e:
+        msgs.append(str(e))
+    assert msgs == ['empty list', 'empty str', 'empty bytes', 'empty dict',
+                    'empty set', 'zero float', 'zero int', 'falsy', 'zero len']
+
+    # boolean operators on containers
+    error = False
+    try:
+        assert [1] and l, 'and'
+    except AssertionError:
+        error = True
+    assert error
+    error = False
+    try:
+        assert l or '', 'or'
+    except AssertionError:
+        error = True
+    assert error
+    assert l or 'a'
+    assert not l
+
+    # literal
+    error = False
+    try:
+        assert '', 'literal'
+    except AssertionError as e:
+        error = str(e) == 'literal'
+    assert error
+
+
 def test_custom_error():
     error = False
     try:
@@ -755,6 +867,7 @@ def test_all():
     test_oserror_str_repr_filename()
     test_key_error()
     test_assert_error()
+    test_assert_truthiness()
     test_index_error()
     test_value_error()
     test_os_error()

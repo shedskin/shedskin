@@ -1394,7 +1394,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Visit an assert node"""
         self.start("ASSERT(")
-        self.visitm(node.test, ", ", func)
+        self.bool_test(node.test, func)
+        self.append(", ")
         if node.msg:
             if not self.only_classes(node.msg, ("str_",)):
                 error.error(
