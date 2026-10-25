@@ -518,13 +518,20 @@ void *mmap::resize(__ss_int new_size)
     {
         __throw_oserror();
     }
-    if (::munmap(m_begin, __size()) == -1)
-    {
-        __throw_oserror();
-    }
     void *temp = ::mmap(0, (size_t)new_size, prot, flags, fd, offset);
     if (temp == MAP_FAILED)
     {
+        __throw_oserror();
+    }
+    /* an anonymous mapping has no file to carry its contents over, so
+       copy them (mremap() would have kept them) */
+    if (fd == -1)
+    {
+        memcpy(temp, m_begin, std::min(__size(), (size_t)new_size));
+    }
+    if (::munmap(m_begin, __size()) == -1)
+    {
+        ::munmap(temp, (size_t)new_size);
         __throw_oserror();
     }
     m_begin = static_cast<iterator>(temp);

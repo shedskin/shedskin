@@ -843,8 +843,10 @@ def test_resize_refused():
         assert str(e) == "mmap: can't expand a shared anonymous mapping"
     assert error
     assert len(m) == 100
+    m[10] = 5
     m.resize(50)  # shrinking is fine
     assert len(m) == 50
+    assert m[10] == 5
     m.close()
 
     m = mmap.mmap(-1, 100, flags=mmap.MAP_PRIVATE)
