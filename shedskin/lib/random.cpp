@@ -180,7 +180,7 @@ __ss_float Random::paretovariate(__ss_float alpha) {
     __ss_float u;
 
     u = (1.0-this->random());
-    return (1.0/__power(u, (1.0/alpha)));
+    return (1.0/__power(u, __divs(1.0, alpha)));
 }
 
 static str *__empty_range(const char *func, __ss_int a, __ss_int b, str *step=NULL) {
@@ -291,7 +291,7 @@ __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
     __ss_float u;
 
     u = (1.0-this->random());
-    return (alpha*__power(-__math__::log(u), (1.0/beta)));
+    return (alpha*__power(-__math__::log(u), __divs(1.0, beta)));
 }
 
 __ss_int Random::binomialvariate(__ss_int n, __ss_float p) {
@@ -551,7 +551,7 @@ __ss_float Random::expovariate(__ss_float lambd) {
     return (-__math__::log(u)/lambd);
     */
 
-    return (-__math__::log(1.0 - this->random())/lambd);
+    return __divs(-__math__::log(1.0 - this->random()), lambd);
 }
 
 __ss_int Random::getrandbits(__ss_int k) {

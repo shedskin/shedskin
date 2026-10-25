@@ -391,6 +391,29 @@ def test_triangular_degenerate():
     assert random.triangular(3.0, 3.0) == 3.0
 
 
+def test_variates_zero_division():
+    # regression test: these used to return inf/0.0 instead of raising
+    msgs = []
+    try:
+        random.expovariate(0.0)
+    except ZeroDivisionError as e:
+        msgs.append(str(e))
+    try:
+        random.paretovariate(0.0)
+    except ZeroDivisionError as e:
+        msgs.append(str(e))
+    try:
+        random.weibullvariate(1.0, 0.0)
+    except ZeroDivisionError as e:
+        msgs.append(str(e))
+    r = random.Random(1)
+    try:
+        r.expovariate(0.0)
+    except ZeroDivisionError as e:
+        msgs.append(str(e))
+    assert msgs == ['float division by zero'] * 4
+
+
 def test_binomialvariate_args():
     # regression test: invalid n and p were silently accepted
     assert random.binomialvariate(5, 0.0) == 0
@@ -738,6 +761,7 @@ def test_all():
     test_wide_ranges()
     test_range_errors()
     test_triangular_degenerate()
+    test_variates_zero_division()
     test_binomialvariate_args()
     test_instance_seeding()
     test_choices_weights()
