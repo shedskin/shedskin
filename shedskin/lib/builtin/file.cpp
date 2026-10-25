@@ -419,10 +419,15 @@ list<str *> *file::readlines(__ss_int /*size_hint*/) {
 
 void *file::close() {
     if(f and not closed) {
-        flush();
-        if(fclose(f))
-            __throw_oserror();
+        /* close even when flushing fails, as CPython */
+        int err = FFLUSH(f) ? errno : 0;
+        if(fclose(f) and not err)
+            err = errno;
         closed = True;
+        if(err) {
+            errno = err;
+            __throw_oserror();
+        }
     }
     return NULL;
 }
@@ -638,10 +643,15 @@ list<bytes *> *file_binary::readlines(__ss_int /*size_hint*/) {
 
 void *file_binary::close() {
     if(f and not closed) {
-        flush();
-        if(fclose(f))
-            __throw_oserror();
+        /* close even when flushing fails, as CPython */
+        int err = FFLUSH(f) ? errno : 0;
+        if(fclose(f) and not err)
+            err = errno;
         closed = True;
+        if(err) {
+            errno = err;
+            __throw_oserror();
+        }
     }
     return NULL;
 }

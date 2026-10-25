@@ -1748,19 +1748,28 @@ void *link(str *src, str *dst) {
 __ss_int pathconf(str *path, str *name_) {
     if(!pathconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return pathconf(path, pathconf_names->__getitem__(name_)); /* XXX errors */
+    return pathconf(path, pathconf_names->__getitem__(name_));
 }
 __ss_int pathconf(str *path, __ss_int name_) {
-    return (__ss_int)::pathconf(__ss_cpath(path, "pathconf"), (int)name_); /* XXX errors */
+    /* -1 with errno unchanged means 'no limit' */
+    errno = 0;
+    long result = ::pathconf(__ss_cpath(path, "pathconf"), (int)name_);
+    if(result == -1 and errno != 0)
+        __throw_oserror(path);
+    return (__ss_int)result;
 }
 
 __ss_int fpathconf(__ss_int fd, str *name_) {
     if(!pathconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return fpathconf(fd, pathconf_names->__getitem__(name_)); /* XXX errors */
+    return fpathconf(fd, pathconf_names->__getitem__(name_));
 }
 __ss_int fpathconf(__ss_int fd, __ss_int name_) {
-    return (__ss_int)::fpathconf((int)fd, (int)name_); /* XXX errors */
+    errno = 0;
+    long result = ::fpathconf((int)fd, (int)name_);
+    if(result == -1 and errno != 0)
+        __throw_oserror();
+    return (__ss_int)result;
 }
 
 str *confstr(str *name_) {
@@ -1770,19 +1779,26 @@ str *confstr(str *name_) {
 }
 str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
-    size_t size = ::confstr((int)name_, buf, MAXENTRIES); /* XXX errors */
-    if(size == std::string::npos)
+    errno = 0;
+    size_t size = ::confstr((int)name_, buf, MAXENTRIES);
+    if(size == 0 and errno != 0)
         __throw_oserror();
+    if(size == 0)
+        return new str(); /* XXX CPython returns None */
     return new str(buf);
 }
 
 __ss_int sysconf(str *name_) {
     if(!sysconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return sysconf(sysconf_names->__getitem__(name_)); /* XXX errors */
+    return sysconf(sysconf_names->__getitem__(name_));
 }
 __ss_int sysconf(__ss_int name_) {
-    return (__ss_int)::sysconf((int)name_); /* XXX errors */
+    errno = 0;
+    long result = ::sysconf((int)name_);
+    if(result == -1 and errno != 0)
+        __throw_oserror();
+    return (__ss_int)result;
 }
 
 tuple<__ss_float> *getloadavg() {

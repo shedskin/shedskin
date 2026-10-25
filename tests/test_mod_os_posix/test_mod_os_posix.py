@@ -533,6 +533,61 @@ def test_inheritable():
     os.remove(path)
 
 
+def test_close_after_failed_flush():
+    # close() closes the file even when the final flush fails
+    f = open('cftest.txt', 'w')
+    f.write('abc')
+    os.close(f.fileno())
+    err = 0
+    try:
+        f.close()
+    except OSError as e:
+        err = e.errno
+    assert err == 9
+    assert f.closed
+    f.close()  # no-op now
+
+    g = open('cftest.txt', 'wb')
+    g.write(b'abc')
+    os.close(g.fileno())
+    err = 0
+    try:
+        g.close()
+    except OSError as e:
+        err = e.errno
+    assert err == 9
+    assert g.closed
+    g.close()
+    os.remove('cftest.txt')
+
+
+def test_pathconf_errors():
+    assert os.pathconf('.', 'PC_NAME_MAX') > 0
+    assert os.sysconf('SC_PAGE_SIZE') > 0
+    assert os.confstr('CS_PATH') != ''
+    try:
+        os.pathconf('nope.txt', 'PC_NAME_MAX')
+        assert False
+    except OSError as e:
+        assert str(e) == "[Errno 2] No such file or directory: 'nope.txt'"
+        assert e.filename == 'nope.txt'
+    try:
+        os.fpathconf(987, 'PC_NAME_MAX')
+        assert False
+    except OSError as e:
+        assert str(e) == '[Errno 9] Bad file descriptor'
+    try:
+        os.sysconf(987654)
+        assert False
+    except OSError as e:
+        assert e.errno == 22
+    try:
+        os.confstr(987654)
+        assert False
+    except OSError as e:
+        assert e.errno == 22
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -554,6 +609,8 @@ def test_all():
     test_broken_pipe()
     test_pty_terminal()
     test_inheritable()
+    test_close_after_failed_flush()
+    test_pathconf_errors()
 
 
 if __name__ == '__main__':
