@@ -130,6 +130,16 @@ void *Error::__init__(str *msg) {
     return NULL;
 }
 
+/* as in CPython, both read 'message', which ParsingError::append()
+   extends, rather than args[0] */
+str *Error::__repr__() {
+    return message;
+}
+
+str *Error::__str__() {
+    return message;
+}
+
 
 /**
 class NoSectionError
@@ -223,7 +233,7 @@ class_ *cl_InterpolationMissingOptionError;
 void *InterpolationMissingOptionError::__init__(str *option_, str *section_, str *rawval, str *reference_) {
     str *msg;
 
-    msg = __mod6(const_6, 4, section_, option_, reference_, rawval);
+    msg = __mod6(const_6, 4, option_, section_, reference_, rawval);
     InterpolationError::__init__(option_, section_, msg);
     reference = reference_;
     return NULL;
@@ -1535,11 +1545,11 @@ void __init() {
     const_3 = new str("No section: %r");
     const_4 = new str("Section %r already exists");
     const_5 = new str("No option %r in section: %r");
-    const_6 = new str("Bad value substitution:\n\tsection: [%s]\n\toption : %s\n\tkey    : %s\n\trawval : %s\n");
+    const_6 = new str("Bad value substitution: option %r in section %r contains an interpolation key %r which is not a valid option name. Raw value: %r");
     const_7 = new str("Recursion limit exceeded in value substitution: option %r in section %r contains an interpolation key which cannot be substituted in %d steps. Raw value: %r");
     const_8 = new str("Source contains parsing errors: %r");
     const_9 = new str("\n\t[line %2d]: %r");
-    const_10 = new str("File contains no section headers.\nfile: %s, line: %d\n%r");
+    const_10 = new str("File contains no section headers.\nfile: %r, line: %d\n%r");
     const_11 = new str("[%s]\n");
     const_12 = new str("%s = %s\n");
     const_13 = new str("\n");
