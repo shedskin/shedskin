@@ -3,6 +3,7 @@
 #include "struct.hpp"
 #include <stdio.h>
 #include <string.h>
+#include <cmath>
 
 namespace __struct__ {
 
@@ -26,6 +27,9 @@ unsigned int get_itemsize(char order, char c) {
             case 'Q': return sizeof(unsigned long long);
             case 'f': return sizeof(float);
             case 'd': return sizeof(double);
+            case 'e': return 2;
+            case 'F': return 2*sizeof(float);
+            case 'D': return 2*sizeof(double);
 //            case 'n': return sizeof(ssize_t); MSVC?
             case 'N': return sizeof(size_t);
         }
@@ -43,9 +47,22 @@ unsigned int get_itemsize(char order, char c) {
             case 'Q': return 8;
             case 'f': return 4;
             case 'd': return 8;
+            case 'e': return 2;
+            case 'F': return 8;
+            case 'D': return 16;
         }
     }
     return 0;
+}
+
+/* native alignment: complex types align like their components */
+unsigned int get_alignment(char order, char c) {
+    switch(c) {
+        case 'e': return (order == '@') ? sizeof(short) : 2;
+        case 'F': return get_itemsize(order, 'f');
+        case 'D': return get_itemsize(order, 'd');
+    }
+    return get_itemsize(order, c);
 }
 
 __ss_int padding(char o, __ss_int pos, unsigned int itemsize) {
@@ -139,10 +156,85 @@ __ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int, __ss_in
     return result;
 }
 
+/* IEEE 754 binary16 conversion, following CPython's PyFloat_Pack2/PyFloat_Unpack2 */
+
+static unsigned short pack_half(double x) {
+    unsigned short sign, bits;
+    int e;
+
+    if(x == 0.0) {
+        sign = (std::copysign(1.0, x) == -1.0);
+        e = 0;
+        bits = 0;
+    } else if(std::isinf(x)) {
+        sign = (x < 0.0);
+        e = 0x1f;
+        bits = 0;
+    } else if(std::isnan(x)) {
+        sign = (std::copysign(1.0, x) == -1.0);
+        e = 0x1f;
+        bits = 512;
+    } else {
+        sign = (x < 0.0);
+        if(sign)
+            x = -x;
+        double f = std::frexp(x, &e);
+        /* normalize f to be in the range [1.0, 2.0) */
+        f *= 2.0;
+        e--;
+        if(e >= 16)
+            throw new OverflowError(new str("float too large to pack with e format"));
+        else if(e < -25) { /* |x| < 2**-25: underflow to zero */
+            f = 0.0;
+            e = 0;
+        } else if(e < -14) { /* |x| < 2**-14: gradual underflow */
+            f = std::ldexp(f, 14 + e);
+            e = 0;
+        } else {
+            e += 15;
+            f -= 1.0; /* get rid of leading 1 */
+        }
+        f *= 1024.0; /* 2**10 */
+        /* round to even */
+        bits = (unsigned short)f; /* truncation */
+        if((f - bits > 0.5) or ((f - bits == 0.5) and (bits % 2 == 1))) {
+            ++bits;
+            if(bits == 1024) { /* carry propagated out of a string of 10 1 bits */
+                bits = 0;
+                ++e;
+                if(e == 31)
+                    throw new OverflowError(new str("float too large to pack with e format"));
+            }
+        }
+    }
+    return (unsigned short)(bits | (e << 10) | (sign << 15));
+}
+
+static double unpack_half(unsigned short h) {
+    int sign = (h >> 15) & 1;
+    int e = (h >> 10) & 0x1f;
+    unsigned int f = h & 0x3ff;
+
+    if(e == 0x1f) {
+        if(f == 0)
+            return sign ? -INFINITY : INFINITY;
+        return sign ? -NAN : NAN;
+    }
+    double x = (double)f / 1024.0;
+    if(e == 0)
+        e = -14;
+    else {
+        x += 1.0;
+        e -= 15;
+    }
+    x = std::ldexp(x, e);
+    return sign ? -x : x;
+}
+
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos) {
     double result;
     unsigned int itemsize = get_itemsize(o, c);
-    *pos += padding(o, *pos-base, itemsize);
+    *pos += padding(o, *pos-base, get_alignment(o, c));
     if(d==0)
         return 0;
     if(swap_endian(o))
@@ -151,12 +243,25 @@ double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int base, 
     else
         for(unsigned int i=0; i<itemsize; i++)
             ((char *)buffy)[i] = data->unit[(size_t)(*pos+(__ss_int)i)];
-    if(c == 'f')
+    if(c == 'e')
+        result = unpack_half(*((unsigned short *)(buffy)));
+    else if(c == 'f')
         result = *((float *)(buffy));
     else
         result = *((double *)(buffy));
     *pos += (__ss_int)itemsize;
     return result;
+}
+
+complex unpack_complex(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos) {
+    char c2 = (c == 'F') ? 'f' : 'd';
+    *pos += padding(o, *pos-base, get_alignment(o, c));
+    if(d==0)
+        return mcomplex(0.0, 0.0);
+    /* real and imaginary parts are stored one after the other, each in the given byte order */
+    double real = unpack_float(o, c2, 1, data, *pos, pos);
+    double imag = unpack_float(o, c2, 1, data, *pos, pos);
+    return mcomplex(real, imag);
 }
 
 void unpack_pad(char, char, unsigned int d, bytes *, __ss_int, __ss_int *pos) {
@@ -215,6 +320,9 @@ template<class S> static __ss_int calcsize_impl(const S &fmt, size_t fmtlen) {
             case 'Q':
             case 'd':
             case 'f':
+            case 'e':
+            case 'F':
+            case 'D':
 //            case 'n':
             case 'N':
                 itemsize = get_itemsize(order, (char)c);
@@ -224,9 +332,9 @@ template<class S> static __ss_int calcsize_impl(const S &fmt, size_t fmtlen) {
                     throw new error(new str("bad char in struct format"));
                 if(ndigits == -1)
                     ndigits = 1;
+                result += padding(order, result, get_alignment(order, (char)c));
                 result += ndigits * (__ss_int)itemsize;
                 ndigits = -1;
-                result += padding(order, result, itemsize);
                 break;
             case 'c':
             case 's':
@@ -330,6 +438,9 @@ __ss_int calcitems(str *fmt) {
             case 'Q':
             case 'd':
             case 'f':
+            case 'e':
+            case 'F':
+            case 'D':
 //            case 'n':
             case 'N':
             case 'c':
@@ -438,6 +549,7 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
 
 void fillbuf_float(char c, __ss_float t, char, unsigned int) {
     switch(c) {
+        case 'e': *((unsigned short *)buffy) = pack_half(t); break;
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = (double)t; break;
     }

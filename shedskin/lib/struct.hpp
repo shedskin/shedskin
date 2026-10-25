@@ -55,9 +55,11 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int base, 
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
 __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
+complex unpack_complex(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int base, __ss_int *pos);
 
 unsigned int get_itemsize(char order, char c);
+unsigned int get_alignment(char order, char c);
 
 __ss_int unpack_pos(const char *fmt, bytes *data);
 __ss_int unpack_from_pos(const char *fmt, bytes *data, __ss_int offset);
@@ -87,6 +89,34 @@ template<> inline void __pack_float(char c, __ss_float t, char order, unsigned i
 }
 template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int itemsize) {
     fillbuf_float(c, (__ss_float)t, order, itemsize);
+}
+
+/* pack complex */
+
+template<class T> complex __complex_arg(T) {
+    throw new error(new str("required argument is not a complex"));
+}
+template<> inline complex __complex_arg(complex t) { return t; }
+template<> inline complex __complex_arg(__ss_float t) { return mcomplex(t, 0.0); }
+template<> inline complex __complex_arg(__ss_int t) { return mcomplex((__ss_float)t, 0.0); }
+
+static inline void __pack_float_bytes(char c, __ss_float t, char order, bytes *result, size_t &pos) {
+    unsigned int itemsize = get_itemsize(order, c);
+    fillbuf_float(c, t, order, itemsize);
+    if(swap_endian(order))
+        for(int k=(int)itemsize-1; k>=0; k--)
+            result->unit[pos++] = ((char *)buffy)[k];
+    else
+        for(unsigned int k=0; k<itemsize; k++)
+            result->unit[pos++] = ((char *)buffy)[k];
+}
+
+template<class T> void __pack_complex(char c, T t, char order, bytes *result, size_t &pos) {
+    complex z = __complex_arg(t);
+    char c2 = (c == 'F') ? 'f' : 'd';
+    /* real and imaginary parts are stored one after the other, each in the given byte order */
+    __pack_float_bytes(c2, z.real, order, result, pos);
+    __pack_float_bytes(c2, z.imag, order, result, pos);
 }
 
 /* pack char */
@@ -206,8 +236,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
             case 'd':
             case 'f':
+            case 'e':
                 itemsize = get_itemsize(order, c);
-                pad = padding(order, (__ss_int)(pos-base), itemsize);
+                pad = padding(order, (__ss_int)(pos-base), get_alignment(order, c));
                 for(__ss_int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
                 if(ndigits == 0) {
@@ -221,6 +252,22 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 else
                     for(unsigned int k=0; k<itemsize; k++)
                         result->unit[pos++] = ((char *)buffy)[k];
+                if(ndigits == -1 or --ndigits == 0) {
+                    j++;
+                    ndigits = -1;
+                }
+                return;
+
+            case 'F':
+            case 'D':
+                pad = padding(order, (__ss_int)(pos-base), get_alignment(order, c));
+                for(__ss_int k=0; k<pad; k++)
+                    result->unit[pos++] = '\x00';
+                if(ndigits == 0) {
+                    ndigits = -1;
+                    break;
+                }
+                __pack_complex(c, arg, order, result, pos);
                 if(ndigits == -1 or --ndigits == 0) {
                     j++;
                     ndigits = -1;
