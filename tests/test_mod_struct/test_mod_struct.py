@@ -804,7 +804,7 @@ def test_complex():
     assert struct.pack('>D', 1.5) == b'?\xf8' + 14*b'\x00'
     assert struct.pack('<F', 3) == b'\x00\x00@@\x00\x00\x00\x00'
     assert struct.pack('<D', 1j) == 14*b'\x00' + b'\xf0?'
-    assert struct.pack('<F', 1e300j) == b'\x00\x00\x00\x00\x00\x00\x80\x7f'
+    assert struct.pack('<F', complex(0.0, float('inf'))) == b'\x00\x00\x00\x00\x00\x00\x80\x7f'
 
     z, = struct.unpack('<F', struct.pack('<F', 1+2j))
     assert z == 1+2j
@@ -853,6 +853,67 @@ def test_e_complex_native_align():
     assert w == -3.5+1j and x == 2.5
 
 
+def test_f_overflow():
+    # a finite value too large for a float is an error, not +-inf
+    for v in [1e39, -1e39, 3.4028235677973366e+38]:
+        error = ''
+        try:
+            struct.pack('<f', v)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'float too large to pack with f format'
+
+    error = ''
+    try:
+        struct.pack('<F', complex(0.0, 1e39))
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'float too large to pack with f format'
+
+    # but a real inf is fine, as is the largest float
+    assert struct.pack('<f', float('inf')) == b'\x00\x00\x80\x7f'
+    assert struct.pack('<f', float('-inf')) == b'\x00\x00\x80\xff'
+    assert struct.pack('<f', 3.4028235e38) == b'\xff\xff\x7f\x7f'
+
+
+def test_float_bool():
+    # bool is an int, so it can be packed as a float
+    assert struct.pack('<d', True) == b'\x00\x00\x00\x00\x00\x00\xf0?'
+    assert struct.pack('<f', False) == b'\x00\x00\x00\x00'
+    assert struct.pack('<e', True) == b'\x00<'
+    assert struct.pack('<D', True) == b'\x00\x00\x00\x00\x00\x00\xf0?' + 8 * b'\x00'
+    assert struct.pack('<d?f', True, True, False) == struct.pack('<d?f', 1.0, True, 0.0)
+
+
+def test_dangling_repeat_count():
+    for fmt in ['3', 'i3', '<3', 'i 3']:
+        error = ''
+        try:
+            struct.calcsize(fmt)
+        except struct.error as e:
+            error = str(e)
+        assert error == 'repeat count given without format specifier'
+
+    error = ''
+    try:
+        struct.pack('i3', 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'repeat count given without format specifier'
+
+    # whitespace may not separate a count from its format char
+    for fmt in ['3 i', '3 ']:
+        error = ''
+        try:
+            struct.calcsize(fmt)
+        except struct.error as e:
+            error = str(e)
+        assert error == 'bad char in struct format'
+
+    assert struct.calcsize(' 3i') == 12
+    assert struct.calcsize('2i ') == 8
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -886,6 +947,9 @@ def test_all():
     test_e()
     test_complex()
     test_e_complex_native_align()
+    test_f_overflow()
+    test_float_bool()
+    test_dangling_repeat_count()
 
 
 if __name__ == '__main__':

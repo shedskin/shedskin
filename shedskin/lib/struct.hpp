@@ -90,6 +90,9 @@ template<> inline void __pack_float(char c, __ss_float t, char order, unsigned i
 template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int itemsize) {
     fillbuf_float(c, (__ss_float)t, order, itemsize);
 }
+template<> inline void __pack_float(char c, __ss_bool t, char order, unsigned int itemsize) {
+    fillbuf_float(c, (__ss_float)t.value, order, itemsize);
+}
 
 /* pack complex */
 
@@ -99,6 +102,7 @@ template<class T> complex __complex_arg(T) {
 template<> inline complex __complex_arg(complex t) { return t; }
 template<> inline complex __complex_arg(__ss_float t) { return mcomplex(t, 0.0); }
 template<> inline complex __complex_arg(__ss_int t) { return mcomplex((__ss_float)t, 0.0); }
+template<> inline complex __complex_arg(__ss_bool t) { return mcomplex((__ss_float)t.value, 0.0); }
 
 static inline void __pack_float_bytes(char c, __ss_float t, char order, bytes *result, size_t &pos) {
     unsigned int itemsize = get_itemsize(order, c);

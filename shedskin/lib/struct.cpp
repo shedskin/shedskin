@@ -352,6 +352,8 @@ template<class S> static __ss_int calcsize_impl(const S &fmt, size_t fmtlen) {
             case '\r':
             case '\x0b':
             case '\x0c':
+                if(ndigits != -1) /* e.g. '3 i', as CPython */
+                    throw new error(new str("bad char in struct format"));
                 break;
             case 'P':
                 throw new error(new str("unsupported 'P' char in struct format"));
@@ -359,6 +361,8 @@ template<class S> static __ss_int calcsize_impl(const S &fmt, size_t fmtlen) {
                 throw new error(new str("bad char in struct format"));
         }
     }
+    if(ndigits != -1) /* e.g. '3' or 'i3', as CPython */
+        throw new error(new str("repeat count given without format specifier"));
     return result;
 }
 
@@ -461,6 +465,8 @@ __ss_int calcitems(str *fmt) {
             case '\r':
             case '\x0b':
             case '\x0c':
+                if(ndigits != -1) /* e.g. '3 i', as CPython */
+                    throw new error(new str("bad char in struct format"));
                 break;
             case 'x':
                 ndigits = -1;
@@ -471,6 +477,8 @@ __ss_int calcitems(str *fmt) {
                 throw new error(new str("bad char in struct format"));
         }
     }
+    if(ndigits != -1) /* e.g. '3' or 'i3', as CPython */
+        throw new error(new str("repeat count given without format specifier"));
     return result;
 }
 
@@ -550,7 +558,15 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
 void fillbuf_float(char c, __ss_float t, char, unsigned int) {
     switch(c) {
         case 'e': *((unsigned short *)buffy) = pack_half(t); break;
-        case 'f': *((float *)buffy) = (float)t; break;
+        case 'f': {
+            /* like CPython, a finite value that doesn't fit in a float is an
+               error (it would otherwise silently become +-inf) */
+            float f = (float)t;
+            if(std::isinf(f) and not std::isinf(t))
+                throw new OverflowError(new str("float too large to pack with f format"));
+            *((float *)buffy) = f;
+            break;
+        }
         case 'd': *((double *)buffy) = (double)t; break;
     }
 }

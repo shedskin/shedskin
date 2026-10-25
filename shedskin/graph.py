@@ -730,7 +730,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 else:
                     result.extend(int(digits or "1") * [(ordering, c, rtype, 1)])
                 digits = ""
-            elif c in string.whitespace:
+            elif c in string.whitespace and not digits:  # '3 i' is an error
                 pass
             else:
                 error.error(
@@ -740,6 +740,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     mv=self,
                 )
                 digits = ""
+        if digits:  # e.g. 'i3'
+            error.error(
+                "repeat count given without format specifier", self.gx, node, mv=self
+            )
         return result
 
     def struct_faketuple(self, info: list[tuple[str, str, str, int]]) -> ast.Tuple:
