@@ -372,6 +372,34 @@ def test_invalid_modes():
             else:
                 assert str(e) == "invalid mode: 'rrb'"
     assert not os.path.exists('shedskin_never_created.gz')
+    # an empty mode is falsy: no 'b' is added, and the mode itself is rejected
+    # (by filename, the file is first opened as 'rb'); 'tt' becomes ''
+    with gzip.open('shedskin_empty_mode.gz', 'wb') as g:
+        g.write(b'abc')
+    msgs = []
+    try:
+        gzip.open('shedskin_empty_mode.gz', '')
+    except ValueError as e:
+        msgs.append(str(e))
+    try:
+        gzip.open('shedskin_empty_mode.gz', 'tt')  # (a constant text mode)
+    except ValueError as e:
+        msgs.append(str(e))
+    try:
+        gzip.open(io.BytesIO(), '')
+    except ValueError as e:
+        msgs.append(str(e))
+    try:
+        gzip.GzipFile('shedskin_empty_mode.gz', '')
+    except ValueError as e:
+        msgs.append(str(e))
+    assert msgs == ["Invalid mode: ''"] * 4
+    os.remove('shedskin_empty_mode.gz')
+    try:
+        gzip.open('shedskin_never_created.gz', '')
+        assert False
+    except FileNotFoundError:
+        pass
     try:
         gzip.open(io.BytesIO(), 'rtb')
         assert False

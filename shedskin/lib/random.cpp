@@ -369,7 +369,7 @@ __ss_int Random::randint(__ss_int a, __ss_int b) {
     */
 
     if (a > b)
-        throw (new ValueError(__empty_range("randint", a, b)));
+        throw (new ValueError(__empty_range("randrange", a, b+1))); /* like cpython, as randint(a, b) is randrange(a, b+1) */
     uint64_t width = (uint64_t)b - (uint64_t)a + 1;
     if (width == 0) /* the full 64-bit range */
         return (__ss_int)this->_next_word();
@@ -603,7 +603,7 @@ bytes *Random::randbytes(__ss_int n) {
     Generate n random bytes from this instance's own stream.
     */
     if (n < 0)
-        throw (new ValueError(new str("negative argument not allowed")));
+        throw (new ValueError(new str("number of bits must be non-negative"))); /* sic, like cpython */
 
     bytes *result = new bytes();
     result->unit.resize((size_t)n);
@@ -769,11 +769,11 @@ uint64_t SystemRandom::_next_word() {
 }
 
 bytes *SystemRandom::getstate() {
-    throw (new NotImplementedError(new str("state of a system random number generator cannot be saved")));
+    throw (new NotImplementedError(new str("System entropy source does not have state.")));
 }
 
 void *SystemRandom::setstate(bytes *state) {
-    throw (new NotImplementedError(new str("state of a system random number generator cannot be restored")));
+    throw (new NotImplementedError(new str("System entropy source does not have state.")));
 }
 
 void __init() {
@@ -791,7 +791,7 @@ void __init() {
     const_3 = new str("non-integer step for randrange()");
     const_4 = new str("zero step for randrange()");
     const_7 = new str("gammavariate: alpha and beta must be > 0.0");
-    const_8 = new str("number of bits must be greater than zero for getrandbits(k)");
+    const_8 = new str("number of bits must be non-negative");
     const_9 = new str("k exceeds size of int for getrandbits(k)");
     const_10 = new str("state with version %s passed to Random.setstate() of version %s");
     const_11 = new str("seeds must be in range(0, 256)");

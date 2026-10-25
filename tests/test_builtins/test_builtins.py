@@ -134,6 +134,15 @@ def test_divmod():
         error = str(e)
     assert error == 'float divmod()'
 
+    # like cpython, an int divmod() says 'division or modulo', not just 'modulo'
+    for b in [0, -0]:
+        error = ''
+        try:
+            divmod(5, b)
+        except ZeroDivisionError as e:
+            error = str(e)
+        assert error == 'integer division or modulo by zero'
+
 
 def test_pow():
     assert pow(2, 10) == 1024

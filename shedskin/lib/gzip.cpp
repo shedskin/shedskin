@@ -265,14 +265,16 @@ void GzipFile::__init(str *filename, str *mode, __ss_int compresslevel, file_bin
 
     if (mode && (mode->unit.find('t') != __GC_STR::npos || mode->unit.find('U') != __GC_STR::npos))
         throw new ValueError(__add_strs(2, new str("Invalid mode: "), repr(mode)));
-    if (mode && mode->unit.find('b') == __GC_STR::npos)
+    /* like cpython, an empty mode is falsy: no 'b' is added, the file is
+       opened as 'rb', and the mode check below then rejects the mode */
+    if (mode && mode->unit.size() && mode->unit.find('b') == __GC_STR::npos)
         mode = __add_strs(2, mode, new str("b"));
 
     str *origmode = mode;
     if (!fileobj) {
         if (!filename)
             throw new TypeError(new str("expected str, bytes or os.PathLike object, not NoneType"));
-        fileobj = new file_binary(filename, mode ? mode : new str("rb"));
+        fileobj = new file_binary(filename, (mode && mode->unit.size()) ? mode : new str("rb"));
         myfileobj = true;
     }
     if (!filename)

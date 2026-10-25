@@ -595,12 +595,12 @@ def test_unicode_errors():
         nums.tounicode()
         assert False, "expected ValueError"
     except ValueError as e:
-        assert str(e) == "tounicode() may only be called on unicode type arrays"
+        assert str(e) == "tounicode() may only be called on unicode type arrays ('u' or 'w')"
     try:
         nums.fromunicode('a')
         assert False, "expected ValueError"
     except ValueError as e:
-        assert str(e) == "fromunicode() may only be called on unicode type arrays"
+        assert str(e) == "fromunicode() may only be called on unicode type arrays ('u' or 'w')"
     assert nums.tolist() == [1, 2, 3]
 
 
@@ -675,6 +675,81 @@ def test_bulk_copies():
     assert u.tounicode() == 'abc\u20acd'
 
 
+def test_error_messages():
+    # index errors say 'array', and 'assignment' when storing/deleting
+    a = array.array('i', [1])
+    msgs = []
+    try:
+        a[5]
+    except IndexError as e:
+        msgs.append(str(e))
+    try:
+        a[-2] = 1
+    except IndexError as e:
+        msgs.append(str(e))
+    try:
+        del a[5]
+    except IndexError as e:
+        msgs.append(str(e))
+    f = array.array('d', [1.0])
+    try:
+        f[1]
+    except IndexError as e:
+        msgs.append(str(e))
+    w = array.array('w', 'a')
+    try:
+        w[1]
+    except IndexError as e:
+        msgs.append(str(e))
+    try:
+        w[1] = 'b'
+    except IndexError as e:
+        msgs.append(str(e))
+    assert msgs == ['array index out of range', 'array assignment index out of range',
+                    'array assignment index out of range', 'array index out of range',
+                    'array index out of range', 'array assignment index out of range']
+
+    # overflow messages, including cpython's quirks: 'b' is first parsed as a
+    # short, 'H' as an int, and a negative 'L' item mentions 'unsigned int'
+    cases = [
+        (array.array('b', [0]), 128, 'signed char is greater than maximum'),
+        (array.array('b', [0]), -129, 'signed char is less than minimum'),
+        (array.array('b', [0]), 40000, 'signed short integer is greater than maximum'),
+        (array.array('b', [0]), -40000, 'signed short integer is less than minimum'),
+        (array.array('H', [0]), 70000, 'unsigned short is greater than maximum'),
+        (array.array('H', [0]), -1, 'unsigned short is less than minimum'),
+        (array.array('H', [0]), 2**40, 'signed integer is greater than maximum'),
+        (array.array('H', [0]), -2**40, 'signed integer is less than minimum'),
+        (array.array('I', [0]), -1, "can't convert negative value to unsigned int"),
+        (array.array('L', [0]), -1, "can't convert negative value to unsigned int"),
+    ]
+    for b, v, msg in cases:
+        assert _overflow_msgs(b, v) == [msg] * 3, msg
+        assert b.tolist() == [0]
+    error = ''
+    try:
+        array.array('b', [40000])
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'signed short integer is greater than maximum'
+
+
+def _overflow_msgs(b, v):
+    # via fromlist() (as the list constructor), and via append() and setitem
+    msgs = []
+    for i in range(3):
+        try:
+            if i == 0:
+                b.fromlist([v])
+            elif i == 1:
+                b.append(v)
+            else:
+                b[0] = v
+        except OverflowError as e:
+            msgs.append(str(e))
+    return msgs
+
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -710,6 +785,7 @@ def test_all():
     test_unicode_errors()
     test_unicode_typecode_u()
     test_bulk_copies()
+    test_error_messages()
 
 
 if __name__ == '__main__':
