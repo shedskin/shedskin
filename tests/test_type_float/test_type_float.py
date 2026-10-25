@@ -329,6 +329,25 @@ def test_float_literal_folding():
         assert str(e) == "could not convert string to float: '1_'"
 
 
+def test_float_from_bytes():
+    assert float(b'3.5') == 3.5
+    assert float(bytearray(b' -1e3 ')) == -1000.0
+    assert float(b'\x0b1_0.5\x0c') == 10.5
+    assert str(float(b'-inf')) == '-inf'
+    assert str(float(b'-nan')) == 'nan'
+    for b in [b'1\x00', b'abc', b'', b'\xb2', b'0x10', b'\x1c1']:
+        try:
+            float(b)
+            assert False
+        except ValueError as e:
+            assert str(e) == 'could not convert string to float: ' + repr(b)
+    try:
+        float(bytearray(b'x'))
+        assert False
+    except ValueError as e:
+        assert str(e) == "could not convert string to float: bytearray(b'x')"
+
+
 def test_all():
     test_float()
     test_inf()
@@ -344,6 +363,7 @@ def test_all():
     test_pow_overflow()
     test_pow_half()
     test_float_literal_folding()
+    test_float_from_bytes()
 
 
 if __name__ == "__main__":

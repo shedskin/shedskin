@@ -254,15 +254,28 @@ static bool __float_scan(const char *p, __GC_STRING &clean) {
     return *p == '\0';
 }
 
-template<> __ss_float __float(str *s) {
+static __ss_float __float_parse(const char *p, pyobj *s) {
     __GC_STRING clean;
-    __GC_STRING a = __ss_ascii_numeric(s); /* unicode digits/whitespace */
-    if(not __float_scan(a.c_str(), clean))
-        throw new ValueError(__add_strs(0, new str("could not convert string to float: "), repr(s)));
+    if(not __float_scan(p, clean))
+        throw new ValueError(__add_strs(0, new str("could not convert string to float: "), s->__repr__()));
     __ss_float d = strtod(clean.c_str(), NULL);
     if(std::isnan(d))
         d = NAN; // avoid "-nan" (test 194)
     return d;
+}
+
+template<> __ss_float __float(str *s) {
+    __GC_STRING a = __ss_ascii_numeric(s); /* unicode digits/whitespace */
+    return __float_parse(a.c_str(), s);
+}
+
+template<> __ss_float __float(bytes *s) {
+    /* only ascii digits/whitespace; nul and non-ascii bytes are rejected */
+    __GC_STRING a;
+    a.reserve(s->unit.size());
+    for(unsigned char c : s->unit)
+        a += (c == 0 || c >= 0x80) ? '?' : (char)c;
+    return __float_parse(a.c_str(), s);
 }
 
 /* zip, map: CPython's message for strict=True, for example 'zip() argument 2
