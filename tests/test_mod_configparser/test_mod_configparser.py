@@ -631,6 +631,38 @@ def test_parsing_error_combine():
     assert e2.errors == [(2, 'two'), (3, 'three')]
 
 
+def test_error_messages():
+    # exact CPython 3.13 messages; str() and repr() both return .message
+    config = configparser.ConfigParser()
+    try:
+        config.read_string('[c]\njunk line\nmore junk\n')
+    except configparser.ParsingError as e:
+        msg = "Source contains parsing errors: '<string>'\n\t[line  2]: 'junk line\\n'\n\t[line  3]: 'more junk\\n'"
+        assert str(e) == msg
+        assert repr(e) == msg
+
+    e2 = configparser.ParsingError('some.ini')
+    e2.append(3, 'bad')
+    assert str(e2) == "Source contains parsing errors: 'some.ini'\n\t[line  3]: 'bad'"
+
+    try:
+        configparser.ConfigParser().read_string('x = 1\n')
+    except configparser.MissingSectionHeaderError as e3:
+        assert str(e3) == "File contains no section headers.\nfile: '<string>', line: 1\n'x = 1\\n'"
+
+    config4 = configparser.ConfigParser()
+    config4.read_string('[s]\na = %(missing)s\n')
+    try:
+        config4.get('s', 'a')
+    except configparser.InterpolationMissingOptionError as e4:
+        assert str(e4) == "Bad value substitution: option 'a' in section 's' contains an interpolation key 'missing' which is not a valid option name. Raw value: '%(missing)s'"
+
+    try:
+        config4.get('nosec', 'a')
+    except configparser.NoSectionError as e5:
+        assert repr(e5) == "No section: 'nosec'"
+
+
 def test_popitem():
     config = configparser.ConfigParser()
     config.read_string('[DEFAULT]\nd = 1\n[s1]\nx = a\n[s2]\ny = b\n')
@@ -1400,6 +1432,7 @@ def test_all():
     test_section_proxy_typed_getters()
     test_parsing_error_append()
     test_parsing_error_combine()
+    test_error_messages()
     test_popitem()
     test_interpolation_kwarg()
     test_extended_interpolation()

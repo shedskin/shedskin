@@ -54,6 +54,8 @@ public:
         __init__(msg);
     }
     void *__init__(str *msg);
+    str *__repr__();
+    str *__str__();
 };
 
 extern class_ *cl_NoSectionError;
