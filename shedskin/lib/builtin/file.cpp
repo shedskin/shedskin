@@ -38,6 +38,17 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #define FEOF   feof_unlocked
 #endif // HAVE_STDIO_UNLOCKED
 
+/* flush and close even when flushing fails, as CPython; returns the first
+   errno (0 on success), leaving it in errno. this is a free function, as on
+   macOS errno expands to (*__error()), which file::__error would shadow */
+static int __ss_fclose(FILE *f) {
+    int err = FFLUSH(f) ? errno : 0;
+    if(fclose(f) and not err)
+        err = errno;
+    errno = err;
+    return err;
+}
+
 /* validate a mode as cpython's io.open does, before anything is opened:
    fopen() would otherwise pick the first of 'rwa' and ignore much of the
    rest, so that e.g. open(f, 'wa') silently truncates f */
@@ -419,15 +430,10 @@ list<str *> *file::readlines(__ss_int /*size_hint*/) {
 
 void *file::close() {
     if(f and not closed) {
-        /* close even when flushing fails, as CPython */
-        int err = FFLUSH(f) ? errno : 0;
-        if(fclose(f) and not err)
-            err = errno;
+        int err = __ss_fclose(f);
         closed = True;
-        if(err) {
-            errno = err;
+        if(err)
             __throw_oserror();
-        }
     }
     return NULL;
 }
@@ -643,15 +649,10 @@ list<bytes *> *file_binary::readlines(__ss_int /*size_hint*/) {
 
 void *file_binary::close() {
     if(f and not closed) {
-        /* close even when flushing fails, as CPython */
-        int err = FFLUSH(f) ? errno : 0;
-        if(fclose(f) and not err)
-            err = errno;
+        int err = __ss_fclose(f);
         closed = True;
-        if(err) {
-            errno = err;
+        if(err)
             __throw_oserror();
-        }
     }
     return NULL;
 }
