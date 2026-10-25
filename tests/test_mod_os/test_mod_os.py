@@ -1318,6 +1318,49 @@ def test_stat_follow_symlinks():
     os.remove(path)
 
 
+def test_fd_errors_no_filename():
+    # errors from calls that take no path carry no filename (like CPython)
+    bad = 987
+    caught = 0
+    try:
+        os.read(bad, 1)
+    except OSError as e:
+        assert e.filename is None
+        assert str(e) == '[Errno 9] Bad file descriptor'
+        caught += 1
+    try:
+        os.write(bad, b'x')
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.close(bad)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.dup(bad)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.lseek(bad, 0, 0)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.fsync(bad)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.ftruncate(bad, 0)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    assert caught == 7
+
+
 def test_two_path_errors():
     # errors from two-path calls carry both names, as filename/filename2
     src = 'shedskin_test_nope_src'
@@ -1676,6 +1719,7 @@ def test_all():
     test_stat_follow_symlinks()
     test_links()
     test_two_path_errors()
+    test_fd_errors_no_filename()
     test_dup2_inheritable()
     test_readinto()
     test_reload_environ()

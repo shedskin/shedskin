@@ -902,10 +902,10 @@ void *putenv(str* varname, str* value) {
         throw new ValueError(new str("illegal environment variable name"));
 #ifdef WIN32
     if(::_putenv_s(__ss_cpath(varname), __ss_cpath(value)) != 0)
-        __throw_oserror(new str("os.putenv"));
+        __throw_oserror();
 #else
     if(::setenv(__ss_cpath(varname), __ss_cpath(value), 1) == -1)
-        __throw_oserror(new str("os.putenv"));
+        __throw_oserror();
 #endif
     return NULL;
 }
@@ -1076,7 +1076,7 @@ __ss_int dup(__ss_int f1) {
 #endif
     }
     if (f2 == -1)
-        __throw_oserror(new str("os.dup failed"));
+        __throw_oserror();
 #ifdef WIN32
     set_inheritable(f2, False);
 #endif
@@ -1090,7 +1090,7 @@ __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
         r = ::dup2((int)f1,(int)f2);
     }
     if (r == -1)
-        __throw_oserror(new str("os.dup2 failed"));
+        __throw_oserror();
     /* like cpython: the new descriptor is inheritable unless asked otherwise */
 #ifdef WIN32
     set_inheritable(f2, inheritable);
@@ -1104,7 +1104,7 @@ __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(__ss_int f1) {
     if (::fdatasync((int)f1) == -1)
-        __throw_oserror(new str("os.fdatasync failed"));
+        __throw_oserror();
     return NULL;
 }
 #endif
@@ -1125,7 +1125,7 @@ static FILE *__fdopen(__ss_int fd, str *mode) {
     /* C fdopen() does not know 'x' (and never creates or truncates) */
     FILE* fp = ::fdopen((int)fd, __c_open_mode(mode, false)->c_str());
     if(fp == NULL)
-        __throw_oserror(new str("os.fdopen failed"));
+        __throw_oserror();
     return fp;
 }
 
@@ -1152,7 +1152,7 @@ bytes *read(__ss_int fd, __ss_int n) {
        (e.g. on a pipe) instead of blocking until n bytes have arrived */
     if(n < 0) {
         errno = EINVAL;
-        __throw_oserror(new str("os.read"));
+        __throw_oserror();
     }
     if(n > INT_MAX)
         n = INT_MAX;
@@ -1164,7 +1164,7 @@ bytes *read(__ss_int fd, __ss_int n) {
         nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
     }
     if(nr < 0)
-        __throw_oserror(new str("os.read"));
+        __throw_oserror();
     s->unit.resize((size_t)nr);
     return s;
 }
@@ -1176,7 +1176,7 @@ __ss_int write(__ss_int fd, bytes *s) {
         r = (size_t)::write((int)fd, s->c_str(), s->unit.size());
     }
     if(r == std::string::npos)
-        __throw_oserror(new str("os.write"));
+        __throw_oserror();
     return (__ss_int)r;
 }
 
@@ -1196,7 +1196,7 @@ __ss_int readinto(__ss_int fd, bytes *buffer) {
         nr = ::read((int)fd, &buffer->unit[0], (unsigned int)n);
     }
     if(nr < 0)
-        __throw_oserror(new str("os.readinto"));
+        __throw_oserror();
     return (__ss_int)nr;
 }
 
@@ -1207,7 +1207,7 @@ void *close(__ss_int fd) {
        r = ::close((int)fd);
    }
    if(r < 0)
-       __throw_oserror(new str("os.close failed"));
+       __throw_oserror();
    return NULL;
 }
 
@@ -1431,7 +1431,7 @@ __ss_int __ss_WTERMSIG(__ss_int status) {
 
 void *fchdir(__ss_int f1) {
     if (::fchdir((int)f1) == -1)
-        __throw_oserror(new str("os.fchdir failed"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -1458,40 +1458,40 @@ str *readlink(str *path) {
 __ss_int getuid() { return (__ss_int)::getuid(); }
 void *setuid(__ss_int uid) {
     if(::setuid((unsigned)uid) == -1)
-        __throw_oserror(new str("os.setuid"));
+        __throw_oserror();
     return NULL;
 }
 
 __ss_int getgid() { return (__ss_int)::getgid(); }
 void *setgid(__ss_int gid) {
     if(::setgid((unsigned)gid) == -1)
-        __throw_oserror(new str("os.setgid"));
+        __throw_oserror();
     return NULL;
 }
 
 __ss_int geteuid() { return (__ss_int)::geteuid(); }
 void *seteuid(__ss_int euid) {
     if(::seteuid((unsigned)euid) == -1)
-        __throw_oserror(new str("os.seteuid"));
+        __throw_oserror();
     return NULL;
 }
 
 __ss_int getegid() { return (__ss_int)::getegid(); }
 void *setegid(__ss_int egid) {
     if(::setegid((unsigned)egid) == -1)
-        __throw_oserror(new str("os.setegid"));
+        __throw_oserror();
     return NULL;
 }
 
 void *setreuid(__ss_int ruid, __ss_int euid) {
     if(::setreuid((unsigned)ruid, (unsigned)euid) == -1)
-        __throw_oserror(new str("os.setreuid"));
+        __throw_oserror();
     return NULL;
 }
 
 void *setregid(__ss_int rgid, __ss_int egid) {
     if(::setregid((unsigned)rgid, (unsigned)egid) == -1)
-        __throw_oserror(new str("os.setregid"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -1499,20 +1499,20 @@ __ss_int tcgetpgrp(__ss_int fd) {
     __ss_int nr;
     nr = ::tcgetpgrp((int)fd);
     if(nr == -1)
-        __throw_oserror(new str("os.tcgetpgrp"));
+        __throw_oserror();
     return nr;
 }
 
 void *tcsetpgrp(__ss_int fd, __ss_int pg) {
     if(::tcsetpgrp((int)fd, (pid_t)pg) == -1)
-        __throw_oserror(new str("os.tcsetpgrp"));
+        __throw_oserror();
     return NULL;
 }
 
 __ss_int fork() {
     __ss_int ret;
     if ((ret = ::fork()) == -1)
-        __throw_oserror(new str("os.fork"));
+        __throw_oserror();
     return ret;
 }
 
@@ -1521,13 +1521,13 @@ tuple<__ss_int> *forkpty() {
     __ss_int ret;
     int amaster;
     if ((ret = ::forkpty(&amaster, NULL, NULL, NULL)) == -1)
-        __throw_oserror(new str("os.forkpty"));
+        __throw_oserror();
     return new tuple<__ss_int>(2, ret, (__ss_int)amaster);
 }
 tuple<__ss_int> *openpty() {
     int amaster, aslave;
     if (::openpty(&amaster, &aslave, NULL, NULL, NULL) == -1)
-        __throw_oserror(new str("os.openpty"));
+        __throw_oserror();
     set_inheritable(amaster, False);
     set_inheritable(aslave, False);
     return new tuple<__ss_int>(2, (__ss_int)amaster, (__ss_int)aslave);
@@ -1537,39 +1537,39 @@ tuple<__ss_int> *openpty() {
 tuple<__ss_int> *wait() {
     int pid, status;
     if((pid = ::wait(&status)) == -1)
-        __throw_oserror(new str("os.wait"));
+        __throw_oserror();
     return new tuple<__ss_int>(2, (__ss_int)pid, (__ss_int)status);
 }
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status;
     if((pid = ::waitpid((pid_t)pid, &status, (int)options)) == -1)
-        __throw_oserror(new str("os.waitpid"));
+        __throw_oserror();
     return new tuple<__ss_int>(2, pid, (__ss_int)status);
 }
 
 __ss_int nice(__ss_int n) {
     __ss_int m;
     if((m = ::nice((int)n)) == -1)
-        __throw_oserror(new str("os.nice"));
+        __throw_oserror();
     return m;
 }
 
 void *kill(__ss_int pid, __ss_int sig) {
     if(::kill((pid_t)pid, (int)sig) == -1)
-        __throw_oserror(new str("os.kill"));
+        __throw_oserror();
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {
     if(::killpg((pid_t)pgid, (int)sig) == -1)
-        __throw_oserror(new str("os.killpg"));
+        __throw_oserror();
     return NULL;
 }
 
 str *getlogin() {
     char *name_ = ::getlogin();
     if(!name_)
-        __throw_oserror(new str("os.getlogin"));
+        __throw_oserror();
     return new str(name_);
 }
 
@@ -1604,7 +1604,7 @@ __ss_bool isatty(__ss_int fd) {
 str *ttyname(__ss_int fd) {
     char *name_ = ::ttyname((int)fd);
     if(!name_)
-        __throw_oserror(new str("os.ttyname"));
+        __throw_oserror();
     return new str(name_);
 }
 
@@ -1687,7 +1687,7 @@ list<__ss_int> *getgroups() {
     gid_t l[MAXENTRIES];
     __ss_int nr = ::getgroups(MAXENTRIES, l);
     if(nr == -1)
-        __throw_oserror(new str("os.getgroups"));
+        __throw_oserror();
     list<__ss_int> *r = new list<__ss_int>();
     for(__ss_int i=0;i<nr;i++)
         r->append((__ss_int)l[i]);
@@ -1700,32 +1700,32 @@ void *setgroups(pyseq<__ss_int> *groups) {
     for(__ss_int i=0; i<len(groups); i++)
         l[i] = (gid_t)groups->__getitem__(i);
     if(::setgroups((size_t)len(groups), l) == -1)
-        __throw_oserror(new str("os.setgroups"));
+        __throw_oserror();
     return NULL;
 }
 
 __ss_int getsid(__ss_int pid) {
     __ss_int nr = ::getsid((pid_t)pid);
     if(nr == -1)
-        __throw_oserror(new str("os.getsid"));
+        __throw_oserror();
     return nr;
 }
 __ss_int setsid() {
     __ss_int nr = ::setsid();
     if(nr == -1)
-        __throw_oserror(new str("os.setsid"));
+        __throw_oserror();
     return nr;
 }
 
 __ss_int getpgid(__ss_int pid) {
     __ss_int nr = ::getpgid((pid_t)pid);
     if(nr == -1)
-        __throw_oserror(new str("os.getpgid"));
+        __throw_oserror();
     return nr;
 }
 void *setpgid(__ss_int pid, __ss_int pgrp) {
     if(::setpgid((pid_t)pid, (pid_t)pgrp) == -1)
-        __throw_oserror(new str("os.setpgid"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -1734,7 +1734,7 @@ __ss_int getpgrp() {
 }
 void *setpgrp() {
     if(::setpgid(0, 0) == -1)
-        __throw_oserror(new str("os.setpgrp"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -1772,7 +1772,7 @@ str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
     size_t size = ::confstr((int)name_, buf, MAXENTRIES); /* XXX errors */
     if(size == std::string::npos)
-        __throw_oserror(new str("os.confstr"));
+        __throw_oserror();
     return new str(buf);
 }
 
@@ -1798,7 +1798,7 @@ tuple<__ss_float> *getloadavg() {
 
 void *mkfifo(str *path, __ss_int mode) {
     if(::mkfifo(__ss_cpath(path, "mkfifo"), (unsigned)mode) == -1)
-        __throw_oserror(new str("os.mkfifo"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -1816,7 +1816,7 @@ __vfsstat::__vfsstat(str *path) {
 __vfsstat::__vfsstat(__ss_int fd) {
     this->__class__ = cl___vfsstat;
     if(fstatvfs((int)fd, &vbuf) == -1)
-        __throw_oserror(__str(fd));
+        __throw_oserror();
     fill_er_up();
 }
 
@@ -1900,7 +1900,7 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
         res = ::_cwait(&status, (intptr_t)pid, (int)options);
     }
     if (res == -1)
-        __throw_oserror(new str("os.waitpid"));
+        __throw_oserror();
     return new tuple<__ss_int>(2, (__ss_int)res, (__ss_int)(((unsigned long long)(unsigned int)status) << 8));
 }
 
@@ -1966,7 +1966,7 @@ void *execv(str *file, list<str *> *args) {
         __suppress_iph guard;
         ::_wexecv(__to_wide(file, "execv").c_str(), argv.data());
     }
-    __throw_oserror(new str("os.execv"));
+    __throw_oserror();
 }
 
 void *execvp(str *file, list<str *> *args) {
@@ -1976,7 +1976,7 @@ void *execvp(str *file, list<str *> *args) {
         __suppress_iph guard;
         ::_wexecvp(__to_wide(file, "execv").c_str(), argv.data());
     }
-    __throw_oserror(new str("os.execvp"));
+    __throw_oserror();
 }
 
 void *execve(str *file, list<str *> *args, dict<str *, str *> *env) {
@@ -1986,7 +1986,7 @@ void *execve(str *file, list<str *> *args, dict<str *, str *> *env) {
         __suppress_iph guard;
         ::_wexecve(__to_wide(file, "execve").c_str(), argv.data(), envp.data());
     }
-    __throw_oserror(new str("os.execve"));
+    __throw_oserror(file);
 }
 
 void *execvpe(str *file, list<str *> *args, dict<str *, str *> *env) {
@@ -1996,13 +1996,13 @@ void *execvpe(str *file, list<str *> *args, dict<str *, str *> *env) {
         __suppress_iph guard;
         ::_wexecvpe(__to_wide(file, "execve").c_str(), argv.data(), envp.data());
     }
-    __throw_oserror(new str("os.execvpe"));
+    __throw_oserror();
 }
 
 /* like cpython: P_WAIT returns the exit code, P_NOWAIT a process handle */
-static __ss_int __spawn_result(intptr_t r, const char *func) {
+static __ss_int __spawn_result(intptr_t r) {
     if (r == -1)
-        __throw_oserror(new str(func));
+        __throw_oserror();
     return (__ss_int)r;
 }
 
@@ -2010,28 +2010,28 @@ __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
     __check_exec_args(args, "spawnv()");
     __wide_vector argv(args);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnv((int)mode, __to_wide(file).c_str(), argv.data()), "os.spawnv");
+    return __spawn_result(::_wspawnv((int)mode, __to_wide(file).c_str(), argv.data()));
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
     __check_exec_args(args, "spawnvp()");
     __wide_vector argv(args);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnvp((int)mode, __to_wide(file).c_str(), argv.data()), "os.spawnvp");
+    return __spawn_result(::_wspawnvp((int)mode, __to_wide(file).c_str(), argv.data()));
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __check_exec_args(args, "spawnve()");
     __wide_vector argv(args), envp(env);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnve((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()), "os.spawnve");
+    return __spawn_result(::_wspawnve((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()));
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __check_exec_args(args, "spawnvpe()");
     __wide_vector argv(args), envp(env);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnvpe((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()), "os.spawnvpe");
+    return __spawn_result(::_wspawnvpe((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()));
 }
 
 #endif /* WIN32 */
@@ -2049,13 +2049,13 @@ __ss_bool access(str *path, __ss_int mode) {
 
 void *fsync(__ss_int fd) {
     if(::fsync((int)fd) == -1)
-        __throw_oserror(new str("os.fsync"));
+        __throw_oserror();
     return NULL;
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
     if (::ftruncate((int)fd, n) == -1)
-        __throw_oserror(new str("os.ftruncate"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -2064,7 +2064,7 @@ times_result *times() {
     clock_t c;
     double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
-        __throw_oserror(new str("os.times"));
+        __throw_oserror();
     return new times_result(((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
 }
 
@@ -2109,7 +2109,7 @@ void *fsync(__ss_int fd) {
         r = ::_commit((int)fd);
     }
     if(r == -1)
-        __throw_oserror(new str("os.fsync"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -2120,7 +2120,7 @@ void *ftruncate(__ss_int fd, __ss_int n) {
         r = ::_chsize_s((int)fd, (__int64)n);
     }
     if (r != 0)
-        __throw_oserror(new str("os.ftruncate"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -2470,14 +2470,14 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
         r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
     }
     if(r == -1)
-        __throw_oserror(new str("os.lseek"));
+        __throw_oserror();
     return (__ss_int)r;
 }
 #else
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     off_t r = ::lseek((int)fd, pos, (int)how);
     if(r == -1)
-        __throw_oserror(new str("os.lseek"));
+        __throw_oserror();
     return (__ss_int)r;
 }
 #endif
@@ -2531,7 +2531,7 @@ __ss_int __ss_minor(__ss_int dev) {
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
     if(::mknod(__ss_cpath(filename, "mknod"), (unsigned)mode, (unsigned)device) == -1)
-        __throw_oserror(new str("os.mknod"));
+        __throw_oserror();
     return NULL;
 }
 
@@ -2560,7 +2560,7 @@ char **__exec_envplist(dict<str *, str *> *env) {
 
 void *execv(str* file, list<str*>* args) {
     ::execv(__ss_cpath(file, "execv"), __exec_argvlist(args));
-    __throw_oserror(new str("os.execv"));
+    __throw_oserror();
 }
 
 void *execvp(str* file, list<str*>* args) {
@@ -2569,7 +2569,7 @@ void *execvp(str* file, list<str*>* args) {
 
     if( ___bool(h_t->__getfirst__())) {
         execv(file,args);
-        __throw_oserror(new str("os.execvp"));
+        __throw_oserror();
     }
 
     list<str *> *PATH = get_exec_path();
@@ -2581,12 +2581,12 @@ void *execvp(str* file, list<str*>* args) {
             execv(fullname, args);
         }
     }
-    __throw_oserror(new str("os.execvp"));
+    __throw_oserror();
 }
 
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
     ::execve(__ss_cpath(file, "execve"), __exec_argvlist(args), __exec_envplist(env));
-    __throw_oserror(new str("os.execve"));
+    __throw_oserror(file);
 }
 
 void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
@@ -2595,7 +2595,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
 
     if( ___bool(h_t->__getfirst__())) {
         execve(file, args, env);
-        __throw_oserror(new str("os.execvpe"));
+        __throw_oserror();
     }
 
     list<str *> *PATH = get_exec_path(env);
@@ -2606,7 +2606,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
         if(__path__::exists(fullname))
             execve(fullname, args, env);
     }
-    __throw_oserror(new str("os.execvpe"));
+    __throw_oserror();
 }
 
 /* like CPython: P_WAIT gives the exit code, or -signal for a killed child */
