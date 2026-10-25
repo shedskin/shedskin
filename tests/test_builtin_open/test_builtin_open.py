@@ -427,6 +427,36 @@ def test_open_mode_order():
     os.remove('uorder.txt')
 
 
+def test_open_read_write_switch():
+    # C stdio needs a seek between reading and writing (macOS, windows)
+    with open('uswitch.bin', 'w+b') as g:
+        g.write(b'12345')
+        g.seek(1)
+        assert g.read(2) == b'23'
+        g.write(b'Z')
+        assert g.read() == b'5'
+        g.seek(0)
+        assert g.read() == b'123Z5'
+    with open('uswitch.bin', 'r+b') as g:
+        g.write(b'A')
+        assert g.read(2) == b'23'
+        g.write(b'B')
+        assert g.tell() == 4
+        assert g.readline() == b'5'
+    assert rbytes('uswitch.bin') == b'A23B5'
+    with open('uswitch.txt', 'w+') as f:
+        f.write('hello\n')
+        f.seek(0)
+        assert f.read() == 'hello\n'
+        f.write('more')
+        f.seek(0)
+        assert f.readline() == 'hello\n'
+        assert f.read() == 'more'
+    assert rtext('uswitch.txt') == 'hello\nmore'
+    os.remove('uswitch.bin')
+    os.remove('uswitch.txt')
+
+
 def test_newline_empty_splits_on_cr():
     # newline='': lines end at '\r', '\n' and '\r\n', untranslated
     with open('ucr.bin', 'wb') as g:
@@ -672,6 +702,7 @@ def test_all():
     test_open_directory_raises_oserror()
     test_closed_is_bool()
     test_open_mode_order()
+    test_open_read_write_switch()
 
 
 if __name__ == '__main__':

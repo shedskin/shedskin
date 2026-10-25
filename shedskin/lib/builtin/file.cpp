@@ -175,9 +175,35 @@ str *file::__decode_cache() {
     return s;
 }
 
+/* universal newlines translate '\r\n' lazily: after a '\r', the next read
+   skips a '\n' (so reading a line never blocks on the character after it).
+   settle that before the file position is used or changed */
+static void __settle_cr(FILE *f, __file_options &options) {
+    if(options.cr) {
+        options.cr = false;
+        int c = GETC(f);
+        if(c != '\n' && c != EOF)
+            ungetc(c, f);
+    }
+}
+
+/* C stdio needs a file positioning call when switching between reading and
+   writing the same stream (C11 7.21.5.3). glibc does not care, but macOS and
+   windows lose or misplace the data otherwise */
+static inline void __switch_op(FILE *f, __file_options &options, char op) {
+    if(options.last_op != op) {
+        if(options.last_op && f) {
+            __settle_cr(f, options);
+            fseek(f, 0, SEEK_CUR);
+        }
+        options.last_op = op;
+    }
+}
+
 __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
+    __switch_op(f, options, 'w');
     if(f) {
         __GC_BYTES b;
         if (__bom_pending) {
@@ -205,18 +231,6 @@ void *file::writelines(pyiter<str *> *iter) {
         write(e);
     END_FOR
     return NULL;
-}
-
-/* universal newlines translate '\r\n' lazily: after a '\r', the next read
-   skips a '\n' (so reading a line never blocks on the character after it).
-   settle that before the file position is used or changed */
-static void __settle_cr(FILE *f, __file_options &options) {
-    if(options.cr) {
-        options.cr = false;
-        int c = GETC(f);
-        if(c != '\n' && c != EOF)
-            ungetc(c, f);
-    }
 }
 
 __ss_int file::seek(__ss_int i, __ss_int w) {
@@ -261,6 +275,7 @@ static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
 
 str *file::readline(__ss_int n) {
     __check_closed();
+    __switch_op(f, options, 'r');
     __read_cache.clear();
     size_t chars = 0;
     if (options.universal_mode) {
@@ -328,6 +343,7 @@ static void __throw_io_error() {
 
 str *file::read(__ss_int n) {
     __check_closed();
+    __switch_op(f, options, 'r');
     size_t chars = 0;
     if (options.universal_mode) {
         __read_cache.clear();
@@ -519,6 +535,7 @@ file_binary *open_binary(bytes *name, str *flags, str *encoding, str *errors, st
 __ss_int file_binary::write(bytes *s) {
     __ss_int size = -1;
     __check_closed();
+    __switch_op(f, options, 'w');
     if(f) {
         size_t s_size = s->unit.size();
         if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
@@ -563,6 +580,7 @@ __ss_int file_binary::tell() {
 
 bytes *file_binary::readline(__ss_int n) {
     __check_closed();
+    __switch_op(f, options, 'r');
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
         const int c = GETC(f);
@@ -582,6 +600,7 @@ bytes *file_binary::readline(__ss_int n) {
 
 bytes *file_binary::read(__ss_int n) {
     __check_closed();
+    __switch_op(f, options, 'r');
     if(n == 1) {
         const int c = GETC(f);
         if(FERROR(f) != 0) /* avoid virtual call */
