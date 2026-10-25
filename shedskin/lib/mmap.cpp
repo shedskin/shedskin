@@ -319,7 +319,8 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_6, *const_8, *const_9, *const_10, *const_11, *const_12,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
-    *const_25, *const_26, *const_27, *const_28, *const_29, *const_30;
+    *const_25, *const_26, *const_27, *const_28, *const_29, *const_30,
+    *const_31, *const_32;
 
 str *__name__;
 class_ *cl_mmap;
@@ -465,7 +466,13 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
 
 void *mmap::resize(__ss_int new_size)
 {
-    __raise_if_closed();
+    __raise_if_closed_or_not_resizeable();
+    /* like CPython: the pages of a shared anonymous mapping cannot be
+       grown, so touching the new part would raise SIGBUS */
+    if (fd == -1 and (flags & MAP_SHARED) and new_size > (__ss_int)__size())
+    {
+        throw new ValueError(const_32);
+    }
 #ifdef HAVE_MREMAP
     /* If this mapping is backed by a file, the file itself must be grown
        (or shrunk) to match, or else accessing the newly mapped region
@@ -722,7 +729,7 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
 
 void *mmap::resize(__ss_int new_size)
 {
-    __raise_if_closed();
+    __raise_if_closed_or_not_resizeable();
     DWORD dwErrCode = 0;
     DWORD off_hi, off_lo;
     LONG newSizeLow, newSizeHigh;
@@ -1174,6 +1181,18 @@ void *mmap::__raise_if_closed_or_not_writable()
     return NULL;
 }
 
+void *mmap::__raise_if_closed_or_not_resizeable()
+{
+    __raise_if_closed();
+    /* like CPython: resizing would otherwise also truncate or extend the
+       file behind a read-only or copy-on-write mapping */
+    if (access == ACCESS_READ or access == ACCESS_COPY)
+    {
+        throw new TypeError(const_31);
+    }
+    return NULL;
+}
+
 void *mmap::__seek_failed()
 {
     throw new ValueError(const_14);
@@ -1284,6 +1303,8 @@ void __init()
         const_28 = new str("mmap offset is greater than file size");
         const_29 = new str("mmap length is greater than file size");
         const_30 = new str("mmap item value must be in range(0, 256)");
+        const_31 = new str("mmap can't resize a readonly or copy-on-write memory map.");
+        const_32 = new str("mmap: can't expand a shared anonymous mapping");
 
         __name__ = new str("mmap");
 

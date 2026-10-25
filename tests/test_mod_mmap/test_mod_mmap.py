@@ -806,6 +806,56 @@ def test_offset():
     os.remove(TESTFILE_OUT)
 
 
+def test_resize_refused():
+    # regression test: resize() on a read-only or copy-on-write map used to
+    # truncate the file behind it, and growing a shared anonymous map
+    # crashed with SIGBUS once the new part was touched
+    setUp()
+    msg = "mmap can't resize a readonly or copy-on-write memory map."
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'important data ' * 100)
+    errors = []
+    f = open(TESTFILE_OUT, 'r+b')
+    for access in (mmap.ACCESS_READ, mmap.ACCESS_COPY):
+        m = mmap.mmap(f.fileno(), 0, access=access)
+        try:
+            m.resize(10)
+        except TypeError as e:
+            errors.append(str(e))
+        assert len(m) == 1500
+        m.close()
+    m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+    try:
+        m.resize(10)
+    except TypeError as e:
+        errors.append(str(e))
+    m.close()
+    f.close()
+    assert errors == [msg] * 3
+    assert os.path.getsize(TESTFILE_OUT) == 1500
+
+    m = mmap.mmap(-1, 100)
+    error = False
+    try:
+        m.resize(10000)
+    except ValueError as e:
+        error = True
+        assert str(e) == "mmap: can't expand a shared anonymous mapping"
+    assert error
+    assert len(m) == 100
+    m.resize(50)  # shrinking is fine
+    assert len(m) == 50
+    m.close()
+
+    m = mmap.mmap(-1, 100, flags=mmap.MAP_PRIVATE)
+    m[99] = 7
+    m.resize(10000)  # a private one can grow
+    m[9000] = 1
+    assert m[99] == 7 and m[9000] == 1
+    m.close()
+    os.remove(TESTFILE_OUT)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
@@ -821,6 +871,7 @@ def test_all():
         test_closed()
         test_resize_grows_backing_file()
         test_resize_shrinks_backing_file()
+        test_resize_refused()
         test_madvise()
         test_seekable()
         test_set_name()

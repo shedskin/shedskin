@@ -203,6 +203,7 @@ class mmap: public pyiter<bytes *>
     void *__raise_if_closed();
     void *__raise_if_closed_or_not_readable();
     void *__raise_if_closed_or_not_writable();
+    void *__raise_if_closed_or_not_resizeable();
     void *__seek_failed();
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
