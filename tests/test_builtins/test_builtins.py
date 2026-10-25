@@ -769,6 +769,18 @@ def test_round():
     assert round(-inf, -1) == -inf
     assert str(round(nan, 2)) == 'nan'
 
+    # a finite value that rounds beyond the float range raises
+    big = 1.7976931348623157e308
+    for x, n in [(big, -308), (-big, -308), (big, -304)]:
+        error = ''
+        try:
+            round(x, n)
+        except OverflowError as e:
+            error = str(e)
+        assert error == 'rounded value too large to represent'
+    assert round(big, -303) == 1.79769e308
+    assert round(-9.5e307, -308) == -1e308
+
 
 def test_set():
     assert list(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]

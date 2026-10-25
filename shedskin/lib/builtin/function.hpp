@@ -1202,6 +1202,8 @@ static inline __ss_float __decimal_round(__ss_float a, int n) {
         valstr += std::to_string(result_e);
 
         __ss_float val = (__ss_float)strtod(valstr.c_str(), NULL);
+        if (std::isinf(val)) /* e.g. round(1.7976931348623157e308, -308) */
+            throw new OverflowError(new str("rounded value too large to represent"));
         return neg ? -val : val;
     }
 }
