@@ -91,6 +91,13 @@ def test_inf():
 def test_is_integer():
     assert (17.0).is_integer()
     assert not (17.5).is_integer()
+    assert (1e20).is_integer()
+    assert (9.3e18).is_integer()
+    assert (-2.0**63).is_integer()
+    assert (2.0**1000).is_integer()
+    assert not float('inf').is_integer()
+    assert not float('nan').is_integer()
+    assert not (-0.5).is_integer()
 
 
 def test_from_number():
