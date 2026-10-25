@@ -56,6 +56,16 @@ public:
     __ss_bool isatty() { __check_closed(); return False; }
     __ss_int __ss_fileno() { throw new UnsupportedOperation(new str("fileno")); }
     void *detach() { throw new UnsupportedOperation(new str("detach")); }
+
+    /* CPython ends the closed-BytesIO message with a period (unlike StringIO and
+       binary files); also used via flush/writelines, as file_binary's own check
+       is non-virtual */
+    inline void __check_closed() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file."));
+    }
+    void *flush() { __check_closed(); return NULL; }
+    void *writelines(pyiter<bytes *> *iter) { __check_closed(); return file_binary::writelines(iter); }
 };
 
 class StringIO : public file {
