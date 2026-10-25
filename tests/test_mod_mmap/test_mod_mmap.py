@@ -806,9 +806,20 @@ def test_offset():
     os.remove(TESTFILE_OUT)
 
 
+def test_enter_exit_results():
+    # __enter__ returns the mmap itself and __exit__ returns None
+    m = mmap.mmap(-1, 8)
+    n = m.__enter__()
+    assert n is m
+    assert len(n) == 8
+    assert m.__exit__() is None
+    assert m.closed
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
+        test_enter_exit_results()
         test_basic()
         test_readonly()
         test_rfind()

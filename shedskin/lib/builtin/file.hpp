@@ -50,8 +50,8 @@ public:
     virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
-    virtual void __enter__();
-    virtual void __exit__();
+    virtual file *__enter__();
+    virtual void *__exit__();
 
     virtual __iter<str *> *__iter__();
     virtual str *  __next__();
@@ -96,8 +96,8 @@ public:
     virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
-    virtual void __enter__();
-    virtual void __exit__();
+    virtual file_binary *__enter__();
+    virtual void *__exit__();
     virtual str *__repr__();
 
     virtual __iter<bytes *> *__iter__();

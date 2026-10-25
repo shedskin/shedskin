@@ -180,6 +180,7 @@ public:
     popen_pipe(FILE* pipe=0) : file(pipe) {}
 
     void *close();
+    popen_pipe *__enter__() { return this; }
 };
 
 popen_pipe* popen(str* cmd);

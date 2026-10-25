@@ -671,10 +671,26 @@ def test_open_invalid_mode():
     os.remove('umode.txt')
 
 
+def test_enter_exit_results():
+    # __enter__ returns the file itself and __exit__ returns None
+    f = open('eetest.txt', 'w')
+    assert f.__enter__() is f
+    f.write('hoi')
+    assert f.__exit__() is None
+    assert f.closed
+    g = open('eetest.txt', 'rb')
+    h = g.__enter__()
+    assert h.read() == b'hoi'
+    assert g.__exit__() is None
+    assert g.closed
+    os.remove('eetest.txt')
+
+
 def test_all():
     test_utf8_sig()
     test_seek_returns_position()
     test_open_exclusive()
+    test_enter_exit_results()
     test_newline_empty_splits_on_cr()
     test_readline_size_counts_characters()
     test_pending_cr_seek_tell()

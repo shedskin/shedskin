@@ -329,6 +329,17 @@ def test_heappushpop_ties():
     assert heap3[0].tag == 1
 
 
+def test_none_results():
+    # the in-place functions return None, so their result can be used as a value
+    h = [3, 1, 2]
+    assert heapq.heappush(h, 0) is None
+    assert heapq.heapify(h) is None
+    assert h[0] == 0
+    assert heapq.heapify_max(h) is None
+    assert heapq.heappush_max(h, 4) is None
+    assert h[0] == 4
+
+
 def test_all():
     test_heapify()
     test_heapify_max()
@@ -358,6 +369,7 @@ def test_all():
     test_custom_class()
 
     test_heappushpop_ties()
+    test_none_results()
 
 
 if __name__ == '__main__':

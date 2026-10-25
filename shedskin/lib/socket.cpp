@@ -686,10 +686,13 @@ str *socket::__repr__() {
     return new str(os.str().c_str());
 }
 
-void socket::__enter__() { }
+socket *socket::__enter__() {
+    return this;
+}
 
-void socket::__exit__() {
+void *socket::__exit__() {
     close();
+    return NULL;
 }
 
 __ss_int socket::detach() {

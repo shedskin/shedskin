@@ -662,10 +662,27 @@ def test_tell_closed():
     assert err
 
 
+def test_enter_exit_results():
+    # __enter__ returns the stream itself and __exit__ returns None
+    s = io.StringIO('hoi')
+    t = s.__enter__()
+    assert t is s
+    assert t.getvalue() == 'hoi'
+    assert s.__exit__() is None
+    assert s.closed
+    b = io.BytesIO(b'hoi')
+    c = b.__enter__()
+    assert c is b
+    assert c.getvalue() == b'hoi'
+    assert b.__exit__() is None
+    assert b.closed
+
+
 def test_all():
     test_stringio()
     test_bytesio()
     test_io_from_file()
+    test_enter_exit_results()
     test_io_read_from_binary_string()
     test_io_write_to_binary_string()
     test_bytesio_write_none()

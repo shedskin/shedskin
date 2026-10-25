@@ -65,7 +65,7 @@ class mmap(pyiter):
         pass
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self):
         pass

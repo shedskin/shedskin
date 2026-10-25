@@ -909,10 +909,21 @@ def test_recvfrom_into():
     b.close()
 
 
+def test_enter_exit_results():
+    # __enter__ returns the socket itself and __exit__ returns None
+    s = socket.socket()
+    t = s.__enter__()
+    assert t is s
+    assert t.fileno() != -1
+    assert s.__exit__() is None
+    assert s.fileno() == -1
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
     test_with()
+    test_enter_exit_results()
     test_detach_dup_fromfd()
     test_create_server()
     test_sendfile()

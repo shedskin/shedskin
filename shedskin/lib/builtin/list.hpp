@@ -16,7 +16,7 @@ public:
     list(str *s);
     list(bytes *b);
 
-    void clear();
+    void *clear();
     list<T> *copy();
 
     void *__setitem__(__ss_int i, T e);
@@ -216,8 +216,9 @@ template<class T> PyObject *list<T>::__to_py__() {
 }
 #endif
 
-template<class T> void list<T>::clear() {
+template<class T> void *list<T>::clear() {
     units.clear();
+    return NULL;
 }
 
 template<class T> list<T> *list<T>::copy() {

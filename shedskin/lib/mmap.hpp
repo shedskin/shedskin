@@ -124,8 +124,8 @@ class mmap: public pyiter<bytes *>
 #endif /* WIN32 */
     // mmap
     void *   close();
-    void     __enter__();
-    void     __exit__();
+    mmap    *__enter__();
+    void    *__exit__();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
     void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
     /* start/end are __ss_void_struct when omitted (start then defaults

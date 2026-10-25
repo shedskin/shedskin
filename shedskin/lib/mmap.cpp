@@ -777,11 +777,15 @@ void *mmap::resize(__ss_int new_size)
 }
 #endif /* WIN32 */
 
-void mmap::__enter__() { }
+mmap *mmap::__enter__()
+{
+    return this;
+}
 
-void mmap::__exit__()
+void *mmap::__exit__()
 {
     close();
+    return NULL;
 }
 
 void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)

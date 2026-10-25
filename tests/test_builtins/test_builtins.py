@@ -872,8 +872,18 @@ def test_zip():
     assert list(zip([1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15])) == [(1,4,7,10,13), (2,5,8,11,14), (3,6,9,12,15)]
 
 
+def test_print_none():
+    # print() returns None, so its result can be used as a value
+    s = io.StringIO()
+    x = print('a', 'b', file=s)
+    assert x is None
+    assert print(end='') is None
+    assert s.getvalue() == 'a b\n'
+
+
 def test_all():
     test_abs()
+    test_print_none()
     # test_ascii()
     test_bin()
     test_bool()
