@@ -9,7 +9,8 @@ struct __file_options {
     bool universal_mode;
     bool cr;
     bool split_cr; /* newline='': lines also end at '\r' and '\r\n', untranslated */
-    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false), split_cr(false) {}
+    char last_op; /* 'r' or 'w' after the last read or write, else 0 */
+    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false), split_cr(false), last_op(0) {}
 };
 
 class file_binary;
@@ -149,6 +150,7 @@ inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "
 #endif
 
 void __check_open_mode(str *mode);
+str *__c_open_mode(str *mode, bool excl);
 
 file *open(str *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);
 file *open(bytes *name, str *flags = 0, str *encoding = 0, str *errors = 0, str *newline = 0);

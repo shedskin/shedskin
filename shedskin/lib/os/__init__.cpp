@@ -1123,12 +1123,7 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 static FILE *__fdopen(__ss_int fd, str *mode) {
     __check_open_mode(mode);
     /* C fdopen() does not know 'x' (and never creates or truncates) */
-    size_t excl = mode->unit.find('x');
-    if (excl != std::string::npos) {
-        mode = new str(mode->unit);
-        mode->unit[excl] = 'w';
-    }
-    FILE* fp = ::fdopen((int)fd, mode->c_str());
+    FILE* fp = ::fdopen((int)fd, __c_open_mode(mode, false)->c_str());
     if(fp == NULL)
         __throw_oserror(new str("os.fdopen failed"));
     return fp;

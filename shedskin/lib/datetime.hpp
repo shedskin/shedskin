@@ -57,7 +57,7 @@ public:
     template<class T> auto __iadd__(T other) { return __add__(other); } /* d += x */
     template<class T> auto __isub__(T other) { return __sub__(other); } /* d -= x */
 
-    date *replace(__ss_int year=0, __ss_int month=0, __ss_int day=0);  //ok (how to handle keyword variables?)
+    date *replace(__ss_int __args, __ss_int year=-1, __ss_int month=-1, __ss_int day=-1);
     __time__::struct_time *timetuple();                 //ok (depends on function from cpython)
     __ss_int toordinal();                                    //copied from cpython
     __ss_int weekday();                                      //copied from cpython

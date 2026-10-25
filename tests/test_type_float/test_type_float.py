@@ -72,6 +72,28 @@ def test_modulo():
     assert str(divmod(3.0, -1.5)[1]) == "-0.0"
     assert str(divmod(-4.5, 1.5)[1]) == "0.0"
 
+    # zero divisor
+    zero = 0.0
+    izero = 0
+    errors = []
+    try:
+        5.0 % zero
+    except ZeroDivisionError as e:
+        errors.append(str(e))
+    try:
+        5 % zero
+    except ZeroDivisionError as e:
+        errors.append(str(e))
+    try:
+        5.0 % izero
+    except ZeroDivisionError as e:
+        errors.append(str(e))
+    try:
+        divmod(5.0, zero)
+    except ZeroDivisionError as e:
+        errors.append(str(e))
+    assert errors == ['float modulo by zero', 'float modulo by zero', 'float modulo by zero', 'float divmod()']
+
 
 def test_multiplication():
     assert 2.5 * 4.0 == 10.0

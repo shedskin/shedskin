@@ -386,6 +386,77 @@ def test_open_exclusive():
     os.remove('uexcl.txt')
 
 
+def test_open_mode_order():
+    # the mode characters may come in any order ('br' is 'rb')
+    with open('uorder.txt', 'bw') as g:
+        g.write(b'pre')
+    with open('uorder.txt', 'ba') as g:
+        g.write(b'cious\n')
+    with open('uorder.txt', 'br') as g:
+        assert g.read() == b'precious\n'
+    with open('uorder.txt', 'tr') as f:
+        assert f.read() == 'precious\n'
+    with open('uorder.txt', '+r') as f:
+        assert f.read(3) == 'pre'
+    with open('uorder.txt', 'b+r') as g:
+        assert g.read(3) == b'pre'
+        g.write(b'C')
+    assert rtext('uorder.txt') == 'preCious\n'
+    with open('uorder.txt', 'tw') as f:
+        f.write('x')
+    with open('uorder.txt', '+a') as f:
+        f.write('y')
+    assert rtext('uorder.txt') == 'xy'
+    os.remove('uorder.txt')
+    with open('uorder.txt', 'bx') as g:
+        g.write(b'hop')
+    try:
+        open('uorder.txt', 'tx')
+        assert False
+    except FileExistsError:
+        pass
+    os.remove('uorder.txt')
+    with open('uorder.txt', 'tx') as f:
+        f.write('hop')
+    fd = os.open('uorder.txt', os.O_RDONLY)
+    with os.fdopen(fd, 'br') as g:
+        assert g.read() == b'hop'
+    fd = os.open('uorder.txt', os.O_RDONLY)
+    with os.fdopen(fd, 'tr') as f:
+        assert f.read() == 'hop'
+    os.remove('uorder.txt')
+
+
+def test_open_read_write_switch():
+    # C stdio needs a seek between reading and writing (macOS, windows)
+    with open('uswitch.bin', 'w+b') as g:
+        g.write(b'12345')
+        g.seek(1)
+        assert g.read(2) == b'23'
+        g.write(b'Z')
+        assert g.read() == b'5'
+        g.seek(0)
+        assert g.read() == b'123Z5'
+    with open('uswitch.bin', 'r+b') as g:
+        g.write(b'A')
+        assert g.read(2) == b'23'
+        g.write(b'B')
+        assert g.tell() == 4
+        assert g.readline() == b'5'
+    assert rbytes('uswitch.bin') == b'A23B5'
+    with open('uswitch.txt', 'w+') as f:
+        f.write('hello\n')
+        f.seek(0)
+        assert f.read() == 'hello\n'
+        f.write('more')
+        f.seek(0)
+        assert f.readline() == 'hello\n'
+        assert f.read() == 'more'
+    assert rtext('uswitch.txt') == 'hello\nmore'
+    os.remove('uswitch.bin')
+    os.remove('uswitch.txt')
+
+
 def test_newline_empty_splits_on_cr():
     # newline='': lines end at '\r', '\n' and '\r\n', untranslated
     with open('ucr.bin', 'wb') as g:
@@ -630,6 +701,8 @@ def test_all():
     test_lineendings()
     test_open_directory_raises_oserror()
     test_closed_is_bool()
+    test_open_mode_order()
+    test_open_read_write_switch()
 
 
 if __name__ == '__main__':
