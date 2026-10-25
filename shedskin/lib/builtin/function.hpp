@@ -36,6 +36,7 @@ template<> inline __ss_float __float(int p) { return p; }
 template<> inline __ss_float __float(__ss_bool b) { return b.value; }
 template<> inline __ss_float __float(__ss_float d) { return d; }
 template<> __ss_float __float(str *s);
+template<> __ss_float __float(bytes *s);
 bool __float_scan_number(const char *&p, __GC_STRING &clean);
 
 /* str */
