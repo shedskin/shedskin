@@ -77,8 +77,6 @@ public:
         __class__ = cl_error;
         __init_plain_oserror(this, msg);
     }
-    str *__str__() { return BaseException::__str__(); }
-    str *__repr__() { return BaseException::__repr__(); }
 };
 
 extern class_ *cl_herror;
@@ -127,8 +125,8 @@ class socket : public object {
     void read_wait();
     void write_wait();
     size_t send(const char *s, size_t len, int flags=0);
-    socket *bind(const sockaddr *, socklen_t);
-    socket *connect(const sockaddr *, socklen_t);
+    void *bind(const sockaddr *, socklen_t);
+    void *connect(const sockaddr *, socklen_t);
     socket *accept(sockaddr *, socklen_t *);
     size_t recvfrom(char *, size_t, int, sockaddr *, socklen_t *);
 public:
@@ -156,30 +154,32 @@ public:
     __ss_int connect_ex(inet_address address);
     __ss_bool get_inheritable();
     void *set_inheritable(__ss_bool inheritable);
-    socket *bind(inet_address address);
-    socket *bind(pyseq<str *> *address);
+    void *bind(inet_address address);
+    void *bind(str *address);
+    void *bind(bytes *address);
     file *makefile(str *mode=NULL);
     file_binary *makefile_binary(str *mode=NULL);
-    socket *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
-    socket *connect(inet_address address);
-    socket *connect(pyseq<str *> *address);
-    socket *setblocking(__ss_int flag);
+    void *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
+    void *connect(inet_address address);
+    void *connect(str *address);
+    void *connect(bytes *address);
+    void *setblocking(__ss_int flag);
     __ss_bool getblocking() { return __mbool(_blocking); }
-    socket *shutdown(__ss_int how);
+    void *shutdown(__ss_int how);
     __ss_int send(bytes *string, __ss_int flags=0);
     void *sendall(bytes *string, __ss_int flags=0);
     __ss_int sendto(bytes *string, __ss_int flags, inet_address addr);
     __ss_int sendto(bytes *string, inet_address addr);
     /* sendto(data, address): the compiler appends the stub's address=0 default */
     __ss_int sendto(bytes *string, inet_address addr, __ss_int) { return sendto(string, addr); }
-    socket *close();
-    socket *settimeout(double value);
+    void *close();
+    void *settimeout(double value);
     double gettimeout() { return _timeout; }
     bytes *recv(__ss_int bufsize, __ss_int flags=0);
     tuple2<bytes *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
     __ss_int recv_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
     tuple2<__ss_int, inet_address> *recvfrom_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
-    socket *listen(__ss_int backlog);
+    void *listen(__ss_int backlog);
     inet_address getpeername();
     inet_address getsockname();
 

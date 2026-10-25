@@ -909,6 +909,113 @@ def test_recvfrom_into():
     b.close()
 
 
+def test_none_returns():
+    # these return None, not the socket (explicit timeouts: an earlier
+    # test leaves the default timeout at 0.0)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    assert server.settimeout(5.0) is None
+    assert server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) is None
+    assert server.bind(('127.0.0.1', 0)) is None
+    assert server.listen(1) is None
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    assert client.setblocking(True) is None
+    assert client.connect(server.getsockname()) is None
+    conn, addr = server.accept()
+    assert conn.close() is None
+    assert server.close() is None
+    assert client.close() is None
+    a, b = socket.socketpair()
+    assert a.setblocking(True) is None
+    assert a.settimeout(1.0) is None
+    r = a.shutdown(socket.SHUT_RDWR)
+    r2 = None
+    assert r is r2
+    assert a.close() is None
+    assert a.close() is None  # already closed
+    b.close()
+
+
+def unix_roundtrip(path):
+    u = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    u.settimeout(5.0)
+    assert u.bind(path) is None
+    u.listen(1)
+    v = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    v.settimeout(5.0)
+    assert v.connect(path) is None
+    c, addr = u.accept()
+    v.sendall(b'hi')
+    r = c.recv(2)
+    c.close()
+    v.close()
+    u.close()
+    return r
+
+
+def unix_roundtrip_bytes(path):
+    u = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    u.settimeout(5.0)
+    u.bind(path)
+    u.listen(1)
+    v = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    v.settimeout(5.0)
+    v.connect(path)
+    c, addr = u.accept()
+    v.sendall(b'hi')
+    r = c.recv(2)
+    c.close()
+    v.close()
+    u.close()
+    return r
+
+
+def test_unix_path():
+    # the whole path is the address (not just its first character)
+    if sys.platform == 'win32':
+        return
+    for path in ['test_unix.sock', 'test_unix_\u00e9\u20ac.sock']:
+        if os.path.exists(path):
+            os.unlink(path)
+        assert unix_roundtrip(path) == b'hi'
+        assert os.path.exists(path)
+        os.unlink(path)
+    path = 'test_unix_b.sock'
+    if os.path.exists(path):
+        os.unlink(path)
+    assert unix_roundtrip_bytes(path.encode()) == b'hi'
+    assert os.path.exists(path)
+    os.unlink(path)
+    if sys.platform == 'linux':  # abstract namespace
+        assert unix_roundtrip('\x00shedskin-test-%d' % os.getpid()) == b'hi'
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        s.bind('a' * 200)
+        assert False
+    except OSError as e:
+        assert str(e) == 'AF_UNIX path too long'
+    s.close()
+
+
+def test_error_text():
+    # as CPython: socket.error is OSError, socket.timeout is TimeoutError
+    a, b = socket.socketpair()
+    a.close()
+    try:
+        a.recv(1)
+        assert False
+    except OSError as e:
+        assert str(e).startswith('[Errno ')
+        if sys.platform != 'win32':
+            assert str(e) == '[Errno 9] Bad file descriptor'
+            assert repr(e) == "OSError(9, 'Bad file descriptor')"
+            assert e.errno == 9 and e.strerror == 'Bad file descriptor'
+    b.close()
+    e1 = socket.error('plain')
+    assert str(e1) == 'plain' and repr(e1) == "OSError('plain')"
+    e2 = socket.timeout('t')
+    assert str(e2) == 't' and repr(e2) == "TimeoutError('t')"
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -933,6 +1040,9 @@ def test_all():
     test_constants()
     test_recv_into()
     test_recvfrom_into()
+    test_none_returns()
+    test_unix_path()
+    test_error_text()
     test_default_timeout() # last, see comment there
 
 
