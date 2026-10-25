@@ -833,18 +833,28 @@ def test_sum():
     try:
         sum(['a', 'b'], '')
         assert False
-    except TypeError:
-        pass
+    except TypeError as err:
+        assert str(err) == "sum() can't sum strings [use ''.join(seq) instead]"
     try:
         sum([b'a', b'b'], b'')
         assert False
-    except TypeError:
-        pass
+    except TypeError as err:
+        assert str(err) == "sum() can't sum bytes [use b''.join(seq) instead]"
+    try:
+        sum(['a', 'b'])
+        assert False
+    except TypeError as err:
+        assert str(err) == "unsupported operand type(s) for +: 'int' and 'str'"
+    try:
+        sum([b'a', b'b'])
+        assert False
+    except TypeError as err:
+        assert str(err) == "unsupported operand type(s) for +: 'int' and 'bytes'"
     try:
         sum([s for s in ['a', 'b']])  # fused listcomp
         assert False
-    except TypeError:
-        pass
+    except TypeError as err:
+        assert str(err) == "unsupported operand type(s) for +: 'int' and 'str'"
 
 
 class SumVec:
