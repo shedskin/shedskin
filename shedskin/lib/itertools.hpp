@@ -203,8 +203,8 @@ template<class T> inline cycleiter<T> *cycle(pyiter<T> *iterable) {
 
 template<class T> class batchediter : public __iter<tuple<T> *> {
 public:
-    int n;
-    int count;
+    __ss_int n;
+    __ss_int count;
     bool exhausted;
     __ss_bool strict;
     __iter<T> *iter;
@@ -1207,7 +1207,7 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
     if (r_ > this->len) {
         this->current = -1;
     } else {
-        this->current = this->r;
+        this->current = (int)this->r; /* r <= len */
         this->indices.resize(this->len);
         this->cycles.resize(this->r);
 
@@ -1243,7 +1243,7 @@ template<class T> tuple2<T, T> *permutationsiter<T>::__next__() {
             for (int i = 0; i < this->r; ++i) {
                 tuple->units.push_back(this->cache[this->indices[i]]);
             }
-            this->current = this->r - 1;
+            this->current = (int)(this->r - 1);
             return tuple;
         } else {
             int last = this->indices[this->current];
@@ -1307,7 +1307,7 @@ template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterab
     if (r_ > this->len) {
         this->current = -1;
     } else {
-        this->current = r_;
+        this->current = (int)r_;
         this->indices.resize(r_);
 
         for (int i = 0; i < this->r; ++i) {
@@ -1350,7 +1350,7 @@ template<class T> tuple2<T, T> *combinationsiter<T>::__next__() {
             tuple->units.push_back(this->cache[this->indices[i]]);
         }
 
-        this->current = this->r - 1;
+        this->current = (int)(this->r - 1);
 
         return tuple;
     }
@@ -1398,12 +1398,12 @@ template<class T> inline combinations_with_replacementiter<T>::combinations_with
             break;
         }
     }
-    this->len = this->cache.size();
+    this->len = (int)(this->cache.size());
 
     if (!this->len && r_) {
         this->current = -1;
     } else {
-        this->current = r_;
+        this->current = (int)r_;
         this->indices.resize(r_);
 
         for (int i = 0; i < this->r; ++i) {
@@ -1445,7 +1445,7 @@ template<class T> tuple2<T, T> *combinations_with_replacementiter<T>::__next__()
             tuple->units.push_back(this->cache[this->indices[i]]);
         }
 
-        this->current = this->r - 1;
+        this->current = (int)(this->r - 1);
 
         return tuple;
     }

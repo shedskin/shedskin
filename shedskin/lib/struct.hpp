@@ -144,11 +144,11 @@ template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos,
 
 template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t base, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
-    int pad;
+    __ss_int pad;
     __ss_int n;
 
     for(; j<fmtlen; j++) {
-        char c = fmt->unit[j];
+        char c = (char)fmt->unit[j]; /* format already validated as ascii */
         switch(c) {
             case '@':
             case '=':
@@ -189,7 +189,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'N':
                 itemsize = get_itemsize(order, c);
                 pad = padding(order, (__ss_int)(pos-base), itemsize);
-                for(int k=0; k<pad; k++)
+                for(__ss_int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
                 if(ndigits == 0) { /* e.g. '0i': align, but consume no argument */
                     ndigits = -1;
@@ -208,7 +208,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'f':
                 itemsize = get_itemsize(order, c);
                 pad = padding(order, (__ss_int)(pos-base), itemsize);
-                for(int k=0; k<pad; k++)
+                for(__ss_int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
                 if(ndigits == 0) {
                     ndigits = -1;
@@ -286,8 +286,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
 template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int, str *fmt, Args ... args) {
     char order = '@';
+    (void)result; /* unused when there are no args */
 
-    unsigned int fmtlen = fmt->__len__();
+    unsigned int fmtlen = (unsigned int)fmt->__len__();
     unsigned int j = 0;
     size_t base = pos; /* native alignment is relative to the start of the packed data */
 

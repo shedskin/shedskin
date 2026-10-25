@@ -4,6 +4,10 @@
 #define NOMINMAX
 #endif
 
+#ifdef __SS_BIND
+#include <Python.h> /* must precede any system header */
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -19,6 +23,8 @@
 #define MMAP_PUSH(constant) __##constant = (constant)
 /* mremap() is Linux/NetBSD only; elsewhere (e.g. macOS, FreeBSD, OpenBSD)
    resize() falls back to unmapping and mapping again */
+#undef HAVE_MREMAP /* pyconfig.h's, for extension modules */
+#undef HAVE_MADVISE
 #if defined(__linux__) || defined(__NetBSD__)
 #define HAVE_MREMAP
 #endif

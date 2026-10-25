@@ -51,7 +51,9 @@
 
 typedef uint32_t Py_UCS4;
 typedef ptrdiff_t Py_ssize_t;
+#ifndef PY_SSIZE_T_MAX /* already defined by Python.h, for extension modules */
 #define PY_SSIZE_T_MAX PTRDIFF_MAX
+#endif
 #if SIZE_MAX > 0xFFFFFFFFu  /* no __SIZEOF_SIZE_T__/__SIZEOF_POINTER__ under msvc */
 #define SIZEOF_SIZE_T 8
 #else
@@ -62,7 +64,9 @@ typedef ptrdiff_t Py_ssize_t;
 #else
 #define SIZEOF_VOID_P 4
 #endif
+#ifndef Py_STRINGIFY
 #define Py_STRINGIFY(x) #x
+#endif
 #define PyErr_CheckSignals() 0
 #if defined(__GNUC__)
 #define HAVE_COMPUTED_GOTOS 1
@@ -105,7 +109,12 @@ static unsigned int sre_toupper(unsigned int ch) {
 /* -------------------------------------------------------------------- */
 /* search engine state */
 
-/* shedskin: ascii-only versions of CPython's Py_ISDIGIT etc. */
+/* shedskin: ascii-only versions of CPython's Py_ISDIGIT etc. (replacing
+   the Python.h ones, for extension modules) */
+#undef Py_ISDIGIT
+#undef Py_ISSPACE
+#undef Py_ISALNUM
+#undef Py_TOLOWER
 #define Py_ISDIGIT(ch) ((ch) >= '0' && (ch) <= '9')
 #define Py_ISSPACE(ch) ((ch) == ' ' || ((ch) >= '\t' && (ch) <= '\r'))
 #define Py_ISALNUM(ch) (Py_ISDIGIT(ch) || ((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z'))
@@ -351,10 +360,20 @@ repeat_pool_clear(SRE_STATE *state)
 
 /* generate 32-bit unicode version */
 
+/* sre_lib.h dispatches on opcodes using computed gotos, a GNU extension */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+
 #define SRE_CHAR Py_UCS4
 #define SIZEOF_SRE_CHAR 4
 #define SRE(F) sre_ucs4_##F
 #include "sre_lib.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 /* -------------------------------------------------------------------- */
 /* state handling (shedskin: simplified versions of sre.c's state_init,

@@ -62,7 +62,8 @@ template<class A> list<typename A::for_in_unit> *__select_ready(A *fds, fd_set *
     typename A::for_in_unit e;
     list<typename A::for_in_unit> *result = new list<typename A::for_in_unit>();
     FOR_IN(e,fds,0,1,2)
-        if(FD_ISSET(__select_fd(e), set))
+        __ss_int FD = __select_fd(e);
+        if(FD >= 0 && FD_ISSET(FD, set))
             result->append(e);
     END_FOR
     return result;
@@ -102,8 +103,8 @@ template<class A, class B, class C, class D> __select_result<typename A::for_in_
     __select_add(xFDs, &lxFDs, &maxFD);
 
     memset(&ltimeout, 0, sizeof(ltimeout));
-    ltimeout.tv_sec = timeout;
-    ltimeout.tv_usec = (timeout - floor(timeout))*1E6;
+    ltimeout.tv_sec = (decltype(ltimeout.tv_sec))timeout;
+    ltimeout.tv_usec = (decltype(ltimeout.tv_usec))((timeout - floor(timeout))*1E6);
 
     if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, has_timeout ? &ltimeout : NULL) == -1) {
 #ifdef WIN32
