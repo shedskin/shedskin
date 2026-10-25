@@ -15,9 +15,8 @@ dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
 
-str *const_1, *const_16, *const_17, *const_2, *const_21, *const_22, *const_23, *const_7;
+str *const_1, *const_16, *const_17, *const_2, *const_21, *const_22, *const_23;
 
-__ss_char EOL = 0;
 
 const __ss_int QUOTE_MINIMAL = 0;
 const __ss_int QUOTE_ALL = 1;
@@ -107,7 +106,7 @@ Dialect *_make_dialect(
     dialect->strict = from->strict;
 
     if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None etc.
-        if(len(delimiter) > 1)
+        if(len(delimiter) != 1)
             throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
         dialect->delimiter = delimiter;
     }
@@ -162,7 +161,7 @@ list<str *> *list_dialects() {
 }
 
 Dialect *get_dialect(str *name) {
-    return _dialects->__getitem__(name);
+    return _lookup_dialect(name);
 }
 
 void *register_dialect(
@@ -183,6 +182,8 @@ void *register_dialect(
 }
 
 void *unregister_dialect(str *name) {
+    if (!_dialects->__contains__(name))
+        throw new Error(new str("unknown dialect"));
     _dialects->__delitem__(name);
     return NULL;
 }
@@ -234,14 +235,16 @@ void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, str *delim
 }
 
 void *reader::parse_process_char(str *s) {
-    __ss_char c = s->unit[0];
+    /* s == NULL signals end of line (a NUL character is ordinary data) */
+    bool eol = (s == NULL);
+    __ss_char c = eol ? 0 : s->unit[0];
 
     Dialect *dialect = this->dialect;
 
     switch (this->state) {
         case START_RECORD:
             /* start of record */
-            if (c == EOL)
+            if (eol)
                 /* empty line - return [] */
                 break;
             else if (c == '\n' || c == '\r') {
@@ -255,10 +258,10 @@ void *reader::parse_process_char(str *s) {
         case START_FIELD:
             /* expecting field */
             this->unquoted_field = true;
-            if (c == '\n' || c == '\r' || c == EOL) {
+            if (c == '\n' || c == '\r' || eol) {
                 /* save empty field - return [fields] */
                 parse_save_field();
-                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+                this->state = (eol ? START_RECORD : EAT_CRNL);
             }
             else if (c == dialect->quotechar->unit[0] &&
                      dialect->quoting != QUOTE_NONE) {
@@ -290,23 +293,23 @@ void *reader::parse_process_char(str *s) {
                 this->state = AFTER_ESCAPED_CRNL;
                 break;
             }
-            if (c == EOL)
+            if (eol)
                 c = '\n';
             parse_add_char(c);
             this->state = IN_FIELD;
             break;
 
         case AFTER_ESCAPED_CRNL:
-            if (c == EOL)
+            if (eol)
                 break;
             [[fallthrough]];
 
         case IN_FIELD:
             /* in unquoted field */
-            if (c == '\n' || c == '\r' || c == EOL) {
+            if (c == '\n' || c == '\r' || eol) {
                 /* end of line - return [fields] */
                 parse_save_field();
-                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+                this->state = (eol ? START_RECORD : EAT_CRNL);
             }
             else if (dialect->escapechar && c == dialect->escapechar->unit[0]) {
                 /* possible escaped character */
@@ -325,7 +328,7 @@ void *reader::parse_process_char(str *s) {
 
         case IN_QUOTED_FIELD:
             /* in quoted field */
-            if (c == EOL)
+            if (eol)
                 ;
             else if (dialect->escapechar && c == dialect->escapechar->unit[0]) {
                 /* Possible escape character */
@@ -349,7 +352,7 @@ void *reader::parse_process_char(str *s) {
             break;
 
         case ESCAPE_IN_QUOTED_FIELD:
-            if (c == EOL)
+            if (eol)
                 c = '\n';
             parse_add_char(c);
             this->state = IN_QUOTED_FIELD;
@@ -368,10 +371,10 @@ void *reader::parse_process_char(str *s) {
                 parse_save_field();
                 this->state = START_FIELD;
             }
-            else if (c == '\n' || c == '\r' || c == EOL) {
+            else if (c == '\n' || c == '\r' || eol) {
                 /* end of line - return [fields] */
                 parse_save_field();
-                this->state = (c == EOL ? START_RECORD : EAT_CRNL);
+                this->state = (eol ? START_RECORD : EAT_CRNL);
             }
             else if (!dialect->strict) {
                 parse_add_char(c);
@@ -386,7 +389,7 @@ void *reader::parse_process_char(str *s) {
         case EAT_CRNL:
             if (c == '\n' || c == '\r')
                 ;
-            else if (c == EOL)
+            else if (eol)
                 this->state = START_RECORD;
             else {
                 throw new Error(new str("new-line character seen in unquoted field - do you need to open the file with newline=''?"));
@@ -424,6 +427,8 @@ list<str *> *reader::__next__() {
             if (this->state == START_RECORD && this->fields->__len__() == 0 && this->field_len == 0) {
                 throw;
             }
+            if (this->dialect->strict)
+                throw new Error(new str("unexpected end of data"));
             this->parse_save_field();
             break;
         }
@@ -433,14 +438,10 @@ list<str *> *reader::__next__() {
         int __2;
         str *__1;
         FOR_IN(c,line,1,2,3) // TODO char c
-            if (__eq(c, const_7)) {
-                throw new Error(new str("line contains NULL byte"));
-            }
-
             this->parse_process_char(c);
         END_FOR
 
-        this->parse_process_char(const_7);
+        this->parse_process_char(NULL);
 
         if (this->state == START_RECORD) {
             break;
@@ -603,7 +604,8 @@ void *writer::writerow(list<str *> *seq) {
     END_FOR
 
     if (this->num_fields > 0 && this->rec_len == 0) {
-        // TODO check error
+        if (dialect->quoting == QUOTE_NONE)
+            throw new Error(new str("single empty field record must be quoted"));
 
         this->num_fields -= 1;
         this->join_append(NULL, 1);
@@ -1259,7 +1261,6 @@ void __init() {
     const_1 = new str("raise");
     const_2 = new str("ignore");
     const_3 = (new tuple2<str *, str *>(2, const_1, const_2));
-    const_7 = new str("\000", 1);
     const_16 = new str("");
     const_17 = new str("field larger than field limit (%d)");
     const_21 = new str("dict contains fields not in fieldnames: ");
