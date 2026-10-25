@@ -412,12 +412,8 @@ def test_extend_overflow_no_corruption():
     # extend() must leave exactly the elements that were successfully
     # converted before the failure -- not a corrupted trailing element from
     # the underlying buffer having already been grown to its final size
-    # before validation reached that far. (Note: real CPython's fromlist()
-    # is stricter still -- it validates the whole list up front and leaves
-    # the array completely untouched on any failure. Shedskin's fromlist()
-    # is implemented directly in terms of extend(), so it shares extend()'s
-    # partial-commit behavior rather than that atomic one; this test covers
-    # the corruption bug, not that CPython/shedskin discrepancy.)
+    # before validation reached that far. (fromlist() is stricter still,
+    # see test_fromlist_overflow_atomic().)
     arr2 = array.array('B')
     try:
         arr2.extend([1, 2, 300])
@@ -444,6 +440,33 @@ def test_extend_overflow_no_corruption():
     except OverflowError:
         pass
     assert arr4.tolist() == [9, 8, 1, 2]
+
+
+def test_fromlist_overflow_atomic():
+    # unlike extend(), fromlist() leaves the array untouched on failure
+    a = array.array('b', [1])
+    try:
+        a.fromlist([2, 300])
+        assert False, "expected OverflowError"
+    except OverflowError as e:
+        assert str(e) == 'signed char is greater than maximum'
+    assert a.tolist() == [1]
+
+    b = array.array('d', [1.0])
+    try:
+        b.fromlist([2.0, 3.0])
+    except OverflowError:
+        assert False
+    assert b.tolist() == [1.0, 2.0, 3.0]
+
+    c = array.array('B', [9, 8])
+    try:
+        c.fromlist([1, 2, -1])
+        assert False, "expected OverflowError"
+    except OverflowError:
+        pass
+    assert c.tolist() == [9, 8]
+    assert len(c) == 2
 
 
 def test_itemsize_is_a_plain_int():
@@ -700,6 +723,7 @@ def test_all():
     test_extend_typecode_mismatch()
     test_iadd_typecode_mismatch_message()
     test_extend_overflow_no_corruption()
+    test_fromlist_overflow_atomic()
     test_itemsize_is_a_plain_int()
     test_unicode()
     test_unicode_mutate()

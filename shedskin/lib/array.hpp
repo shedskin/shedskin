@@ -210,8 +210,16 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
 }
 template<> template<> void *array<__ss_int>::extend(list<__ss_int> *l);
 
+/* unlike extend(), CPython's fromlist() is atomic: on failure (e.g. an
+ * out-of-range element) the array is resized back to its original length */
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
-    extend(iter);
+    size_t size = this->units.size();
+    try {
+        extend(iter);
+    } catch (BaseException *) {
+        this->units.resize(size);
+        throw;
+    }
     return NULL;
 }
 
