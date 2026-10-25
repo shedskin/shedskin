@@ -76,6 +76,15 @@ def test_division():
     assert 8 /  2 == 4.0
     assert 9 // 2 == 4
 
+    # beyond 2**53 the quotient must be rounded once, not the operands first
+    big = 9007199254740993
+    assert big / 3 == 3002399751580331.0
+    assert -big / 3 == -3002399751580331.0
+    assert big / -3 == -3002399751580331.0
+    assert 9223372036854775807 / 9223372036854775806 == 1.0
+    assert str(0 / -2**60) == '-0.0'
+    assert str(0 / 2**60) == '0.0'
+
 
 def test_is_integer():
     assert (-1).is_integer()

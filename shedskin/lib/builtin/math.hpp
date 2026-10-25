@@ -199,7 +199,39 @@ template<class A, class B> __ss_float __divs(A a, B b);
 template<> inline __ss_float __divs(__ss_int a, __ss_float b) { __SS_ZERO_CHECK(b, "float division by zero"); return (__ss_float)a/b; }
 template<> inline __ss_float __divs(__ss_float a, __ss_int b) { __SS_ZERO_CHECK(b, "float division by zero"); return a/((__ss_float)b); }
 
-inline __ss_float __divs(__ss_int a, __ss_int b) { __SS_ZERO_CHECK(b, "division by zero"); return (__ss_float)a/((__ss_float)b); }
+/* int / int: like CPython, round the exact quotient once. (double)a/(double)b
+   is only exact while both operands fit in 53 bits; above that the int ->
+   double conversions round as well, e.g. 9007199254740993 / 3 gave
+   3002399751580330.5 instead of 3002399751580331.0 */
+#ifdef __SS_INT64
+inline __ss_float __int_truediv_slow(__ss_int a, __ss_int b) {
+    /* as CPython's long_true_divide: compute q = a * 2**shift / b to at least
+       55 bits (53 + guard + sticky) by long division, fold a nonzero remainder
+       into its lowest bit, and let the single q -> double conversion round */
+    __ss_uint ua = __ss_magnitude(a), ub = __ss_magnitude(b);
+    __ss_uint q = ua / ub, r = ua % ub;
+    int shift = 0;
+    while (r && !(q >> 54)) {
+        int k = std::min(std::countl_zero(r), std::countl_zero(q)); /* r << k and q << k fit */
+        q = (q << k) | ((r << k) / ub);
+        r = (r << k) % ub;
+        shift += k;
+    }
+    __ss_float d = std::ldexp((__ss_float)(q | (r != 0)), -shift);
+    return ((a < 0) != (b < 0)) ? -d : d;
+}
+#endif
+
+inline __ss_float __divs(__ss_int a, __ss_int b) {
+    __SS_ZERO_CHECK(b, "division by zero");
+    __ss_float da = (__ss_float)a, db = (__ss_float)b;
+#ifdef __SS_INT64
+    /* an operand of 2**53 or more converts to >= 2**53 */
+    if (std::max(std::fabs(da), std::fabs(db)) >= 0x1p53) [[unlikely]]
+        return __int_truediv_slow(a, b);
+#endif
+    return da/db;
+}
 
 /* CPython's float_divmod(): the single source of truth for float //, % and
    divmod(), so that they agree (q*b + r == a). floor(a/b) does not: the
@@ -332,7 +364,8 @@ inline __ss_bool __ss_is_integer(__ss_int) {
 }
 
 inline __ss_bool __ss_is_integer(__ss_float d) {
-    return __mbool((long long)d == d);
+    /* not (long long)d == d: that cast is undefined behaviour from 2**63 on */
+    return __mbool(std::isfinite(d) && std::floor(d) == d);
 }
 
 /* int.{bit_count, bit_length */
