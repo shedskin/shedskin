@@ -203,8 +203,9 @@ def test_clock_invalid_id():
     caught = False
     try:
         time.clock_gettime_ns(-1)
-    except OSError:
-        caught = True
+    except OSError as e:
+        # no made-up filename (like CPython)
+        caught = e.filename is None and str(e) == '[Errno 22] Invalid argument'
     assert caught
 
 def test_isdst_attribute():

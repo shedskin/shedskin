@@ -362,7 +362,7 @@ static __ss_int __ss_win_clock_ns(__ss_int clk_id) {
         return thread_time_ns();
     }
     errno = EINVAL;
-    __throw_oserror(new str("clock_gettime"));
+    __throw_oserror();
 }
 
 __ss_float clock_gettime(__ss_int clk_id) {
@@ -384,7 +384,7 @@ __ss_float clock_getres(__ss_int clk_id) {
         return 1e-7; /* FILETIME granularity: 100ns */
     }
     errno = EINVAL;
-    __throw_oserror(new str("clock_getres"));
+    __throw_oserror();
 }
 
 #else
@@ -392,32 +392,32 @@ __ss_float clock_getres(__ss_int clk_id) {
 /* reject -1 ("not available on this platform", see __init_clock_ids) up
    front: on FreeBSD, ids with the high bit set are valid cpu-time clocks
    (CPUCLOCK_BIT), so e.g. CLOCK_TAI would otherwise silently succeed */
-static clockid_t __ss_clock_id(__ss_int clk_id, const char *fname) {
+static clockid_t __ss_clock_id(__ss_int clk_id) {
     if (clk_id == -1) {
         errno = EINVAL;
-        __throw_oserror(new str(fname));
+        __throw_oserror();
     }
     return (clockid_t)clk_id;
 }
 
 __ss_float clock_gettime(__ss_int clk_id) {
     timespec ts { 0, 0 };
-    if (::clock_gettime(__ss_clock_id(clk_id, "clock_gettime"), &ts) == -1)
-        __throw_oserror(new str("clock_gettime"));
+    if (::clock_gettime(__ss_clock_id(clk_id), &ts) == -1)
+        __throw_oserror();
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 
 __ss_int clock_gettime_ns(__ss_int clk_id) {
     timespec ts { 0, 0 };
-    if (::clock_gettime(__ss_clock_id(clk_id, "clock_gettime"), &ts) == -1)
-        __throw_oserror(new str("clock_gettime"));
+    if (::clock_gettime(__ss_clock_id(clk_id), &ts) == -1)
+        __throw_oserror();
     return (__ss_int)((int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec);
 }
 
 __ss_float clock_getres(__ss_int clk_id) {
     timespec ts { 0, 0 };
-    if (::clock_getres(__ss_clock_id(clk_id, "clock_getres"), &ts) == -1)
-        __throw_oserror(new str("clock_getres"));
+    if (::clock_getres(__ss_clock_id(clk_id), &ts) == -1)
+        __throw_oserror();
     return (__ss_float)ts.tv_sec + (__ss_float)ts.tv_nsec/1000000000.0;
 }
 

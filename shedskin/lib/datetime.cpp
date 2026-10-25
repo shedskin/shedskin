@@ -539,7 +539,7 @@ datetime *datetime::today() {
 #else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
-        __throw_oserror(new str("clock_gettime"));
+        __throw_oserror();
 
     tm *t = localtime(&ts.tv_sec);
 
@@ -568,7 +568,7 @@ datetime *datetime::utcnow() {
 #else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
-        __throw_oserror(new str("clock_gettime"));
+        __throw_oserror();
 
     tm *t = gmtime(&ts.tv_sec);
 

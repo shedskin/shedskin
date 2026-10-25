@@ -15,6 +15,8 @@ def test_kill():
         assert False, 'expected an error for a non-existent pid'
     except ProcessLookupError as e:
         assert e.errno == 3  # ESRCH
+        assert e.filename is None
+        assert str(e) == '[Errno 3] No such process'
     os.killpg(os.getpgrp(), 0)
 
 
@@ -243,6 +245,43 @@ def test_oserror_subclasses():
         ok = True
     assert ok and os.path.isdir(path)
     os.rmdir(path)
+
+
+def test_oserror_filename():
+    # only calls that take a path report it as the filename (like CPython)
+    caught = 0
+    try:
+        os.getpgid(2 ** 22 + 12345)
+    except ProcessLookupError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.ttyname(987)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.mkfifo('shedskin_no_such_dir/fifo')
+    except FileNotFoundError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.execv('shedskin_no_such_dir/prog', ['prog'])
+    except FileNotFoundError as e:
+        assert e.filename is None
+        caught += 1
+    try:
+        os.execve('shedskin_no_such_dir/prog', ['prog'], {'A': 'b'})
+    except FileNotFoundError as e:
+        assert e.filename == 'shedskin_no_such_dir/prog'
+        assert str(e) == "[Errno 2] No such file or directory: 'shedskin_no_such_dir/prog'"
+        caught += 1
+    try:
+        os.fstatvfs(987)
+    except OSError as e:
+        assert e.filename is None
+        caught += 1
+    assert caught == 6
 
 
 def test_kwarg_names():
@@ -507,6 +546,7 @@ def test_all():
     test_times_children()
     test_misc_constants()
     test_oserror_subclasses()
+    test_oserror_filename()
     test_kwarg_names()
     test_direntry_inode_symlink()
     test_mknod_default_mode()
