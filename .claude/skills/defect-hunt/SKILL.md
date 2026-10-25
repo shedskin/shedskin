@@ -96,6 +96,11 @@ down to the smallest program that still reproduces before reporting.
 - **Never run the whole test suite.** It takes about an hour. Use
   `shedskin translate` on individual probes, or at most a few related test sets
   via `shedskin runtests --include <regex>`.
+- **When you build a test set by hand** (`shedskin translate tests/test_x/test_x.py`
+  in a copy of its folder), copy `tests/testdata` next to it first. About a
+  dozen tests (`test_mod_io`, `test_mod_mmap`, `test_builtin_open`, ...) look for
+  `testdata`, `../testdata` or `../../testdata` and otherwise stop at once with
+  `FileNotFoundError`, which is not a test failure. See `tests/README.md`.
 - **Read `docs/documentation.md` "Python Subset Restrictions" before you probe**,
   and put it in every subagent's brief. shedskin supports a subset on purpose,
   and a divergence from a documented non-feature is not a defect. That list

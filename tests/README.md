@@ -69,6 +69,18 @@ To build / run a **single** test using cmake:
 shedskin runtests -r test_builtin_iter
 ```
 
+To build / run a single test **by hand**, outside cmake, copy its folder somewhere and use `shedskin translate`:
+
+```bash
+cp -r tests/test_mod_io /tmp/t && cd /tmp/t/test_mod_io
+cp -r ~/shedskin/tests/testdata .    # needed by some tests, see below
+shedskin translate test_mod_io.py && make && ./test_mod_io
+```
+
+Some tests read (and write) data files under `tests/testdata`, and look for that folder as `testdata`, `../testdata` or `../../testdata`, relative to the current directory. cmake copies it into its `build` folder, but a by-hand build does not, so without a `testdata` folder next to the test (or one or two levels up) these tests stop at once with `FileNotFoundError: ... '../../testdata/...'`. That is not a test failure. Copy the folder rather than symlinking it, so that the checkout's copy is not modified. The tests that need it:
+
+`test_builtin_iter`, `test_builtin_open`, `test_mod_configparser`, `test_mod_csv`, `test_mod_io`, `test_mod_mmap`, `test_mod_os_path`, `test_prog_board2`, `test_prog_satisfy1`, `test_prog_satisfy2`, `test_prog_shader`
+
 To build and run **all** tests as executables using cmake on Linux and macOS:
 
 ```bash
