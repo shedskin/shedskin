@@ -453,14 +453,14 @@ void *mmap::close()
     return NULL;
 }
 
-__ss_int mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::flush(__ss_int offset, __ss_int size)
 {
     __raise_if_closed();
     if (::msync(m_begin + offset, __subscript(size), MS_SYNC) == -1)
     {
         __throw_oserror();
     }
-    return 0;
+    return NULL;
 }
 
 void *mmap::resize(__ss_int new_size)
@@ -714,10 +714,14 @@ void *mmap::close()
     return NULL;
 }
 
-__ss_int mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::flush(__ss_int offset, __ss_int size)
 {
     __raise_if_closed();
-    return __ss_int(FlushViewOfFile(m_begin + offset, __subscript(size)));
+    if (!FlushViewOfFile(m_begin + offset, __subscript(size)))
+    {
+        throw new OSError();
+    }
+    return NULL;
 }
 
 void *mmap::resize(__ss_int new_size)
@@ -858,7 +862,7 @@ bytes *mmap::readline(__ss_int size, const char eol)
     return new bytes(at, (size_t)(m_position - at), 1);
 }
 
-void *mmap::seek(__ss_int offset, __ss_int whence)
+__ss_int mmap::seek(__ss_int offset, __ss_int whence)
 {
     __raise_if_closed();
     const iterator restore = m_begin + tell();
@@ -890,7 +894,7 @@ void *mmap::seek(__ss_int offset, __ss_int whence)
     default: // Error
         throw new ValueError(const_12);
     }
-    return NULL;
+    return (__ss_int)__tell();
 }
 
 void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
@@ -1025,7 +1029,7 @@ __ss_int mmap::tell()
     return (__ss_int)__tell();
 }
 
-void *mmap::write(bytes *string)
+__ss_int mmap::write(bytes *string)
 {
     __raise_if_closed_or_not_writable();
     size_t length = string->unit.size();
@@ -1036,7 +1040,7 @@ void *mmap::write(bytes *string)
     std::copy_n(string->unit.data(), length, m_position);
     m_position += length;
 
-    return NULL;
+    return (__ss_int)length;
 }
 
 void *mmap::write_byte(__ss_int value)

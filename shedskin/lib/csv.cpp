@@ -577,7 +577,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
     return NULL;
 }
 
-void *writer::writerow(list<str *> *seq) {
+__ss_int writer::writerow(list<str *> *seq) {
     list<str *> *__24;
     list<str *>::for_in_loop __123;
     __ss_int __26, quoted;
@@ -610,8 +610,7 @@ void *writer::writerow(list<str *> *seq) {
     }
 
     (this->rec)->append((this->dialect)->lineterminator);
-    (this->output_file)->write((const_16)->join(this->rec));
-    return NULL;
+    return (this->output_file)->write((const_16)->join(this->rec));
 }
 
 void *writer::join_reset() {
@@ -760,12 +759,11 @@ list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
     return list_comp_1(this, rowdict);
 }
 
-void *DictWriter::writeheader() {
-    this->_writer->writerow(this->fieldnames);
-    return NULL;
+__ss_int DictWriter::writeheader() {
+    return this->_writer->writerow(this->fieldnames);
 }
 
-void *DictWriter::writerow(dict<str *, str *> *rowdict) {
+__ss_int DictWriter::writerow(dict<str *, str *> *rowdict) {
     return (this->_writer)->writerow(this->_dict_to_list(rowdict));
 }
 

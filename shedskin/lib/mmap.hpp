@@ -126,7 +126,7 @@ class mmap: public pyiter<bytes *>
     void *   close();
     void     __enter__();
     void     __exit__();
-    __ss_int flush(__ss_int offset=0, __ss_int size=-1);
+    void *   flush(__ss_int offset=0, __ss_int size=-1);
     void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
     /* start/end are __ss_void_struct when omitted (start then defaults
        to the current position, end to the size), so that negative values
@@ -142,12 +142,12 @@ class mmap: public pyiter<bytes *>
     template<class S=__ss_void_struct, class E=__ss_void_struct> __ss_int rfind(bytes *s, S start=__ss_void, E end=__ss_void) {
         return __find_args(s, start, end, true);
     }
-    void *   seek(__ss_int offset, __ss_int whence=0);
+    __ss_int seek(__ss_int offset, __ss_int whence=0);
     __ss_bool seekable();
     void *   set_name(str *name);
     __ss_int size();
     __ss_int tell();
-    void *   write(bytes *string);
+    __ss_int write(bytes *string);
     void *   write_byte(__ss_int vale);
 
     // pyraw

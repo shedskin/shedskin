@@ -263,7 +263,7 @@ public:
         __ss_int strict
     );
 
-    void *writerow(list<str *> *seq);
+    __ss_int writerow(list<str *> *seq);
     void *writerows(pyiter<list<str *> *> *seqs);
 
     // internal
@@ -424,8 +424,8 @@ public:
         __ss_int strict
     );
 
-    void *writeheader();
-    void *writerow(dict<str *, str *> *rowdict);
+    __ss_int writeheader();
+    __ss_int writerow(dict<str *, str *> *rowdict);
     void *writerows(pyiter<dict<str *, str *> *> *rowdicts);
 
     // internal
