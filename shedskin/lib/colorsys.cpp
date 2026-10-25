@@ -54,10 +54,10 @@ tuple2<__ss_float, __ss_float> *rgb_to_hls(__ss_float r, __ss_float g, __ss_floa
         return (new tuple2<__ss_float, __ss_float>(3,0.0,l,0.0));
     }
     if (l <= 0.5) {
-        s = ((maxc-minc)/(maxc+minc));
+        s = __divs(maxc-minc, maxc+minc);
     }
     else {
-        s = ((maxc-minc)/((2.0-maxc)-minc));
+        s = __divs(maxc-minc, ((__ss_float)2.0-maxc)-minc);
     }
     rc = ((maxc-r)/(maxc-minc));
     gc = ((maxc-g)/(maxc-minc));
@@ -115,7 +115,7 @@ tuple2<__ss_float, __ss_float> *rgb_to_hsv(__ss_float r, __ss_float g, __ss_floa
     if (minc == maxc) {
         return (new tuple2<__ss_float, __ss_float>(3,0.0,0.0,v));
     }
-    s = ((maxc-minc)/maxc);
+    s = __divs(maxc-minc, maxc);
     rc = ((maxc-r)/(maxc-minc));
     gc = ((maxc-g)/(maxc-minc));
     bc = ((maxc-b)/(maxc-minc));

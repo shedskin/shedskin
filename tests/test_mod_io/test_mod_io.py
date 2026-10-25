@@ -639,6 +639,29 @@ def test_stringio_line_buffering():
     assert not io.StringIO(newline=None).line_buffering
 
 
+def test_tell_closed():
+    s = io.StringIO('hello')
+    s.read(2)
+    assert s.tell() == 2
+    s.close()
+    err = False
+    try:
+        s.tell()
+    except ValueError:
+        err = True
+    assert err
+    b = io.BytesIO(b'hello')
+    b.read(3)
+    assert b.tell() == 3
+    b.close()
+    err = False
+    try:
+        b.tell()
+    except ValueError:
+        err = True
+    assert err
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -674,6 +697,7 @@ def test_all():
     test_stringio_newline()
     test_bytesio_readinto()
     test_stringio_line_buffering()
+    test_tell_closed()
 
 
 if __name__ == '__main__':

@@ -693,6 +693,35 @@ def test_copy():
             assert str(e) == 'System entropy source does not have state.'
 
 
+def test_sample_sequence():
+    # sets/dicts are not sequences: CPython refuses them (order is arbitrary)
+    expected = 'Population must be a sequence.  For dicts or sets, use sorted(d).'
+    err = False
+    try:
+        random.sample({1, 2, 3}, 2)
+    except TypeError as e:
+        err = True
+        assert str(e) == expected
+    assert err
+    err = False
+    try:
+        random.Random(1).sample({'a': 1, 'b': 2}, 1)
+    except TypeError as e:
+        err = True
+        assert str(e) == expected
+    assert err
+    err = False
+    try:
+        random.sample((x for x in range(3)), 2)
+    except TypeError:
+        err = True
+    assert err
+    # sequences still work
+    assert sorted(random.sample('abc', 3)) == ['a', 'b', 'c']
+    assert sorted(random.sample((4, 5, 6), 3)) == [4, 5, 6]
+    assert sorted(random.sample(sorted({3, 1, 2}), 3)) == [1, 2, 3]
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -719,6 +748,7 @@ def test_all():
     test_seed_version()
     test_version()
     test_copy()
+    test_sample_sequence()
 
 
 if __name__ == '__main__':
