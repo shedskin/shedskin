@@ -783,7 +783,7 @@ def test_round():
 
 
 def test_set():
-    assert list(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]
+    assert sorted(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]
 
 
 def test_str():

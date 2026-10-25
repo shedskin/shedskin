@@ -2011,7 +2011,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Assert, func: Optional["python.Function"] = None
     ) -> None:
         """Visit an assert statement"""
-        self.visit(node.test, func)
+        self.bool_test_add(node.test)
+        faker = ast.Call(ast.Name("bool", ast.Load()), [node.test], [])
+        self.visit(faker, func)
         if node.msg:
             self.visit(node.msg, func)
 
