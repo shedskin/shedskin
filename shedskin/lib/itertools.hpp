@@ -726,6 +726,11 @@ template<class T> T teeiter<T>::__next__() {
 }
 
 template<class T> inline tuple2<__iter<T> *, __iter<T> *> *tee(pyiter<T> *iterable, int n = 2) {
+    if (n < 0)
+        throw new ValueError(new str("n must be >= 0"));
+    if (n == 0)
+        return new tuple2<__iter<T> *, __iter<T> *>();
+
     teecache<T> *cache = new teecache<T>(n);
     __iter<T> *iter = iterable->__iter__();
 

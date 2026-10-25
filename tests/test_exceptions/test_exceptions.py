@@ -862,6 +862,42 @@ def test_raise_class():
         assert repr(e) == 'KeyError()'
 
 
+class SuperNoArgErr(Exception):
+    def __init__(self, code):
+        super().__init__()
+        self.code = code
+
+class SuperNoArgValueError(ValueError):
+    def __init__(self):
+        super().__init__()
+
+class ExplicitNoArgErr(Exception):
+    def __init__(self):
+        Exception.__init__(self)
+
+
+def test_super_init_no_args():
+    # regression test (1021-C7): calling the base __init__ without
+    # arguments used to fail in g++
+    try:
+        raise SuperNoArgErr(7)
+    except SuperNoArgErr as e:
+        assert e.code == 7
+        assert e.args == ()
+        assert str(e) == ''
+        assert repr(e) == 'SuperNoArgErr()'
+    try:
+        raise SuperNoArgValueError()
+    except ValueError as e2:
+        assert e2.args == ()
+        assert repr(e2) == 'SuperNoArgValueError()'
+    try:
+        raise ExplicitNoArgErr()
+    except Exception as e3:
+        assert str(e3) == ''
+        assert repr(e3) == 'ExplicitNoArgErr()'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -890,6 +926,7 @@ def test_all():
     test_keyerror_str()
     test_custom_error_no_args()
     test_raise_class()
+    test_super_init_no_args()
 
 
 if __name__ == '__main__':
