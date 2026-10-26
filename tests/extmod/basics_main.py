@@ -79,6 +79,22 @@ def test_class():
     assert isinstance(v, basics.Vector)
 
 
+def test_fake_class():
+    # an object that only claims to be a Vector, through __class__, is not
+    # one: it must give a TypeError, not be used as one (1025-A4)
+    from unittest import mock
+    assert basics.length2_of(basics.Vector(3, 4)) == 25
+    m = mock.Mock(spec=basics.Vector)
+    assert isinstance(m, basics.Vector)
+    if not PURE:
+        assert raises(TypeError, basics.length2_of, m)
+
+    class Fake:
+        __class__ = basics.Vector
+    assert isinstance(Fake(), basics.Vector)
+    assert raises(TypeError if not PURE else AttributeError, basics.length2_of, Fake())
+
+
 def test_number_slots():
     a, b = basics.Vector(1, 2), basics.Vector(3, 5)
     assert repr(a + b) == 'Vector(4, 7)'

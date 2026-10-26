@@ -114,6 +114,17 @@ public:
 
     str *__repr__();
     str *__str__();
+
+#ifdef __SS_BIND
+   virtual PyObject *__to_py__() { return PyExc_BaseException; }
+   /* constructor arguments for the CPython exception, as a new tuple
+      reference, for exceptions that cannot be created from just their
+      message (see __ss_raise_py in extmod.hpp); 0 means use message */
+   virtual PyObject *__py_args__() { return 0; }
+   /* copy attributes to the CPython exception (for exported exception
+      subclasses, see extmod.convert_exception); -1 on error */
+   virtual int __py_setattrs__(PyObject *) { return 0; }
+#endif
 };
 
 class Exception: public BaseException {
@@ -123,14 +134,7 @@ public:
     }
 
 #ifdef __SS_BIND
-   virtual PyObject *__to_py__() { return PyExc_Exception; }
-   /* constructor arguments for the CPython exception, as a new tuple
-      reference, for exceptions that cannot be created from just their
-      message (see __ss_raise_py in extmod.hpp); 0 means use message */
-   virtual PyObject *__py_args__() { return 0; }
-   /* copy attributes to the CPython exception (for exported exception
-      subclasses, see extmod.convert_exception); -1 on error */
-   virtual int __py_setattrs__(PyObject *) { return 0; }
+   PyObject *__to_py__() { return PyExc_Exception; }
 #endif
 };
 
@@ -529,6 +533,7 @@ public:
 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
+    PyObject *__py_args__();
 #endif
 };
 

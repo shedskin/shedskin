@@ -92,6 +92,10 @@ class Vector:
         return self.x * n
 
 
+def length2_of(v):
+    return v.length2()
+
+
 class Countdown:
     def __init__(self, n):
         self.n = n
@@ -121,6 +125,7 @@ if __name__ == '__main__':
     fail(1)
     v = Vector(1, 2)
     v.length2()
+    length2_of(v)
     repr(v)
     str(v)
     v + v

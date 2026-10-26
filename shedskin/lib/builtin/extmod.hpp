@@ -45,7 +45,7 @@ template<class T> PyObject *__to_py(T t) {
    the char* strictly as utf-8, so a surrogate-escaped byte (e.g. a
    non-utf-8 file name in an OSError message) would turn into a
    UnicodeDecodeError */
-inline void __ss_raise_py(Exception *e) {
+inline void __ss_raise_py(BaseException *e) {
     PyObject *type = e->__to_py__();
     PyObject *args = e->__py_args__();
     if(!args) {

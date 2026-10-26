@@ -125,6 +125,32 @@ def test_inside():
     assert exceptions.catch_inside(8) == 'MyError subcode'
 
 
+def stopped(n):
+    try:
+        exceptions.stop(n)
+    except BaseException as e:
+        return e
+    return None
+
+
+def test_base_exceptions():
+    # exceptions that derive from BaseException but not from Exception are
+    # passed on to Python, rather than aborting it (1025-A3)
+    e = stopped(0)
+    assert type(e) is SystemExit and e.code == 3 and e.args == (3,), e.args
+    e = stopped(1)
+    assert type(e) is SystemExit and e.code == 'bye' and e.args == ('bye',)
+    e = stopped(2)
+    assert type(e) is SystemExit and e.code is None and e.args == ()
+    e = stopped(3)
+    assert type(e) is KeyboardInterrupt and e.args == ('ctrl-c',)
+    e = stopped(4)
+    assert type(e) is GeneratorExit and e.args == ('gen',)
+    e = stopped(5)
+    assert type(e) is SystemExit and e.code == 0 and e.args == (0,)
+    assert stopped(6) is None
+
+
 def test_python_side():
     # the types can be raised from Python and pickled like any exception
     try:
