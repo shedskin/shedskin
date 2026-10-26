@@ -243,6 +243,7 @@ class StaticClass(PyObject):
         self.vars: dict[str, Variable] = {}
         self.static_nodes: list[ast.AST] = []
         self.funcs: dict[str, Function] = {}
+        self.globals: list[str] = []
         self.ident = cl.ident
         self.parent = None
         self.mv = mv
