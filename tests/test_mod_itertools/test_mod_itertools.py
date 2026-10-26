@@ -340,6 +340,19 @@ def test_tee_short():
         assert str(e) == 'tuple index out of range'
 
 
+def test_tee_zero():
+    # regression test (1023-D3): n=0 gives an empty tuple, and a negative
+    # n a ValueError, rather than a 1-tuple
+    t = itertools.tee(gen(), 0)
+    assert len(t) == 0
+    assert t == ()
+    try:
+        itertools.tee(gen(), -1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'n must be >= 0'
+
+
 def test_tee_interleaved():
     # draining both iterators in lockstep (rather than one fully before
     # the other) forces the "leader" role to switch back and forth
@@ -556,6 +569,7 @@ def test_all():
     test_compress()
     test_tee()
     test_tee_short()
+    test_tee_zero()
     test_tee_interleaved()
     test_tee_gc()
     test_filterfalse()

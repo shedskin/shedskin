@@ -108,6 +108,9 @@ public:
     void *add_note(str *note);
 
     void __init__(str *msg);
+    void __init__() { /* super().__init__() */
+        __init__((str *)0);
+    }
     void __init__(void *) {
         this->message = 0;
     }
