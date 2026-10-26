@@ -5,7 +5,9 @@
 #ifndef SS_FORMAT_HPP
 #define SS_FORMAT_HPP
 
-template <class T> void *__mod_dict_arg(T, str *) { return NULL; }
+template <class T> void *__mod_dict_arg(T, str *) {
+    throw new TypeError(new str("format requires a mapping"));
+}
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
 }
@@ -68,6 +70,40 @@ static inline void __mod_pad_signed(str *result, const std::string &sign, const 
     __mod_pad_signed(result, sign, __gcs(digits), f_flag, f_width, f_zero);
 }
 
+/* the type name of an argument, for error messages */
+template<class T> str *__fmt_typename(T arg) {
+    if constexpr (std::is_same_v<T, __ss_int>)
+        return new str("int");
+    else if constexpr (std::is_same_v<T, __ss_float>)
+        return new str("float");
+    else if constexpr (std::is_same_v<T, __ss_bool>)
+        return new str("bool");
+    else if constexpr (std::is_same_v<T, complex>)
+        return new str("complex");
+    else if constexpr (std::is_integral_v<T>)
+        return new str("int");
+    else if constexpr (std::is_base_of_v<pyobj, std::remove_pointer_t<T>>)
+        return arg ? arg->__class__->__name__ : new str("NoneType");
+    else
+        return new str("NoneType"); /* void * */
+}
+
+/* a TypeError for an argument that a conversion does not accept: 'msg', the
+   type name of the argument, then 'end' */
+template<class T> [[noreturn]] void __mod_type_error(const std::string &msg, T arg, const std::string &end = "") {
+    str *s = new str();
+    __mod_append_ascii(s, msg);
+    s->unit += __fmt_typename(arg)->unit;
+    __mod_append_ascii(s, end);
+    throw new TypeError(s);
+}
+
+/* d/i/u, o, x and X */
+template<class T> [[noreturn]] void __mod_int_error(char c, T arg) {
+    bool real = (c == 'd' || c == 'i' || c == 'u');
+    __mod_type_error(std::string("%") + c + (real ? " format: a real number is required, not " : " format: an integer is required, not "), arg);
+}
+
 /* d/i/u, o, x and X: the digits of the magnitude (unsigned, so that the most
    negative int does not overflow), zero-extended to the precision; the '#'
    prefix (0o, 0x, 0X) goes with the sign, so that zero-fill comes after it */
@@ -91,18 +127,22 @@ static inline void __mod_integer(str *result, __ss_int arg, int base, char c, ch
     __mod_pad_signed(result, sign, digits, f_flag, f_width, f_zero);
 }
 
-template <class T> void __mod_int(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_int(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+template <class T> void __mod_int(str *, size_t &, char c, T arg, char, __ss_int, __ss_int, bool) {
+    __mod_int_error(c, arg);
+}
+template<> inline void __mod_int(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_integer(result, arg, 10, 'd', f_flag, f_width, f_precision, f_zero);
 }
-template<> inline void __mod_int(str *result, size_t &pos, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
-    __mod_int(result, pos, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_int(str *result, size_t &pos, char c, __ss_float arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
+    __mod_int(result, pos, c, (__ss_int)arg, f_flag, f_width, f_precision, f_zero);
 }
-template<> inline void __mod_int(str *result, size_t &pos, __ss_bool arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
-    __mod_int(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_int(str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width,__ss_int f_precision, bool f_zero) {
+    __mod_int(result, pos, c, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_oct(str *, size_t &, T, char, __ss_int, __ss_int, bool) {}
+template <class T> void __mod_oct(str *, size_t &, T arg, char, __ss_int, __ss_int, bool) {
+    __mod_int_error('o', arg);
+}
 template<> inline void __mod_oct(str *result, size_t &, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_integer(result, arg, 8, 'o', f_flag, f_width, f_precision, f_zero);
 }
@@ -110,7 +150,9 @@ template<> inline void __mod_oct(str *result, size_t &pos, __ss_bool arg, char f
     __mod_oct(result, pos, (__ss_int)arg.value, f_flag, f_width, f_precision, f_zero);
 }
 
-template <class T> void __mod_hex(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
+template <class T> void __mod_hex(str *, size_t &, char c, T arg, char, __ss_int, __ss_int, bool) {
+    __mod_int_error(c, arg);
+}
 template<> inline void __mod_hex(str *result, size_t &, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __mod_integer(result, arg, 16, c, f_flag, f_width, f_precision, f_zero);
 }
@@ -244,20 +286,33 @@ static inline void __fmt_float(str *result, char c, __ss_float arg, char f_flag,
     __mod_pad_signed(result, sign, __fmt_printf(c, f_flag & __SS_FMT_ALT, f_precision, aarg) + suffix, f_flag, f_width, f_zero);
 }
 
-template <class T> void __mod_float(str *, size_t &, char, T, char, __ss_int, __ss_int, bool) {}
-template<> inline void __mod_float(str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+template <class T> void __mod_float(int flag, str *, size_t &, char, T arg, char, __ss_int, __ss_int, bool) {
+    __mod_type_error(flag ? "float argument required, not " : "must be real number, not ", arg);
+}
+template<> inline void __mod_float(int, str *result, size_t &, char c, __ss_float arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
     __fmt_float(result, c, arg, f_flag, f_width, f_precision, f_zero);
 }
-template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __mod_float(result, pos, (char)c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_float(int flag, str *result, size_t &pos, char c, __ss_int arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_float(flag, result, pos, (char)c, (__ss_float)arg, f_flag, f_width, f_precision, f_zero);
 }
-template<> inline void __mod_float(str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
-    __mod_float(result, pos, (char)c, (__ss_float)arg.value, f_flag, f_width, f_precision, f_zero);
+template<> inline void __mod_float(int flag, str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width, __ss_int f_precision, bool f_zero) {
+    __mod_float(flag, result, pos, (char)c, (__ss_float)arg.value, f_flag, f_width, f_precision, f_zero);
+}
+
+/* b'%s' and b'%b' with an argument that is not bytes: only __bytes__ will do */
+template <class T> __GC_STR __mod_bytes_arg(T arg) {
+    if constexpr (requires { arg->__bytes__(); }) {
+        if (arg)
+            return __widen(arg->__bytes__()->unit);
+    }
+    __mod_type_error("%b requires a bytes-like object, or an object that implements __bytes__, not '", arg, "'");
 }
 
 template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
     __GC_STR s;
-    if(c=='s')
+    if(flag && (c=='s' || c=='b'))
+        s = __mod_bytes_arg(arg);
+    else if(c=='s')
         s = __str(arg)->unit;
     else if(c=='a' || flag) /* b'%r' means b'%a' */
         s = ascii(arg)->unit;
@@ -272,8 +327,11 @@ template <class T> void __mod_str(int flag, str *result, size_t &, char c, T arg
 }
 template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes *arg, char f_flag, __ss_int f_width, __ss_int f_precision) {
     __GC_STR s;
-    if(flag && c=='s') // bytes % bytes (%r/%a still use repr/ascii)
+    if(flag && (c=='s' || c=='b')) { // bytes % bytes (%r/%a still use repr/ascii)
+        if(!arg)
+            __mod_bytes_arg(arg);
         s = __widen(arg->unit);
+    }
     else if(c=='a')
         s = ascii(arg)->unit;
     else
@@ -285,8 +343,16 @@ template<> inline void __mod_str(int flag, str *result, size_t &, char c, bytes 
     __mod_pad_signed(result, "", s, f_flag, f_width, false);
 }
 
-template <class T> void __mod_char(str *, size_t &, char, T, char, __ss_int) {}
-template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
+[[noreturn]] inline void __mod_char_error(int flag) {
+    throw new TypeError(new str(flag ? "%c requires an integer in range(256) or a single byte" : "%c requires int or char"));
+}
+
+template <class T> void __mod_char(int flag, str *, size_t &, char, T, char, __ss_int) {
+    __mod_char_error(flag);
+}
+template<> inline void __mod_char(int flag, str *result, size_t &, char, __ss_int arg, char f_flag, __ss_int f_width) {
+    if(flag && (arg < 0 || arg > 255))
+        throw new OverflowError(new str("%c arg not in range(256)"));
     if(arg < 0 || arg > 0x10ffff)
         throw new OverflowError(new str("%c arg not in range(0x110000)"));
     if(f_width == -1)
@@ -294,10 +360,18 @@ template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg, cha
     else
         __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)arg), f_flag, f_width, false);
 }
-template<> inline void __mod_char(str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
-    if(arg->unit.size() != 1)
-        throw new TypeError(new str("%c requires int or char"));
+template<> inline void __mod_char(int flag, str *result, size_t &pos, char c, __ss_bool arg, char f_flag, __ss_int f_width) {
+    __mod_char(flag, result, pos, c, (__ss_int)arg.value, f_flag, f_width);
+}
+template<> inline void __mod_char(int flag, str *result, size_t &, char, str *arg, char f_flag, __ss_int f_width) {
+    if(flag || !arg || arg->unit.size() != 1)
+        __mod_char_error(flag);
     __mod_pad_signed(result, "", __GC_STR(1, arg->unit[0]), f_flag, f_width, false);
+}
+template<> inline void __mod_char(int flag, str *result, size_t &, char, bytes *arg, char f_flag, __ss_int f_width) {
+    if(!flag || !arg || arg->unit.size() != 1)
+        __mod_char_error(flag);
+    __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)(unsigned char)arg->unit[0]), f_flag, f_width, false);
 }
 
 template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &pos, T arg) {
@@ -398,10 +472,10 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 'i':
             case 'u':
                 if(name) {
-                    __mod_int(result, pos, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_int(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_int(result, pos, arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_int(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
                     return true;
                 }
 
@@ -431,14 +505,18 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
             case 'g':
             case 'G':
                 if(name) {
-                    __mod_float(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
+                    __mod_float(flag, result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width, f_precision, f_zero);
                     break;
                 } else {
-                    __mod_float(result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
+                    __mod_float(flag, result, pos, (char)c, arg, f_flag, f_width, f_precision, f_zero);
                     return true;
                 }
                 break;
 
+            case 'b': /* b'%b' is b'%s' */
+                if(!flag)
+                    throw new ValueError(new str("unsupported format character"));
+                [[fallthrough]];
             case 's':
             case 'r':
             case 'a':
@@ -452,10 +530,10 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
 
             case 'c':
                 if(name) {
-                    __mod_char(result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width);
+                    __mod_char(flag, result, pos, (char)c, __mod_dict_arg(arg, name), f_flag, f_width);
                     break;
                 } else {
-                    __mod_char(result, pos, (char)c, arg, f_flag, f_width);
+                    __mod_char(flag, result, pos, (char)c, arg, f_flag, f_width);
                     return true;
                 }
 
@@ -581,9 +659,6 @@ str *__format(__ss_bool arg, str *spec);
 str *__format(__ss_float arg, str *spec);
 str *__format(str *arg, str *spec);
 str *__format(complex arg, str *spec);
-
-inline str *__fmt_typename(pyobj *p) { return p ? p->__class__->__name__ : new str("NoneType"); }
-inline str *__fmt_typename(void *) { return new str("NoneType"); }
 
 /* like object.__format__ */
 template<class T> str *__format(T arg, str *spec) {

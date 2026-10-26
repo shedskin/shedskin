@@ -666,6 +666,7 @@ class bytes_(pyseq):
         a = a.unit
         a.__str__()
         a.__repr__()
+        a.__bytes__()
         return b''
     def __add__(self,be):
         return b''
