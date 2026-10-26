@@ -517,6 +517,59 @@ def test_stray_mid_line_cr():
     )
 
 
+def test_reader_nul_byte():
+    # NUL characters are ordinary data since Python 3.11
+    assert list(csv.reader(['a\x00b,c\n'])) == [['a\x00b', 'c']]
+    assert list(csv.reader(['"\x00",\x00\n'])) == [['\x00', '\x00']]
+
+
+def test_strict_eof():
+    # strict mode: input ending inside a quoted field is an error
+    assert list(csv.reader(['a,"bc'])) == [['a', 'bc']]
+    error = ''
+    try:
+        list(csv.reader(['a,"bc'], strict=True))
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'unexpected end of data'
+
+
+def test_unknown_dialect():
+    error = ''
+    try:
+        csv.get_dialect('nope')
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'unknown dialect'
+
+    error = ''
+    try:
+        csv.unregister_dialect('nope')
+    except csv.Error as e:
+        error = str(e)
+    assert error == 'unknown dialect'
+
+    error = ''
+    try:
+        csv.reader(['a'], delimiter='')
+    except TypeError as e:
+        error = str(e)
+    assert error == '"delimiter" must be a 1-character string'
+
+
+def test_quote_none_single_empty_field():
+    error = ''
+    with open('test_out.csv', 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_NONE, lineterminator='\n')
+        writer.writerow(['', ''])
+        try:
+            writer.writerow([''])
+        except csv.Error as e:
+            error = str(e)
+    assert error == 'single empty field record must be quoted'
+    assert open('test_out.csv').read() == ',\n'
+
+
 def test_sniffer_sniff():
     s = csv.Sniffer()
 
@@ -1056,6 +1109,10 @@ def test_all():
     test_eof_mid_row()
     test_strict_illegal_quote()
     test_stray_mid_line_cr()
+    test_reader_nul_byte()
+    test_strict_eof()
+    test_unknown_dialect()
+    test_quote_none_single_empty_field()
     test_sniffer_sniff()
     test_sniffer_doublequote_and_skipinitialspace()
     test_sniffer_delimiters_restriction()
