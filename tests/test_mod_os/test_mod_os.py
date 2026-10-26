@@ -1666,10 +1666,21 @@ def test_bytes_paths():
     os.rmdir(d)
 
 
+def test_popen_enter_exit_results():
+    # __enter__ returns the pipe itself and __exit__ returns None
+    p = os.popen('echo hi')
+    q = p.__enter__()
+    assert q is p
+    assert q.read().strip() == 'hi'
+    assert p.__exit__() is None
+    assert p.closed
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
     test_bytes_paths()
+    test_popen_enter_exit_results()
     test_getcwd()
     test_chdir()
     test_exceptions()

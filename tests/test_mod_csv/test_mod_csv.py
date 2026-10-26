@@ -1150,6 +1150,26 @@ def test_dictwriter_kwargs():
     assert not dw.writer.dialect.strict
 
 
+def test_writer_return_values():
+    s = io.StringIO()
+    w = csv.writer(s)
+    assert w.writerow(['a', 'b']) == 5
+    assert w.writerow(['x,y', '\u00e9']) == 9
+    assert w.writerows([['1'], ['2']]) is None
+
+    s = io.StringIO()
+    dw = csv.DictWriter(s, fieldnames=['a', 'b'])
+    assert dw.writeheader() == 5
+    assert dw.writerow({'a': '1', 'b': '22'}) == 6
+    assert dw.writerows([{'a': '3', 'b': '4'}]) is None
+    assert s.getvalue() == 'a,b\r\n1,22\r\n3,4\r\n'
+
+    name = _csv_path('csv_return.csv')
+    with open(name, 'w', newline='') as f:
+        assert csv.writer(f).writerow(['\u00e9', 'b']) == 5
+    os.remove(name)
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -1196,6 +1216,7 @@ def test_all():
     test_sniffer_preferred()
     test_sniffer_non_ascii_delimiter()
     test_dictwriter_kwargs()
+    test_writer_return_values()
 
 
 if __name__ == "__main__":

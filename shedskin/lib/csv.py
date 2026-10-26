@@ -50,7 +50,7 @@ class writer:
         self.dialect = Dialect()
 
     def writerow(self, seq):
-        pass
+        return 0
 
     def writerows(self, seqs):
         pass
@@ -87,10 +87,10 @@ class DictWriter:
         self.extrasaction = ''
 
     def writeheader(self):
-        pass
+        return 0
 
     def writerow(self, rowdict):
-        pass
+        return 0
 
     def writerows(self, rowdicts):
         pass

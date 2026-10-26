@@ -144,8 +144,8 @@ public:
     socket(wrap_fd_tag, socket_type fd, __ss_int family, __ss_int type, __ss_int proto);
     ~socket();
     str *__repr__();
-    void __enter__();
-    void __exit__();
+    socket *__enter__();
+    void *__exit__();
     __ss_int __ss_fileno();
     __ss_int detach();
     socket *dup();

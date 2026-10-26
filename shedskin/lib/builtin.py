@@ -1262,7 +1262,7 @@ class file(pyiter):
         pass
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self):
         pass
@@ -1313,7 +1313,7 @@ class file_binary(pyiter):
         pass
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self):
         pass

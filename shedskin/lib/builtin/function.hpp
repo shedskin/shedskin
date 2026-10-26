@@ -1060,7 +1060,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
         result->unit += separator->unit;
 }
 
-template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
+template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
     (void)count; // unused when Args is empty (e.g. print_() with no arguments)
@@ -1090,10 +1090,11 @@ template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, st
         if(flush and fflush(stdout) != 0)
             __throw_oserror();
     }
+    return NULL;
 }
 
-template <class ... Args> void print(Args ... args) {
-    print_(0, False, NULL, NULL, NULL, args...);
+template <class ... Args> void *print(Args ... args) {
+    return print_(0, False, NULL, NULL, NULL, args...);
 }
 
 /* isinstance */

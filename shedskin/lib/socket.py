@@ -208,7 +208,7 @@ class socket(object):
         return ''
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self):
         pass

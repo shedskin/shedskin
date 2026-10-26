@@ -65,13 +65,13 @@ class mmap(pyiter):
         pass
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self):
         pass
 
     def flush(self, offset=0, size=-1):
-        return 0
+        pass
 
     def madvise(self, option, start=0, length=-1):
         pass
@@ -98,7 +98,7 @@ class mmap(pyiter):
         return -1
 
     def seek(self, offset, whence=0):
-        pass
+        return 0
 
     def seekable(self):
         return True
@@ -113,7 +113,7 @@ class mmap(pyiter):
         return 0
 
     def write(self, string):
-        pass
+        return 0
 
     def write_byte(self, string):
         pass
