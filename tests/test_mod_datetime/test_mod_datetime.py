@@ -590,6 +590,23 @@ def test_timedelta_sorting():
     assert datetime.timedelta(hours=24) == b
 
 
+def test_wide_intermediates():
+    # results fit 32 bits, but intermediate values did not (--int32)
+    assert datetime.time(12, 0) < datetime.time(13, 0)
+    assert max(datetime.time(10, 0), datetime.time(20, 0)) == datetime.time(20, 0)
+    assert sorted([datetime.time(23, 59), datetime.time(0, 40), datetime.time(12)]) == \
+        [datetime.time(0, 40), datetime.time(12), datetime.time(23, 59)]
+    assert datetime.datetime(2020, 1, 1, 12) < datetime.datetime(2020, 1, 1, 13)
+    assert datetime.timedelta(days=-30000) < datetime.timedelta(0)
+    assert datetime.timedelta(days=30000) > datetime.timedelta(days=29999, hours=23)
+    assert str(datetime.timedelta(days=30000) // 7) == '4285 days, 17:08:34.285714'
+    assert str(datetime.timedelta(days=30000) / 7) == '4285 days, 17:08:34.285714'
+    assert str(datetime.timedelta(hours=600000)) == '25000 days, 0:00:00'
+    assert str(datetime.timedelta(minutes=-50000000)) == '-34723 days, 18:40:00'
+    assert str(datetime.timedelta(milliseconds=2000000000)) == '23 days, 3:33:20'
+    assert str(datetime.timedelta(microseconds=1500000000) / 2000000000) == '0:00:00.000001'
+
+
 def test_class_attributes():
     assert datetime.date.min == datetime.date(datetime.MINYEAR, 1, 1)
     assert datetime.date.max == datetime.date(datetime.MAXYEAR, 12, 31)
@@ -1295,6 +1312,7 @@ def test_all():
         test_datetime_sorting()
         test_time_sorting()
         test_timedelta_sorting()
+        test_wide_intermediates()
         test_class_attributes()
         test_timedelta_bool()
         test_timedelta_fractional_args()

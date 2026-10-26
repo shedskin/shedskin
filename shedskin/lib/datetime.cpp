@@ -125,7 +125,7 @@ static __ss_int days_before_year(__ss_int year);
 static void ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day);
 static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
 static __ss_int iso_week1_monday(__ss_int year);
-static __ss_int floordivmod(__ss_int a, __ss_int b, __ss_int *r);
+static int64_t floordivmod(int64_t a, int64_t b, int64_t *r);
 
 /* Parse the (already-isolated) fractional-seconds digits of an ISO 8601
  * time string into microseconds, e.g. "5" -> 500000, "123456" -> 123456,
@@ -378,8 +378,8 @@ tuple2<__ss_int, __ss_int> *date::isocalendar() {
     __ss_int  week1_monday = iso_week1_monday(year);
     __ss_int  today        = ymd_to_ord(year, month, day);
     __ss_int  tmpyear      = year;
-    __ss_int  tmpweek;
-    __ss_int  tmpday;
+    int64_t   tmpweek;
+    int64_t   tmpday;
 
     tmpweek = floordivmod(today - week1_monday, 7, &tmpday);
     if (tmpweek < 0) {
@@ -784,7 +784,7 @@ __ss_int datetime::__cmp__(datetime *other) {
 	__ss_int oord = other->toordinal();
 	if(ford > oord)
 		return 1;
-	if(ford == oord && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+	if(ford == oord && ((int64_t)f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > ((int64_t)other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
 		return 1;
     return -1;
 }
@@ -1167,9 +1167,11 @@ __ss_int time::__cmp__(time *other) {
     time *f = this;
     time_compare_check(f, other);
 
-    if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+    int64_t fus = ((int64_t)f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond;
+    int64_t ous = ((int64_t)other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond;
+    if(fus == ous)
         return 0;
-    if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+    if(fus > ous)
         return 1;
     return -1;
 }
@@ -1202,21 +1204,21 @@ __ss_int time::__hash__() {
  * very end. Handling every argument separately keeps e.g.
  * timedelta(hours=-55695256, seconds=-909.352) exact, where combining the
  * arguments into one double first would lose the microseconds. */
-static inline void timedelta_accum(double arg, __ss_int factor, double factor_us, __ss_int *whole_acc, __ss_int *us_acc, double *leftover_us) {
+static inline void timedelta_accum(double arg, int64_t factor, double factor_us, int64_t *whole_acc, int64_t *us_acc, double *leftover_us) {
     double whole;
     double frac = modf(arg, &whole);
-    *whole_acc += (__ss_int)whole * factor;
+    *whole_acc += (int64_t)whole * factor;
     if (frac != 0.0) {
         /* scale the fraction to microseconds and again split off the whole
            microseconds, so that only the sub-microsecond remainder is carried
            in floating point (keeps it small, hence precise) */
         frac = modf(frac * factor_us, &whole);
-        *us_acc += (__ss_int)whole;
+        *us_acc += (int64_t)whole;
         *leftover_us += frac;
     }
 }
 
-static void timedelta_check_days(__ss_int days) {
+static void timedelta_check_days(int64_t days) {
     if(days>999999999 || days<(-999999999)) {
         char buf[64];
         snprintf(buf, sizeof(buf), "days=%lld; must have magnitude <= 999999999", (long long)days);
@@ -1235,7 +1237,7 @@ timedelta::timedelta(double days_, double seconds_, double microseconds_, double
      * total and the seconds from a separately truncated total; for negative
      * totals the two disagreed by a second (timedelta(days=-1, seconds=1.5)
      * came out as -1 day, 0:00:00.5), and it rounded ties away from zero. */
-    __ss_int d = 0, s = 0, us = 0;
+    int64_t d = 0, s = 0, us = 0;
     double leftover_us = 0.0;
 
     /* same order as cpython's delta_new: the leftover is a floating point sum,
@@ -1254,22 +1256,22 @@ timedelta::timedelta(double days_, double seconds_, double microseconds_, double
          * is the parity of us, since the day and second factors are even.
          * Adding that parity before rounding and removing it afterwards makes
          * ___round's tie-breaking land the total on an even value. */
-        __ss_int odd = us & 1;
+        int64_t odd = us & 1;
         us += ___round(leftover_us + (double)odd) - odd;
     }
 
     /* normalize with floor semantics: 0 <= microseconds < 1e6, 0 <= seconds < 86400 */
-    __ss_int rem;
+    int64_t rem;
     s += floordivmod(us, 1000000, &rem);
     us = rem;
     d += floordivmod(s, 24 * 3600, &rem);
     s = rem;
 
-    this->days = d;
-    this->seconds = s;
-    this->microseconds = us;
+    timedelta_check_days(d);
 
-    timedelta_check_days(this->days);
+    this->days = (__ss_int)d;
+    this->seconds = (__ss_int)s;
+    this->microseconds = (__ss_int)us;
 }
 
 __ss_bool timedelta::__bool__() {
@@ -1343,9 +1345,9 @@ timedelta *timedelta::__truediv__(__ss_float f) {
  * *out_remainder is the exact remainder of the division (Python divmod sign
  * convention), used by __truediv__ below to implement round-half-to-even
  * like cpython. */
-static __ss_int floordivmod(__ss_int a, __ss_int b, __ss_int *r) {
-    __ss_int q = a / b;
-    __ss_int rem = a - q * b;
+static int64_t floordivmod(int64_t a, int64_t b, int64_t *r) {
+    int64_t q = a / b;
+    int64_t rem = a - q * b;
     if (rem != 0 && ((rem < 0) != (b < 0))) {
         q -= 1;
         rem += b;
@@ -1354,20 +1356,20 @@ static __ss_int floordivmod(__ss_int a, __ss_int b, __ss_int *r) {
     return q;
 }
 
-static void timedelta_floordivmod(__ss_int days, __ss_int seconds, __ss_int microseconds, __ss_int n,
-                                   __ss_int *out_days, __ss_int *out_seconds, __ss_int *out_microseconds,
-                                   __ss_int *out_remainder) {
-    __ss_int A = days * 86400 + seconds;          /* exact, fits comfortably in 64 bits */
-    __ss_int r1;
-    __ss_int qhigh = floordivmod(A, n, &r1);       /* |r1| < |n| */
-    __ss_int combined = r1 * 1000000 + microseconds;
-    __ss_int r2;
-    __ss_int qlow = floordivmod(combined, n, &r2); /* |qlow| stays small, no overflow */
-    __ss_int qlow_hi, qlow_lo;
+static void timedelta_floordivmod(int64_t days, int64_t seconds, int64_t microseconds, int64_t n,
+                                   int64_t *out_days, int64_t *out_seconds, int64_t *out_microseconds,
+                                   int64_t *out_remainder) {
+    int64_t A = days * 86400 + seconds;           /* exact, fits comfortably in 64 bits */
+    int64_t r1;
+    int64_t qhigh = floordivmod(A, n, &r1);        /* |r1| < |n| */
+    int64_t combined = r1 * 1000000 + microseconds;
+    int64_t r2;
+    int64_t qlow = floordivmod(combined, n, &r2);  /* |qlow| stays small, no overflow */
+    int64_t qlow_hi, qlow_lo;
     qlow_hi = floordivmod(qlow, 1000000, &qlow_lo);
-    __ss_int total_seconds = qhigh + qlow_hi;
-    __ss_int seconds_final;
-    __ss_int days_final = floordivmod(total_seconds, 86400, &seconds_final);
+    int64_t total_seconds = qhigh + qlow_hi;
+    int64_t seconds_final;
+    int64_t days_final = floordivmod(total_seconds, 86400, &seconds_final);
 
     *out_days = days_final;
     *out_seconds = seconds_final;
@@ -1379,11 +1381,11 @@ timedelta *timedelta::__truediv__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    __ss_int d, s, us, rem;
+    int64_t d, s, us, rem;
     timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
 
     /* round-half-to-even, matching cpython's _divide_and_round */
-    __ss_int rr = rem * 2;
+    int64_t rr = rem * 2;
     bool greater_than_half = n > 0 ? rr > n : rr < n;
     bool tie = (rr == n);
     if(greater_than_half || (tie && (us % 2 != 0))) {
@@ -1398,13 +1400,13 @@ timedelta *timedelta::__truediv__(__ss_int n) {
         }
     }
 
-    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
-    result->days = d;
-    result->seconds = s;
-    result->microseconds = us;
-    if(result->days>999999999 || result->days<(-999999999)) {
+    if(d>999999999 || d<(-999999999)) {
         throw new OverflowError();
     }
+    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
+    result->days = (__ss_int)d;
+    result->seconds = (__ss_int)s;
+    result->microseconds = (__ss_int)us;
     return result;
 }
 
@@ -1615,16 +1617,16 @@ timedelta *timedelta::__floordiv__(__ss_int n) {
     if(n==0) {
        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    __ss_int d, s, us, rem;
+    int64_t d, s, us, rem;
     timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
 
-    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
-    result->days = d;
-    result->seconds = s;
-    result->microseconds = us;
-    if(result->days>999999999 || result->days<(-999999999)) {
+    if(d>999999999 || d<(-999999999)) {
         throw new OverflowError();
     }
+    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
+    result->days = (__ss_int)d;
+    result->seconds = (__ss_int)s;
+    result->microseconds = (__ss_int)us;
     return result;
 }
 
@@ -1642,9 +1644,11 @@ __ss_float timedelta::total_seconds() {
 __ss_int timedelta::__cmp__(timedelta *other) {
     if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds))
         return 0;
-    if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds))
+    int64_t s = (int64_t)days * 24 * 3600 + seconds;
+    int64_t os = (int64_t)other->days * 24 * 3600 + other->seconds;
+    if (s > os)
         return 1;
-    if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds))
+    if ((s == os) && (microseconds > other->microseconds))
         return 1;
     return -1;
 }
