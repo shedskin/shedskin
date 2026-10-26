@@ -666,10 +666,27 @@ def test_text_files():
     os.remove(name)
 
 
+def test_enter_exit_results():
+    # __enter__ returns the file itself and __exit__ returns None
+    name = tmpname('c.gz')
+    g = gzip.open(name, 'wb')
+    h = g.__enter__()
+    assert h is g
+    h.write(b'hoi')
+    assert g.__exit__() is None
+    t = gzip.open(name, 'rt')
+    u = t.__enter__()
+    assert u is t
+    assert u.read() == 'hoi'
+    assert t.__exit__() is None
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
     test_bad_level()
+    test_enter_exit_results()
     test_decompress_zlib_data()
     test_multi_member()
     test_header_fields()

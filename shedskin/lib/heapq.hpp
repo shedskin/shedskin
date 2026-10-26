@@ -141,18 +141,20 @@ template<template <class Y, class Z> class Cmp, class T, class Key> inline void 
 
 /* Basic operations */
 
-template<class T> inline void heapify(list<T> *l) {
+template<class T> inline void *heapify(list<T> *l) {
     __GC_VECTOR(T) &heap = l->units;
     for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
         _siftup<Cmp>(heap, i, 0);
     }
+    return NULL;
 }
 
-template<class T> inline void heapify_max(list<T> *l) {
+template<class T> inline void *heapify_max(list<T> *l) {
     __GC_VECTOR(T) &heap = l->units;
     for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
         _siftup<InvCmp>(heap, i, 0);
     }
+    return NULL;
 }
 
 template<template <class Y, class Z> class Cmp, class Key, class T, class E> inline void heappush(T &heap, E item, Key key) {
@@ -160,12 +162,14 @@ template<template <class Y, class Z> class Cmp, class Key, class T, class E> inl
     _siftdown<Cmp>(heap, 0, heap.size() - 1, key);
 }
 
-template<class T> inline void heappush(list<T> *l, T item) {
+template<class T> inline void *heappush(list<T> *l, T item) {
     heappush<Cmp>(l->units, item, 0);
+    return NULL;
 }
 
-template<class T> inline void heappush_max(list<T> *l, T item) {
+template<class T> inline void *heappush_max(list<T> *l, T item) {
     heappush<InvCmp>(l->units, item, 0);
+    return NULL;
 }
 
 template<template <class Y, class Z> class Cmp, class T, class Key> auto heappop(T &heap, Key key) {

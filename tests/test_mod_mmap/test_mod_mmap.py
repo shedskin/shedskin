@@ -858,9 +858,38 @@ def test_resize_refused():
     os.remove(TESTFILE_OUT)
 
 
+def test_return_values():
+    setUp()
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'0123456789')
+    f = open(TESTFILE_OUT, 'r+b')
+    m = mmap.mmap(f.fileno(), 0)
+    assert m.write(b'AB') == 2
+    assert m.write(b'') == 0
+    assert m.seek(3) == 3
+    assert m.seek(2, 1) == 5
+    assert m.seek(-1, 2) == 9
+    assert m.flush() is None
+    assert m[:] == b'AB23456789'
+    m.close()
+    f.close()
+    os.remove(TESTFILE_OUT)
+
+
+def test_enter_exit_results():
+    # __enter__ returns the mmap itself and __exit__ returns None
+    m = mmap.mmap(-1, 8)
+    n = m.__enter__()
+    assert n is m
+    assert len(n) == 8
+    assert m.__exit__() is None
+    assert m.closed
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
+        test_enter_exit_results()
         test_basic()
         test_readonly()
         test_rfind()
@@ -884,6 +913,7 @@ def test_all():
     test_access_read()
     test_readline()
     test_offset()
+    test_return_values()
 
 if __name__ == '__main__':
     test_all()

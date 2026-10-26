@@ -271,7 +271,7 @@ public:
 
     /* like CPython, accept any iterable of fields: str is written as is,
        None as an empty field and anything else as its str() */
-    template<class T> void *writerow(T *seq) {
+    template<class T> __ss_int writerow(T *seq) {
         typedef typename T::for_in_unit E;
         E field;
         typename T::for_in_loop __3;
@@ -324,7 +324,7 @@ public:
 
     // internal
     void *join_reset();
-    void *join_finish(bool null_field);
+    __ss_int join_finish(bool null_field);
     void *join_append(str *field, __ss_int quoted);
     void *join_append_data(str *field, __ss_int quoted);
 };
@@ -481,8 +481,8 @@ public:
         __ss_int strict
     );
 
-    void *writeheader();
-    void *writerow(dict<str *, str *> *rowdict);
+    __ss_int writeheader();
+    __ss_int writerow(dict<str *, str *> *rowdict);
     void *writerows(pyiter<dict<str *, str *> *> *rowdicts);
 
     // internal

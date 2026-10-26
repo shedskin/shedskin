@@ -842,6 +842,14 @@ def test_list_growth():
     assert fl[299] == 74.75
 
 
+def test_list_clear_none():
+    # clear() returns None, so its result can be used as a value
+    l = [1, 2]
+    x = l.clear()
+    assert x is None
+    assert l == []
+
+
 def test_all():
     test_list_literal_long()
     test_list_copy_paths()
@@ -880,6 +888,7 @@ def test_all():
     test_listcomp_append_reserve()
     test_list_fresh_copy()
     test_list_growth()
+    test_list_clear_none()
 
 
 if __name__ == "__main__":

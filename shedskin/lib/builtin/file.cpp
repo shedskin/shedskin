@@ -481,10 +481,13 @@ str *file::__repr__() {
     return (new str("file '"))->__add__(name)->__add__(new str("'"));
 }
 
-void file::__enter__() { }
+file *file::__enter__() {
+    return this;
+}
 
-void file::__exit__() {
+void *file::__exit__() {
     close();
+    return NULL;
 }
 
 bool file::__error() {
@@ -700,10 +703,13 @@ str *file_binary::__repr__() {
     return (new str("file '"))->__add__(name)->__add__(new str("'"));
 }
 
-void file_binary::__enter__() { }
+file_binary *file_binary::__enter__() {
+    return this;
+}
 
-void file_binary::__exit__() {
+void *file_binary::__exit__() {
     close();
+    return NULL;
 }
 
 bool file_binary::__error() {

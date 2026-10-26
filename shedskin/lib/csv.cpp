@@ -578,7 +578,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
     return NULL;
 }
 
-void *writer::join_finish(bool null_field) {
+__ss_int writer::join_finish(bool null_field) {
     if (this->num_fields > 0 && this->rec_len == 0) {
         /* a single empty field must be quoted, to tell it apart from an empty row */
         if (dialect->quoting == QUOTE_NONE ||
@@ -590,8 +590,7 @@ void *writer::join_finish(bool null_field) {
     }
 
     (this->rec)->append((this->dialect)->lineterminator);
-    (this->output_file)->write((const_16)->join(this->rec));
-    return NULL;
+    return (this->output_file)->write((const_16)->join(this->rec));
 }
 
 void *writer::join_reset() {
@@ -726,12 +725,11 @@ list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
     return list_comp_1(this, rowdict);
 }
 
-void *DictWriter::writeheader() {
-    this->_writer->writerow(this->fieldnames);
-    return NULL;
+__ss_int DictWriter::writeheader() {
+    return this->_writer->writerow(this->fieldnames);
 }
 
-void *DictWriter::writerow(dict<str *, str *> *rowdict) {
+__ss_int DictWriter::writerow(dict<str *, str *> *rowdict) {
     return (this->_writer)->writerow(this->_dict_to_list(rowdict));
 }
 

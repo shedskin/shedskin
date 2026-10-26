@@ -78,6 +78,7 @@ public:
     void *rewind();
     void *flush();
     void *close();
+    GzipFile *__enter__() { return this; }
     __ss_int truncate(__ss_int size=-1);
     __ss_int __ss_fileno();
     __ss_bool isatty();
@@ -132,6 +133,7 @@ public:
     __ss_int truncate(__ss_int size=-1);
     void *flush();
     void *close();
+    _GzipTextFile *__enter__() { return this; }
     __ss_int __ss_fileno();
     __ss_bool isatty();
 
