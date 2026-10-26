@@ -963,7 +963,19 @@ void *socket::connect(bytes *address)
     socklen_t len = unix_sockaddr(&smup, address->unit);
     return connect(reinterpret_cast<sockaddr *>(&smup), len);
 }
-#endif /* ! WIN32 */
+#else /* WIN32 */
+/* no AF_UNIX path addresses here (as in CPython, which has no AF_UNIX on
+   windows), but still define these, as callers may be compiled in */
+static void *unix_unsupported(__ss_int family)
+{
+    if (family != AF_UNIX)
+        throw new ValueError(invalid_address);
+    throw new error(new str("AF_UNIX path addresses are not supported on windows"));
+}
+
+void *socket::connect(str *) { return unix_unsupported(family); }
+void *socket::connect(bytes *) { return unix_unsupported(family); }
+#endif /* WIN32 */
 
 
 static void set_blocking(socket_type fd)
@@ -1431,7 +1443,10 @@ void *socket::bind(bytes *address)
     socklen_t len = unix_sockaddr(&smup, address->unit);
     return bind(reinterpret_cast<sockaddr *>(&smup), len);
 }
-#endif /* ! WIN32 */
+#else /* WIN32 */
+void *socket::bind(str *) { return unix_unsupported(family); }
+void *socket::bind(bytes *) { return unix_unsupported(family); }
+#endif /* WIN32 */
 
 socket::inet_address socket::getpeername()
 {
