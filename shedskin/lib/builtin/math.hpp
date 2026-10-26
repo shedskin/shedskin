@@ -370,6 +370,64 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
     return __mbool(std::isfinite(d) && std::floor(d) == d);
 }
 
+/* {int, float, bool}.{real, imag, numerator, denominator, conjugate} */
+
+inline __ss_int __ss_real(__ss_int i) { return i; }
+inline __ss_float __ss_real(__ss_float d) { return d; }
+inline __ss_int __ss_real(__ss_bool b) { return (__ss_int)b.value; }
+
+inline __ss_int __ss_imag(__ss_int) { return 0; }
+inline __ss_float __ss_imag(__ss_float) { return 0.0; }
+inline __ss_int __ss_imag(__ss_bool) { return 0; }
+
+inline __ss_int __ss_numerator(__ss_int i) { return i; }
+inline __ss_int __ss_numerator(__ss_bool b) { return (__ss_int)b.value; }
+
+inline __ss_int __ss_denominator(__ss_int) { return 1; }
+inline __ss_int __ss_denominator(__ss_bool) { return 1; }
+
+inline __ss_int __ss_conjugate(__ss_int i) { return i; }
+inline __ss_float __ss_conjugate(__ss_float d) { return d; }
+inline __ss_int __ss_conjugate(__ss_bool b) { return (__ss_int)b.value; }
+
+/* {int, float, bool}.as_integer_ratio */
+
+inline tuple<__ss_int> *__ss_as_integer_ratio(__ss_int i) {
+    return new tuple<__ss_int>(2, i, (__ss_int)1);
+}
+
+inline tuple<__ss_int> *__ss_as_integer_ratio(__ss_bool b) {
+    return new tuple<__ss_int>(2, (__ss_int)b.value, (__ss_int)1);
+}
+
+inline tuple<__ss_int> *__ss_as_integer_ratio(__ss_float d) {
+    if(std::isinf(d))
+        throw new OverflowError(new str("cannot convert Infinity to integer ratio"));
+    if(std::isnan(d))
+        throw new ValueError(new str("cannot convert NaN to integer ratio"));
+
+    /* as in CPython: double the mantissa until it is integral, so that
+     * d == m * 2**e with m odd (or zero), which keeps the ratio in lowest terms */
+    int e;
+    __ss_float m = std::frexp(d, &e);
+    while(m != std::floor(m)) {
+        m *= 2;
+        e--;
+    }
+
+    /* unlike CPython, numerator and denominator must fit in an __ss_int */
+    const int bits = (int)sizeof(__ss_int) * 8 - 1;
+    const double limit = std::ldexp(1.0, bits);
+    if(e >= 0) { /* d is integral */
+        if(d < -limit || d >= limit)
+            throw new OverflowError(new str("int too big to convert"));
+        return new tuple<__ss_int>(2, (__ss_int)d, (__ss_int)1);
+    }
+    if(-e >= bits || m < -limit || m >= limit)
+        throw new OverflowError(new str("int too big to convert"));
+    return new tuple<__ss_int>(2, (__ss_int)m, (__ss_int)1 << -e);
+}
+
 /* int.{bit_count, bit_length */
 
 namespace __int___ {
@@ -400,10 +458,6 @@ namespace __int___ {
         return (__ss_int)std::bit_width((unsigned long long)u);
 #endif
     }
-
-/*    inline tuple<__ss_int> *as_integer_ratio(__ss_int i) {
-        return new tuple<__ss_int>(2, i, 1);
-    } */
 
 }
 

@@ -205,6 +205,10 @@ inline __ss_int complex::__hash__() { return (__ss_int)(__complex_part_hash(real
 
 inline complex complex::conjugate() { return mcomplex(real, -imag); }
 
+/* complex.{real, imag} (see {int, float, bool} versions in math.hpp) */
+inline __ss_float __ss_real(complex c) { return c.real; }
+inline __ss_float __ss_imag(complex c) { return c.imag; }
+
 /* glue */
 
 #ifdef __SS_BIND
