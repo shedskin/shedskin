@@ -64,7 +64,34 @@ def test_exhausted():
     assert list(h) == []
 
 
+CALLS = []
+XS = [1, 2]
+
+def make_iter():
+    CALLS.append('make')
+    return [3, 4]
+
+
+def test_eager_iterable():  # outermost iterable is evaluated at creation (PEP 289)
+    global XS
+    g = (x for x in make_iter())
+    CALLS.append('created')
+    assert list(g) == [3, 4]
+    assert CALLS == ['make', 'created']
+
+    h = (x * y for x in XS for y in make_iter())
+    XS = [7, 8]
+    assert list(h) == [3, 4, 6, 8]
+
+    try:
+        e = (x for x in [1 // len(CALLS[:0])])
+        assert False
+    except ZeroDivisionError:
+        pass
+
+
 def test_all():
+    test_eager_iterable()
     test_sum()
     test_list()
     test_set_comprehensions()
