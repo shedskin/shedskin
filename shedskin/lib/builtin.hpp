@@ -796,6 +796,25 @@ template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see
         throw new ValueError(new str("not enough values to unpack"));
 #endif
 
+template<class P> inline auto __ss_unpack_next(P *it) -> decltype(it->__next__()) {
+    try {
+        return it->__next__();
+    } catch (StopIteration *) {
+        throw new ValueError(new str("not enough values to unpack"));
+    }
+}
+
+template<class P> inline void __ss_unpack_end(P *it) {
+#ifndef __SS_NOBOUNDS
+    try {
+        it->__next__();
+    } catch (StopIteration *) {
+        return;
+    }
+    throw new ValueError(new str("too many values to unpack"));
+#endif
+}
+
 template<class T> list<T> *__ss_list() {
     list<T> *l = new list<T>();
 #ifndef __SS_BOOST

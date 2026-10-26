@@ -4334,6 +4334,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(temp, " = ", rvalue, func)
             self.eol()
 
+            temp_iter = None
             for i, item in enumerate(lvalue.elts):
                 rvalue_node = self.gx.item_rvalue[item]
                 if i == 0:
@@ -4345,22 +4346,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
                         )
                     else:
-                        rtypes = self.mergeinh[rvalue_node]
-                        ts = typestr.typestr(
-                            self.gx, self.subtypes(rtypes, "unit"), mv=self.mv
-                        )
-                        self.output(
-                            "list<%s> *%s_list = new list<%s>(%s);"  # TODO ugh.. iterable? can't we iterate then?
-                            % (ts, temp, ts, temp)
-                        )
-                        temp = temp + "_list"
-                        self.output(
-                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
-                        )
+                        # use iteration protocol (avoid list allocation)
+                        temp_iter = temp + "_iter"
+                        self.output("{")
+                        self.indent()
+                        self.output("auto %s = ___iter(%s);" % (temp_iter, temp))
 
+                if temp_iter:
+                    selector = "__ss_unpack_next(%s)" % temp_iter
+                else:
+                    selector = self.get_selector(temp, item, i)
                 self.start()
-                self.visitm(item, " = ", self.get_selector(temp, item, i), func)
+                self.visitm(item, " = ", selector, func)
                 self.eol()
+
+            if temp_iter:
+                self.output("__ss_unpack_end(%s);" % temp_iter)
+                self.deindent()
+                self.output("}")
 
     def one_class(self, node: ast.AST, names: tuple[str, ...]) -> bool:
         """Check if a node is a single class"""

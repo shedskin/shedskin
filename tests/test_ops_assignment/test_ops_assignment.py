@@ -279,6 +279,34 @@ def test_augassign_dict_inplace():
         pass
 
 
+def unpack_gen(n):
+    for i in range(n):
+        yield i + 1
+
+
+def unpack_gen2():
+    a, b = unpack_gen(2)
+    yield a + b
+
+
+def test_unpack16():
+    # iterables other than list/tuple/str/bytes (no intermediate list)
+    a, b = {7: 'x', 8: 'y'}
+    assert sorted([a, b]) == [7, 8]
+
+    a, b, c = unpack_gen(3)
+    assert (a, b, c) == (1, 2, 3)
+
+    assert list(unpack_gen2()) == [3]
+
+    for n in (2, 4):
+        try:
+            a, b, c = unpack_gen(n)
+            assert False
+        except ValueError:
+            pass
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
@@ -299,6 +327,7 @@ def test_all():
     test_unpack13()
     test_unpack14()
     test_unpack15()
+    test_unpack16()
     test_walrus()
     test_walrus2()
     test_walrus3()
