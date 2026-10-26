@@ -127,12 +127,12 @@ def test_getrandbits():
     ok = False
     assert random.getrandbits(0) == 0
 
-    ok = False
+    error = ''
     try:
         random.getrandbits(-1)
-    except ValueError:
-        ok = True
-    assert ok
+    except ValueError as e:
+        error = str(e)
+    assert error == 'number of bits must be non-negative'
 
     # regression test: getrandbits(k) for k > 53 used to derive its value
     # via random()*width, but random() only has BPF=53 bits of mantissa
@@ -223,12 +223,12 @@ def test_randbytes_range():
     r.setstate(st)
     assert r.randbytes(16) == x
 
-    ok = False
+    error = ''
     try:
         random.Random(1).randbytes(-1)
-    except ValueError:
-        ok = True
-    assert ok
+    except ValueError as e:
+        error = str(e)
+    assert error == 'number of bits must be non-negative'  # sic, like cpython
 
 
 def test_choices():
@@ -745,6 +745,34 @@ def test_sample_sequence():
     assert sorted(random.sample(sorted({3, 1, 2}), 3)) == [1, 2, 3]
 
 
+def test_error_messages():
+    # like cpython, randint(a, b) reports itself as randrange(a, b+1)
+    error = ''
+    try:
+        random.randint(5, 4)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty range in randrange(5, 5)'
+    error = ''
+    try:
+        random.Random(1).randint(-3, -10)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'empty range in randrange(-3, -9)'
+
+    sr = random.SystemRandom()
+    msgs = []
+    try:
+        sr.getstate()
+    except NotImplementedError as e:
+        msgs.append(str(e))
+    try:
+        sr.setstate(random.getstate())
+    except NotImplementedError as e:
+        msgs.append(str(e))
+    assert msgs == ['System entropy source does not have state.'] * 2
+
+
 def test_all():
     test_random1()
     test_random2()
@@ -773,6 +801,7 @@ def test_all():
     test_version()
     test_copy()
     test_sample_sequence()
+    test_error_messages()
 
 
 if __name__ == '__main__':

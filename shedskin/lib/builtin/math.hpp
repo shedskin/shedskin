@@ -326,10 +326,12 @@ template<> inline tuple2<__ss_float, __ss_float> *divmod(__ss_float a, __ss_floa
 }
 #ifdef __SS_LONG
 template<> inline tuple2<__ss_int, __ss_int> *divmod(__ss_int a, __ss_int b) {
+    __SS_ZERO_CHECK(b, "integer division or modulo by zero"); /* before __mods() can raise its own message */
     return new tuple2<__ss_int, __ss_int>(2, __floordiv(a,b), __mods(a,b));
 }
 #endif
 template<> inline tuple2<int, int> *divmod(int a, int b) {
+    __SS_ZERO_CHECK(b, "integer division or modulo by zero"); /* before __mods() can raise its own message */
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
 

@@ -240,11 +240,11 @@ template<class T> void *array<T>::fromstring(bytes *s) {
  * (statically well-typed, but semantically wrong) mistake, so mirror
  * CPython's runtime ValueError rather than silently returning nonsense. */
 template<class T> str *array<T>::tounicode() {
-    throw new ValueError(new str("tounicode() may only be called on unicode type arrays"));
+    throw new ValueError(new str("tounicode() may only be called on unicode type arrays ('u' or 'w')"));
 }
 
 template<class T> void *array<T>::fromunicode(str *) {
-    throw new ValueError(new str("fromunicode() may only be called on unicode type arrays"));
+    throw new ValueError(new str("fromunicode() may only be called on unicode type arrays ('u' or 'w')"));
 }
 
 /* Address of the backing buffer plus its length in *elements* (not bytes --
@@ -410,7 +410,9 @@ template<class T, class M> inline bool __gt_limit(T t, M m) {
 
 template<class T> void array<T>::fillbuf(T t) {
     switch(typechar) {
-        case 'b':
+        case 'b': /* like cpython, which first parses the item as a short */
+            if(t > 32767) throw new OverflowError(new str("signed short integer is greater than maximum"));
+            if(t < -32768) throw new OverflowError(new str("signed short integer is less than minimum"));
             if(t > 127) throw new OverflowError(new str("signed char is greater than maximum"));
             if(t < -128) throw new OverflowError(new str("signed char is less than minimum"));
             *((signed char *)buffy) = (signed char)t; break;
@@ -422,7 +424,9 @@ template<class T> void array<T>::fillbuf(T t) {
             if(t > 32767) throw new OverflowError(new str("signed short integer is greater than maximum"));
             if(t < -32768) throw new OverflowError(new str("signed short integer is less than minimum"));
             *((signed short *)buffy) = (signed short)t; break;
-        case 'H':
+        case 'H': /* like cpython, which first parses the item as an int */
+            if(t > 2147483647LL) throw new OverflowError(new str("signed integer is greater than maximum"));
+            if(t < -2147483648LL) throw new OverflowError(new str("signed integer is less than minimum"));
             if(t < 0) throw new OverflowError(new str("unsigned short is less than minimum"));
             if(t > 65535) throw new OverflowError(new str("unsigned short is greater than maximum"));
             *((unsigned short *)buffy) = (unsigned short)t; break;
@@ -439,7 +443,7 @@ template<class T> void array<T>::fillbuf(T t) {
             if(t < std::numeric_limits<signed long>::min()) throw new OverflowError(new str("signed long is less than minimum"));
             *((signed long *)buffy) = (signed long)t; break;
         case 'L':
-            if(t < 0) throw new OverflowError(new str("can't convert negative value to unsigned long"));
+            if(t < 0) throw new OverflowError(new str("can't convert negative value to unsigned int")); /* sic, like cpython */
             if(__gt_limit(t, std::numeric_limits<unsigned long>::max())) throw new OverflowError(new str("unsigned long is greater than maximum"));
             *((unsigned long *)buffy) = (unsigned long)t; break;
         case 'q':
@@ -460,7 +464,7 @@ template<class T> T array<T>::__getitem__(__ss_int i) {
 }
 
 template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array index out of range");
     unsigned int j = (unsigned int)i;
     switch(typechar) {
         case 'b': return (__ss_int)(*((signed char *)(&units[j*itemsize])));
@@ -477,7 +481,7 @@ template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
     return 0;
 }
 template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array index out of range");
     if(typechar == 'f')
         return (__ss_float)(*((float *)(&units[(size_t)i*itemsize])));
     else
@@ -495,7 +499,7 @@ template<> inline void array<str *>::fillbuf(str *t) {
 }
 
 template<> inline str *array<str *>::__getfast__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array index out of range");
     return __char_str(*((__ss_char *)(&units[(size_t)i*itemsize])));
 }
 
@@ -507,7 +511,7 @@ template<class T> void *array<T>::append(T t) {
 }
 
 template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array assignment index out of range");
     fillbuf(t);
     for(unsigned int j=0; j<itemsize; j++)
         this->units[i*itemsize+j] = ((char *)buffy)[j];
@@ -530,7 +534,7 @@ template<class T> void *array<T>::insert(__ss_int i, T t) {
 }
 
 template<class T> void *array<T>::__delitem__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array assignment index out of range");
     this->units.erase(units.begin()+(i*itemsize), units.begin()+((i+1)*itemsize));
     return NULL;
 }
@@ -670,7 +674,7 @@ template<class T> void *array<T>::__setslice__(__ss_int x, __ss_int l, __ss_int 
 }
 
 template<class T> void *array<T>::__delete__(__ss_int i) {
-    i = __wrap(this, i);
+    i = __wrap(this, i, "array assignment index out of range");
     this->units.erase(units.begin()+(i*itemsize), units.begin()+((i+1)*itemsize));
     return NULL;
 }
