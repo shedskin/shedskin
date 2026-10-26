@@ -317,6 +317,7 @@ class Function(Namespace):
         self.defaults: list[ast.expr] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
+        self.miss_nodes: dict[str, ast.Name] = {}
         self.cp: dict[int, dict[CartesianProduct, int]] = {}
         self.xargs: dict[tuple[int, int], int] = {}
         self.largs: Optional[int] = None
@@ -634,3 +635,12 @@ def subclass(a: Class, b: Class) -> bool:
         return True
     else:
         return bool(a.bases) and subclass(a.bases[0], b)  # XXX mult inh
+
+
+def lc_miss_var(name: str, lcfunc: Function) -> Variable | None:
+    if name != "self":
+        name_node = lcfunc.miss_nodes.get(name)
+        func = outer_func(lcfunc)
+        if name_node and func:
+            return func.read_variables.get(name_node)
+    return None

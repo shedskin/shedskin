@@ -451,8 +451,9 @@ class VisitContext:
         if defs:
             for c in defs:
                 mv.add_constraint((c, cnode), func)
-            return cnode
-        if self.contained_local_writes:
+            if node.id not in self.conditional_writes:
+                return cnode
+        elif self.contained_local_writes:
             contained_def = self.contained_local_writes.get(name)
             if contained_def:
                 mv.add_constraint((contained_def, cnode), func)
@@ -466,6 +467,8 @@ class VisitContext:
             if parent_cnode != cnode:
                 mv.add_constraint((parent_cnode, cnode), func)
             self.incoming_definition[name] = cnode
+            if self.parent.namespace and self.parent.namespace != self.namespace and isinstance(self.namespace, python.Function):
+                self.namespace.miss_nodes[name] = node
         elif isinstance(func, python.Function):
             func_parent = (
                 func.parent
@@ -2320,7 +2323,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         while_context = context.child()
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
-        self.visit(node.test, context)
+        self.visit(node.test, while_context)
         body_context = while_context.child()
         for child in node.body:
             self.visit(child, body_context)
@@ -2384,7 +2387,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lcfunc = python.Function(self.gx, getmv(), parent=func)
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
-        lc_context = VisitContext(lcfunc)
+        lc_context = VisitContext(lcfunc, context)
 
         for qual in node.generators:
             # iter
@@ -2415,7 +2418,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 )
                 lc_context.contained_write(qual.target, fakefunc_cnode)
             else:  # AssTuple, AssList
-                self.tuple_flow(qual.target, qual.target, lc_context, True)
+                self.tuple_flow(qual.target, qual.target, lc_context, is_contained=True)
 
             self.do_for(qual, assnode, get_iter, lcfunc)
 

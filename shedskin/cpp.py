@@ -202,7 +202,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self._ss_list_site_ids: dict[int, int] = {}
         self.str_format_node: Optional[ast_utils.StrFormat] = None
 
-    def split_variables(self):
+    def split_variables(self) -> None:
         for func in self.mv.funcs.values():
             self.split_namespace_variables(func)
 
@@ -211,7 +211,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             for func in cls.funcs.values():
                 self.split_namespace_variables(func)
 
-    def split_namespace_variables(self, parent: AllParent):
+    def split_namespace_variables(self, parent: AllParent) -> None:
         for varname, reads in parent.variable_reads.items():
             if len(reads) <= 1 or varname == "self":
                 continue
@@ -230,14 +230,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         parent.formal_split_in[varname] = varname + "__in"
                         typestr_to_reads.setdefault(formal_typestr, [])
             for read in reads:
-                read_typestr = typestr.nodetypestr(self.gx, read.thing, parent, mv=self.mv)
+                read_types = self.gx.merged_inh[read.thing]
+                read_typestr = typestr.typestr(self.gx, read_types, None, read.thing, mv=self.mv)
                 typestr_to_reads.setdefault(read_typestr, []).append(read.thing)
             if len(typestr_to_reads) <= 1:
                 continue
             assign_targets = parent.split_assign_targets.setdefault(varname, {})
             i = 0
             for type_str, read_nodes in typestr_to_reads.items():
-                if type_str == typestr_to_reads:
+                if type_str == var_typestr:
                     target_var = var
                 else:
                     target_var = None
@@ -247,6 +248,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             i += 1
                         else:
                             target_var = infer.default_var(self.gx, target_name, parent)
+                            target_var_types = self.mergeinh.setdefault(target_var, set())
+                            for r in read_nodes:
+                                target_var_types |= self.mergeinh[r]
                     target_var.typestr = type_str
                 assert isinstance(target_var, python.Variable)
                 assign_values = set()
@@ -2013,10 +2017,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.local_defs(func)
 
         for f, f_in in func.formal_split_in.items():
-            in_targets = func.split_assign_targets[f].get(func.formal_nodes[f])
+            formal_node = func.formal_nodes[f]
+            in_targets = func.split_assign_targets[f].get(formal_node)
             if in_targets:
+                formal_typestr = typestr.nodetypestr(self.gx, formal_node, func, mv=self.mv)
                 for target in in_targets:
-                    self.output(f"{self.cpp_name(target)} = {f_in};")
+                    self.start(f"{self.cpp_name(target)} = ")
+                    target_typestr = target.typestr or typestr.nodetypestr(self.gx, target, func, mv=self.mv)
+                    if formal_typestr != target_typestr:
+                        self.append(f"(({target_typestr.strip()})({f_in}))")
+                    else:
+                        self.append(f_in)
+                    self.eol()
 
         # --- function body
         for child in node.body:
@@ -4099,7 +4111,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """
         args = []
         for name in sorted(lcfunc.misses):
-            var = python.lookup_var(name, func, self.mv)
+            var = python.lc_miss_var(name, lcfunc) or python.lookup_var(name, func, self.mv)
             assert var
             if var.parent:
                 arg = self.cpp_name(name)
@@ -4107,7 +4119,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     arg = "&" + arg
                 args.append(
                     (
-                        typestr.nodetypestr(
+                        var.typestr or typestr.nodetypestr(
                             self.gx,
                             python.lookup_var(name, lcfunc, self.mv),
                             lcfunc,
@@ -4217,7 +4229,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         pairs = []
         for name, var in func.vars.items():
             if not var.invisible and (
-                not hasattr(func, "formals") or name not in func.formals
+                not hasattr(func, "formals") or name not in func.formals or name in func.formal_split_in
             ):  # XXX
                 pairs.append(
                     (
@@ -4443,7 +4455,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # must match the parameter order chosen by lc_args
         for name in sorted(lcfunc.misses):
-            var = python.lookup_var(name, func, self.mv)
+            var = python.lc_miss_var(name, lcfunc) or python.lookup_var(name, func, self.mv)
             if var and var.parent:
                 if name == "self" and not (func and func.listcomp):
                     args.append("this")
