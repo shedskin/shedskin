@@ -14,8 +14,8 @@ namespace __itertools__ {
 
 /* Local helpers */
 
-template<class T> static bool _identity(T value) {
-    return value;
+template<class T> static __ss_bool _identity(T value) {
+    return ___bool(value);
 }
 
 /* Infinite Iterators */
@@ -388,7 +388,7 @@ template<class T, class B> T dropwhileiter<T, B>::__next__() {
     if (drop) {
         for (; ; ) {
             const T& value = this->iter->__next__();
-            if (!this->predicate(value)) {
+            if (!___bool(this->predicate(value))) {
                 this->drop = false;
                 return value;
             }
@@ -540,7 +540,7 @@ template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter(B (*pre
 template<class T, class B> T filterfalseiter<T, B>::__next__() {
     for (; ; ) {
         const T& value = this->iter->__next__();
-        if (!this->predicate(value)) {
+        if (!___bool(this->predicate(value))) {
             return value;
         }
     }
@@ -551,8 +551,8 @@ template<class T, class B> T filterfalseiter<T, B>::__next__() {
 template<class T, class B> inline filterfalseiter<T, B> *filterfalse(B (*predicate)(T), pyiter<T> *iterable) {
     return new filterfalseiter<T, B>(predicate, iterable);
 }
-template<class T> inline filterfalseiter<T, bool> *filterfalse(void * /* null */, pyiter<T> *iterable) {
-    return new filterfalseiter<T, bool>(_identity, iterable);
+template<class T> inline filterfalseiter<T, __ss_bool> *filterfalse(void * /* null */, pyiter<T> *iterable) {
+    return new filterfalseiter<T, __ss_bool>(_identity, iterable);
 }
 
 // islice
@@ -771,7 +771,7 @@ template<class T, class B> inline takewhileiter<T, B>::takewhileiter(B (*predica
 template<class T, class B> T takewhileiter<T, B>::__next__() {
     if (take) {
         const T& value = this->iter->__next__();
-        if (this->predicate(value)) {
+        if (___bool(this->predicate(value))) {
             return value;
         }
         this->take = false;

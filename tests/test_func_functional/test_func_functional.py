@@ -85,7 +85,13 @@ def test_misc():
     assert list(filter(lambda a: 2<=a<5, range(10))) == [2, 3, 4]
     assert list(filter(lambda c: c>'a', 'abaaac')) == ['b', 'c']
     assert list(filter(lambda c: c>'a', tuple('abaaac'))) == ['b', 'c']
-    # assert list(filter(None, range(3))), list(filter(None, 'abc')), list(filter(None, tuple(range(3)))) == ([1, 2], ['a', 'b', 'c'], [1, 2])
+    assert list(filter(None, range(3))) == [1, 2]
+    assert list(filter(None, 'abc')) == ['a', 'b', 'c']
+    assert list(filter(None, tuple(range(3)))) == [1, 2]
+    assert list(filter(None, ['', 'a', '', 'bc'])) == ['a', 'bc']
+    assert list(filter(None, [[1], [], [2]])) == [[1], [2]]
+    assert list(filter(None, [0.0, 1.5])) == [1.5]
+    assert list(filter(lambda s: s.strip(), ['  ', 'x', ''])) == ['x']
     assert list(filter(lambda option: option != 'fake', ['duh'])) == ['duh']
 
 
