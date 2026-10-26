@@ -1581,9 +1581,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 ast.copy_location(child, pattern)
         return test
 
-    def visit_Global(self, node: ast.Global, func: "python.Function") -> None:
+    def visit_Global(
+        self,
+        node: ast.Global,
+        func: Optional[Union["python.Function", "python.StaticClass"]] = None,
+    ) -> None:
         """Visit a global statement"""
-        func.globals += node.names
+        if func is not None:  # module-level 'global' is a no-op
+            func.globals += node.names
 
     def visit_List(
         self, node: ast.List, func: Optional["python.Function"] = None
@@ -2624,7 +2629,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, name: str, func: Optional["python.Function"], exc_name: bool = False
     ) -> "python.Variable":
         """Get the default variable for a name"""
-        if isinstance(func, python.Function) and name in func.globals:
+        if isinstance(func, (python.Function, python.StaticClass)) and name in func.globals:
             return infer.default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
             return infer.default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
@@ -3259,7 +3264,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             var: Optional["python.Variable"]
 
-            if isinstance(func, python.Function) and node.id in func.globals:
+            if (
+                isinstance(func, (python.Function, python.StaticClass))
+                and node.id in func.globals
+            ):
                 var = infer.default_var(self.gx, node.id, None, mv=getmv())
             else:
                 var = python.lookup_var(node.id, func, getmv())
