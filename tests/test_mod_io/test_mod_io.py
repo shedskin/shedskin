@@ -662,6 +662,55 @@ def test_tell_closed():
     assert err
 
 
+def test_closed_message():
+    # CPython ends the closed-BytesIO message with a period, but not StringIO's
+    b = io.BytesIO(b'abc\ndef\n')
+    b.close()
+    for i in range(14):
+        msg = ''
+        try:
+            if i == 0:
+                b.read()
+            elif i == 1:
+                b.write(b'x')
+            elif i == 2:
+                b.tell()
+            elif i == 3:
+                b.seek(0)
+            elif i == 4:
+                b.readline()
+            elif i == 5:
+                b.readlines()
+            elif i == 6:
+                b.getvalue()
+            elif i == 7:
+                b.truncate()
+            elif i == 8:
+                b.writelines([b'x'])
+            elif i == 9:
+                b.flush()
+            elif i == 10:
+                b.readable()
+            elif i == 11:
+                b.read1()
+            elif i == 12:
+                b.readinto(bytearray(2))
+            else:
+                for line in b:
+                    pass
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'I/O operation on closed file.', '%d: %s' % (i, msg)
+    s = io.StringIO('abc')
+    s.close()
+    msg = ''
+    try:
+        s.read()
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -698,6 +747,7 @@ def test_all():
     test_bytesio_readinto()
     test_stringio_line_buffering()
     test_tell_closed()
+    test_closed_message()
 
 
 if __name__ == '__main__':
