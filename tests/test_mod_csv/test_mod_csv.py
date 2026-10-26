@@ -808,8 +808,8 @@ def test_unicode_roundtrip():
 
 
 def test_quote_nonnumeric_writer():
-    # csv fields are always str (or None) here, so QUOTE_NONNUMERIC quotes
-    # every field, including the empty string a None field turns into
+    # str fields are quoted under QUOTE_NONNUMERIC, including the empty
+    # string a None field turns into (numbers: see test_writerow_any_iterable)
     with open('test_out.csv', 'w') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
         writer.writerow(['hello', None, 'world'])
@@ -821,6 +821,65 @@ def test_quote_nonnumeric_writer():
     # the quoting constants are distinct from each other
     quotings = [csv.QUOTE_MINIMAL, csv.QUOTE_ALL, csv.QUOTE_NONNUMERIC, csv.QUOTE_NONE]
     assert len(set(quotings)) == 4
+
+def test_writerow_any_iterable():
+    # like CPython, writerow accepts any iterable: str fields are written as
+    # is, None as an empty field and anything else as its str()
+    s = io.StringIO()
+    w = csv.writer(s, lineterminator='\n')
+    w.writerow([1, 2, 3])
+    w.writerow((1.5, -2.0))
+    w.writerow([True, False])
+    w.writerow([b'x', b'y,z'])
+    w.writerow([1j, 2+3j])
+    w.writerow([[1, 2], [3]])
+    w.writerow('abc')
+    w.writerow(range(3))
+    w.writerow(iter([4, 5]))
+    w.writerow(x * 2 for x in [3, 4])
+    w.writerow({'k': 1})
+    w.writerows([(1, 2), (3, 4)])
+    w.writerows([1.5, 2.5] for _ in range(2))
+    assert s.getvalue() == ('1,2,3\n1.5,-2.0\nTrue,False\nb\'x\',"b\'y,z\'"\n'
+                            '1j,(2+3j)\n"[1, 2]",[3]\na,b,c\n0,1,2\n4,5\n6,8\nk\n'
+                            '1,2\n3,4\n1.5,2.5\n1.5,2.5\n')
+
+    # quoting depends on the field type, as in CPython
+    results = []
+    for quoting in [csv.QUOTE_MINIMAL, csv.QUOTE_ALL, csv.QUOTE_NONNUMERIC,
+                    csv.QUOTE_STRINGS, csv.QUOTE_NOTNULL, csv.QUOTE_NONE]:
+        s = io.StringIO()
+        w = csv.writer(s, quoting=quoting, lineterminator='|')
+        w.writerow([1, 2])
+        w.writerow([2.5])
+        w.writerow([True])
+        w.writerow([1j])
+        w.writerow([b'b'])
+        w.writerow(['s', None])
+        results.append(s.getvalue())
+    assert results == [
+        '1,2|2.5|True|1j|b\'b\'|s,|',
+        '"1","2"|"2.5"|"True"|"1j"|"b\'b\'"|"s",""|',
+        '1,2|2.5|True|1j|"b\'b\'"|"s",""|',
+        '1,2|2.5|True|1j|b\'b\'|"s",|',
+        '"1","2"|"2.5"|"True"|"1j"|"b\'b\'"|"s",|',
+        '1,2|2.5|True|1j|b\'b\'|s,|',
+    ]
+
+    # a single empty field must be quoted, which is not always possible
+    results = []
+    for quoting in [csv.QUOTE_MINIMAL, csv.QUOTE_STRINGS, csv.QUOTE_NOTNULL, csv.QUOTE_NONE]:
+        for row in [[''], [None]]:
+            s = io.StringIO()
+            w = csv.writer(s, quoting=quoting, lineterminator='|')
+            try:
+                w.writerow(row)
+                results.append(s.getvalue())
+            except csv.Error as e:
+                results.append(str(e))
+    err = 'single empty field record must be quoted'
+    assert results == ['""|', '""|', '""|', err, '""|', err, err, err]
+
 
 def test_field_size_limit():
     old = csv.field_size_limit()
@@ -1125,6 +1184,7 @@ def test_all():
     test_non_ascii_fields()
     test_unicode_roundtrip()
     test_quote_nonnumeric_writer()
+    test_writerow_any_iterable()
     test_field_size_limit()
     test_reader_doublequote()
     test_reader_skipinitialspace()

@@ -203,6 +203,12 @@ public:
     void *parse_add_char(__ss_char c);
 };
 
+/* whether CPython would consider a field of type T a number (PyNumber_Check),
+   which decides quoting under QUOTE_NONNUMERIC */
+template<class T> struct __csv_is_numeric : std::bool_constant<
+    std::is_arithmetic_v<T> || std::is_same_v<T, __ss_int> || std::is_same_v<T, __ss_float> ||
+    std::is_same_v<T, __ss_bool> || std::is_same_v<T, complex>> {};
+
 class writer : public pyobj {
 public:
     Dialect *dialect;
@@ -263,11 +269,62 @@ public:
         __ss_int strict
     );
 
-    void *writerow(list<str *> *seq);
-    void *writerows(pyiter<list<str *> *> *seqs);
+    /* like CPython, accept any iterable of fields: str is written as is,
+       None as an empty field and anything else as its str() */
+    template<class T> void *writerow(T *seq) {
+        typedef typename T::for_in_unit E;
+        E field;
+        typename T::for_in_loop __3;
+        int __2;
+        T *__1;
+        __ss_int quoting = this->dialect->quoting;
+        bool null_field = false;
+
+        this->join_reset();
+
+        FOR_IN(field,seq,1,2,3)
+            if constexpr (std::is_pointer_v<E>)
+                null_field = (field == NULL);
+
+            __ss_int quoted;
+            if (quoting == QUOTE_ALL)
+                quoted = 1;
+            else if (quoting == QUOTE_NONNUMERIC)
+                quoted = !__csv_is_numeric<E>::value;
+            else if (quoting == QUOTE_STRINGS)
+                quoted = std::is_same_v<E, str *> && !null_field;
+            else if (quoting == QUOTE_NOTNULL)
+                quoted = !null_field;
+            else
+                quoted = 0;
+
+            if constexpr (std::is_same_v<E, str *>)
+                this->join_append(field, quoted);
+            else if constexpr (std::is_pointer_v<E>)
+                this->join_append(null_field ? NULL : __str(field), quoted);
+            else
+                this->join_append(__str(field), quoted);
+        END_FOR
+
+        return this->join_finish(null_field);
+    }
+
+    template<class T> void *writerows(T *seqs) {
+        typename T::for_in_unit seq;
+        typename T::for_in_loop __3;
+        int __2;
+        T *__1;
+
+        FOR_IN(seq,seqs,1,2,3)
+            this->writerow(seq);
+        END_FOR
+
+        return NULL;
+    }
 
     // internal
     void *join_reset();
+    void *join_finish(bool null_field);
     void *join_append(str *field, __ss_int quoted);
     void *join_append_data(str *field, __ss_int quoted);
 };
