@@ -8,10 +8,10 @@ str *input(str *msg) {
         __ss_stdout->options.lastchar = msg->unit[msg->unit.size()-1];
     }
     str *s = __ss_stdin->readline();
-    if(s->unit.size() and s->unit[s->unit.size()-1] == '\n')
+    if(!s->unit.size()) /* EOF only if nothing was read: a last line without newline is returned */
+        throw new EOFError(new str("EOF when reading a line"));
+    if(s->unit[s->unit.size()-1] == '\n')
         s->unit.erase(s->unit.end()-1, s->unit.end());
-    if(__ss_stdin->__eof())
-        throw new EOFError();
     return s;
 }
 

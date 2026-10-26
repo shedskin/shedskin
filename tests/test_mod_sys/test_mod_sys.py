@@ -53,6 +53,23 @@ def test_systemexit_large_code():
         matched = (e.code == big)
     assert matched
 
+def test_systemexit_no_args():
+    # sys.exit() raises SystemExit without args (code None), unlike sys.exit(0)
+    s = r = ''
+    try:
+        sys.exit()
+    except SystemExit as e:
+        s, r = str(e), repr(e)
+    assert s == ''
+    assert r == 'SystemExit()'
+    try:
+        sys.exit(0)
+    except SystemExit as e:
+        s, r = str(e), repr(e)
+    assert s == '0'
+    assert r == 'SystemExit(0)'
+    assert str(SystemExit()) == ''
+
 def test_intern():
     s = 'hello world'
     assert sys.intern(s) == s
@@ -236,6 +253,30 @@ def test_std_streams():
     assert sys.stdin.isatty() in (True, False)
     assert sys.stdin is not sys.stdout
     assert sys.stdout is not sys.stderr
+    assert sys.stdin.mode == 'r'
+    assert sys.stdout.mode == 'w'
+    assert sys.stderr.mode == 'w'
+
+def test_input_eof():
+    # feed stdin from a pipe: a last line without newline is still returned,
+    # and only then does input() raise EOFError
+    r, w = os.pipe()
+    os.write(w, b'one\ntwo')
+    os.close(w)
+    saved = os.dup(0)
+    os.dup2(r, 0)
+    os.close(r)
+    lines = []
+    msg = ''
+    try:
+        while True:
+            lines.append(input())
+    except EOFError as e:
+        msg = str(e)
+    os.dup2(saved, 0)
+    os.close(saved)
+    assert lines == ['one', 'two']
+    assert msg == 'EOF when reading a line'
 
 def test_std_streams_encoding():
     # utf-8 mode (as CPython 3.15), with surrogateescape for stdin/stdout
@@ -321,6 +362,7 @@ def test_all():
     test_recursionlimit()
     test_recursionlimit_invalid()
     test_systemexit_large_code()
+    test_systemexit_no_args()
     test_intern()
     test_is_finalizing()
     test_encodings()
@@ -342,6 +384,7 @@ def test_all():
     test_int_info()
     test_hash_info()
     test_getsizeof()
+    test_input_eof() # last: replaces stdin
 
 if __name__ == '__main__':
     test_all()

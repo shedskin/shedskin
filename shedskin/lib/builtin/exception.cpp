@@ -295,8 +295,7 @@ SystemExit::SystemExit(__ss_int c) : BaseException(__str(c)) {
 
 SystemExit::SystemExit() {
         this->__class__ = cl_systemexit;
-        this->code = 0;
-        this->message = __str(this->code);
+        this->code = 0; /* code is None in cpython; no args, so str() is '' */
         this->show_message = 0;
         this->int_code = 0;
 }

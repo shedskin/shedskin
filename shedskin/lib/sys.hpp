@@ -21,7 +21,10 @@ extern file *__stdin__, *__stdout__, *__stderr__;
 
 void __ss_exit();
 template<class T> void __ss_exit(T x) {
-    throw new SystemExit(x);
+    if constexpr (std::is_same_v<T, __ss_void_struct>) /* sys.exit() */
+        __ss_exit();
+    else
+        throw new SystemExit(x);
 }
 
 extern __ss_int __recursionlimit;
