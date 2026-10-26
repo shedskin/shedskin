@@ -122,6 +122,40 @@ def test_is_integer():
     assert not (-0.5).is_integer()
 
 
+def test_attributes():
+    f = -2.5
+    assert f.real == -2.5
+    assert f.imag == 0.0
+    assert f.conjugate() == -2.5
+    assert (2 * f).real == -5.0
+    assert sum(g.imag for g in [1.0, 2.0]) == 0.0
+
+
+def test_as_integer_ratio():
+    assert (0.0).as_integer_ratio() == (0, 1)
+    assert (-0.0).as_integer_ratio() == (0, 1)
+    assert (0.5).as_integer_ratio() == (1, 2)
+    assert (-2.75).as_integer_ratio() == (-11, 4)
+    assert (4.0).as_integer_ratio() == (4, 1)
+    assert (0.1).as_integer_ratio() == (3602879701896397, 36028797018963968)
+    assert (1e15).as_integer_ratio() == (1000000000000000, 1)
+    assert (2.0**62).as_integer_ratio() == (2**62, 1)
+    assert (2.0**-62).as_integer_ratio() == (1, 2**62)
+    n, d = (123456.789).as_integer_ratio()
+    assert n / d == 123456.789
+
+    try:
+        float('inf').as_integer_ratio()
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'cannot convert Infinity to integer ratio'
+    try:
+        float('nan').as_integer_ratio()
+        assert False
+    except ValueError as e:
+        assert str(e) == 'cannot convert NaN to integer ratio'
+
+
 def test_from_number():
     assert float.from_number(18) == 18.0
     assert float.from_number(18.87) == 18.87
@@ -352,6 +386,8 @@ def test_all():
     test_float()
     test_inf()
     test_is_integer()
+    test_attributes()
+    test_as_integer_ratio()
     test_from_number()
     test_division()
     test_modulo()

@@ -134,8 +134,18 @@ def test_from_number():
     assert complex.from_number(PI3()) == 27
 
 
+def test_attributes():
+    c = 3 - 4j
+    assert c.real == 3.0
+    assert c.imag == -4.0
+    assert c.conjugate() == 3 + 4j
+    assert (c * c).real == -7.0
+    assert [z.imag for z in [1j, 2 + 3j]] == [1.0, 3.0]
+
+
 def test_all():
     test_complex()
+    test_attributes()
     test_from_string()
     test_from_class()
     test_from_number()

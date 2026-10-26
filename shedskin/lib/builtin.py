@@ -5,6 +5,16 @@ class class_:
         return self.__name__
 
 class int_:
+    def __real__(self):
+        return 1
+    real = property(__real__)
+    imag = property(__real__)
+    numerator = property(__real__)
+    denominator = property(__real__)
+
+    def conjugate(self):
+        return 1
+
     def bit_count(self):
         return 1
 
@@ -18,8 +28,8 @@ class int_:
     def from_bytes(cls, b, byteorder=None, signed=False):
         return 1
 
-#    def as_integer_ratio(self, i):
-#        return (1,)
+    def as_integer_ratio(self):
+        return (1,)
 
     def is_integer(self):
         return True
@@ -89,6 +99,19 @@ class int_:
         return ''
 
 class bool_:
+    def __real__(self):  # bool attributes are int
+        return 1
+    real = property(__real__)
+    imag = property(__real__)
+    numerator = property(__real__)
+    denominator = property(__real__)
+
+    def conjugate(self):
+        return 1
+
+    def as_integer_ratio(self):
+        return (1,)
+
     def __add__(self, b):
         return b.__with_int__()
     def __sub__(self, b):
@@ -164,6 +187,17 @@ class float_:
 
     def hex(self):
         return ''
+
+    def __real__(self):
+        return 1.0
+    real = property(__real__)
+    imag = property(__real__)
+
+    def conjugate(self):
+        return 1.0
+
+    def as_integer_ratio(self):
+        return (1,)
 
     def __add__(self, b):
         return b.__with_float__()
@@ -999,7 +1033,11 @@ class complex:
         real.__complex__()  # TODO to sep function like float, int?
         real.__float__()
         real.__index__()
-        self.real = self.imag = 1.0
+
+    def __real__(self):
+        return 1.0
+    real = property(__real__)
+    imag = property(__real__)
 
     def __add__(self, c):
         return self

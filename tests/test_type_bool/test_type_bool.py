@@ -96,8 +96,22 @@ def test_containers():
     assert t < (True, True)
 
 
+def test_attributes():
+    t, f = True, False
+    assert t.real == 1
+    assert t.imag == 0
+    assert t.numerator == 1
+    assert t.denominator == 1
+    assert t.conjugate() == 1
+    assert f.real == 0
+    assert f.numerator == 0
+    assert t.as_integer_ratio() == (1, 1)
+    assert f.as_integer_ratio() == (0, 1)
+
+
 def test_all():
     test_bool()
+    test_attributes()
     test_empty()
     test_custom()
     test_containers()

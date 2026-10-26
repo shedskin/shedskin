@@ -480,8 +480,28 @@ def test_int_from_str_syntax():
     assert int_error('099999999999999999999', 0).startswith('VE')
 
 
+def test_attributes():
+    i = -7
+    assert i.real == -7
+    assert i.imag == 0
+    assert i.numerator == -7
+    assert i.denominator == 1
+    assert i.conjugate() == -7
+    assert (i + 1).real == -6
+    assert abs(i).numerator == 7
+    assert [n.denominator for n in range(3)] == [1, 1, 1]
+
+
+def test_as_integer_ratio():
+    assert (7).as_integer_ratio() == (7, 1)
+    assert (-3).as_integer_ratio() == (-3, 1)
+    assert (0).as_integer_ratio() == (0, 1)
+
+
 def test_all():
     test_int()
+    test_attributes()
+    test_as_integer_ratio()
     test_int_from_float()
     test_division()
     test_multiplication()

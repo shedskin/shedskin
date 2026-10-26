@@ -3907,12 +3907,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(")", func)
                 return
             elif (
-                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes", "hex")
+                ident in ("is_integer", "bit_length", "bit_count", "as_integer_ratio", "to_bytes", "hex", "conjugate")
                 and isinstance(node.func, ast.Attribute)
                 and (
                     (python.def_class(self.gx, "float_"), 0)
                     in self.mergeinh[node.func.value]
                     or (python.def_class(self.gx, "int_"), 0)
+                    in self.mergeinh[node.func.value]
+                    or (python.def_class(self.gx, "bool_"), 0)
                     in self.mergeinh[node.func.value]
                 )
             ):
@@ -5319,6 +5321,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # module.attr
             if module:
                 self.append(module.full_path() + "::")
+
+            # {int, float, bool, complex}.real etc.: free functions (see lib/builtin/math.hpp)
+            elif (
+                not cl
+                and node.attr in ("real", "imag", "numerator", "denominator")
+                and self.mergeinh[node.value]
+                and all(
+                    t[0] in (python.def_class(self.gx, c) for c in ("int_", "float_", "bool_", "complex"))
+                    for t in self.mergeinh[node.value]
+                )
+            ):
+                self.visitm(f"__ss_{node.attr}(", node.value, ")", func)
+                return
 
             # class.attr: staticmethod
             elif cl and (node.attr in cl.staticmethods or node.attr in cl.classmethods):
