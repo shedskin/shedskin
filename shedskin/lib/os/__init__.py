@@ -131,7 +131,8 @@ def fstatvfs(fd):
     return __vfsstat()
 
 class popen_pipe(file):
-    pass
+    def close(self):
+        return 0
 
 def listdir(path=None):
     return [path.__or_x__('')]

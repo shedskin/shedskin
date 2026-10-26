@@ -320,7 +320,7 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
     *const_25, *const_26, *const_27, *const_28, *const_29, *const_30,
-    *const_31, *const_32;
+    *const_31, *const_32, *const_33;
 
 str *__name__;
 class_ *cl_mmap;
@@ -457,7 +457,8 @@ void *mmap::close()
 void *mmap::flush(__ss_int offset, __ss_int size)
 {
     __raise_if_closed();
-    if (::msync(m_begin + offset, __subscript(size), MS_SYNC) == -1)
+    __check_flush_range(offset, size);
+    if (::msync(m_begin + offset, (size_t)size, MS_SYNC) == -1)
     {
         __throw_oserror();
     }
@@ -731,7 +732,8 @@ void *mmap::close()
 void *mmap::flush(__ss_int offset, __ss_int size)
 {
     __raise_if_closed();
-    if (!FlushViewOfFile(m_begin + offset, __subscript(size)))
+    __check_flush_range(offset, size);
+    if (!FlushViewOfFile(m_begin + offset, (size_t)size))
     {
         throw new OSError();
     }
@@ -1214,6 +1216,17 @@ void *mmap::__seek_failed()
     return NULL;
 }
 
+/* as CPython; size -1 (not given) means the whole map, so that a nonzero
+   offset then needs an explicit size */
+void mmap::__check_flush_range(__ss_int offset, __ss_int &size) const
+{
+    __ss_int total = (__ss_int)__size();
+    if (size == -1)
+        size = total;
+    if (size < 0 or offset < 0 or total - offset < size)
+        throw new ValueError(const_33);
+}
+
 size_t mmap::__subscript(__ss_int index, bool include_end) const
 {
     if (index < 0)
@@ -1320,6 +1333,7 @@ void __init()
         const_30 = new str("mmap item value must be in range(0, 256)");
         const_31 = new str("mmap can't resize a readonly or copy-on-write memory map.");
         const_32 = new str("mmap: can't expand a shared anonymous mapping");
+        const_33 = new str("flush values out of range");
 
         __name__ = new str("mmap");
 

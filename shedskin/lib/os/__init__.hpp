@@ -174,14 +174,29 @@ __ss_int write(__ss_int fd, bytes *s);
 __ss_int readinto(__ss_int fd, bytes *buffer);
 void *reload_environ();
 
-class popen_pipe : public file {
+/* popen_pipe.close() returns the exit status (0 for None), so it cannot
+   override file::close, which returns void *. __popen_file does that, so
+   closing through a file * (or by __exit__) still calls pclose */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+class __popen_file : public file {
 public:
-    popen_pipe(str *cmd, str *mode=0);
-    popen_pipe(FILE* pipe=0) : file(pipe) {}
+    __ss_int status = 0;
+
+    __popen_file(FILE* pipe=0) : file(pipe) {}
 
     void *close();
+};
+
+class popen_pipe : public __popen_file {
+public:
+    popen_pipe(str *cmd, str *mode=0);
+    popen_pipe(FILE* pipe=0) : __popen_file(pipe) {}
+
+    __ss_int close(__ss_int=0); /* (hides __popen_file::close on purpose) */
     popen_pipe *__enter__() { return this; }
 };
+#pragma GCC diagnostic pop
 
 popen_pipe* popen(str* cmd);
 popen_pipe* popen(str* cmd, str* mode);

@@ -876,6 +876,38 @@ def test_return_values():
     os.remove(TESTFILE_OUT)
 
 
+def test_flush_range():
+    # regression test: flush() did not check its range as cpython
+    setUp()
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'0' * 5000)
+    f = open(TESTFILE_OUT, 'r+b')
+    m = mmap.mmap(f.fileno(), 0)
+    errors = []
+    for offset, size in [(0, 100000), (-1, 1), (4096, 5000), (6000, 1), (0, -2)]:
+        try:
+            m.flush(offset, size)
+        except ValueError as e:
+            errors.append(str(e))
+    assert errors == ['flush values out of range'] * 5
+    try:  # the size defaults to the whole map, as cpython
+        m.flush(4096)
+        assert False
+    except ValueError:
+        pass
+    m.flush()
+    m.flush(0)
+    m.flush(0, 5000)
+    try:  # macos msync refuses a zero length (EINVAL), also under cpython
+        m.flush(0, 0)
+        assert sys.platform != 'darwin'
+    except OSError:
+        assert sys.platform == 'darwin'
+    m.close()
+    f.close()
+    os.remove(TESTFILE_OUT)
+
+
 def test_enter_exit_results():
     # __enter__ returns the mmap itself and __exit__ returns None
     m = mmap.mmap(-1, 8)
@@ -914,6 +946,7 @@ def test_all():
     test_readline()
     test_offset()
     test_return_values()
+    test_flush_range()
 
 if __name__ == '__main__':
     test_all()
