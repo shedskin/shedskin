@@ -205,10 +205,13 @@ void __init() {
 
     __ss_stdin = new file(stdin);
     __ss_stdin->name = new str("<stdin>");
+    __ss_stdin->mode = new str("r");
     __ss_stdout = new file(stdout);
     __ss_stdout->name = new str("<stdout>");
+    __ss_stdout->mode = new str("w");
     __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
+    __ss_stderr->mode = new str("w");
     str *utf8 = new str("utf-8"), *se = new str("surrogateescape");
     for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {
         fp->encoding = utf8;

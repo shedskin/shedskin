@@ -98,7 +98,7 @@ void __init(int c, char **v) {
 }
 
 void __ss_exit() {
-    throw new SystemExit((__ss_int)0);
+    throw new SystemExit(); /* sys.exit(): no args, unlike sys.exit(0) */
 }
 
 __ss_int __recursionlimit = 1000; /* CPython's default */

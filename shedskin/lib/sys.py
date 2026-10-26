@@ -34,7 +34,7 @@ def getdefaultencoding():
 def getfilesystemencoding():
     return ''
 
-def exit(code=0):
+def exit(code=__void):
     pass
 
 def getfilesystemencodeerrors():
