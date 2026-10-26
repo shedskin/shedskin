@@ -414,60 +414,44 @@ inline __ss_int __ss_bit_length(__ss_int i) {
     return __int___::bit_length(i);
 }
 
+/* is byteorder 'little' (true) or 'big'/default (false)? */
+inline bool __ss_byteorder_little(str *byteorder) {
+    if(!byteorder || __eq(byteorder, byteorder_big))
+        return false;
+    if(__eq(byteorder, byteorder_little))
+        return true;
+    throw new ValueError(new str("byteorder must be either 'little' or 'big'"));
+}
+
 inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __ss_bool __ss_signed=False) {
-    __ss_int inc = 0;
-    __ss_int start_index = 0;
-    __ss_int extension = 0;
-    __ss_int actual_size = 0;
-    unsigned char sign_ext = 0xff;
-    unsigned char zero_ext = 0x00;
-    unsigned char sign_bit = 0x80;
+    bool little = __ss_byteorder_little(byteorder);
+    if(length < 0)
+        throw new ValueError(new str("length argument must be non-negative"));
+    if(!__ss_signed && n < 0)
+        throw new OverflowError(new str("can't convert negative int to unsigned"));
+
+    /* minimal number of bits: a signed value also needs room for its sign bit
+     * (~n maps -1..-2**k onto 0..2**k-1, so -128 needs 7+1 bits like 127) */
+    __ss_int bits;
+    if(!__ss_signed)
+        bits = __int___::bit_length(n);
+    else if(n == 0)
+        bits = 0;
+    else
+        bits = __int___::bit_length(n < 0 ? ~n : n) + 1;
+    if((bits + 7) / 8 > length)
+        throw new OverflowError(new str("int too big to convert"));
 
     bytes *b = new bytes();
     b->unit.resize(length);
 
-    /* endianness */
-    if(!byteorder || __eq(byteorder, byteorder_big)) {
-        start_index = length-1;
-        inc = -1;
-    } else {
-        start_index = 0;
-        inc = 1;
-    }
-
-    /* check sign bit */
-    if(__ss_signed)
-        __ss_signed = __mbool(n < 0);
-
-    /* count extending 0x00/0xff bytes */
-    for(__ss_int i=sizeof(__ss_int)-1; i>0; i--) {
-        if((__ss_signed && (((n >> (8*i)) & sign_ext) == sign_ext)) ||
-           (!__ss_signed && (((n >> (8*i)) & sign_ext) == zero_ext)))
-            extension += 1;
-        else
-            break;
-    }
-
-    /* check overflow */
-    actual_size = sizeof(__ss_int) - extension;
-    if(__ss_signed && !(n & (sign_bit << (8*(actual_size-1))))) /* sign bit fell off the bus */
-        actual_size += 1;
-    if(actual_size > length)
-        throw new OverflowError(new str("int too big to convert"));
-
-    /* copy non-extending bytes */
-    __ss_int i = start_index;
-    for(__ss_int j = 0; j < actual_size; j++) {
-        b->unit[i] = (unsigned char)((n >> (8*j)) & sign_ext);
-        i += inc;
-    }
-
-    /* extend sign bit */
-    if(__ss_signed) {
-        for(__ss_int j = 0; j < length-actual_size; j++) {
-            b->unit[i] = sign_ext;
-            i += inc;
-        }
+    /* least significant byte first; beyond the width of __ss_int, extend the
+     * sign (shifting that far would be undefined behaviour) */
+    for(__ss_int j = 0; j < length; j++) {
+        unsigned char c = (n < 0) ? 0xff : 0x00;
+        if((size_t)j < sizeof(__ss_int))
+            c = (unsigned char)(n >> (8*j)); /* arithmetic shift for n < 0 */
+        b->unit[little ? j : length-1-j] = c;
     }
 
     return b;
@@ -476,74 +460,39 @@ inline bytes *__ss_to_bytes(__ss_int n, __ss_int length=1, str *byteorder=0, __s
 str *__ss_hex(__ss_float f);
 
 namespace __int___ {
-    inline __ss_int from_bytes(bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
+    /* (the unused first argument is the 'cls' of int.from_bytes, see graph.py) */
+    inline __ss_int from_bytes(void *, bytes *b, str* byteorder=0, __ss_bool __ss_signed=False) {
+        bool little = __ss_byteorder_little(byteorder);
         __ss_int blen = len(b);
-        __ss_int inc = 0;
-        __ss_int start_index = 0;
-        __ss_int end_index = 0;
-        __ss_int extension = 0;
-        __ss_int actual_size = 0;
-        unsigned char sign_ext = 0xff;
-        unsigned char zero_ext = 0x00;
-        unsigned char sign_bit = 0x80;
 
-        if(!blen)
-            return 0;
+        /* index of the most significant byte, and the step towards the least */
+        __ss_int start = little ? blen-1 : 0;
+        __ss_int inc = little ? -1 : 1;
 
-        /* endianness */
-        if(!byteorder || __eq(byteorder, byteorder_big)) {
-            start_index = blen-1;
-            end_index = 0;
-            inc = -1;
-        } else {
-            start_index = 0;
-            end_index = blen-1;
-            inc = 1;
-        }
+        bool negative = __ss_signed && blen && ((unsigned char)b->unit[start] & 0x80);
+        unsigned char fill = negative ? 0xff : 0x00;
 
-        /* check sign bit */
-        if(__ss_signed)
-            __ss_signed = __mbool((b->unit[end_index] & 0x80) == 0x80);
+        /* skip leading sign-extension bytes */
+        __ss_int skip = 0;
+        while(skip < blen && (unsigned char)b->unit[start + skip*inc] == fill)
+            skip++;
+        __ss_int size = blen - skip;
 
-        /* count extending 0x00/0xff bytes */
-        for(__ss_int i=end_index; ; i-= inc) {
-            if((__ss_signed && ((unsigned char)(b->unit[i])) == sign_ext) ||
-               (!__ss_signed && ((unsigned char)(b->unit[i])) == zero_ext))
-                extension += 1;
-            else
-                break;
-            if(i == start_index)
-                break;
-        }
-
-        /* check overflow */
-        actual_size = blen - extension;
-        if(__ss_signed && !(b->unit[start_index + (actual_size-1) * inc] & sign_bit)) /* sign bit fell off the bus */
-            actual_size += 1;
-
-        if((size_t)actual_size > sizeof(__ss_int))
+        /* too many bytes, or exactly as many but with a top bit that does not
+         * match the sign (e.g. unsigned b'\xff'*8 is 2**64-1, not -1) */
+        if((size_t)size > sizeof(__ss_int) ||
+           ((size_t)size == sizeof(__ss_int) && (((unsigned char)b->unit[start + skip*inc] & 0x80) != 0) != negative))
             throw new OverflowError(new str("int too big to convert"));
 
-        /* copy non-extending bytes */
-        __ss_int n = 0;
-        __ss_int i = start_index;
-        for(__ss_int j = 0; j < actual_size; j++) {
-            n |= (__ss_int)((unsigned char)(b->unit[i])) << (8*j);
-            i += inc;
-        }
+        __ss_uint u = negative ? ~(__ss_uint)0 : 0;
+        for(__ss_int i = skip; i < blen; i++)
+            u = (u << 8) | (unsigned char)b->unit[start + i*inc];
 
-        /* extend sign bit */
-        if(__ss_signed) {
-            for(__ss_int j = actual_size; (size_t)j < sizeof(__ss_int); j++) {
-                n |= ((__ss_int)sign_ext) << (8*j);
-            }
-        }
-
-        return n;
+        return (__ss_int)u;
     }
 
-    inline __ss_int from_bytes(pyiter<__ss_int> *p, str* byteorder=0, __ss_bool __ss_signed=False) {
-        return from_bytes(__bytes(p), byteorder, __ss_signed);
+    inline __ss_int from_bytes(void *, pyiter<__ss_int> *p, str* byteorder=0, __ss_bool __ss_signed=False) {
+        return from_bytes(NULL, __bytes(p), byteorder, __ss_signed);
     }
 
 }

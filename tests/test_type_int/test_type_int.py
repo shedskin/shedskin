@@ -173,6 +173,16 @@ def test_str_small():
         assert len(str(i)) == len(repr(i))
 
 
+def to_bytes_error(n, length, byteorder, signed):
+    try:
+        n.to_bytes(length, byteorder, signed=signed)
+    except OverflowError as e:
+        return 'OverflowError: ' + str(e)
+    except ValueError as e:
+        return 'ValueError: ' + str(e)
+    return ''
+
+
 def test_to_bytes():
     assert (0).to_bytes() == b'\x00'
     assert (0).to_bytes(signed=True) == b'\x00'
@@ -211,6 +221,34 @@ def test_to_bytes():
     assert (0xabcdabcd).to_bytes(length=4) == b'\xab\xcd\xab\xcd'
     assert (0xabcdabcd).to_bytes(length=5) == b'\x00\xab\xcd\xab\xcd'
 
+    assert (300).to_bytes(2, 'little') == b',\x01'
+
+    # signed=True also needs room for the sign bit of a positive value
+    assert (127).to_bytes(1, signed=True) == b'\x7f'
+    assert (128).to_bytes(2, signed=True) == b'\x00\x80'
+    assert to_bytes_error(128, 1, 'big', True) == "OverflowError: int too big to convert"
+    assert to_bytes_error(255, 1, 'little', True) == "OverflowError: int too big to convert"
+    assert to_bytes_error(-1, 8, 'big', False) == "OverflowError: can't convert negative int to unsigned"
+    assert to_bytes_error(5, 2, 'mid', False) == "ValueError: byteorder must be either 'little' or 'big'"
+    assert to_bytes_error(5, -1, 'big', False) == "ValueError: length argument must be non-negative"
+
+    # zero length
+    assert (0).to_bytes(0, 'big') == b''
+    assert (0).to_bytes(0, signed=True) == b''
+    assert to_bytes_error(1, 0, 'big', False) == "OverflowError: int too big to convert"
+    assert to_bytes_error(-1, 0, 'big', True) == "OverflowError: int too big to convert"
+
+    # longer than an int
+    assert (-1).to_bytes(12, 'big', signed=True) == b'\xff' * 12
+    assert (-2).to_bytes(12, 'little', signed=True) == b'\xfe' + b'\xff' * 11
+    assert (1).to_bytes(12, 'little') == b'\x01' + b'\x00' * 11
+
+    # 64-bit extremes
+    assert (0x7fffffffffffffff).to_bytes(8, signed=True) == b'\x7f' + b'\xff' * 7
+    assert (-0x7fffffffffffffff - 1).to_bytes(8, signed=True) == b'\x80' + b'\x00' * 7
+    assert (-0x7fffffffffffffff - 1).to_bytes(9, 'little', signed=True) == b'\x00' * 7 + b'\x80\xff'
+    assert to_bytes_error(-0x7fffffffffffffff - 1, 7, 'big', True) == "OverflowError: int too big to convert"
+
 
 def test_from_bytes():
     assert int.from_bytes(b'') == 0
@@ -244,6 +282,44 @@ def test_from_bytes():
     assert int.from_bytes([255]) == 255
     assert int.from_bytes([255], signed=True) == -1
     assert int.from_bytes([66, 67, 68]) == 4342596
+    assert int.from_bytes([1, 2], 'little') == 513
+    assert int.from_bytes(bytearray(b'\x01\x02'), 'little') == 513
+
+    # positional byteorder
+    assert int.from_bytes(b'\x01\x02', 'little') == 513
+    assert int.from_bytes(b'\x01\x02', 'big', signed=True) == 258
+    assert int.from_bytes(b'\xff\xfe', 'little', signed=True) == -257
+
+    error = ''
+    try:
+        int.from_bytes(b'\x01\x02', byteorder='mid')
+    except ValueError as e:
+        error = str(e)
+    assert error == "byteorder must be either 'little' or 'big'"
+
+    # all sign-extension bytes, and longer than an int
+    assert int.from_bytes(b'\xff\xff', signed=True) == -1
+    assert int.from_bytes(b'\xff\xff', 'little', signed=True) == -1
+    assert int.from_bytes(b'\xff' * 12, signed=True) == -1
+    assert int.from_bytes(b'\xfe' + b'\xff' * 11, 'little', signed=True) == -2
+    assert int.from_bytes(b'\x00' * 11 + b'\x01') == 1
+
+    # 64-bit extremes
+    assert int.from_bytes(b'\x7f' + b'\xff' * 7) == 0x7fffffffffffffff
+    assert int.from_bytes(b'\xff' * 7 + b'\x7f', 'little', signed=True) == 0x7fffffffffffffff
+    assert int.from_bytes(b'\x80' + b'\x00' * 7, signed=True) == -0x7fffffffffffffff - 1
+    assert int.from_bytes(b'\xff\x80' + b'\x00' * 7, signed=True) == -0x7fffffffffffffff - 1
+
+
+def test_bytes_roundtrip():
+    for n in range(-70000, 70000, 7):
+        for length in (3, 4, 8, 9):
+            for byteorder in ('big', 'little'):
+                b = n.to_bytes(length, byteorder, signed=True)
+                assert int.from_bytes(b, byteorder, signed=True) == n
+                if n >= 0:
+                    b = n.to_bytes(length, byteorder)
+                    assert int.from_bytes(b, byteorder) == n
 
 
 def int_fails(s):
@@ -417,6 +493,7 @@ def test_all():
     test_str_small()
     test_to_bytes()
     test_from_bytes()
+    test_bytes_roundtrip()
     test_int_from_unicode_str()
     test_int_error_message()
     test_int_from_str_syntax()

@@ -2751,6 +2751,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     "bytes",
                     "complex",
                     "bytearray",
+                ) or (
+                    node.func.value.id == "int" and node.func.attr == "from_bytes"
                 ):
                     node.args.insert(0, ast.Name("None", ast.Load()))
 
