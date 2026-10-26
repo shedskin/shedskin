@@ -353,6 +353,25 @@ def test_strftime_range():
             caught = True
         assert caught
 
+def test_strftime_utc_offset():
+    # regression test: %z printed +0000 for localtime(), while %Z was right
+    for t in [1700000000, 1690000000]:
+        lt = time.localtime(t)
+        gt = time.gmtime(t)
+        days = 0
+        if lt.tm_year != gt.tm_year:
+            days = 1 if lt.tm_year > gt.tm_year else -1
+        elif lt.tm_yday != gt.tm_yday:
+            days = lt.tm_yday - gt.tm_yday
+        minutes = days * 1440 + (lt.tm_hour - gt.tm_hour) * 60 + lt.tm_min - gt.tm_min
+        sign = '-' if minutes < 0 else '+'
+        minutes = abs(minutes)
+        assert time.strftime('%z', lt) == '%s%02d%02d' % (sign, minutes // 60, minutes % 60)
+        assert time.strftime('%Z', lt) == time.tzname[lt.tm_isdst]
+        assert time.strftime('%z', gt) == '+0000'
+        # as in CPython, a plain tuple has no offset
+        assert time.strftime('%z', tuple(lt)) == '+0000'
+
 def __rss_kb():
     try:
         for l in open('/proc/self/status'):
@@ -463,6 +482,7 @@ def test_all():
     test_gmtime_out_of_range()
     test_struct_time_no_leak()
     test_strftime_buffer()
+    test_strftime_utc_offset()
     print('ok')
 
 if __name__ == '__main__':
