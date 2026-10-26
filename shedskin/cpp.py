@@ -4898,6 +4898,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             for a, b in args:
                 if not b.startswith("&"):
                     self.output("    this->{} = {};".format(b, b))
+            # the outermost iterable is evaluated at creation (PEP 289)
+            qual = node.generators[0]
+            if self.genexpr_eager_iter(qual, lcfunc):
+                self.start("    ")
+                self.visitm(self.mv.tempcount[qual], " = ", qual.iter, lcfunc)
+                self.eol()
             self.output("    __last_yield = -1;")
             self.output("}\n")
             self.output(func2 + " " + lcfunc.ident + "::__get_next_awesome() {")
@@ -4925,6 +4931,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("inline " + func2 + " " + lcfunc.ident + "::for_in_next(size_t &i) {")
             self.output("    return myresult;")
             self.output("}\n")
+
+    def genexpr_eager_iter(
+        self, qual: ast.comprehension, lcfunc: "python.Function"
+    ) -> bool:
+        """Is the outermost genexpr iterable evaluated in the constructor"""
+        return not (
+            ast_utils.is_fastfor(qual, lcfunc, self.mv)
+            or self.fastenumerate(qual, lcfunc)
+            or self.fastzip2(qual, lcfunc)
+            or self.fastdictiter(qual)
+        )
 
     def local_defs(self, func: python.Function) -> None:
         """Generate local definitions for a function"""
@@ -5091,7 +5108,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.do_fastdictiter(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         else:
-            if not isinstance(qual.iter, ast.Name):
+            if genexpr and qual is node.generators[0]:
+                itervar = self.mv.tempcount[qual]  # set in constructor
+            elif not isinstance(qual.iter, ast.Name):
                 itervar = self.mv.tempcount[qual]
                 self.start("")
                 self.visitm(itervar, " = ", qual.iter, lcfunc)
