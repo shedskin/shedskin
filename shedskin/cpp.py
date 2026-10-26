@@ -4334,7 +4334,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(temp, " = ", rvalue, func)
             self.eol()
 
-            temp_iter = None
+            temp_loop = None
             for i, item in enumerate(lvalue.elts):
                 rvalue_node = self.gx.item_rvalue[item]
                 if i == 0:
@@ -4347,21 +4347,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                     else:
                         # use iteration protocol (avoid list allocation)
-                        temp_iter = temp + "_iter"
+                        temp_loop = temp + "_loop"
                         self.output("{")
                         self.indent()
-                        self.output("auto %s = ___iter(%s);" % (temp_iter, temp))
+                        self.output(
+                            "auto %s = %s->for_in_init();" % (temp_loop, temp)
+                        )
 
-                if temp_iter:
-                    selector = "__ss_unpack_next(%s)" % temp_iter
+                if temp_loop:
+                    selector = "__ss_unpack_next(%s, %s)" % (temp, temp_loop)
                 else:
                     selector = self.get_selector(temp, item, i)
                 self.start()
                 self.visitm(item, " = ", selector, func)
                 self.eol()
 
-            if temp_iter:
-                self.output("__ss_unpack_end(%s);" % temp_iter)
+            if temp_loop:
+                self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
                 self.deindent()
                 self.output("}")
 

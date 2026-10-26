@@ -297,6 +297,12 @@ def test_unpack16():
     a, b, c = unpack_gen(3)
     assert (a, b, c) == (1, 2, 3)
 
+    x, = {4}
+    assert x == 4
+
+    a, b = iter([5, 6])
+    assert (a, b) == (5, 6)
+
     assert list(unpack_gen2()) == [3]
 
     for n in (2, 4):
