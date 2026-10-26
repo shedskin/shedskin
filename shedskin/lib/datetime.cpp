@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cctype>
 #include <cstring>
+#include <cmath>
+#include <limits>
 
 #ifdef _MSC_VER
 
@@ -226,8 +228,13 @@ date *date::today() {
     return new date(t->tm_year+1900,t->tm_mon+1,t->tm_mday);
 }
 
-date* date::fromtimestamp(__ss_int timestamp) {
-	//date from timestamp using localtime
+date* date::fromtimestamp(double timestamp) {
+	//date from timestamp using localtime; like cpython, round down (so -0.5 is still 1969-12-31)
+	if (std::isnan(timestamp))
+		throw new ValueError(new str("Invalid value NaN (not a number)"));
+	timestamp = std::floor(timestamp);
+	if (timestamp < (double)std::numeric_limits<time_t>::min() || timestamp >= (double)std::numeric_limits<time_t>::max())
+		throw new OverflowError(new str("timestamp out of range for platform time_t"));
 	time_t t = time_t(timestamp);
 	tm *tm = localtime(&t);
 	if (!tm)

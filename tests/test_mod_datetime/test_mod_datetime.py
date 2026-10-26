@@ -689,6 +689,19 @@ def test_datetime_fromtimestamp_round_half_even():
     assert repr(datetime.datetime.utcfromtimestamp(-1.0000001)) == 'datetime.datetime(1969, 12, 31, 23, 59, 59)'
 
 
+def test_date_fromtimestamp_floor():
+    # a float timestamp is rounded down, like datetime.fromtimestamp
+    for ts in [-0.5, -86400.5, -1.0000001, 0.5, 1700000000.9, 3000000000.0]:
+        assert datetime.date.fromtimestamp(ts) == datetime.datetime.fromtimestamp(ts).date()
+    assert datetime.date.fromtimestamp(-0.5) == datetime.date.fromtimestamp(-1)
+    assert datetime.date.fromtimestamp(1700000000) == datetime.datetime.fromtimestamp(1700000000).date()
+    try:
+        datetime.date.fromtimestamp(1e20)
+        assert False
+    except OverflowError:
+        pass
+
+
 def test_fromisocalendar():
     # inverse of isocalendar(): round-trip a few dates, including ones where
     # the ISO year differs from the calendar year
@@ -1318,6 +1331,7 @@ def test_all():
         test_timedelta_fractional_args()
         test_timedelta_round_half_even()
         test_datetime_fromtimestamp_round_half_even()
+        test_date_fromtimestamp_floor()
         test_fromisocalendar()
         test_date_time_strptime()
         test_isoformat_timespec()
