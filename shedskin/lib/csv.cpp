@@ -578,33 +578,11 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
     return NULL;
 }
 
-void *writer::writerow(list<str *> *seq) {
-    list<str *> *__24;
-    list<str *>::for_in_loop __123;
-    __ss_int __26, quoted;
-    str *field;
-
-    this->join_reset();
-
-    FOR_IN(field,seq,24,26,123)
-        /* fields are always str (or None) here, so QUOTE_NONNUMERIC quotes them all */
-        if (dialect->quoting == QUOTE_ALL || dialect->quoting == QUOTE_NONNUMERIC)
-            quoted = 1;
-        else if (dialect->quoting == QUOTE_NOTNULL || dialect->quoting == QUOTE_STRINGS)
-            quoted = field ? 1 : 0;
-        else
-            quoted = 0;
-
-        if (field == NULL) {
-            this->join_append(NULL, quoted);
-        }
-        else {
-            this->join_append(field, quoted);
-        }
-    END_FOR
-
+void *writer::join_finish(bool null_field) {
     if (this->num_fields > 0 && this->rec_len == 0) {
-        if (dialect->quoting == QUOTE_NONE)
+        /* a single empty field must be quoted, to tell it apart from an empty row */
+        if (dialect->quoting == QUOTE_NONE ||
+            (null_field && (dialect->quoting == QUOTE_STRINGS || dialect->quoting == QUOTE_NOTNULL)))
             throw new Error(new str("single empty field record must be quoted"));
 
         this->num_fields -= 1;
@@ -620,20 +598,6 @@ void *writer::join_reset() {
     this->rec = (new list<str *>());
     this->num_fields = 0;
     this->rec_len = 0;
-    return NULL;
-}
-
-void *writer::writerows(pyiter<list<str *> *> *seqs) {
-    list<str *> *seq;
-
-    pyiter<list<str *> *> *__0;
-    __ss_int __2;
-    pyiter<list<str *> *>::for_in_loop __3;
-
-    FOR_IN(seq,seqs,0,2,3)
-        this->writerow(seq);
-    END_FOR
-
     return NULL;
 }
 
