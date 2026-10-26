@@ -112,20 +112,45 @@ __ss_int struct_time::__cmp__(pyobj *p) {
     return __cmp(tm_isdst, b->tm_isdst);
 }
 
+/* like CPython's gettmarg(), which parses each field as a C int: raise
+   OverflowError instead of silently truncating e.g. a year of 10**12 */
+static int __ss_tm_field(__ss_int v) {
+    if constexpr (sizeof(__ss_int) > sizeof(int)) {
+        if (v > INT_MAX)
+            throw new OverflowError(new str("signed integer is greater than maximum"));
+        if (v < INT_MIN)
+            throw new OverflowError(new str("signed integer is less than minimum"));
+    }
+    return (int)v;
+}
+
 /* by value: a plain 'new tm' is malloc memory that was never freed. value-
    initialized, so platform-specific fields (tm_zone, tm_gmtoff) are not garbage */
 tm tuple2tm(struct_time* tuple) {
     tm time_tuple = tm();
 
-    time_tuple.tm_sec = (int)tuple->tm_sec;
-    time_tuple.tm_min = (int)tuple->tm_min;
-    time_tuple.tm_hour = (int)tuple->tm_hour;
-    time_tuple.tm_mday = (int)tuple->tm_mday;
-    time_tuple.tm_mon = (int)tuple->tm_mon - 1;
-    time_tuple.tm_year = (int)tuple->tm_year - 1900;
-    time_tuple.tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
-    time_tuple.tm_yday = (int)tuple->tm_yday - 1 ;
-    time_tuple.tm_isdst = (int)tuple->tm_isdst;
+    int year = __ss_tm_field(tuple->tm_year);
+    int mon = __ss_tm_field(tuple->tm_mon);
+    int mday = __ss_tm_field(tuple->tm_mday);
+    int hour = __ss_tm_field(tuple->tm_hour);
+    int min = __ss_tm_field(tuple->tm_min);
+    int sec = __ss_tm_field(tuple->tm_sec);
+    int wday = __ss_tm_field(tuple->tm_wday);
+    int yday = __ss_tm_field(tuple->tm_yday);
+    int isdst = __ss_tm_field(tuple->tm_isdst);
+
+    if (year < INT_MIN + 1900)
+        throw new OverflowError(new str("year out of range"));
+
+    time_tuple.tm_sec = sec;
+    time_tuple.tm_min = min;
+    time_tuple.tm_hour = hour;
+    time_tuple.tm_mday = mday;
+    time_tuple.tm_mon = (int)((__ss_int)mon - 1); /* (no int overflow) */
+    time_tuple.tm_year = year - 1900;
+    time_tuple.tm_wday = wday == 6 ? 0 : (int)((__ss_int)wday + 1);
+    time_tuple.tm_yday = (int)((__ss_int)yday - 1);
+    time_tuple.tm_isdst = isdst;
 #ifndef WIN32
     time_tuple.tm_gmtoff = tuple->gmtoff;
     if (tuple->zone)
@@ -547,14 +572,16 @@ void *sleep(__ss_float s) {
 
 __ss_float mktime(struct_time *tuple) {
     tm time_tuple = tuple2tm(tuple);
-    return (__ss_float)::mktime(&time_tuple);
+    /* as in CPython: -1 is only an error if mktime() left tm_wday untouched */
+    time_tuple.tm_wday = -1;
+    time_t tt = ::mktime(&time_tuple);
+    if (tt == (time_t)(-1) && time_tuple.tm_wday == -1)
+        throw new OverflowError(new str("mktime argument out of range"));
+    return (__ss_float)tt;
 }
 
 __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
-    struct_time *st = new struct_time(tuple);
-
-    tm time_tuple = tuple2tm(st);
-    return (__ss_float)::mktime(&time_tuple);
+    return mktime(new struct_time(tuple));
 }
 
 /* CPython floors the seconds-since-epoch value before converting to an

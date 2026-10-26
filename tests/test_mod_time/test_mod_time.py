@@ -443,6 +443,47 @@ def test_gmtime_out_of_range():
         caught = True
     assert caught
 
+def test_tuple_field_overflow():
+    # regression test: fields were silently truncated to a C int
+    big = 'signed integer is greater than maximum'
+    small = 'signed integer is less than minimum'
+    cases = [
+        ((10**12, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2**33, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2**31, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((-2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0), small),
+        ((-2**31, 1, 1, 0, 0, 0, 0, 0, 0), 'year out of range'),
+        ((2000, 2**31, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2000, 1, 1, 0, 0, 0, -2**40, 0, 0), small),
+        ((2000, 1, 1, 0, 0, 0, 0, 0, 2**40), big),
+    ]
+    for t, msg in cases:
+        for i in range(4):
+            caught = ''
+            try:
+                if i == 0:
+                    time.mktime(t)
+                elif i == 1:
+                    time.strftime('%Y', t)
+                elif i == 2:
+                    time.asctime(time.struct_time(t))
+                else:
+                    time.mktime(time.struct_time(t))
+            except OverflowError as e:
+                caught = str(e)
+            assert caught == msg, caught
+
+    caught = ''
+    try:
+        time.mktime((2**31 - 1, 2**31 - 1, 1, 0, 0, 0, 0, 0, 0))
+    except OverflowError as e:
+        caught = str(e)
+    assert caught == 'mktime argument out of range', caught
+
+    assert time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0)) == '2147483647'
+    assert time.asctime(time.struct_time((2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 2147483647'
+    assert time.mktime(time.localtime(1000000)) == 1000000.0
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -483,6 +524,7 @@ def test_all():
     test_struct_time_no_leak()
     test_strftime_buffer()
     test_strftime_utc_offset()
+    test_tuple_field_overflow()
     print('ok')
 
 if __name__ == '__main__':
