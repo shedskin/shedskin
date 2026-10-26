@@ -86,6 +86,53 @@ def test_stop_iter():
     assert stop_iter(4, mode=2) == 'not-stopped'
 
 
+def firsts(its):
+    for it in its:
+        yield next(it)
+
+
+def raise_stop():
+    yield 1
+    raise StopIteration
+
+
+def caught_stop(its):
+    for it in its:
+        try:
+            x = next(it)
+        except StopIteration:
+            x = -1
+        yield x
+
+
+def test_stop_iter_pep479():  # StopIteration escaping a generator becomes RuntimeError
+    out = []
+    try:
+        for x in firsts([iter([1]), iter([0][1:]), iter([3])]):
+            out.append(x)
+        msg = 'no error'
+    except RuntimeError as e:
+        msg = str(e)
+    assert msg == 'generator raised StopIteration'
+    assert out == [1]
+
+    try:
+        list(raise_stop())
+        msg = 'no error'
+    except RuntimeError as e:
+        msg = str(e)
+    assert msg == 'generator raised StopIteration'
+
+    try:
+        list(next(iter([0][1:])) for x in range(2))
+        msg = 'no error'
+    except RuntimeError as e:
+        msg = str(e)
+    assert msg == 'generator raised StopIteration'
+
+    assert list(caught_stop([iter([1]), iter([0][1:]), iter([3])])) == [1, -1, 3]
+
+
 def test_class_iter():
     i = iter_(Container())
     try:
@@ -390,6 +437,7 @@ def test_all():
     test_iter2()
     test_file_iter()
     test_stop_iter()
+    test_stop_iter_pep479()
     test_iter_correct()
     test_iter_later_class()
     test_iter_self()
