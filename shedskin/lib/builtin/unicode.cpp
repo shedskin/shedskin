@@ -412,36 +412,66 @@ size_t __utf8_encode_checked(str *s, char *dst) {
     return r.units;
 }
 
+/* the encodings.* module names of the supported codecs, and their entries
+   in encodings.aliases.aliases (both as normalised, see below) */
+struct __encoding_name { const char *name; __ss_encoding enc; };
+
+static const __encoding_name __encoding_modules[] = {
+    {"utf_8", __SS_ENC_UTF8}, {"ascii", __SS_ENC_ASCII}, {"latin_1", __SS_ENC_LATIN1},
+    {"utf_8_sig", __SS_ENC_UTF8_SIG}, {"cp1250", __SS_ENC_CP1250}, {"cp1251", __SS_ENC_CP1251},
+    {"cp1252", __SS_ENC_CP1252},
+};
+
+static const __encoding_name __encoding_aliases[] = {
+    {"utf8", __SS_ENC_UTF8}, {"utf", __SS_ENC_UTF8}, {"u8", __SS_ENC_UTF8}, {"cp65001", __SS_ENC_UTF8},
+    {"utf8_ucs2", __SS_ENC_UTF8}, {"utf8_ucs4", __SS_ENC_UTF8},
+    {"646", __SS_ENC_ASCII}, {"ansi_x3.4_1968", __SS_ENC_ASCII}, {"ansi_x3_4_1968", __SS_ENC_ASCII},
+    {"ansi_x3.4_1986", __SS_ENC_ASCII}, {"cp367", __SS_ENC_ASCII}, {"csascii", __SS_ENC_ASCII},
+    {"ibm367", __SS_ENC_ASCII}, {"iso646_us", __SS_ENC_ASCII}, {"iso_646.irv_1991", __SS_ENC_ASCII},
+    {"iso_ir_6", __SS_ENC_ASCII}, {"us", __SS_ENC_ASCII}, {"us_ascii", __SS_ENC_ASCII},
+    {"latin1", __SS_ENC_LATIN1}, {"latin", __SS_ENC_LATIN1}, {"l1", __SS_ENC_LATIN1}, {"8859", __SS_ENC_LATIN1},
+    {"cp819", __SS_ENC_LATIN1}, {"csisolatin1", __SS_ENC_LATIN1}, {"ibm819", __SS_ENC_LATIN1},
+    {"iso8859", __SS_ENC_LATIN1}, {"iso8859_1", __SS_ENC_LATIN1}, {"iso_8859_1", __SS_ENC_LATIN1},
+    {"iso_8859_1_1987", __SS_ENC_LATIN1}, {"iso_ir_100", __SS_ENC_LATIN1},
+    {"windows_1250", __SS_ENC_CP1250}, {"1250", __SS_ENC_CP1250},
+    {"windows_1251", __SS_ENC_CP1251}, {"1251", __SS_ENC_CP1251},
+    {"windows_1252", __SS_ENC_CP1252}, {"1252", __SS_ENC_CP1252},
+};
+
 __ss_encoding __lookup_encoding(str *encoding) {
     if (!encoding)
         return __SS_ENC_UTF8;
-    __GC_BYTES norm;
+    /* as CPython (_Py_normalize_encoding): lower-case, and runs of chars other
+       than ascii alphanumerics and '.' become one '_', or are dropped at the
+       start and end */
+    std::string norm;
+    bool punct = false;
     for (__ss_char ch : encoding->unit) {
+        if (ch == 0)
+            throw new ValueError(new str("embedded null character"));
         if (ch >= 'A' && ch <= 'Z')
             ch = ch + ('a' - 'A');
-        if (ch == '_' || ch == ' ')
-            ch = '-';
-        if (ch > 127) { /* no non-ascii encoding names */
-            norm += '?';
-            continue;
-        }
-        norm += (char)(unsigned char)ch;
+        if (ch == '.' || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+            if (punct && !norm.empty())
+                norm += '_';
+            norm += (char)ch;
+            punct = false;
+        } else
+            punct = true;
     }
-    if (norm == "utf-8" || norm == "utf8" || norm == "utf" || norm == "u8" || norm == "cp65001")
-        return __SS_ENC_UTF8;
-    if (norm == "ascii" || norm == "us-ascii" || norm == "646")
-        return __SS_ENC_ASCII;
-    if (norm == "latin-1" || norm == "latin1" || norm == "latin" || norm == "l1" ||
-        norm == "iso-8859-1" || norm == "iso8859-1" || norm == "8859" || norm == "cp819")
-        return __SS_ENC_LATIN1;
-    if (norm == "utf-8-sig")
-        return __SS_ENC_UTF8_SIG;
-    if (norm == "cp1250" || norm == "windows-1250" || norm == "1250")
-        return __SS_ENC_CP1250;
-    if (norm == "cp1251" || norm == "windows-1251" || norm == "1251")
-        return __SS_ENC_CP1251;
-    if (norm == "cp1252" || norm == "windows-1252" || norm == "1252")
-        return __SS_ENC_CP1252;
+    /* as encodings.search_function: an alias as is or with '.' as '_', else
+       a module name (which a dotted name never is) */
+    std::string undotted = norm;
+    for (char &c : undotted)
+        if (c == '.')
+            c = '_';
+    for (const __encoding_name &a : __encoding_aliases)
+        if (norm == a.name || undotted == a.name)
+            return a.enc;
+    if (undotted == norm)
+        for (const __encoding_name &m : __encoding_modules)
+            if (norm == m.name)
+                return m.enc;
     char buf[128];
     snprintf(buf, sizeof(buf), "unknown encoding: %s", __to_utf8(encoding->unit).c_str());
     throw new LookupError(new str(buf));

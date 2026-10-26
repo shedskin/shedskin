@@ -97,6 +97,28 @@ def test_encoding_lookup():
         caught += 1
     assert caught == 2
 
+    # names are normalised as by codecs.lookup: case, punctuation runs, aliases
+    for name in ['UTF-8 ', ' utf8', '__utf__8__', 'utf_8_', 'UTF8-UCS2', 'utf\xe98', 'utf\u20ac8', 'UTF-\u0130']:
+        assert 'é'.encode(name) == b'\xc3\xa9', name
+    for name in ['latin--1', 'ISO-IR-100', 'latin 1', 'IBM819', 'iso8859', 'csISOLatin1']:
+        assert 'é'.encode(name) == b'\xe9', name
+        assert b'\xe9'.decode(name) == 'é', name
+    for name in ['csASCII', 'US', 'ANSI_X3.4-1968', 'iso_646.irv:1991', 'ibm367']:
+        assert 'a'.encode(name) == b'a', name
+    assert 'é'.encode('UTF-8-SIG') == b'\xef\xbb\xbf\xc3\xa9'
+    assert '€'.encode('Windows 1252') == b'\x80'
+    for name in ['utf.8', 'u.8', 'UTF8-SIG', 'cp-1252', '', ' ', '\u0130SO8859-1']:
+        try:
+            'x'.encode(name)
+            assert False, name
+        except LookupError as e:
+            assert str(e) == 'unknown encoding: ' + name
+    try:
+        b'x'.decode('utf-8\x00')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'embedded null character'
+
 
 def test_errors_arg():
     assert 'x'.encode('utf-8', 'strict') == b'x'
