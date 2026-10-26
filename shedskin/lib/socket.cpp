@@ -6,7 +6,7 @@
  * February 25, 2008
  *
  * Current Issues:
- * - unix domain sockets are not implemented
+ * - unix domain sockets: only bind() and connect() take an AF_UNIX path
  * - can't call socket.settimeout(None)
  */
 
@@ -20,6 +20,8 @@
 #include <climits>
 #include <fcntl.h>
 #include <cerrno>
+#include <cstddef>
+#include <cstring>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -598,11 +600,11 @@ std::string strerror(int e)
  * the throw. */
 static error *make_error(const char *prefix, int e)
 {
-    std::ostringstream os;
-    os << prefix << ": " << strerror(e) << " (errno " << e << ")";
-    error *err = new error(new str(os.str().c_str()));
-    err->__ss_errno = e;
-    err->strerror = new str(std::string(strerror(e)).c_str());
+    (void)prefix; /* as in CPython, the message does not name the call */
+    error *err = new error();
+    err->__init_errno(e, 0); /* "[Errno 9] Bad file descriptor" */
+    err->strerror = new str(std::string(strerror(e)).c_str()); /* windows: winsock codes, see strerror() above */
+    err->message = err->__str__();
     return err;
 }
 
@@ -820,12 +822,12 @@ file_binary *socket::makefile_binary(str *mode) {
     return f;
 }
 
-socket *socket::bind(const sockaddr *sa, socklen_t salen)
+void *socket::bind(const sockaddr *sa, socklen_t salen)
 {
     if (::bind(_fd, sa, salen) == SOCKET_ERROR) {
         throw make_error("bind");
     }
-    return this;
+    return NULL;
 }
 
 /* the C apis stop at the first NUL, so (as in CPython) refuse these instead
@@ -887,7 +889,7 @@ static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
     dst->sin_port = htons((uint16_t)src->second);
 }
 
-socket *socket::bind(socket::inet_address address)
+void *socket::bind(socket::inet_address address)
 {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
@@ -897,7 +899,7 @@ socket *socket::bind(socket::inet_address address)
     return bind(reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
 
-socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
+void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     /* pass a plain int, as CPython does: __ss_int is 64-bit by default, and
      * some option handlers (winsock TCP_*, big-endian kernels) do not accept
      * or misread a wider buffer */
@@ -905,10 +907,10 @@ socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
         throw make_error("setsockopt");
 
-    return this;
+    return NULL;
 }
 
-socket *socket::connect(socket::inet_address address) {
+void *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
     check_address_nul(address);
@@ -925,20 +927,55 @@ socket *socket::connect(socket::inet_address address) {
 }
 
 #ifndef WIN32
-socket *socket::connect(pyseq<str *> *address)
+/* an AF_UNIX address is a whole path (str, fs-encoded as in CPython, or
+   bytes), not a sequence. as in CPython, on linux an empty path or one
+   starting with NUL is an address in the abstract namespace */
+static socklen_t unix_sockaddr(sockaddr_un *smup, const __GC_BYTES &path)
+{
+    memset(smup, 0, sizeof(*smup));
+    smup->sun_family = AF_UNIX;
+#ifdef __linux__
+    if (path.empty() || path[0] == 0) {
+        if (path.size() > sizeof(smup->sun_path))
+            throw new error(new str("AF_UNIX path too long"));
+    } else
+#endif
+    if (path.size() >= sizeof(smup->sun_path))
+        throw new error(new str("AF_UNIX path too long"));
+    memcpy(smup->sun_path, path.data(), path.size());
+    return (socklen_t)(offsetof(sockaddr_un, sun_path) + path.size());
+}
+
+void *socket::connect(str *address)
 {
     if (family != AF_UNIX)
         throw new ValueError(invalid_address);
     sockaddr_un smup;
-    smup.sun_family = AF_UNIX;
-    const str* __0 = address->__getitem__(0);
-    if(__0->unit.size() >= sizeof(smup.sun_path))
-        throw new error(new str("AF_UNIX path too long"));
-    strcpy(smup.sun_path, __0->c_str());
-
-    return connect(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
+    socklen_t len = unix_sockaddr(&smup, __to_utf8_se(address));
+    return connect(reinterpret_cast<sockaddr *>(&smup), len);
 }
-#endif /* ! WIN32 */
+
+void *socket::connect(bytes *address)
+{
+    if (family != AF_UNIX)
+        throw new ValueError(invalid_address);
+    sockaddr_un smup;
+    socklen_t len = unix_sockaddr(&smup, address->unit);
+    return connect(reinterpret_cast<sockaddr *>(&smup), len);
+}
+#else /* WIN32 */
+/* no AF_UNIX path addresses here (as in CPython, which has no AF_UNIX on
+   windows), but still define these, as callers may be compiled in */
+static void *unix_unsupported(__ss_int family)
+{
+    if (family != AF_UNIX)
+        throw new ValueError(invalid_address);
+    throw new error(new str("AF_UNIX path addresses are not supported on windows"));
+}
+
+void *socket::connect(str *) { return unix_unsupported(family); }
+void *socket::connect(bytes *) { return unix_unsupported(family); }
+#endif /* WIN32 */
 
 
 static void set_blocking(socket_type fd)
@@ -967,7 +1004,7 @@ static void set_nonblocking(socket_type fd)
             throw make_error("fcntl");
         }
 }
-socket *socket::connect(const sockaddr *sa, socklen_t salen)
+void *socket::connect(const sockaddr *sa, socklen_t salen)
 {
     if (_blocking && _timeout > 0) {
         // temporarily set the socket to nonblocking
@@ -1040,7 +1077,7 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
             throw make_error("connect", err);
     }
 
-    return this;
+    return NULL;
 }
 
 /* Put the socket in the mode a timeout value means in CPython: 0.0 is
@@ -1060,26 +1097,26 @@ void socket::apply_timeout(double val)
     }
 }
 
-socket *socket::setblocking(__ss_int flag)
+void *socket::setblocking(__ss_int flag)
 {
     /* setblocking(True) is settimeout(None), setblocking(False) is settimeout(0.0) */
     apply_timeout(flag ? -1 : 0);
-    return this;
+    return NULL;
 }
 
-socket *socket::settimeout(double val)
+void *socket::settimeout(double val)
 {
     if (val < 0)
 	throw new ValueError(new str("Timeout value out of range"));
     apply_timeout(val);
-    return this;
+    return NULL;
 }
 
-socket *socket::shutdown(__ss_int how)
+void *socket::shutdown(__ss_int how)
 {
     if (::shutdown(_fd, (int)how) == SOCKET_ERROR)
         throw make_error("shutdown");
-    return this;
+    return NULL;
 }
 
 void socket::write_wait()
@@ -1151,7 +1188,7 @@ __ss_int socket::sendto(bytes* msg, socket::inet_address addr)
     return sendto(msg, 0, addr);
 }
 
-socket *socket::close()
+void *socket::close()
 {
     if (_fd != SS_INVALID_SOCKET) {
         socket_type fd = _fd;
@@ -1161,7 +1198,7 @@ socket *socket::close()
             throw make_error(STRINGIFY(CLOSE));
 #undef STRINGIFY
     }
-    return this;
+    return NULL;
 }
 
 void socket::read_wait()
@@ -1339,11 +1376,11 @@ socket::~socket()
         ::CLOSE(_fd); // ignore error since we can't throw
 }
 
-socket *socket::listen(__ss_int backlog)
+void *socket::listen(__ss_int backlog)
 {
     if(::listen(_fd, (int)backlog) == SOCKET_ERROR)
         throw make_error("listen");
-    return this;
+    return NULL;
 }
 
 socket* socket::accept(sockaddr *sa, socklen_t *salen)
@@ -1389,20 +1426,27 @@ tuple2<socket *, socket::inet_address> *socket::accept() {
 }
 
 #ifndef WIN32
-socket *socket::bind(pyseq<str *> *address)
+void *socket::bind(str *address)
 {
     if (family != AF_UNIX)
         throw new ValueError(invalid_address);
     sockaddr_un smup;
-    smup.sun_family = AF_UNIX;
-    const str* __0 = address->__getitem__(0);
-    if(__0->unit.size() >= sizeof(smup.sun_path))
-        throw new error(new str("AF_UNIX path too long"));
-    strcpy(smup.sun_path, __0->c_str());
-
-    return bind(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
+    socklen_t len = unix_sockaddr(&smup, __to_utf8_se(address));
+    return bind(reinterpret_cast<sockaddr *>(&smup), len);
 }
-#endif /* ! WIN32 */
+
+void *socket::bind(bytes *address)
+{
+    if (family != AF_UNIX)
+        throw new ValueError(invalid_address);
+    sockaddr_un smup;
+    socklen_t len = unix_sockaddr(&smup, address->unit);
+    return bind(reinterpret_cast<sockaddr *>(&smup), len);
+}
+#else /* WIN32 */
+void *socket::bind(str *) { return unix_unsupported(family); }
+void *socket::bind(bytes *) { return unix_unsupported(family); }
+#endif /* WIN32 */
 
 socket::inet_address socket::getpeername()
 {
@@ -1560,8 +1604,8 @@ void __init()
     cl_socket = new class_("socket");
     cl_herror = new class_("herror");
     cl_gaierror = new class_("gaierror");
-    cl_timeout = new class_("timeout");
-    cl_error = new class_("error");
+    cl_timeout = new class_("TimeoutError"); /* socket.timeout is TimeoutError */
+    cl_error = new class_("OSError"); /* socket.error is OSError */
 
     // string constants used by this module
     invalid_address = new str("invalid address");

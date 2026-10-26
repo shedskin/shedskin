@@ -237,30 +237,30 @@ class socket(object):
         return file_binary('', mode)
 
     def listen(self, backlog):
-        return self
+        pass
 
     def shutdown(self, how):
-        return self
+        pass
 
     def close(self):
-        return self
+        pass
 
     # setblocking(0) == settimeout(0.0)
     # setblocking(1) == settimeout(None)
     def setblocking(self, flag):
-        return self
+        pass
 
     def getblocking(self):
         return True
 
     def settimeout(self, value):
-        return self
+        pass
 
     def gettimeout(self):
         return 0.0
 
     def setsockopt(self, level, optname, value):
-        return self
+        pass
 
     # NOTE only the int-returning form; the buflen form (returning bytes) is
     # not supported, as a method can only have one return type
@@ -268,10 +268,10 @@ class socket(object):
         return 0
 
     def bind(self, address):
-        return self
+        pass
 
     def connect(self, address):
-        return self
+        pass
 
     def connect_ex(self, address):
         return 0
