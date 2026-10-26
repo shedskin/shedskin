@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 
 
@@ -691,9 +692,13 @@ def test_datetime_fromtimestamp_round_half_even():
 
 def test_date_fromtimestamp_floor():
     # a float timestamp is rounded down, like datetime.fromtimestamp
-    for ts in [-0.5, -86400.5, -1.0000001, 0.5, 1700000000.9, 3000000000.0]:
+    for ts in [0.5, 1700000000.9, 3000000000.0]:
         assert datetime.date.fromtimestamp(ts) == datetime.datetime.fromtimestamp(ts).date()
-    assert datetime.date.fromtimestamp(-0.5) == datetime.date.fromtimestamp(-1)
+    # the windows localtime() rejects negative timestamps (cpython raises OSError there)
+    if sys.platform != 'win32':
+        for ts in [-0.5, -86400.5, -1.0000001]:
+            assert datetime.date.fromtimestamp(ts) == datetime.datetime.fromtimestamp(ts).date()
+        assert datetime.date.fromtimestamp(-0.5) == datetime.date.fromtimestamp(-1)
     assert datetime.date.fromtimestamp(1700000000) == datetime.datetime.fromtimestamp(1700000000).date()
     try:
         datetime.date.fromtimestamp(1e20)
