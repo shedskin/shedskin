@@ -2275,6 +2275,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.deindent()
         self.output("}\n")
 
+    def generator_get_next(self, func2: str) -> None:
+        """Generate the body of a generator's __get_next: once the generator
+        has finished (run off its end, returned or raised), it stays finished,
+        even though starting a new loop resets __stop_iteration"""
+        self.output("if(__last_yield == -2) {")
+        self.output("    __stop_iteration = true;")
+        self.output("    return __zero<%s>();" % func2)
+        self.output("}")
+        self.output("try {")
+        self.output("    %s __r = __get_next_awesome();" % func2)
+        self.output("    if(__stop_iteration)")
+        self.output("        __last_yield = -2;")
+        self.output("    return __r;")
+        self.output("} catch (...) {")
+        self.output("    __last_yield = -2;")
+        self.output("    throw;")
+        self.output("}")
+
     # XXX merge?
     def generator_ident(self, func: "python.Function") -> str:
         if func.parent:
@@ -2322,7 +2340,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         func2 = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)[7:-3]
         self.output("%s __get_next() {" % func2)
-        self.output("    return __get_next_awesome();")
+        self.indent()
+        self.generator_get_next(func2)
+        self.deindent()
         self.output("}")
         self.output("%s __get_next_awesome() {" % func2)
         self.indent()
@@ -4891,7 +4911,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}\n")
             self.output(func2 + " " + lcfunc.ident + "::__get_next() {")
             self.indent()
-            self.output("return __get_next_awesome();")
+            self.generator_get_next(func2)
             self.deindent()
             self.output("}\n")
             self.output("inline size_t " + lcfunc.ident + "::for_in_init() {")
@@ -4899,7 +4919,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("    return 0;")
             self.output("}\n")
             self.output("inline bool " + lcfunc.ident + "::for_in_has_next(size_t i) {")
-            self.output("    myresult = __get_next_awesome();")
+            self.output("    myresult = " + lcfunc.ident + "::__get_next();")
             self.output("    return !__stop_iteration;")
             self.output("}\n")
             self.output("inline " + func2 + " " + lcfunc.ident + "::for_in_next(size_t &i) {")

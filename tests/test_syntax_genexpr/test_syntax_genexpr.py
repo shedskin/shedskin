@@ -42,12 +42,35 @@ def test_dict_comprehensions():  # TODO to seperate 'syntax_comprehension' tests
     assert anapali
 
 
+def test_exhausted():
+    xs = [1, 2]
+    g = (x for x in xs)
+    assert sum(g) == 3
+    xs.append(3)
+    assert sum(g) == 0
+    assert list(g) == []
+    assert sorted(g) == []
+    assert not any(g)
+    for x in g:
+        assert False
+
+    h = (10 // y for y in [1, 0, 2])
+    assert next(h) == 10
+    try:
+        next(h)
+        assert False
+    except ZeroDivisionError:
+        pass
+    assert list(h) == []
+
+
 def test_all():
     test_sum()
     test_list()
     test_set_comprehensions()
     test_set_comprehensions2()
     test_dict_comprehensions()
+    test_exhausted()
 
 
 if __name__ == "__main__":

@@ -280,6 +280,111 @@ def test_class_name_shadows_builtin():
     assert (d.a, d.b) == (3, 4)
 
 
+def gen_from(xs):
+    for x in xs:
+        yield x
+
+
+def gen_done(log):
+    yield 1
+    log.append('finished')
+
+
+def gen_return(n):
+    yield 1
+    if n:
+        return
+    yield 2
+
+
+def gen_div(xs):
+    for x in xs:
+        yield 10 // x
+
+
+def gen_raise():
+    yield 1
+    raise KeyError('k')
+    yield 2
+
+
+class GenHolder:
+    def __init__(self):
+        self.xs = [4, 5]
+
+    def items(self):
+        for x in self.xs:
+            yield x
+
+
+def test_exhausted_generator():
+    xs = [1, 2]
+    g = gen_from(xs)
+    assert list(g) == [1, 2]
+    xs.append(3)
+    assert list(g) == []
+    assert sum(g) == 0
+    assert sorted(g) == []
+    assert not any(g)
+    for x in g:
+        assert False
+
+    log = []
+    d = gen_done(log)
+    for v in d:
+        pass
+    for v in d:
+        pass
+    assert log == ['finished']
+
+    r = gen_return(1)
+    assert list(r) == [1]
+    assert list(r) == []
+
+    h = GenHolder()
+    m = h.items()
+    assert list(m) == [4, 5]
+    h.xs.append(6)
+    assert list(m) == []
+
+    e = gen_from([7])
+    assert next(e) == 7
+    for i in range(2):
+        try:
+            next(e)
+            assert False
+        except StopIteration:
+            pass
+
+
+def test_generator_after_exception():
+    g = gen_div([1, 0, 2, 5])
+    out = []
+    while True:
+        try:
+            out.append(next(g))
+        except ZeroDivisionError:
+            out.append(-1)
+        except StopIteration:
+            break
+    assert out == [10, -1]
+    assert list(g) == []
+
+    r = gen_raise()
+    assert next(r) == 1
+    try:
+        next(r)
+        assert False
+    except KeyError:
+        pass
+    try:
+        next(r)
+        assert False
+    except StopIteration:
+        pass
+    assert list(r) == []
+
+
 def test_all():
     test_iter1()
     test_iter2()
@@ -290,6 +395,8 @@ def test_all():
     test_iter_self()
     test_iter_self_subclass()
     test_class_name_shadows_builtin()
+    test_exhausted_generator()
+    test_generator_after_exception()
 
 
 if __name__ == '__main__':
