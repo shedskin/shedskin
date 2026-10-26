@@ -126,10 +126,19 @@ template<> struct __sumtype2<__ss_bool, __ss_int> { typedef __ss_int type; };
 template<> struct __sumtype2<__ss_bool, __ss_float> { typedef __ss_float type; };
 template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
+/* no start: CPython starts from 0, so the first str/bytes element fails on 0 + e */
 template<class T> void __sum_check() {
     if constexpr (std::is_same_v<T, str *>)
-        throw new TypeError(new str("sum() can't sum strings [use ''.join(seq) instead]"));
+        throw new TypeError(new str("unsupported operand type(s) for +: 'int' and 'str'"));
     if constexpr (std::is_same_v<T, bytes *>)
+        throw new TypeError(new str("unsupported operand type(s) for +: 'int' and 'bytes'"));
+}
+
+/* str/bytes start is refused up front */
+template<class B> void __sum_start_check() {
+    if constexpr (std::is_same_v<B, str *>)
+        throw new TypeError(new str("sum() can't sum strings [use ''.join(seq) instead]"));
+    if constexpr (std::is_same_v<B, bytes *>)
         throw new TypeError(new str("sum() can't sum bytes [use b''.join(seq) instead]"));
 }
 
@@ -160,6 +169,7 @@ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *i
 }
 
 template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type __sum(U *iter, B b) {
+    __sum_start_check<B>();
     typename __sumtype1<typename U::for_in_unit>::type result1 = __sum(iter);
     return __add((typename __sumtype2<typename U::for_in_unit,B>::type)b, (typename __sumtype2<typename U::for_in_unit,B>::type)result1);
 }
