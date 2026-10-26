@@ -657,9 +657,23 @@ str *asctime() {
     return asctime(tuple);
 }
 
+/* formatted by hand like CPython's _asctime(): libc asctime() differs for
+   years beyond 4 digits (macOS pads them with spaces) */
 str *asctime(struct_time *tuple) {
+    static const char wday_name[7][4] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const char mon_name[12][4] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
     tm time_tuple = tuple2tm_checked(tuple);
-    return (new str(::asctime(&time_tuple)))->__slice__(2, 0, -1, 0);
+    char buf[64];
+    int n = snprintf(buf, sizeof(buf), "%s %s%3d %.2d:%.2d:%.2d %lld",
+        wday_name[time_tuple.tm_wday], mon_name[time_tuple.tm_mon],
+        time_tuple.tm_mday, time_tuple.tm_hour, time_tuple.tm_min,
+        time_tuple.tm_sec, 1900 + (long long)time_tuple.tm_year);
+    return new str(buf, (size_t)n);
 }
 
 str *ctime() {

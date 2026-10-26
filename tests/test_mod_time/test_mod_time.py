@@ -18,6 +18,10 @@ def test_localtime():
 def test_asctime():
     t1 = (2008, 6, 24, 12, 50, 00, 0, 120, -1)
     assert time.asctime(time.struct_time(t1)) == 'Mon Jun 24 12:50:00 2008'
+    # regression test: libc asctime() padded such years on macOS
+    assert time.asctime(time.struct_time((12345, 2, 3, 4, 5, 6, 0, 0, 0))) == 'Mon Feb  3 04:05:06 12345'
+    assert time.asctime(time.struct_time((-5, 12, 31, 23, 59, 59, 6, 0, 0))) == 'Sun Dec 31 23:59:59 -5'
+    assert time.asctime(time.struct_time((999, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 999'
     assert time.strftime("%a, %d %b %Y %H:%M:%S", t1) == 'Mon, 24 Jun 2008 12:50:00'
 
 def test_strftime():
