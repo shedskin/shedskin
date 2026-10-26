@@ -126,6 +126,11 @@ tm tuple2tm(struct_time* tuple) {
     time_tuple.tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
     time_tuple.tm_yday = (int)tuple->tm_yday - 1 ;
     time_tuple.tm_isdst = (int)tuple->tm_isdst;
+#ifndef WIN32
+    time_tuple.tm_gmtoff = tuple->gmtoff;
+    if (tuple->zone)
+        time_tuple.tm_zone = (char *)tuple->zone->c_str();
+#endif
 
     return time_tuple;
 }
@@ -569,6 +574,17 @@ static inline time_t __ss_seconds_to_time_t(const __ss_float seconds) {
     return static_cast<time_t>(f);
 }
 
+/* also keep the UTC offset and zone name of the result (see struct_time) */
+static struct_time *__ss_tm2tuple_zone(tm *tm_time) {
+    struct_time *time_tuple = tm2tuple(tm_time);
+#ifndef WIN32
+    time_tuple->gmtoff = tm_time->tm_gmtoff;
+    if (tm_time->tm_zone)
+        time_tuple->zone = new str(tm_time->tm_zone);
+#endif
+    return time_tuple;
+}
+
 /* ::localtime/::gmtime return NULL (errno EOVERFLOW) when the year does
    not fit in struct tm; CPython raises OSError there. */
 static struct_time *__ss_localtime(time_t timet) {
@@ -578,7 +594,7 @@ static struct_time *__ss_localtime(time_t timet) {
         if (errno == 0) errno = EINVAL;
         __throw_oserror();
     }
-    return tm2tuple(tm_time);
+    return __ss_tm2tuple_zone(tm_time);
 }
 
 static struct_time *__ss_gmtime(time_t timet) {
@@ -588,7 +604,7 @@ static struct_time *__ss_gmtime(time_t timet) {
         if (errno == 0) errno = EINVAL;
         __throw_oserror();
     }
-    return tm2tuple(tm_time);
+    return __ss_tm2tuple_zone(tm_time);
 }
 
 /* the no-argument variants pass time_t straight through, rather than via
