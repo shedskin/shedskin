@@ -866,8 +866,8 @@ template<class R, class T1, class T2, class T3> inline imapiter3<R, T1, T2, T3> 
 
 /* filter */
 
-template<class T> static bool _identity(T value) {
-    return value;
+template<class T> static __ss_bool _identity(T value) {
+    return ___bool(value);
 }
 
 template<class T, class B> class ifilteriter : public __iter<T> {
@@ -895,7 +895,7 @@ template<class T, class B> inline ifilteriter<T, B>::ifilteriter(B (*predicate_)
 template<class T, class B> T ifilteriter<T, B>::__next__() {
     for (; ; ) {
         const T& value = this->iter->__next__();
-        if (this->predicate(value)) {
+        if (___bool(this->predicate(value))) {
             return value;
         }
     }
@@ -906,8 +906,8 @@ template<class T, class B> T ifilteriter<T, B>::__next__() {
 template<class T, class B> inline ifilteriter<T, B> *filter(B (*predicate_)(T), pyiter<T> *iterable) {
     return new ifilteriter<T, B>(predicate_, iterable);
 }
-template<class T> inline ifilteriter<T, bool> *filter(void * /* null */, pyiter<T> *iterable) {
-    return new ifilteriter<T, bool>(_identity, iterable);
+template<class T> inline ifilteriter<T, __ss_bool> *filter(void * /* null */, pyiter<T> *iterable) {
+    return new ifilteriter<T, __ss_bool>(_identity, iterable);
 }
 
 

@@ -72,10 +72,12 @@ pred = lambda x: x < 5
 
 def test_dropwhile():
     assert list(itertools.dropwhile(pred, [1, 4, 6, 4, 1])) == [6, 4, 1]
+    assert list(itertools.dropwhile(lambda s: s, ['a', '', 'b'])) == ['', 'b']
 
 
 def test_takewhile():
     assert list(itertools.takewhile(pred, [1,4,6,4,1])) == [1, 4]
+    assert list(itertools.takewhile(lambda s: s, ['a', '', 'b'])) == ['a']
 
 
 def key(x):
@@ -384,6 +386,8 @@ def pred1(x):
 def test_filterfalse():
     assert list(itertools.filterfalse(pred1, range(10))) == [0, 2, 4, 6, 8]
     assert list(itertools.filterfalse(None, range(10))) == [0]
+    assert list(itertools.filterfalse(None, ['', 'a', '', 'bc'])) == ['', '']
+    assert list(itertools.filterfalse(lambda l: l, [[1], [], [2]])) == [[]]
 
 
 def test_zip_longest():
