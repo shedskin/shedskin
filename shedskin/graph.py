@@ -1821,6 +1821,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.fake_func(
                         infer.inode(self.gx, child), child, "__str__", [], func
                     )
+                    if isinstance(node.left, ast.Constant) and isinstance(
+                        node.left.value, bytes
+                    ):  # b'%s' uses __bytes__
+                        self.fake_func(
+                            infer.inode(self.gx, child), child, "__bytes__", [], func
+                        )
             else:
                 self.fake_func(
                     node,

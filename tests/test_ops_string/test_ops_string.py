@@ -331,6 +331,144 @@ def test_format_spec_parsing():
         assert error == 'incomplete format'
 
 
+class WithBytes:
+    def __bytes__(self):
+        return b'wb'
+
+
+def test_bytes_char_and_b():
+    # bytes %c takes a single byte or an int in range(256), and %b is %s (1026-B11)
+    z = b'\xe9'
+    assert b'%c|' % z == b'\xe9|'
+    assert b'[%3c] [%-2c]' % (b'a', bytearray(b'b')) == b'[  a] [b ]'
+    assert b'%c%c' % (255, True) == b'\xff\x01'
+    assert b'%5b|%-3b|%.1b' % (z, b'a', b'xy') == b'    \xe9|a  |x'
+    assert b'%(k)b %(k)c' % {b'k': b'v'} == b'v v'
+    assert b'%s %b' % (WithBytes(), WithBytes()) == b'wb wb'
+    assert b'%r %a' % ('\xe9', 5) == b"'\\xe9' 5"
+    for n in [256, 300, -1]:
+        error = ''
+        try:
+            bs = b'%c' % n
+        except OverflowError as e:
+            error = str(e)
+        assert error == '%c arg not in range(256)'
+    for bad in [b'xy', b'']:
+        error = ''
+        try:
+            bs = b'%c' % bad
+        except TypeError as e:
+            error = str(e)
+        assert error == '%c requires an integer in range(256) or a single byte'
+    error = ''
+    try:
+        bs = b'%c' % 'x'
+    except TypeError as e:
+        error = str(e)
+    assert error == '%c requires an integer in range(256) or a single byte'
+    for fmt in [b'%s', b'%b']:
+        error = ''
+        try:
+            bs = fmt % '\xe9'
+        except TypeError as e:
+            error = str(e)
+        assert error == "%b requires a bytes-like object, or an object that implements __bytes__, not 'str'"
+    error = ''
+    try:
+        bs = b'%s' % 5
+    except TypeError as e:
+        error = str(e)
+    assert error == "%b requires a bytes-like object, or an object that implements __bytes__, not 'int'"
+
+    # %b is for bytes only, and str %c does not take bytes
+    error = ''
+    try:
+        s = '%b' % z
+    except ValueError as e:
+        error = 'VE'
+    assert error == 'VE'
+    error = ''
+    try:
+        s = '%c' % z
+    except TypeError as e:
+        error = str(e)
+    assert error == '%c requires int or char'
+    assert '%c' % True == '\x01'
+
+
+def test_wrong_argument_type():
+    # numeric conversions raise TypeError instead of printing nothing (1026-B12)
+    x = 'abc'
+    for fmt in ['[%d]', '[%i]', '[%u]', '[%x]', '[%X]', '[%o]']:
+        error = ''
+        try:
+            s = fmt % x
+        except TypeError as e:
+            error = str(e)
+        if fmt in ['[%d]', '[%i]', '[%u]']:
+            assert error == fmt[1:3] + ' format: a real number is required, not str'
+        else:
+            assert error == fmt[1:3] + ' format: an integer is required, not str'
+    for fmt in ['[%e]', '[%f]', '[%g]']:
+        error = ''
+        try:
+            s = fmt % x
+        except TypeError as e:
+            error = str(e)
+        assert error == 'must be real number, not str'
+    for fmt in ['%x', '%o']:
+        error = ''
+        try:
+            s = fmt % 1.5
+        except TypeError as e:
+            error = str(e)
+        assert error == fmt + ' format: an integer is required, not float'
+    error = ''
+    try:
+        s = '%d' % [1]
+    except TypeError as e:
+        error = str(e)
+    assert error == '%d format: a real number is required, not list'
+    error = ''
+    try:
+        s = '%d' % None
+    except TypeError as e:
+        error = str(e)
+    assert error == '%d format: a real number is required, not NoneType'
+    error = ''
+    try:
+        s = '%f' % 1j
+    except TypeError as e:
+        error = str(e)
+    assert error == 'must be real number, not complex'
+    error = ''
+    try:
+        s = '%(a)s %(b)x' % {'a': 'p', 'b': 'q'}
+    except TypeError as e:
+        error = str(e)
+    assert error == '%x format: an integer is required, not str'
+    error = ''
+    try:
+        s = '%(a)d' % 5
+    except TypeError as e:
+        error = str(e)
+    assert error == 'format requires a mapping'
+
+    # bytes formatting, where the float message differs
+    error = ''
+    try:
+        bs = b'%d' % b'x'
+    except TypeError as e:
+        error = str(e)
+    assert error == '%d format: a real number is required, not bytes'
+    error = ''
+    try:
+        bs = b'%f' % b'x'
+    except TypeError as e:
+        error = str(e)
+    assert error == 'float argument required, not bytes'
+
+
 def test_bool_argument():
     b = True
     assert '[%d]' % b == '[1]'
@@ -356,6 +494,8 @@ def test_all():
     test_float_conversions()
     test_sign_padding()
     test_argument_count()
+    test_bytes_char_and_b()
+    test_wrong_argument_type()
 
 
 if __name__ == "__main__":
