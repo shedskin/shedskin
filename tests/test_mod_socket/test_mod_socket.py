@@ -123,6 +123,92 @@ def test_byteorder():
     # a 16-bit value in network order is either unchanged or byte-swapped
     assert socket.htons(0x1234) in (0x1234, 0x3412)
     assert socket.htonl(1) in (1, 1 << 24)
+    assert socket.ntohs(socket.htons(0xffff)) == 0xffff
+    assert socket.ntohl(socket.htonl(0xffffffff)) == 0xffffffff
+
+    # out-of-range values raise rather than being truncated
+    errors = []
+    for v in [-1, 0x10000, 1 << 31, -(1 << 31) - 1]:
+        try:
+            socket.htons(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            socket.ntohs(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == [
+        "htons: can't convert negative Python int to C 16-bit unsigned integer",
+        "ntohs: can't convert negative Python int to C 16-bit unsigned integer",
+        'htons: Python int too large to convert to C 16-bit unsigned integer',
+        'ntohs: Python int too large to convert to C 16-bit unsigned integer',
+        'Python int too large to convert to C int',
+        'Python int too large to convert to C int',
+        'Python int too large to convert to C int',
+        'Python int too large to convert to C int',
+    ]
+    errors = []
+    for v in [-1, 1 << 32]:
+        try:
+            socket.htonl(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            socket.ntohl(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == [
+        "can't convert negative value to unsigned int",
+        "can't convert negative value to unsigned int",
+        'int larger than 32 bits',
+        'int larger than 32 bits',
+    ]
+
+
+def test_port_range():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    errors = []
+    for port in [70000, -1]:
+        try:
+            s.bind(('127.0.0.1', port))
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            s.connect(('127.0.0.1', port))
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            s.connect_ex(('127.0.0.1', port))
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            s.sendto(b'x', ('127.0.0.1', port))
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            s.sendto(b'x', 0, ('127.0.0.1', port))
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == 2 * [
+        'bind(): port must be 0-65535.',
+        'connect(): port must be 0-65535.',
+        'connect_ex(): port must be 0-65535.',
+        'sendto(): port must be 0-65535.',
+        'sendto(): port must be 0-65535.',
+    ]
+    # the boundaries themselves are fine
+    s.bind(('127.0.0.1', 0))
+    assert 0 < s.getsockname()[1] <= 65535
+    s.close()
 
 
 def test_inet():
@@ -1035,6 +1121,7 @@ def test_all():
     test_create_server()
     test_sendfile()
     test_byteorder()
+    test_port_range()
     test_inet()
     test_names()
     test_embedded_nul()
