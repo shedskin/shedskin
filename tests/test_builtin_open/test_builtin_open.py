@@ -32,8 +32,9 @@ def test_open_readlines():
 
 def test_open_readlines_hint():
     # stop once the total length read exceeds the hint (text: in characters)
-    with open('rlh.txt', 'w', encoding='utf-8') as f:
-        f.write('\xe9\xe9\nb\nc\n')
+    # write in binary mode, so the file has no '\r\n' newlines under windows
+    with open('rlh.txt', 'wb') as g:
+        g.write(b'\xc3\xa9\xc3\xa9\nb\nc\n')
     for hint, n in [(-1, 3), (0, 3), (1, 1), (2, 1), (3, 2), (4, 2), (5, 3)]:
         with open('rlh.txt', encoding='utf-8') as f:
             assert len(f.readlines(hint)) == n
