@@ -432,6 +432,49 @@ def test_generator_after_exception():
     assert list(r) == []
 
 
+# an iterable class whose __iter__ returns iter(list) or yields: its pyiter
+# base type must not come from other iter() uses in the program (sum, max..)
+class IterLeaf:
+    def __init__(self, n):
+        self.n = n
+
+class IterNode:
+    def __init__(self):
+        self.kids = [IterLeaf(1), IterLeaf(2)]
+    def __iter__(self):
+        return iter(self.kids)
+
+class IterGenStr:
+    def __iter__(self):
+        yield 'a'
+        yield 'b'
+    def ints(self):
+        yield 1
+
+class IterFloats:
+    def __init__(self):
+        self.i = 0
+    def __next__(self):
+        self.i += 1
+        if self.i > 3:
+            raise StopIteration
+        return self.i * 1.5
+    def __iter__(self):
+        return self
+
+class IterUsesFloats:
+    def __iter__(self):
+        return IterFloats()
+
+def test_iter_returned_elem_type():
+    assert [k.n for k in IterNode()] == [1, 2]
+    assert len(list(IterNode())) == 2
+    assert sum([1]) == 1 and max([1]) == 1 and sorted([3, 1]) == [1, 3]
+    assert list(IterGenStr()) == ['a', 'b']
+    assert list(IterGenStr().ints()) == [1]
+    assert list(IterUsesFloats()) == [1.5, 3.0, 4.5]
+
+
 def test_all():
     test_iter1()
     test_iter2()
@@ -445,6 +488,7 @@ def test_all():
     test_class_name_shadows_builtin()
     test_exhausted_generator()
     test_generator_after_exception()
+    test_iter_returned_elem_type()
 
 
 if __name__ == '__main__':

@@ -1064,14 +1064,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif "__iter__" in cl.funcs:  # iterable
                 retnode = cl.funcs["__iter__"].retnode
                 assert retnode is not None
-                for cl2, _ in self.mergeinh[retnode.thing]:
+                # use the element types of the iterators actually returned
+                # here: the __next__ return node of a builtin iterator class
+                # is shared by all its instantiations in the program
+                elemtypes: Types = set()
+                found = False
+                for t in self.mergeinh[retnode.thing]:
+                    cl2 = t[0]
                     if "__next__" in cl2.funcs:
-                        next_retnode = cl2.funcs["__next__"].retnode
-                        assert next_retnode is not None
-                        ts = typestr.nodetypestr(
-                            self.gx, next_retnode.thing, mv=self.mv
-                        )
-                        clnames = ["pyiter<%s>" % ts]
+                        found = True
+                        if "unit" in cl2.vars:
+                            elemtypes.update(self.subtypes({t}, "unit"))
+                        else:
+                            next_retnode = cl2.funcs["__next__"].retnode
+                            assert next_retnode is not None
+                            elemtypes.update(self.mergeinh[next_retnode.thing])
+                if found:
+                    ts = typestr.typestr(self.gx, elemtypes, mv=self.mv)
+                    clnames = ["pyiter<%s>" % ts]
         self.output(
             "class "
             + self.cpp_name(cl)
