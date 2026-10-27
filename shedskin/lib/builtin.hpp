@@ -796,6 +796,21 @@ template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see
         throw new ValueError(new str("not enough values to unpack"));
 #endif
 
+/* unpacking of arbitrary iterables, using the same for_in_* protocol as
+   for-loops (so e.g. os.times_result works, which has no __iter__) */
+template<class P> inline typename P::for_in_unit __ss_unpack_next(P *p, typename P::for_in_loop &l) {
+    if(!p->for_in_has_next(l))
+        throw new ValueError(new str("not enough values to unpack"));
+    return p->for_in_next(l);
+}
+
+template<class P> inline void __ss_unpack_end(P *p, typename P::for_in_loop &l) {
+#ifndef __SS_NOBOUNDS
+    if(p->for_in_has_next(l))
+        throw new ValueError(new str("too many values to unpack"));
+#endif
+}
+
 template<class T> list<T> *__ss_list() {
     list<T> *l = new list<T>();
 #ifndef __SS_BOOST
