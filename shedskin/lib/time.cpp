@@ -689,6 +689,12 @@ str *strftime(str *format, struct_time* tuple) {
     if (__ss_has_nul(format))
         throw new ValueError(new str("embedded null character"));
     tm time_tuple = tuple2tm_checked(tuple);
+#ifdef _MSC_VER
+    /* as CPython: the MSVC strftime() aborts the process (0xc0000409) on
+       years it does not support */
+    if (time_tuple.tm_year + 1900 < 1 || 9999 < time_tuple.tm_year + 1900)
+        throw new ValueError(new str("strftime() requires year in [1; 9999]"));
+#endif
     size_t fmtlen = format->unit.size();
     size_t size = fmtlen;
     size_t n;

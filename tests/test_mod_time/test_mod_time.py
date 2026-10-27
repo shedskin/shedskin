@@ -484,7 +484,15 @@ def test_tuple_field_overflow():
         caught = str(e)
     assert caught == 'mktime argument out of range', caught
 
-    assert time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0)) == '2147483647'
+    if sys.platform == 'win32':
+        caught = ''
+        try:
+            time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))
+        except ValueError as e:
+            caught = str(e)
+        assert caught == 'strftime() requires year in [1; 9999]', caught
+    else:
+        assert time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0)) == '2147483647'
     assert time.asctime(time.struct_time((2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 2147483647'
     assert time.mktime(time.localtime(1000000)) == 1000000.0
 
