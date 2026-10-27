@@ -23,6 +23,7 @@ function(add_shedskin_product)
         ENABLE_SPM
         ENABLE_FETCH_CONTENT
         ENABLE_LOCAL_DEPS
+        NOBOOST
         DEBUG
     )
     set(oneValueArgs
@@ -159,6 +160,7 @@ function(add_shedskin_product)
             SHEDSKIN_ENABLE_SPM
             SHEDSKIN_ENABLE_FETCH_CONTENT
             SHEDSKIN_ENABLE_LOCAL_DEPS
+            SHEDSKIN_NOBOOST
             SHEDSKIN_DEBUG
 
             # one value args
@@ -442,7 +444,9 @@ function(add_shedskin_product)
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
         # PCRE2_STATIC is required on Windows when linking statically with pcre2
+        # boost (bundled) containers are the default, as for 'shedskin build'
         target_compile_definitions(${EXE} PRIVATE
+            $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
@@ -609,6 +613,7 @@ function(add_shedskin_product)
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
         # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXT} PRIVATE
+            $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )

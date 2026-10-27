@@ -809,12 +809,13 @@ def test_counter_repr_empty():
 
 def test_counter_repr_order():
     # regression test: Counter reprs its items in most_common() order
-    # (by descending count, ties in insertion order), not insertion order
-    c = Counter('abbcccd')
-    assert repr(c) == "Counter({'c': 3, 'b': 2, 'a': 1, 'd': 1})"
+    # (by descending count), not insertion order. avoid ties: CPython breaks
+    # them by insertion order, which shedskin dicts do not keep
+    c = Counter('abbcccdddd')
+    assert repr(c) == "Counter({'d': 4, 'c': 3, 'b': 2, 'a': 1})"
     assert str(c) == repr(c)
-    c['a'] -= 3
-    assert repr(c) == "Counter({'c': 3, 'b': 2, 'd': 1, 'a': -2})"
+    c['d'] -= 6
+    assert repr(c) == "Counter({'c': 3, 'b': 2, 'a': 1, 'd': -2})"
 
 
 def test_counter_total():

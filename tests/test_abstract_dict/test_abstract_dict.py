@@ -205,7 +205,8 @@ def test_counter_ordering_with_dict():
 
 def test_repr():
     d, dd, c = make_dicts()
-    assert repr(d) == "{'a': 1, 'b': 2}"
+    # shedskin dicts are not insertion-ordered, so either order may show up
+    assert repr(d) in ("{'a': 1, 'b': 2}", "{'b': 2, 'a': 1}")
     assert repr(c) == "Counter({'b': 2, 'a': 1})"
     assert str(c) == "Counter({'b': 2, 'a': 1})"
 
