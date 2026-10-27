@@ -475,7 +475,49 @@ def test_bool_argument():
     assert '[%x] [%.1f] [%5d]' % (b, b, False) == '[1] [1.0] [    0]'
     assert '%o %X %e' % (b, b, False) == '1 1 0.000000e+00'
 
-    
+
+def test_unsupported_char():
+    # the index counts code points; non-printable characters show as '?'
+    for fmt, msg in [('%q', "'q' (0x71) at index 1"),
+                     ('ab%-5.2q', "'q' (0x71) at index 7"),
+                     ('é%%%q', "'q' (0x71) at index 4"),
+                     ('%b', "'b' (0x62) at index 1"),
+                     ('%é', "'?' (0xe9) at index 1"),
+                     ('%😀', "'?' (0x1f600) at index 1"),
+                     ('%\x1e', "'?' (0x1e) at index 1"),
+                     ('%\x1f', "'\x1f' (0x1f) at index 1")]:
+        error = ''
+        try:
+            s = fmt % 1
+        except ValueError as e:
+            error = str(e)
+        assert error == 'unsupported format character ' + msg
+    error = ''
+    try:
+        s = '%(b)d %(a)q' % {'a': 1, 'b': 2}
+    except ValueError as e:
+        error = str(e)
+    assert error == "unsupported format character 'q' (0x71) at index 10"
+
+    # bytes show non-printable characters as-is, but fail from 0x80
+    for bfmt, msg in [(b'%q', "'q' (0x71) at index 1"),
+                      (b'ab%-3q', "'q' (0x71) at index 5"),
+                      (b'%\x01', "'\x01' (0x1) at index 1")]:
+        error = ''
+        try:
+            bs = bfmt % 1
+        except ValueError as e:
+            error = str(e)
+        assert error == 'unsupported format character ' + msg
+    error = ''
+    try:
+        bs = b'%\xe9' % 1
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'character argument not in range(0x110000)'
+
+
+
 def test_all():
     test_combined_flags()
     test_alternate_form()
@@ -496,6 +538,7 @@ def test_all():
     test_argument_count()
     test_bytes_char_and_b()
     test_wrong_argument_type()
+    test_unsupported_char()
 
 
 if __name__ == "__main__":
