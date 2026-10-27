@@ -234,6 +234,31 @@ def test_defaultdict_values():
     assert list(e.values()) == [0]
 
 
+def test_defaultdict_or():
+    d = defaultdict(list, {1: [1]})
+    e = d | {2: [2]}
+    assert sorted(e.items()) == [(1, [1]), (2, [2])]
+    assert e is not d
+    assert sorted(d.items()) == [(1, [1])]
+    e[3].append(3)  # result keeps the default_factory
+    assert e[3] == [3]
+
+
+def test_defaultdict_ior():
+    d = defaultdict(list)
+    alias = d
+    d |= {1: [1]}
+    d |= defaultdict(list, {2: [2]})
+    # regression test: an iterable of pairs failed to compile
+    d |= [(3, [3])]
+    d |= ((k, [k]) for k in [4])
+    d |= zip([5], [[5]])
+    assert d is alias
+    assert sorted(alias.items()) == [(1, [1]), (2, [2]), (3, [3]), (4, [4]), (5, [5])]
+    d[6].append(6)
+    assert alias[6] == [6]
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -1003,6 +1028,8 @@ def test_all():
     test_defaultdict_setdefault()
     test_defaultdict_popitem()
     test_defaultdict_values()
+    test_defaultdict_or()
+    test_defaultdict_ior()
     test_deque1()
     test_deque2()
     test_deque_rotate_default()

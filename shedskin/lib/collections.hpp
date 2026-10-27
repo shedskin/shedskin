@@ -451,7 +451,9 @@ public:
         return result;
     }
 
-    defaultdict<K, V> *__ior__(dict<K,V> *other) {
+    /* same as dict::__ior__ (other can also be an iterable of pairs), but
+       returning defaultdict, as 'x |= y' becomes 'x = x->__ior__(y)' */
+    template <class U> defaultdict<K, V> *__ior__(U *other) {
         this->update(other);
         return this;
     }
