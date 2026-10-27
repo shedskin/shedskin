@@ -94,10 +94,10 @@ public:
     __ss_int tm_yday;
     __ss_int tm_wday;
     __ss_int tm_min;
-    /* hidden, as CPython's tm_gmtoff/tm_zone: only localtime()/gmtime() set
+    /* not part of the 9-sequence, as in CPython: only localtime()/gmtime() set
        them, so that strftime('%z') does not print +0000 for local time */
-    long gmtoff = 0;
-    str *zone = NULL;
+    __ss_int tm_gmtoff = 0;
+    str *tm_zone = NULL;
 
     struct_time() {
         __class__ = cl_struct_time;
