@@ -299,7 +299,7 @@ def getsid(pid):
     return 1
 
 def setsid():
-    return 1
+    pass
 
 def getpid():
     return 1
@@ -323,7 +323,7 @@ def umask(mask):
     return 0
 
 def chmod(path, mode):
-    return 0
+    pass
 
 def fchmod(fd, mode):
     pass

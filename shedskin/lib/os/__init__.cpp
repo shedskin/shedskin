@@ -927,7 +927,7 @@ __ss_int umask(__ss_int newmask)  {
     return (__ss_int)::umask((unsigned)newmask);
 }
 
-__ss_int chmod(str* path, __ss_int val) {
+void *chmod(str* path, __ss_int val) {
 #ifdef WIN32
     /* windows only honours the write permission bit (read-only attribute) */
     if(::_wchmod(__to_wide(path, "chmod").c_str(), (int)val) == -1)
@@ -935,7 +935,7 @@ __ss_int chmod(str* path, __ss_int val) {
     if(::chmod(__ss_cpath(path, "chmod"), (unsigned)val) == -1)
 #endif
         __throw_oserror(path);
-    return 0;
+    return NULL;
 }
 
 void *fchmod(__ss_int fd, __ss_int mode) {
@@ -1728,11 +1728,10 @@ __ss_int getsid(__ss_int pid) {
         __throw_oserror();
     return nr;
 }
-__ss_int setsid() {
-    __ss_int nr = ::setsid();
-    if(nr == -1)
+void *setsid() {
+    if(::setsid() == -1)
         __throw_oserror();
-    return nr;
+    return NULL;
 }
 
 __ss_int getpgid(__ss_int pid) {
