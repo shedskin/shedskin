@@ -870,6 +870,35 @@ def test_re_groupindex_values():
     assert sorted(p.groupindex.values()) == [1, 2]
 
 
+def test_re_module_funcs_compiled_pattern():
+    p = re.compile(r'(a)(b)?')
+    assert re.compile(p) is p
+    assert re.sub(p, 'X', 'ac ab') == 'Xc X'
+    assert re.sub(p, lambda m: m.group(1).upper(), 'ac ab') == 'Ac A'
+    assert re.subn(p, 'X', 'ac ab ab', count=2) == ('Xc X ab', 2)
+    assert re.subn(p, lambda m: 'Y', 'ab') == ('Y', 1)
+    m = re.search(p, 'baa')
+    assert m is not None and m.start() == 1
+    assert re.match(p, 'baa') is None
+    assert re.prefixmatch(p, 'abc') is not None
+    assert re.fullmatch(p, 'ab') is not None
+    assert re.fullmatch(p, 'abc') is None
+    assert [m.span() for m in re.finditer(p, 'a ab')] == [(0, 1), (2, 4)]
+    q = re.compile(r'\d')
+    assert re.findall(q, 'a1b22') == ['1', '2', '2']
+    assert re.split(q, 'a1b2c', maxsplit=1) == ['a', 'b2c']
+    try:
+        re.search(q, 'x1', re.I)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'cannot process flags argument with a compiled pattern'
+    try:
+        re.compile(q, re.I)
+        assert False
+    except ValueError:
+        pass
+
+
 def test_all():
     test_re_endpos_default()
     test_re_subn_func()
@@ -932,6 +961,7 @@ def test_all():
     test_re_sub_template_gc()
     test_re_compile_groupnames_gc()
     test_re_groupindex_values()
+    test_re_module_funcs_compiled_pattern()
 
 
 if __name__ == "__main__":
