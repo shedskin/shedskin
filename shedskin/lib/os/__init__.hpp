@@ -159,7 +159,7 @@ str *strerror(__ss_int i);
 
 void *putenv(str* varname, str* value);
 __ss_int umask(__ss_int newmask);
-__ss_int chmod(str* path, __ss_int val);
+void *chmod(str* path, __ss_int val);
 void *fchmod(__ss_int fd, __ss_int mode);
 void *renames(str* old, str* _new);
 tuple2<__ss_int,__ss_int>* pipe();
@@ -410,7 +410,7 @@ void *setpgrp();
 void *setreuid(__ss_int ruid, __ss_int euid);
 void *setregid(__ss_int rgid, __ss_int egid);
 __ss_int getsid(__ss_int pid);
-__ss_int setsid();
+void *setsid();
 __ss_int tcgetpgrp(__ss_int fd);
 void *tcsetpgrp(__ss_int fd, __ss_int pg);
 

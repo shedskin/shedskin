@@ -66,6 +66,7 @@ def test_chmod():
     assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
     os.chmod(path, 0o644)
     assert stat.S_IMODE(os.stat(path).st_mode) == 0o644
+    assert os.chmod(path, 0o644) is None
 
     os.remove(path)
 
@@ -588,6 +589,20 @@ def test_pathconf_errors():
         assert e.errno == 22
 
 
+def test_setsid():
+    # in a forked child, so the session of the test runner is left alone
+    sys.stdout.flush()
+    pid = os.fork()
+    if pid == 0:
+        code = 1
+        if os.setsid() is None and os.getsid(0) == os.getpid():
+            code = 0
+        os._exit(code)
+    pid2, status = os.waitpid(pid, 0)
+    assert os.WIFEXITED(status)
+    assert os.WEXITSTATUS(status) == 0
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -611,6 +626,7 @@ def test_all():
     test_inheritable()
     test_close_after_failed_flush()
     test_pathconf_errors()
+    test_setsid()
 
 
 if __name__ == '__main__':
