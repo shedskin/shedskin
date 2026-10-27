@@ -198,6 +198,22 @@ str *sub(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ 
 tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 tuple2<str *, __ss_int> *subn(str *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
 list<str *> *findall(str *pat, str *subj, __ss_int flags = 0);
+
+//like CPython, a compiled pattern is accepted too (flags must then be 0)
+Pattern *compile(Pattern *pat, __ss_int flags = 0);
+
+Match *match(Pattern *pat, str *subj, __ss_int flags = 0);
+Match *prefixmatch(Pattern *pat, str *subj, __ss_int flags = 0);
+Match *fullmatch(Pattern *pat, str *subj, __ss_int flags = 0);
+Match *search(Pattern *pat, str *subj, __ss_int flags = 0);
+__iter<Match *> *finditer(Pattern *pat, str *subj, __ss_int flags = 0);
+list<str *> *split(Pattern *pat, str *subj, __ss_int maxn = 0, __ss_int flags = 0);
+str *sub(Pattern *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
+str *sub(Pattern *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
+tuple2<str *, __ss_int> *subn(Pattern *pat, str *repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
+tuple2<str *, __ss_int> *subn(Pattern *pat, replfunc repl, str *subj, __ss_int maxn = 0, __ss_int flags_ = 0);
+list<str *> *findall(Pattern *pat, str *subj, __ss_int flags = 0);
+
 str *escape(str *s);
 
 void *purge();

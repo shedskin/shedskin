@@ -605,6 +605,13 @@ Pattern *compile(str *pat, __ss_int flags)
     return p;
 }
 
+Pattern *compile(Pattern *pat, __ss_int flags)
+{
+    if(flags)
+        throw new ValueError(new str("cannot process flags argument with a compiled pattern"));
+    return pat;
+}
+
 void *purge() {
     std::fill(__cache, __cache + __CACHE_SIZE, (Pattern *)0);
     return NULL;
@@ -685,6 +692,63 @@ list<str *> *split(str *pat, str *subj, __ss_int maxn, __ss_int flags)
 }
 
 list<str *> *findall(str *pat, str *subj, __ss_int flags)
+{
+    return compile(pat, flags)->findall(subj);
+}
+
+//the same, for a compiled pattern
+
+Match *search(Pattern *pat, str *subj, __ss_int flags)
+{
+    return compile(pat, flags)->search(subj);
+}
+
+Match *match(Pattern *pat, str *subj, __ss_int flags)
+{
+    return compile(pat, flags)->match(subj);
+}
+
+Match *prefixmatch(Pattern *pat, str *subj, __ss_int flags)
+{
+    return match(pat, subj, flags);
+}
+
+Match *fullmatch(Pattern *pat, str *subj, __ss_int flags)
+{
+    return compile(pat, flags)->fullmatch(subj);
+}
+
+__iter<Match *> *finditer(Pattern *pat, str *subj, __ss_int flags)
+{
+    return compile(pat, flags)->finditer(subj);
+}
+
+str *sub(Pattern *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->sub(repl, subj, maxn);
+}
+
+str *sub(Pattern *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->sub(func, subj, maxn);
+}
+
+tuple2<str *, __ss_int> *subn(Pattern *pat, str *repl, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->subn(repl, subj, maxn);
+}
+
+tuple2<str *, __ss_int> *subn(Pattern *pat, replfunc func, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->subn(func, subj, maxn);
+}
+
+list<str *> *split(Pattern *pat, str *subj, __ss_int maxn, __ss_int flags)
+{
+    return compile(pat, flags)->split(subj, maxn);
+}
+
+list<str *> *findall(Pattern *pat, str *subj, __ss_int flags)
 {
     return compile(pat, flags)->findall(subj);
 }
