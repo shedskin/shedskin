@@ -152,9 +152,9 @@ tm tuple2tm(struct_time* tuple) {
     time_tuple.tm_yday = (int)((__ss_int)yday - 1);
     time_tuple.tm_isdst = isdst;
 #ifndef WIN32
-    time_tuple.tm_gmtoff = tuple->gmtoff;
-    if (tuple->zone)
-        time_tuple.tm_zone = (char *)tuple->zone->c_str();
+    time_tuple.tm_gmtoff = (long)tuple->tm_gmtoff;
+    if (tuple->tm_zone)
+        time_tuple.tm_zone = (char *)tuple->tm_zone->c_str();
 #endif
 
     return time_tuple;
@@ -601,13 +601,27 @@ static inline time_t __ss_seconds_to_time_t(const __ss_float seconds) {
     return static_cast<time_t>(f);
 }
 
-/* also keep the UTC offset and zone name of the result (see struct_time) */
-static struct_time *__ss_tm2tuple_zone(tm *tm_time) {
+/* also keep the UTC offset and zone name of the result (see struct_time).
+   windows has no tm_gmtoff/tm_zone, so derive them as CPython does there:
+   "UTC" for gmtime(), else strftime('%Z') and the difference with timegm() */
+static struct_time *__ss_tm2tuple_zone(tm *tm_time, time_t timet, bool utc) {
     struct_time *time_tuple = tm2tuple(tm_time);
 #ifndef WIN32
-    time_tuple->gmtoff = tm_time->tm_gmtoff;
+    (void)timet;
+    (void)utc;
+    time_tuple->tm_gmtoff = (__ss_int)tm_time->tm_gmtoff;
     if (tm_time->tm_zone)
-        time_tuple->zone = new str(tm_time->tm_zone);
+        time_tuple->tm_zone = new str(tm_time->tm_zone);
+#else
+    if (utc)
+        time_tuple->tm_zone = new str("UTC");
+    else {
+        tm buf = *tm_time;
+        char zone[100];
+        size_t n = ::strftime(zone, sizeof(zone), "%Z", &buf);
+        time_tuple->tm_zone = new str(zone, n);
+        time_tuple->tm_gmtoff = (__ss_int)(::_mkgmtime(&buf) - timet);
+    }
 #endif
     return time_tuple;
 }
@@ -621,7 +635,7 @@ static struct_time *__ss_localtime(time_t timet) {
         if (errno == 0) errno = EINVAL;
         __throw_oserror();
     }
-    return __ss_tm2tuple_zone(tm_time);
+    return __ss_tm2tuple_zone(tm_time, timet, false);
 }
 
 static struct_time *__ss_gmtime(time_t timet) {
@@ -631,7 +645,7 @@ static struct_time *__ss_gmtime(time_t timet) {
         if (errno == 0) errno = EINVAL;
         __throw_oserror();
     }
-    return __ss_tm2tuple_zone(tm_time);
+    return __ss_tm2tuple_zone(tm_time, timet, true);
 }
 
 /* the no-argument variants pass time_t straight through, rather than via

@@ -83,6 +83,8 @@ class struct_time(pyseq):
         self.tm_wday = 0
         self.tm_yday = 0
         self.tm_isdst = 0
+        self.tm_zone = ''
+        self.tm_gmtoff = 0
         self.unit = self.tm_year
     def __getitem__(self, n):
         return 1

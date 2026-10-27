@@ -376,6 +376,25 @@ def test_strftime_utc_offset():
         # as in CPython, a plain tuple has no offset
         assert time.strftime('%z', tuple(lt)) == '+0000'
 
+def test_zone_gmtoff():
+    for t in [1700000000, 1690000000]:
+        lt = time.localtime(t)
+        gt = time.gmtime(t)
+        assert gt.tm_gmtoff == 0
+        assert gt.tm_zone in ('GMT', 'UTC')
+        assert lt.tm_zone == time.tzname[lt.tm_isdst]
+        assert lt.tm_zone == time.strftime('%Z', lt)
+        days = 0
+        if lt.tm_year != gt.tm_year:
+            days = 1 if lt.tm_year > gt.tm_year else -1
+        elif lt.tm_yday != gt.tm_yday:
+            days = lt.tm_yday - gt.tm_yday
+        seconds = days * 86400 + (lt.tm_hour - gt.tm_hour) * 3600 + (lt.tm_min - gt.tm_min) * 60 + lt.tm_sec - gt.tm_sec
+        assert lt.tm_gmtoff == seconds
+        assert len(lt) == 9
+    st = time.struct_time((2024, 1, 1, 0, 0, 0, 0, 1, 0))
+    assert st.tm_zone is None
+
 def __rss_kb():
     try:
         for l in open('/proc/self/status'):
@@ -537,6 +556,7 @@ def test_all():
     test_strftime_buffer()
     test_strftime_utc_offset()
     test_tuple_field_overflow()
+    test_zone_gmtoff()
     print('ok')
 
 if __name__ == '__main__':
