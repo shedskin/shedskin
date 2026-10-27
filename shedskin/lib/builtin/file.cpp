@@ -416,14 +416,18 @@ str *file::read(__ss_int n) {
     return __decode_cache();
 }
 
-list<str *> *file::readlines(__ss_int /*size_hint*/) {
+list<str *> *file::readlines(__ss_int size_hint) {
     __check_closed();
     list<str *> *lines = new list<str *>();
+    __ss_int total = 0;
     while(not __eof()) {
         str *line = readline();
         if(line->unit.empty())
             break;
         lines->append(line);
+        total += len(line);
+        if(size_hint > 0 && total > size_hint)
+            break;
     }
     return lines;
 }
@@ -638,14 +642,18 @@ bytes *file_binary::read(__ss_int n) {
     return b;
 }
 
-list<bytes *> *file_binary::readlines(__ss_int /*size_hint*/) {
+list<bytes *> *file_binary::readlines(__ss_int size_hint) {
     __check_closed();
     list<bytes *> *lines = new list<bytes *>();
+    __ss_int total = 0;
     while(not __eof()) {
         bytes *line = readline();
         if(line->unit.empty())
             break;
         lines->append(line);
+        total += len(line);
+        if(size_hint > 0 && total > size_hint)
+            break;
     }
     return lines;
 }

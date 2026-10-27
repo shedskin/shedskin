@@ -268,6 +268,10 @@ def test_readlines_hint():
     b = io.BytesIO(b'aa\nbb\ncc\n')
     assert b.readlines(1) == [b'aa\n']
     assert b.readlines(0) == [b'bb\n', b'cc\n']
+    # BytesIO stops once the total reaches the hint, StringIO once it exceeds it
+    assert io.BytesIO(b'a\nb\nc\n').readlines(2) == [b'a\n']
+    assert io.BytesIO(b'a\nb\nc\n').readlines(3) == [b'a\n', b'b\n']
+    assert io.StringIO('a\nb\nc\n').readlines(2) == ['a\n', 'b\n']
 
 
 def test_getvalue_is_snapshot():

@@ -30,6 +30,27 @@ def test_open_readlines():
     f.close()
 
 
+def test_open_readlines_hint():
+    # stop once the total length read exceeds the hint (text: in characters)
+    # write in binary mode, so the file has no '\r\n' newlines under windows
+    with open('rlh.txt', 'wb') as g:
+        g.write(b'\xc3\xa9\xc3\xa9\nb\nc\n')
+    for hint, n in [(-1, 3), (0, 3), (1, 1), (2, 1), (3, 2), (4, 2), (5, 3)]:
+        with open('rlh.txt', encoding='utf-8') as f:
+            assert len(f.readlines(hint)) == n
+    with open('rlh.txt', encoding='utf-8') as f:
+        assert f.readlines(1) == ['\xe9\xe9\n']
+        assert f.readlines() == ['b\n', 'c\n']
+    # binary: in bytes
+    for hint, n in [(-1, 3), (0, 3), (4, 1), (5, 2), (6, 2), (7, 3)]:
+        with open('rlh.txt', 'rb') as g:
+            assert len(g.readlines(hint)) == n
+    with open('rlh.txt', 'rb') as g:
+        assert g.readlines(1) == [b'\xc3\xa9\xc3\xa9\n']
+        assert g.readlines() == [b'b\n', b'c\n']
+    os.remove('rlh.txt')
+
+
 def test_with_open_read():
     with open(datafile) as f:
         assert f.read() == 'hop\nhop\nhoppa!\n'
@@ -726,6 +747,7 @@ def test_all():
     test_open_read()
     test_open_read2()
     test_open_readlines()
+    test_open_readlines_hint()
     test_with_open_read()
     test_with_open_write()
     test_open_write()
