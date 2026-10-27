@@ -746,7 +746,16 @@ __ss_int socket::getsockopt(__ss_int level, __ss_int optname) {
     return (__ss_int)v;
 }
 
+/* as in CPython, an AF_INET port outside 0-65535 is an OverflowError naming
+   the caller, rather than being silently truncated to 16 bits */
+static void check_port(__ss_int port, const char *caller)
+{
+    if (port < 0 || port > 0xffff)
+        throw new OverflowError(new str((std::string(caller) + "(): port must be 0-65535.").c_str()));
+}
+
 __ss_int socket::connect_ex(socket::inet_address address) {
+    check_port(address->second, "connect_ex");
     try {
         connect(address);
     } catch (error *e) {
@@ -882,9 +891,11 @@ static unsigned long int string_to_addr(const char *s)
 }
 
 // conver the python version of a address to the bsd socket variety
-static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
+static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src, const char *caller)
 {
     check_address_nul(src);
+    if (caller)
+        check_port(src->second, caller);
     memset(dst, 0, sizeof(sockaddr_in));
     dst->sin_family = AF_INET;
     const char *host = src->first->c_str();
@@ -898,7 +909,7 @@ void *socket::bind(socket::inet_address address)
         throw new ValueError(invalid_address);
 
     sockaddr_in sin;
-    tuple_to_sin_addr(&sin, address);
+    tuple_to_sin_addr(&sin, address, "bind");
     return bind(reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
 
@@ -917,6 +928,7 @@ void *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
     check_address_nul(address);
+    check_port(address->second, "connect");
     const char *host = address->first->c_str();
     int port = (int)address->second;
 
@@ -1177,7 +1189,7 @@ __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
     sa = reinterpret_cast<sockaddr *>(&sin);
     salen = sizeof(sin);
 
-    tuple_to_sin_addr(&sin, addr);
+    tuple_to_sin_addr(&sin, addr, "sendto");
 
     ssize_t len = ::sendto(_fd, buf, buflen, (int)flags, sa, salen);
     if (len == SOCKET_ERROR)
@@ -1567,20 +1579,41 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
     return new tuple2<socket *, socket *>(2, ssock, csock);
 }
 
+/* the argument checks (and messages) of CPython's htons/htonl and friends */
+static uint16_t check_uint16(__ss_int x, const char *name)
+{
+    if ((long long)x < INT_MIN || (long long)x > INT_MAX)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
+    if (x < 0)
+        throw new OverflowError(new str((std::string(name) + ": can't convert negative Python int to C 16-bit unsigned integer").c_str()));
+    if (x > 0xffff)
+        throw new OverflowError(new str((std::string(name) + ": Python int too large to convert to C 16-bit unsigned integer").c_str()));
+    return (uint16_t)x;
+}
+
+static uint32_t check_uint32(__ss_int x)
+{
+    if (x < 0)
+        throw new OverflowError(new str("can't convert negative value to unsigned int"));
+    if ((long long)x > 0xffffffffLL)
+        throw new OverflowError(new str("int larger than 32 bits"));
+    return (uint32_t)x;
+}
+
 __ss_int __ss_htonl(__ss_int x) {
-    return (__ss_int)htonl((uint32_t)x);
+    return (__ss_int)htonl(check_uint32(x));
 }
 
 __ss_int __ss_htons(__ss_int x) {
-    return (__ss_int)htons((uint16_t)x);
+    return (__ss_int)htons(check_uint16(x, "htons"));
 }
 
 __ss_int __ss_ntohl(__ss_int x) {
-    return (__ss_int)ntohl((uint32_t)x);
+    return (__ss_int)ntohl(check_uint32(x));
 }
 
 __ss_int __ss_ntohs(__ss_int x) {
-    return (__ss_int)ntohs((uint16_t)x);
+    return (__ss_int)ntohs(check_uint16(x, "ntohs"));
 }
 
 //FIXME this should return None when no timeout is set
@@ -1704,7 +1737,7 @@ tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags
 {
     check_nul(sockaddr_->first); /* (a ValueError here, unlike for bind/connect) */
     sockaddr_in sin;
-    tuple_to_sin_addr(&sin, sockaddr_);
+    tuple_to_sin_addr(&sin, sockaddr_, NULL); /* no port check: CPython gives a gaierror here, via getaddrinfo() */
     char host[NI_MAXHOST], serv[NI_MAXSERV];
     int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), (int)flags);
     if (r != 0) {
