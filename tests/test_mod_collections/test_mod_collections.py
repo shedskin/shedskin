@@ -832,6 +832,17 @@ def test_counter_repr_empty():
     assert repr(c) == 'Counter()'
 
 
+def test_counter_repr_order():
+    # regression test: Counter reprs its items in most_common() order
+    # (by descending count), not insertion order. avoid ties: CPython breaks
+    # them by insertion order, which shedskin dicts do not keep
+    c = Counter('abbcccdddd')
+    assert repr(c) == "Counter({'d': 4, 'c': 3, 'b': 2, 'a': 1})"
+    assert str(c) == repr(c)
+    c['d'] -= 6
+    assert repr(c) == "Counter({'c': 3, 'b': 2, 'a': 1, 'd': -2})"
+
+
 def test_counter_total():
     # total() sums the counts, including zero and negative ones
     c = Counter('abracadabra')
@@ -1075,6 +1086,7 @@ def test_all():
     test_counter_copy_module()
     test_counter_type_identity()
     test_counter_repr_empty()
+    test_counter_repr_order()
     test_counter_total()
     test_counter_eq_zero_counts()
     test_counter_ne()

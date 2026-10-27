@@ -54,19 +54,25 @@ public:
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
-    void *__delitem__(K k);
+    virtual V __missing__(K k);
+    virtual void *__delitem__(K k);
     __ss_int __len__() final;
     str *__repr__();
     __ss_bool has_key(K k);
     __ss_bool __contains__(K key) final;
     void *clear();
-    dict<K,V> *copy();
+    virtual dict<K,V> *copy();
     V get(K k);
     V get(K k, V v);
     V pop(K k);
     V pop(K k, V v);
     tuple2<K, V> *popitem();
     template <class U> void *update(U *other);
+
+    /* non-templated hooks behind update() and |= with a mapping argument,
+       so they dispatch on the dynamic type of an abstractly typed dict */
+    virtual void *__update_dict__(dict<K,V> *other);
+    virtual void *__ior_dict__(dict<K,V> *other);
 
     __ss_bool __gt__(pyobj *p);
     __ss_bool __lt__(pyobj *p);
@@ -75,10 +81,10 @@ public:
 
     __ss_bool __eq__(pyobj *p);
 
-    __ss_bool __gt__(dict<K,V> *s);
-    __ss_bool __lt__(dict<K,V> *s);
-    __ss_bool __ge__(dict<K,V> *s);
-    __ss_bool __le__(dict<K,V> *s);
+    virtual __ss_bool __gt__(dict<K,V> *s);
+    virtual __ss_bool __lt__(dict<K,V> *s);
+    virtual __ss_bool __ge__(dict<K,V> *s);
+    virtual __ss_bool __le__(dict<K,V> *s);
 
     dict<K,V> *__or__(dict<K,V> *s);
     template <class U> dict<K,V> *__ior__(U *other);
@@ -259,18 +265,24 @@ template<> int __none();
 template<> __ss_float __none();
 template<> __ss_bool __none();
 
+/* as in CPython, subclasses (defaultdict, Counter) customize missing keys
+   via __missing__, so only a failed lookup pays for the virtual call */
 template <class K, class V> V dict<K,V>::__getitem__(K key) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw __key_error(key);
+        return __missing__(key);
     else
         return (*it).second;
+}
+
+template <class K, class V> V dict<K,V>::__missing__(K key) {
+    throw __key_error(key);
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
     typename __GC_DICT<K, V>::iterator it = gcd.find(key);
     if (it == gcd.end())
-        throw __key_error(key);
+        gcd[key] = __add(__missing__(key), value);
     else
         (*it).second = __add((*it).second, value);
 
@@ -390,19 +402,31 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
 
 template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
     dict<K,V> *result = copy();
-    result->update(other);
+    result->__ior_dict__(other);
     return result;
 }
 
 template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *other) {
-    update(other);
+    if constexpr (std::is_base_of_v<dict<K,V>, U>)
+        __ior_dict__(other);
+    else
+        update(other);
     return this;
+}
+
+template <class K, class V> void *dict<K,V>::__update_dict__(dict<K,V> *other) {
+    for (const auto& [key, value] : other->gcd)
+        gcd[key] = value;
+    return NULL;
+}
+
+template <class K, class V> void *dict<K,V>::__ior_dict__(dict<K,V> *other) {
+    return dict<K,V>::__update_dict__(other);
 }
 
 template <class K, class V> template<class U> void *dict<K,V>::update(U *other) {
     if constexpr (std::is_base_of_v<dict<K,V>, U>) {
-       for (const auto& [key, value] : other->gcd)
-           gcd[key] = value;
+        __update_dict__(other);
     } else {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;

@@ -561,6 +561,7 @@ def add_shedskin_product(
     # has_lib: bool = False,
     enable_externalproject: bool = False,
     enable_spm: bool = False,
+    noboost: bool = False,
     debug: bool = False,
     name: Optional[str] = None,
     extra_lib_dir: Optional[str] = None,
@@ -569,6 +570,7 @@ def add_shedskin_product(
 
     boolean options:
         HAS_LIB
+        NOBOOST
         DEBUG
 
     boolean option pairs (setting one unsets the other)
@@ -621,6 +623,9 @@ def add_shedskin_product(
         add(1, "ENABLE_EXTERNALPROJECT")
     elif enable_spm:
         add(1, "ENABLE_SPM")
+
+    if noboost:
+        add(1, "NOBOOST")
 
     if debug:
         add(1, "DEBUG")
@@ -765,8 +770,6 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
         compile_options.append("-D__SS_NOASSERT")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
-    if gx.boost:
-        compile_options.append("-D__SS_BOOST")
     compile_opts = " ".join(compile_options)
     link_opts = " ".join(link_options)
 
@@ -813,6 +816,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                noboost=not gx.boost,
                 link_options=link_opts,
                 cmdline_options=cmdline_opts,
             ),
@@ -835,6 +839,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                noboost=not gx.boost,
                 link_options=link_opts,
                 cmdline_options=cmdline_opts,
             )
@@ -873,6 +878,7 @@ def generate_cmakefile(gx: config.GlobalInfo) -> None:
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
                 compile_options=compile_opts,
+                noboost=not gx.boost,
                 link_options=link_opts,
                 cmdline_options=cmdline_opts,
             ),
