@@ -46,7 +46,7 @@ public:
     static date *min, *max;
     static timedelta *resolution;
     static date *today();
-    static date *fromtimestamp(__ss_int timestamp);
+    static date *fromtimestamp(double timestamp);
     static date *fromordinal(__ss_int o);                    //copied from cpython
     static date *fromisoformat(str *date_string);
     static date *fromisocalendar(__ss_int year, __ss_int week, __ss_int day);
