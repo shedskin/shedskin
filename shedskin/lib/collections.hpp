@@ -387,13 +387,7 @@ public:
         END_FOR
     }
 
-    V __getitem__(K key) {
-        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
-        if(it == this->gcd.end())
-            return __missing__(key);
-        return (*it).second;
-    }
-
+    /* called by dict::__getitem__/__addtoitem__ for a missing key */
     V __missing__(K k) {
         if(func) {
             V v = func();
@@ -401,21 +395,6 @@ public:
             return v;
         }
         throw __key_error(k);
-    }
-
-    void *__addtoitem__(K key, V value) {
-        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
-        if(it == this->gcd.end()) {
-            if(func)
-                this->__setitem__(key, __add(func(), value));
-            else
-                throw __key_error(key);
-        }
-        else {
-            (*it).second = __add((*it).second, value);
-        }
-
-        return NULL;
     }
 
     str *__repr__() {
@@ -524,7 +503,7 @@ public:
         int __2;
         pyiter<K> *__1;
         FOR_IN(e, i, 1, 2, 3)
-            __addtoitem__(e, 1);
+            this->__addtoitem__(e, 1);
         END_FOR
     }
 
@@ -546,14 +525,8 @@ public:
     }
 #endif
 
-    /* unlike defaultdict, missing keys are never inserted */
-    V __getitem__(K key) {
-        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
-        if(it == this->gcd.end())
-            return __missing__(key);
-        return (*it).second;
-    }
-
+    /* called by dict::__getitem__/__addtoitem__ for a missing key; unlike
+       defaultdict, missing keys are never inserted */
     V __missing__(K /*key*/) {
         return V();
     }
@@ -563,20 +536,22 @@ public:
         return NULL;
     }
 
-    void *__addtoitem__(K key, V value) { /* backs `counter[key] += n` */
-        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
-        if(it == this->gcd.end())
-            this->__setitem__(key, value);
-        else
-            (*it).second = (*it).second + value;
-        return NULL;
-    }
-
-    /* CPython prints an empty counter as 'Counter()', not 'Counter({})' */
+    /* CPython prints an empty counter as 'Counter()', not 'Counter({})',
+       and lists the items in most_common() order */
     str *__repr__() {
         if(this->gcd.empty())
             return new str("Counter()");
-        return __add_strs(3, new str("Counter("), dict<K, V>::__repr__(), new str(")"));
+        str *r = new str("Counter({");
+        list<tuple2<K, V> *> *items = most_common();
+        for(size_t i = 0; i < items->units.size(); i++) {
+            if(i > 0)
+                *r += ", ";
+            r->unit += repr(items->units[i]->__getfirst__())->unit;
+            *r += ": ";
+            r->unit += repr(items->units[i]->__getsecond__())->unit;
+        }
+        *r += "})";
+        return r;
     }
 
     Counter<K, V> *copy() {
@@ -611,15 +586,14 @@ public:
        stubs exist only so CPA can type-check the non-dict call shape. */
     template <class U> void *update(U *other) {
         if constexpr (std::is_base_of_v<dict<K, V>, U>) {
-            for(auto &kv : other->gcd)
-                __addtoitem__(kv.first, kv.second);
+            __update_dict__(other);
         } else {
             K e;
             typename U::for_in_loop __3;
             int __2;
             U *__1;
             FOR_IN(e, other, 1, 2, 3)
-                __addtoitem__(e, 1);
+                this->__addtoitem__(e, 1);
             END_FOR
         }
         return NULL;
@@ -628,14 +602,14 @@ public:
     template <class U> void *subtract(U *other) {
         if constexpr (std::is_base_of_v<dict<K, V>, U>) {
             for(auto &kv : other->gcd)
-                __addtoitem__(kv.first, -kv.second);
+                this->__addtoitem__(kv.first, -kv.second);
         } else {
             K e;
             typename U::for_in_loop __3;
             int __2;
             U *__1;
             FOR_IN(e, other, 1, 2, 3)
-                __addtoitem__(e, -1);
+                this->__addtoitem__(e, -1);
             END_FOR
         }
         return NULL;
@@ -674,25 +648,38 @@ public:
        sets, with missing counts treated as zero: Counter(a=1) equals
        Counter(a=1, b=0), and <=/>= are (non-strict) subset/superset tests.
        dict's inherited versions would compare keys only, and its inherited
-       ordering throws NotImplementedError. */
+       ordering throws NotImplementedError. Against a non-Counter (e.g. an
+       abstractly typed dict), == falls back to plain dict equality and
+       ordering raises TypeError, as in CPython. */
     __ss_bool __eq__(pyobj *p) {
+        if(p->__class__ != cl_counter)
+            return dict<K, V>::__eq__(p);
         return __allcounts((Counter<K, V> *)p, __CMP_EQ);
     }
     __ss_bool __ne__(pyobj *p) {
         return __mbool(!__eq__(p));
     }
     __ss_bool __le__(pyobj *p) {
+        __checkcounter(p, "<=");
         return __allcounts((Counter<K, V> *)p, __CMP_LE);
     }
     __ss_bool __ge__(pyobj *p) {
+        __checkcounter(p, ">=");
         return __allcounts((Counter<K, V> *)p, __CMP_GE);
     }
     __ss_bool __lt__(pyobj *p) { /* proper subset */
+        __checkcounter(p, "<");
         return __mbool(__le__(p) && !__eq__(p));
     }
     __ss_bool __gt__(pyobj *p) { /* proper superset */
+        __checkcounter(p, ">");
         return __mbool(__ge__(p) && !__eq__(p));
     }
+    /* also reached via dict<K,V> * (e.g. a Counter compared with a dict) */
+    __ss_bool __le__(dict<K, V> *d) { return __le__((pyobj *)d); }
+    __ss_bool __ge__(dict<K, V> *d) { return __ge__((pyobj *)d); }
+    __ss_bool __lt__(dict<K, V> *d) { return __lt__((pyobj *)d); }
+    __ss_bool __gt__(dict<K, V> *d) { return __gt__((pyobj *)d); }
 
     /* +, -, &, | all drop non-positive results, matching CPython */
     Counter<K, V> *__add__(Counter<K, V> *other) {
@@ -793,13 +780,28 @@ public:
         return this;
     }
     template <class U> Counter<K, V> *__ior__(U *other) {
-        if constexpr (std::is_same_v<Counter<K, V>, U>) {
-            this->gcd = __or__(other)->gcd;
-        } else {
-            Counter<K, V> *o = new Counter<K, V>(other);
-            this->gcd = __or__(o)->gcd;
-        }
+        if constexpr (std::is_base_of_v<dict<K, V>, U>)
+            __ior_dict__(other);
+        else
+            this->gcd = __or__(new Counter<K, V>(other))->gcd;
         return this;
+    }
+
+    /* overrides of the dict hooks, so update() and |= on an abstractly
+       typed dict that holds a Counter add counts/take maxima */
+    void *__update_dict__(dict<K, V> *other) {
+        for(auto &kv : other->gcd)
+            this->__addtoitem__(kv.first, kv.second);
+        return NULL;
+    }
+    void *__ior_dict__(dict<K, V> *other) {
+        Counter<K, V> *o;
+        if(other->__class__ == cl_counter)
+            o = (Counter<K, V> *)other;
+        else
+            o = new Counter<K, V>(other);
+        this->gcd = __or__(o)->gcd;
+        return NULL;
     }
 
 private:
@@ -811,6 +813,11 @@ private:
             case __CMP_GE: return a >= b;
             default: return a == b;
         }
+    }
+
+    void __checkcounter(pyobj *p, const char *op) {
+        if(p->__class__ != cl_counter)
+            throw new TypeError(__add_strs(5, new str("'"), new str(op), new str("' not supported between instances of 'Counter' and '"), p->__class__->__name__, new str("'")));
     }
 
     static V __abscount(V v) {
