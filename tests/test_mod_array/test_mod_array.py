@@ -757,6 +757,67 @@ def test_error_messages():
     assert error == 'signed short integer is greater than maximum'
 
 
+def test_inplace_return_value():
+    # __iadd__/__imul__ return the array itself, so their result can be used
+    a = array.array('i', [1, 2])
+    b = a.__iadd__(array.array('i', [3]))
+    assert b is a
+    assert b.tolist() == [1, 2, 3]
+    c = a.__imul__(2)
+    assert c is a
+    assert len(c) == 6 and c[5] == 3
+
+    ad = array.array('d', [1.5])
+    assert ad.__iadd__(ad).tolist() == [1.5, 1.5]
+    assert ad.__imul__(0).tolist() == []
+
+    au = array.array('w', 'ab')
+    assert au.__imul__(2).tounicode() == 'abab'
+    assert au.__iadd__(array.array('w', 'c')).tounicode() == 'ababc'
+
+
+class _ArrayHolder:
+    def __init__(self, arr):
+        self.arr = arr
+
+
+def _grow(arr):
+    arr += array.array('i', [9])
+    arr *= 2
+    return arr
+
+
+def test_inplace_aliasing():
+    # '+=' and '*=' mutate in place, so all aliases see the change
+    a = array.array('i', [1, 2])
+    alias = a
+    a += array.array('i', [3])
+    assert alias is a and alias.tolist() == [1, 2, 3]
+    a *= 2
+    assert alias is a and alias.tolist() == [1, 2, 3, 1, 2, 3]
+    a *= 0
+    assert alias is a and len(alias) == 0
+
+    # ..also through a function argument, a container and an attribute
+    b = array.array('i', [1])
+    assert _grow(b) is b
+    assert b.tolist() == [1, 9, 1, 9]
+    l = [b]
+    l[0] += array.array('i', [5])
+    assert l[0] is b and b.tolist() == [1, 9, 1, 9, 5]
+    h = _ArrayHolder(b)
+    h.arr *= 2
+    assert h.arr is b and len(b) == 10
+
+    # whereas '+' and '*' create a new array, leaving the original alone
+    c = array.array('d', [0.5])
+    alias2 = c
+    c = c + array.array('d', [1.5])
+    assert c is not alias2 and alias2.tolist() == [0.5]
+    c = c * 2
+    assert c.tolist() == [0.5, 1.5, 0.5, 1.5] and alias2.tolist() == [0.5]
+
+
 def _overflow_msgs(b, v):
     # via fromlist() (as the list constructor), and via append() and setitem
     msgs = []
@@ -809,6 +870,8 @@ def test_all():
     test_unicode_errors()
     test_unicode_typecode_u()
     test_bulk_copies()
+    test_inplace_return_value()
+    test_inplace_aliasing()
     test_error_messages()
 
 
