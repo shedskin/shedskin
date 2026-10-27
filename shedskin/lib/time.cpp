@@ -112,20 +112,45 @@ __ss_int struct_time::__cmp__(pyobj *p) {
     return __cmp(tm_isdst, b->tm_isdst);
 }
 
+/* like CPython's gettmarg(), which parses each field as a C int: raise
+   OverflowError instead of silently truncating e.g. a year of 10**12 */
+static int __ss_tm_field(__ss_int v) {
+    if constexpr (sizeof(__ss_int) > sizeof(int)) {
+        if (v > INT_MAX)
+            throw new OverflowError(new str("signed integer is greater than maximum"));
+        if (v < INT_MIN)
+            throw new OverflowError(new str("signed integer is less than minimum"));
+    }
+    return (int)v;
+}
+
 /* by value: a plain 'new tm' is malloc memory that was never freed. value-
    initialized, so platform-specific fields (tm_zone, tm_gmtoff) are not garbage */
 tm tuple2tm(struct_time* tuple) {
     tm time_tuple = tm();
 
-    time_tuple.tm_sec = (int)tuple->tm_sec;
-    time_tuple.tm_min = (int)tuple->tm_min;
-    time_tuple.tm_hour = (int)tuple->tm_hour;
-    time_tuple.tm_mday = (int)tuple->tm_mday;
-    time_tuple.tm_mon = (int)tuple->tm_mon - 1;
-    time_tuple.tm_year = (int)tuple->tm_year - 1900;
-    time_tuple.tm_wday = tuple->tm_wday == 6 ? 0 : (int)tuple->tm_wday + 1;
-    time_tuple.tm_yday = (int)tuple->tm_yday - 1 ;
-    time_tuple.tm_isdst = (int)tuple->tm_isdst;
+    int year = __ss_tm_field(tuple->tm_year);
+    int mon = __ss_tm_field(tuple->tm_mon);
+    int mday = __ss_tm_field(tuple->tm_mday);
+    int hour = __ss_tm_field(tuple->tm_hour);
+    int min = __ss_tm_field(tuple->tm_min);
+    int sec = __ss_tm_field(tuple->tm_sec);
+    int wday = __ss_tm_field(tuple->tm_wday);
+    int yday = __ss_tm_field(tuple->tm_yday);
+    int isdst = __ss_tm_field(tuple->tm_isdst);
+
+    if (year < INT_MIN + 1900)
+        throw new OverflowError(new str("year out of range"));
+
+    time_tuple.tm_sec = sec;
+    time_tuple.tm_min = min;
+    time_tuple.tm_hour = hour;
+    time_tuple.tm_mday = mday;
+    time_tuple.tm_mon = (int)((__ss_int)mon - 1); /* (no int overflow) */
+    time_tuple.tm_year = year - 1900;
+    time_tuple.tm_wday = wday == 6 ? 0 : (int)((__ss_int)wday + 1);
+    time_tuple.tm_yday = (int)((__ss_int)yday - 1);
+    time_tuple.tm_isdst = isdst;
 #ifndef WIN32
     time_tuple.tm_gmtoff = tuple->gmtoff;
     if (tuple->zone)
@@ -547,14 +572,16 @@ void *sleep(__ss_float s) {
 
 __ss_float mktime(struct_time *tuple) {
     tm time_tuple = tuple2tm(tuple);
-    return (__ss_float)::mktime(&time_tuple);
+    /* as in CPython: -1 is only an error if mktime() left tm_wday untouched */
+    time_tuple.tm_wday = -1;
+    time_t tt = ::mktime(&time_tuple);
+    if (tt == (time_t)(-1) && time_tuple.tm_wday == -1)
+        throw new OverflowError(new str("mktime argument out of range"));
+    return (__ss_float)tt;
 }
 
 __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
-    struct_time *st = new struct_time(tuple);
-
-    tm time_tuple = tuple2tm(st);
-    return (__ss_float)::mktime(&time_tuple);
+    return mktime(new struct_time(tuple));
 }
 
 /* CPython floors the seconds-since-epoch value before converting to an
@@ -630,9 +657,23 @@ str *asctime() {
     return asctime(tuple);
 }
 
+/* formatted by hand like CPython's _asctime(): libc asctime() differs for
+   years beyond 4 digits (macOS pads them with spaces) */
 str *asctime(struct_time *tuple) {
+    static const char wday_name[7][4] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const char mon_name[12][4] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
     tm time_tuple = tuple2tm_checked(tuple);
-    return (new str(::asctime(&time_tuple)))->__slice__(2, 0, -1, 0);
+    char buf[64];
+    int n = snprintf(buf, sizeof(buf), "%s %s%3d %.2d:%.2d:%.2d %lld",
+        wday_name[time_tuple.tm_wday], mon_name[time_tuple.tm_mon],
+        time_tuple.tm_mday, time_tuple.tm_hour, time_tuple.tm_min,
+        time_tuple.tm_sec, 1900 + (long long)time_tuple.tm_year);
+    return new str(buf, (size_t)n);
 }
 
 str *ctime() {
@@ -648,6 +689,12 @@ str *strftime(str *format, struct_time* tuple) {
     if (__ss_has_nul(format))
         throw new ValueError(new str("embedded null character"));
     tm time_tuple = tuple2tm_checked(tuple);
+#ifdef _MSC_VER
+    /* as CPython: the MSVC strftime() aborts the process (0xc0000409) on
+       years it does not support */
+    if (time_tuple.tm_year + 1900 < 1 || 9999 < time_tuple.tm_year + 1900)
+        throw new ValueError(new str("strftime() requires year in [1; 9999]"));
+#endif
     size_t fmtlen = format->unit.size();
     size_t size = fmtlen;
     size_t n;

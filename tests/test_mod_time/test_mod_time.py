@@ -18,6 +18,10 @@ def test_localtime():
 def test_asctime():
     t1 = (2008, 6, 24, 12, 50, 00, 0, 120, -1)
     assert time.asctime(time.struct_time(t1)) == 'Mon Jun 24 12:50:00 2008'
+    # regression test: libc asctime() padded such years on macOS
+    assert time.asctime(time.struct_time((12345, 2, 3, 4, 5, 6, 0, 0, 0))) == 'Mon Feb  3 04:05:06 12345'
+    assert time.asctime(time.struct_time((-5, 12, 31, 23, 59, 59, 6, 0, 0))) == 'Sun Dec 31 23:59:59 -5'
+    assert time.asctime(time.struct_time((999, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 999'
     assert time.strftime("%a, %d %b %Y %H:%M:%S", t1) == 'Mon, 24 Jun 2008 12:50:00'
 
 def test_strftime():
@@ -443,6 +447,55 @@ def test_gmtime_out_of_range():
         caught = True
     assert caught
 
+def test_tuple_field_overflow():
+    # regression test: fields were silently truncated to a C int
+    big = 'signed integer is greater than maximum'
+    small = 'signed integer is less than minimum'
+    cases = [
+        ((10**12, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2**33, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2**31, 1, 1, 0, 0, 0, 0, 0, 0), big),
+        ((-2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0), small),
+        ((-2**31, 1, 1, 0, 0, 0, 0, 0, 0), 'year out of range'),
+        ((2000, 2**31, 1, 0, 0, 0, 0, 0, 0), big),
+        ((2000, 1, 1, 0, 0, 0, -2**40, 0, 0), small),
+        ((2000, 1, 1, 0, 0, 0, 0, 0, 2**40), big),
+    ]
+    for t, msg in cases:
+        for i in range(4):
+            caught = ''
+            try:
+                if i == 0:
+                    time.mktime(t)
+                elif i == 1:
+                    time.strftime('%Y', t)
+                elif i == 2:
+                    time.asctime(time.struct_time(t))
+                else:
+                    time.mktime(time.struct_time(t))
+            except OverflowError as e:
+                caught = str(e)
+            assert caught == msg, caught
+
+    caught = ''
+    try:
+        time.mktime((2**31 - 1, 2**31 - 1, 1, 0, 0, 0, 0, 0, 0))
+    except OverflowError as e:
+        caught = str(e)
+    assert caught == 'mktime argument out of range', caught
+
+    if sys.platform == 'win32':
+        caught = ''
+        try:
+            time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))
+        except ValueError as e:
+            caught = str(e)
+        assert caught == 'strftime() requires year in [1; 9999]', caught
+    else:
+        assert time.strftime('%Y', (2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0)) == '2147483647'
+    assert time.asctime(time.struct_time((2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 2147483647'
+    assert time.mktime(time.localtime(1000000)) == 1000000.0
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -483,6 +536,7 @@ def test_all():
     test_struct_time_no_leak()
     test_strftime_buffer()
     test_strftime_utc_offset()
+    test_tuple_field_overflow()
     print('ok')
 
 if __name__ == '__main__':

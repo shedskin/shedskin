@@ -34,6 +34,19 @@ def use_more_reserved():
     return concept + requires + noexcept + static_assert + bitand + bitor + xor + compl
 
 
+def use_windows_macros():
+    # lowercase macros from the Windows SDK headers (e.g. rpcndr.h has
+    # '#define small char'), which broke the MSVC build
+    small = 1
+    hyper = 2
+    near = 3
+    far = 4
+    pascal = 5
+    cdecl = 6
+    interface = 7
+    return small + hyper + near + far + pascal + cdecl + interface
+
+
 def double(v):
     return v * 2
 
@@ -58,6 +71,10 @@ def test_other_reserved_identifiers():
     assert use_more_reserved() == 36
 
 
+def test_windows_macros_as_identifiers():
+    assert use_windows_macros() == 28
+
+
 def test_reserved_function_names_as_values():
     f = double
     assert f(21) == 42
@@ -69,6 +86,7 @@ def test_all():
     test_nullptr_as_identifier()
     test_decltype_and_thread_local_as_identifiers()
     test_other_reserved_identifiers()
+    test_windows_macros_as_identifiers()
     test_reserved_function_names_as_values()
 
 
