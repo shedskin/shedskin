@@ -69,7 +69,7 @@ list<bytes *> *BytesIO::readlines(__ss_int hint) {
         bytes *line = readline();
         result->append(line);
         total += len(line);
-        if(hint > 0 && total > hint)
+        if(hint > 0 && total >= hint) /* unlike StringIO and files */
             break;
     }
     return result;
