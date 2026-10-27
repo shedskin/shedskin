@@ -47,7 +47,7 @@ public:
     virtual list<str *> *  readlines(__ss_int size_hint=-1);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size);
+    virtual __ss_int truncate(__ss_int size=-1);
     virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
     virtual file *__enter__();
@@ -93,7 +93,7 @@ public:
     list<bytes *> *  readlines(__ss_int size_hint=-1);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size);
+    virtual __ss_int truncate(__ss_int size=-1);
     virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
     virtual file_binary *__enter__();

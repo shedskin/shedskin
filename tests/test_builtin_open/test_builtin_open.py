@@ -82,6 +82,23 @@ def test_open_truncate():
     with open(outputfile) as g:
         assert g.read() == 'hop'
 
+    # truncate() without argument truncates at the current position
+    f = open(outputfile, 'w')
+    f.write('hello')
+    f.seek(2)
+    assert f.truncate() == 2
+    f.close()
+    with open(outputfile) as g:
+        assert g.read() == 'he'
+
+    fb = open(outputfile, 'wb')
+    fb.write(b'hello')
+    fb.seek(3)
+    assert fb.truncate() == 3
+    fb.close()
+    with open(outputfile, 'rb') as gb:
+        assert gb.read() == b'hel'
+
 
 def test_lineendings():
      cr_txt = os.path.join(testdata, 'cr.txt')
