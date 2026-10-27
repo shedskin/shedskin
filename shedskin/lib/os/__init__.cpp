@@ -1036,10 +1036,28 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
     mode = flags;
 }
 
-void *popen_pipe::close() {
-    __ss_pclose(f);
-    closed = True;
+/* as CPython: the exit code shifted left by 8, minus the signal number
+   shifted left by 8 if the process was killed, or the exit code on windows */
+void *__popen_file::close() {
+    if(f and not closed) {
+        int st = __ss_pclose(f);
+        closed = True;
+        if(st == -1)
+            __throw_oserror();
+#ifndef WIN32
+        if(WIFSIGNALED(st))
+            st = -(WTERMSIG(st) << 8);
+        else if(WIFEXITED(st))
+            st = WEXITSTATUS(st) << 8;
+#endif
+        status = st;
+    }
     return NULL;
+}
+
+__ss_int popen_pipe::close(__ss_int) {
+    __popen_file::close();
+    return status;
 }
 
 popen_pipe* popen(str* cmd) {

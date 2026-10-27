@@ -207,6 +207,7 @@ class mmap: public pyiter<bytes *>
     void *__seek_failed();
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
+    void __check_flush_range(__ss_int offset, __ss_int &size) const;
     inline size_t __tell() const { return (size_t)(m_position - m_begin); }
     __ss_int __find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse=false);
 

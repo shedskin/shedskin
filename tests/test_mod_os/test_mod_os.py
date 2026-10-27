@@ -1003,6 +1003,27 @@ def test_kwarg_names_posix():
     p.close()
 
 
+def test_popen_close_status():
+    # close() returns the wait status as cpython (None, here 0, on success)
+    p = os.popen('echo hi')
+    assert p.read() == 'hi\n'
+    assert not p.close()
+    p = os.popen('exit 3')
+    p.read()
+    assert p.close() == 3 << 8
+    assert p.close() == 3 << 8  # (again)
+    assert os.waitstatus_to_exitcode(3 << 8) == 3
+    p = os.popen('kill -9 $$')
+    p.read()
+    assert p.close() == -9 << 8
+    p = os.popen('cat >/dev/null; exit 5', 'w')
+    p.write('x')
+    assert p.close() == 5 << 8
+    with os.popen('exit 1') as p:  # (closed by __exit__)
+        p.read()
+    assert p.closed
+
+
 def test_getcwdb():
     b = os.getcwdb()
     assert b.__class__.__name__ == 'bytes'
@@ -1757,6 +1778,7 @@ def test_all():
         test_makedirs_parent_mode()
         test_makedirs_default_parent_mode()
         test_kwarg_names_posix()
+        test_popen_close_status()
         # test_setgroups_overflow()  # os.setgroups is #ifndef WIN32'd out of
         # __os__ in lib/os/__init__.hpp, and shedskin translates this
         # function's body to C++ unconditionally (the `os.name == 'posix'`
