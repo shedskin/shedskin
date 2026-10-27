@@ -374,6 +374,20 @@ template<> inline void __mod_char(int flag, str *result, size_t &, char, bytes *
     __mod_pad_signed(result, "", __GC_STR(1, (__ss_char)(unsigned char)arg->unit[0]), f_flag, f_width, false);
 }
 
+/* like CPython: str formatting shows non-printable characters as '?', while
+   bytes formatting shows them as-is, but raises OverflowError from 0x80 */
+[[noreturn]] inline void __mod_unsupported(int flag, __ss_char c, size_t index) {
+    if(flag && c >= 0x80)
+        throw new OverflowError(new str("character argument not in range(0x110000)"));
+    char buf[32];
+    snprintf(buf, sizeof(buf), "' (0x%x) at index ", (unsigned int)c);
+    str *msg = new str("unsupported format character '");
+    msg->unit += (flag || (c >= 31 && c <= 126)) ? c : (__ss_char)'?';
+    *msg += buf;
+    *msg += std::to_string(index).c_str();
+    throw new ValueError(msg);
+}
+
 template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, str *result, size_t &pos, T arg) {
     size_t namepos;
     str *name = NULL;
@@ -515,7 +529,7 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
 
             case 'b': /* b'%b' is b'%s' */
                 if(!flag)
-                    throw new ValueError(new str("unsupported format character"));
+                    __mod_unsupported(flag, c, j-1);
                 [[fallthrough]];
             case 's':
             case 'r':
@@ -538,7 +552,7 @@ template<class T> bool __mod_one(int flag, str *fmt, size_t fmtlen, size_t &j, s
                 }
 
             default:
-                throw new ValueError(new str("unsupported format character"));
+                __mod_unsupported(flag, c, j-1);
         }
     }
     return name != NULL; /* the format ran out: only used by %(name) directives */
