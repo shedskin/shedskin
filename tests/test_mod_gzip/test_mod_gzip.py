@@ -530,6 +530,36 @@ def test_large():
     assert g.tell() == sum([len(line) for line in lines])
 
 
+def test_readlines_hint():
+    # stop once the total length read exceeds the hint (as IOBase)
+    data = gzip.compress('ab\ncd\n\xe9f\n'.encode('utf-8'))
+    for hint, n in [(-1, 3), (0, 3), (1, 1), (2, 1), (3, 2), (5, 2), (6, 3)]:
+        g = gzip.GzipFile(fileobj=io.BytesIO(data))
+        assert len(g.readlines(hint)) == n
+    g = gzip.GzipFile(fileobj=io.BytesIO(data))
+    assert g.readlines(3) == [b'ab\n', b'cd\n']
+    assert g.readlines() == [b'\xc3\xa9f\n']
+    # text mode: in characters
+    for hint, n in [(-1, 3), (0, 3), (2, 1), (3, 2), (5, 2), (6, 3)]:
+        t = gzip.open(io.BytesIO(data), 'rt', encoding='utf-8')
+        assert len(t.readlines(hint)) == n
+    t = gzip.open(io.BytesIO(data), 'rt', encoding='utf-8')
+    assert t.readlines(3) == ['ab\n', 'cd\n']
+    assert t.readlines() == ['\xe9f\n']
+
+
+def test_read_negative():
+    g = gzip.GzipFile(fileobj=io.BytesIO(gzip.compress(b'abcdef')))
+    assert g.read(-1) == b'abcdef'
+    g = gzip.GzipFile(fileobj=io.BytesIO(gzip.compress(b'abcdef')))
+    try:
+        g.read(-7)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'read length must be non-negative or -1'
+    assert g.read(2) == b'ab'
+
+
 def test_text_mode():
     buf = io.BytesIO()
     with gzip.open(buf, 'wt') as f:
@@ -693,6 +723,8 @@ def test_all():
     test_errors()
     test_gzipfile_bytesio()
     test_reading()
+    test_readlines_hint()
+    test_read_negative()
     test_seek_read()
     test_write_mode()
     test_closed()
