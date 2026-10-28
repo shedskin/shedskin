@@ -1286,6 +1286,8 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
 
 bytes *__mmapiter::__next__()
 {
+    if (map->closed) /* (as CPython, whose iterator goes through __getitem__) */
+        throw new ValueError(const_11);
     if (pos >= map->__size())
         throw new StopIteration();
     return new bytes(__GC_BYTES(1, (char)map->data()[pos++]));

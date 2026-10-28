@@ -167,7 +167,24 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
         }
     }
 
+    __make_buffer();
+}
+
+file::file(FILE *g) : name(0), mode(0), f(g), buffer(0), closed(False) {
+    if (g)
+        __make_buffer();
+}
+
+/* the binary file as .buffer: it shares our FILE *, so it closes that by
+   closing us (so e.g. a pipe is pclosed), and closing us marks it closed */
+void file::__make_buffer() {
     buffer = new file_binary(f);
+    buffer->__text = this;
+}
+
+void file::__close_buffer() {
+    if (buffer)
+        buffer->closed = True;
 }
 
 file *open(str *name, str *flags, str *encoding, str *errors, str *newline) {
@@ -436,6 +453,7 @@ void *file::close() {
     if(f and not closed) {
         int err = __ss_fclose(f);
         closed = True;
+        __close_buffer();
         if(err)
             __throw_oserror();
     }
@@ -499,6 +517,7 @@ bool file::__error() {
 }
 
 bool file::__eof() {
+    __check_closed(); /* (before touching f, which may be fclosed) */
     return (FEOF(f) != 0);
 }
 
@@ -659,6 +678,11 @@ list<bytes *> *file_binary::readlines(__ss_int size_hint) {
 }
 
 void *file_binary::close() {
+    if(__text) { /* our text file owns the FILE * */
+        __text->close();
+        closed = True;
+        return NULL;
+    }
     if(f and not closed) {
         int err = __ss_fclose(f);
         closed = True;
@@ -725,6 +749,7 @@ bool file_binary::__error() {
 }
 
 bool file_binary::__eof() {
+    __check_closed();
     return (FEOF(f) != 0);
 }
 

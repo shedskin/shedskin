@@ -1042,6 +1042,7 @@ void *__popen_file::close() {
     if(f and not closed) {
         int st = __ss_pclose(f);
         closed = True;
+        __close_buffer();
         if(st == -1)
             __throw_oserror();
 #ifndef WIN32

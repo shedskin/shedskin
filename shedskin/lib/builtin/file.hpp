@@ -35,7 +35,7 @@ public:
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
 
-    file(FILE *g=0) : name(0), mode(0), f(g), buffer(0), closed(False) {}
+    file(FILE *g=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0);
 
     virtual void * close();
@@ -67,6 +67,8 @@ public:
     }
 
     str *__decode_cache();
+    void __make_buffer();
+    void __close_buffer();
 };
 
 /* TODO file<bytes *> template? */
@@ -80,6 +82,7 @@ public:
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
+    file *__text = 0; /* as .buffer of a text file: shares its FILE *, so closing either closes both */
 
     file_binary(FILE *g=0) : name(0), mode(0), f(g), closed(False) {}
     file_binary(str *name, str *mode=0);
