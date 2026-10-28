@@ -2725,7 +2725,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Visit a binary operation"""
         if isinstance(node.op, ast.Add):
             str_nodes = self.rec_string_addition(node)
-            list_parts = self.list_concat_parts(node)
+            # 'a += b' must extend 'a' in place, not build a new list
+            list_parts = None
+            if node not in self.gx.augment:
+                list_parts = self.list_concat_parts(node)
             if list_parts:
                 self.append("__add_lists(")
                 self.visit_list_parts(list_parts, func)
