@@ -1673,6 +1673,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         func: Optional["python.Function"],
         genexpr: bool,
         fuse_reduce: bool,
+        iter_targets: set[python.Variable] | None = None
     ) -> None:
         """Generate a fast for loop"""
         assert isinstance(qual.iter, ast.Call)
@@ -1685,7 +1686,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.fastfor(qual, iter, func)
         if isinstance(node, ast.For):
             self.find_append_idioms(node)
-        self.forbody(node, quals, iter, func, False, genexpr, fuse_reduce)
+        self.forbody(node, quals, iter, func, False, genexpr, fuse_reduce, iter_targets)
 
     def find_append_idioms(self, node: ast.For) -> None:
         """for i in range(..): .. l.append(x) ..: when l has to grow, make
@@ -1899,8 +1900,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.For, func: Optional["python.Function"] = None
     ) -> None:
         """Generate a for loop"""
+        iter_targets: set[python.Variable] | None = None
         if isinstance(node.target, ast.Name):
-            assname = node.target.id
+            targets = None
+            if func:
+                assign_targets = func.split_assign_targets.get(node.target.id)
+                if assign_targets:
+                    targets = assign_targets.get(node.target, set())
+            if targets:
+                if len(targets) > 1:
+                    assname = self.temp_varname(node.target)
+                    iter_targets = targets
+                else:
+                    var = next(iter(targets))
+                    assname = var.name
+            else:
+                assname = node.target.id
         elif ast_utils.is_assign_attribute(node.target):
             assert isinstance(node.target, ast.Attribute)
             self.start("")
@@ -1913,26 +1928,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[node, "orelse"])
+        if iter_targets:
+            iter_typestr = typestr.nodetypestr(self.gx, node.target, func, mv=self.mv)
+            self.output(f"{iter_typestr}{assname};")
         if ast_utils.is_fastfor(node, func, self.mv):
-            self.do_fastfor(node, node, None, assname, func, False, False)
+            self.do_fastfor(node, node, None, assname, func, False, False, iter_targets)
         elif self.fastenumerate(node, func):
             self.do_fastenumerate(node, func, False)
             self.add_append_idioms(
                 node, "%s, %s" % (self.mv.tempcount[(node, 2)], self.mv.tempcount[node.iter])
             )
-            self.forbody(node, None, assname, func, True, False, False)
+            self.forbody(node, None, assname, func, True, False, False, iter_targets)
         elif self.fastzip2(node, func):
             self.do_fastzip2(node, func, False)
-            self.forbody(node, None, assname, func, True, False, False)
+            self.forbody(node, None, assname, func, True, False, False, iter_targets)
         elif self.fastdictiter(node):
             self.do_fastdictiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False, False)
+            self.forbody(node, None, assname, func, True, False, False, iter_targets)
         elif self.fastfileiter(node):
             self.do_fastfileiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False, False)
+            self.forbody(node, None, assname, func, True, False, False, iter_targets)
         elif self.fastchoiceiter(node) and not (func and func.isGenerator):
             self.do_fastchoiceiter(node, func, False)
-            self.forbody(node, None, assname, func, True, False, False)
+            self.forbody(node, None, assname, func, True, False, False, iter_targets)
         else:
             pref, tail = self.forin_preftail(node)
             self.start("FOR_IN{}({},".format(pref, assname))
@@ -1945,7 +1963,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.add_append_idioms(
                     node, "%s, %s" % (self.mv.tempcount[node], self.mv.tempcount[node.iter])
                 )
-            self.forbody(node, None, assname, func, False, False, False)
+            self.forbody(node, None, assname, func, False, False, False, iter_targets)
         self.print()
 
     def do_fastzip2(
@@ -2129,6 +2147,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         skip: bool,
         genexpr: bool,
         fuse_reduce: bool,
+        iter_targets: set[python.Variable] | None = None
     ) -> None:
         """Generate the body of a for loop"""
         if quals is not None:
@@ -2142,6 +2161,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if ast_utils.is_assign_list_or_tuple(node.target):
                 assert isinstance(node.target, (ast.List, ast.Tuple))
                 self.tuple_assign(node.target, self.mv.tempcount[node.target], func)
+        if iter_targets:
+            for var in iter_targets:
+                self.output(f"{self.cpp_name(var)} = {iter};")
         self.gx.loopstack.append(node)
         for child in node.body:
             self.visit(child, func)
@@ -4597,7 +4619,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             self.visitm(" = ", selector, func)
                             self.eol()
                     else:
-                        breakpoint()
+                        # value never reaches a read
+                        pass
                 else:
                     self.start()
                     self.visitm(item, " = ", selector, func)
