@@ -896,6 +896,9 @@ class dict(pyiter):
         self.__key__(key)
         return self.value
         return v
+    def __pop1(self, key):  # no default: KeyError, never None
+        self.__key__(key)
+        return self.value
     def popitem(self):
         return (self.unit, self.value)
 

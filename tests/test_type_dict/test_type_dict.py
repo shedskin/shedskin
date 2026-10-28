@@ -119,6 +119,23 @@ def test_pop():
     assert len(d) == 0
 
 
+def test_pop_no_default():
+    # pop(k) without a default never returns None (1028-A1)
+    d = {'a': 1, 'b': 2}
+    x = d.pop('a')
+    assert x + 1 == 2
+    assert d.pop('b') + 10 == 12
+    f = {'a': 1.5}
+    assert f.pop('a') * 2 == 3.0
+    b = {'a': True}
+    assert b.pop('a') + 1 == 2
+    try:
+        d.pop('c')
+        assert False
+    except KeyError as e:
+        assert str(e) == "'c'"
+
+
 def test_popitem():
     d = {1: 'a', 2: 'b', 3: 'c'}
     seen = []
@@ -362,6 +379,7 @@ def test_all():
     # test_func_as_value()
     test_dict_fromkeys()
     test_pop()
+    test_pop_no_default()
     test_popitem()
     test_update()
     test_merge()
