@@ -925,7 +925,7 @@ void *unsetenv(str* var) {
 }
 
 __ss_int umask(__ss_int newmask)  {
-    return (__ss_int)::umask((mode_t)__ss_cint(newmask));
+    return (__ss_int)::umask((unsigned)__ss_cint(newmask));
 }
 
 void *chmod(str* path, __ss_int val) {
@@ -1423,36 +1423,46 @@ __ss_bool isatty(__ss_int fd) {
 /* UNIX-only functionality */
 
 #ifndef WIN32
+/* the macOS W*() macros take the address of their argument */
+
 __ss_bool __ss_WCOREDUMP(__ss_int status) {
-    return __mbool(WCOREDUMP(__ss_cint(status)));
+    int st = __ss_cint(status);
+    return __mbool(WCOREDUMP(st));
 }
 
 __ss_int __ss_WEXITSTATUS(__ss_int status) {
-    return WEXITSTATUS(__ss_cint(status));
+    int st = __ss_cint(status);
+    return WEXITSTATUS(st);
 }
 
 __ss_bool __ss_WIFCONTINUED(__ss_int status) {
-    return __mbool(WIFCONTINUED(__ss_cint(status)));
+    int st = __ss_cint(status);
+    return __mbool(WIFCONTINUED(st));
 }
 
 __ss_bool __ss_WIFEXITED(__ss_int status) {
-    return __mbool(WIFEXITED(__ss_cint(status)));
+    int st = __ss_cint(status);
+    return __mbool(WIFEXITED(st));
 }
 
 __ss_bool __ss_WIFSIGNALED(__ss_int status) {
-    return __mbool(WIFSIGNALED(__ss_cint(status)));
+    int st = __ss_cint(status);
+    return __mbool(WIFSIGNALED(st));
 }
 
 __ss_bool __ss_WIFSTOPPED(__ss_int status) {
-    return __mbool(WIFSTOPPED(__ss_cint(status)));
+    int st = __ss_cint(status);
+    return __mbool(WIFSTOPPED(st));
 }
 
 __ss_int __ss_WSTOPSIG(__ss_int status) {
-    return WSTOPSIG(__ss_cint(status));
+    int st = __ss_cint(status);
+    return WSTOPSIG(st);
 }
 
 __ss_int __ss_WTERMSIG(__ss_int status) {
-    return WTERMSIG(__ss_cint(status));
+    int st = __ss_cint(status);
+    return WTERMSIG(st);
 }
 
 void *fchdir(__ss_int f1) {
