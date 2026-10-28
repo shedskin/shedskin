@@ -458,6 +458,8 @@ bool GzipFile::__eof() {
 
 bytes *GzipFile::read(__ss_int n) {
     __check_can_read("read");
+    if (n < -1)
+        throw new ValueError(new str("read length must be non-negative or -1"));
     if (n < 0) {
         while (__fill()) ;
     } else
@@ -542,7 +544,7 @@ list<bytes *> *GzipFile::readlines(__ss_int hint) {
             break;
         result->append(line);
         total += len(line);
-        if (hint > 0 && total >= hint)
+        if (hint > 0 && total > hint)
             break;
     }
     return result;
@@ -848,7 +850,7 @@ list<str *> *_GzipTextFile::readlines(__ss_int hint) {
             break;
         result->append(line);
         total += len(line);
-        if (hint > 0 && total >= hint)
+        if (hint > 0 && total > hint)
             break;
     }
     return result;

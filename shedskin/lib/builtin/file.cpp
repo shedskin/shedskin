@@ -617,6 +617,8 @@ bytes *file_binary::readline(__ss_int n) {
 }
 
 bytes *file_binary::read(__ss_int n) {
+    if(n < -1)
+        throw new ValueError(new str("read length must be non-negative or -1"));
     __check_closed();
     __switch_op(f, options, 'r');
     if(n == 1) {

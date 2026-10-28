@@ -173,6 +173,23 @@ def test_open_directory_raises_oserror():
         pass
 
 
+def test_binary_read_negative():
+    with open('rn.bin', 'wb') as g:
+        g.write(b'abcdef')
+    with open('rn.bin', 'rb') as g:
+        try:
+            g.read(-7)
+            assert False
+        except ValueError as e:
+            assert str(e) == 'read length must be non-negative or -1'
+        assert g.read(2) == b'ab'
+        assert g.read(-1) == b'cdef'
+    # text files accept any negative size
+    with open('rn.bin') as f:
+        assert f.read(-7) == 'abcdef'
+    os.remove('rn.bin')
+
+
 def test_read_chars_unicode():
     # text-mode read(n) counts characters, not bytes
     with open('utest.txt', 'w') as f:
@@ -743,6 +760,7 @@ def test_all():
     test_open_encoding_attributes()
     test_open_newline()
     test_read_chars_unicode()
+    test_binary_read_negative()
     test_open_for()
     test_open_read()
     test_open_read2()
